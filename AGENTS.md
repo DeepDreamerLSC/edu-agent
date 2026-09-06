@@ -10,3 +10,5 @@
 **ponytail(可选辅助,插件本体不进仓库、不进 CI)**:编码前默认启用 ponytail(full 档);不可用不阻塞,仍守最小修改原则。编码后、`make check` 前对完整 diff 执行一次 ponytail-review,合理的 delete/stdlib/native/yagni/shrink 建议直接处理。不设第二审查通道、不开生命周期 Hook;ponytail-debt 只读。
 
 其余硬规则一句话版:agent 只开 PR 不合并;四类结构改动(顶层包、第三方依赖、配置文件、CI 规则/规划文档/`scripts/budget.py`)必须人批;不自建租约/心跳/worker 池/调度器/预载恢复(02 §5);预算超限没有豁免,要加就先删(02 §2)。
+
+**角色与审查(协作模式:1 PM + 1 审查 + 开发线)**:审查者只验证、不产码,产出复现清单(章程:[docs/roles/reviewer.md](docs/roles/reviewer.md));所有 PR 含 PM 的必须过独立审查;合并键只在人手里;人每周抽审一个 PR,对照审查者的复现清单。开发线随里程碑扩编(M2 增内核线),上限按线递增。
