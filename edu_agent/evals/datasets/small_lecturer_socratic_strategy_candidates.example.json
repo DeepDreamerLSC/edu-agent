@@ -1,0 +1,48 @@
+{
+  "schema_version": "small_lecturer_prompt_lab_matrix/v1",
+  "experiment_key": "small-lecturer-socratic-strategy-three-arm-v1",
+  "declared_axes": ["question_adaptation", "few_shot"],
+  "fixed_conditions": {
+    "dataset": "evals/datasets/small_lecturer_prompt_lab_seed_v1.json",
+    "question_fixture": "evals/datasets/small_lecturer_prompt_lab_seed_question_bank.json",
+    "models_prompt_expression_seed": "replace-with-identical-hash-bound-controls-for-all-arms",
+    "empty_few_shot_fixture_note": "Fallback proof only; replace with a teacher-reviewed train index before measuring quality."
+  },
+  "candidates": [
+    {
+      "candidate_key": "socratic-baseline", "label": "当前 Baseline", "baseline": true,
+      "question_adaptation_mode": "baseline", "few_shot_enabled": false,
+      "model_variant": "fixed-model", "prompt_variant": "fixed-prompt", "expression_profile_variant": "expression-v2",
+      "expected_tutor_model_id": "replace-with-actual-logical-model-id", "expected_worker_model_id": "replace-with-actual-worker-model-id",
+      "expected_upstream_model": "replace-with-actual-upstream-model", "expected_weights_version": "replace-with-actual-weights-version",
+      "expected_model_policy": "small_lecturer_tutor", "tutor_prompt_version": "replace-with-fixed-prompt-version",
+      "style_profile_version": "small_lecturer_expression/v2",
+      "expression_profile": {"style_profile_version": "small_lecturer_expression/v2", "source": "replace-with-hash-bound-expression-profile"},
+      "code_revision": "0000000000000000000000000000000000000000"
+    },
+    {
+      "candidate_key": "socratic-structured", "label": "结构化换角度",
+      "question_adaptation_mode": "structured", "few_shot_enabled": false,
+      "model_variant": "fixed-model", "prompt_variant": "fixed-prompt", "expression_profile_variant": "expression-v2",
+      "expected_tutor_model_id": "replace-with-actual-logical-model-id", "expected_worker_model_id": "replace-with-actual-worker-model-id",
+      "expected_upstream_model": "replace-with-actual-upstream-model", "expected_weights_version": "replace-with-actual-weights-version",
+      "expected_model_policy": "small_lecturer_tutor", "tutor_prompt_version": "replace-with-fixed-prompt-version",
+      "style_profile_version": "small_lecturer_expression/v2",
+      "expression_profile": {"style_profile_version": "small_lecturer_expression/v2", "source": "replace-with-hash-bound-expression-profile"},
+      "code_revision": "0000000000000000000000000000000000000000"
+    },
+    {
+      "candidate_key": "socratic-structured-few-shot", "label": "结构化换角度 + 教师 Gold few-shot",
+      "question_adaptation_mode": "structured", "few_shot_enabled": true,
+      "few_shot_data_version": "teacher-reviewed-empty-fixture/v1",
+      "few_shot_index_sha256": "1785eb34f979248e14864eb445dbaa3efba352b2755e2427c1e6953e8974dba2",
+      "model_variant": "fixed-model", "prompt_variant": "fixed-prompt", "expression_profile_variant": "expression-v2",
+      "expected_tutor_model_id": "replace-with-actual-logical-model-id", "expected_worker_model_id": "replace-with-actual-worker-model-id",
+      "expected_upstream_model": "replace-with-actual-upstream-model", "expected_weights_version": "replace-with-actual-weights-version",
+      "expected_model_policy": "small_lecturer_tutor", "tutor_prompt_version": "replace-with-fixed-prompt-version",
+      "style_profile_version": "small_lecturer_expression/v2",
+      "expression_profile": {"style_profile_version": "small_lecturer_expression/v2", "source": "replace-with-hash-bound-expression-profile"},
+      "code_revision": "0000000000000000000000000000000000000000"
+    }
+  ]
+}

@@ -1,0 +1,297 @@
+{
+  "sample_id": "pujia-silver-v0:reserved:6a699c052ebd2a1afb8782fc:f5ff1c3e5961",
+  "pilot_bucket": "reserved:wide",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:reserved:6a699c052ebd2a1afb8782fc:f5ff1c3e5961",
+    "status": "pending_gold",
+    "disposition": "ready",
+    "observed": {
+      "scope": "single_question",
+      "stem": "一本杂志各栏目所占页面的比例如图所示，这本杂志共有206页，其中新闻版约占( )页。",
+      "numbers_units": [
+        "206"
+      ],
+      "formulas": [],
+      "options": [
+        {
+          "label": "A",
+          "text": "10"
+        },
+        {
+          "label": "B",
+          "text": "25"
+        },
+        {
+          "label": "C",
+          "text": "75"
+        },
+        {
+          "label": "D",
+          "text": "100"
+        }
+      ],
+      "ordered_subquestions": [
+        "这本杂志共有206页，其中新闻版约占( )页。"
+      ],
+      "raw_starter_question": "新闻版大约占多少比例？",
+      "starter_question": "新闻版大约占多少比例？",
+      "student_visible_gate": {
+        "policy_version": "small_lecturer_visible_guardrail/v8",
+        "action": "ALLOW",
+        "passed": true,
+        "reason_codes": []
+      },
+      "student_visible_repair": {
+        "applied": false,
+        "strategy": "none",
+        "schema_repaired": false
+      },
+      "starter_active_subquestion_index": 0,
+      "candidate_answer": "100",
+      "disposition": "ready",
+      "evidence_completeness": "partial",
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "structured_question": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "passed",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "db785f5c7143383eb6577a3614e6e5269855681fceee5936a46454f964ca478c",
+        "sha256": "f5ff1c3e59612c6c75b6fc554b940cc44f015c6bccc1ff04b08324b62bd038fd",
+        "mime_type": "image/jpeg",
+        "size_bytes": 17411
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "738f0507f34473a32d2ba8d15e7223e9ec086bba74f058f0d41d414a5249943b",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_661d93639c06",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow"
+      },
+      "raw_output": {
+        "model_call_id": "mc_661d93639c06",
+        "request_id": "tctx_f18a294baf760ed203c9afd8:understanding:attempt-1",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"一本杂志各栏目所占页面的比例如图所示，这本杂志共有206页，其中新闻版约占( )页。\",\"u\":[\"这本杂志共有206页，其中新闻版约占( )页。\"],\"o\":[{\"m\":\"A\",\"h\":\"10\"},{\"m\":\"B\",\"h\":\"25\"},{\"m\":\"C\",\"h\":\"75\"},{\"m\":\"D\",\"h\":\"100\"}],\"g\":[{\"m\":\"pie_chart\",\"h\":\"扇形统计图，显示生活、财经、广告、新闻四部分占比，新闻约占半圆\"}],\"a\":\"100\",\"r\":\"新闻约占半圆，即50%\",\"k\":[\"扇形统计图表示部分与整体的关系\"],\"p\":[\"新闻约占半圆，即50%\",\"206×50%≈103，最接近100\"],\"e\":[{\"m\":\"misread\",\"h\":\"误将新闻看作四分之一\"}],\"c\":\"p\",\"x\":[\"sac\"],\"n\":[\"扇形统计图\"],\"q\":\"新闻版大约占多少比例？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"一本杂志各栏目所占页面的比例如图所示，这本杂志共有206页，其中新闻版约占( )页。\",\"u\":[\"这本杂志共有206页，其中新闻版约占( )页。\"],\"o\":[{\"m\":\"A\",\"h\":\"10\"},{\"m\":\"B\",\"h\":\"25\"},{\"m\":\"C\",\"h\":\"75\"},{\"m\":\"D\",\"h\":\"100\"}],\"g\":[{\"m\":\"pie_chart\",\"h\":\"扇形统计图，显示生活、财经、广告、新闻四部分占比，新闻约占半圆\"}],\"a\":\"100\",\"r\":\"新闻约占半圆，即50%\",\"k\":[\"扇形统计图表示部分与整体的关系\"],\"p\":[\"新闻约占半圆，即50%\",\"206×50%≈103，最接近100\"],\"e\":[{\"m\":\"misread\",\"h\":\"误将新闻看作四分之一\"}],\"c\":\"p\",\"x\":[\"sac\"],\"n\":[\"扇形统计图\"],\"q\":\"新闻版大约占多少比例？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2130,
+          "completion_tokens": 231,
+          "total_tokens": 2361
+        },
+        "latency_ms": 9164.56,
+        "queue_ms": 0.07,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-5478334834724984aa43ad1f9f4a590e",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.19,
+          "worker_latency_ms": 9147.11,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.07,
+          "replica_queue_ms": 0.07,
+          "worker_pool_queue_ms": 0.07,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.07,
+          "total_queue_ms": 0.33,
+          "deadline_at": 1788390943.954325,
+          "deadline_remaining_ms": 120769,
+          "queue_deadline_at": 1788390824.019608,
+          "queue_deadline_remaining_ms": 835
+        }
+      },
+      "timing": {
+        "latency_ms": 9164.56,
+        "queue_ms": 0.07,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_f18a294baf760ed203c9afd8",
+      "compile": {
+        "model_call_id": "mc_f4c7f23c1fc5",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+        "prompt_sha256": "8371dacac165e3d08fe27bbf37234d5a20899e6f436303e1ee34063369af8f7a",
+        "response_parse_status": "parsed",
+        "raw_output": {
+          "model_call_id": "mc_f4c7f23c1fc5",
+          "request_id": "tctx_f18a294baf760ed203c9afd8:compile:attempt-1",
+          "agent_run_id": null,
+          "workflow_step": "teaching_context_compile",
+          "invoke_type": "structured",
+          "resolved_model": {
+            "model_id": "qwen36-27b-mlx-worker-v1",
+            "display_name": "Qwen3.6-27B Worker Test",
+            "capability": "teaching_context_compile",
+            "deployment_profile": "test_text_model_worker"
+          },
+          "content": "{\n  \"v\": 1,\n  \"s\": \"s\",\n  \"t\": \"一本杂志各栏目所占页面的比例如图所示，这本杂志共有206页，其中新闻版约占( )页。\",\n  \"u\": [],\n  \"o\": [\n    [\n      \"A\",\n      \"10\"\n    ],\n    [\n      \"B\",\n      \"25\"\n    ],\n    [\n      \"C\",\n      \"75\"\n    ],\n    [\n      \"D\",\n      \"100\"\n    ]\n  ],\n  \"g\": [\n    [\n      \"chart\",\n      \"扇形统计图，显示生活、财经、广告、新闻四部分占比，新闻约占半圆\"\n    ]\n  ],\n  \"a\": \"D\",\n  \"r\": \"新闻约占半圆即50%，206×50%≈103，最接近100\",\n  \"k\": [\n    \"扇形统计图\",\n    \"百分数应用\"\n  ],\n  \"p\": [\n    \"从扇形统计图中观察，新闻版约占半圆，即50%\",\n    \"计算206×50%≈103，对比选项，100最接近\"\n  ],\n  \"e\": [\n    {\n      \"m\": \"误将新闻看作四分之一\",\n      \"h\": \"观察扇形大小，半圆对应50%，四分之一圆对应25%\"\n    }\n  ],\n  \"c\": \"p\",\n  \"x\": [],\n  \"n\": [\n    \"扇形统计图\"\n  ],\n  \"q\": \"新闻版大约占多少比例？\"\n}",
+          "parsed": {},
+          "raw_text": "{\n  \"v\": 1,\n  \"s\": \"s\",\n  \"t\": \"一本杂志各栏目所占页面的比例如图所示，这本杂志共有206页，其中新闻版约占( )页。\",\n  \"u\": [],\n  \"o\": [\n    [\n      \"A\",\n      \"10\"\n    ],\n    [\n      \"B\",\n      \"25\"\n    ],\n    [\n      \"C\",\n      \"75\"\n    ],\n    [\n      \"D\",\n      \"100\"\n    ]\n  ],\n  \"g\": [\n    [\n      \"chart\",\n      \"扇形统计图，显示生活、财经、广告、新闻四部分占比，新闻约占半圆\"\n    ]\n  ],\n  \"a\": \"D\",\n  \"r\": \"新闻约占半圆即50%，206×50%≈103，最接近100\",\n  \"k\": [\n    \"扇形统计图\",\n    \"百分数应用\"\n  ],\n  \"p\": [\n    \"从扇形统计图中观察，新闻版约占半圆，即50%\",\n    \"计算206×50%≈103，对比选项，100最接近\"\n  ],\n  \"e\": [\n    {\n      \"m\": \"误将新闻看作四分之一\",\n      \"h\": \"观察扇形大小，半圆对应50%，四分之一圆对应25%\"\n    }\n  ],\n  \"c\": \"p\",\n  \"x\": [],\n  \"n\": [\n    \"扇形统计图\"\n  ],\n  \"q\": \"新闻版大约占多少比例？\"\n}",
+          "raw_output_ref": null,
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 394,
+            "total_tokens": 394
+          },
+          "latency_ms": 55654.55,
+          "queue_ms": 0.02,
+          "first_token_ms": null,
+          "degraded": false,
+          "provider_metrics": {
+            "provider": "mlx_text",
+            "upstream_model": "qwen36-27b-mlx-worker-v1",
+            "structured_output_enforced": true,
+            "generation_tps": 8.51,
+            "peak_memory_gb": 20.082,
+            "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+            "worker_provider": "mlx_text",
+            "worker_source_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_source_revision_verified": true,
+            "worker_source_tree_clean": true,
+            "worker_runtime_contract_version": "model-worker-runtime/v1",
+            "worker_runtime_kind": "mlx_text",
+            "worker_runtime_version": "0.31.3",
+            "worker_engine_version": "edu-agent-model-worker/v1",
+            "worker_engine_mode": "provider_serialized",
+            "worker_scheduler_enabled": false,
+            "worker_effective_batching": false,
+            "worker_dynamic_batching": false,
+            "worker_deployment_profile": "local_model_worker",
+            "worker_environment": "test",
+            "worker_shadow_only": false,
+            "worker_weights_identity_sha256": "bd5ddc47eaba8c246ebb3b5f8913e8764bfed2925a74ca095db19c729b3f8f43",
+            "worker_weights_identity_verified": true,
+            "worker_effective_batch_id": "worker-direct-ff80cd75934b4a24b8949ebdc0e31e5b",
+            "worker_effective_batch_identity_authoritative": false,
+            "worker_batch_correlation_source": "worker_generated_direct_id",
+            "worker_effective_batch_size": 1,
+            "worker_requested_batch_size": 1,
+            "worker_pid": 41384,
+            "worker_model_id": "qwen36-27b-mlx-worker-v1",
+            "worker_internal_concurrency": 1,
+            "worker_serialized": true,
+            "worker_warm_count": 1,
+            "worker_queue_ms": 1.0,
+            "worker_latency_ms": 55600.7,
+            "request_contract": "model_invoke_v1",
+            "endpoint_host": "127.0.0.1:8200",
+            "deployment_id": "qwen36-27b-mlx-worker",
+            "replica_id": "qwen36-27b-mlx-worker-a",
+            "queue_ms": 0.02,
+            "replica_queue_ms": 0.02,
+            "worker_pool_queue_ms": 0.02,
+            "retry_count": 0,
+            "request_priority": "bulk",
+            "gateway_queue_ms": 0.02,
+            "total_queue_ms": 1.04,
+            "deadline_at": 1788390953.187019,
+            "deadline_remaining_ms": 74181,
+            "queue_deadline_at": 1788390833.350334,
+            "queue_deadline_remaining_ms": 0
+          }
+        }
+      },
+      "gold": {
+        "status": "pending",
+        "missing_fields": [
+          "gold_status_complete"
+        ]
+      }
+    },
+    "failure": null
+  }
+}

@@ -1,0 +1,297 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a69e11a2ef3251197be2596:5baa9f7f7c11",
+  "pilot_bucket": "development:wide",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a69e11a2ef3251197be2596:5baa9f7f7c11",
+    "status": "pending_gold",
+    "disposition": "ready",
+    "observed": {
+      "scope": "single_question",
+      "stem": "如图，若AB=16 dm，则三角形AOB的面积是多少平方分米？",
+      "numbers_units": [
+        "16 "
+      ],
+      "formulas": [],
+      "options": [
+        {
+          "label": "A",
+          "text": "圆上点A"
+        },
+        {
+          "label": "B",
+          "text": "圆上点B"
+        },
+        {
+          "label": "O",
+          "text": "圆心O"
+        },
+        {
+          "label": "AB",
+          "text": "弦AB"
+        }
+      ],
+      "ordered_subquestions": [
+        "求三角形AOB的面积。"
+      ],
+      "raw_starter_question": "三角形AOB中，已知AB=16 dm，如何求其面积？",
+      "starter_question": "三角形AOB中，已知AB=16 dm，如何求其面积？",
+      "student_visible_gate": {
+        "policy_version": "small_lecturer_visible_guardrail/v8",
+        "action": "ALLOW",
+        "passed": true,
+        "reason_codes": []
+      },
+      "student_visible_repair": {
+        "applied": false,
+        "strategy": "none",
+        "schema_repaired": false
+      },
+      "starter_active_subquestion_index": 0,
+      "candidate_answer": "32",
+      "disposition": "ready",
+      "evidence_completeness": "partial",
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "structured_question": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "passed",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "2b1b6a076cd6d52af9656724e890cf3edd3b23c3570b229b624795a3633d57c3",
+        "sha256": "5baa9f7f7c114de0cc8a84ab771489d72de5c3998af4c6655abd45a32952d2de",
+        "mime_type": "image/jpeg",
+        "size_bytes": 11194
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "13f4f919607c44b303e725d017fe62ca6432d504cbea61be2013abe868cfe68e",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_7e925025614b",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow"
+      },
+      "raw_output": {
+        "model_call_id": "mc_7e925025614b",
+        "request_id": "tctx_0066f546b2215ca7cbdc61f8:understanding:attempt-1",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"如图，若AB=16 dm，则三角形AOB的面积是多少平方分米？\",\"u\":[\"求三角形AOB的面积\"],\"o\":[{\"m\":\"A\",\"h\":\"圆上点A\"},{\"m\":\"B\",\"h\":\"圆上点B\"},{\"m\":\"O\",\"h\":\"圆心O\"},{\"m\":\"AB\",\"h\":\"弦AB\"}],\"g\":[{\"m\":\"圆O\",\"h\":\"圆心为O的圆，标注圆心角270°\"},{\"m\":\"三角形AOB\",\"h\":\"顶点为A、O、B的三角形，阴影部分\"}],\"a\":\"32\",\"r\":\"圆心角270°，则∠AOB=90°，△AOB为等腰直角三角形，AB为斜边。由AB=16得OA=OB=8√2，面积=1/2×8√2×8√2=32。\",\"k\":[\"圆心角与圆周角关系\",\"等腰直角三角形性质\",\"三角形面积公式\"],\"p\":[\"由270°得∠AOB=90°，OA=OB=半径，AB为斜边，用勾股定理求半径，再算面积\"],\"e\":[{\"m\":\"误将270°当作∠AOB\",\"h\":\"应取补角90°\"},{\"m\":\"误用AB为直角边\",\"h\":\"AB是斜边，需用勾股定理\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"圆的性质\",\"三角形面积\"],\"q\":\"三角形AOB中，已知AB=16 dm，如何求其面积？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"如图，若AB=16 dm，则三角形AOB的面积是多少平方分米？\",\"u\":[\"求三角形AOB的面积\"],\"o\":[{\"m\":\"A\",\"h\":\"圆上点A\"},{\"m\":\"B\",\"h\":\"圆上点B\"},{\"m\":\"O\",\"h\":\"圆心O\"},{\"m\":\"AB\",\"h\":\"弦AB\"}],\"g\":[{\"m\":\"圆O\",\"h\":\"圆心为O的圆，标注圆心角270°\"},{\"m\":\"三角形AOB\",\"h\":\"顶点为A、O、B的三角形，阴影部分\"}],\"a\":\"32\",\"r\":\"圆心角270°，则∠AOB=90°，△AOB为等腰直角三角形，AB为斜边。由AB=16得OA=OB=8√2，面积=1/2×8√2×8√2=32。\",\"k\":[\"圆心角与圆周角关系\",\"等腰直角三角形性质\",\"三角形面积公式\"],\"p\":[\"由270°得∠AOB=90°，OA=OB=半径，AB为斜边，用勾股定理求半径，再算面积\"],\"e\":[{\"m\":\"误将270°当作∠AOB\",\"h\":\"应取补角90°\"},{\"m\":\"误用AB为直角边\",\"h\":\"AB是斜边，需用勾股定理\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"圆的性质\",\"三角形面积\"],\"q\":\"三角形AOB中，已知AB=16 dm，如何求其面积？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2139,
+          "completion_tokens": 341,
+          "total_tokens": 2480
+        },
+        "latency_ms": 16909.12,
+        "queue_ms": 0.02,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-5512c53c6bc04b5b8cc9b0c70ada527f",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.53,
+          "worker_latency_ms": 16894.35,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.02,
+          "total_queue_ms": 0.57,
+          "deadline_at": 1788389722.39872,
+          "deadline_remaining_ms": 112953,
+          "queue_deadline_at": 1788389602.535993,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 16909.12,
+        "queue_ms": 0.02,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_0066f546b2215ca7cbdc61f8",
+      "compile": {
+        "model_call_id": "mc_2587193347ff",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+        "prompt_sha256": "c65f86caa2f01731f4c6a81db04d905516a9ba42750ee85a0b6c747a52dc98e1",
+        "response_parse_status": "parsed",
+        "raw_output": {
+          "model_call_id": "mc_2587193347ff",
+          "request_id": "tctx_0066f546b2215ca7cbdc61f8:compile:attempt-1",
+          "agent_run_id": null,
+          "workflow_step": "teaching_context_compile",
+          "invoke_type": "structured",
+          "resolved_model": {
+            "model_id": "qwen36-27b-mlx-worker-v1",
+            "display_name": "Qwen3.6-27B Worker Test",
+            "capability": "teaching_context_compile",
+            "deployment_profile": "test_text_model_worker"
+          },
+          "content": "{\n\"v\": 1,\n\"s\": \"s\",\n\"t\": \"如图，若AB=16 dm，则三角形AOB的面积是多少平方分米？\",\n\"u\": [],\n\"o\": [\n[\n\"A\",\n\"圆上点A\"\n],\n[\n\"B\",\n\"圆上点B\"\n],\n[\n\"O\",\n\"圆心O\"\n],\n[\n\"AB\",\n\"弦AB\"\n]\n],\n\"g\": [\n[\n\"other\",\n\"圆心为O的圆，标注圆心角270°；顶点为A、O、B的三角形，阴影部分\"\n]\n],\n\"a\": \"32\",\n\"r\": \"圆心角270°，则∠AOB=90°，△AOB为等腰直角三角形，AB为斜边。由AB=16得OA=OB=8√2，面积=1/2×8√2×8√2=32。\",\n\"k\": [\n\"圆的性质\",\n\"三角形面积\"\n],\n\"p\": [\n\"由270°得∠AOB=90°，OA=OB=半径，AB为斜边，用勾股定理求半径，再算面积\"\n],\n\"e\": [\n{\n\"m\": \"误将270°当作∠AOB\",\n\"h\": \"应取补角90°\"\n},\n{\n\"m\": \"误用AB为直角边\",\n\"h\": \"AB是斜边，需用勾股定理\"\n}\n],\n\"c\": \"p\",\n\"x\": [],\n\"n\": [\n\"圆的性质\",\n\"三角形面积\"\n],\n\"q\": \"三角形AOB中，已知AB=16 dm，如何求其面积？\"\n}",
+          "parsed": {},
+          "raw_text": "{\n\"v\": 1,\n\"s\": \"s\",\n\"t\": \"如图，若AB=16 dm，则三角形AOB的面积是多少平方分米？\",\n\"u\": [],\n\"o\": [\n[\n\"A\",\n\"圆上点A\"\n],\n[\n\"B\",\n\"圆上点B\"\n],\n[\n\"O\",\n\"圆心O\"\n],\n[\n\"AB\",\n\"弦AB\"\n]\n],\n\"g\": [\n[\n\"other\",\n\"圆心为O的圆，标注圆心角270°；顶点为A、O、B的三角形，阴影部分\"\n]\n],\n\"a\": \"32\",\n\"r\": \"圆心角270°，则∠AOB=90°，△AOB为等腰直角三角形，AB为斜边。由AB=16得OA=OB=8√2，面积=1/2×8√2×8√2=32。\",\n\"k\": [\n\"圆的性质\",\n\"三角形面积\"\n],\n\"p\": [\n\"由270°得∠AOB=90°，OA=OB=半径，AB为斜边，用勾股定理求半径，再算面积\"\n],\n\"e\": [\n{\n\"m\": \"误将270°当作∠AOB\",\n\"h\": \"应取补角90°\"\n},\n{\n\"m\": \"误用AB为直角边\",\n\"h\": \"AB是斜边，需用勾股定理\"\n}\n],\n\"c\": \"p\",\n\"x\": [],\n\"n\": [\n\"圆的性质\",\n\"三角形面积\"\n],\n\"q\": \"三角形AOB中，已知AB=16 dm，如何求其面积？\"\n}",
+          "raw_output_ref": null,
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 408,
+            "total_tokens": 408
+          },
+          "latency_ms": 47409.21,
+          "queue_ms": 0.03,
+          "first_token_ms": null,
+          "degraded": false,
+          "provider_metrics": {
+            "provider": "mlx_text",
+            "upstream_model": "qwen36-27b-mlx-worker-v1",
+            "structured_output_enforced": true,
+            "generation_tps": 10.69,
+            "peak_memory_gb": 20.082,
+            "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+            "worker_provider": "mlx_text",
+            "worker_source_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_source_revision_verified": true,
+            "worker_source_tree_clean": true,
+            "worker_runtime_contract_version": "model-worker-runtime/v1",
+            "worker_runtime_kind": "mlx_text",
+            "worker_runtime_version": "0.31.3",
+            "worker_engine_version": "edu-agent-model-worker/v1",
+            "worker_engine_mode": "provider_serialized",
+            "worker_scheduler_enabled": false,
+            "worker_effective_batching": false,
+            "worker_dynamic_batching": false,
+            "worker_deployment_profile": "local_model_worker",
+            "worker_environment": "test",
+            "worker_shadow_only": false,
+            "worker_weights_identity_sha256": "bd5ddc47eaba8c246ebb3b5f8913e8764bfed2925a74ca095db19c729b3f8f43",
+            "worker_weights_identity_verified": true,
+            "worker_effective_batch_id": "worker-direct-202731e3740a47e4bc9b7d22e4d48267",
+            "worker_effective_batch_identity_authoritative": false,
+            "worker_batch_correlation_source": "worker_generated_direct_id",
+            "worker_effective_batch_size": 1,
+            "worker_requested_batch_size": 1,
+            "worker_pid": 41384,
+            "worker_model_id": "qwen36-27b-mlx-worker-v1",
+            "worker_internal_concurrency": 1,
+            "worker_serialized": true,
+            "worker_warm_count": 1,
+            "worker_queue_ms": 0.14,
+            "worker_latency_ms": 47395.12,
+            "request_contract": "model_invoke_v1",
+            "endpoint_host": "127.0.0.1:8200",
+            "deployment_id": "qwen36-27b-mlx-worker",
+            "replica_id": "qwen36-27b-mlx-worker-a",
+            "queue_ms": 0.02,
+            "replica_queue_ms": 0.02,
+            "worker_pool_queue_ms": 0.02,
+            "retry_count": 0,
+            "request_priority": "bulk",
+            "gateway_queue_ms": 0.03,
+            "total_queue_ms": 0.19,
+            "deadline_at": 1788389739.447822,
+            "deadline_remaining_ms": 82537,
+            "queue_deadline_at": 1788389619.5006511,
+            "queue_deadline_remaining_ms": 0
+          }
+        }
+      },
+      "gold": {
+        "status": "pending",
+        "missing_fields": [
+          "gold_status_complete"
+        ]
+      }
+    },
+    "failure": null
+  }
+}

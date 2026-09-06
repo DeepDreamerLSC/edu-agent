@@ -1,0 +1,181 @@
+{
+  "sample_id": "pujia-silver-v0:reserved:6a631186184f723b3592c8a5:f72f687a3dd4",
+  "pilot_bucket": "reserved:wide",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:reserved:6a631186184f723b3592c8a5:f72f687a3dd4",
+    "status": "failed",
+    "disposition": "failed",
+    "observed": {
+      "model_response_received": true,
+      "structured_result": {},
+      "raw_starter_question": null,
+      "student_visible_gate": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "student_visible_repair": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "starter_question": null,
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "failed",
+          "reason_codes": [
+            "MODEL_RESPONSE_PARSE_FAILED"
+          ]
+        },
+        "structured_question": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "not_run",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "7bfe55817fb1e5729272576c0873ec82748666b224164b1fe222ec399a894d81",
+        "sha256": "f72f687a3dd40b5fa8c0f47465f856604b323f300d43ab2fa641a6da8b07ac7b",
+        "mime_type": "image/jpeg",
+        "size_bytes": 15719
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "27c3674f85dfd49c17d7d262cc6b5922fc5b1f20d1d2f3f0a210f2fe7fb8e53c",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_b52e63937fb8",
+        "model_call_count": 2,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+        "response_parse_status": "failed",
+        "response_parsed_keys": [],
+        "response_content_length": 107,
+        "response_parse_error_code": "COMPACTCOMPILEPAYLOADERROR"
+      },
+      "raw_output": {
+        "model_call_id": "mc_b52e63937fb8",
+        "request_id": "tctx_1e005580f92b7a0edbc09c1d:understanding:attempt-2",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"\",\"u\":[],\"o\":[],\"g\":[],\"a\":\"\",\"r\":\"\",\"k\":[],\"p\":[],\"e\":[],\"c\":\"p\",\"x\":[],\"n\":[],\"q\":\"\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"\",\"u\":[],\"o\":[],\"g\":[],\"a\":\"\",\"r\":\"\",\"k\":[],\"p\":[],\"e\":[],\"c\":\"p\",\"x\":[],\"n\":[],\"q\":\"\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2164,
+          "completion_tokens": 47,
+          "total_tokens": 2211
+        },
+        "latency_ms": 4353.34,
+        "queue_ms": 0.01,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-4cfd5d5fe53e4ea4b4d10533ba4d0ed7",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.07,
+          "worker_latency_ms": 4341.99,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.01,
+          "total_queue_ms": 0.1,
+          "deadline_at": 1788368005.921576,
+          "deadline_remaining_ms": 125606,
+          "queue_deadline_at": 1788367885.961707,
+          "queue_deadline_remaining_ms": 5646
+        }
+      },
+      "timing": {
+        "latency_ms": 4353.34,
+        "queue_ms": 0.01,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_1e005580f92b7a0edbc09c1d"
+    },
+    "failure": {
+      "stage": "question_image_understanding",
+      "code": "MODEL_RESPONSE_PARSE_FAILED",
+      "summary": "模型已返回题图结果，但结果未通过结构化题图理解解析"
+    }
+  }
+}

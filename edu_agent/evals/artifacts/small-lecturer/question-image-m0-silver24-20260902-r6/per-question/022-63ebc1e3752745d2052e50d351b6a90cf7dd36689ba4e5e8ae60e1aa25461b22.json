@@ -1,0 +1,181 @@
+{
+  "sample_id": "pujia-silver-v0:reserved:6a699e5b2ef3251197be025e:30b4d2f43174",
+  "pilot_bucket": "reserved:squareish",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:reserved:6a699e5b2ef3251197be025e:30b4d2f43174",
+    "status": "failed",
+    "disposition": "failed",
+    "observed": {
+      "model_response_received": true,
+      "structured_result": {},
+      "raw_starter_question": null,
+      "student_visible_gate": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "student_visible_repair": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "starter_question": null,
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "failed",
+          "reason_codes": [
+            "MODEL_RESPONSE_PARSE_FAILED"
+          ]
+        },
+        "structured_question": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "not_run",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "555fdefca25dff8be5b734b12451afd58009f37f92a81f476b447b61dc9ea042",
+        "sha256": "30b4d2f431747227249bf71dc5fabcc2259681ebfb7da169d12eef5cf45e7b2b",
+        "mime_type": "image/jpeg",
+        "size_bytes": 14943
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "e88595c2c62c2f29f93d3db22c632bd2f46043892d321b7c4d8961500b105d04",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_64f8fa43cf2e",
+        "model_call_count": 2,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+        "response_parse_status": "failed",
+        "response_parsed_keys": [],
+        "response_content_length": 646,
+        "response_parse_error_code": "VALIDATIONERROR"
+      },
+      "raw_output": {
+        "model_call_id": "mc_64f8fa43cf2e",
+        "request_id": "tctx_f34a6a1dff63a0f7587ce09e:understanding:attempt-2",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"我是小法官。(对的画“√”，错的画“×”并改正)(1)7/10×6÷10/6×6=21/5÷21/5=1()(2)11/12-11/12×1/4=0×1/4=0()\",\"u\":[\"(1)7/10×6÷10/6×6=21/5÷21/5=1()\",\"(2)11/12-11/12×1/4=0×1/4=0()\"],\"o\":[{\"m\":\"A\",\"h\":\"7/10×6÷10/6×6=21/5÷21/5=1()\"},{\"m\":\"B\",\"h\":\"11/12-11/12×1/4=0×1/4=0()\"}],\"g\":[{\"m\":\"分数运算\",\"h\":\"分数乘除混合运算与分数乘减混合运算\"}],\"a\":\"\",\"r\":\"分数运算顺序与运算律\",\"k\":[\"分数乘除法运算顺序\",\"分数乘法分配律\",\"分数混合运算性质\"],\"p\":[\"(1)原式=7/10×6÷10/6×6=7/10×6×6/10×6=252/100=2.52≠1\",\"(2)原式=11/12-11/12×1/4=11/12-11/48=33/48=11/16≠0\"],\"e\":[{\"m\":\"运算顺序错误\",\"h\":\"先算乘除后算加减，分数混合运算同样适用\"},{\"m\":\"分配律误用\",\"h\":\"分数乘法对减法有分配律，但不能直接提取公因数\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"分数混合运算\",\"分数运算律\"],\"q\":\"请判断第(1)题的运算过程和结果是否正确，并说明理由。\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"我是小法官。(对的画“√”，错的画“×”并改正)(1)7/10×6÷10/6×6=21/5÷21/5=1()(2)11/12-11/12×1/4=0×1/4=0()\",\"u\":[\"(1)7/10×6÷10/6×6=21/5÷21/5=1()\",\"(2)11/12-11/12×1/4=0×1/4=0()\"],\"o\":[{\"m\":\"A\",\"h\":\"7/10×6÷10/6×6=21/5÷21/5=1()\"},{\"m\":\"B\",\"h\":\"11/12-11/12×1/4=0×1/4=0()\"}],\"g\":[{\"m\":\"分数运算\",\"h\":\"分数乘除混合运算与分数乘减混合运算\"}],\"a\":\"\",\"r\":\"分数运算顺序与运算律\",\"k\":[\"分数乘除法运算顺序\",\"分数乘法分配律\",\"分数混合运算性质\"],\"p\":[\"(1)原式=7/10×6÷10/6×6=7/10×6×6/10×6=252/100=2.52≠1\",\"(2)原式=11/12-11/12×1/4=11/12-11/48=33/48=11/16≠0\"],\"e\":[{\"m\":\"运算顺序错误\",\"h\":\"先算乘除后算加减，分数混合运算同样适用\"},{\"m\":\"分配律误用\",\"h\":\"分数乘法对减法有分配律，但不能直接提取公因数\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"分数混合运算\",\"分数运算律\"],\"q\":\"请判断第(1)题的运算过程和结果是否正确，并说明理由。\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2185,
+          "completion_tokens": 450,
+          "total_tokens": 2635
+        },
+        "latency_ms": 18378.69,
+        "queue_ms": 0.02,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-aa82df5e9dd8429d826d39ebe6002885",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 2.14,
+          "worker_latency_ms": 18358.43,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.02,
+          "total_queue_ms": 2.18,
+          "deadline_at": 1788367952.613291,
+          "deadline_remaining_ms": 111566,
+          "queue_deadline_at": 1788367832.667989,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 18378.69,
+        "queue_ms": 0.02,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_f34a6a1dff63a0f7587ce09e"
+    },
+    "failure": {
+      "stage": "question_image_understanding",
+      "code": "MODEL_RESPONSE_PARSE_FAILED",
+      "summary": "模型已返回题图结果，但结果未通过结构化题图理解解析"
+    }
+  }
+}

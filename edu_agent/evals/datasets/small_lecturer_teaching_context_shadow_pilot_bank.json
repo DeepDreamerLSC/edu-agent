@@ -1,0 +1,700 @@
+{
+  "schema_version": "question_bank_fixture/v1",
+  "provider": "shadow_pilot_bank",
+  "records": [
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_equation_subtract",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": [
+        "简易方程",
+        "等式的性质"
+      ],
+      "stem": "解方程 3x+7=25，并说明每一步为什么这样做。",
+      "answer": "x=6",
+      "original_analysis": "我想两边都减去7，得到3x等于18。 因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "detailed",
+        "verified_answer": "x=6",
+        "verified_analysis": "我想两边都减去7，得到3x等于18。 因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。",
+        "acceptable_methods": [
+          "等式两边依次减7、除以3，并代入检验"
+        ],
+        "common_mistakes": [
+          "只改变等式一边",
+          "把加7移到右边后仍写成加7"
+        ],
+        "content_hash": "e1ffda01ab79c1674b87dfa4f4e077c44843fcbbd3f4db348307befa64ef90c2"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_equation_sign",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": [
+        "简易方程",
+        "等式的性质"
+      ],
+      "stem": "解方程 2x+5=17，并说明理由。",
+      "answer": "x=6",
+      "original_analysis": "我检查发现应该让两边同时减去5，所以2x等于12。 接着两边同时除以2，x等于6，代入2乘6加5等于17。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "misconception",
+        "analysis_quality": "detailed",
+        "verified_answer": "x=6",
+        "verified_analysis": "我检查发现应该让两边同时减去5，所以2x等于12。 接着两边同时除以2，x等于6，代入2乘6加5等于17。",
+        "acceptable_methods": [
+          "等式两边先减5，再同时除以2并代入检验"
+        ],
+        "common_mistakes": [
+          "把加5移到右边后仍写成加5"
+        ],
+        "content_hash": "f5c78684b597058d325708f63014b23e03125d0d23878a1a52b8f27baf8925f3"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_equation_parentheses",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": [
+        "简易方程",
+        "乘法分配律"
+      ],
+      "stem": "解方程 4(x+2)=24，并说明过程。",
+      "answer": "x=4",
+      "original_analysis": "再让两边同时减去8，得到4x等于16。 最后两边同时除以4，x等于4，代回原式得到24。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "detailed",
+        "verified_answer": "x=4",
+        "verified_analysis": "再让两边同时减去8，得到4x等于16。 最后两边同时除以4，x等于4，代回原式得到24。",
+        "acceptable_methods": [
+          "先用乘法分配律展开，再利用等式性质求解",
+          "等式两边先同时除以4，再求括号内的未知数"
+        ],
+        "common_mistakes": [
+          "展开括号时漏乘常数项",
+          "只对等式一边做运算"
+        ],
+        "content_hash": "441557f02ba9324406e857f02fe2ce339ab5746b987fc02acb059c574576b659"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_fraction_addition",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": [
+        "异分母分数加法",
+        "通分"
+      ],
+      "stem": "计算四分之三加八分之一，并说明为什么要这样算。",
+      "answer": "7/8",
+      "original_analysis": "同分母后分子相加得到八分之七，分母仍然是8。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "terse",
+        "verified_answer": "7/8",
+        "verified_analysis": "同分母后分子相加得到八分之七，分母仍然是8。",
+        "acceptable_methods": [
+          "先通分成八分之六和八分之一再相加"
+        ],
+        "common_mistakes": [
+          "把分子和分母分别直接相加"
+        ],
+        "content_hash": "7dbec9058a3de53f3c95e9fb7cd6854daf345547b0c7191f50d414a616e718a0"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_decimal_multiply",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": [
+        "小数乘法",
+        "小数点位置"
+      ],
+      "stem": "计算 2.4×0.5，并解释小数点的位置。",
+      "answer": "1.2",
+      "original_analysis": "那结果是不是1.20？ 是的，120从右往左数两位得到1.20，也就是1.2；0.5表示一半，2.4的一半也是1.2。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "detailed",
+        "verified_answer": "1.2",
+        "verified_analysis": "那结果是不是1.20？ 是的，120从右往左数两位得到1.20，也就是1.2；0.5表示一半，2.4的一半也是1.2。",
+        "acceptable_methods": [
+          "先按整数乘法计算，再按小数位数点小数点",
+          "把0.5理解为一半"
+        ],
+        "common_mistakes": [
+          "遗漏小数点",
+          "小数点位数数错"
+        ],
+        "content_hash": "119d57b8df3e3b88dff397f44866edfc0f8a069949bb641d416cf3beb1558339"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_rectangle_perimeter",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "三年级",
+      "knowledge_points": [
+        "长方形周长"
+      ],
+      "stem": "一个长方形长8厘米、宽5厘米，它的周长是多少？请解释。",
+      "answer": "26厘米",
+      "original_analysis": "周长要把四条边加起来，也就是8加5加8加5。 可以写成括号8加5括号乘2，结果是26厘米。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "geometry",
+        "analysis_quality": "detailed",
+        "verified_answer": "26厘米",
+        "verified_analysis": "周长要把四条边加起来，也就是8加5加8加5。 可以写成括号8加5括号乘2，结果是26厘米。",
+        "acceptable_methods": [
+          "四条边依次相加",
+          "用长与宽的和乘2"
+        ],
+        "common_mistakes": [
+          "把长乘宽的面积当成周长"
+        ],
+        "content_hash": "2ee7384c6b3485cac0c98ff0a8efe2f9f0cc5cdf2f249d10bb35c56ee710894d"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_triangle_area",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": [
+        "三角形面积",
+        "图形转化"
+      ],
+      "stem": "一个三角形底是10厘米，高是6厘米，面积是多少？为什么要除以2？",
+      "answer": "30平方厘米",
+      "original_analysis": "两个完全相同的三角形可以拼成一个底10高6的平行四边形。 所以三角形面积是10乘6再除以2，等于30平方厘米。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "geometry",
+        "analysis_quality": "detailed",
+        "verified_answer": "30平方厘米",
+        "verified_analysis": "两个完全相同的三角形可以拼成一个底10高6的平行四边形。 所以三角形面积是10乘6再除以2，等于30平方厘米。",
+        "acceptable_methods": [
+          "用底乘高再除以2",
+          "拼成平行四边形后取一半"
+        ],
+        "common_mistakes": [
+          "忘记除以2",
+          "使用了不是对应底边的高"
+        ],
+        "content_hash": "8ab9c655fa73109fdf3a8b19b429ad05206527f57af41e5854d8c5fe146d3cef"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_chicken_rabbit",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": [
+        "鸡兔同笼",
+        "假设法"
+      ],
+      "stem": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+      "answer": "鸡3只，兔5只",
+      "original_analysis": "所以兔有10除以2等于5只，鸡有3只，检查5乘4加3乘2等于26。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "terse",
+        "verified_answer": "鸡3只，兔5只",
+        "verified_analysis": "所以兔有10除以2等于5只，鸡有3只，检查5乘4加3乘2等于26。",
+        "acceptable_methods": [
+          "假设全是鸡后按脚数差替换",
+          "列表枚举并检验总只数与总脚数"
+        ],
+        "common_mistakes": [
+          "只满足总只数而不检验总脚数",
+          "每次替换的脚数差算错"
+        ],
+        "content_hash": "3e25e1502fc0fa1dd2d201e0c8b6c747b34c414dbef729caa5fbda9eede96a97"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_average",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "四年级",
+      "knowledge_points": [
+        "平均数"
+      ],
+      "stem": "小明三次数学测验分别是82分、88分和94分，平均分是多少？",
+      "answer": "88分",
+      "original_analysis": "平均数应该用三次总分除以次数，先算82加88加94等于264。 264除以3等于88，所以平均分是88分。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "detailed",
+        "verified_answer": "88分",
+        "verified_analysis": "平均数应该用三次总分除以次数，先算82加88加94等于264。 264除以3等于88，所以平均分是88分。",
+        "acceptable_methods": [
+          "三次总分除以测验次数",
+          "以88为基准比较上下偏差"
+        ],
+        "common_mistakes": [
+          "只取最高分和最低分的平均数"
+        ],
+        "content_hash": "1ea9c85d092c386e138824494b198e01fe774802b1c2fa1058388de788d319cf"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_discount",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": [
+        "百分数",
+        "折扣"
+      ],
+      "stem": "一件原价200元的商品打八折，现价是多少？",
+      "answer": "160元",
+      "original_analysis": "所以要算200乘百分之八十。 200乘0.8等于160，现价是160元，少付40元。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "detailed",
+        "verified_answer": "160元",
+        "verified_analysis": "所以要算200乘百分之八十。 200乘0.8等于160，现价是160元，少付40元。",
+        "acceptable_methods": [
+          "原价乘80%",
+          "先算优惠20%再用原价减去优惠金额"
+        ],
+        "common_mistakes": [
+          "把八折理解为便宜8元",
+          "把八折写成8%"
+        ],
+        "content_hash": "9e8debe80fa498e5157c2d84209e6b075481fcb8ac99ec9adad8e9d74f11cc95"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_ratio",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": [
+        "比",
+        "按比分配"
+      ],
+      "stem": "把35本书按2比3分给甲、乙两组，两组各分多少本？",
+      "answer": "甲14本，乙21本",
+      "original_analysis": "每一份是35除以5等于7本。 甲组2份是14本，乙组3份是21本，合起来正好35本。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "detailed",
+        "verified_answer": "甲14本，乙21本",
+        "verified_analysis": "每一份是35除以5等于7本。 甲组2份是14本，乙组3份是21本，合起来正好35本。",
+        "acceptable_methods": [
+          "先求总份数和每份数量再按份数分配"
+        ],
+        "common_mistakes": [
+          "分别用总数除以两个比数",
+          "没有检查两组数量之和"
+        ],
+        "content_hash": "71f51b1458a9b4d3fbf9e5e8fd68b09ad0909aa8d59f6392070548bc01808e5a"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_speed",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": [
+        "平均速度",
+        "路程问题"
+      ],
+      "stem": "一辆车3小时行驶180千米，平均每小时行驶多少千米？",
+      "answer": "60千米/小时",
+      "original_analysis": "结果是60，平均速度是每小时60千米。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "terse",
+        "verified_answer": "60千米/小时",
+        "verified_analysis": "结果是60，平均速度是每小时60千米。",
+        "acceptable_methods": [
+          "总路程除以总时间"
+        ],
+        "common_mistakes": [
+          "用路程乘时间",
+          "遗漏速度单位"
+        ],
+        "content_hash": "535e0b0f52743bd9b4f42eadf97bbbff8a167977355f922382da4c37e68aa5f8"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_age",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "四年级",
+      "knowledge_points": [
+        "倍数关系"
+      ],
+      "stem": "妈妈今年36岁，是小华年龄的3倍。小华今年多少岁？",
+      "answer": "12岁",
+      "original_analysis": "应该把36平均分成3份，用36除以3。 小华是12岁，12乘3等于36，符合题意。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "detailed",
+        "verified_answer": "12岁",
+        "verified_analysis": "应该把36平均分成3份，用36除以3。 小华是12岁，12乘3等于36，符合题意。",
+        "acceptable_methods": [
+          "妈妈年龄除以倍数",
+          "设小华年龄为一份进行份数推理"
+        ],
+        "common_mistakes": [
+          "看到倍数就用36乘3"
+        ],
+        "content_hash": "7cc688f53aa039136c6854d5a65604c708ca6c6647f99dfb3fac43920b99c31d"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_unit_conversion",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "四年级",
+      "knowledge_points": [
+        "长度单位换算"
+      ],
+      "stem": "3.5米等于多少厘米？说明换算关系。",
+      "answer": "350厘米",
+      "original_analysis": "用3.5乘100。 结果是350，因此3.5米等于350厘米。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "detailed",
+        "verified_answer": "350厘米",
+        "verified_analysis": "用3.5乘100。 结果是350，因此3.5米等于350厘米。",
+        "acceptable_methods": [
+          "利用1米等于100厘米，用3.5乘100"
+        ],
+        "common_mistakes": [
+          "换成更小单位时错误地除以100"
+        ],
+        "content_hash": "0ad450653a04b8cd4b1e908562017068e5103db9f0c56f08d39da5aec5c56e1a"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_division_remainder",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "三年级",
+      "knowledge_points": [
+        "有余数除法"
+      ],
+      "stem": "有53名同学，每6人一组，最多可以分成多少个完整小组，还剩几人？",
+      "answer": "8组，余5人",
+      "original_analysis": "所以最多只能分8个完整小组。 53减48等于5，还剩5人，答案是8组余5人。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "detailed",
+        "verified_answer": "8组，余5人",
+        "verified_analysis": "所以最多只能分8个完整小组。 53减48等于5，还剩5人，答案是8组余5人。",
+        "acceptable_methods": [
+          "用53除以6解释商和余数",
+          "寻找不超过53的最大6的倍数"
+        ],
+        "common_mistakes": [
+          "把不足一组的人也算成完整小组",
+          "余数大于或等于除数"
+        ],
+        "content_hash": "9f1d923a00809fcb91df27d89e29d99f6fc4408a87fb2b0fbc2f3c9ae0106899"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_sequence",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "四年级",
+      "knowledge_points": [
+        "数列规律"
+      ],
+      "stem": "找规律：2、5、8、11，下一项是多少？请说明。",
+      "answer": "14",
+      "original_analysis": "所以规律是每次增加3，下一项是14，再下一项会是17。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "reasoning",
+        "analysis_quality": "terse",
+        "verified_answer": "14",
+        "verified_analysis": "所以规律是每次增加3，下一项是14，再下一项会是17。",
+        "acceptable_methods": [
+          "比较相邻两项并发现每次增加3"
+        ],
+        "common_mistakes": [
+          "只凭数值变大猜下一项而没有验证相邻差"
+        ],
+        "content_hash": "a236ffd35684a754f810df5d2f80fea1ad1cfec43de438ce827dff472369c568"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_probability",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": [
+        "可能性",
+        "简单概率"
+      ],
+      "stem": "袋子里有3个红球和2个蓝球，任意摸出1个球，摸到哪种颜色的可能性更大？为什么？",
+      "answer": "红球可能性更大",
+      "original_analysis": "总共有5个球，红球占五分之三，蓝球占五分之二。 五分之三大于五分之二，所以摸到红球的可能性更大。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "reasoning",
+        "analysis_quality": "detailed",
+        "verified_answer": "红球可能性更大",
+        "verified_analysis": "总共有5个球，红球占五分之三，蓝球占五分之二。 五分之三大于五分之二，所以摸到红球的可能性更大。",
+        "acceptable_methods": [
+          "比较两种颜色球的数量",
+          "比较五分之三和五分之二"
+        ],
+        "common_mistakes": [
+          "认为两种结果都可能发生就表示可能性相同"
+        ],
+        "content_hash": "677005f39d17ad8b099fafacbddbb5d88e429ced2f9e5976deaba6b856b947fc"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_angles",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "四年级",
+      "knowledge_points": [
+        "平角",
+        "角度计算"
+      ],
+      "stem": "一个平角被分成两个角，其中一个角是65度，另一个角是多少度？",
+      "answer": "115度",
+      "original_analysis": "所以另一个角用180减去65。 180减65等于115，另一个角是115度，65加115正好是180。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "geometry",
+        "analysis_quality": "detailed",
+        "verified_answer": "115度",
+        "verified_analysis": "所以另一个角用180减去65。 180减65等于115，另一个角是115度，65加115正好是180。",
+        "acceptable_methods": [
+          "用平角180度减去已知角"
+        ],
+        "common_mistakes": [
+          "记错平角度数",
+          "把两个角相加而不是求缺少的角"
+        ],
+        "content_hash": "66b7166cfb8320484818300ea6c122252814ce52f80995b1414097c53792dc6a"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_order_operations",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "三年级",
+      "knowledge_points": [
+        "混合运算顺序"
+      ],
+      "stem": "计算 18-3×4，并说明运算顺序。",
+      "answer": "6",
+      "original_analysis": "先算3乘4等于12。 再算18减12等于6，所以结果是6。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "detailed",
+        "verified_answer": "6",
+        "verified_analysis": "先算3乘4等于12。 再算18减12等于6，所以结果是6。",
+        "acceptable_methods": [
+          "先算乘法3×4，再算减法"
+        ],
+        "common_mistakes": [
+          "不考虑运算顺序而从左到右计算"
+        ],
+        "content_hash": "35b0ea55f8ef98655450f00bba02c1d0a34b3da1a74ddaae8313002c9cef57c6"
+      }
+    },
+    {
+      "provider": "shadow_pilot_bank",
+      "question_id": "stability_word_problem",
+      "question_version": "pilot-2026-07-v2",
+      "subject": "math",
+      "grade": "三年级",
+      "knowledge_points": [
+        "加减两步应用题"
+      ],
+      "stem": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
+      "answer": "127本",
+      "original_analysis": "再算165减38等于127本，所以现在有127本。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-07-25T00:00:00Z",
+      "source_metadata": {
+        "contract_schema": "small_lecturer_verified_question/v1",
+        "evaluation_fixture": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "terse",
+        "verified_answer": "127本",
+        "verified_analysis": "再算165减38等于127本，所以现在有127本。",
+        "acceptable_methods": [
+          "先加上买来的数量，再减去借出的数量",
+          "列综合算式120+45-38"
+        ],
+        "common_mistakes": [
+          "把借出也当作增加",
+          "只完成第一步没有求现在的数量"
+        ],
+        "content_hash": "244f010330015fb0906d3f717b36c3fbc82f836f59a47f4055a3ca074d5f915b"
+      }
+    }
+  ]
+}

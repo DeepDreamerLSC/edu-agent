@@ -1,0 +1,207 @@
+{
+  "schema_version": "question_bank_fixture/v1",
+  "provider": "prompt_lab_seed_bank",
+  "records": [
+    {
+      "provider": "prompt_lab_seed_bank",
+      "question_id": "equation_subtract",
+      "question_version": "prompt-lab-2026-08-v1",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": ["简易方程", "等式的性质"],
+      "stem": "解方程 3x+7=25，并说明每一步为什么这样做。",
+      "answer": "x=6",
+      "original_analysis": "等式两边先同时减去7，得到3x=18，再同时除以3得到x=6，代回原式成立。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "repo_constructed_seed",
+        "promotion_evidence_eligible": false,
+        "acceptable_methods": ["等式两边依次减7、除以3，并代入检验"],
+        "common_mistakes": ["只改变等式一边", "把加7移到右边后仍写成加7"]
+      }
+    },
+    {
+      "provider": "prompt_lab_seed_bank",
+      "question_id": "fraction_addition",
+      "question_version": "prompt-lab-2026-08-v1",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": ["异分母分数加法", "通分"],
+      "stem": "计算四分之三加八分之一，并说明为什么要这样算。",
+      "answer": "7/8",
+      "original_analysis": "先把四分之三通分成八分之六，再与八分之一相加，得到八分之七。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "repo_constructed_seed",
+        "promotion_evidence_eligible": false,
+        "acceptable_methods": ["先通分成八分之六和八分之一再相加"],
+        "common_mistakes": ["把分子和分母分别直接相加"]
+      }
+    },
+    {
+      "provider": "prompt_lab_seed_bank",
+      "question_id": "triangle_area",
+      "question_version": "prompt-lab-2026-08-v1",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": ["三角形面积", "图形转化"],
+      "stem": "一个三角形底是10厘米，高是6厘米，面积是多少？为什么要除以2？",
+      "answer": "30平方厘米",
+      "original_analysis": "两个完全相同的三角形可以拼成底10厘米、高6厘米的平行四边形，所以三角形面积是10×6÷2=30平方厘米。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "repo_constructed_seed",
+        "promotion_evidence_eligible": false,
+        "acceptable_methods": ["用底乘高再除以2", "拼成平行四边形后取一半"],
+        "common_mistakes": ["忘记除以2", "不能说明除以2的图形依据"]
+      }
+    },
+    {
+      "provider": "prompt_lab_seed_bank",
+      "question_id": "chicken_rabbit",
+      "question_version": "prompt-lab-2026-08-v1",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": ["鸡兔同笼", "假设法"],
+      "stem": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+      "answer": "鸡3只，兔5只",
+      "original_analysis": "假设全是鸡共有16只脚，比实际少10只；每把一只鸡换成兔增加2只脚，所以兔有5只，鸡有3只。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "repo_constructed_seed",
+        "promotion_evidence_eligible": false,
+        "acceptable_methods": ["假设全是鸡后按脚数差替换", "列表枚举并同时检验只数和脚数"],
+        "common_mistakes": ["只满足总只数而不检验总脚数", "每次替换的脚数差算错"]
+      }
+    },
+    {
+      "provider": "prompt_lab_seed_bank",
+      "question_id": "library_books",
+      "question_version": "prompt-lab-2026-08-v1",
+      "subject": "math",
+      "grade": "三年级",
+      "knowledge_points": ["加减两步应用题"],
+      "stem": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
+      "answer": "127本",
+      "original_analysis": "先算买来后有120+45=165本，再减去借出的38本，得到127本。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "repo_constructed_seed",
+        "promotion_evidence_eligible": false,
+        "acceptable_methods": ["先加上买来的数量，再减去借出的数量", "列综合算式120+45-38"],
+        "common_mistakes": ["把借出也当作增加", "只完成第一步"]
+      }
+    },
+    {
+      "provider": "prompt_lab_seed_bank",
+      "question_id": "order_operations",
+      "question_version": "prompt-lab-2026-08-v1",
+      "subject": "math",
+      "grade": "三年级",
+      "knowledge_points": ["混合运算顺序"],
+      "stem": "计算 18-3×4，并说明运算顺序。",
+      "answer": "6",
+      "original_analysis": "先算乘法3×4=12，再算18-12=6。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "repo_constructed_seed",
+        "promotion_evidence_eligible": false,
+        "acceptable_methods": ["先算乘法3×4，再算减法"],
+        "common_mistakes": ["不考虑运算顺序而从左到右计算"]
+      }
+    },
+    {
+      "provider": "prompt_lab_seed_bank",
+      "question_id": "coordinate_notation_multi",
+      "question_version": "prompt-lab-2026-08-v1",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": ["有序数对", "位置表示"],
+      "stem": "第1个小题：已知8排6号记作（6，8），请把12排5号写成有序数对。第2个小题：写出（3，10）表示几排几号。",
+      "answer": "（5，12）；10排3号",
+      "original_analysis": "例子说明第一个数表示号、第二个数表示排；两道小题必须按顺序分别核对。",
+      "verified": true,
+      "verified_at": "2026-08-14T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "repo_constructed_seed",
+        "independent_verification_basis": "The ordered-pair convention and both subquestion answers are derivable directly from the complete text stem.",
+        "promotion_evidence_eligible": false,
+        "subquestion_count": 2,
+        "required_order": [1, 2]
+      }
+    },
+    {
+      "provider": "prompt_lab_seed_bank",
+      "question_id": "coordinate_graph_no_origin_label",
+      "question_version": "prompt-lab-2026-08-v1",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": ["方格图", "坐标原点", "证据判断"],
+      "stem": "一张方格图标出了A点和B点，但没有标出坐标原点或（0，0）。有同学说A点一定是（0，0）。仅根据这些信息，能这样确定吗？",
+      "answer": "不能。图中没有标出坐标原点，不能断言A点是（0，0）。",
+      "original_analysis": "先核对题图是否标出坐标原点；没有原点标记时，A点的位置不能被直接当作（0，0）。",
+      "verified": true,
+      "verified_at": "2026-08-14T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "repo_constructed_seed",
+        "independent_verification_basis": "The fixture intentionally contains no visual measurements; the verified conclusion is that no numeric distance or origin may be inferred from the supplied evidence.",
+        "promotion_evidence_eligible": false,
+        "text_only_false_premise_regression": true,
+        "forbidden_assumption": "A点是（0，0）"
+      }
+    },
+    {
+      "provider": "prompt_lab_seed_bank",
+      "question_id": "robot_route_direction_distance",
+      "question_version": "prompt-lab-2026-08-v1",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": ["方向与位置", "路线图", "任务要求识别"],
+      "stem": "路线图显示：A站在出发站的东北方向，两站相距2千米。（1）机器人从出发站到A站的方向与距离。",
+      "answer": "东北方向，2千米",
+      "original_analysis": "题目同时要求方向和距离。先从路线图确认A站相对出发站的方向，再读取两站距离。学生只回答距离时，应肯定已找到一个要求，再追问遗漏的方向。",
+      "verified": true,
+      "verified_at": "2026-08-15T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-15T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "repo_constructed_seed",
+        "independent_verification_basis": "Both the direction and distance are explicit in the complete text fixture, so the expected correction can be verified without inferring missing visual information.",
+        "promotion_evidence_eligible": false,
+        "real_regression": true,
+        "observed_student_answer": "求到A的距离"
+      }
+    }
+  ]
+}

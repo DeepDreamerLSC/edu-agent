@@ -1,0 +1,113 @@
+{
+  "schema_version": "small_lecturer_prompt_lab_matrix/v1",
+  "experiment_key": "small-lecturer-model-prompt-2x2",
+  "declared_axes": [
+    "model",
+    "prompt"
+  ],
+  "fixed_conditions": {
+    "dataset": "evals/datasets/small_lecturer_prompt_lab_seed_v1.json",
+    "question_fixture": "evals/datasets/small_lecturer_prompt_lab_seed_question_bank.json",
+    "student_profile": "dataset-pinned",
+    "seed": "dataset-pinned",
+    "expression_profile": "primary-lower-and-primary-upper-v2"
+  },
+  "candidates": [
+    {
+      "schema_version": "small_lecturer_prompt_lab_candidate/v1",
+      "candidate_key": "baseline-model_baseline-prompt",
+      "label": "Baseline Model + Baseline Prompt",
+      "baseline": true,
+      "model_variant": "baseline-model",
+      "prompt_variant": "baseline-prompt",
+      "expression_profile_variant": "expression-v2",
+      "expected_tutor_model_id": "replace-with-actual-baseline-logical-model-id",
+      "expected_worker_model_id": "replace-with-actual-baseline-worker-model-id",
+      "expected_upstream_model": "replace-with-actual-baseline-upstream-model",
+      "expected_weights_version": "replace-with-actual-baseline-weights-version",
+      "expected_model_policy": "small_lecturer_tutor",
+      "tutor_prompt_version": "replace-with-baseline-prompt-version",
+      "style_profile_version": "small_lecturer_expression/v2",
+      "expression_profile": {
+        "style_profile_version": "small_lecturer_expression/v2",
+        "grade_band_hashes": {
+          "primary_lower": "8dee75ef351be84de346d437bd21f10b7cc791620ca7a587c33722eeb9f6abbf",
+          "primary_upper": "eb77bde69794a060887ecb77c98cd364adb830547d616a5d12b805134a819f9c"
+        }
+      },
+      "code_revision": "0000000000000000000000000000000000000000"
+    },
+    {
+      "schema_version": "small_lecturer_prompt_lab_candidate/v1",
+      "candidate_key": "baseline-model_candidate-prompt",
+      "label": "Baseline Model + Candidate Prompt",
+      "baseline": false,
+      "model_variant": "baseline-model",
+      "prompt_variant": "candidate-prompt",
+      "expression_profile_variant": "expression-v2",
+      "expected_tutor_model_id": "replace-with-actual-baseline-logical-model-id",
+      "expected_worker_model_id": "replace-with-actual-baseline-worker-model-id",
+      "expected_upstream_model": "replace-with-actual-baseline-upstream-model",
+      "expected_weights_version": "replace-with-actual-baseline-weights-version",
+      "expected_model_policy": "small_lecturer_tutor",
+      "tutor_prompt_version": "replace-with-candidate-prompt-version",
+      "style_profile_version": "small_lecturer_expression/v2",
+      "expression_profile": {
+        "style_profile_version": "small_lecturer_expression/v2",
+        "grade_band_hashes": {
+          "primary_lower": "8dee75ef351be84de346d437bd21f10b7cc791620ca7a587c33722eeb9f6abbf",
+          "primary_upper": "eb77bde69794a060887ecb77c98cd364adb830547d616a5d12b805134a819f9c"
+        }
+      },
+      "code_revision": "0000000000000000000000000000000000000000"
+    },
+    {
+      "schema_version": "small_lecturer_prompt_lab_candidate/v1",
+      "candidate_key": "candidate-model_baseline-prompt",
+      "label": "Candidate Model + Baseline Prompt",
+      "baseline": false,
+      "model_variant": "candidate-model",
+      "prompt_variant": "baseline-prompt",
+      "expression_profile_variant": "expression-v2",
+      "expected_tutor_model_id": "replace-with-actual-candidate-logical-model-id",
+      "expected_worker_model_id": "replace-with-actual-candidate-worker-model-id",
+      "expected_upstream_model": "replace-with-actual-candidate-upstream-model",
+      "expected_weights_version": "replace-with-actual-candidate-weights-version",
+      "expected_model_policy": "small_lecturer_tutor",
+      "tutor_prompt_version": "replace-with-baseline-prompt-version",
+      "style_profile_version": "small_lecturer_expression/v2",
+      "expression_profile": {
+        "style_profile_version": "small_lecturer_expression/v2",
+        "grade_band_hashes": {
+          "primary_lower": "8dee75ef351be84de346d437bd21f10b7cc791620ca7a587c33722eeb9f6abbf",
+          "primary_upper": "eb77bde69794a060887ecb77c98cd364adb830547d616a5d12b805134a819f9c"
+        }
+      },
+      "code_revision": "0000000000000000000000000000000000000000"
+    },
+    {
+      "schema_version": "small_lecturer_prompt_lab_candidate/v1",
+      "candidate_key": "candidate-model_candidate-prompt",
+      "label": "Candidate Model + Candidate Prompt",
+      "baseline": false,
+      "model_variant": "candidate-model",
+      "prompt_variant": "candidate-prompt",
+      "expression_profile_variant": "expression-v2",
+      "expected_tutor_model_id": "replace-with-actual-candidate-logical-model-id",
+      "expected_worker_model_id": "replace-with-actual-candidate-worker-model-id",
+      "expected_upstream_model": "replace-with-actual-candidate-upstream-model",
+      "expected_weights_version": "replace-with-actual-candidate-weights-version",
+      "expected_model_policy": "small_lecturer_tutor",
+      "tutor_prompt_version": "replace-with-candidate-prompt-version",
+      "style_profile_version": "small_lecturer_expression/v2",
+      "expression_profile": {
+        "style_profile_version": "small_lecturer_expression/v2",
+        "grade_band_hashes": {
+          "primary_lower": "8dee75ef351be84de346d437bd21f10b7cc791620ca7a587c33722eeb9f6abbf",
+          "primary_upper": "eb77bde69794a060887ecb77c98cd364adb830547d616a5d12b805134a819f9c"
+        }
+      },
+      "code_revision": "0000000000000000000000000000000000000000"
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "schema_version": "small_lecturer_production_quality_protocol/v1",
+  "formal_gold_dataset": "evals/datasets/small_lecturer_math_gold_candidates.json",
+  "formal_scenario_ids": [
+    "equation_addition_complete_reasoning",
+    "equation_addition_misconception_repair",
+    "equation_addition_support_boundary",
+    "equation_addition_alternative_method",
+    "equation_multiplication_complete_reasoning",
+    "equation_multiplication_misconception_repair",
+    "equation_multiplication_support_boundary",
+    "equation_multiplication_alternative_method",
+    "fraction_addition_complete_reasoning",
+    "fraction_addition_misconception_repair",
+    "fraction_addition_support_boundary",
+    "fraction_addition_alternative_method",
+    "rectangle_perimeter_complete_reasoning",
+    "rectangle_perimeter_misconception_repair",
+    "rectangle_perimeter_support_boundary",
+    "rectangle_perimeter_alternative_method",
+    "chicken_rabbit_complete_reasoning",
+    "chicken_rabbit_misconception_repair",
+    "chicken_rabbit_support_boundary",
+    "chicken_rabbit_alternative_method"
+  ],
+  "observation_slices": [
+    {
+      "dataset": "evals/datasets/small_lecturer_dialogue_stability_20.json",
+      "scenario_ids": [
+        "stability_equation_subtract",
+        "stability_equation_sign",
+        "stability_equation_parentheses",
+        "stability_fraction_addition",
+        "stability_rectangle_perimeter",
+        "stability_chicken_rabbit"
+      ],
+      "promotion_eligible": false
+    },
+    {
+      "dataset": "evals/datasets/small_lecturer_shadow_scenarios_24.json",
+      "scenario_ids": [
+        "shadow_upper_equation__off_topic",
+        "shadow_upper_equation__exit_then_resume"
+      ],
+      "promotion_eligible": false
+    },
+    {
+      "dataset": "evals/datasets/small_lecturer_target_mode_v3_regressions.json",
+      "scenario_ids": [
+        "target_v3_compound_question_b_before_c"
+      ],
+      "promotion_eligible": false
+    }
+  ],
+  "coverage": {
+    "valid_evidence_correct": [
+      "equation_addition_complete_reasoning",
+      "fraction_addition_complete_reasoning"
+    ],
+    "valid_evidence_wrong_conclusion": [
+      "equation_addition_misconception_repair",
+      "rectangle_perimeter_misconception_repair"
+    ],
+    "no_valid_evidence_cannot_answer": [
+      "equation_addition_support_boundary",
+      "fraction_addition_support_boundary"
+    ],
+    "partial_progress": [
+      "equation_multiplication_support_boundary",
+      "chicken_rabbit_support_boundary"
+    ],
+    "direct_answer_request": [
+      "equation_addition_support_boundary",
+      "rectangle_perimeter_support_boundary"
+    ],
+    "two_rounds_wrong_or_no_progress": [
+      "stability_equation_sign",
+      "stability_fraction_addition"
+    ],
+    "off_target_response": [
+      "shadow_upper_equation__off_topic"
+    ],
+    "compound_subquestion_switch": [
+      "target_v3_compound_question_b_before_c"
+    ],
+    "refresh_resume_retry": [
+      "shadow_upper_equation__exit_then_resume"
+    ],
+    "mastered_closure_without_repetition": [
+      "equation_addition_complete_reasoning",
+      "chicken_rabbit_complete_reasoning"
+    ]
+  },
+  "governance": {
+    "formal_minimum_confirmed": 20,
+    "formal_minimum_negative_or_boundary_ratio": 0.4,
+    "observation_slices_enter_formal_denominator": false,
+    "current_formal_status": "blocked_by_gold",
+    "reason": "The selected v2 scenarios remain teacher Gold candidates without a signed approval registry."
+  }
+}

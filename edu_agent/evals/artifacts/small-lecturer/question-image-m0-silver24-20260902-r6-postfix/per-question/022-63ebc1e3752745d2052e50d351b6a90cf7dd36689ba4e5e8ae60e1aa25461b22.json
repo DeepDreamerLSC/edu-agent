@@ -1,0 +1,311 @@
+{
+  "sample_id": "pujia-silver-v0:reserved:6a699e5b2ef3251197be025e:30b4d2f43174",
+  "pilot_bucket": "reserved:squareish",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:reserved:6a699e5b2ef3251197be025e:30b4d2f43174",
+    "status": "pending_gold",
+    "disposition": "ready",
+    "observed": {
+      "scope": "compound_single_question",
+      "stem": "我是小法官。(对的画“√”，错的画“×”并改正)(1)7/10×6÷10×6=21/5÷21/5=1()(2)11/12-11/12×1/4=0×1/4=0()",
+      "numbers_units": [
+        "1",
+        "7",
+        "10",
+        "6",
+        "10",
+        "6",
+        "21",
+        "5",
+        "21",
+        "5",
+        "1",
+        "2",
+        "11",
+        "12",
+        "-11",
+        "12",
+        "1",
+        "4",
+        "0",
+        "1",
+        "4",
+        "0"
+      ],
+      "formulas": [],
+      "options": [
+        {
+          "label": "A",
+          "text": "7/10×6÷10×6=21/5÷21/5=1()"
+        },
+        {
+          "label": "B",
+          "text": "11/12-11/12×1/4=0×1/4=0()"
+        }
+      ],
+      "ordered_subquestions": [
+        "(1)7/10×6÷10×6=21/5÷21/5=1()。",
+        "(2)11/12-11/12×1/4=0×1/4=0()。"
+      ],
+      "raw_starter_question": "先看“7/10×6÷10×6=21/5÷21/5=1()”，这道小问要求我们做什么？",
+      "starter_question": "先看“7/10×6÷10×6=21/5÷21/5=1()”，这道小问要求我们做什么？",
+      "student_visible_gate": {
+        "policy_version": "small_lecturer_visible_guardrail/v8",
+        "action": "ALLOW",
+        "passed": true,
+        "reason_codes": []
+      },
+      "student_visible_repair": {
+        "applied": false,
+        "strategy": "none",
+        "schema_repaired": true
+      },
+      "starter_active_subquestion_index": 0,
+      "candidate_answer": "(1)×改正：7/10×6÷10×6=42/10÷10×6=42/100×6=252/100=63/25(2)×改正：11/12-11/12×1/4=11/12-11/48=44/48-11/48=33/48=11/16",
+      "disposition": "ready",
+      "evidence_completeness": "partial",
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "structured_question": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "passed",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "555fdefca25dff8be5b734b12451afd58009f37f92a81f476b447b61dc9ea042",
+        "sha256": "30b4d2f431747227249bf71dc5fabcc2259681ebfb7da169d12eef5cf45e7b2b",
+        "mime_type": "image/jpeg",
+        "size_bytes": 14943
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "7f691d9d4ca0559605ce33e18f4183296f0d4f8eba076cdd5183ec180a89aa43",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_409ab9abb10c",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow"
+      },
+      "raw_output": {
+        "model_call_id": "mc_409ab9abb10c",
+        "request_id": "tctx_f34a6a1dff63a0f7587ce09e:understanding:attempt-1",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"c\",\"t\":\"我是小法官。(对的画“√”，错的画“×”并改正)(1)7/10×6÷10×6=21/5÷21/5=1()(2)11/12-11/12×1/4=0×1/4=0()\",\"u\":[\"(1)7/10×6÷10×6=21/5÷21/5=1()\",\"(2)11/12-11/12×1/4=0×1/4=0()\"],\"o\":[{\"m\":\"A\",\"h\":\"7/10×6÷10×6=21/5÷21/5=1()\"},{\"m\":\"B\",\"h\":\"11/12-11/12×1/4=0×1/4=0()\"}],\"g\":[{\"m\":\"分数混合运算\",\"h\":\"涉及分数乘除混合运算与分数乘减混合运算\"}],\"a\":\"(1)×改正：7/10×6÷10×6=42/10÷10×6=42/100×6=252/100=63/25(2)×改正：11/12-11/12×1/4=11/12-11/48=44/48-11/48=33/48=11/16\",\"r\":\"(1)错误在于将乘除运算错误地转化为分数除法形式，未遵循从左到右的运算顺序；(2)错误在于先计算了减法而非先算乘法，违背了四则运算优先级规则。\",\"k\":[\"分数乘除法运算顺序\",\"分数混合运算优先级\",\"分数减法运算规则\"],\"p\":[\"(1)原式=7/10×6÷10×6=42/10÷10×6=42/100×6=252/100=63/25；(2)原式=11/12-11/12×1/4=11/12-11/48=44/48-11/48=33/48=11/16\"],\"e\":[{\"m\":\"运算顺序混淆\",\"h\":\"学生常将乘除混合运算误作分数除法形式，或先算加减再算乘除\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"分数混合运算\",\"四则运算顺序\"],\"q\":\"请判断第(1)题的运算过程和结果是否正确，并给出正确的计算步骤。\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"c\",\"t\":\"我是小法官。(对的画“√”，错的画“×”并改正)(1)7/10×6÷10×6=21/5÷21/5=1()(2)11/12-11/12×1/4=0×1/4=0()\",\"u\":[\"(1)7/10×6÷10×6=21/5÷21/5=1()\",\"(2)11/12-11/12×1/4=0×1/4=0()\"],\"o\":[{\"m\":\"A\",\"h\":\"7/10×6÷10×6=21/5÷21/5=1()\"},{\"m\":\"B\",\"h\":\"11/12-11/12×1/4=0×1/4=0()\"}],\"g\":[{\"m\":\"分数混合运算\",\"h\":\"涉及分数乘除混合运算与分数乘减混合运算\"}],\"a\":\"(1)×改正：7/10×6÷10×6=42/10÷10×6=42/100×6=252/100=63/25(2)×改正：11/12-11/12×1/4=11/12-11/48=44/48-11/48=33/48=11/16\",\"r\":\"(1)错误在于将乘除运算错误地转化为分数除法形式，未遵循从左到右的运算顺序；(2)错误在于先计算了减法而非先算乘法，违背了四则运算优先级规则。\",\"k\":[\"分数乘除法运算顺序\",\"分数混合运算优先级\",\"分数减法运算规则\"],\"p\":[\"(1)原式=7/10×6÷10×6=42/10÷10×6=42/100×6=252/100=63/25；(2)原式=11/12-11/12×1/4=11/12-11/48=44/48-11/48=33/48=11/16\"],\"e\":[{\"m\":\"运算顺序混淆\",\"h\":\"学生常将乘除混合运算误作分数除法形式，或先算加减再算乘除\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"分数混合运算\",\"四则运算顺序\"],\"q\":\"请判断第(1)题的运算过程和结果是否正确，并给出正确的计算步骤。\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2158,
+          "completion_tokens": 595,
+          "total_tokens": 2753
+        },
+        "latency_ms": 27234.66,
+        "queue_ms": 0.02,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-f7d7163ae894441e96749e7a67ee83cf",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 2.64,
+          "worker_latency_ms": 27218.23,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.02,
+          "total_queue_ms": 2.68,
+          "deadline_at": 1788390838.515268,
+          "deadline_remaining_ms": 102433,
+          "queue_deadline_at": 1788390718.846963,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 27234.66,
+        "queue_ms": 0.02,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_f34a6a1dff63a0f7587ce09e",
+      "compile": {
+        "model_call_id": "mc_5ab424344d55",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+        "prompt_sha256": "52327f1eae4f4c084d5957e295b066a0ebe34d54bdcf1fcae3c2ca88bb752390",
+        "response_parse_status": "parsed",
+        "raw_output": {
+          "model_call_id": "mc_5ab424344d55",
+          "request_id": "tctx_f34a6a1dff63a0f7587ce09e:compile:attempt-1",
+          "agent_run_id": null,
+          "workflow_step": "teaching_context_compile",
+          "invoke_type": "structured",
+          "resolved_model": {
+            "model_id": "qwen36-27b-mlx-worker-v1",
+            "display_name": "Qwen3.6-27B Worker Test",
+            "capability": "teaching_context_compile",
+            "deployment_profile": "test_text_model_worker"
+          },
+          "content": "{\"v\":1,\"s\":\"m\",\"t\":\"我是小法官。(对的画“√”，错的画“×”并改正)\",\"u\":[[\"(1)7/10×6÷10×6=21/5÷21/5=1()\",\"×；改正：7/10×6÷10×6=42/10÷10×6=42/100×6=252/100=63/25\",\"原式错误在于将乘除运算错误地转化为分数除法形式，未遵循从左到右的运算顺序。\"],[\"(2)11/12-11/12×1/4=0×1/4=0()\",\"×；改正：11/12-11/12×1/4=11/12-11/48=44/48-11/48=33/48=11/16\",\"原式错误在于先计算了减法而非先算乘法，违背了四则运算优先级规则。\"]],\"o\":[],\"g\":[[\"other\",\"涉及分数乘除混合运算与分数乘减混合运算\"]],\"a\":\"(1)×，改正：63/25；(2)×，改正：11/16\",\"r\":\"(1)错误在于将乘除运算错误地转化为分数除法形式，未遵循从左到右的运算顺序；(2)错误在于先计算了减法而非先算乘法，违背了四则运算优先级规则。\",\"k\":[\"分数混合运算\",\"四则运算顺序\"],\"p\":[\"(1)原式=7/10×6÷10×6=42/10÷10×6=42/100×6=252/100=63/25；(2)原式=11/12-11/12×1/4=11/12-11/48=44/48-11/48=33/48=11/16\"],\"e\":[{\"m\":\"运算顺序混淆\",\"h\":\"学生常将乘除混合运算误作分数除法形式，或先算加减再算乘除\"}],\"c\":\"p\",\"x\":[],\"n\":[\"分数混合运算\",\"四则运算顺序\"],\"q\":\"在算式“7/10×6÷10×6”中，应该先计算哪一步？\"}",
+          "parsed": {},
+          "raw_text": "{\"v\":1,\"s\":\"m\",\"t\":\"我是小法官。(对的画“√”，错的画“×”并改正)\",\"u\":[[\"(1)7/10×6÷10×6=21/5÷21/5=1()\",\"×；改正：7/10×6÷10×6=42/10÷10×6=42/100×6=252/100=63/25\",\"原式错误在于将乘除运算错误地转化为分数除法形式，未遵循从左到右的运算顺序。\"],[\"(2)11/12-11/12×1/4=0×1/4=0()\",\"×；改正：11/12-11/12×1/4=11/12-11/48=44/48-11/48=33/48=11/16\",\"原式错误在于先计算了减法而非先算乘法，违背了四则运算优先级规则。\"]],\"o\":[],\"g\":[[\"other\",\"涉及分数乘除混合运算与分数乘减混合运算\"]],\"a\":\"(1)×，改正：63/25；(2)×，改正：11/16\",\"r\":\"(1)错误在于将乘除运算错误地转化为分数除法形式，未遵循从左到右的运算顺序；(2)错误在于先计算了减法而非先算乘法，违背了四则运算优先级规则。\",\"k\":[\"分数混合运算\",\"四则运算顺序\"],\"p\":[\"(1)原式=7/10×6÷10×6=42/10÷10×6=42/100×6=252/100=63/25；(2)原式=11/12-11/12×1/4=11/12-11/48=44/48-11/48=33/48=11/16\"],\"e\":[{\"m\":\"运算顺序混淆\",\"h\":\"学生常将乘除混合运算误作分数除法形式，或先算加减再算乘除\"}],\"c\":\"p\",\"x\":[],\"n\":[\"分数混合运算\",\"四则运算顺序\"],\"q\":\"在算式“7/10×6÷10×6”中，应该先计算哪一步？\"}",
+          "raw_output_ref": null,
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 543,
+            "total_tokens": 543
+          },
+          "latency_ms": 77640.34,
+          "queue_ms": 0.02,
+          "first_token_ms": null,
+          "degraded": false,
+          "provider_metrics": {
+            "provider": "mlx_text",
+            "upstream_model": "qwen36-27b-mlx-worker-v1",
+            "structured_output_enforced": true,
+            "generation_tps": 8.11,
+            "peak_memory_gb": 20.082,
+            "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+            "worker_provider": "mlx_text",
+            "worker_source_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_source_revision_verified": true,
+            "worker_source_tree_clean": true,
+            "worker_runtime_contract_version": "model-worker-runtime/v1",
+            "worker_runtime_kind": "mlx_text",
+            "worker_runtime_version": "0.31.3",
+            "worker_engine_version": "edu-agent-model-worker/v1",
+            "worker_engine_mode": "provider_serialized",
+            "worker_scheduler_enabled": false,
+            "worker_effective_batching": false,
+            "worker_dynamic_batching": false,
+            "worker_deployment_profile": "local_model_worker",
+            "worker_environment": "test",
+            "worker_shadow_only": false,
+            "worker_weights_identity_sha256": "bd5ddc47eaba8c246ebb3b5f8913e8764bfed2925a74ca095db19c729b3f8f43",
+            "worker_weights_identity_verified": true,
+            "worker_effective_batch_id": "worker-direct-7998ce1e7b1145acb5a3f088c294fd61",
+            "worker_effective_batch_identity_authoritative": false,
+            "worker_batch_correlation_source": "worker_generated_direct_id",
+            "worker_effective_batch_size": 1,
+            "worker_requested_batch_size": 1,
+            "worker_pid": 41384,
+            "worker_model_id": "qwen36-27b-mlx-worker-v1",
+            "worker_internal_concurrency": 1,
+            "worker_serialized": true,
+            "worker_warm_count": 1,
+            "worker_queue_ms": 0.38,
+            "worker_latency_ms": 77628.26,
+            "request_contract": "model_invoke_v1",
+            "endpoint_host": "127.0.0.1:8200",
+            "deployment_id": "qwen36-27b-mlx-worker",
+            "replica_id": "qwen36-27b-mlx-worker-a",
+            "queue_ms": 0.02,
+            "replica_queue_ms": 0.02,
+            "worker_pool_queue_ms": 0.02,
+            "retry_count": 0,
+            "request_priority": "bulk",
+            "gateway_queue_ms": 0.02,
+            "total_queue_ms": 0.42,
+            "deadline_at": 1788390866.086984,
+            "deadline_remaining_ms": 52286,
+            "queue_deadline_at": 1788390746.1602829,
+            "queue_deadline_remaining_ms": 0
+          }
+        }
+      },
+      "gold": {
+        "status": "pending",
+        "missing_fields": [
+          "gold_status_complete"
+        ]
+      }
+    },
+    "failure": null
+  }
+}

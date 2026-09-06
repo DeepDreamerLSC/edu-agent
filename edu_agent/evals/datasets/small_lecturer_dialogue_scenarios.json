@@ -1,0 +1,44 @@
+{
+  "schema_version": "small_lecturer_dialogue_scenarios/v1",
+  "scenarios": [
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "equation_complete_reasoning",
+      "title": "一元一次方程完整推理",
+      "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
+      "student_turns": [
+        "我先把等式两边都减去7，得到3x等于18。",
+        "然后两边都除以3，所以x等于6。代回去3乘6加7等于25。"
+      ],
+      "expect": {
+        "ready_to_record": true
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "equation_misconception_repair",
+      "title": "方程移项误解纠正",
+      "question": "解方程 2x+5=17，并说明你的思路。",
+      "student_turns": [
+        "我把5移到右边后还是加5，所以2x等于22。",
+        "等式两边应该同时减去5，因此2x等于12，再同时除以2得到x等于6。"
+      ],
+      "expect": {
+        "final_states": ["coaching", "diagnosing", "ready_to_record"]
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "chicken_rabbit_alternative_method",
+      "title": "鸡兔同笼替代解法",
+      "question": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？请说明思路。",
+      "student_turns": [
+        "假设全是鸡，一共有16只脚，比实际少10只脚。",
+        "每把一只鸡换成兔会多2只脚，所以有5只兔，鸡有3只，再检查是26只脚。"
+      ],
+      "expect": {
+        "ready_to_record": true
+      }
+    }
+  ]
+}

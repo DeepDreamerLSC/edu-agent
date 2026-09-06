@@ -1,0 +1,466 @@
+{
+  "schema_version": "small_lecturer_dialogue_scenarios/v2",
+  "scenarios": [
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v2",
+      "id": "target_v3_coordinate_notation_golden",
+      "title": "座位有序数对黄金对话",
+      "subject": "math",
+      "question": "学校用有序数对表示座位，8排6号记作（6，8）。请把12排5号写成有序数对，再写出（3，10）表示几排几号。",
+      "question_source": {
+        "provider": "target_mode_v3_shadow_bank",
+        "question_id": "coordinate_notation_full",
+        "question_version": "2026-08-10-v1"
+      },
+      "seed": 2026081001,
+      "max_turns": 9,
+      "trajectory_tags": [
+        "target_mode_v3",
+        "governed_regression",
+        "coordinate_notation",
+        "primary_upper"
+      ],
+      "steps": [
+        {
+          "id": "identify_first_coordinate",
+          "branches": [
+            {
+              "id": "answer_seat_number",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": ["两个数字分别", "第一个数", "6对应", "6 表示"]
+              },
+              "student_response": "例子里的第一个数6表示号。",
+              "trajectory_tags": ["short_answer", "confirmed_first_coordinate"]
+            },
+            {
+              "id": "fallback_request_alignment",
+              "response_kind": "request_hint",
+              "when": {"fallback": true},
+              "student_response": "我先看例子里的第一个数，它表示号。",
+              "trajectory_tags": ["first_question_alignment_gap"]
+            }
+          ]
+        },
+        {
+          "id": "identify_second_coordinate",
+          "branches": [
+            {
+              "id": "answer_row_number",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": ["第二个数", "另一个数", "8代表", "8 表示"]
+              },
+              "student_response": "例子里的第二个数8表示排。",
+              "trajectory_tags": ["short_answer", "confirmed_second_coordinate"]
+            },
+            {
+              "id": "answer_current_task_if_requested",
+              "response_kind": "incorrect",
+              "when": {
+                "assistant_contains_any": ["最后结果", "完整说出", "写成有序数对"]
+              },
+              "student_response": "我先写成5.12。",
+              "trajectory_tags": ["format_error", "preserve_value_order"]
+            },
+            {
+              "id": "fallback_second_coordinate",
+              "response_kind": "correct",
+              "when": {"fallback": true},
+              "student_response": "第二个数8表示排。",
+              "trajectory_tags": ["short_answer", "confirmed_second_coordinate"]
+            }
+          ]
+        },
+        {
+          "id": "attempt_current_subquestion",
+          "branches": [
+            {
+              "id": "classify_five_as_seat",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_all": ["5", "排还是号"]
+              },
+              "student_response": "5是号。",
+              "trajectory_tags": ["short_answer", "first_value"]
+            },
+            {
+              "id": "classify_twelve_as_row",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_all": ["12", "排还是号"]
+              },
+              "student_response": "12是排。",
+              "trajectory_tags": ["short_answer", "second_value"]
+            },
+            {
+              "id": "attempt_decimal_separator",
+              "response_kind": "incorrect",
+              "when": {
+                "assistant_contains_any": ["最后结果", "完整说出", "完整写出", "有序数对"]
+              },
+              "student_response": "我写成5.12。",
+              "trajectory_tags": ["format_error", "preserve_value_order"]
+            },
+            {
+              "id": "fallback_attempt_decimal_separator",
+              "response_kind": "incorrect",
+              "when": {"fallback": true},
+              "student_response": "我把12排5号写成5.12。",
+              "trajectory_tags": ["format_error", "preserve_value_order"]
+            }
+          ]
+        },
+        {
+          "id": "confirm_mapping_or_format",
+          "branches": [
+            {
+              "id": "confirm_five_as_seat",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_all": ["5", "排还是号"]
+              },
+              "student_response": "5是号。",
+              "trajectory_tags": ["short_answer", "first_value"]
+            },
+            {
+              "id": "confirm_twelve_as_row",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_all": ["12", "排还是号"]
+              },
+              "student_response": "12是排。",
+              "trajectory_tags": ["short_answer", "second_value"]
+            },
+            {
+              "id": "repeat_decimal_separator_attempt",
+              "response_kind": "incorrect",
+              "when": {"fallback": true},
+              "student_response": "我写成5.12。",
+              "trajectory_tags": ["format_error", "preserve_value_order"]
+            }
+          ]
+        },
+        {
+          "id": "repair_format_only",
+          "branches": [
+            {
+              "id": "correct_coordinate_format",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": ["5.12", "格式", "括号", "逗号", "完整", "最后结果"]
+              },
+              "student_response": "（5，12）",
+              "trajectory_tags": ["format_repaired", "advance_after_completion"]
+            },
+            {
+              "id": "fallback_correct_coordinate_format",
+              "response_kind": "correct",
+              "when": {"fallback": true},
+              "student_response": "（5，12）",
+              "trajectory_tags": ["format_repaired", "advance_after_completion"]
+            }
+          ]
+        },
+        {
+          "id": "enter_second_subquestion",
+          "branches": [
+            {
+              "id": "state_second_subquestion_goal",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": ["3,10", "3，10", "这道小问", "几排几号"]
+              },
+              "student_response": "要判断（3，10）表示几排几号。",
+              "trajectory_tags": ["second_subquestion", "goal_restated"]
+            },
+            {
+              "id": "finish_first_subquestion_if_still_active",
+              "response_kind": "correct",
+              "when": {"fallback": true},
+              "student_response": "（5，12）",
+              "trajectory_tags": ["format_repaired", "advance_after_completion"]
+            }
+          ]
+        },
+        {
+          "id": "decode_second_subquestion_first_value",
+          "branches": [
+            {
+              "id": "decode_three_as_seat",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": ["第一个数3", "3表示", "3 表示"]
+              },
+              "student_response": "3表示号数。",
+              "trajectory_tags": ["second_subquestion", "first_value"]
+            },
+            {
+              "id": "decode_ten_as_row",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": ["第二个数10", "10表示", "10 表示"]
+              },
+              "student_response": "10表示排数。",
+              "trajectory_tags": ["second_subquestion", "second_value"]
+            },
+            {
+              "id": "decode_second_subquestion_directly",
+              "response_kind": "correct",
+              "when": {"fallback": true},
+              "student_response": "3是号数，10是排数。",
+              "trajectory_tags": ["second_subquestion", "mapping_complete"]
+            }
+          ]
+        },
+        {
+          "id": "decode_second_subquestion_second_value",
+          "branches": [
+            {
+              "id": "complete_missing_three",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": ["第一个数3", "3表示", "3 表示"]
+              },
+              "student_response": "3表示号数。",
+              "trajectory_tags": ["second_subquestion", "first_value"]
+            },
+            {
+              "id": "complete_missing_ten",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": ["第二个数10", "10表示", "10 表示"]
+              },
+              "student_response": "10表示排数。",
+              "trajectory_tags": ["second_subquestion", "second_value"]
+            },
+            {
+              "id": "state_decoded_seat",
+              "response_kind": "correct",
+              "when": {"fallback": true},
+              "student_response": "（3，10）表示10排3号。",
+              "trajectory_tags": ["second_subquestion", "final_answer"]
+            }
+          ]
+        },
+        {
+          "id": "finish_second_subquestion",
+          "branches": [
+            {
+              "id": "state_final_decoding",
+              "response_kind": "correct",
+              "when": {"fallback": true},
+              "student_response": "（3，10）表示10排3号。",
+              "trajectory_tags": ["second_subquestion", "final_answer"]
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": ["collecting_inputs", "ready_to_confirm", "ready_to_record"],
+        "assistant_contains": [],
+        "failure_category": "pedagogy"
+      },
+      "gold": {
+        "status": "candidate",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
+      "metadata": {
+        "governance_status": "shadow_only",
+        "source_kind": "deidentified_real_regression",
+        "learner_grade_band": "primary_upper",
+        "active_subquestion_order": ["encode_12_row_5_seat", "decode_3_10"],
+        "required_invariants": [
+          "first_question_uses_given_example",
+          "short_answers_are_resolved_from_context",
+          "format_error_preserves_confirmed_value_order",
+          "second_subquestion_waits_for_first_completion"
+        ],
+        "forbidden_behaviors": [
+          "reverse_the_original_task_in_first_question",
+          "reask_confirmed_coordinate_meaning",
+          "advance_before_correct_coordinate_format",
+          "reveal_final_answer"
+        ]
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v2",
+      "id": "target_v3_coordinate_first_question_alignment",
+      "title": "坐标题首问不反转任务",
+      "subject": "math",
+      "question": "8排6号记作（6，8），请写出12排5号对应的有序数对。",
+      "question_source": {
+        "provider": "target_mode_v3_shadow_bank",
+        "question_id": "coordinate_notation_encode_only",
+        "question_version": "2026-08-10-v1"
+      },
+      "seed": 2026081002,
+      "max_turns": 2,
+      "trajectory_tags": ["target_mode_v3", "governed_regression", "first_question_alignment"],
+      "steps": [
+        {
+          "id": "first_question",
+          "branches": [
+            {
+              "id": "example_based_short_answer",
+              "response_kind": "correct",
+              "when": {"assistant_contains_any": ["第一个数", "6对应", "例子"]},
+              "student_response": "号",
+              "trajectory_tags": ["aligned_first_question"]
+            },
+            {
+              "id": "misaligned_first_question",
+              "response_kind": "request_hint",
+              "when": {"fallback": true},
+              "student_response": "请先带我看懂题目给的例子。",
+              "trajectory_tags": ["first_question_alignment_gap"]
+            }
+          ]
+        }
+      ],
+      "expect": {"failure_category": "pedagogy"},
+      "gold": {"status": "candidate", "expectation_version": "small_lecturer_teacher_gold/v1"},
+      "metadata": {
+        "governance_status": "shadow_only",
+        "source_kind": "deidentified_real_regression",
+        "required_invariants": ["first_question_preserves_original_task", "first_question_anchors_given_example"],
+        "forbidden_behaviors": ["ask_what_12_5_means", "reveal_5_12"]
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v2",
+      "id": "target_v3_compound_question_b_before_c",
+      "title": "复合题先处理第一小问",
+      "subject": "math",
+      "question": "观察坐标图。第一小问已给出B点的位置是（2，4），请先根据每格200米，填写B点相对A点向东、向北各多少米；完成后再处理C点等后续小问。",
+      "question_source": {
+        "provider": "target_mode_v3_shadow_bank",
+        "question_id": "coordinate_graph_compound",
+        "question_version": "2026-08-10-v1"
+      },
+      "seed": 2026081003,
+      "max_turns": 3,
+      "trajectory_tags": ["target_mode_v3", "governed_regression", "compound_question"],
+      "steps": [
+        {
+          "id": "locate_b_first",
+          "branches": [
+            {
+              "id": "answer_about_b",
+              "response_kind": "incomplete",
+              "when": {"assistant_contains_all": ["B点"]},
+              "student_response": "B点在原点右边。",
+              "trajectory_tags": ["active_subquestion_b"]
+            },
+            {
+              "id": "detected_skip_to_c",
+              "response_kind": "off_topic",
+              "when": {"fallback": true},
+              "student_response": "题目不是应该先看B点吗？",
+              "trajectory_tags": ["active_subquestion_skip"]
+            }
+          ]
+        }
+      ],
+      "expect": {"failure_category": "pedagogy"},
+      "gold": {"status": "candidate", "expectation_version": "small_lecturer_teacher_gold/v1"},
+      "metadata": {
+        "governance_status": "shadow_only",
+        "source_kind": "deidentified_real_regression",
+        "active_subquestion_order": ["point_b", "point_c"],
+        "required_invariants": ["first_unfinished_subquestion_is_authoritative"],
+        "forbidden_behaviors": ["ask_about_c_before_b_completion"]
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v2",
+      "id": "target_v3_northwest_clarification_not_leakage",
+      "title": "自然方向澄清不被误判泄题",
+      "subject": "math",
+      "question": "一块等边三角形草地的三个顶点分别住着小羊、小兔和小马，边长20米。依次判断小羊在小马、小兔的什么方向，以及小兔、小马在小羊的什么方向。",
+      "question_source": {
+        "provider": "target_mode_v3_shadow_bank",
+        "question_id": "equilateral_triangle_directions",
+        "question_version": "2026-08-10-v1"
+      },
+      "seed": 2026081004,
+      "max_turns": 2,
+      "trajectory_tags": ["target_mode_v3", "governed_regression", "guardrail_false_positive"],
+      "steps": [
+        {
+          "id": "clarify_reference_point",
+          "branches": [
+            {
+              "id": "answer_horse",
+              "response_kind": "correct",
+              "when": {"assistant_contains_any": ["以谁为中心", "参照点"]},
+              "student_response": "先以小马为中心。",
+              "trajectory_tags": ["natural_question_observed"]
+            },
+            {
+              "id": "guardrail_fallback",
+              "response_kind": "request_hint",
+              "when": {"fallback": true},
+              "student_response": "我还没确定第一小问要以谁为中心。",
+              "trajectory_tags": ["natural_question_missing"]
+            }
+          ]
+        }
+      ],
+      "expect": {"failure_category": "pedagogy"},
+      "gold": {"status": "candidate", "expectation_version": "small_lecturer_teacher_gold/v1"},
+      "metadata": {
+        "governance_status": "shadow_only",
+        "source_kind": "deidentified_real_regression",
+        "required_invariants": ["natural_reference_question_remains_student_visible", "transport_status_is_success"],
+        "forbidden_behaviors": ["classify_reference_question_as_answer_leakage", "show_generic_safety_failure"]
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v2",
+      "id": "target_v3_understood_image_not_vision_failure",
+      "title": "已理解题图不伪装成识别失败",
+      "subject": "math",
+      "question": "圆形池塘半径为r，老鼠从圆心O沿半径跑向B，速度1.5米/秒；猫从圆周上的A沿箭头方向跑向B，速度5米/秒。判断谁先到达B。",
+      "question_source": {
+        "provider": "target_mode_v3_shadow_bank",
+        "question_id": "circular_pond_cat_mouse_race",
+        "question_version": "2026-08-10-v1"
+      },
+      "seed": 2026081005,
+      "max_turns": 2,
+      "trajectory_tags": ["target_mode_v3", "governed_regression", "failure_classification"],
+      "steps": [
+        {
+          "id": "identify_paths",
+          "branches": [
+            {
+              "id": "partial_path_evidence",
+              "response_kind": "incomplete",
+              "when": {"assistant_contains_any": ["猫", "老鼠", "哪一段路程"]},
+              "student_response": "猫走的是从自己的起点沿箭头到相遇点的那段。",
+              "trajectory_tags": ["question_understood", "partial_evidence"]
+            },
+            {
+              "id": "classification_gap",
+              "response_kind": "request_hint",
+              "when": {"fallback": true},
+              "student_response": "题目已经看清了，请继续问图里的路程关系。",
+              "trajectory_tags": ["incorrect_failure_classification"]
+            }
+          ]
+        }
+      ],
+      "expect": {"failure_category": "pedagogy"},
+      "gold": {"status": "candidate", "expectation_version": "small_lecturer_teacher_gold/v1"},
+      "metadata": {
+        "governance_status": "shadow_only",
+        "source_kind": "deidentified_real_regression",
+        "required_invariants": ["understood_question_remains_in_tutoring_flow", "repairable_candidate_does_not_become_vision_failure"],
+        "forbidden_behaviors": ["show_question_recognition_failed", "show_generic_safety_failure"]
+      }
+    }
+  ]
+}

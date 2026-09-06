@@ -1,0 +1,55 @@
+{
+  "schema_version": "small_lecturer_question_image_reliability/v1",
+  "purpose": "internal_shadow_regression_only",
+  "source_artifacts": {
+    "directory": "data/test-backend/test/oss-cache/raw/other/test_school/frontend_509e87a6c45ee0a3",
+    "tracked_in_git": false,
+    "privacy_note": "The four deidentified source images remain outside Git and are used only by approved internal Shadow evaluation."
+  },
+  "cases": [
+    {
+      "case_id": "target_v3_coordinate_notation",
+      "file_id": "file_fe4d364a152e",
+      "sha256": "0cc92d5cdc052e02e03b7020e79a146c6e00c5ad166d1801e681f280d08d759d",
+      "format": "JPEG",
+      "width": 888,
+      "height": 28,
+      "bytes": 11258,
+      "expected_disposition": "ready_after_normalization",
+      "expected_checks": ["first_question_preserves_original_task", "coordinate_order_is_not_reversed"]
+    },
+    {
+      "case_id": "target_v3_coordinate_graph_compound",
+      "file_id": "file_8bde460877a5",
+      "sha256": "ad743dc44ffd43a51ec2443630a67cb8b630c1e2286421cf69ed99a58c783860",
+      "format": "JPEG",
+      "width": 748,
+      "height": 452,
+      "bytes": 60297,
+      "expected_disposition": "ready",
+      "expected_checks": ["diagram_dependencies_are_preserved", "first_subquestion_precedes_later_subquestions"]
+    },
+    {
+      "case_id": "target_v3_equilateral_triangle_directions",
+      "file_id": "file_a3c10d1b87c9",
+      "sha256": "5297142b92240c62ec50b9a4498390454834168de43592eb5802dc1d3238e9d5",
+      "format": "JPEG",
+      "width": 467,
+      "height": 227,
+      "bytes": 33010,
+      "expected_disposition": "ready",
+      "expected_checks": ["reference_point_is_preserved", "natural_direction_question_is_not_answer_leakage"]
+    },
+    {
+      "case_id": "target_v3_circular_pond_race",
+      "file_id": "file_9dfd3ccb6ff0",
+      "sha256": "3fc57f957437f4721c6dba63ca48eae3db60fb1ad51caf0db2c64fe8b94e581a",
+      "format": "JPEG",
+      "width": 1176,
+      "height": 201,
+      "bytes": 30942,
+      "expected_disposition": "ready",
+      "expected_checks": ["question_understanding_is_not_reported_as_vision_failure", "answer_remains_unverified_until_independent_review"]
+    }
+  ]
+}

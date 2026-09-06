@@ -1,0 +1,282 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a6320c2184f723b3592d185:677d05578d25",
+  "pilot_bucket": "development:wide",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a6320c2184f723b3592d185:677d05578d25",
+    "status": "pending_gold",
+    "disposition": "ready",
+    "observed": {
+      "scope": "single_question",
+      "stem": "从1~10这10个自然数中，至少要取出( )个不同的数，才能保证其中一定有一个数是偶数。",
+      "numbers_units": [
+        "1",
+        "10",
+        "10个"
+      ],
+      "formulas": [],
+      "options": [],
+      "ordered_subquestions": [
+        "从1~10这10个自然数中，至少要取出( )个不同的数，才能保证其中一定有一个数是偶数。"
+      ],
+      "raw_starter_question": "从1~10中，先取出所有奇数，再取一个，一共取几个？",
+      "starter_question": "从1~10中，先取出所有奇数，再取一个，一共取几个？",
+      "student_visible_gate": {
+        "policy_version": "small_lecturer_visible_guardrail/v8",
+        "action": "ALLOW",
+        "passed": true,
+        "reason_codes": []
+      },
+      "student_visible_repair": {
+        "applied": false,
+        "strategy": "none",
+        "schema_repaired": false
+      },
+      "starter_active_subquestion_index": 0,
+      "candidate_answer": "6",
+      "disposition": "ready",
+      "evidence_completeness": "partial",
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "structured_question": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "passed",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "166cf6dc6c0a206ff11d7d10112b74387b0f261c6114fefc3f1c37fa55ccbbde",
+        "sha256": "677d05578d2517fced6c941964f79acf12f25c2829ae3a5bdeafc3de03867b57",
+        "mime_type": "image/jpeg",
+        "size_bytes": 9945
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "b27fc870f2b7e1a53732260af16feabe4bdd3fdcf3f0d799be3be54f8064eaa9",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_e70eb2b321be",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow"
+      },
+      "raw_output": {
+        "model_call_id": "mc_e70eb2b321be",
+        "request_id": "tctx_302b4a1b9e1c0e3228f201f2:understanding:attempt-1",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"从1~10这10个自然数中，至少要取出( )个不同的数，才能保证其中一定有一个数是偶数。\",\"u\":[],\"o\":[],\"g\":[],\"a\":\"6\",\"r\":\"最不利原则：先取完所有奇数（1,3,5,7,9共5个），再取1个必为偶数，故5+1=6\",\"k\":[\"抽屉原理\",\"最不利原则\"],\"p\":[\"1~10中奇数有5个，偶数有5个\",\"考虑最坏情况：先取5个奇数\",\"第6个数必为偶数\"],\"e\":[{\"m\":\"奇偶数个数记错\",\"h\":\"1~10中奇偶各5个\"},{\"m\":\"忘记加1\",\"h\":\"最不利后需+1\"}],\"c\":\"p\",\"x\":[],\"n\":[\"抽屉原理\",\"最不利原则\"],\"q\":\"从1~10中，先取出所有奇数，再取一个，一共取几个？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"从1~10这10个自然数中，至少要取出( )个不同的数，才能保证其中一定有一个数是偶数。\",\"u\":[],\"o\":[],\"g\":[],\"a\":\"6\",\"r\":\"最不利原则：先取完所有奇数（1,3,5,7,9共5个），再取1个必为偶数，故5+1=6\",\"k\":[\"抽屉原理\",\"最不利原则\"],\"p\":[\"1~10中奇数有5个，偶数有5个\",\"考虑最坏情况：先取5个奇数\",\"第6个数必为偶数\"],\"e\":[{\"m\":\"奇偶数个数记错\",\"h\":\"1~10中奇偶各5个\"},{\"m\":\"忘记加1\",\"h\":\"最不利后需+1\"}],\"c\":\"p\",\"x\":[],\"n\":[\"抽屉原理\",\"最不利原则\"],\"q\":\"从1~10中，先取出所有奇数，再取一个，一共取几个？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2218,
+          "completion_tokens": 225,
+          "total_tokens": 2443
+        },
+        "latency_ms": 18044.7,
+        "queue_ms": 0.02,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-f48a6eaf9a9e43239fed9a92f268ceb4",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.11,
+          "worker_latency_ms": 17948.53,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.03,
+          "replica_queue_ms": 0.03,
+          "worker_pool_queue_ms": 0.03,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.02,
+          "total_queue_ms": 0.16,
+          "deadline_at": 1788367284.535221,
+          "deadline_remaining_ms": 111781,
+          "queue_deadline_at": 1788367164.708351,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 18044.7,
+        "queue_ms": 0.02,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_302b4a1b9e1c0e3228f201f2",
+      "compile": {
+        "model_call_id": "mc_86ab9f672a93",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+        "prompt_sha256": "0e6269cf02a1a1a29335fbd897ee796233b6cd14b48c7d252b0e92157bff307c",
+        "response_parse_status": "parsed",
+        "raw_output": {
+          "model_call_id": "mc_86ab9f672a93",
+          "request_id": "tctx_302b4a1b9e1c0e3228f201f2:compile:attempt-1",
+          "agent_run_id": null,
+          "workflow_step": "teaching_context_compile",
+          "invoke_type": "structured",
+          "resolved_model": {
+            "model_id": "qwen36-27b-mlx-worker-v1",
+            "display_name": "Qwen3.6-27B Worker Test",
+            "capability": "teaching_context_compile",
+            "deployment_profile": "test_text_model_worker"
+          },
+          "content": "{\"v\":1,\"s\":\"s\",\"t\":\"从1~10这10个自然数中，至少要取出( )个不同的数，才能保证其中一定有一个数是偶数。\",\"u\":[],\"o\":[],\"g\":[[\"other\",\"从1~10这10个自然数中，至少要取出( )个不同的数，才能保证其中一定有一个数是偶数。\"]],\"a\":\"6\",\"r\":\"最不利原则：先取完所有奇数（1,3,5,7,9共5个），再取1个必为偶数，故5+1=6\",\"k\":[\"抽屉原理\",\"最不利原则\"],\"p\":[\"1~10中奇数有5个，偶数有5个\",\"考虑最坏情况：先取5个奇数\",\"第6个数必为偶数\"],\"e\":[{\"m\":\"奇偶数个数记错\",\"h\":\"1~10中奇偶各5个\"},{\"m\":\"忘记加1\",\"h\":\"最不利后需+1\"}],\"c\":\"p\",\"x\":[],\"n\":[\"抽屉原理\",\"最不利原则\"],\"q\":\"1~10中有多少个奇数？\"}",
+          "parsed": {},
+          "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"从1~10这10个自然数中，至少要取出( )个不同的数，才能保证其中一定有一个数是偶数。\",\"u\":[],\"o\":[],\"g\":[[\"other\",\"从1~10这10个自然数中，至少要取出( )个不同的数，才能保证其中一定有一个数是偶数。\"]],\"a\":\"6\",\"r\":\"最不利原则：先取完所有奇数（1,3,5,7,9共5个），再取1个必为偶数，故5+1=6\",\"k\":[\"抽屉原理\",\"最不利原则\"],\"p\":[\"1~10中奇数有5个，偶数有5个\",\"考虑最坏情况：先取5个奇数\",\"第6个数必为偶数\"],\"e\":[{\"m\":\"奇偶数个数记错\",\"h\":\"1~10中奇偶各5个\"},{\"m\":\"忘记加1\",\"h\":\"最不利后需+1\"}],\"c\":\"p\",\"x\":[],\"n\":[\"抽屉原理\",\"最不利原则\"],\"q\":\"1~10中有多少个奇数？\"}",
+          "raw_output_ref": null,
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 247,
+            "total_tokens": 247
+          },
+          "latency_ms": 51597.03,
+          "queue_ms": 0.02,
+          "first_token_ms": null,
+          "degraded": false,
+          "provider_metrics": {
+            "provider": "mlx_text",
+            "upstream_model": "qwen36-27b-mlx-worker-v1",
+            "structured_output_enforced": true,
+            "generation_tps": 6.04,
+            "peak_memory_gb": 20.041,
+            "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+            "worker_provider": "mlx_text",
+            "worker_source_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_source_revision_verified": true,
+            "worker_source_tree_clean": true,
+            "worker_runtime_contract_version": "model-worker-runtime/v1",
+            "worker_runtime_kind": "mlx_text",
+            "worker_runtime_version": "0.31.3",
+            "worker_engine_version": "edu-agent-model-worker/v1",
+            "worker_engine_mode": "provider_serialized",
+            "worker_scheduler_enabled": false,
+            "worker_effective_batching": false,
+            "worker_dynamic_batching": false,
+            "worker_deployment_profile": "local_model_worker",
+            "worker_environment": "test",
+            "worker_shadow_only": false,
+            "worker_weights_identity_sha256": "bd5ddc47eaba8c246ebb3b5f8913e8764bfed2925a74ca095db19c729b3f8f43",
+            "worker_weights_identity_verified": true,
+            "worker_effective_batch_id": "worker-direct-a148ecd2ad904d06ade57e963b900cd3",
+            "worker_effective_batch_identity_authoritative": false,
+            "worker_batch_correlation_source": "worker_generated_direct_id",
+            "worker_effective_batch_size": 1,
+            "worker_requested_batch_size": 1,
+            "worker_pid": 41384,
+            "worker_model_id": "qwen36-27b-mlx-worker-v1",
+            "worker_internal_concurrency": 1,
+            "worker_serialized": true,
+            "worker_warm_count": 1,
+            "worker_queue_ms": 0.31,
+            "worker_latency_ms": 51564.96,
+            "request_contract": "model_invoke_v1",
+            "endpoint_host": "127.0.0.1:8200",
+            "deployment_id": "qwen36-27b-mlx-worker",
+            "replica_id": "qwen36-27b-mlx-worker-a",
+            "queue_ms": 0.04,
+            "replica_queue_ms": 0.04,
+            "worker_pool_queue_ms": 0.04,
+            "retry_count": 0,
+            "request_priority": "bulk",
+            "gateway_queue_ms": 0.02,
+            "total_queue_ms": 0.37,
+            "deadline_at": 1788367302.755095,
+            "deadline_remaining_ms": 78463,
+            "queue_deadline_at": 1788367182.815727,
+            "queue_deadline_remaining_ms": 0
+          }
+        }
+      },
+      "gold": {
+        "status": "pending",
+        "missing_fields": [
+          "gold_status_complete"
+        ]
+      }
+    },
+    "failure": null
+  }
+}

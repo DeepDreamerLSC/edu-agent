@@ -1,0 +1,46 @@
+{
+  "schema_version": "small_lecturer_teaching_context_shadow_pilot/v2",
+  "scenario_count": 20,
+  "unique_question_count": 20,
+  "provider": "shadow_pilot_bank",
+  "question_version": "pilot-2026-07-v2",
+  "subject_counts": {
+    "math": 20
+  },
+  "primary_school_only": true,
+  "required_question_fields": [
+    "provider",
+    "question_id",
+    "question_version",
+    "grade",
+    "subject",
+    "knowledge_points",
+    "stem",
+    "verified_answer",
+    "verified_analysis",
+    "acceptable_methods",
+    "common_mistakes",
+    "content_hash"
+  ],
+  "content_hash_algorithm": "question_source_snapshot/v1",
+  "coverage_counts": {
+    "application": 7,
+    "calculation": 4,
+    "geometry": 3,
+    "misconception": 1,
+    "multi_step": 3,
+    "reasoning": 2
+  },
+  "grade_counts": {
+    "三年级": 4,
+    "五年级": 7,
+    "六年级": 4,
+    "四年级": 5
+  },
+  "analysis_quality_counts": {
+    "detailed": 15,
+    "terse": 5
+  },
+  "promotion_evidence_eligible": false,
+  "promotion_mode_remains": "shadow"
+}

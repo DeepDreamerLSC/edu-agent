@@ -1,0 +1,284 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a631d5199bf346827f09389:396043867148",
+  "pilot_bucket": "development:wide",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a631d5199bf346827f09389:396043867148",
+    "status": "pending_gold",
+    "disposition": "ready",
+    "observed": {
+      "scope": "single_question",
+      "stem": "一部流传很广的唐诗诗选收录了311首唐诗，是中小学生接触中国古典诗歌的入门书籍。在这本唐诗诗选中，七言律诗有50首，七言绝句比七言律诗少44%，七言绝句又比乐府诗少9/23。乐府诗有多少首？(画线段图并解答)",
+      "numbers_units": [
+        "311",
+        "50",
+        "44%",
+        "9",
+        "23"
+      ],
+      "formulas": [],
+      "options": [],
+      "ordered_subquestions": [
+        "乐府诗有多少首？"
+      ],
+      "raw_starter_question": "七言绝句有多少首？",
+      "starter_question": "七言绝句有多少首？",
+      "student_visible_gate": {
+        "policy_version": "small_lecturer_visible_guardrail/v8",
+        "action": "ALLOW",
+        "passed": true,
+        "reason_codes": []
+      },
+      "student_visible_repair": {
+        "applied": false,
+        "strategy": "none",
+        "schema_repaired": false
+      },
+      "starter_active_subquestion_index": 0,
+      "candidate_answer": "乐府诗有50首",
+      "disposition": "ready",
+      "evidence_completeness": "partial",
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "structured_question": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "passed",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "60fc582fe4938b3e44c5ffa5b5c6b8e2636ab230733a100a13d97f13fe0c7aa7",
+        "sha256": "396043867148703491ecb688851757b6435cacf5395448bc767bd12af8f03c07",
+        "mime_type": "image/jpeg",
+        "size_bytes": 23801
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "b0f11da543af9fb489fbae005ac37e19d7906d11ce473efbed8c493721ea2ba3",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_d79d5345522f",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow"
+      },
+      "raw_output": {
+        "model_call_id": "mc_d79d5345522f",
+        "request_id": "tctx_2d14c7a740768694234cab13:understanding:attempt-1",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"一部流传很广的唐诗诗选收录了311首唐诗，是中小学生接触中国古典诗歌的入门书籍。在这本唐诗诗选中，七言律诗有50首，七言绝句比七言律诗少44%，七言绝句又比乐府诗少9/23。乐府诗有多少首？(画线段图并解答)\",\"u\":[\"乐府诗有多少首？\"],\"o\":[],\"g\":[{\"m\":\"线段图\",\"h\":\"用线段表示七言律诗、七言绝句与乐府诗的数量关系，标注已知数值与比例\"}],\"a\":\"乐府诗有50首\",\"r\":\"七言绝句=50×(1-44%)=28首；设乐府诗为x首，则28=x×(1-9/23)，解得x=50\",\"k\":[\"分数乘法\",\"分数除法\",\"线段图表示数量关系\"],\"p\":[\"先求七言绝句数量：50×(1-44%)=28首；再根据七言绝句与乐府诗的关系列方程求解\"],\"e\":[{\"m\":\"误将44%当作绝对数量\",\"h\":\"44%是比例，应乘以50求具体首数\"},{\"m\":\"混淆‘比...少’的方向\",\"h\":\"七言绝句比乐府诗少9/23，即七言绝句是乐府诗的(1-9/23)\"}],\"c\":\"p\",\"x\":[],\"n\":[\"分数应用题\",\"比例关系\"],\"q\":\"七言绝句有多少首？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"一部流传很广的唐诗诗选收录了311首唐诗，是中小学生接触中国古典诗歌的入门书籍。在这本唐诗诗选中，七言律诗有50首，七言绝句比七言律诗少44%，七言绝句又比乐府诗少9/23。乐府诗有多少首？(画线段图并解答)\",\"u\":[\"乐府诗有多少首？\"],\"o\":[],\"g\":[{\"m\":\"线段图\",\"h\":\"用线段表示七言律诗、七言绝句与乐府诗的数量关系，标注已知数值与比例\"}],\"a\":\"乐府诗有50首\",\"r\":\"七言绝句=50×(1-44%)=28首；设乐府诗为x首，则28=x×(1-9/23)，解得x=50\",\"k\":[\"分数乘法\",\"分数除法\",\"线段图表示数量关系\"],\"p\":[\"先求七言绝句数量：50×(1-44%)=28首；再根据七言绝句与乐府诗的关系列方程求解\"],\"e\":[{\"m\":\"误将44%当作绝对数量\",\"h\":\"44%是比例，应乘以50求具体首数\"},{\"m\":\"混淆‘比...少’的方向\",\"h\":\"七言绝句比乐府诗少9/23，即七言绝句是乐府诗的(1-9/23)\"}],\"c\":\"p\",\"x\":[],\"n\":[\"分数应用题\",\"比例关系\"],\"q\":\"七言绝句有多少首？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2215,
+          "completion_tokens": 354,
+          "total_tokens": 2569
+        },
+        "latency_ms": 18116.07,
+        "queue_ms": 0.03,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-2739a3bc50b14f888fbb25bce99f65cb",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.33,
+          "worker_latency_ms": 18100.23,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.09,
+          "replica_queue_ms": 0.09,
+          "worker_pool_queue_ms": 0.09,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.03,
+          "total_queue_ms": 0.45,
+          "deadline_at": 1788390326.857269,
+          "deadline_remaining_ms": 111831,
+          "queue_deadline_at": 1788390206.909591,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 18116.07,
+        "queue_ms": 0.03,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_2d14c7a740768694234cab13",
+      "compile": {
+        "model_call_id": "mc_a52705d0b8a7",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+        "prompt_sha256": "e45da567916cc0b390c8c28071f934bde0b2ad307f4356cc53bb99884c9fa30c",
+        "response_parse_status": "parsed",
+        "raw_output": {
+          "model_call_id": "mc_a52705d0b8a7",
+          "request_id": "tctx_2d14c7a740768694234cab13:compile:attempt-1",
+          "agent_run_id": null,
+          "workflow_step": "teaching_context_compile",
+          "invoke_type": "structured",
+          "resolved_model": {
+            "model_id": "qwen36-27b-mlx-worker-v1",
+            "display_name": "Qwen3.6-27B Worker Test",
+            "capability": "teaching_context_compile",
+            "deployment_profile": "test_text_model_worker"
+          },
+          "content": "{\"v\":1,\"s\":\"s\",\"t\":\"一部流传很广的唐诗诗选收录了311首唐诗，是中小学生接触中国古典诗歌的入门书籍。在这本唐诗诗选中，七言律诗有50首，七言绝句比七言律诗少44%，七言绝句又比乐府诗少9/23。乐府诗有多少首？(画线段图并解答)\",\"u\":[],\"o\":[],\"g\":[[\"diagram\",\"用线段表示七言律诗、七言绝句与乐府诗的数量关系，标注已知数值与比例\"]],\"a\":\"50\",\"r\":\"七言绝句=50×(1-44%)=28首；设乐府诗为x首，则28=x×(1-9/23)，解得x=50\",\"k\":[\"分数应用题\",\"比例关系\"],\"p\":[\"先求七言绝句数量：50×(1-44%)=28首；再根据七言绝句与乐府诗的关系列方程求解\"],\"e\":[{\"m\":\"误将44%当作绝对数量\",\"h\":\"44%是比例，应乘以50求具体首数\"},{\"m\":\"混淆‘比...少’的方向\",\"h\":\"七言绝句比乐府诗少9/23，即七言绝句是乐府诗的(1-9/23)\"}],\"c\":\"p\",\"x\":[],\"n\":[\"分数应用题\",\"比例关系\"],\"q\":\"七言绝句有多少首？\"}",
+          "parsed": {},
+          "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"一部流传很广的唐诗诗选收录了311首唐诗，是中小学生接触中国古典诗歌的入门书籍。在这本唐诗诗选中，七言律诗有50首，七言绝句比七言律诗少44%，七言绝句又比乐府诗少9/23。乐府诗有多少首？(画线段图并解答)\",\"u\":[],\"o\":[],\"g\":[[\"diagram\",\"用线段表示七言律诗、七言绝句与乐府诗的数量关系，标注已知数值与比例\"]],\"a\":\"50\",\"r\":\"七言绝句=50×(1-44%)=28首；设乐府诗为x首，则28=x×(1-9/23)，解得x=50\",\"k\":[\"分数应用题\",\"比例关系\"],\"p\":[\"先求七言绝句数量：50×(1-44%)=28首；再根据七言绝句与乐府诗的关系列方程求解\"],\"e\":[{\"m\":\"误将44%当作绝对数量\",\"h\":\"44%是比例，应乘以50求具体首数\"},{\"m\":\"混淆‘比...少’的方向\",\"h\":\"七言绝句比乐府诗少9/23，即七言绝句是乐府诗的(1-9/23)\"}],\"c\":\"p\",\"x\":[],\"n\":[\"分数应用题\",\"比例关系\"],\"q\":\"七言绝句有多少首？\"}",
+          "raw_output_ref": null,
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 335,
+            "total_tokens": 335
+          },
+          "latency_ms": 76484.72,
+          "queue_ms": 0.02,
+          "first_token_ms": null,
+          "degraded": false,
+          "provider_metrics": {
+            "provider": "mlx_text",
+            "upstream_model": "qwen36-27b-mlx-worker-v1",
+            "structured_output_enforced": true,
+            "generation_tps": 5.26,
+            "peak_memory_gb": 20.082,
+            "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+            "worker_provider": "mlx_text",
+            "worker_source_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_source_revision_verified": true,
+            "worker_source_tree_clean": true,
+            "worker_runtime_contract_version": "model-worker-runtime/v1",
+            "worker_runtime_kind": "mlx_text",
+            "worker_runtime_version": "0.31.3",
+            "worker_engine_version": "edu-agent-model-worker/v1",
+            "worker_engine_mode": "provider_serialized",
+            "worker_scheduler_enabled": false,
+            "worker_effective_batching": false,
+            "worker_dynamic_batching": false,
+            "worker_deployment_profile": "local_model_worker",
+            "worker_environment": "test",
+            "worker_shadow_only": false,
+            "worker_weights_identity_sha256": "bd5ddc47eaba8c246ebb3b5f8913e8764bfed2925a74ca095db19c729b3f8f43",
+            "worker_weights_identity_verified": true,
+            "worker_effective_batch_id": "worker-direct-89b47762287548d8b0d77d910383f8e4",
+            "worker_effective_batch_identity_authoritative": false,
+            "worker_batch_correlation_source": "worker_generated_direct_id",
+            "worker_effective_batch_size": 1,
+            "worker_requested_batch_size": 1,
+            "worker_pid": 41384,
+            "worker_model_id": "qwen36-27b-mlx-worker-v1",
+            "worker_internal_concurrency": 1,
+            "worker_serialized": true,
+            "worker_warm_count": 1,
+            "worker_queue_ms": 0.64,
+            "worker_latency_ms": 76467.34,
+            "request_contract": "model_invoke_v1",
+            "endpoint_host": "127.0.0.1:8200",
+            "deployment_id": "qwen36-27b-mlx-worker",
+            "replica_id": "qwen36-27b-mlx-worker-a",
+            "queue_ms": 0.02,
+            "replica_queue_ms": 0.02,
+            "worker_pool_queue_ms": 0.02,
+            "retry_count": 0,
+            "request_priority": "bulk",
+            "gateway_queue_ms": 0.02,
+            "total_queue_ms": 0.68,
+            "deadline_at": 1788390345.027736,
+            "deadline_remaining_ms": 53469,
+            "queue_deadline_at": 1788390225.0611022,
+            "queue_deadline_remaining_ms": 0
+          }
+        }
+      },
+      "gold": {
+        "status": "pending",
+        "missing_fields": [
+          "gold_status_complete"
+        ]
+      }
+    },
+    "failure": null
+  }
+}

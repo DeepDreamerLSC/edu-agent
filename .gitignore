@@ -4,6 +4,8 @@ __pycache__/
 .env
 *.jsonl
 !evals/datasets/**/*.jsonl
+!edu_agent/evals/datasets/**/*.jsonl
+!edu_agent/evals/artifacts/**/*.jsonl
 .DS_Store
 .ruff_cache/
 .pytest_cache/

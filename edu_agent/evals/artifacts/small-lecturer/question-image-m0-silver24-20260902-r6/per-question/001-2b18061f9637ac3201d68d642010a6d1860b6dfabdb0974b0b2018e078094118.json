@@ -1,0 +1,285 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a62cb2999bf346827f05354:b4d7e4d67ce3",
+  "pilot_bucket": "development:wide",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a62cb2999bf346827f05354:b4d7e4d67ce3",
+    "status": "pending_gold",
+    "disposition": "ready",
+    "observed": {
+      "scope": "single_question",
+      "stem": "把20/13 m长的彩带平均剪成4段，每段长是20/13 m的（ ），每段长（ ）m。",
+      "numbers_units": [
+        "20",
+        "13 ",
+        "4",
+        "20",
+        "13 "
+      ],
+      "formulas": [],
+      "options": [],
+      "ordered_subquestions": [
+        "把20/13 m长的彩带平均剪成4段，每段长是20/13 m的几分之几？",
+        "把20/13 m长的彩带平均剪成4段，每段长多少米？"
+      ],
+      "raw_starter_question": "每段长是20/13 m的几分之几？",
+      "starter_question": "每段长是20/13 m的几分之几？",
+      "student_visible_gate": {
+        "policy_version": "small_lecturer_visible_guardrail/v8",
+        "action": "ALLOW",
+        "passed": true,
+        "reason_codes": []
+      },
+      "student_visible_repair": {
+        "applied": false,
+        "strategy": "none",
+        "schema_repaired": false
+      },
+      "starter_active_subquestion_index": 0,
+      "candidate_answer": "",
+      "disposition": "ready",
+      "evidence_completeness": "partial",
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "structured_question": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "passed",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "672b5f7a4e567295cfab0d84121352404c21744cd6d7871ab58beb7ea5e6eb74",
+        "sha256": "b4d7e4d67ce36042bbd139ed4fa036033ba76659bc1d57ea15a3c1a1679c9904",
+        "mime_type": "image/jpeg",
+        "size_bytes": 8820
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "8bf7ab29606e3e209e25c6b59e54cc2132fa6e990fce5f55cbe6403569cb9869",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_bc532f22fb5f",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow"
+      },
+      "raw_output": {
+        "model_call_id": "mc_bc532f22fb5f",
+        "request_id": "tctx_93be83364f485ccd0bab406b:understanding:attempt-1",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"把20/13 m长的彩带平均剪成4段，每段长是20/13 m的（ ），每段长（ ）m。\",\"u\":[\"把20/13 m长的彩带平均剪成4段，每段长是20/13 m的几分之几？\",\"把20/13 m长的彩带平均剪成4段，每段长多少米？\"],\"o\":[],\"g\":[],\"a\":\"\",\"r\":\"\",\"k\":[\"分数除法意义\",\"分数与除法的联系\"],\"p\":[\"每段是整体的1/4，即20/13×1/4=5/13 m\"],\"e\":[],\"c\":\"p\",\"x\":[],\"n\":[\"分数除法\"],\"q\":\"每段长是20/13 m的几分之几？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"把20/13 m长的彩带平均剪成4段，每段长是20/13 m的（ ），每段长（ ）m。\",\"u\":[\"把20/13 m长的彩带平均剪成4段，每段长是20/13 m的几分之几？\",\"把20/13 m长的彩带平均剪成4段，每段长多少米？\"],\"o\":[],\"g\":[],\"a\":\"\",\"r\":\"\",\"k\":[\"分数除法意义\",\"分数与除法的联系\"],\"p\":[\"每段是整体的1/4，即20/13×1/4=5/13 m\"],\"e\":[],\"c\":\"p\",\"x\":[],\"n\":[\"分数除法\"],\"q\":\"每段长是20/13 m的几分之几？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2225,
+          "completion_tokens": 189,
+          "total_tokens": 2414
+        },
+        "latency_ms": 9972.38,
+        "queue_ms": 0.02,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-bc8922840b4d4e099761acbfa60c344d",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.05,
+          "worker_latency_ms": 9963.26,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.02,
+          "total_queue_ms": 0.09,
+          "deadline_at": 1788366740.863602,
+          "deadline_remaining_ms": 120005,
+          "queue_deadline_at": 1788366620.885802,
+          "queue_deadline_remaining_ms": 27
+        }
+      },
+      "timing": {
+        "latency_ms": 9972.38,
+        "queue_ms": 0.02,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_93be83364f485ccd0bab406b",
+      "compile": {
+        "model_call_id": "mc_f0419e5a8053",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+        "prompt_sha256": "ac3c70fd3d0226d0ac15a0c6a6508917da0498cd4a344240670218e0d85a42f8",
+        "response_parse_status": "parsed",
+        "raw_output": {
+          "model_call_id": "mc_f0419e5a8053",
+          "request_id": "tctx_93be83364f485ccd0bab406b:compile:attempt-1",
+          "agent_run_id": null,
+          "workflow_step": "teaching_context_compile",
+          "invoke_type": "structured",
+          "resolved_model": {
+            "model_id": "qwen36-27b-mlx-worker-v1",
+            "display_name": "Qwen3.6-27B Worker Test",
+            "capability": "teaching_context_compile",
+            "deployment_profile": "test_text_model_worker"
+          },
+          "content": "{\n\"v\": 1,\n\"s\": \"c\",\n\"t\": \"把20/13 m长的彩带平均剪成4段，每段长是20/13 m的（ ），每段长（ ）m。\",\n\"u\": [\n[\n\"每段长是20/13 m的几分之几？\",\n\"1/4\",\n\"将整体平均分成4份，每份占整体的1/4。\"\n],\n[\n\"每段长多少米？\",\n\"5/13\",\n\"20/13 ÷ 4 = 5/13 (m)。\"\n]\n],\n\"o\": [],\n\"g\": [\n[\n\"other\",\n\"把20/13 m长的彩带平均剪成4段，每段长是20/13 m的（ ），每段长（ ）m。\"\n]\n],\n\"a\": \"1/4, 5/13\",\n\"r\": \"每段占整体的1/4，长度为20/13除以4等于5/13米。\",\n\"k\": [\n\"分数除法\",\n\"分数的意义\"\n],\n\"p\": [\n\"理解题意：将20/13 m长的彩带平均剪成4段。\",\n\"第一空：求每段是总长的几分之几，即1÷4=1/4。\",\n\"第二空：求每段的具体长度，即20/13÷4=5/13 (m)。\"\n],\n\"e\": [\n{\n\"m\": \"混淆‘分率’与‘具体数量’，认为每段长是20/13 m的1/4 m。\",\n\"h\": \"‘是...的几分之几’表示分率，不带单位；‘长多少米’表示具体数量，带单位。\"\n},\n{\n\"m\": \"计算错误，将20/13 ÷ 4 误算为 20/52 或 80/13。\",\n\"h\": \"分数除以整数，等于分数乘以该整数的倒数，即 20/13 × 1/4 = 5/13。\"\n}\n],\n\"c\": \"p\",\n\"x\": [],\n\"n\": [\n\"分数除法\",\n\"分数的意义\"\n],\n\"q\": \"每段长是20/13 m的几分之几？\"\n}",
+          "parsed": {},
+          "raw_text": "{\n\"v\": 1,\n\"s\": \"c\",\n\"t\": \"把20/13 m长的彩带平均剪成4段，每段长是20/13 m的（ ），每段长（ ）m。\",\n\"u\": [\n[\n\"每段长是20/13 m的几分之几？\",\n\"1/4\",\n\"将整体平均分成4份，每份占整体的1/4。\"\n],\n[\n\"每段长多少米？\",\n\"5/13\",\n\"20/13 ÷ 4 = 5/13 (m)。\"\n]\n],\n\"o\": [],\n\"g\": [\n[\n\"other\",\n\"把20/13 m长的彩带平均剪成4段，每段长是20/13 m的（ ），每段长（ ）m。\"\n]\n],\n\"a\": \"1/4, 5/13\",\n\"r\": \"每段占整体的1/4，长度为20/13除以4等于5/13米。\",\n\"k\": [\n\"分数除法\",\n\"分数的意义\"\n],\n\"p\": [\n\"理解题意：将20/13 m长的彩带平均剪成4段。\",\n\"第一空：求每段是总长的几分之几，即1÷4=1/4。\",\n\"第二空：求每段的具体长度，即20/13÷4=5/13 (m)。\"\n],\n\"e\": [\n{\n\"m\": \"混淆‘分率’与‘具体数量’，认为每段长是20/13 m的1/4 m。\",\n\"h\": \"‘是...的几分之几’表示分率，不带单位；‘长多少米’表示具体数量，带单位。\"\n},\n{\n\"m\": \"计算错误，将20/13 ÷ 4 误算为 20/52 或 80/13。\",\n\"h\": \"分数除以整数，等于分数乘以该整数的倒数，即 20/13 × 1/4 = 5/13。\"\n}\n],\n\"c\": \"p\",\n\"x\": [],\n\"n\": [\n\"分数除法\",\n\"分数的意义\"\n],\n\"q\": \"每段长是20/13 m的几分之几？\"\n}",
+          "raw_output_ref": null,
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 559,
+            "total_tokens": 559
+          },
+          "latency_ms": 53137.5,
+          "queue_ms": 0.04,
+          "first_token_ms": null,
+          "degraded": false,
+          "provider_metrics": {
+            "provider": "mlx_text",
+            "upstream_model": "qwen36-27b-mlx-worker-v1",
+            "structured_output_enforced": true,
+            "generation_tps": 12.71,
+            "peak_memory_gb": 20.041,
+            "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+            "worker_provider": "mlx_text",
+            "worker_source_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_source_revision_verified": true,
+            "worker_source_tree_clean": true,
+            "worker_runtime_contract_version": "model-worker-runtime/v1",
+            "worker_runtime_kind": "mlx_text",
+            "worker_runtime_version": "0.31.3",
+            "worker_engine_version": "edu-agent-model-worker/v1",
+            "worker_engine_mode": "provider_serialized",
+            "worker_scheduler_enabled": false,
+            "worker_effective_batching": false,
+            "worker_dynamic_batching": false,
+            "worker_deployment_profile": "local_model_worker",
+            "worker_environment": "test",
+            "worker_shadow_only": false,
+            "worker_weights_identity_sha256": "bd5ddc47eaba8c246ebb3b5f8913e8764bfed2925a74ca095db19c729b3f8f43",
+            "worker_weights_identity_verified": true,
+            "worker_effective_batch_id": "worker-direct-0f863c819dcc4fa6813acb0bfa834db5",
+            "worker_effective_batch_identity_authoritative": false,
+            "worker_batch_correlation_source": "worker_generated_direct_id",
+            "worker_effective_batch_size": 1,
+            "worker_requested_batch_size": 1,
+            "worker_pid": 41384,
+            "worker_model_id": "qwen36-27b-mlx-worker-v1",
+            "worker_internal_concurrency": 1,
+            "worker_serialized": true,
+            "worker_warm_count": 1,
+            "worker_queue_ms": 0.09,
+            "worker_latency_ms": 53122.31,
+            "request_contract": "model_invoke_v1",
+            "endpoint_host": "127.0.0.1:8200",
+            "deployment_id": "qwen36-27b-mlx-worker",
+            "replica_id": "qwen36-27b-mlx-worker-a",
+            "queue_ms": 0.04,
+            "replica_queue_ms": 0.04,
+            "worker_pool_queue_ms": 0.04,
+            "retry_count": 0,
+            "request_priority": "bulk",
+            "gateway_queue_ms": 0.04,
+            "total_queue_ms": 0.17,
+            "deadline_at": 1788366750.867716,
+            "deadline_remaining_ms": 76826,
+            "queue_deadline_at": 1788366630.9031072,
+            "queue_deadline_remaining_ms": 0
+          }
+        }
+      },
+      "gold": {
+        "status": "pending",
+        "missing_fields": [
+          "gold_status_complete"
+        ]
+      }
+    },
+    "failure": null
+  }
+}

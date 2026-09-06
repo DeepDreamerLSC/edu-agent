@@ -1,0 +1,13 @@
+{
+  "schema_version": "small_lecturer_partner_pilot_case/v1",
+  "generated_at": "2026-08-08T10:59:51.982596+00:00",
+  "source_manifest_sha256": "2ceffeac15a6eac600abb19ea0b50358b96958dff8050fd4ad2a9c3f1777ab33",
+  "model_calls": [],
+  "failure_stage": "preflight",
+  "question_id": "6a62f66f184f723b3592b939",
+  "question_version": "sha256:37b1fcd7212c2fe9e296dec5f8d02f2345b195559d2e27eb42bb600730156c0b",
+  "pilot_bucket": "circle_geometry",
+  "status": "blocked",
+  "blocking_reason_code": "question_image_understanding_worker_unavailable",
+  "model_call_count": 0
+}

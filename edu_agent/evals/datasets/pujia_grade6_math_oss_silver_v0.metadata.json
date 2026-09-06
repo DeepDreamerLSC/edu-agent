@@ -1,0 +1,55 @@
+{
+  "schema_version": "pujia_grade6_math_oss_silver_metadata/v1",
+  "dataset_id": "pujia_grade6_math_oss_silver_v0",
+  "display_name": "濮家六年级数学 OSS 题图 Silver v0",
+  "status": "internal_silver",
+  "source_summary_artifact": "artifacts/dataset-preparation/pujia-grade6-oss-silver-v0/source-summary.json",
+  "discovery_pool_artifact": "artifacts/dataset-preparation/pujia-grade6-oss-silver-v0/discovery-pool.jsonl",
+  "development_artifact": "artifacts/dataset-preparation/pujia-grade6-oss-silver-v0/silver-v0-development.json",
+  "reserved_artifact": "artifacts/dataset-preparation/pujia-grade6-oss-silver-v0/silver-v0-reserved.json",
+  "expansion_artifact": "artifacts/dataset-preparation/pujia-grade6-oss-silver-v0/expansion-candidates.json",
+  "coverage_artifact": "artifacts/dataset-preparation/pujia-grade6-oss-silver-v0/coverage-report.md",
+  "source_domain": "oss.k12m.cn",
+  "source_file_sha256": "355fff012b371e175946ebf43ad683209f5077ee8ea05c2448d5b6f078223f22",
+  "source_url_policy": "committed records contain URL digests and redacted source descriptors only",
+  "record_counts": {
+    "discovery_pool": 264,
+    "development": 18,
+    "reserved": 6,
+    "expansion_candidates": 72
+  },
+  "sampling": {
+    "random_seed": 20260819,
+    "sampler_version": "pujia-oss-silver-v0-v1",
+    "development_and_reserved_disjoint": true,
+    "reserved_not_used_for_normal_prompt_debugging": true,
+    "isolation_mode": "process_and_workflow_only; artifact remains readable to repository users"
+  },
+  "classification": {
+    "deterministic_metadata": true,
+    "controlled_vision_adapter": "not_configured_in_v0_run",
+    "vision_labels_status": "blocked",
+    "formal_accuracy_claim": false,
+    "teacher_gold": false,
+    "teacher_review_required": true
+  },
+  "prompt_lab_integration": {
+    "status": "not_connected",
+    "runtime_executable": false,
+    "reason": "This preparation asset is not in the controlled Prompt Lab catalog yet."
+  },
+  "last_preparation_run": {
+    "download_attempted": true,
+    "downloaded_count": 264,
+    "download_failed_count": 0,
+    "duplicate_sha256_count": 0,
+    "raw_cache": "temporary_untracked_directory"
+  },
+  "privacy_and_commit_boundary": {
+    "raw_xls_committed": false,
+    "raw_images_committed": false,
+    "full_partner_url_list_committed": false,
+    "artifacts_are_internal_only": false,
+    "artifacts_visibility": "repository_visible; reserved usage is isolated by process and workflow permissions"
+  }
+}

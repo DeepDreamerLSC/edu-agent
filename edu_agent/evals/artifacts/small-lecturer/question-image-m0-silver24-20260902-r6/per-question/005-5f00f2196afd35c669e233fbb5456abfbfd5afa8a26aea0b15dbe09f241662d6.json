@@ -1,0 +1,181 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a69586fb0ffee286ba75532:55853c6518b8",
+  "pilot_bucket": "development:squareish",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a69586fb0ffee286ba75532:55853c6518b8",
+    "status": "failed",
+    "disposition": "failed",
+    "observed": {
+      "model_response_received": true,
+      "structured_result": {},
+      "raw_starter_question": null,
+      "student_visible_gate": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "student_visible_repair": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "starter_question": null,
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "failed",
+          "reason_codes": [
+            "MODEL_RESPONSE_PARSE_FAILED"
+          ]
+        },
+        "structured_question": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "not_run",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "55c0c2529ab6ddf30f4a98ebac0abf1d53a1170a7a1d1ce28e626faec92177cf",
+        "sha256": "55853c6518b85c5689074e6a8998d9cc5454f740a69ee357bb448958d411832f",
+        "mime_type": "image/jpeg",
+        "size_bytes": 25186
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "d94265c08b4bba100debf42b992d79978a0aaaa786677672ac681d517cac7274",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_993032484616",
+        "model_call_count": 2,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+        "response_parse_status": "failed",
+        "response_parsed_keys": [],
+        "response_content_length": 617,
+        "response_parse_error_code": "VALIDATIONERROR"
+      },
+      "raw_output": {
+        "model_call_id": "mc_993032484616",
+        "request_id": "tctx_c8e49551dd095f68f5cab433:understanding:attempt-2",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"c\",\"t\":\"以灯塔为观测点，C岛和D岛分别在什么方位上？(1)C岛在灯塔的北偏( )(°)的方向上。(2)D岛在灯塔的南偏( )(°)的方向上。还可以这样描述：(3)C岛在灯塔的东偏( )(°)的方向上。(4)D岛在灯塔的( )偏( )(°)的方向上。\",\"u\":[\"C岛在灯塔的北偏( )(°)的方向上。\",\"D岛在灯塔的南偏( )(°)的方向上。\",\"C岛在灯塔的东偏( )(°)的方向上。\",\"D岛在灯塔的( )偏( )(°)的方向上。\"],\"o\":[{\"m\":\"A\",\"h\":\"灯塔\"},{\"m\":\"B\",\"h\":\"C岛\"},{\"m\":\"C\",\"h\":\"D岛\"}],\"g\":[{\"m\":\"方位角图\",\"h\":\"以灯塔为中心，标有东西南北方向，C岛在北偏东75°，D岛在西偏南40°\"}],\"a\":\"(1)东 15 (2)西 50 (3)北 15 (4)西 南 50\",\"r\":\"C岛与正东夹角75°，则与正北夹角15°；D岛与正西夹角40°，则与正南夹角50°。\",\"k\":[\"方位角定义\",\"方向互补关系\"],\"p\":[\"C岛：90°-75°=15°；D岛：90°-40°=50°\"],\"e\":[{\"m\":\"方向混淆\",\"h\":\"将北偏东误作东偏北，或忽略90°互补关系\"}],\"c\":\"p\",\"x\":[\"amu\"],\"n\":[\"方位角\",\"方向描述\"],\"q\":\"C岛在灯塔的北偏东多少度？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"c\",\"t\":\"以灯塔为观测点，C岛和D岛分别在什么方位上？(1)C岛在灯塔的北偏( )(°)的方向上。(2)D岛在灯塔的南偏( )(°)的方向上。还可以这样描述：(3)C岛在灯塔的东偏( )(°)的方向上。(4)D岛在灯塔的( )偏( )(°)的方向上。\",\"u\":[\"C岛在灯塔的北偏( )(°)的方向上。\",\"D岛在灯塔的南偏( )(°)的方向上。\",\"C岛在灯塔的东偏( )(°)的方向上。\",\"D岛在灯塔的( )偏( )(°)的方向上。\"],\"o\":[{\"m\":\"A\",\"h\":\"灯塔\"},{\"m\":\"B\",\"h\":\"C岛\"},{\"m\":\"C\",\"h\":\"D岛\"}],\"g\":[{\"m\":\"方位角图\",\"h\":\"以灯塔为中心，标有东西南北方向，C岛在北偏东75°，D岛在西偏南40°\"}],\"a\":\"(1)东 15 (2)西 50 (3)北 15 (4)西 南 50\",\"r\":\"C岛与正东夹角75°，则与正北夹角15°；D岛与正西夹角40°，则与正南夹角50°。\",\"k\":[\"方位角定义\",\"方向互补关系\"],\"p\":[\"C岛：90°-75°=15°；D岛：90°-40°=50°\"],\"e\":[{\"m\":\"方向混淆\",\"h\":\"将北偏东误作东偏北，或忽略90°互补关系\"}],\"c\":\"p\",\"x\":[\"amu\"],\"n\":[\"方位角\",\"方向描述\"],\"q\":\"C岛在灯塔的北偏东多少度？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2187,
+          "completion_tokens": 405,
+          "total_tokens": 2592
+        },
+        "latency_ms": 28725.33,
+        "queue_ms": 0.02,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-c3f368e560a848a9b28843b53c3eb611",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.11,
+          "worker_latency_ms": 28708.45,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.02,
+          "total_queue_ms": 0.15,
+          "deadline_at": 1788366968.661909,
+          "deadline_remaining_ms": 101234,
+          "queue_deadline_at": 1788366848.70098,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 28725.33,
+        "queue_ms": 0.02,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_c8e49551dd095f68f5cab433"
+    },
+    "failure": {
+      "stage": "question_image_understanding",
+      "code": "MODEL_RESPONSE_PARSE_FAILED",
+      "summary": "模型已返回题图结果，但结果未通过结构化题图理解解析"
+    }
+  }
+}
