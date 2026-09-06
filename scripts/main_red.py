@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""main 推送报警(issue #11,04 §3.2/§4):push 到 main 的 CI 失败自动开 issue。
+"""main 推送报警(issue #11/#35,04 §3.2/§4):main 上的 CI 失败自动开 issue。
 
-GitHub Free 私有仓库无分支保护,main 红了只有邮件通知;本脚本挂在 ci.yml checks
-job 的失败步骤上(push 事件才触发),用 GITHUB_TOKEN 开带 main-red 标签的 issue:
-标题含 commit sha 与失败步骤,已有未关闭的 main-red issue 不重复开(按标签查重)。
---dry-run 用模拟输入打印将开的内容、不访问网络,是开 issue 逻辑的本地验证方式。
-只依赖标准库。
+两种挂法,报警逻辑只此一份:
+- ci.yml checks job 内的失败步骤(GITHUB_JOB 自动指向 checks,只看该 job);
+- main.yml alarm job(--all-jobs,#35):needs checks+benchmark 任一失败触发,
+  收集本 run 全部 job 的失败步骤,步骤名带 job 前缀。
+
+用 GITHUB_TOKEN 开带 main-red 标签的 issue:标题含 commit sha 与失败步骤,
+已有未关闭的同标签 issue 不重复开(按标签查重)。--dry-run 用模拟输入打印
+将开的内容、不访问网络。只依赖标准库。
 """
 
 from __future__ import annotations
@@ -46,14 +49,23 @@ def issue_body(sha: str, step_names: list[str], run_url: str) -> str:
     )
 
 
-def alert(api, sha: str, run_id: str, job_name: str, run_url: str) -> None:
-    """checks 失败 → 开 main-red issue;已有未关闭的同标签 issue 则跳过。"""
-    data = api.get(f"actions/runs/{run_id}/jobs?per_page=100")
-    steps = next(
-        (job["steps"] for job in (data or {}).get("jobs", []) if job.get("name") == job_name),
-        [],
-    )
-    names = failed_step_names(steps)
+def alert(api, sha: str, run_id: str, job_name: str | None, run_url: str) -> None:
+    """失败 → 开 main-red issue;已有未关闭的同标签 issue 则跳过。
+
+    job_name 指定时只看该 job 的失败步骤(ci.yml 挂在 checks job 内的用法);
+    None = 报警 job 模式(main.yml --all-jobs,#35):收集全部 job 的失败步骤,
+    步骤名带 job 前缀(checks/ruff、benchmark/效率基准…)。
+    """
+    jobs = (api.get(f"actions/runs/{run_id}/jobs?per_page=100") or {}).get("jobs", [])
+    if job_name is None:
+        names = [
+            f"{job.get('name', '?')}/{name}"
+            for job in jobs
+            for name in failed_step_names(job.get("steps") or [])
+        ]
+    else:
+        steps = next((job["steps"] for job in jobs if job.get("name") == job_name), [])
+        names = failed_step_names(steps)
     if not names:
         print("main-red: 没有失败步骤(运行被取消或读不到),不开 issue")
         return
@@ -72,6 +84,11 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="打印将开的 issue,不访问网络")
     parser.add_argument("--sha", default="", help="dry-run:模拟的 commit sha")
     parser.add_argument("--steps", default="", help="dry-run:逗号分隔的失败步骤名")
+    parser.add_argument(
+        "--all-jobs",
+        action="store_true",
+        help="报警 job 模式(main.yml alarm,#35):收集本 run 全部 job 的失败步骤",
+    )
     args = parser.parse_args()
     if args.dry_run:
         names = [name for name in args.steps.split(",") if name]
@@ -94,7 +111,7 @@ def main() -> int:
         api,
         os.environ.get("GITHUB_SHA", ""),
         run_id,
-        os.environ.get("GITHUB_JOB", "checks"),
+        None if args.all_jobs else os.environ.get("GITHUB_JOB", "checks"),
         run_url,
     )
     return 0
