@@ -137,6 +137,8 @@ cached_input_tokens, finish_reason, fallback_from, redacted, trace_id
 新做法：
 
 - 本地模型服务以独立进程运行，OpenAI 兼容接口，由 launchd（Mac）或 systemd（Linux）管理。
+  v1 目标机器是本机 Mac（M5 Max，128 GB）；首选 mlx-lm server 跑 Qwen3.5-27B 4bit 作 tutor，
+  llama-server 跑 Qwen3.5-9B GGUF 作本地 judge 备选，两者都是老系统已验证可跑的模型。
 - gateway 对它与对云 API 一视同仁，只是 base_url 不同。
 - 健康检查是 gateway 启动时对每个 base_url 发一次 `/v1/models`，不通即在事实记录里标记，不阻塞启动。
 - 需要更强的路由、预算、多 key 轮换时，在 gateway 与上游之间放 LiteLLM proxy，

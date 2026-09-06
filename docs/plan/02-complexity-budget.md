@@ -90,7 +90,7 @@ CI 以关键词扫描 `edu_agent/` 中的 `lease`、`heartbeat`、`worker_pool`�
 
 ## 7. 结构性改动必须人批
 
-AI agent 可以改函数、改文件、写测试。以下四类改动必须由人在 PR 上显式批准（GitHub CODEOWNERS 指定）：
+AI agent 可以改函数、改文件、写测试。以下四类改动必须由人显式批准：
 
 1. 新增顶层包
 2. 新增第三方依赖
@@ -98,6 +98,15 @@ AI agent 可以改函数、改文件、写测试。以下四类改动必须由�
 4. 修改 CI 规则、本文档、`scripts/budget.py`
 
 原因：加代码对 agent 是免费的，约束只能放在结构上。
+
+**落地方式（单人开发模式）**。本仓库只有一个人提交，agent 写代码、人评审，GitHub 不允许自己批准自己的 PR，
+所以不用 CODEOWNERS 和必需评审，改用：
+
+- agent 只开 PR，**永远不合并**。合并动作本身就是人批。
+- CI 检查 PR 是否触碰上述四类路径；触碰时自动打 `structural` 标签，并要求 PR 描述里有
+  `structural-approval:` 一行写明理由，缺失则 CI 失败。
+- 分支保护只开"CI 必须通过"，不开"必需评审"。
+- 人自己写代码时走同一套 CI 检查，规则不因提交者而异。
 
 ## 8. 进度只有一个尺子
 
@@ -114,5 +123,5 @@ AI agent 可以改函数、改文件、写测试。以下四类改动必须由�
 - [ ] `scripts/budget.py`：统计第 2 节全部指标，超限非零退出
 - [ ] `.github/workflows/ci.yml`：ruff + pytest + budget + 基础设施关键词扫描 + 私有导入检查
 - [ ] `.github/pull_request_template.md`：需求来源、删除了什么、评测差异三个字段
-- [ ] `CODEOWNERS`：第 7 节四类路径指向人
+- [ ] 分支保护：仅要求 CI 通过；`structural` 标签检查按第 7 节实现
 - [ ] 本文档第 2 节数字写进 `scripts/budget.py` 的常量，两处必须一致（CI 校验）
