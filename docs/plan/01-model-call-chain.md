@@ -93,7 +93,7 @@ request → registry(解析角色→模型) → ratelimit → retry → fallback
 |---|---|---|
 | TTFT p50 / p95 | 请求发出到首 token。仅统计 `stream` 调用——`invoke` 非流式没有首 token 事件，其效率看端到端与生成速度 | 云 API：p95 < 1.5 s；本地：p95 < 3 s |
 | 端到端 p50 / p95 | 请求发出到完成 | 按数据集记录，不设绝对阈值。老系统基线经合作方 HTTP 接口测量、新 agent 在内核函数测量，口径不同，M0–M2 只记录不比对；M3 起新旧同口径（都过 HTTP）后启用"不劣于基线 10%"门 |
-| 生成速度 | 输出 tokens / 生成秒数 | 本地服务 p50 > 20 tok/s。这是守护下限（防量化配置、推理服务误配劣化），不是优化目标——27B 4bit 在 M5 Max 上正常应显著高于此值 |
+| 生成速度 | 输出 tokens / 生成秒数 | 本地服务 p50 > 20 tok/s。守护下限（防量化配置、推理服务误配劣化）。实测参考（M0 环境验证报告）：27B 4bit ≈ 28 tok/s，已接近该规格单流解码的内存带宽上限；9B ≈ 63 tok/s |
 | 并发吞吐 | 固定并发下每分钟完成的对话轮数 | 云 API：16 并发，不劣于基线；本地 mlx-lm 单进程基本串行，按 2 并发度量，只记录不设阈值 |
 | 缓存命中 | prompt caching 命中的输入 token 占比（支持的 provider） | 系统提示词部分 > 80% |
 | 单轮成本 | 按 provider 定价折算 | 报告中列出，不设阈值 |
@@ -156,6 +156,12 @@ gen_ai.response.finish_reasons, gen_ai.server.time_to_first_token (ms), edu.tota
   v1 目标机器是本机 Mac（M5 Max，128 GB）；首选 mlx-lm server 跑 Qwen3.5-27B 4bit 作 tutor，
   llama-server 跑 Qwen3.5-9B GGUF 作本地 judge 备选，两者都是老系统已验证可跑的模型。
 - gateway 对它与对云 API 一视同仁，只是 base_url 不同。
+- **结构化输出的服务端支持参差（M0 环境实测）**：mlx-lm server 0.31.3 不处理 `response_format`，
+  json_schema **静默不生效**（请求不报错，模型自由发挥）；DeepSeek 拒绝 `json_schema` 类型（400），
+  `json_object` + prompt 附 schema 可用；llama-server 有 grammar 级保证。因此 gateway 必须按
+  provider 声明 `json_strict` 能力：对不支持的 provider 显式失败（快速失败），绝不让请求静默穿过。
+  tutor 本地路线的选型（prompt 附 schema + `schema_violation` 一次重试 / 转 llama-server /
+  等上游支持）在 M1 gateway 实现前定案。
 - 健康检查是 gateway 启动时对每个 base_url 发一次 `/v1/models`，不通即在事实记录里标记，不阻塞启动。
 - 需要更强的路由、预算、多 key 轮换时，在 gateway 与上游之间放 LiteLLM proxy，
   gateway 代码不变。这一步不在 v1。
