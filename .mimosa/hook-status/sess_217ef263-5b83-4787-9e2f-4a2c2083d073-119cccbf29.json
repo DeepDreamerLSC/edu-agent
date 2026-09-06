@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "mimosa-hook-status/v1",
+  "recordedAt": "2026-09-06T13:35:37.686Z",
+  "sessionId": "sess_217ef263-5b83-4787-9e2f-4a2c2083d073",
+  "event": "PostToolUse",
+  "toolName": "Edit",
+  "file": "/Users/linsuchang/Desktop/work/github/edu-agent-b-line/tests/rules/test_pr_gates.py",
+  "outcome": "inconclusive",
+  "coverage": "partial",
+  "findingCount": 0,
+  "durationMs": 2,
+  "hostState": "hook_complete",
+  "reportHint": ".mimosa/reports/"
+}
