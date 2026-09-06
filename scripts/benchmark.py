@@ -126,11 +126,13 @@ def collect(run_id: str) -> dict:
 
 
 def compare(current: dict, baseline: dict) -> list[str]:
-    """ttft/e2e 的 p95 越高越糟,speed_p50 越低越糟;劣化 >10% 即失败(01 §5)。"""
+    """ttft/e2e 的 p50 越高越糟,speed_p50 越低越糟;劣化 >10% 即失败(01 §5,2026-09-07
+    口径修订:门从 p95 改 p50——n=20 的 p95 尾部噪声天然超过 10%,六次实证见 #40;
+    p95 保留在报告与基线中,仅记录不阻断)。"""
     failures = []
     for role, metrics in current.items():
         base = baseline.get("roles", {}).get(role, {})
-        checks = [("ttft_p95_ms", +1), ("e2e_p95_ms", +1), ("speed_p50", -1)]
+        checks = [("ttft_p50_ms", +1), ("e2e_p50_ms", +1), ("speed_p50", -1)]
         for name, direction in checks:
             now, old = metrics.get(name), base.get(name)
             if now is None or not old:
