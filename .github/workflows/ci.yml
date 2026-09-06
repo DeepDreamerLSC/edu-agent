@@ -47,6 +47,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: 门使用 main 版本(规则来自 base,不来自被审分支;issue #24)
+        run: |
+          git fetch origin main
+          if git ls-tree FETCH_HEAD --name-only scripts/pr_gates.py | grep -q .; then
+            git checkout FETCH_HEAD -- scripts/
+            echo "pr-gates: 门已替换为 main 版本(issue #24:被审分支不能携带自己的门)"
+          else
+            echo "pr-gates: main 无 scripts/pr_gates.py(门的引入 PR),沿用分支版本"
+          fi
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

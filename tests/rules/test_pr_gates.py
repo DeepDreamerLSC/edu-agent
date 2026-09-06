@@ -1,6 +1,7 @@
 """04 §3.1 PR 元数据门纯逻辑测试:分支年龄、触碰顶层包、large-pr 阈值、structural 主门。"""
 
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import scripts.pr_gates as pr_gates
 
@@ -116,3 +117,49 @@ def test_approval_must_start_the_line():
     body = "评审备注:请补一行 structural-approval: 2026-09-06 理由"
     assert pr_gates.structural_gate(api, 1, files, body) != []
     assert pr_gates.structural_gate(api, 1, files, f"  {APPROVAL}") == []  # 行首空白容忍
+
+
+# ---------- scripts 通配与规则文件(issue #22 方案 A、#23 教训) ----------
+
+
+def test_any_scripts_py_is_structural():
+    """scripts/ 下全部 *.py 通配:点名制的缝隙先例是 #14 的 github_api.py。"""
+    for name in ("scripts/github_api.py", "scripts/budget.py", "scripts/some_future_helper.py"):
+        assert pr_gates.path_is_structural(name) is True, name
+
+
+def test_scripts_non_py_not_structural():
+    """非 .py 不算(deploy.sh 由 04 §4 的行数预算管,不进四类)。"""
+    assert pr_gates.path_is_structural("scripts/deploy.sh") is False
+    assert pr_gates.path_is_structural("scripts/README.md") is False
+
+
+def test_rule_files_are_structural():
+    """AGENTS.md 与 docs/roles/ 是规则文件(#23 未经审即合的教训)。"""
+    for name in ("AGENTS.md", "docs/roles/reviewer.md", "docs/roles/new_role.md"):
+        assert pr_gates.path_is_structural(name) is True, name
+    assert pr_gates.path_is_structural("docs/other/notes.md") is False
+
+
+def test_gate_runs_main_version_in_ci():
+    """issue #24:门必须以 main 版本执行——ci.yml 的 pr-gates job 含替换步骤,
+    删掉这个步骤(回到分支自带门、堆叠可绕过)本测试变红。"""
+    workflow = (Path(__file__).resolve().parents[2] / ".github" / "workflows" / "ci.yml").read_text(
+        encoding="utf-8"
+    )
+    gate_section = workflow.split("pr-gates:")[1]
+    assert "git ls-tree FETCH_HEAD --name-only scripts/pr_gates.py" in gate_section
+    assert "git checkout FETCH_HEAD -- scripts/" in gate_section
+
+
+def test_stacked_branch_cannot_smuggle_structural_change():
+    """堆叠场景(issue #24 复现的单元化):门(本仓库版本=main 立场)对
+    '分支上同时带旧门与新配置'的 PR 数据,结构触碰必须照样命中。"""
+    api = StubApi()
+    files = [
+        {"filename": "scripts/pr_gates.py", "additions": 2, "deletions": 1},  # 分支上的旧门
+        {"filename": "configs/models.yaml", "additions": 4, "deletions": 0},  # 偷渡目标
+    ]
+    failures = pr_gates.structural_gate(api, 1, files, "无批准行")
+    assert failures and "configs/models.yaml" in failures[0]
+    assert api.added == ["structural"]
