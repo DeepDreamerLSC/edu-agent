@@ -43,7 +43,7 @@ class _Handler(BaseHTTPRequestHandler):
         with self.fixture._lock:
             self.fixture.requests.append({"path": path, "body": body})
         if path == "/api/auth/login":
-            self._handle_login()
+            self._handle_login(body)
         elif not self._authed():
             self._reply(401, {"error": {"code": "USER_LOGIN_REQUIRED", "status_code": 401}})
         elif path.endswith("/open"):
@@ -56,7 +56,7 @@ class _Handler(BaseHTTPRequestHandler):
         else:
             self._reply(404, {"error": {"code": "NOT_FOUND", "status_code": 404}})
 
-    def _handle_login(self) -> None:
+    def _handle_login(self, body: dict) -> None:
         with self.fixture._lock:
             self.fixture.login_count += 1
             token = f"tok-{self.fixture.login_count}"
@@ -69,23 +69,28 @@ class _Handler(BaseHTTPRequestHandler):
         with fake._lock:
             if fake.revoke_token_after_open and fake.valid_tokens:
                 fake.valid_tokens.clear()  # 模拟登录态中途过期
+            committed = fake.preset_committed
+        messages = [{"role": "assistant", "content": "先看看图上有几个圆片?"}]
+        for i in range(committed):
+            messages.append({"role": "user", "content": f"已提交回答{i + 1}"})
+            messages.append({"role": "assistant", "content": f"已提交讲解{i + 1}"})
         self._reply(200, {
             "question": {"active_session": {
                 "conversation_id": fake.conversation_id,
                 "skill_session_id": fake.session_id,
                 "attempt_id": fake.attempt_id, "state": "collecting_inputs"}},
             "conversation": {"conversation": {"conversation_id": fake.conversation_id},
-                             "messages": [{"role": "assistant", "content": "先看看图上有几个圆片?"}]},
-            "session_version": fake.version, "first_question_ready": True, "restored": False})
+                             "messages": messages},
+            "session_version": fake.version, "first_question_ready": True,
+            "restored": committed > 0})
 
     def _handle_message(self, path: str) -> None:
         fake = self.fixture
         with fake._lock:
             fake.version += 1
             version = fake.version
-            remaining = len(fake.tutor_replies)
             reply = fake.tutor_replies.pop(0) if fake.tutor_replies else "很好,你讲清楚了。"
-            state = "collecting_inputs" if remaining > 0 else "completed"
+            state = "collecting_inputs" if fake.tutor_replies else "completed"
             turn_index = len(fake.requests)
         message = {"message_id": f"msg_{turn_index}", "content": reply,
                    "metadata": {"interaction": {"state": state, "session_version": version}}}
@@ -108,16 +113,22 @@ class _Handler(BaseHTTPRequestHandler):
 
 
 class FakeLegacy:
-    """有状态假服务:登录发 token;open 建会话;每条消息出一条脚本回复,耗尽即 completed。"""
+    """有状态假服务:登录发 token;open 建会话;每条消息出一条脚本回复,耗尽即 completed。
+
+    preset_committed>0 模拟"服务端已有已提交回合"的恢复形态(审查 P1 复现):
+    open 返回 restored=true、messages 含首问与已提交回合(user+assistant)、version 已推进。
+    """
 
     def __init__(self, tutor_replies: list[str], *, revoke_token_after_open: bool = False,
-                 stream_error_on_turn: int | None = None) -> None:
+                 stream_error_on_turn: int | None = None,
+                 preset_committed: int = 0) -> None:
         self.tutor_replies = list(tutor_replies)
         self.revoke_token_after_open = revoke_token_after_open
         self.stream_error_on_turn = stream_error_on_turn
+        self.preset_committed = preset_committed
         self.login_count = 0
         self.valid_tokens: set[str] = set()
-        self.version = 3
+        self.version = 3 + preset_committed
         self.conversation_id = "conv_fake"
         self.session_id = "skillsess_fake"
         self.attempt_id = "qat_fake"
