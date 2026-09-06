@@ -3,8 +3,13 @@ name = "edu-agent"
 version = "0.1.0"
 description = "小讲师 agent 与评测线的重写仓库(规划见 docs/plan/00-rewrite-plan.md)"
 requires-python = ">=3.12"
-# 02 §2:第三方运行时依赖上限 15,当前为 0(dev 工具不计入)。
-dependencies = []
+# 02 §2:第三方运行时依赖上限 15,当前 3(dev 工具不计入)。
+# httpx=模型调用 HTTP 客户端;jsonschema=路线 1 本地校验(issue #8);pyyaml=models.yaml 解析。
+dependencies = [
+    "httpx>=0.27",
+    "jsonschema>=4.23",
+    "pyyaml>=6.0",
+]
 
 [dependency-groups]
 dev = [

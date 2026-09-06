@@ -1,0 +1,50 @@
+# 全仓库唯一的模型配置(01 §2.6、§10)。环境差异用环境变量覆盖(api_key_env),不复制文件。
+# 端口与能力声明来自 issue #3 环境实测;重试/退避/备选按角色声明(01 §4),不写死在代码里。
+
+providers:
+  deepseek: # 云 API(issue #3):json_object + prompt 附 schema 实测可用 → 路线 1 可信
+    base_url: https://api.deepseek.com/v1
+    api_key_env: DEEPSEEK_API_KEY
+    json_strict: true
+  mlx_tutor: # 本地 27B(127.0.0.1:8301,launchd 常驻):json_schema 静默不生效 → 声明不支持;
+    base_url: http://127.0.0.1:8301/v1 # 路线 1 在 mlx 上实测达标(一次通过率>98%)前保持 false
+    json_strict: false
+  llama_judge: # 本地 9B(127.0.0.1:8302,launchd 常驻):grammar 级 json_schema 保证
+    base_url: http://127.0.0.1:8302/v1
+    json_strict: true
+
+models:
+  tutor_local: # issue #3:mlx-lm 请求体 model 必须传服务广告的权重完整路径
+    provider: mlx_tutor
+    name: /Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit
+  tutor_cloud:
+    provider: deepseek
+    name: deepseek-chat
+  judge_cloud:
+    provider: deepseek
+    name: deepseek-chat
+  judge_local:
+    provider: llama_judge
+    name: Qwen3.5-9B
+
+roles:
+  tutor:
+    primary: tutor_local
+    fallback: tutor_cloud
+    json_strict: false # 若改为 true,registry 加载即报错(mlx_tutor 未声明能力,01 §8)
+    concurrency: 2 # 01 §5:本地 mlx-lm 单进程按 2 并发度量
+    first_token_timeout_s: 5
+    total_timeout_s: 120
+    max_attempts: 3
+    backoff_base_ms: 400
+    backoff_cap_ms: 8000
+  judge:
+    primary: judge_cloud
+    fallback: judge_local
+    json_strict: true # 主备 provider 均已声明支持(registry 加载期校验)
+    concurrency: 4
+    first_token_timeout_s: 15
+    total_timeout_s: 60
+    max_attempts: 3
+    backoff_base_ms: 400
+    backoff_cap_ms: 8000
