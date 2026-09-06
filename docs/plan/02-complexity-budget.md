@@ -139,17 +139,18 @@ AI agent 可以改函数、改文件、写测试。以下四类改动必须由�
 
 原因：加代码对 agent 是免费的，约束只能放在结构上。
 
-**落地方式（两人并行开发，见 00 文档 8.3 节）**。仓库有两位开发者，各自带 agent 写代码。
-这让 GitHub 的必需评审重新可用：
+**落地方式（单人开发，双 agent 线，见 00 文档 8.1/8.3 节）**。仓库只有一位开发者账户，
+GitHub 的必需评审不可用（禁止自我批准），也不为此引入第二个账户。人批按三层落地：
 
-- agent 只开 PR，**永远不合并**。合并由人执行。
-- `CODEOWNERS` 把上述四类路径指向两位开发者，分支保护开启 "Require review from Code Owners"。
-  效果：触碰结构路径的 PR 必须由**另一位**开发者批准；不触碰的 PR 只需 CI 绿，作者自己合。
-- CI 仍对触碰四类路径的 PR 打 `structural` 标签并要求 `structural-approval:` 一行，作为 CODEOWNERS 的双保险。
-- 分支保护同时开启 "Require branches to be up to date"（04 文档 3.2 节）。
-- 人自己写代码时走同一套检查，规则不因提交者而异。
+1. **`structural` 检查是主门（CI 强制）**：触碰四类路径的 PR，描述必须含 `structural-approval:`
+   一行（日期 + 一句批准理由），缺即 pr-gates 失败并打 `structural` 标签。
+2. **合并即人批**：分支保护禁止直推 `main`（一切变更走 PR）、要求 CI 通过并基于最新
+   `main` 重跑（04 文档 3.2 节）；合并按钮只由人在网页上按。
+3. **agent 只开 PR，永远不合并**是铁律。同一账户下没有技术手段阻止 agent 按合并键，
+   防线是 AGENTS.md 的规矩与 PR 时间线的可回溯性；若需要技术强制，后续引入 GitHub App
+   给 agent 降权（App 可推分支、开 PR，但被分支保护挡在合并之外），不在 v1。
 
-若某段时间只有一人可用，退回单人模式：关闭 Code Owners 评审，仅保留 `structural` 标签检查与"合并即人批"。
+人自己写代码时走同一套检查，规则不因提交者而异。
 
 ## 8. 进度只有一个尺子
 
@@ -168,7 +169,7 @@ AI agent 可以改函数、改文件、写测试。以下四类改动必须由�
 - [ ] `.importlinter`：2.2 节四条合同
 - [ ] `.github/workflows/ci.yml`：ruff + import-linter + pytest + budget + 基础设施关键词扫描 + 私有导入检查
 - [ ] `.github/pull_request_template.md`：需求来源、删除了什么、评测差异三个字段
-- [ ] 分支保护：CI 通过 + Require branches to be up to date + Require review from Code Owners（第 7 节四类结构路径）；`structural` 标签检查作为双保险
+- [ ] 分支保护：CI 通过 + Require branches to be up to date + 禁止直推 main（`pr-gates` 上下文仅在 PR 事件运行，直推永远无法满足）；不启用必需评审（单账户，见第 7 节）；`structural` 标签与 `structural-approval:` 检查为主门
 - [ ] 本文档第 2 节数字写进 `scripts/budget.py` 的常量，两处必须一致（CI 校验）
 - [ ] `tests/rules/`：第 11 节的规则红灯测试
 - [ ] `AGENTS.md`：一页，只指向本文档与 04 文档
