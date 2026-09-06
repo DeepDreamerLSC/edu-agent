@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """测试私有导入检查(02 §6)。
 
-tests/ 下的测试只能导入公开入口:edu_agent.gateway、edu_agent.agents.small_lecturer、
-edu_agent.api、edu_agent.contracts(以及包名 edu_agent 本身),导入私有模块即失败。
+tests/ 下的测试只能导入公开入口:edu_agent.gateway、edu_agent.evals、
+edu_agent.agents.small_lecturer、edu_agent.api、edu_agent.contracts
+(以及包名 edu_agent 本身),导入私有模块即失败。
 "私有模块"包括 from 公开入口 import 私有子模块的形式(评审发现的绕过路径):
 from edu_agent.gateway import middleware —— alias 按文件系统解析为
 edu_agent/gateway/middleware.py,存在且不在公开名单内即报 PRIVATE-IMPORT;
 公开入口子模块(from edu_agent.agents import small_lecturer)与普通符号不受影响。
+evals 于 M1 前置(评测 runner 单测)加入公开名单(02 §7 结构性改动,随 PR 人批)。
 只依赖标准库。
 """
 
@@ -18,6 +20,7 @@ from pathlib import Path
 PUBLIC_MODULES = frozenset({
     "edu_agent",
     "edu_agent.gateway",
+    "edu_agent.evals",
     "edu_agent.agents.small_lecturer",
     "edu_agent.api",
     "edu_agent.contracts",
