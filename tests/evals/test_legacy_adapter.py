@@ -52,8 +52,29 @@ def test_idempotency_keys_are_stable_across_runs(pool_file):
     assert keys_per_run[0][0].endswith(":t0")
 
 
+def test_resume_skips_committed_turns(pool_file):
+    """审查 P1 复现形态:服务端已有已提交回合(t0),续跑不得重发——重发同回合
+    会因版本推进被判并发更新 409(稳定幂等键只救孤儿生成)。恢复响应是对齐权威:
+    跳过已提交回合、从 t1 续发、transcript 回填已提交内容。
+    """
+    fake = FakeLegacy(["t1 的讲解", "t2 的讲解"], preset_committed=1).start()
+    adapter = LegacyAdapter(base_url=fake.url)
+    transcript = adapter.run_case({"id": "stable-case", "question_id": "q",
+                                   "student_turns": ["1", "2", "3"]})
+    fake.stop()
+    stream = [r for r in fake.requests if r["path"].endswith("/messages/stream")]
+    # 只发 t1/t2,绝不重发已提交的 t0(重发即 409,实测三连)
+    assert [r["body"]["idempotency_key"][-3:] for r in stream] == [":t1", ":t2"]
+    assert stream[0]["body"]["input"]["expected_session_version"] == 4  # 恢复响应的已推进版本
+    assert stream[0]["body"]["content"] == "2"  # 第 2 个学生回合
+    # transcript 完整:首问 + 回填的 t0 + 新发的 t1/t2
+    assert [t["student"] for t in transcript["turns"]] == ["", "已提交回答1", "2", "3"]
+    assert transcript["turns"][1]["tutor"] == "已提交讲解1"
+    assert transcript["final_state"] == "completed"
+
+
 def test_full_flow_drives_dialogue_to_terminal(pool_file):
-    fake = FakeLegacy(["12个圆片,平均分成4份,每份几个?", "对!每份3个。你讲完了,确认结束?"]).start()
+    fake = FakeLegacy(["12个圆片,平均分成4份,每份几个?", "对!每份3个。", "你讲完了,确认结束?"]).start()
     adapter = LegacyAdapter(base_url=fake.url)
     transcript = adapter.run_case(CASE)
     fake.stop()

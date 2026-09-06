@@ -105,22 +105,35 @@ class LegacyAdapter:
         conversation_id = skill_session.get("conversation_id") or conversation["conversation_id"]
         session_id = skill_session.get("skill_session_id")
         version = opened.get("session_version")
+        # 恢复对齐(审查 P1 修复):open 撞到已有 attempt 时,恢复响应里的 assistant 消息
+        # 就是服务端已提交回合的权威。已确认提交的回合不能重发(版本已推进,同键重放
+        # 被判并发更新 409——稳定幂等键只救孤儿生成,救不了已确认提交),
+        # 按恢复响应跳过到第 N+1 回合;transcript 回填已提交回合,终态则直接返回。
+        messages = opened["conversation"].get("messages") or []
+        assistants = [m for m in messages if m.get("role") == "assistant"]
+        users = [m for m in messages if m.get("role") == "user"]
         turns: list[dict] = []
-        first = next((m for m in reversed(opened["conversation"].get("messages") or [])
-                      if m.get("role") == "assistant"), None)
-        if first is not None:
-            turns.append({"student": "", "tutor": first.get("content", ""),
+        if assistants:
+            turns.append({"student": "", "tutor": assistants[0].get("content", ""),
                           "state": skill_session.get("state", ""), "elapsed_ms": 0})
+        committed = max(0, len(assistants) - 1)
+        for i in range(committed):
+            state = ((assistants[i + 1].get("metadata") or {}).get("interaction") or {}).get("state", "")
+            turns.append({"student": users[i].get("content", "") if i < len(users) else "",
+                          "tutor": assistants[i + 1].get("content", ""),
+                          "state": state, "elapsed_ms": 0})
         # refresh 端点已在 spike 实测(0.6s);批跑不做 open 后的冗余刷新——
         # open 响应的信封即新鲜状态,多一次刷新多占一次老系统模型队列(429 实测)
         final_state = skill_session.get("state", "")
-        for index, answer in enumerate(case.get("student_turns") or ["12", "3", "我讲完了", "确认结束"]):
+        answers = (case.get("student_turns") or ["12", "3", "我讲完了", "确认结束"])[committed:]
+        for offset, answer in enumerate(answers):
+            if final_state in TERMINAL_STATES:
+                break  # 恢复到终态:剩余回合不再发
             turn, version, final_state = self._turn(client, session,
                                                     (conversation_id, session_id),
-                                                    version, (index, answer, case_tag))
+                                                    version,
+                                                    (committed + offset, answer, case_tag))
             turns.append(turn)
-            if final_state in TERMINAL_STATES:
-                break
         return {
             "question_id": question_id,
             "attempt_id": skill_session.get("attempt_id"),
@@ -154,7 +167,8 @@ class LegacyAdapter:
         try:
             if response.status_code != 200:
                 response.read()
-                raise EnvironmentFailure(f"messages/stream HTTP {response.status_code}")
+                raise EnvironmentFailure(
+                    f"messages/stream HTTP {response.status_code}:{response.text[:160]}")
             for line in response.iter_lines():
                 if line.startswith("event:"):
                     event_name = line[6:].strip()
