@@ -72,11 +72,63 @@ JSONL 数据集 → 小讲师 agent（经 gateway） → judge 模型（经 gate
 
 ## 5. 小讲师 agent
 
+### 5.1 内核：与传输无关的纯模块
+
 - 目标形态：**可单测的纯函数**编排，不引入 agent 框架（LangGraph 等否决，理由与老仓库 ADR-0006 一致）。
+- 对外只有三个函数，评测线直接调用，不经 HTTP：
+
+```
+start(question, learner)          -> Turn        # 生成首问
+reply(session, student_message)   -> Turn        # 多轮苏格拉底交流
+finish(session)                   -> Summary     # 学习总结，证据不足时返回 needs_review
+```
+
 - 教学合同（首问不泄露答案、语气护栏、年级表达适配、追问节奏）以**行为测试**形式从老仓库移植。
   实现耦合的单测不迁。
 - 结构化输出（json_schema 强制）是 gateway 的能力，agent 不自己解析文本。
 - 对话状态在 v1 内存化，持久化推到 M3。
+
+### 5.2 外壳：复用老仓库的合作方接口合同
+
+小讲师**不做成通用聊天接口里的一个 skill**。老仓库曾按 ADR-0002 做过这条路
+（`/api/conversations` + `skill_id` + interaction 信封），但合作方最终对接的是一条
+绑定题目的专用流程。教学对话有题目、有阶段、有不可违反的合同、有终态总结，
+塞进通用聊天只能靠 metadata 私有约定，评测也无法稳定断言。
+
+M3 对外接口**原样复用老仓库合作方正在调用的路径与字段**，合作方 App 零改动切换后端。
+复用的是合同（路径、请求响应字段、错误码、语义），不是实现。
+
+**复用清单**
+
+| 步骤 | 端点 | 保留的字段与语义 |
+|---|---|---|
+| 开会话 | `POST /api/prepared-questions/{question_id}/open` | 请求只有 `idempotency_key`；响应 `conversation`、`skill_session_id`、`session_version`、`first_question_ready`、`retry_after_ms`。同键重试返回同一 Attempt |
+| 等首问 | `POST .../skill-sessions/{id}/refresh` | 返回首问与新 `session_version` |
+| 多轮 | `POST /api/conversations/{id}/messages` 与 `/messages/stream` | 请求 `content`、`skill_id`、`input.skill_session_id`、`input.expected_session_version`；响应 `assistant_message` + `skill_interaction/v1` |
+| 结束 | 同上，`interaction_action=confirm` | 返回 `ready_to_confirm` → `completed`，或 `needs_review` |
+| 身份 | `POST /api/openapi/v1/auth/native-codes`、`POST /api/auth/native/token` | 路径与 token 语义保留（ADR-0004），v1 实现只支持单合作方 |
+| 错误码 | `409 QUESTION_SOURCE_PINNED`、`409 SKILL_SESSION_CONFLICT`、`409 TEACHING_CONTEXT_PRELOAD_NOT_READY`、`401` | 含义与合作方处理方式不变 |
+
+**必须保留的约定**（直接对应教学合同与稳定性，评测一对一断言）：
+
+1. 幂等键开会话，同键重试不创建第二个会话。
+2. 题目在会话内固定，不能中途换题。
+3. `session_version` 乐观并发，旧版本返回 409，不静默覆盖新一轮诊断。
+4. 客户端不得提交 `answer`、`analysis`、`verified`、`mastery_status`，掌握结论只能服务端产生。
+5. 首问未就绪时按 `retry_after_ms` 重试同一入口。新链路下首问通常同步返回，
+   `first_question_ready` 字段保留，基本恒为 true。
+
+**接口背后扔掉的实现**：
+
+- prepared-questions 的导入、发布包、`question_version`、快照、租户与 Client App 可见性策略。
+  v1 题目来源是一个适配器：调合作方题库接口（`GET .../v1/questions/{question_id}`）或读本地 JSON。
+- `/api/skills`、`/api/capabilities`、`general_chat`、interaction.json 渐进加载、`agent_id` 兼容。
+- teaching_context 异步预载流水线。
+- 多租户权限矩阵。
+
+**合同快照来源**：老仓库 `scripts/check_public_openapi_contract.py` 中的 16 条必需路径、
+`public_docs/small-lecturer-partner-pilot.md` 的 Postman 样例、`skill_interaction/v1` 的 schema。
+M3 开始前先把这三样迁入本仓库作为合同测试。
 
 ## 6. 资产迁移清单
 
@@ -90,6 +142,7 @@ JSONL 数据集 → 小讲师 agent（经 gateway） → judge 模型（经 gate
 | Prompt Lab 中被采用的 prompt 版本 | `configs/prompt_lab/` | 只迁被 production 采用的版本 |
 | 教学合同行为测试 | `tests/` 中与 small_lecturer 教学语义相关的断言 | 重写为新接口的测试，断言不变 |
 | 公开接口文档 | `edu_agent/app/api/public_docs/small-lecturer-*.md`、`partner-sso.md` | M3 对齐用 |
+| 合作方接口合同 | `scripts/check_public_openapi_contract.py` 必需路径、Postman 样例、`skill_interaction/v1` schema | 迁为本仓库合同测试，见 5.2 |
 
 ## 7. 不做清单（v1）
 
@@ -101,6 +154,7 @@ JSONL 数据集 → 小讲师 agent（经 gateway） → judge 模型（经 gate
 - 蓝绿发布、release preflight 仪式
 - Alembic 迁移史、手写补列
 - 多租户、权限矩阵、SSO（M3 前）
+- 通用聊天接口与 skill 目录（`/api/skills`、`/api/capabilities`、`general_chat`），见 5.2
 - 除小讲师外的任何业务域
 
 ## 8. 里程碑
@@ -110,7 +164,7 @@ JSONL 数据集 → 小讲师 agent（经 gateway） → judge 模型（经 gate
 | M0 骨架 | 仓库结构、gateway、model_call 记录、基准与故障注入测试 | gateway 对一个云 API 和一个本地服务跑通，效率/稳定性测试进 CI | 1 周 |
 | M1 评测线 | 数据集迁入、runner、judge、报告；老系统作为 provider 跑出基线 | 一份完整基线报告入库 | 2 周 |
 | M2 追平 | 小讲师 agent 重写、教学合同测试移植、逐数据集追平 | 全部数据集不劣于基线 | 3 周 |
-| M3 对齐 | 公开接口对齐、持久化、合作方切换预案 | 老仓库接口文档中的小讲师端点全部可用 | 视情况 |
+| M3 对齐 | 用 5.2 复用清单中的老路径包装内核；会话持久化；单合作方身份端点；合作方切换预案 | 合同测试全绿，合作方 Postman 样例在新后端上原样通过，App 侧零改动 | 视情况 |
 
 ## 9. 老仓库处理
 
