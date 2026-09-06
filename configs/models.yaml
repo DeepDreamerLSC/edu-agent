@@ -25,7 +25,7 @@ models:
     name: deepseek-chat
   judge_local:
     provider: llama_judge
-    name: Qwen3.5-9B
+    name: Qwen3.5-9B-GGUF # 8302 /v1/models 实际通告名(本地冒烟核对)
 
 roles:
   tutor:
