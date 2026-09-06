@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""PR 元数据门(04 §3.1):分支年龄、PR 触碰顶层包数、large-pr 软标签。
+"""PR 元数据门(04 §3.1):分支年龄、PR 触碰顶层包数、large-pr 软标签、structural 主门。
 
 只在有 PR 上下文(GITHUB_TOKEN/GH_TOKEN + PR 号 + GITHUB_REPOSITORY)时执行,本地跳过。
 分支年龄检查对"引入本检查的 PR"自豁免(04 §3.1:M0 第一个 PR 豁免;判断方式为
-base 分支上不存在 scripts/pr_gates.py)。只依赖标准库,经 GitHub REST API 读写。
+base 分支上不存在 scripts/pr_gates.py)。structural 主门(02 §7,issue #4):触碰
+四类结构路径或新增六包名单外的顶层包 → 打 structural 标签,描述缺
+`structural-approval:` 一行即 pr-gates 失败。只依赖标准库,经 GitHub REST API 读写。
 """
 
 from __future__ import annotations
@@ -23,7 +25,28 @@ MAX_PACKAGES_PER_PR = 2
 LARGE_PR_LINES = 800
 STALE_LABEL = "stale-branch"
 LARGE_LABEL = "large-pr"
-LABEL_COLORS = {STALE_LABEL: "b60205", LARGE_LABEL: "fbca04"}
+STRUCTURAL_LABEL = "structural"
+APPROVAL_PREFIX = "structural-approval:"
+LABEL_COLORS = {STALE_LABEL: "b60205", LARGE_LABEL: "fbca04", STRUCTURAL_LABEL: "5319e7"}
+
+# 四类结构路径(issue #4 评论草案,单人模式下 structural 检查是唯一载体):目录以
+# 前缀匹配,文件在仓库根精确匹配。新增顶层包无法用路径表达,按 02 §2 六包名单判定。
+STRUCTURAL_PATHS = (
+    "pyproject.toml",
+    "uv.lock",
+    "configs/",
+    ".github/",
+    ".importlinter",
+    "docs/plan/",
+    "scripts/budget.py",
+    "scripts/pr_gates.py",
+    "scripts/check_infra_keywords.py",
+    "scripts/check_test_imports.py",
+    "Makefile",
+)
+PLANNED_TOP_LEVEL_PACKAGES = frozenset(
+    {"gateway", "evals", "agents", "contracts", "api", "store"}  # 02 §2
+)
 
 
 # ---------- 纯逻辑(供 tests/rules 单测) ----------
@@ -54,6 +77,41 @@ def is_large_pr(additions: int) -> bool:
     return additions > LARGE_PR_LINES
 
 
+def path_is_structural(name: str) -> bool:
+    """命中结构路径:STRUCTURAL_PATHS 里目录前缀匹配,文件根路径精确匹配。"""
+    for pattern in STRUCTURAL_PATHS:
+        if pattern.endswith("/"):
+            if name.startswith(pattern):
+                return True
+        elif name == pattern:
+            return True
+    return False
+
+
+def new_top_level_packages(files: list[dict]) -> set[str]:
+    """名单外的 edu_agent/<名>/ 下有增删行的包(02 §7 第①类:新增顶层包)。
+
+    六包名单内的包不算;判定与 touched_packages 同款(只看有增删行的文件)。
+    """
+    packages = set()
+    for entry in files:
+        parts = Path(entry["filename"]).parts
+        changed = entry["additions"] + entry["deletions"]
+        if (
+            len(parts) >= 3
+            and parts[0] == "edu_agent"
+            and changed > 0
+            and parts[1] not in PLANNED_TOP_LEVEL_PACKAGES
+        ):
+            packages.add(parts[1])
+    return packages
+
+
+def has_structural_approval(body: str) -> bool:
+    """描述里有一行以 structural-approval: 开头(日期 + 一句批准理由,02 §7)。"""
+    return any(line.lstrip().startswith(APPROVAL_PREFIX) for line in body.splitlines())
+
+
 def parse_iso(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
 
@@ -63,7 +121,7 @@ def parse_iso(value: str) -> datetime:
 # REST 封装统一在 scripts/github_api.py(SSRF 边界只实现这一份,别处漂移即错)。
 
 
-# ---------- 三道门 ----------
+# ---------- 四道门 ----------
 
 
 def branch_age_gate(api: GithubApi, number: int, commits: list, base_sha: str) -> list[str]:
@@ -108,6 +166,33 @@ def large_pr_gate(api: GithubApi, number: int, additions: int) -> None:
         print(f"PR-GATE-OK large-pr: +{additions} 行 ≤ {LARGE_PR_LINES}")
 
 
+def structural_gate(api, number: int, files: list, body: str) -> list[str]:
+    """structural 主门(02 §7):命中即打标签;描述缺批准行即失败。
+
+    structural 标签是"强制亮到合并时刻"的标记,批准行存在也保留(不是墙,
+    agent 可伪造批准行是已知边界,02 §7 单人模式第 1 条)。
+    """
+    touched = [entry["filename"] for entry in files if path_is_structural(entry["filename"])]
+    new_packages = sorted(new_top_level_packages(files))
+    if not touched and not new_packages:
+        api.remove_label(number, STRUCTURAL_LABEL)
+        print("PR-GATE-OK structural: 未触碰结构路径")
+        return []
+    api.add_label(number, STRUCTURAL_LABEL, LABEL_COLORS[STRUCTURAL_LABEL])
+    reasons = []
+    if touched:
+        reasons.append(f"触碰结构路径 {touched}")
+    if new_packages:
+        reasons.append(f"新增顶层包 {new_packages}(不在 02 §2 六包名单)")
+    if has_structural_approval(body):
+        print(f"PR-GATE-OK structural: {'; '.join(reasons)};描述含 {APPROVAL_PREFIX} 行")
+        return []
+    detail = "; ".join(reasons)
+    return [
+        f"structural: {detail},描述缺 {APPROVAL_PREFIX} 行即失败(02 §7 主门,已打标签)"
+    ]
+
+
 def run_pr_gates(api: GithubApi, number: int) -> list[str]:
     pr = api.get(f"pulls/{number}")
     if not isinstance(pr, dict):
@@ -117,6 +202,7 @@ def run_pr_gates(api: GithubApi, number: int) -> list[str]:
     files = api.get_paged(f"pulls/{number}/files")
     failures = branch_age_gate(api, number, commits, base_sha)
     failures += packages_gate(api, number, files)
+    failures += structural_gate(api, number, files, pr.get("body") or "")
     large_pr_gate(api, number, pr.get("additions", 0))
     return failures
 

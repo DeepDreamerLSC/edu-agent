@@ -1,10 +1,25 @@
-"""04 §3.1 PR 元数据门纯逻辑测试:分支年龄、触碰顶层包、large-pr 阈值。"""
+"""04 §3.1 PR 元数据门纯逻辑测试:分支年龄、触碰顶层包、large-pr 阈值、structural 主门。"""
 
 from datetime import datetime, timedelta, timezone
 
 import scripts.pr_gates as pr_gates
 
 NOW = datetime(2026, 9, 6, 12, 0, tzinfo=timezone.utc)
+APPROVAL = "structural-approval: 2026-09-06 人批,依据 issue #4 指派"
+
+
+class StubApi:
+    """模拟 GithubApi:只记录标签增删,structural_gate 对 api 的全部用法。"""
+
+    def __init__(self):
+        self.added = []
+        self.removed = []
+
+    def add_label(self, number, name, color):
+        self.added.append(name)
+
+    def remove_label(self, number, name):
+        self.removed.append(name)
 
 
 def test_branch_age_boundary():
@@ -42,3 +57,62 @@ def test_pure_deletions_count_as_touched():
 def test_large_pr_threshold():
     assert pr_gates.is_large_pr(pr_gates.LARGE_PR_LINES) is False
     assert pr_gates.is_large_pr(pr_gates.LARGE_PR_LINES + 1) is True
+
+
+# ---------- structural 主门(issue #4,02 §7) ----------
+
+
+def test_structural_hit_without_approval_fails():
+    """触碰结构路径 + 描述缺批准行 → pr-gates 失败并打 structural 标签(红灯)。"""
+    api = StubApi()
+    files = [{"filename": ".github/workflows/ci.yml", "additions": 5, "deletions": 0}]
+    failures = pr_gates.structural_gate(api, 1, files, "普通描述,没有批准行")
+    assert failures and "structural-approval" in failures[0]
+    assert api.added == ["structural"]
+
+
+def test_structural_hit_with_approval_passes_but_stays_labelled():
+    api = StubApi()
+    files = [{"filename": "Makefile", "additions": 1, "deletions": 1}]
+    assert pr_gates.structural_gate(api, 1, files, f"说明\n{APPROVAL}\n") == []
+    assert api.added == ["structural"]  # 命中即亮标签,批准了也保留(02 §7:亮到合并时刻)
+
+
+def test_non_structural_pr_passes():
+    api = StubApi()
+    files = [{"filename": "edu_agent/gateway/client.py", "additions": 10, "deletions": 0}]
+    assert pr_gates.structural_gate(api, 1, files, "") == []
+    assert api.added == []
+
+
+def test_every_structural_path_pattern_matches():
+    for pattern in pr_gates.STRUCTURAL_PATHS:
+        name = (pattern + "x.yml") if pattern.endswith("/") else pattern
+        assert pr_gates.path_is_structural(name) is True, pattern
+    assert pr_gates.path_is_structural("edu_agent/gateway/x.py") is False
+    assert pr_gates.path_is_structural("docs/README.md") is False  # docs/plan/ 之外不算
+    assert pr_gates.path_is_structural("sub/Makefile") is False  # 文件只认仓库根
+
+
+def test_new_top_level_package_outside_plan_hits():
+    """六包名单外的 edu_agent/<名>/ 有增删行 = 新增顶层包(02 §7 第①类)。"""
+    files = [{"filename": "edu_agent/plugins/core.py", "additions": 3, "deletions": 0}]
+    assert pr_gates.new_top_level_packages(files) == {"plugins"}
+    api = StubApi()
+    assert pr_gates.structural_gate(api, 1, files, APPROVAL) == []
+    assert api.added == ["structural"]
+
+
+def test_planned_package_is_not_new():
+    files = [{"filename": "edu_agent/store/cache.py", "additions": 9, "deletions": 1}]
+    assert pr_gates.new_top_level_packages(files) == set()
+    assert pr_gates.path_is_structural("edu_agent/store/cache.py") is False
+
+
+def test_approval_must_start_the_line():
+    """批准行必须独占一行;行中被提及不算(可伪造是已知边界,但格式不放松)。"""
+    api = StubApi()
+    files = [{"filename": "configs/models.yaml", "additions": 4, "deletions": 0}]
+    body = "评审备注:请补一行 structural-approval: 2026-09-06 理由"
+    assert pr_gates.structural_gate(api, 1, files, body) != []
+    assert pr_gates.structural_gate(api, 1, files, f"  {APPROVAL}") == []  # 行首空白容忍
