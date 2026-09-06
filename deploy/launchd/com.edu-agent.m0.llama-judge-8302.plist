@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!-- M0 本地 judge 备选模型服务:llama-server + Qwen3.5-9B GGUF(Q4_K_M,本机已有 DavidAU 变体权重)。
+     --reasoning off 关闭思考模式,与 tutor 侧 enable_thinking:false 对齐;
+     --jinja 启用 chat template,json_schema 走 llama.cpp grammar 约束(已验证一次通过)。 -->
+<dict>
+  <key>Label</key>
+  <string>com.edu-agent.m0.llama-judge-8302</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/llama-server</string>
+    <string>--model</string>
+    <string>/Users/linsuchang/Desktop/work/models/Qwen3.5-9B-Defiant-Fable-GGUF/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q4_K_M.gguf</string>
+    <string>--host</string>
+    <string>127.0.0.1</string>
+    <string>--port</string>
+    <string>8302</string>
+    <string>--ctx-size</string>
+    <string>32768</string>
+    <string>--jinja</string>
+    <string>--alias</string>
+    <string>Qwen3.5-9B-GGUF</string>
+    <string>--reasoning</string>
+    <string>off</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/linsuchang/Library/Logs/edu-agent/llama-judge-8302.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/linsuchang/Library/Logs/edu-agent/llama-judge-8302.log</string>
+  <key>LimitLoadToSessionType</key>
+  <array>
+    <string>Aqua</string>
+    <string>Background</string>
+  </array>
+</dict>
+</plist>
