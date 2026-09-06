@@ -8,7 +8,7 @@
 
 | 文件 | 行数 | 职责 |
 |---|---|---|
-| gateway.py | 2325 | 路由、优先级老化、身份、事实记录、流式，全在一个类里 |
+| gateway.py | 2333 | 路由、优先级老化、身份、事实记录、流式，全在一个类里 |
 | worker_sidecar.py | 1728 | 自研 worker 边车 |
 | providers/external_http.py | 1382 | 外部 HTTP provider，含身份链路 |
 | mlx_batch_engine.py + mlx_vlm_continuous_engine.py + mlx_vlm_batching.py | 2325 | 进程内推理引擎 |
@@ -91,15 +91,16 @@ request → registry(解析角色→模型) → ratelimit → retry → fallback
 
 | 指标 | 定义 | v1 阈值（tutor 角色） |
 |---|---|---|
-| TTFT p50 / p95 | 请求发出到首 token | 云 API：p95 < 1.5 s；本地：p95 < 3 s |
-| 端到端 p50 / p95 | 请求发出到完成 | 按数据集记录，不设绝对阈值，只设"不劣于基线 10%" |
-| 生成速度 | 输出 tokens / 生成秒数 | 本地服务 p50 > 20 tok/s |
+| TTFT p50 / p95 | 请求发出到首 token。仅统计 `stream` 调用——`invoke` 非流式没有首 token 事件，其效率看端到端与生成速度 | 云 API：p95 < 1.5 s；本地：p95 < 3 s |
+| 端到端 p50 / p95 | 请求发出到完成 | 按数据集记录，不设绝对阈值。老系统基线经合作方 HTTP 接口测量、新 agent 在内核函数测量，口径不同，M0–M2 只记录不比对；M3 起新旧同口径（都过 HTTP）后启用"不劣于基线 10%"门 |
+| 生成速度 | 输出 tokens / 生成秒数 | 本地服务 p50 > 20 tok/s。这是守护下限（防量化配置、推理服务误配劣化），不是优化目标——27B 4bit 在 M5 Max 上正常应显著高于此值 |
 | 并发吞吐 | 固定并发下每分钟完成的对话轮数 | 云 API：16 并发，不劣于基线；本地 mlx-lm 单进程基本串行，按 2 并发度量，只记录不设阈值 |
 | 缓存命中 | prompt caching 命中的输入 token 占比（支持的 provider） | 系统提示词部分 > 80% |
 | 单轮成本 | 按 provider 定价折算 | 报告中列出，不设阈值 |
 
-所有指标来自 model_call 事实记录，由 `evals/report` 汇总。基准测试进 CI，
-用固定的 20 条对话回放，比较 p95 与上次基线，劣化超过 10% 即失败。
+所有指标来自 model_call 事实记录，由 `evals/report` 汇总。效率基准进 **main CI**（Mac 上的
+self-hosted runner，可访问本机模型服务与云 API），用固定的 20 条对话回放，比较 p95 与上次
+基线，劣化超过 10% 即失败。PR CI（托管 runner）只跑故障注入，不测真实延迟。
 
 ## 6. 稳定性指标
 
@@ -123,12 +124,23 @@ OTel 后台是零映射；约定未覆盖的字段以 `edu.*` 前缀标明：
 
 ```
 edu.call_id, edu.ts, edu.role, edu.attempt, edu.outcome(ok|<失败类型>),
-edu.fallback_from, edu.redacted, edu.trace_id,
+edu.session_id, edu.fallback_from, edu.fallback_to, edu.redacted, edu.trace_id,
+edu.queue_ms, edu.error_detail,
 gen_ai.provider.name, gen_ai.request.model, gen_ai.response.model,
 gen_ai.usage.input_tokens, gen_ai.usage.output_tokens, gen_ai.usage.cache_read.input_tokens,
 gen_ai.response.finish_reasons, gen_ai.server.time_to_first_token (ms), edu.total_ms
 ```
 
+- `edu.session_id`：教学会话或评测用例标识。没有它，"端到端按数据集记录"与单轮成本
+  无法按数据集/会话归因——这是报告的分组键。评测线调用时由 runner 注入，M3 生产调用
+  即合作方会话 id。
+- `edu.fallback_to`：与 `edu.fallback_from` 配对，报告需要知道切去了哪个模型，
+  而不只是发生了切换。
+- `edu.queue_ms`：ratelimit 等待时长。`edu.total_ms` 含排队时间时，自伤延迟与
+  上游延迟分不开。
+- `edu.error_detail`：失败时的上游状态码类别与脱敏后的错误摘要。只有一个 outcome
+  枚举，事后排查 `upstream_5xx` 是 500 还是 503 全靠猜。
+- `gen_ai.server.time_to_first_token` 仅流式路径有值，见第 5 节 TTFT 定义。
 - v1 写 JSONL 文件，按天切分。M3 再决定是否入库。
 - 学生内容不进记录。`redact` 中间件在记录之前把消息体替换为长度与哈希。这与 OTel GenAI 约定
   "默认不采集消息内容"一致。
@@ -160,7 +172,7 @@ gen_ai.response.finish_reasons, gen_ai.server.time_to_first_token (ms), edu.tota
 M0 结束时：
 
 - [ ] 对一个云 API 与一个本地服务，invoke 与 stream 均跑通
-- [ ] 9 种失败类型各有一个故障注入测试
-- [ ] 基准测试进 CI，产出第一份效率报告
+- [ ] 9 种失败类型各有一个故障注入测试（PR CI）
+- [ ] 效率基准进 main CI（self-hosted runner），产出第一份效率报告
 - [ ] 事实记录字段齐全，脱敏测试通过
 - [ ] `models.yaml` 一份，tutor / judge 两个角色各有主选与备选

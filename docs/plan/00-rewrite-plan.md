@@ -12,15 +12,15 @@
 其余业务域（题目入库、PDF 裁题与排版、微课、讲评、作文批改、后台管理、Prompt Lab 控制台）
 **不迁移，不重写**。老仓库（Gitee `edu_agent`）进入冻结维护，只接合作方缺陷修复。
 
-这不是"从零重写整个平台"。老仓库约 102 万行 Python，其中小讲师 agent 约 1.2 万行、
-评测约 5.6 万行、二者直接依赖约 4 万行；非主线代码超过 25 万行。我们放弃的是那 85%，
-保留并提炼的是这 15%。
+这不是"从零重写整个平台"。老仓库约 100 万行 Python，其中小讲师 agent 约 1.2 万行、
+评测约 5.6 万行、二者直接依赖约 4 万行；仅非主线的应用代码就超过 25 万行，连同测试与
+脚本，全仓库近九成不迁移。我们保留并提炼的是那一成。
 
 ## 2. 为什么重写而不是在老仓库里重构
 
 老仓库有一份 ADR-0006 草案提议"12 周时间盒重构窗口"。放弃它的理由：
 
-- 重构要在 100 万行、85 个迁移、2130 行豁免机制和 Local CI 门禁之间做外科手术，
+- 重构要在 100 万行、85 个迁移、2130 行文件上限的豁免机制和 Local CI 门禁之间做外科手术，
   每一步都在和自己的治理机制对抗。
 - 最近 300 次提交中 33 次在修租约、预载、运行时身份恢复。根因不是某个 bug，
   而是**自研模型 worker 池 + 进程内推理引擎 + 身份契约**这条链路本身过重。
@@ -44,7 +44,8 @@
 - provider 协议只保留 **OpenAI 兼容**一种（可选加 Anthropic 原生），不再有
   `external_http` / `managed_external` / `mlx_text` / `system_vision` 等五六种。
 - 每次调用产出一条 **model_call 事实记录**（JSONL 起步），这是唯一审计源，也是效率与稳定性指标的数据源。
-- 效率与稳定性各有一组硬指标，在 CI 里以基准测试和故障注入测试守护，见 01 文档第 5、6 节。
+- 效率与稳定性各有一组硬指标：故障注入测试进 PR CI，效率基准进 main CI 的
+  self-hosted runner（可访问本机模型服务与云 API），见 01 文档第 5、6 节。
 
 ## 4. 评测线路（主线）
 
@@ -88,6 +89,9 @@ finish(session)                   -> Summary     # 学习总结，证据不足�
 
 - 教学合同（首问不泄露答案、语气护栏、年级表达适配、追问节奏）以**行为测试**形式从老仓库移植。
   实现耦合的单测不迁。
+- 题目解析在 `start()` 内完成：题面文本直接使用；含图题目经 gateway 以 `vision` 角色做
+  图意理解与"题图不可信 / 多题混入"检测（对应 03 状态机 Preparing → Failed），
+  纯文本题跳过该步。
 - 结构化输出（json_schema 强制）是 gateway 的能力，agent 不自己解析文本。
 - 对话状态在 v1 内存化，持久化推到 M3。
 
@@ -110,7 +114,7 @@ M3 对外接口**原样复用老仓库合作方正在调用的路径与字段**�
 | 多轮 | `POST /api/conversations/{id}/messages` 与 `/messages/stream` | 请求 `content`、`skill_id`、`input.skill_session_id`、`input.expected_session_version`；响应 `assistant_message` + `skill_interaction/v1` |
 | 结束 | 同上，`interaction_action=confirm` | 返回 `ready_to_confirm` → `completed`，或 `needs_review` |
 | 身份 | `POST /api/openapi/v1/auth/native-codes`、`POST /api/auth/native/token` | 路径与 token 语义保留（ADR-0004），v1 实现只支持单合作方 |
-| 错误码 | `409 QUESTION_SOURCE_PINNED`、`409 SKILL_SESSION_CONFLICT`、`409 TEACHING_CONTEXT_PRELOAD_NOT_READY`、`401` | 含义与合作方处理方式不变 |
+| 错误码 | `409 QUESTION_SOURCE_PINNED`、`409 SKILL_SESSION_CONFLICT`、`409 TEACHING_CONTEXT_PRELOAD_NOT_READY`、`401` | 含义与合作方处理方式不变。新链路下 `PRELOAD_NOT_READY` 预期不再触发，仅为合作方既有错误处理兼容而保留 |
 
 **必须保留的约定**（直接对应教学合同与稳定性，评测一对一断言）：
 
@@ -158,13 +162,14 @@ M3 开始前先把这三样迁入本仓库作为合同测试。
 - Alembic 迁移史、手写补列
 - 多租户、权限矩阵、SSO（M3 前）
 - 通用聊天接口与 skill 目录（`/api/skills`、`/api/capabilities`、`general_chat`），见 5.2
+- 合作方 API 的限流、配额、计费（M3 前；单合作方试点期不做）
 - 除小讲师外的任何业务域
 
 ## 8. 里程碑
 
 | 里程碑 | 内容 | 出口标准 | 预计 |
 |---|---|---|---|
-| M0 骨架 | **第一个 PR 是执行机制**（budget.py、ruff、import-linter、CI、PR 模板、分支保护、AGENTS.md，见 02 第 11 节），之后才是 gateway、model_call 记录、基准与故障注入测试、两分钟部署脚本 | 规则红灯演练通过；gateway 对一个云 API 和一个本地服务跑通；效率/稳定性测试进 CI；`make deploy` 两分钟内 | 1 周 |
+| M0 骨架 | **第一个 PR 是执行机制**（budget.py、ruff、import-linter、CI、PR 模板、分支保护、AGENTS.md，见 02 第 11 节），之后才是 gateway、model_call 记录、基准与故障注入测试、两分钟部署脚本 | 规则红灯演练通过；gateway 对一个云 API 和一个本地服务跑通；故障注入测试进 PR CI，效率基准在 self-hosted runner 上跑通；`make deploy` 两分钟内 | 1 周 |
 | M1 评测线 | 数据集迁入、runner、judge、报告；老系统作为 provider 跑出基线 | 一份完整基线报告入库 | 2 周 |
 | M2 追平 | 小讲师 agent 重写、教学合同测试移植、逐数据集追平 | 全部数据集不劣于基线 | 3 周 |
 | M3 对齐 | 用 5.2 复用清单中的老路径包装内核；会话持久化；单合作方身份端点；合作方切换预案 | 合同测试全绿，合作方 Postman 样例在新后端上原样通过，App 侧零改动 | 视情况 |
@@ -176,7 +181,7 @@ M3 开始前先把这三样迁入本仓库作为合同测试。
 | 仓库可见性 | 已改为 **private** | 合作方评测样本、题库、试点对话可以直接进 `evals/datasets`，不需要脱敏流程 |
 | M0 的两个 provider | 云端：一个 OpenAI 兼容 API，M0 时以环境变量接入。本地：本机 Mac（M5 Max，128 GB）跑 mlx-lm server 或 llama-server | 效率阈值以这台机器为基准；老系统 tutor 用 Qwen3.5-27B MLX 4bit，judge 用 Qwen3.5-9B GGUF，可沿用作为本地首选 |
 | M1 基线来源 | 老仓库公网测试环境在运行，能拿到访问凭据 | 评测 runner 把老系统接口当 provider 实时跑基线；凭据以环境变量注入，不进仓库 |
-| 开发与评审模式 | 单人开发，agent 写代码、人评审 | 02 文档第 7 节改为"agent 只开 PR 不合并，合并即人批"，不用 CODEOWNERS 与必需评审 |
+| 开发与评审模式 | **两人并行开发**，各自带 agent 写代码 | 02 文档第 7 节按两人模式落地：agent 只开 PR 不合并，合并由人执行；CODEOWNERS 覆盖四类结构路径，结构改动需另一位开发者批准；仅一人可用时退回单人模式（关闭 Code Owners 评审，保留 `structural` 标签检查） |
 
 **待 M0 开工时补的两个输入**（不阻塞文档评审）：云 API 的 base_url 与模型名；judge 用云模型还是本地 9B。
 默认假设：judge 用云模型，与 tutor 不同模型以保持独立性，本地 9B 作备选。
@@ -192,7 +197,8 @@ M3 开始前先把这三样迁入本仓库作为合同测试。
 - 主分支 `main`，所有变更走 PR。
 - 每个 PR 必须说明：改了什么、评测结果变化（若涉及 agent 或 gateway）、删掉了什么。
 - 测试是规格：改断言必须在 PR 描述里单独说明理由。
-- 没有 Local CI 仪式，CI 就是 GitHub Actions：lint + 单测 + gateway 基准 + 故障注入。
+- 没有 Local CI 仪式，CI 就是 GitHub Actions：PR CI 跑 lint + 单测 + 故障注入；
+  main CI 另跑 gateway 效率基准与评测冒烟（self-hosted runner）。
 - 文件上限 800 行，超出即失败，不设豁免。
 - 复杂度预算、PR 必答问题、"修三次就停"、结构性改动人批等规则见 [02-complexity-budget.md](02-complexity-budget.md)。
 - 两分钟部署、合并即验证、黄金路径 e2e、评测作为集成门见 [04-deploy-and-integration.md](04-deploy-and-integration.md)。

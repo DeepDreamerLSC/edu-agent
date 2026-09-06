@@ -137,7 +137,7 @@ stateDiagram-v2
 | 维度 | 老仓库 | 本仓库 |
 |---|---|---|
 | 顶层包 | 30+ | 6 |
-| 模型调用 | gateway 2325 行 + worker 边车 + 进程内引擎 + 6 种 provider | gateway 若干中间件 + 2 个 provider，本地模型进程外 |
+| 模型调用 | gateway 2333 行 + worker 边车 + 进程内引擎 + 6 种 provider | gateway 若干中间件 + 2 个 provider，本地模型进程外 |
 | 对外接口 | 通用对话 + skill 信封 + 专用流程并存 | 只保留专用流程路径，内核纯函数 |
 | 评测 | 依赖数据库、后台、身份 | 直接调内核，JSONL 进 JSONL 出 |
 | 观测 | 自建流量页、trace 页、model_calls 表 十几个维度 | JSONL 事实记录，需要时 DuckDB 查 |

@@ -4,7 +4,7 @@
 
 ## 1. 老仓库的两个症状
 
-**部署半小时以上，且反复试错。** `scripts/deploy-backend.sh` 3484 行，一次部署串行执行：三套环境边界校验、
+**部署半小时以上，且反复试错。** `scripts/deploy-backend.sh` 3342 行，一次部署串行执行：三套环境边界校验、
 要求 git 工作区干净、迁移前备份、迁移、灌种子数据、重绑 prompt lab 版本、审计 promotion、等 Postgres、
 等健康、登录 smoke、prompt lab 就绪、小讲师链路就绪、tutor 网关 smoke、题图渲染门禁、素材编辑门禁、
 镜像身份校验、蓝绿槽位切换、回滚基线快照。另有 491 行脚本重启模型 worker，27B 权重重新加载数分钟。
@@ -59,7 +59,7 @@ gateway 是 HTTP 客户端，应用重启不碰模型进程。模型服务起来
 |---|---|---|---|
 | PR CI | 每次 push | ruff、import-linter、budget、单测、三类合同测试、黄金路径 e2e | 不能合 |
 | 合并前重跑 | 合并按钮 | 分支保护 "Require branches to be up to date"：基于最新 main 重跑 PR CI | 先 rebase |
-| main CI | 每次合并后 | 完整 PR CI + 20 条评测冒烟 vs 基线 + 自动部署 test | 只允许 fix 或 revert PR；30 分钟不修好就 revert |
+| main CI | 每次合并后 | 完整 PR CI + gateway 效率基准 vs 上次基线（01 文档第 5 节，20 条回放）+ 20 条评测冒烟 + 自动部署 test | 只允许 fix 或 revert PR；30 分钟不修好就 revert |
 
 第二道关卡是消灭"各自绿、合起来红"最便宜的手段，GitHub 分支保护免费提供。
 
