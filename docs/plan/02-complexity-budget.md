@@ -144,8 +144,10 @@ GitHub 的必需评审不可用（禁止自我批准），也不为此引入第�
 
 1. **`structural` 检查是主门（CI 强制）**：触碰四类路径的 PR，描述必须含 `structural-approval:`
    一行（日期 + 一句批准理由），缺即 pr-gates 失败并打 `structural` 标签。
-2. **合并即人批**：分支保护禁止直推 `main`（一切变更走 PR）、要求 CI 通过并基于最新
-   `main` 重跑（04 文档 3.2 节）；合并按钮只由人在网页上按。
+2. **合并即人批（程序性，无分支保护）**：GitHub Free 私有仓库不开放分支保护与规则集，
+   技术门槛以约定替代——agent 永不合并、永不直推 `main`；人在网页合并前确认 CI 绿、
+   分支已 rebase 到最新 `main`（04 文档 3.2、3.7 节）；合并后由 main 推送验证兜底，
+   红则立刻修或 revert。若未来升级 GitHub Pro，补开 strict 状态检查即恢复技术强制。
 3. **agent 只开 PR，永远不合并**是铁律。同一账户下没有技术手段阻止 agent 按合并键，
    防线是 AGENTS.md 的规矩与 PR 时间线的可回溯性；若需要技术强制，后续引入 GitHub App
    给 agent 降权（App 可推分支、开 PR，但被分支保护挡在合并之外），不在 v1。
@@ -169,7 +171,7 @@ GitHub 的必需评审不可用（禁止自我批准），也不为此引入第�
 - [ ] `.importlinter`：2.2 节四条合同
 - [ ] `.github/workflows/ci.yml`：ruff + import-linter + pytest + budget + 基础设施关键词扫描 + 私有导入检查
 - [ ] `.github/pull_request_template.md`：需求来源、删除了什么、评测差异三个字段
-- [ ] 分支保护：CI 通过 + Require branches to be up to date + 禁止直推 main（`pr-gates` 上下文仅在 PR 事件运行，直推永远无法满足）；不启用必需评审（单账户，见第 7 节）；`structural` 标签与 `structural-approval:` 检查为主门
+- [x] 分支保护：**GitHub Free 私有仓库不可用**，以程序性约定替代（agent 永不合并/直推 main，人合并前确认 CI 绿，见第 7 节）；`structural` 标签与 `structural-approval:` 检查为主门（跑在 PR CI 内，不依赖分支保护）
 - [ ] 本文档第 2 节数字写进 `scripts/budget.py` 的常量，两处必须一致（CI 校验）
 - [ ] `tests/rules/`：第 11 节的规则红灯测试
 - [ ] `AGENTS.md`：一页，只指向本文档与 04 文档
@@ -180,7 +182,8 @@ GitHub 的必需评审不可用（禁止自我批准），也不为此引入第�
 本仓库靠下面五条把规则变成会咬人的东西。
 
 **1. 规则先于代码存在。** M0 的第一个 PR 不是 gateway，是执行机制本身：budget.py、ruff 配置、import-linter、
-CI workflow、PR 模板、分支保护、AGENTS.md。这个 PR 合并之前仓库里没有一行应用代码。
+CI workflow、PR 模板、PR 元数据门（分支保护在 GitHub Free 私有仓库不可用，以程序性约定替代，见第 7 节）、
+AGENTS.md。这个 PR 合并之前仓库里没有一行应用代码。
 顺序倒过来的话，第一批代码就会带着"先合了以后再补"的豁免进来，而老仓库证明"以后"不会来。
 
 **2. 每条规则都要被证明会变红。** `tests/rules/` 下每条规则一个测试：构造一段违规代码放进临时目录，

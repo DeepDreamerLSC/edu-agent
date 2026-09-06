@@ -58,10 +58,12 @@ gateway 是 HTTP 客户端，应用重启不碰模型进程。模型服务起来
 | 关卡 | 何时 | 跑什么 | 红了怎么办 |
 |---|---|---|---|
 | PR CI | 每次 push | ruff、import-linter、budget、单测、三类合同测试、黄金路径 e2e | 不能合 |
-| 合并前重跑 | 合并按钮 | 分支保护 "Require branches to be up to date"：基于最新 main 重跑 PR CI | 先 rebase |
+| 合并前重跑 | 合并按钮 | 程序性：agent 按 3.7 rebase 到最新 main 重跑；人合并前确认 checks 绿（分支保护在 GitHub Free 私有仓库不可用） | 先 rebase |
 | main CI | 每次合并后 | 完整 PR CI + gateway 效率基准 vs 上次基线（01 文档第 5 节，20 条回放）+ 20 条评测冒烟 + 自动部署 test | 只允许 fix 或 revert PR；30 分钟不修好就 revert |
 
-第二道关卡是消灭"各自绿、合起来红"最便宜的手段，GitHub 分支保护免费提供。
+第二道关卡是消灭"各自绿、合起来红"最便宜的手段。注：分支保护与规则集在 GitHub Free
+私有仓库不可用，此关卡目前为程序性约定（升级 Pro 后补开 strict 状态检查即恢复技术强制）；
+第三道关卡（main 推送验证）因此前移为主要的兜底。
 
 ### 3.3 黄金路径端到端测试
 
@@ -95,7 +97,8 @@ v1 禁止 feature flag。开关是组合状态爆炸的第一来源。需要的�
 - [ ] launchd plist 两份：应用、模型服务
 - [ ] `GET /healthz` 实现
 - [ ] `tests/e2e/test_golden_path.py`
-- [ ] GitHub 分支保护：CI 必须通过 + Require branches to be up to date + 禁止直推 main（见 02 第 7 节单人模式；不启用必需评审——单账户无法自我批准）
+- [x] GitHub 分支保护：**GitHub Free 私有仓库不可用**（升级 Pro 后补开 strict 状态检查 + 禁止直推）；以程序性约定替代，见 02 第 7 节
+- [ ] main 推送报警（无分支保护的补偿，提前自 3.2 节）：push 到 main 的 CI 失败自动开 issue，合并后 30 分钟内未修复则人工 revert
 - [ ] `.github/workflows/main.yml`：合并后评测冒烟 + 自动部署 test。评测冒烟与部署都需要能访问本机模型服务与 test 环境，
       因此在 Mac 上跑一个 **GitHub self-hosted runner**，PR CI 仍用托管 runner
 - [ ] `scripts/budget.py` 增加：部署脚本行数、PR 触碰包数、分支年龄、`large-pr` 软标签

@@ -171,7 +171,7 @@ M3 开始前先把这三样迁入本仓库作为合同测试。
 
 | 里程碑 | 内容 | 出口标准 | 预计 |
 |---|---|---|---|
-| M0 骨架 | **第一个 PR 是执行机制**（budget.py、ruff、import-linter、CI、PR 模板、分支保护、AGENTS.md，见 02 第 11 节），之后才是 gateway、model_call 记录、基准与故障注入测试、两分钟部署脚本 | 规则红灯演练通过；gateway 对一个云 API 和一个本地服务跑通；故障注入测试进 PR CI，效率基准在 self-hosted runner 上跑通；`make deploy` 两分钟内 | 1 周 |
+| M0 骨架 | **第一个 PR 是执行机制**（budget.py、ruff、import-linter、CI、PR 模板、PR 元数据门、AGENTS.md，见 02 第 11 节；分支保护在 GitHub Free 私有仓库不可用，以程序性约定替代），之后才是 gateway、model_call 记录、基准与故障注入测试、两分钟部署脚本 | 规则红灯演练通过；gateway 对一个云 API 和一个本地服务跑通；故障注入测试进 PR CI，效率基准在 self-hosted runner 上跑通；`make deploy` 两分钟内 | 1 周 |
 | M1 评测线 | 数据集迁入、runner、judge、报告；老系统作为 provider 跑出基线（落地清单见 8.2） | 一份完整基线报告入库 | 2 周 |
 | M2 追平 | 小讲师 agent 重写、教学合同测试移植、逐数据集追平 | 全部数据集不劣于基线 | 3 周 |
 | M3 对齐 | 用 5.2 复用清单中的老路径包装内核；会话持久化；单合作方身份端点；合作方切换预案 | 合同测试全绿，合作方 Postman 样例在新后端上原样通过，App 侧零改动 | 视情况 |
