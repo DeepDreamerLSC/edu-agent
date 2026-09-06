@@ -29,8 +29,10 @@ STRUCTURAL_LABEL = "structural"
 APPROVAL_PREFIX = "structural-approval:"
 LABEL_COLORS = {STALE_LABEL: "b60205", LARGE_LABEL: "fbca04", STRUCTURAL_LABEL: "5319e7"}
 
-# 四类结构路径(issue #4 评论草案,单人模式下 structural 检查是唯一载体):目录以
-# 前缀匹配,文件在仓库根精确匹配。新增顶层包无法用路径表达,按 02 §2 六包名单判定。
+# 四类结构路径(issue #22 方案 A 通配制):目录以前缀匹配,文件在仓库根精确匹配;
+# scripts/ 下全部 *.py 通配(执行机制整体,点名制会漏新脚本——#14 的 github_api.py
+# 即缝隙先例)。新增顶层包无法用路径表达,按 02 §2 六包名单判定。
+# AGENTS.md 与 docs/roles/ 是规则文件(#23 未经审查即合的教训,从严纳入)。
 STRUCTURAL_PATHS = (
     "pyproject.toml",
     "uv.lock",
@@ -38,11 +40,9 @@ STRUCTURAL_PATHS = (
     ".github/",
     ".importlinter",
     "docs/plan/",
-    "scripts/budget.py",
-    "scripts/pr_gates.py",
-    "scripts/check_infra_keywords.py",
-    "scripts/check_test_imports.py",
+    "docs/roles/",
     "Makefile",
+    "AGENTS.md",
 )
 PLANNED_TOP_LEVEL_PACKAGES = frozenset(
     {"gateway", "evals", "agents", "contracts", "api", "store"}  # 02 §2
@@ -78,7 +78,10 @@ def is_large_pr(additions: int) -> bool:
 
 
 def path_is_structural(name: str) -> bool:
-    """命中结构路径:STRUCTURAL_PATHS 里目录前缀匹配,文件根路径精确匹配。"""
+    """命中结构路径:STRUCTURAL_PATHS 里目录前缀匹配,文件根路径精确匹配;
+    scripts/ 下全部 *.py(issue #22 方案 A 通配,非 .py 不算)。"""
+    if name.startswith("scripts/") and name.endswith(".py"):
+        return True
     for pattern in STRUCTURAL_PATHS:
         if pattern.endswith("/"):
             if name.startswith(pattern):
