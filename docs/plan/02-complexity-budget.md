@@ -25,17 +25,47 @@
 | 项目 | v1 上限 | 度量方式 |
 |---|---|---|
 | 应用代码总行数（`edu_agent/`，不含空行与注释） | 30 000 | `scripts/budget.py` 统计 |
-| 单文件行数 | 800 | 同上 |
+| 单文件非空非注释行 | 800 | 同上 |
 | 顶层包数量（`edu_agent/` 下一级目录） | 6 | 同上 |
 | 第三方运行时依赖（`pyproject.toml` dependencies） | 15 | 同上 |
 | 配置文件数量（`configs/`） | 5 | 同上 |
 | 测试代码 / 应用代码 行数比 | ≤ 1.0 | 同上 |
-| 单函数循环复杂度 | 12 | ruff C901 |
+| 部署脚本行数 | 100 | 同上 |
+| `# noqa` / `# type: ignore` / `per-file-ignores` 总数 | 10 | 同上，见第 11 节 |
 
 v1 顶层包预定为：`gateway`、`evals`、`agents`、`contracts`（接口合同与 schema）、`api`（M3）、`store`（M3）。
 第七个包需要人批准并在本表登记，同时收紧其他某一项。
 
 数字可以调整，调整只能通过修改本文档的 PR，且只能向下。
+
+### 2.1 函数级度量与危险调用
+
+PR 行数不设硬上限（重写初期几乎每个 PR 都会撞，规则会形同虚设），改为约束每个函数与每处调用。
+全部是 ruff 现成规则，写在 `pyproject.toml`，零额外依赖：
+
+| 维度 | 规则 | 阈值 |
+|---|---|---|
+| 函数语句数 | PLR0915 | 50 |
+| 圈复杂度 | C901 | 12 |
+| 分支数 / 返回数 / 参数数 | PLR0912 / PLR0911 / PLR0913 | 12 / 6 / 6 |
+| 危险调用 | S102 exec、S307 eval、S602 与 S605 shell=True 和 os.system、S301 pickle | 禁止 |
+| 吞错 | E722 裸 except、BLE001 捕获 Exception 不重抛、TRY400 except 中不记日志 | 禁止 |
+| 全局可变状态 | PLW0603 global 语句 | 禁止 |
+| 野生协程 | RUF006 create_task 不持有句柄 | 禁止 |
+| bugbear 全集 | B | 启用 |
+
+"吞错"与"野生协程"针对老仓库租约、预载恢复类缺陷的典型成因：except 里悄悄降级、后台任务无人等待。
+
+### 2.2 包依赖方向
+
+用 import-linter 写死四条合同，CI 强制：
+
+1. `gateway` 不得 import `agents`、`evals`、`api`、`store`
+2. `agents` 不得 import `api`、`store`
+3. `evals` 不得 import `api`
+4. `contracts` 不 import 任何本仓库包
+
+老仓库有一份《包依赖方向》ADR 但只是文档，未进 CI，最终 small_lecturer 依赖了九个包。
 
 ## 3. 每个 PR 必答的两个问题
 
@@ -121,7 +151,38 @@ AI agent 可以改函数、改文件、写测试。以下四类改动必须由�
 ## 10. M0 落地清单
 
 - [ ] `scripts/budget.py`：统计第 2 节全部指标，超限非零退出
-- [ ] `.github/workflows/ci.yml`：ruff + pytest + budget + 基础设施关键词扫描 + 私有导入检查
+- [ ] `pyproject.toml` 的 `[tool.ruff]`：2.1 节全部规则与阈值
+- [ ] `.importlinter`：2.2 节四条合同
+- [ ] `.github/workflows/ci.yml`：ruff + import-linter + pytest + budget + 基础设施关键词扫描 + 私有导入检查
 - [ ] `.github/pull_request_template.md`：需求来源、删除了什么、评测差异三个字段
-- [ ] 分支保护：仅要求 CI 通过；`structural` 标签检查按第 7 节实现
+- [ ] 分支保护：仅要求 CI 通过 + Require branches to be up to date；`structural` 标签检查按第 7 节实现
 - [ ] 本文档第 2 节数字写进 `scripts/budget.py` 的常量，两处必须一致（CI 校验）
+- [ ] `tests/rules/`：第 11 节的规则红灯测试
+- [ ] `AGENTS.md`：一页，只指向本文档与 04 文档
+
+## 11. 落地保障：规则如何不变成又一份文档
+
+老仓库的宪法、ADR、《包依赖方向》都写得对，都没落地。原因不是写得不够，而是规则和代码之间没有机器在中间。
+本仓库靠下面五条把规则变成会咬人的东西。
+
+**1. 规则先于代码存在。** M0 的第一个 PR 不是 gateway，是执行机制本身：budget.py、ruff 配置、import-linter、
+CI workflow、PR 模板、分支保护、AGENTS.md。这个 PR 合并之前仓库里没有一行应用代码。
+顺序倒过来的话，第一批代码就会带着"先合了以后再补"的豁免进来，而老仓库证明"以后"不会来。
+
+**2. 每条规则都要被证明会变红。** `tests/rules/` 下每条规则一个测试：构造一段违规代码放进临时目录，
+运行 budget.py 或 ruff 或 import-linter，断言非零退出并输出正确的规则名。规则本身有测试，
+改坏或删掉一条规则时 CI 会红。老仓库的门禁没有这一层，所以门禁失效时没人知道。
+
+**3. 禁用规则本身有预算。** `# noqa`、`# type: ignore`、`per-file-ignores`、`[tool.ruff] exclude` 的总数计入第 2 节预算，
+上限 10。每处禁用必须带规则代码和一句原因。这是老仓库棘轮豁免的镜像：那边豁免不限量，这边禁用是稀缺资源。
+
+**4. 规则与文档的一致性由 CI 校验。** 第 2 节和 2.1 节的每个数字在 budget.py 与 pyproject.toml 里各有一份，
+CI 解析本文档的表格与配置文件比对，不一致即失败。改数字只能一起改，且走人批。
+
+**5. agent 的反馈回路在本地，不在 PR。** `pre-commit` 钩子跑 ruff 与 import-linter，`make check` 跑完整 CI 等价物。
+agent 在提 PR 前就看到红灯，不会把违规推到远端再由人指出。AGENTS.md 只写一句：提 PR 前 `make check` 必须绿。
+
+**规则被绕过的唯一合法路径**是修改本文档并走 `structural` 人批。没有第二条路。
+
+**验证落地的方式**：M0 结束时，人为在一个分支上各违反一次第 2、2.1、2.2、5、6 节的规则，
+每次 CI 都必须红且指出正确的规则名。这个演练的结果写进 M0 关闭报告。

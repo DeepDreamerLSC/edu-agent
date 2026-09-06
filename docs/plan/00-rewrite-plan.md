@@ -163,7 +163,7 @@ M3 开始前先把这三样迁入本仓库作为合同测试。
 
 | 里程碑 | 内容 | 出口标准 | 预计 |
 |---|---|---|---|
-| M0 骨架 | 仓库结构、gateway、model_call 记录、基准与故障注入测试 | gateway 对一个云 API 和一个本地服务跑通，效率/稳定性测试进 CI | 1 周 |
+| M0 骨架 | **第一个 PR 是执行机制**（budget.py、ruff、import-linter、CI、PR 模板、分支保护、AGENTS.md，见 02 第 11 节），之后才是 gateway、model_call 记录、基准与故障注入测试、两分钟部署脚本 | 规则红灯演练通过；gateway 对一个云 API 和一个本地服务跑通；效率/稳定性测试进 CI；`make deploy` 两分钟内 | 1 周 |
 | M1 评测线 | 数据集迁入、runner、judge、报告；老系统作为 provider 跑出基线 | 一份完整基线报告入库 | 2 周 |
 | M2 追平 | 小讲师 agent 重写、教学合同测试移植、逐数据集追平 | 全部数据集不劣于基线 | 3 周 |
 | M3 对齐 | 用 5.2 复用清单中的老路径包装内核；会话持久化；单合作方身份端点；合作方切换预案 | 合同测试全绿，合作方 Postman 样例在新后端上原样通过，App 侧零改动 | 视情况 |
@@ -194,3 +194,4 @@ M3 开始前先把这三样迁入本仓库作为合同测试。
 - 没有 Local CI 仪式，CI 就是 GitHub Actions：lint + 单测 + gateway 基准 + 故障注入。
 - 文件上限 800 行，超出即失败，不设豁免。
 - 复杂度预算、PR 必答问题、"修三次就停"、结构性改动人批等规则见 [02-complexity-budget.md](02-complexity-budget.md)。
+- 两分钟部署、合并即验证、黄金路径 e2e、评测作为集成门见 [04-deploy-and-integration.md](04-deploy-and-integration.md)。
