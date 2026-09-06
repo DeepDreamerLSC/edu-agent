@@ -1,15 +1,11 @@
 """tests/rules 夹具:构造全部指标通过的临时仓库与含六个顶层包的骨架(02 §11.2)。"""
 
 import shutil
-import sys
 from pathlib import Path
 
 import pytest
 
 from rulekit import REPO_ROOT, VALID_PYPROJECT
-
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
 
 
 @pytest.fixture

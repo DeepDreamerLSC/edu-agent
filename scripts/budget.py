@@ -378,9 +378,6 @@ def check_forbidden_rows(rows: list[list[str]], select: list) -> list[str]:
             errors.append(
                 f"ruff-consistency: 表格'{key}'规则 {sorted(doc_codes)} ≠ 预期 {sorted(expected_codes)}"
             )
-        for code in expected_codes:
-            if code not in select:
-                errors.append(f"ruff-consistency: pyproject select 缺少 {code}(02 §2.1'{key}')")
     missing = [code for code in RUFF_REQUIRED_CODES if code not in select]
     if missing:
         errors.append(f"ruff-consistency: pyproject select 缺少 {', '.join(missing)}")
