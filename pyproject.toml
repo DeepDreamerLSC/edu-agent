@@ -1,0 +1,62 @@
+[project]
+name = "edu-agent"
+version = "0.1.0"
+description = "小讲师 agent 与评测线的重写仓库(规划见 docs/plan/00-rewrite-plan.md)"
+requires-python = ">=3.12"
+# 02 §2:第三方运行时依赖上限 15,当前为 0(dev 工具不计入)。
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.12",
+    "import-linter>=2.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["edu_agent"]
+
+# ---- 02 §2.1 函数级度量与危险调用(全部为 ruff 现成规则,阈值见下方各节)----
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    # 函数级度量
+    "PLR0915", # 函数语句数 ≤ 50
+    "C901",    # 圈复杂度 ≤ 12
+    "PLR0912", # 分支数 ≤ 12
+    "PLR0911", # 返回数 ≤ 6
+    "PLR0913", # 参数数 ≤ 6
+    # 危险调用,禁止
+    "S102", # exec
+    "S307", # eval
+    "S602", # subprocess shell=True
+    "S605", # os.system / os.popen
+    "S301", # pickle 反序列化
+    # 吞错,禁止
+    "E722",   # 裸 except
+    "BLE001", # 捕获 Exception 不重抛
+    "TRY400", # except 中用 logging.error 而非 logging.exception
+    # 全局可变状态 / 野生协程,禁止
+    "PLW0603", # global 语句
+    "RUF006",  # create_task 不持有句柄
+    # bugbear 全集
+    "B",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.ruff.lint.pylint]
+max-statements = 50
+max-branches = 12
+max-returns = 6
+max-args = 6
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

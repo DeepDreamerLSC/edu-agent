@@ -5,3 +5,5 @@ __pycache__/
 *.jsonl
 !evals/datasets/**/*.jsonl
 .DS_Store
+.ruff_cache/
+.pytest_cache/

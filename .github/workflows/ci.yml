@@ -1,0 +1,49 @@
+# PR CI(02 §10、04 §3.2):红了不能合。
+# main 合并后的效率基准与评测冒烟跑在 self-hosted runner 的 main.yml(04 §3.2),不在本文件范围。
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write # pr-gates 打 stale-branch / large-pr 标签
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: 安装依赖(uv sync,含锁文件)
+        run: uv sync --frozen
+      - name: ruff(02 §2.1 函数级度量与危险调用)
+        run: uv run ruff check .
+      - name: import-linter(02 §2.2 包依赖方向)
+        run: uv run lint-imports
+      - name: budget(02 §2 复杂度预算 + §11.4 文档一致性)
+        run: uv run python scripts/budget.py
+      - name: 基础设施关键词扫描(02 §5)
+        run: uv run python scripts/check_infra_keywords.py
+      - name: 测试私有导入检查(02 §6)
+        run: uv run python scripts/check_test_imports.py
+      - name: pytest(含 tests/rules 规则红灯测试,02 §11.2)
+        run: uv run pytest
+
+  # PR 元数据门(04 §3.1):分支年龄(超两天打 stale-branch 阻止合并,引入 PR 自豁免)、
+  # 触碰顶层包 ≤ 2、超 800 行打 large-pr 软标签。
+  pr-gates:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: PR 元数据门(04 §3.1)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: python scripts/pr_gates.py
