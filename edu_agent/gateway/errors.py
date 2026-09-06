@@ -19,6 +19,25 @@ class FailureType(Enum):
     CONNECTION = "connection"                    # 连不上/中途断开
 
 
+# 01 §4 表"可重试"列。重试几次、退避多少由 models.yaml 按角色声明,类型级资格在这里。
+RETRYABLE = frozenset({
+    FailureType.TIMEOUT_FIRST_TOKEN,
+    FailureType.RATE_LIMITED,
+    FailureType.UPSTREAM_5XX,
+    FailureType.SCHEMA_VIOLATION,  # 恰一次,带修复提示(路线 1,issue #8)
+    FailureType.CONNECTION,
+})
+
+# 01 §4 表"触发备选"列:值 = 当前模型失败几次后切备选;不在表中 = 永不触发。
+FALLBACK_AFTER_FAILURES = {
+    FailureType.TIMEOUT_FIRST_TOKEN: 1,
+    FailureType.TIMEOUT_TOTAL: 1,
+    FailureType.RATE_LIMITED: 2,  # 第二次起
+    FailureType.UPSTREAM_5XX: 2,  # 第二次起
+    FailureType.CONNECTION: 1,
+}
+
+
 class GatewayError(Exception):
     """带失败类型的调用失败(01 §2.4)。output 保留违规原文,供 schema 修复重试。"""
 

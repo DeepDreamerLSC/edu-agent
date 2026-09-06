@@ -92,7 +92,7 @@ def test_invoke_ok_records_full_fact(tmp_path, fake):
 ])
 def test_invoke_http_failures_map_to_types(tmp_path, reply, expected, detail):
     fake = FakeOpenAI([reply]).start()
-    gateway = gateway_for(fake.url, tmp_path)
+    gateway = gateway_for(fake.url, tmp_path, max_attempts=1)  # 只测类型映射,重试语义见故障注入套件
     with pytest.raises(GatewayError) as excinfo:
         gateway.invoke(ModelRequest(role="tutor", messages=[{"role": "user", "content": "hi"}]))
     gateway.close()
@@ -141,7 +141,8 @@ def test_invoke_connection_dropped(tmp_path):
 
 
 def test_invoke_schema_route1_violation(tmp_path):
-    fake = FakeOpenAI([completion("我答不上来")]).start()  # 非法 JSON → schema_violation
+    # 两次都不合规:修复重试恰一次后仍失败
+    fake = FakeOpenAI([completion("我答不上来"), completion("还是答不上来")]).start()
     gateway = gateway_for(fake.url, tmp_path)  # json_strict=True
     with pytest.raises(GatewayError) as excinfo:
         gateway.invoke(ModelRequest(
@@ -153,7 +154,8 @@ def test_invoke_schema_route1_violation(tmp_path):
     fake.stop()
     error = excinfo.value
     assert error.failure is FailureType.SCHEMA_VIOLATION
-    assert error.output == "我答不上来"  # 违规原文保留,供修复重试(PR2)
+    assert error.output == "还是答不上来"
+    assert len(fake.requests) == 2  # 修复重试恰一次(issue #8)
     # 路线 1:schema 进了 prompt(issue #8)
     sent = fake.requests[0]["messages"]
     assert "JSON Schema" in sent[-1]["content"]
