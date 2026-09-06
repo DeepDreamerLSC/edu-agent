@@ -8,13 +8,15 @@ base 分支上不存在 scripts/pr_gates.py)。只依赖标准库,经 GitHub RES
 
 from __future__ import annotations
 
-import json
 import os
 import sys
-import urllib.error
-import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+try:
+    from scripts import github_api
+except ImportError:  # 以脚本直接执行时(scripts/ 在 sys.path[0])
+    import github_api
 
 MAX_BRANCH_AGE_DAYS = 2
 MAX_PACKAGES_PER_PR = 2
@@ -58,54 +60,7 @@ def parse_iso(value: str) -> datetime:
 
 # ---------- GitHub API ----------
 
-
-class GithubApi:
-    """极简 REST 封装:404/422 视为'资源不存在/已存在'返回 None,其余错误抛出。"""
-
-    def __init__(self, token: str, repo: str) -> None:
-        self._token = token
-        self._repo = repo
-
-    def _url(self, path: str) -> str:
-        return f"https://api.github.com/repos/{self._repo}/{path}"
-
-    def _request(self, path: str, method: str = "GET", body: dict | None = None):
-        data = json.dumps(body).encode() if body is not None else None
-        request = urllib.request.Request(self._url(path), data=data, method=method)
-        request.add_header("Authorization", f"Bearer {self._token}")
-        request.add_header("Accept", "application/vnd.github+json")
-        request.add_header("User-Agent", "edu-agent-pr-gates")
-        try:
-            with urllib.request.urlopen(request) as response:
-                payload = response.read()
-        except urllib.error.HTTPError as exc:
-            if exc.code in (404, 422):
-                return None
-            raise
-        return json.loads(payload) if payload else None
-
-    def get(self, path: str):
-        return self._request(path)
-
-    def get_paged(self, path: str) -> list:
-        items = []
-        page = 1
-        while True:
-            separator = "&" if "?" in path else "?"
-            batch = self.get(f"{path}{separator}per_page=100&page={page}")
-            if not isinstance(batch, list) or not batch:
-                return items
-            items.extend(batch)
-            if len(batch) < 100:
-                return items
-            page += 1
-
-    def add_label(self, number: int, name: str) -> None:
-        self._request("labels", method="POST", body={"name": name, "color": LABEL_COLORS[name]})
-        self._request(f"issues/{number}/labels", method="POST", body={"labels": [name]})
-
-    def remove_label(self, number: int, name: str) -> None:
-        self._request(f"issues/{number}/labels/{name}", method="DELETE")
+# REST 封装统一在 scripts/github_api.py(SSRF 边界只实现这一份,别处漂移即错)。
 
 
 # ---------- 三道门 ----------
@@ -127,7 +82,7 @@ def branch_age_gate(api: GithubApi, number: int, commits: list, base_sha: str) -
             f"PR-GATE-EXEMPT branch-age: 分支已 {age_days:.1f} 天,但本 PR 引入该检查,自豁免(04 §3.1)"
         )
         return []
-    api.add_label(number, STALE_LABEL)
+    api.add_label(number, STALE_LABEL, LABEL_COLORS[STALE_LABEL])
     detail = f"分支首个提交距今 {age_days:.1f} 天 > {MAX_BRANCH_AGE_DAYS} 天,已打 {STALE_LABEL},需 rebase(04 §3.1)"
     return [f"branch-age: {detail}"]
 
@@ -143,7 +98,7 @@ def packages_gate(api: GithubApi, number: int, files: list) -> list[str]:
 
 def large_pr_gate(api: GithubApi, number: int, additions: int) -> None:
     if is_large_pr(additions):
-        api.add_label(number, LARGE_LABEL)
+        api.add_label(number, LARGE_LABEL, LABEL_COLORS[LARGE_LABEL])
         print(
             f"PR-GATE-LABEL large-pr: +{additions} 行 > {LARGE_PR_LINES},已打软标签"
             "(不阻塞;描述里需写一句为什么必须一起合,04 §3.1)"
@@ -184,7 +139,7 @@ def main() -> int:
     if not (token and repo and number):
         print("pr-gates: 无 PR 上下文(缺 GITHUB_TOKEN/GITHUB_REPOSITORY/PR 号),跳过")
         return 0
-    failures = run_pr_gates(GithubApi(token, repo), number)
+    failures = run_pr_gates(github_api.GithubApi(token, repo), number)
     for failure in failures:
         print(f"PR-GATE-FAIL {failure}")
     if failures:

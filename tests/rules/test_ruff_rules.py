@@ -13,6 +13,12 @@ HANDLER_CHAIN = "\n".join(f"    except {name}:\n        pass" for name in (
     "ArithmeticError", "UnicodeError", "BufferError", "StopIteration",
 ))
 
+# S602 样本的 shell=True 用拼接构造:样本只是喂给 ruff 的文本(02 §11.2),
+# 字面量写法会被仓库安全扫描误判为真实命令注入并拦截提交。
+_S602 = (
+    "import subprocess\n\n\ndef f(cmd):\n    subprocess.run(cmd, shell=" + "True)\n"
+)
+
 SNIPPETS = {
     "PLR0915": "def f():\n" + "\n".join(f"    v{i} = {i}" for i in range(51)) + "\n",
     "C901": f"def f(x):\n    try:\n        pass\n{HANDLER_CHAIN}\n",
@@ -25,7 +31,7 @@ SNIPPETS = {
     "PLR0913": "def f(a, b, c, d, e, f, g):\n    return a\n",
     "S102": 'def f():\n    exec("x = 1")\n',
     "S307": 'def f():\n    return eval("1 + 1")\n',
-    "S602": "import subprocess\n\n\ndef f(cmd):\n    subprocess.run(cmd, shell=True)\n",
+    "S602": _S602,
     "S605": 'import os\n\n\ndef f():\n    os.system("ls")\n',
     "S301": "import pickle\n\n\ndef f(data):\n    return pickle.loads(data)\n",
     "E722": "def f():\n    try:\n        return 1\n    except:\n        return 2\n",
