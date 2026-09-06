@@ -92,10 +92,10 @@ v1 禁止 feature flag。开关是组合状态爆炸的第一来源。需要的�
 
 ## 4. M0 落地清单
 
-- [ ] `Makefile`：deploy、models-up/down/status、smoke、healthz 四组目标
-- [ ] `scripts/deploy.sh` ≤ 100 行，幂等，`--dry-run`
-- [ ] launchd plist 两份：应用、模型服务
-- [ ] `GET /healthz` 实现
+- [x] `Makefile`：deploy、models-up/down/status、smoke、healthz 四组目标
+- [x] `scripts/deploy.sh` ≤ 100 行，幂等，`--dry-run`
+- [x] launchd plist 两份：应用、模型服务（模型两份随 #17 入库，应用一份随部署件 PR）
+- [x] `GET /healthz` 实现
 - [ ] `tests/e2e/test_golden_path.py`
 - [x] GitHub 分支保护：**GitHub Free 私有仓库不可用**（升级 Pro 后补开 strict 状态检查 + 禁止直推）；以程序性约定替代，见 02 第 7 节
 - [x] main 推送报警（无分支保护的补偿，提前自 3.2 节）：push 到 main 的 CI 失败自动开 issue，合并后 30 分钟内未修复则人工 revert
