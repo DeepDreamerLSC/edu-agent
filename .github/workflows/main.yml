@@ -12,6 +12,7 @@ on:
 permissions:
   contents: read
   issues: write # alarm 报警 job 开 issue(#35)
+  actions: read # alarm --all-jobs 查 run 各 job 状态(#40 后续)
 
 jobs:
   checks:
