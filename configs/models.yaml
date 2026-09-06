@@ -1,47 +1,61 @@
 # 全仓库唯一的模型配置(01 §2.6、§10)。环境差异用环境变量覆盖(api_key_env),不复制文件。
-# 端口与能力声明来自 issue #3 环境实测;重试/退避/备选按角色声明(01 §4),不写死在代码里。
+# 2026-09-07 角色互换(#34 人批):tutor↔judge 对调——tutor=9B llama(延迟敏感),
+# judge=27B mlx(#32:与 tutor 不同模型);DeepSeek 降为 judge 备选,并兼任 10%
+# 平行评分的独立 judge(#32 独立性保险)。
+# json_strict 两层含义:provider 层=服务端原生保证(llama=grammar 级,deepseek=
+# json_object 实测可信,mlx=无保证故 false);角色层=本角色接受结构化请求。
+# 结构化输出全走路线 1(schema 进 prompt + 本地校验 + schema_violation 一次修复
+# 重试,issue #8)——不合规显式失败,不静默穿透(01 §8);mlx 无服务端保证只影响
+# 一次通过率,由 #32 的 10% 平行评分与双评一致性量化,不阻塞使用。
 
 providers:
   deepseek: # 云 API(issue #3):json_object + prompt 附 schema 实测可用 → 路线 1 可信
     base_url: https://api.deepseek.com/v1
     api_key_env: DEEPSEEK_API_KEY
     json_strict: true
-  mlx_tutor: # 本地 27B(127.0.0.1:8301,launchd 常驻):json_schema 静默不生效 → 声明不支持;
-    base_url: http://127.0.0.1:8301/v1 # 路线 1 在 mlx 上实测达标(一次通过率>98%)前保持 false
+  mlx: # 本地 27B(127.0.0.1:8301,launchd 常驻):json_schema 静默不生效 → 服务端保证记 false;
+    base_url: http://127.0.0.1:8301/v1 # 结构化输出靠路线 1 本地校验兜底(#32 定稿)
     json_strict: false
-  llama_judge: # 本地 9B(127.0.0.1:8302,launchd 常驻):grammar 级 json_schema 保证
-    base_url: http://127.0.0.1:8302/v1
+  llama: # 本地 9B(127.0.0.1:8302,launchd 常驻,--reasoning off/--alias 在 plist #17):
+    base_url: http://127.0.0.1:8302/v1 # grammar 级 json_schema 真强制
     json_strict: true
 
 models:
-  tutor_local: # issue #3:mlx-lm 请求体 model 必须传服务广告的权重完整路径
-    provider: mlx_tutor
+  mlx_27b: # issue #3:mlx-lm 请求体 model 必须传服务广告的权重完整路径
+    provider: mlx
     name: /Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit
-  tutor_cloud:
-    provider: deepseek
-    name: deepseek-chat
-  judge_cloud:
-    provider: deepseek
-    name: deepseek-chat
-  judge_local:
-    provider: llama_judge
+  llama_9b:
+    provider: llama
     name: Qwen3.5-9B-GGUF # 8302 /v1/models 实际通告名(本地冒烟核对)
+  deepseek_chat:
+    provider: deepseek
+    name: deepseek-chat
 
 roles:
-  tutor:
-    primary: tutor_local
-    fallback: tutor_cloud
-    json_strict: false # 若改为 true,registry 加载即报错(mlx_tutor 未声明能力,01 §8)
-    concurrency: 2 # 01 §5:本地 mlx-lm 单进程按 2 并发度量
+  tutor: # #34 互换:主选 9B llama(63 tok/s、TTFT 30ms,延迟敏感),备选 27B mlx;
+    primary: llama_9b # 9B 数学可靠性风险(抽测有算术口误)由评测线量化,备选兜底
+    fallback: mlx_27b
+    json_strict: true # 主选 llama grammar 级真强制(#34);备选 mlx 走路线 1 校验
+    concurrency: 2
     first_token_timeout_s: 5
     total_timeout_s: 120
     max_attempts: 3
     backoff_base_ms: 400
     backoff_cap_ms: 8000
-  judge:
-    primary: judge_cloud
-    fallback: judge_local
-    json_strict: true # 主备 provider 均已声明支持(registry 加载期校验)
+  judge: # #32/#34:主选 27B mlx(路线 1:本地校验+一次修复重试),备选 DeepSeek。
+    primary: mlx_27b # 系统性偏向时的切回开关 = 把 primary 换成 deepseek_chat
+    fallback: deepseek_chat # (configs/ 结构路径,人批改;不自行切回,#32)
+    json_strict: true # 接受结构化请求;mlx 无服务端保证由路线 1 校验兜底
+    concurrency: 2 # 27B 本地按 2 并发(01 §5)
+    first_token_timeout_s: 15
+    total_timeout_s: 120
+    max_attempts: 3
+    backoff_base_ms: 400
+    backoff_cap_ms: 8000
+  judge_independent: # #32 独立性保险:10% case 平行评分专用,DeepSeek 直评;
+    primary: deepseek_chat # 不设备选——独立通道不许静默降级到被审计的同款模型
+    fallback: null
+    json_strict: true
     concurrency: 4
     first_token_timeout_s: 15
     total_timeout_s: 60

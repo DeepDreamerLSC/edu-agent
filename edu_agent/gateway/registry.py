@@ -1,4 +1,11 @@
-"""models.yaml 加载与角色解析(01 §2.6、§8):配置一份;json_strict 能力声明在加载期校验。"""
+"""models.yaml 加载与角色解析(01 §2.6、§8):配置一份。
+
+json_strict 声明:provider 层=服务端原生保证(grammar/json_object),mlx 无保证记
+false;角色层=本角色接受结构化请求。#32/#34 定稿后 judge 主选 mlx 走路线 1
+(schema 进 prompt + 本地校验 + schema_violation 一次修复重试),加载期不再按
+provider 能力拒绝角色——"不静默穿透"由路线 1 的本地校验保证(不合规即显式失败),
+provider 声明只反映一次通过率风险,由评测线量化(#32 10% 平行评分)。
+"""
 
 from __future__ import annotations
 
@@ -144,26 +151,6 @@ def _role_entries(raw: dict, models: dict[str, ModelConfig]) -> dict[str, RoleCo
     return entries
 
 
-def _check_json_strict(roles: dict[str, RoleConfig], models: dict[str, ModelConfig],
-                       providers: dict[str, ProviderConfig]) -> None:
-    """01 §8/issue #8:角色要求 json_strict 而其模型 provider 未声明支持,加载即报错。
-
-    不许把请求发给不支持的服务端静默收垃圾(mlx-lm 的教训)。
-    """
-    for role in roles.values():
-        if not role.json_strict:
-            continue
-        for model_id in (role.primary, role.fallback):
-            if model_id is None:
-                continue
-            provider = providers[models[model_id].provider]
-            if not provider.json_strict:
-                raise RegistryError(
-                    f"角色 '{role.name}' 要求 json_strict,但模型 '{model_id}' 的 provider "
-                    f"'{provider.name}' 未声明该能力(01 §8:加载期失败,不发请求)"
-                )
-
-
 def load_registry(path: Path | str) -> ModelRegistry:
     """加载并校验 models.yaml;任何结构性问题在这里失败,不带病运行。"""
     file = Path(path)
@@ -181,5 +168,4 @@ def load_registry(path: Path | str) -> ModelRegistry:
     providers = _provider_entries(raw["providers"])
     models = _model_entries(raw["models"], providers)
     roles = _role_entries(raw["roles"], models)
-    _check_json_strict(roles, models, providers)
     return ModelRegistry(providers=providers, models=models, roles=roles)
