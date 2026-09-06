@@ -48,7 +48,7 @@ gateway 是 HTTP 客户端，应用重启不碰模型进程。模型服务起来
 
 - 分支活不过 **两天**。CI 检查 PR 首个提交距今时间，超过打 `stale-branch` 标签并阻止合并，需 rebase。
   该检查在执行机制 PR 合并后启用，M0 第一个 PR 自身豁免。
-- 每位开发者同时打开的 PR **不超过两个**，其 agent 并行开工上限也是两个。两人共四个。
+- 每条 agent 线同时打开的 PR **不超过两个**，两条线（评测线 / gateway 与模型服务线）共四个。
 - 一个 PR 触碰的顶层包 **不超过两个**。范围约束，不是体积约束：M0 建 gateway 骨架可以两千行，但只在 gateway 里。
 - PR 行数是软信号：超过 800 行 CI 打 `large-pr` 标签，不阻塞，要求描述里写一句为什么必须一起合。
   M2 后若 `large-pr` 成常态再讨论收紧。
@@ -95,7 +95,7 @@ v1 禁止 feature flag。开关是组合状态爆炸的第一来源。需要的�
 - [ ] launchd plist 两份：应用、模型服务
 - [ ] `GET /healthz` 实现
 - [ ] `tests/e2e/test_golden_path.py`
-- [ ] GitHub 分支保护：CI 必须通过 + Require branches to be up to date + Require review from Code Owners（仅结构路径，见 02 第 7 节）
+- [ ] GitHub 分支保护：CI 必须通过 + Require branches to be up to date + 禁止直推 main（见 02 第 7 节单人模式；不启用必需评审——单账户无法自我批准）
 - [ ] `.github/workflows/main.yml`：合并后评测冒烟 + 自动部署 test。评测冒烟与部署都需要能访问本机模型服务与 test 环境，
       因此在 Mac 上跑一个 **GitHub self-hosted runner**，PR CI 仍用托管 runner
 - [ ] `scripts/budget.py` 增加：部署脚本行数、PR 触碰包数、分支年龄、`large-pr` 软标签
