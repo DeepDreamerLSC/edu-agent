@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  issues: write # main 推送报警开 issue(issue #11)
   pull-requests: write # pr-gates 打 stale-branch / large-pr 标签
 
 jobs:
@@ -31,6 +32,13 @@ jobs:
         run: uv run python scripts/check_test_imports.py
       - name: pytest(含 tests/rules 规则红灯测试,02 §11.2)
         run: uv run pytest
+      # main 推送报警(issue #11,04 §3.2 第三道关卡):push 到 main 失败自动开
+      # main-red issue;PR 事件不开,本地无 Actions 上下文时脚本自行跳过。
+      - name: main 推送报警(失败自动开 issue,issue #11)
+        if: failure() && github.event_name == 'push'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: uv run python scripts/main_red.py
 
   # PR 元数据门(04 §3.1):分支年龄(超两天打 stale-branch 阻止合并,引入 PR 自豁免)、
   # 触碰顶层包 ≤ 2、超 800 行打 large-pr 软标签。
