@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!-- M0 本地 tutor 模型服务:mlx-lm server + Qwen3.5-27B-4bit。
+     权重路径来源:老仓库运行时清单 data/runtime/test-tutor-server/*.json。
+     注意:请求体 model 字段必须使用下方完整权重路径(mlx-lm server 不支持 served-model-name 别名)。 -->
+<dict>
+  <key>Label</key>
+  <string>com.edu-agent.m0.mlx-tutor-8301</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/mlx_lm.server</string>
+    <string>--model</string>
+    <string>/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit</string>
+    <string>--host</string>
+    <string>127.0.0.1</string>
+    <string>--port</string>
+    <string>8301</string>
+    <string>--temp</string>
+    <string>0</string>
+    <string>--decode-concurrency</string>
+    <string>5</string>
+    <string>--prompt-concurrency</string>
+    <string>5</string>
+    <string>--prefill-step-size</string>
+    <string>2048</string>
+    <string>--max-tokens</string>
+    <string>2048</string>
+    <string>--chat-template-args</string>
+    <string>{"enable_thinking":false}</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HF_HUB_OFFLINE</key>
+    <string>1</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/linsuchang/Library/Logs/edu-agent/mlx-tutor-8301.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/linsuchang/Library/Logs/edu-agent/mlx-tutor-8301.log</string>
+  <key>LimitLoadToSessionType</key>
+  <array>
+    <string>Aqua</string>
+    <string>Background</string>
+  </array>
+</dict>
+</plist>
