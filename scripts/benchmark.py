@@ -77,7 +77,7 @@ def run_role(role: str, run_id: str) -> None:
             role=role,
             messages=[{"role": "user", "content": prompt}],
             session_id=f"{run_id}-{role}",
-            max_tokens=128,
+            max_tokens=512,
             temperature=0,
         )
         start = time.monotonic()
