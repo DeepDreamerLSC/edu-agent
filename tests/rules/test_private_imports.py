@@ -20,6 +20,7 @@ def test_private_module_import_fails(base_repo):
 def test_public_entry_imports_pass(base_repo):
     source = (
         "from edu_agent.gateway import invoke\n"
+        "from edu_agent.evals import Runner\n"
         "from edu_agent.contracts import schemas\n"
         "from edu_agent.agents.small_lecturer import start\n"
         "from edu_agent.api import app\n"
