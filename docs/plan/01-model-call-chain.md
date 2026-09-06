@@ -99,8 +99,9 @@ request → registry(解析角色→模型) → ratelimit → retry → fallback
 | 单轮成本 | 按 provider 定价折算 | 报告中列出，不设阈值 |
 
 所有指标来自 model_call 事实记录，由 `evals/report` 汇总。效率基准进 **main CI**（Mac 上的
-self-hosted runner，可访问本机模型服务与云 API），用固定的 20 条对话回放，比较 p95 与上次
-基线，劣化超过 10% 即失败。PR CI（托管 runner）只跑故障注入，不测真实延迟。
+self-hosted runner，可访问本机模型服务与云 API），用固定的 20 条对话回放，比较 **p50** 与上次
+基线，劣化超过 10% 即失败；p95 记录进报告不阻断（n=20 的尾部噪声天然超过 10%，#40 六次实证，
+2026-09-07 口径修订，原为 p95 门）。PR CI（托管 runner）只跑故障注入，不测真实延迟。
 
 ## 6. 稳定性指标
 
