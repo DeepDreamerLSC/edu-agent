@@ -1,0 +1,55 @@
+# main CI(04 §3.2 第三道关卡):合并后完整 checks + gateway 效率基准 vs 基线(01 §5)。
+# 跑在 Mac self-hosted runner(issue #3,标签 mac):本地模型服务(8301/8302)与云 API 都在机。
+# M1 件留位(04 §3.4/§3.5,到位后挂进本 workflow,不另开):
+#   - job 评测冒烟:20 条评测,教学/效率指标 vs 01 阈值,劣化自动开 issue 并阻止部署
+#   - job 自动部署 test:scripts/deploy.sh --env test(main 绿即部署)
+name: main
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    # 与 PR CI(ci.yml checks)同一组关卡,但落在部署目标机上跑
+    runs-on: [self-hosted, mac]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: 安装依赖(uv sync,含锁文件)
+        run: uv sync --frozen
+      - name: ruff(02 §2.1 函数级度量与危险调用)
+        run: uv run ruff check .
+      - name: import-linter(02 §2.2 包依赖方向)
+        run: uv run lint-imports
+      - name: budget(02 §2 复杂度预算 + §11.4 文档一致性)
+        run: uv run python scripts/budget.py
+      - name: 基础设施关键词扫描(02 §5)
+        run: uv run python scripts/check_infra_keywords.py
+      - name: 测试私有导入检查(02 §6)
+        run: uv run python scripts/check_test_imports.py
+      - name: pytest(含 tests/rules 规则红灯测试,02 §11.2)
+        run: uv run pytest
+
+  benchmark:
+    needs: checks
+    runs-on: [self-hosted, mac]
+    env:
+      # 凭据只走环境变量(01 §5/issue #3):仓库 secrets 注入,不进日志与报告
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+      - name: 效率基准(20 条固定回放 × 本地/云,p95 劣化>10% 失败,01 §5)
+        run: uv run python scripts/benchmark.py
+      - name: 上传基准报告(artifacts)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-report
+          path: var/benchmark-report.md
+          if-no-files-found: ignore
