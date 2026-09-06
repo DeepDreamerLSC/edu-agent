@@ -43,7 +43,7 @@ class _Handler(BaseHTTPRequestHandler):
         with self.fixture._lock:
             self.fixture.requests.append({"path": path, "body": body})
         if path == "/api/auth/login":
-            self._handle_login()
+            self._handle_login(body)
         elif not self._authed():
             self._reply(401, {"error": {"code": "USER_LOGIN_REQUIRED", "status_code": 401}})
         elif path.endswith("/open"):
@@ -56,7 +56,7 @@ class _Handler(BaseHTTPRequestHandler):
         else:
             self._reply(404, {"error": {"code": "NOT_FOUND", "status_code": 404}})
 
-    def _handle_login(self) -> None:
+    def _handle_login(self, body: dict) -> None:
         with self.fixture._lock:
             self.fixture.login_count += 1
             token = f"tok-{self.fixture.login_count}"
