@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!-- M0 应用服务(04 §2):GET /healthz 最小常驻进程,deploy.sh 每次部署重启。
+     __DEPLOY_ROOT__ 占位符由 deploy.sh 按实际部署 checkout 替换后写入
+     ~/Library/LaunchAgents/com.edu-agent.app.plist;模型服务两份见 #17。 -->
+<dict>
+  <key>Label</key>
+  <string>com.edu-agent.app</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/linsuchang/.local/bin/uv</string>
+    <string>run</string>
+    <string>python</string>
+    <string>-m</string>
+    <string>edu_agent.api.healthz</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__DEPLOY_ROOT__</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+  <key>ThrottleInterval</key>
+  <integer>5</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/linsuchang/Library/Logs/edu-agent/app.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/linsuchang/Library/Logs/edu-agent/app.log</string>
+  <key>LimitLoadToSessionType</key>
+  <array>
+    <string>Aqua</string>
+    <string>Background</string>
+  </array>
+</dict>
+</plist>
