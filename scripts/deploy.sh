@@ -71,5 +71,9 @@ run "uv sync --frozen(增量幂等)" step_sync
 run "重启应用服务 launchd/$APP_LABEL" step_restart
 run "健康检查 /healthz(轮询 30s)" step_health
 run "链路 smoke:3 条固定调用(04 §2.2)" step_smoke
+if [ "$DRY_RUN" = 1 ]; then  # dry-run 不是部署:不写台账(04 §2.1 台账只记真实部署)
+  say "dry-run 完成,未执行任何步骤、未写台账"
+  exit 0
+fi
 finish ok
 say "完成,用时 $(( $(date +%s) - START ))s"
