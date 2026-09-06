@@ -99,7 +99,7 @@ flowchart LR
     DS[("数据集<br/>JSONL")] --> R["runner<br/>控制并发"]
     R --> A["被测对象"]
     A --> A1["新内核<br/>start · reply · finish"]
-    A --> A2["老系统<br/>作为 provider 接入<br/>（M1 基线）"]
+    A --> A2["老系统<br/>evals 内的被测对象适配器<br/>驱动合作方流程接口（M1 基线）"]
     A1 --> J["judge<br/>经 gateway"]
     A2 --> J
     J --> Rep["报告<br/>Markdown + JSON"]

@@ -94,7 +94,7 @@ request → registry(解析角色→模型) → ratelimit → retry → fallback
 | TTFT p50 / p95 | 请求发出到首 token | 云 API：p95 < 1.5 s；本地：p95 < 3 s |
 | 端到端 p50 / p95 | 请求发出到完成 | 按数据集记录，不设绝对阈值，只设"不劣于基线 10%" |
 | 生成速度 | 输出 tokens / 生成秒数 | 本地服务 p50 > 20 tok/s |
-| 并发吞吐 | 16 并发下每分钟完成的对话轮数 | 不劣于基线 |
+| 并发吞吐 | 固定并发下每分钟完成的对话轮数 | 云 API：16 并发，不劣于基线；本地 mlx-lm 单进程基本串行，按 2 并发度量，只记录不设阈值 |
 | 缓存命中 | prompt caching 命中的输入 token 占比（支持的 provider） | 系统提示词部分 > 80% |
 | 单轮成本 | 按 provider 定价折算 | 报告中列出，不设阈值 |
 
@@ -118,16 +118,20 @@ request → registry(解析角色→模型) → ratelimit → retry → fallback
 
 ## 7. model_call 事实记录
 
-每次调用一条 JSON 行，字段固定：
+每次调用一条 JSON 行。字段名**对齐 OpenTelemetry GenAI 语义约定**（`gen_ai.*`），以后接 Langfuse 或任何
+OTel 后台是零映射；约定未覆盖的字段以 `edu.*` 前缀标明：
 
 ```
-call_id, ts, role, requested_model, actual_model, provider, attempt,
-outcome(ok|<失败类型>), ttft_ms, total_ms, input_tokens, output_tokens,
-cached_input_tokens, finish_reason, fallback_from, redacted, trace_id
+edu.call_id, edu.ts, edu.role, edu.attempt, edu.outcome(ok|<失败类型>),
+edu.fallback_from, edu.redacted, edu.trace_id,
+gen_ai.provider.name, gen_ai.request.model, gen_ai.response.model,
+gen_ai.usage.input_tokens, gen_ai.usage.output_tokens, gen_ai.usage.cache_read.input_tokens,
+gen_ai.response.finish_reasons, gen_ai.server.time_to_first_token (ms), edu.total_ms
 ```
 
 - v1 写 JSONL 文件，按天切分。M3 再决定是否入库。
-- 学生内容不进记录。`redact` 中间件在记录之前把消息体替换为长度与哈希。
+- 学生内容不进记录。`redact` 中间件在记录之前把消息体替换为长度与哈希。这与 OTel GenAI 约定
+  "默认不采集消息内容"一致。
 - 老仓库的 model_calls 表有 tenant_id、client_id、traffic_class 等十几个维度列，
   v1 只保留上面这些，多租户维度在 M3 按需加。
 

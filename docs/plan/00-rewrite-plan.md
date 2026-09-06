@@ -60,8 +60,9 @@ JSONL 数据集 → 小讲师 agent（经 gateway） → judge 模型（经 gate
 
 ### 4.2 先拿老系统基线
 
-第一个里程碑不是新 agent，而是**用新评测线跑老系统**：把老仓库测试环境的小讲师接口当作
-一个 provider，在迁移过来的数据集上出一份基线报告。此后新 agent 的每个版本都与这条基线对比。
+第一个里程碑不是新 agent，而是**用新评测线跑老系统**：在 `evals/` 里写一个"被测对象适配器"，
+驱动老仓库测试环境的合作方流程接口（open → refresh → messages → confirm），在迁移过来的数据集上出一份基线报告。
+它不是 gateway 的 provider（gateway 只做 chat completions），凭据以环境变量注入。此后新 agent 的每个版本都与这条基线对比。
 
 ### 4.3 追平门
 
@@ -141,8 +142,8 @@ M3 开始前先把这三样迁入本仓库作为合同测试。
 | 评测数据集 | `evals/datasets/` | 21 个 |
 | 合作方评测样本与产物 | `artifacts/small-lecturer/` | 101 个文件 |
 | 风格档案 | `configs/small_lecturer_style_profiles.yaml` | |
-| Prompt Lab 中被采用的 prompt 版本 | `configs/prompt_lab/` | 只迁被 production 采用的版本 |
-| 教学合同行为测试 | `tests/` 中与 small_lecturer 教学语义相关的断言 | 重写为新接口的测试，断言不变 |
+| Prompt Lab 中被采用的 prompt 版本 | `configs/prompt_lab/` | 只迁被 production 采用的版本，落到 `agents/small_lecturer/prompts/` 作为代码而非配置，不占配置文件预算 |
+| 教学合同行为测试 | `tests/` 中与 small_lecturer 教学语义相关的断言，以及 `skills/small-lecturer-coaching/SKILL.md` 的 12 条交互规则与教学边界 | 重写为新接口的护栏测试，断言不变；SKILL.md 剪掉绑定老架构的第 2、3、8、10 条后作为系统提示词来源 |
 | 公开接口文档 | `edu_agent/app/api/public_docs/small-lecturer-*.md`、`partner-sso.md` | M3 对齐用 |
 | 合作方接口合同 | `scripts/check_public_openapi_contract.py` 必需路径、Postman 样例、`skill_interaction/v1` schema | 迁为本仓库合同测试，见 5.2 |
 

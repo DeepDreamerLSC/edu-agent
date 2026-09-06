@@ -103,20 +103,25 @@ CI 以关键词扫描 `edu_agent/` 中的 `lease`、`heartbeat`、`worker_pool`�
 
 ## 6. 测试只写在合同边界
 
-允许的测试只有三类，各放在固定目录：
+允许的测试只有五类，各放在固定目录：
 
 | 类型 | 目录 | 守护对象 |
 |---|---|---|
-| 教学合同 | `tests/teaching/` | 首问不泄露答案、语气护栏、年级表达、追问节奏 |
+| 教学合同 | `tests/teaching/` | 护栏代码：首问答案泄露检测、格式降级（无 Markdown / LaTeX）、年级表达规则、追问节奏约束。用假上游返回构造输出，测的是护栏而不是模型 |
 | gateway 合同 | `tests/gateway/` | 9 种失败类型、重试与备选策略、事实记录、脱敏 |
 | 接口合同 | `tests/contracts/` | 老仓库合作方路径与字段快照、Postman 样例回放 |
+| 黄金路径 | `tests/e2e/` | 一条端到端用例，见 04 文档 3.3 节 |
+| 规则红灯 | `tests/rules/` | 每条预算与 lint 规则会变红，见第 11 节 |
+
+模型输出的语义质量不在这里测，那是评测线的事（第 8 节）。CI 里的测试不调用真实模型。
 
 规则：
 
-- 测试只能导入公开入口（`edu_agent.gateway`、`edu_agent.agents.small_lecturer`、`edu_agent.api`），
+- 测试只能导入公开入口（`edu_agent.gateway`、`edu_agent.agents.small_lecturer`、`edu_agent.api`、`edu_agent.contracts`），
   导入私有模块的测试 CI 失败。
 - 修改任何断言必须在 PR 描述里单独说明理由。
-- 测试与应用代码行数比不超过 1.0（见第 2 节）。规格不应该比产品长。
+- 测试与应用代码行数比不超过 1.0（见第 2 节）。分母是 `edu_agent/`，分子**不含** `tests/rules/` 与 `tests/fixtures/`
+  （假上游服务器等测试基础设施）。M0、M1 期间应用代码基数小，该比值只报告不阻塞，**M2 起阻塞**。
 
 ## 7. 结构性改动必须人批
 
@@ -129,14 +134,17 @@ AI agent 可以改函数、改文件、写测试。以下四类改动必须由�
 
 原因：加代码对 agent 是免费的，约束只能放在结构上。
 
-**落地方式（单人开发模式）**。本仓库只有一个人提交，agent 写代码、人评审，GitHub 不允许自己批准自己的 PR，
-所以不用 CODEOWNERS 和必需评审，改用：
+**落地方式（两人开发模式，2026-09-06 更新）**。仓库有两位开发者，各自带 agent 写代码。这让 GitHub 的
+必需评审重新可用：
 
-- agent 只开 PR，**永远不合并**。合并动作本身就是人批。
-- CI 检查 PR 是否触碰上述四类路径；触碰时自动打 `structural` 标签，并要求 PR 描述里有
-  `structural-approval:` 一行写明理由，缺失则 CI 失败。
-- 分支保护只开"CI 必须通过"，不开"必需评审"。
-- 人自己写代码时走同一套 CI 检查，规则不因提交者而异。
+- agent 只开 PR，**永远不合并**。合并由人执行。
+- `CODEOWNERS` 把上述四类路径指向两位开发者，分支保护开启 "Require review from Code Owners"。
+  效果：触碰结构路径的 PR 必须由**另一位**开发者批准；不触碰的 PR 只需 CI 绿，作者自己合。
+- CI 仍对触碰四类路径的 PR 打 `structural` 标签并要求 `structural-approval:` 一行，作为 CODEOWNERS 的双保险。
+- 分支保护同时开启 "Require branches to be up to date"（04 文档 3.2 节）。
+- 人自己写代码时走同一套检查，规则不因提交者而异。
+
+若某段时间只有一人可用，退回单人模式：关闭 Code Owners 评审，仅保留 `structural` 标签检查与"合并即人批"。
 
 ## 8. 进度只有一个尺子
 
