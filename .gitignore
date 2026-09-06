@@ -15,3 +15,6 @@ __pycache__/
 
 # 部署环境差异文件(04 §2.1:ENV 只差一个 .env),凭据不进仓库
 .env.*
+
+# 部署台账与基准报告等本地产物(04 §2.1 JSONL / benchmark report)
+var/
