@@ -32,7 +32,8 @@ LABEL_COLORS = {STALE_LABEL: "b60205", LARGE_LABEL: "fbca04", STRUCTURAL_LABEL: 
 # 四类结构路径(issue #22 方案 A 通配制):目录以前缀匹配,文件在仓库根精确匹配;
 # scripts/ 下全部 *.py 通配(执行机制整体,点名制会漏新脚本——#14 的 github_api.py
 # 即缝隙先例)。新增顶层包无法用路径表达,按 02 §2 六包名单判定。
-# AGENTS.md 与 docs/roles/ 是规则文件(#23 未经审查即合的教训,从严纳入)。
+# AGENTS.md 与 docs/roles/ 是规则文件(#23 未经审查即合的教训,从严纳入);
+# baselines/ 是效率门的尺子(#27 审查 P2 跟进:普通 PR 改基线即放水,纳入门保护)。
 STRUCTURAL_PATHS = (
     "pyproject.toml",
     "uv.lock",
@@ -41,6 +42,7 @@ STRUCTURAL_PATHS = (
     ".importlinter",
     "docs/plan/",
     "docs/roles/",
+    "baselines/",
     "Makefile",
     "AGENTS.md",
 )

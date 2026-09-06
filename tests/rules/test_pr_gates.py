@@ -141,6 +141,14 @@ def test_rule_files_are_structural():
     assert pr_gates.path_is_structural("docs/other/notes.md") is False
 
 
+def test_baseline_files_are_structural():
+    """baselines/ 是效率门的尺子(#27 审查 P2:普通 PR 改基线即放水,必须亮到合并时刻)。"""
+    for name in ("baselines/efficiency.json", "baselines/some-future-gate.json"):
+        assert pr_gates.path_is_structural(name) is True, name
+    assert pr_gates.path_is_structural("baseline.md") is False  # 根文件精确匹配,不同名不算
+    assert pr_gates.path_is_structural("docs/baselines/notes.md") is False  # 前缀不跨目录
+
+
 def test_gate_runs_main_version_in_ci():
     """issue #24:门必须以 main 版本执行——ci.yml 的 pr-gates job 含替换步骤,
     删掉这个步骤(回到分支自带门、堆叠可绕过)本测试变红。"""
