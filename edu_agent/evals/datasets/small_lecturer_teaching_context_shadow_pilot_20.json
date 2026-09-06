@@ -1,0 +1,725 @@
+{
+  "schema_version": "small_lecturer_dialogue_scenarios/v1",
+  "scenarios": [
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_equation_subtract",
+      "title": "方程同减同除",
+      "subject": "math",
+      "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_subtract",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我还没有想清楚，能先给我一个方向吗？",
+        "是不是先处理加上的7，但我不确定该怎么处理。",
+        "我想两边都减去7，得到3x等于18。",
+        "因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "detailed",
+        "grade": "五年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_equation_sign",
+      "title": "方程符号误解",
+      "subject": "math",
+      "question": "解方程 2x+5=17，并说明理由。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_sign",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我想把5移过去以后还是加5。",
+        "这样算出2x等于22，好像哪里不对。",
+        "我检查发现应该让两边同时减去5，所以2x等于12。",
+        "接着两边同时除以2，x等于6，代入2乘6加5等于17。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "misconception",
+        "analysis_quality": "detailed",
+        "grade": "五年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_equation_parentheses",
+      "title": "含括号方程",
+      "subject": "math",
+      "question": "解方程 4(x+2)=24，并说明过程。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_parentheses",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我不知道先算括号还是先除。",
+        "我试着把4乘进去，得到4x加8等于24。",
+        "再让两边同时减去8，得到4x等于16。",
+        "最后两边同时除以4，x等于4，代回原式得到24。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "detailed",
+        "grade": "六年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_fraction_addition",
+      "title": "异分母分数加法",
+      "subject": "math",
+      "question": "计算四分之三加八分之一，并说明为什么要这样算。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_fraction_addition",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我能不能直接把分子和分母分别相加？",
+        "直接算成十二分之四好像不对，因为每一份的大小不同。",
+        "我把四分之三化成八分之六，再加八分之一。",
+        "同分母后分子相加得到八分之七，分母仍然是8。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "terse",
+        "grade": "五年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_decimal_multiply",
+      "title": "小数乘法",
+      "subject": "math",
+      "question": "计算 2.4×0.5，并解释小数点的位置。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_decimal_multiply",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我先按24乘5算，但不知道小数点放哪里。",
+        "24乘5等于120，两个数一共有两位小数。",
+        "那结果是不是1.20？",
+        "是的，120从右往左数两位得到1.20，也就是1.2；0.5表示一半，2.4的一半也是1.2。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "detailed",
+        "grade": "五年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_rectangle_perimeter",
+      "title": "长方形周长",
+      "subject": "math",
+      "question": "一个长方形长8厘米、宽5厘米，它的周长是多少？请解释。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_rectangle_perimeter",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我把8乘5算成40厘米。",
+        "40算的是面积，不是周长。",
+        "周长要把四条边加起来，也就是8加5加8加5。",
+        "可以写成括号8加5括号乘2，结果是26厘米。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "geometry",
+        "analysis_quality": "detailed",
+        "grade": "三年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_triangle_area",
+      "title": "三角形面积",
+      "subject": "math",
+      "question": "一个三角形底是10厘米，高是6厘米，面积是多少？为什么要除以2？",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_triangle_area",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我先算10乘6等于60。",
+        "但三角形不是整个长方形，所以可能还要少一些。",
+        "两个完全相同的三角形可以拼成一个底10高6的平行四边形。",
+        "所以三角形面积是10乘6再除以2，等于30平方厘米。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "geometry",
+        "analysis_quality": "detailed",
+        "grade": "五年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_chicken_rabbit",
+      "title": "鸡兔同笼假设法",
+      "subject": "math",
+      "question": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_chicken_rabbit",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我还不知道怎么同时算两种动物。",
+        "可以先假设8只全是鸡，这样有16只脚。",
+        "实际比16只多10只，每把一只鸡换成兔会多2只脚。",
+        "所以兔有10除以2等于5只，鸡有3只，检查5乘4加3乘2等于26。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "terse",
+        "grade": "六年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_average",
+      "title": "平均数",
+      "subject": "math",
+      "question": "小明三次数学测验分别是82分、88分和94分，平均分是多少？",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_average",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我能不能把最高分和最低分加起来除以2？",
+        "这样刚好是88，但我不确定是不是通用方法。",
+        "平均数应该用三次总分除以次数，先算82加88加94等于264。",
+        "264除以3等于88，所以平均分是88分。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "detailed",
+        "grade": "四年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_discount",
+      "title": "百分数折扣",
+      "subject": "math",
+      "question": "一件原价200元的商品打八折，现价是多少？",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_discount",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "八折是不是便宜8元？",
+        "我想八折表示按原价的百分之八十付款。",
+        "所以要算200乘百分之八十。",
+        "200乘0.8等于160，现价是160元，少付40元。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "detailed",
+        "grade": "六年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_ratio",
+      "title": "按比例分配",
+      "subject": "math",
+      "question": "把35本书按2比3分给甲、乙两组，两组各分多少本？",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_ratio",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我先用35分别除以2和3，但结果加起来不等于35。",
+        "2比3一共有5份。",
+        "每一份是35除以5等于7本。",
+        "甲组2份是14本，乙组3份是21本，合起来正好35本。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "detailed",
+        "grade": "六年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_speed",
+      "title": "路程速度时间",
+      "subject": "math",
+      "question": "一辆车3小时行驶180千米，平均每小时行驶多少千米？",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_speed",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我不确定该用乘法还是除法。",
+        "题目是把180千米平均分到3小时里。",
+        "所以用路程除以时间，180除以3。",
+        "结果是60，平均速度是每小时60千米。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "terse",
+        "grade": "五年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_age",
+      "title": "年龄倍数",
+      "subject": "math",
+      "question": "妈妈今年36岁，是小华年龄的3倍。小华今年多少岁？",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_age",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我看到3倍，想用36乘3。",
+        "但妈妈年龄更大，乘3会得到更大的数，不合理。",
+        "应该把36平均分成3份，用36除以3。",
+        "小华是12岁，12乘3等于36，符合题意。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "detailed",
+        "grade": "四年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_unit_conversion",
+      "title": "长度单位换算",
+      "subject": "math",
+      "question": "3.5米等于多少厘米？说明换算关系。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_unit_conversion",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我记不清米和厘米之间差多少。",
+        "1米等于100厘米，所以从米换到厘米数会变大。",
+        "用3.5乘100。",
+        "结果是350，因此3.5米等于350厘米。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "detailed",
+        "grade": "四年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_division_remainder",
+      "title": "有余数的分组",
+      "subject": "math",
+      "question": "有53名同学，每6人一组，最多可以分成多少个完整小组，还剩几人？",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_division_remainder",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我用53除以6，但不知道余数怎么解释。",
+        "6乘8等于48，6乘9等于54，已经超过53。",
+        "所以最多只能分8个完整小组。",
+        "53减48等于5，还剩5人，答案是8组余5人。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "application",
+        "analysis_quality": "detailed",
+        "grade": "三年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_sequence",
+      "title": "数列规律",
+      "subject": "math",
+      "question": "找规律：2、5、8、11，下一项是多少？请说明。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_sequence",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我只看出这些数越来越大。",
+        "相邻两个数的差好像都是3。",
+        "11再加3得到14。",
+        "所以规律是每次增加3，下一项是14，再下一项会是17。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 3,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "reasoning",
+        "analysis_quality": "terse",
+        "grade": "四年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_probability",
+      "title": "简单可能性",
+      "subject": "math",
+      "question": "袋子里有3个红球和2个蓝球，任意摸出1个球，摸到哪种颜色的可能性更大？为什么？",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_probability",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我觉得两种颜色都有可能，所以一样大。",
+        "但红球有3个，蓝球只有2个。",
+        "总共有5个球，红球占五分之三，蓝球占五分之二。",
+        "五分之三大于五分之二，所以摸到红球的可能性更大。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "reasoning",
+        "analysis_quality": "detailed",
+        "grade": "五年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_angles",
+      "title": "平角中的角",
+      "subject": "math",
+      "question": "一个平角被分成两个角，其中一个角是65度，另一个角是多少度？",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_angles",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我不知道平角一共有多少度。",
+        "平角是180度，两个角合起来应该等于180度。",
+        "所以另一个角用180减去65。",
+        "180减65等于115，另一个角是115度，65加115正好是180。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "geometry",
+        "analysis_quality": "detailed",
+        "grade": "四年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_order_operations",
+      "title": "混合运算顺序",
+      "subject": "math",
+      "question": "计算 18-3×4，并说明运算顺序。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_order_operations",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我从左往右先算18减3等于15，再乘4等于60。",
+        "但混合运算应该先算乘法。",
+        "先算3乘4等于12。",
+        "再算18减12等于6，所以结果是6。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "detailed",
+        "grade": "三年级"
+      }
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "id": "stability_word_problem",
+      "title": "两步应用题",
+      "subject": "math",
+      "question": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_word_problem",
+        "question_version": "pilot-2026-07-v2"
+      },
+      "student_turns": [
+        "我把三个数直接加在一起。",
+        "借出表示数量减少，不能也加上38。",
+        "先算120加45等于165本。",
+        "再算165减38等于127本，所以现在有127本。"
+      ],
+      "expect": {
+        "ready_to_record": true,
+        "final_states": [
+          "completed"
+        ],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "tags": [],
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "terse",
+        "grade": "三年级"
+      }
+    }
+  ]
+}

@@ -1,0 +1,291 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a69e2b02ef3251197be26db:95b651a1f7b8",
+  "pilot_bucket": "development:portrait",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a69e2b02ef3251197be26db:95b651a1f7b8",
+    "status": "pending_gold",
+    "disposition": "ready",
+    "observed": {
+      "scope": "multiple_independent_questions",
+      "stem": "求下面各图中涂色部分的面积。(1) 一个圆环，外圆半径5m，内圆直径6m。(2) 一个大圆内包含一个小圆，大圆直径为小圆直径的2倍，小圆直径8m，求大圆减去小圆后的涂色面积。",
+      "numbers_units": [
+        "1",
+        "5",
+        "6",
+        "2",
+        "2",
+        "8"
+      ],
+      "formulas": [],
+      "options": [
+        {
+          "label": "A",
+          "text": "外圆半径5m"
+        }
+      ],
+      "ordered_subquestions": [
+        "(1) 求圆环涂色部分的面积，外圆半径5m，内圆直径6m。",
+        "(2) 求大圆减去小圆后的涂色面积，小圆直径8m，大圆直径为其2倍。"
+      ],
+      "raw_starter_question": "(1) 外圆半径5m，内圆直径6m，求圆环面积。",
+      "starter_question": "(1) 外圆半径5m，内圆直径6m，求圆环面积。",
+      "student_visible_gate": {
+        "policy_version": "small_lecturer_visible_guardrail/v8",
+        "action": "ALLOW",
+        "passed": true,
+        "reason_codes": []
+      },
+      "student_visible_repair": {
+        "applied": false,
+        "strategy": "none",
+        "schema_repaired": false
+      },
+      "starter_active_subquestion_index": 0,
+      "candidate_answer": "(1) 31.4 m² (2) 113.04 m²",
+      "disposition": "ready",
+      "evidence_completeness": "partial",
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "structured_question": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "passed",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "320299d594a2b2050d7c033be621974b1219a13d675c72083ba6508b6136570b",
+        "sha256": "95b651a1f7b8a7d828a046f70884206ea174cfc096132ee21fa8287c1d14bc3e",
+        "mime_type": "image/jpeg",
+        "size_bytes": 11397
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "5e51eb31245fcdbdf17708c5257a3d44c82686f11b7c60b7953cd71404a960dc",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_8d8c6e3e6ccd",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow"
+      },
+      "raw_output": {
+        "model_call_id": "mc_8d8c6e3e6ccd",
+        "request_id": "tctx_0ac2b06fdd9981bfc7d783cb:understanding:attempt-1",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"m\",\"t\":\"求下面各图中涂色部分的面积。(1) 一个圆环，外圆半径5m，内圆直径6m。(2) 一个大圆内包含一个小圆，大圆直径为小圆直径的2倍，小圆直径8m，求大圆减去小圆后的涂色面积。\",\"u\":[\"(1) 求圆环涂色部分的面积，外圆半径5m，内圆直径6m。\",\"(2) 求大圆减去小圆后的涂色面积，小圆直径8m，大圆直径为其2倍。\"],\"o\":[{\"m\":\"A\",\"h\":\"外圆半径5m\"}],\"g\":[{\"m\":\"圆环\",\"h\":\"外圆半径5m，内圆直径6m\"}],\"a\":\"(1) 31.4 m² (2) 113.04 m²\",\"r\":\"(1) 大圆面积减去小圆面积；(2) 大圆面积减去小圆面积\",\"k\":[\"圆面积公式 S=πr²\",\"圆环面积=大圆面积-小圆面积\"],\"p\":[\"(1) 外圆半径5m，内圆半径3m，面积=π×(5²-3²)=31.4 m²；(2) 小圆直径8m，大圆直径16m，面积=π×(8²-4²)=113.04 m²\"],\"e\":[{\"m\":\"混淆直径与半径\",\"h\":\"误将直径当半径计算面积\"}],\"c\":\"p\",\"x\":[\"amu\"],\"n\":[\"圆面积\",\"圆环面积\"],\"q\":\"(1) 外圆半径5m，内圆直径6m，求圆环面积。\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"m\",\"t\":\"求下面各图中涂色部分的面积。(1) 一个圆环，外圆半径5m，内圆直径6m。(2) 一个大圆内包含一个小圆，大圆直径为小圆直径的2倍，小圆直径8m，求大圆减去小圆后的涂色面积。\",\"u\":[\"(1) 求圆环涂色部分的面积，外圆半径5m，内圆直径6m。\",\"(2) 求大圆减去小圆后的涂色面积，小圆直径8m，大圆直径为其2倍。\"],\"o\":[{\"m\":\"A\",\"h\":\"外圆半径5m\"}],\"g\":[{\"m\":\"圆环\",\"h\":\"外圆半径5m，内圆直径6m\"}],\"a\":\"(1) 31.4 m² (2) 113.04 m²\",\"r\":\"(1) 大圆面积减去小圆面积；(2) 大圆面积减去小圆面积\",\"k\":[\"圆面积公式 S=πr²\",\"圆环面积=大圆面积-小圆面积\"],\"p\":[\"(1) 外圆半径5m，内圆半径3m，面积=π×(5²-3²)=31.4 m²；(2) 小圆直径8m，大圆直径16m，面积=π×(8²-4²)=113.04 m²\"],\"e\":[{\"m\":\"混淆直径与半径\",\"h\":\"误将直径当半径计算面积\"}],\"c\":\"p\",\"x\":[\"amu\"],\"n\":[\"圆面积\",\"圆环面积\"],\"q\":\"(1) 外圆半径5m，内圆直径6m，求圆环面积。\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2152,
+          "completion_tokens": 380,
+          "total_tokens": 2532
+        },
+        "latency_ms": 18281.96,
+        "queue_ms": 0.02,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-7ea255aee65e46d68ec1737653b34d82",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.07,
+          "worker_latency_ms": 18267.59,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.02,
+          "total_queue_ms": 0.11,
+          "deadline_at": 1788389193.956476,
+          "deadline_remaining_ms": 111691,
+          "queue_deadline_at": 1788389073.982354,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 18281.96,
+        "queue_ms": 0.02,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_0ac2b06fdd9981bfc7d783cb",
+      "compile": {
+        "model_call_id": "mc_d677a34a6646",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+        "prompt_sha256": "64218a77968a1650f1aa440c80d516a985fccea704de7697cffe6a3e9a098d19",
+        "response_parse_status": "parsed",
+        "raw_output": {
+          "model_call_id": "mc_d677a34a6646",
+          "request_id": "tctx_0ac2b06fdd9981bfc7d783cb:compile:attempt-1",
+          "agent_run_id": null,
+          "workflow_step": "teaching_context_compile",
+          "invoke_type": "structured",
+          "resolved_model": {
+            "model_id": "qwen36-27b-mlx-worker-v1",
+            "display_name": "Qwen3.6-27B Worker Test",
+            "capability": "teaching_context_compile",
+            "deployment_profile": "test_text_model_worker"
+          },
+          "content": "{\n\"v\": 1,\n\"s\": \"m\",\n\"t\": \"求下面各图中涂色部分的面积。\",\n\"u\": [\n[\n\"(1) 求圆环涂色部分的面积，外圆半径5m，内圆直径6m。\",\n\"31.4 m²\",\n\"外圆半径R=5m，内圆直径d=6m则半径r=3m。圆环面积=π(R²-r²)=3.14×(25-9)=31.4 m²。\"\n],\n[\n\"(2) 求大圆减去小圆后的涂色面积，小圆直径8m，大圆直径为其2倍。\",\n\"113.04 m²\",\n\"小圆直径8m则半径r=4m；大圆直径16m则半径R=8m。涂色面积=π(R²-r²)=3.14×(64-16)=113.04 m²。\"\n]\n],\n\"o\": [],\n\"g\": [\n[\n\"geometry_figure\",\n\"外圆半径5m，内圆直径6m\"\n]\n],\n\"a\": \"(1) 31.4 m² (2) 113.04 m²\",\n\"r\": \"利用圆环面积公式 S=π(R²-r²) 分别计算。\",\n\"k\": [\n\"圆面积\",\n\"圆环面积\"\n],\n\"p\": [\n\"识别图形为圆环或大圆减小圆\",\n\"确定外圆/大圆半径 R\",\n\"确定内圆/小圆半径 r\",\n\"代入公式 S=π(R²-r²) 计算\"\n],\n\"e\": [\n{\n\"m\": \"混淆直径与半径\",\n\"h\": \"误将直径当半径计算面积\"\n}\n],\n\"c\": \"p\",\n\"x\": [],\n\"n\": [\n\"圆面积\",\n\"圆环面积\"\n],\n\"q\": \"第(1)题中，内圆的半径是多少米？\"\n}",
+          "parsed": {},
+          "raw_text": "{\n\"v\": 1,\n\"s\": \"m\",\n\"t\": \"求下面各图中涂色部分的面积。\",\n\"u\": [\n[\n\"(1) 求圆环涂色部分的面积，外圆半径5m，内圆直径6m。\",\n\"31.4 m²\",\n\"外圆半径R=5m，内圆直径d=6m则半径r=3m。圆环面积=π(R²-r²)=3.14×(25-9)=31.4 m²。\"\n],\n[\n\"(2) 求大圆减去小圆后的涂色面积，小圆直径8m，大圆直径为其2倍。\",\n\"113.04 m²\",\n\"小圆直径8m则半径r=4m；大圆直径16m则半径R=8m。涂色面积=π(R²-r²)=3.14×(64-16)=113.04 m²。\"\n]\n],\n\"o\": [],\n\"g\": [\n[\n\"geometry_figure\",\n\"外圆半径5m，内圆直径6m\"\n]\n],\n\"a\": \"(1) 31.4 m² (2) 113.04 m²\",\n\"r\": \"利用圆环面积公式 S=π(R²-r²) 分别计算。\",\n\"k\": [\n\"圆面积\",\n\"圆环面积\"\n],\n\"p\": [\n\"识别图形为圆环或大圆减小圆\",\n\"确定外圆/大圆半径 R\",\n\"确定内圆/小圆半径 r\",\n\"代入公式 S=π(R²-r²) 计算\"\n],\n\"e\": [\n{\n\"m\": \"混淆直径与半径\",\n\"h\": \"误将直径当半径计算面积\"\n}\n],\n\"c\": \"p\",\n\"x\": [],\n\"n\": [\n\"圆面积\",\n\"圆环面积\"\n],\n\"q\": \"第(1)题中，内圆的半径是多少米？\"\n}",
+          "raw_output_ref": null,
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 472,
+            "total_tokens": 472
+          },
+          "latency_ms": 77875.35,
+          "queue_ms": 0.03,
+          "first_token_ms": null,
+          "degraded": false,
+          "provider_metrics": {
+            "provider": "mlx_text",
+            "upstream_model": "qwen36-27b-mlx-worker-v1",
+            "structured_output_enforced": true,
+            "generation_tps": 6.92,
+            "peak_memory_gb": 20.082,
+            "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+            "worker_provider": "mlx_text",
+            "worker_source_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_source_revision_verified": true,
+            "worker_source_tree_clean": true,
+            "worker_runtime_contract_version": "model-worker-runtime/v1",
+            "worker_runtime_kind": "mlx_text",
+            "worker_runtime_version": "0.31.3",
+            "worker_engine_version": "edu-agent-model-worker/v1",
+            "worker_engine_mode": "provider_serialized",
+            "worker_scheduler_enabled": false,
+            "worker_effective_batching": false,
+            "worker_dynamic_batching": false,
+            "worker_deployment_profile": "local_model_worker",
+            "worker_environment": "test",
+            "worker_shadow_only": false,
+            "worker_weights_identity_sha256": "bd5ddc47eaba8c246ebb3b5f8913e8764bfed2925a74ca095db19c729b3f8f43",
+            "worker_weights_identity_verified": true,
+            "worker_effective_batch_id": "worker-direct-2f9968054916437c8a6b1f2e8f723089",
+            "worker_effective_batch_identity_authoritative": false,
+            "worker_batch_correlation_source": "worker_generated_direct_id",
+            "worker_effective_batch_size": 1,
+            "worker_requested_batch_size": 1,
+            "worker_pid": 41384,
+            "worker_model_id": "qwen36-27b-mlx-worker-v1",
+            "worker_internal_concurrency": 1,
+            "worker_serialized": true,
+            "worker_warm_count": 1,
+            "worker_queue_ms": 0.36,
+            "worker_latency_ms": 77857.68,
+            "request_contract": "model_invoke_v1",
+            "endpoint_host": "127.0.0.1:8200",
+            "deployment_id": "qwen36-27b-mlx-worker",
+            "replica_id": "qwen36-27b-mlx-worker-a",
+            "queue_ms": 0.03,
+            "replica_queue_ms": 0.03,
+            "worker_pool_queue_ms": 0.03,
+            "retry_count": 0,
+            "request_priority": "bulk",
+            "gateway_queue_ms": 0.03,
+            "total_queue_ms": 0.42,
+            "deadline_at": 1788389212.2681658,
+            "deadline_remaining_ms": 51852,
+            "queue_deadline_at": 1788389092.540216,
+            "queue_deadline_remaining_ms": 0
+          }
+        }
+      },
+      "gold": {
+        "status": "pending",
+        "missing_fields": [
+          "gold_status_complete"
+        ]
+      }
+    },
+    "failure": null
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "schema_version": "small_lecturer_one_call_fast_path/v1",
+  "purpose": "internal_real_model_acceptance",
+  "source_artifacts": {
+    "tracked_in_git": false,
+    "privacy_note": "Only hashes and approved local paths are tracked. Source images stay outside Git."
+  },
+  "cases": [
+    {
+      "case_id": "position_path_a",
+      "category": "position",
+      "file_id": "file_1a6aec4a19a5",
+      "source_path": "data/test-backend/test/oss-cache/raw/other/test_school/frontend_509e87a6c45ee0a3/file_1a6aec4a19a5",
+      "sha256": "68b30a0944cdd32cb40a39944994f497148bf789cd648679f7a5dad29b1fd6e5",
+      "format": "JPEG",
+      "expected_disposition": "ready_after_normalization",
+      "student_turns": [
+        {"kind": "correct_brief", "content": "同一条竖线上，第一个数应该都是2。"},
+        {"kind": "wrong", "content": "那我选D（4，2）。"},
+        {"kind": "no_progress", "content": "我还是分不清哪一个数要保持不变。"}
+      ]
+    },
+    {
+      "case_id": "position_path_b",
+      "category": "position",
+      "file_id": "file_1a6aec4a19a5",
+      "source_path": "data/test-backend/test/oss-cache/raw/other/test_school/frontend_509e87a6c45ee0a3/file_1a6aec4a19a5",
+      "sha256": "68b30a0944cdd32cb40a39944994f497148bf789cd648679f7a5dad29b1fd6e5",
+      "format": "JPEG",
+      "expected_disposition": "ready_after_normalization",
+      "student_turns": [
+        {"kind": "no_answer", "content": "我不会判断这几个数对。"},
+        {"kind": "partial", "content": "我知道要和他们在同一条竖线上。"},
+        {"kind": "asks_model", "content": "你直接告诉我选哪个可以吗？"},
+        {"kind": "no_progress", "content": "换个说法我还是不知道该比较第几个数。"}
+      ]
+    },
+    {
+      "case_id": "coordinate_path_a",
+      "category": "coordinate_graph",
+      "file_id": "file_33c05053d7ea",
+      "source_path": "data/test-backend/test/oss-cache/raw/other/test_school/frontend_509e87a6c45ee0a3/file_33c05053d7ea",
+      "sha256": "31f0b683215098c2f230c64f3d117ed19686007e1e2071fcdbeb08f3084ace7e",
+      "format": "JPEG",
+      "expected_disposition": "ready",
+      "student_turns": [
+        {"kind": "correct_brief", "content": "我先把A点向右移动4格。"},
+        {"kind": "wrong", "content": "再向下2格后，纵坐标应该加2。"},
+        {"kind": "no_progress", "content": "我还是不知道平移后坐标怎么变。"}
+      ]
+    },
+    {
+      "case_id": "coordinate_path_b",
+      "category": "coordinate_graph",
+      "file_id": "file_33c05053d7ea",
+      "source_path": "data/test-backend/test/oss-cache/raw/other/test_school/frontend_509e87a6c45ee0a3/file_33c05053d7ea",
+      "sha256": "31f0b683215098c2f230c64f3d117ed19686007e1e2071fcdbeb08f3084ace7e",
+      "format": "JPEG",
+      "expected_disposition": "ready",
+      "student_turns": [
+        {"kind": "no_answer", "content": "我不会画平移后的图形。"},
+        {"kind": "partial", "content": "我知道向右4格会改变横坐标。"},
+        {"kind": "asks_model", "content": "你直接把A1的坐标告诉我可以吗？"},
+        {"kind": "no_progress", "content": "换个说法我还是不知道向下2格该怎么改。"}
+      ]
+    },
+    {
+      "case_id": "equation_path_a",
+      "category": "equation_word_problem",
+      "file_id": "page-002-question-11-pqcq_41215f79a0d5-crop.png",
+      "source_path": "artifacts/openapi-pdf-flow/20260626-public-math-equation-qwen36-quality/downloads/questions/page-002-question-11-pqcq_41215f79a0d5-crop.png",
+      "sha256": "3acfc9001760de73b49753db2b4bfe6ed750a16fdd37c4b7e03397c2fece85a5",
+      "format": "PNG",
+      "expected_disposition": "ready",
+      "student_turns": [
+        {"kind": "correct_brief", "content": "我想先设每一份是x人。"},
+        {"kind": "wrong", "content": "那原来男生是4x人，女生增加后就是3x减15。"},
+        {"kind": "no_progress", "content": "我还是列不出增加后的数量关系。"}
+      ]
+    },
+    {
+      "case_id": "equation_path_b",
+      "category": "equation_word_problem",
+      "file_id": "page-002-question-11-pqcq_41215f79a0d5-crop.png",
+      "source_path": "artifacts/openapi-pdf-flow/20260626-public-math-equation-qwen36-quality/downloads/questions/page-002-question-11-pqcq_41215f79a0d5-crop.png",
+      "sha256": "3acfc9001760de73b49753db2b4bfe6ed750a16fdd37c4b7e03397c2fece85a5",
+      "format": "PNG",
+      "expected_disposition": "ready",
+      "student_turns": [
+        {"kind": "no_answer", "content": "我不会列方程。"},
+        {"kind": "partial", "content": "我知道原来男生和女生是4比3。"},
+        {"kind": "asks_model", "content": "你能把方程直接写给我吗？"},
+        {"kind": "no_progress", "content": "我还是不知道15应该加在哪里。"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": "small_lecturer_partner_pilot_case/v1",
+  "generated_at": "2026-08-08T10:59:51.982596+00:00",
+  "source_manifest_sha256": "2ceffeac15a6eac600abb19ea0b50358b96958dff8050fd4ad2a9c3f1777ab33",
+  "model_calls": [],
+  "failure_stage": "preflight",
+  "question_id": "6a61b319f0e25247f1ee3061",
+  "question_version": "sha256:79e890ec4c4465e89ac3103caa4e8583d8294aab1479d9cc1d5c196b58d1b3d6",
+  "pilot_bucket": "fraction_formula",
+  "status": "blocked",
+  "blocking_reason_code": "question_image_understanding_worker_unavailable",
+  "model_call_count": 0
+}

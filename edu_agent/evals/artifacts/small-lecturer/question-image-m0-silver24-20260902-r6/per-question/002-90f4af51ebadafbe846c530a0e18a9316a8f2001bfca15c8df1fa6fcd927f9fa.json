@@ -1,0 +1,181 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a69e2b02ef3251197be26db:95b651a1f7b8",
+  "pilot_bucket": "development:portrait",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a69e2b02ef3251197be26db:95b651a1f7b8",
+    "status": "failed",
+    "disposition": "failed",
+    "observed": {
+      "model_response_received": true,
+      "structured_result": {},
+      "raw_starter_question": null,
+      "student_visible_gate": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "student_visible_repair": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "starter_question": null,
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "failed",
+          "reason_codes": [
+            "MODEL_RESPONSE_PARSE_FAILED"
+          ]
+        },
+        "structured_question": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "not_run",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "320299d594a2b2050d7c033be621974b1219a13d675c72083ba6508b6136570b",
+        "sha256": "95b651a1f7b8a7d828a046f70884206ea174cfc096132ee21fa8287c1d14bc3e",
+        "mime_type": "image/jpeg",
+        "size_bytes": 11397
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "48229619e3971d0a4c66569df6ad940f7dc0f616552a3961d7bbb19b1374341f",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_c14a8ab77c4d",
+        "model_call_count": 2,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+        "response_parse_status": "failed",
+        "response_parsed_keys": [],
+        "response_content_length": 706,
+        "response_parse_error_code": "VALIDATIONERROR"
+      },
+      "raw_output": {
+        "model_call_id": "mc_c14a8ab77c4d",
+        "request_id": "tctx_0ac2b06fdd9981bfc7d783cb:understanding:attempt-2",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"m\",\"t\":\"求下面各图中涂色部分的面积。(1) 一个圆环，外圆半径5m，内圆直径6m。(2) 一个大圆内包含一个小圆，大圆直径为小圆直径的2倍，小圆直径8m，求大圆减去小圆后的涂色面积。\",\"u\":[\"(1) 求圆环涂色部分的面积，外圆半径5m，内圆直径6m。\",\"(2) 求大圆减去小圆后的涂色面积，小圆直径8m，大圆直径为其2倍。\"],\"o\":[{\"m\":\"A\",\"h\":\"外圆半径5m\"},{\"m\":\"B\",\"h\":\"内圆直径6m\"}],\"g\":[{\"m\":\"圆环\",\"h\":\"外圆半径5m，内圆直径6m\"},{\"m\":\"大圆减小圆\",\"h\":\"小圆直径8m，大圆直径16m\"}],\"a\":\"(1) 3.14×(5² - 3²) = 3.14×16 = 50.24(m²)；(2) 3.14×(8² - 4²) = 3.14×48 = 150.72(m²)\",\"r\":\"圆环面积=π(R²-r²)，大圆减小圆面积=π(R²-r²)\",\"k\":[\"圆的面积公式πr²\",\"圆环面积公式π(R²-r²)\"],\"p\":[\"(1) 外圆半径5m，内圆半径3m，面积差=3.14×(25-9)；(2) 大圆半径8m，小圆半径4m，面积差=3.14×(64-16)\"],\"e\":[{\"m\":\"误用直径当半径\",\"h\":\"内圆直径6m，半径应为3m，不是6m\"},{\"m\":\"混淆大圆半径\",\"h\":\"大圆直径16m，半径应为8m，不是16m\"}],\"c\":\"p\",\"x\":[\"amu\"],\"n\":[\"圆的面积\",\"圆环面积\"],\"q\":\"(1) 外圆半径5m，内圆直径6m，求圆环面积。\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"m\",\"t\":\"求下面各图中涂色部分的面积。(1) 一个圆环，外圆半径5m，内圆直径6m。(2) 一个大圆内包含一个小圆，大圆直径为小圆直径的2倍，小圆直径8m，求大圆减去小圆后的涂色面积。\",\"u\":[\"(1) 求圆环涂色部分的面积，外圆半径5m，内圆直径6m。\",\"(2) 求大圆减去小圆后的涂色面积，小圆直径8m，大圆直径为其2倍。\"],\"o\":[{\"m\":\"A\",\"h\":\"外圆半径5m\"},{\"m\":\"B\",\"h\":\"内圆直径6m\"}],\"g\":[{\"m\":\"圆环\",\"h\":\"外圆半径5m，内圆直径6m\"},{\"m\":\"大圆减小圆\",\"h\":\"小圆直径8m，大圆直径16m\"}],\"a\":\"(1) 3.14×(5² - 3²) = 3.14×16 = 50.24(m²)；(2) 3.14×(8² - 4²) = 3.14×48 = 150.72(m²)\",\"r\":\"圆环面积=π(R²-r²)，大圆减小圆面积=π(R²-r²)\",\"k\":[\"圆的面积公式πr²\",\"圆环面积公式π(R²-r²)\"],\"p\":[\"(1) 外圆半径5m，内圆半径3m，面积差=3.14×(25-9)；(2) 大圆半径8m，小圆半径4m，面积差=3.14×(64-16)\"],\"e\":[{\"m\":\"误用直径当半径\",\"h\":\"内圆直径6m，半径应为3m，不是6m\"},{\"m\":\"混淆大圆半径\",\"h\":\"大圆直径16m，半径应为8m，不是16m\"}],\"c\":\"p\",\"x\":[\"amu\"],\"n\":[\"圆的面积\",\"圆环面积\"],\"q\":\"(1) 外圆半径5m，内圆直径6m，求圆环面积。\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2179,
+          "completion_tokens": 486,
+          "total_tokens": 2665
+        },
+        "latency_ms": 22818.4,
+        "queue_ms": 0.01,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-cf071416381742dfb45eaa331fd6c819",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.22,
+          "worker_latency_ms": 22808.39,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.01,
+          "total_queue_ms": 0.25,
+          "deadline_at": 1788366822.5319319,
+          "deadline_remaining_ms": 107150,
+          "queue_deadline_at": 1788366702.5627258,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 22818.4,
+        "queue_ms": 0.01,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_0ac2b06fdd9981bfc7d783cb"
+    },
+    "failure": {
+      "stage": "question_image_understanding",
+      "code": "MODEL_RESPONSE_PARSE_FAILED",
+      "summary": "模型已返回题图结果，但结果未通过结构化题图理解解析"
+    }
+  }
+}

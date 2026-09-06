@@ -1,0 +1,1 @@
+{"case_id":"essay_review_basic","input":{"student_id":"stu_001","grade":"五年级","title":"难忘的秋游","content":"今天学校组织了秋游。\n我高心地跑向操场，还看到了很多花。\n回家的路上，我觉得今天很难忘。","review_level":"standard"},"expected":{"required_keys":["score","paragraph_comments","underline_annotations","typo_annotations","summary","review_required"]},"metadata":{"agent_id":"essay_review"}}

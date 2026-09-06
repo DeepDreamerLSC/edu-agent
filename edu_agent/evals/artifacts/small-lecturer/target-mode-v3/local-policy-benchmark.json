@@ -1,0 +1,85 @@
+{
+  "schema_version": "small_lecturer_target_mode_v3_local_benchmark/v1",
+  "benchmark_kind": "deterministic_local_policy_only",
+  "generated_at": "2026-08-11T00:03:37.153892+00:00",
+  "source_revision": "c2dc6edf2",
+  "inputs": {
+    "iterations": 20000,
+    "grade_bands": [
+      "primary_lower",
+      "primary_upper",
+      "junior_middle",
+      "neutral"
+    ],
+    "interaction_signals": [
+      "neutral",
+      "requesting_support",
+      "requesting_direct_answer",
+      "frustrated",
+      "stopping"
+    ],
+    "normal_question_count": 50,
+    "fixture_sha256": "743cd1bcffc56a24bf1ee6f6bd64b5fef703658983ee525ebb6b7052a4a0f146",
+    "style_profile_sha256": "5c5d979229fab192fcc587ddbe38730b1d1d1b5cb98457f9b9a60def1953d0e8",
+    "style_profile_version": "small_lecturer_expression/v2"
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "macOS-26.5-arm64-arm-64bit",
+    "machine": "arm64"
+  },
+  "model_call_count": 0,
+  "thresholds": {
+    "combined_local_policy_p95_ms_less_than": 10.0,
+    "style_directives_estimated_tokens_max": 120
+  },
+  "metrics": {
+    "profile_compile_ms": {
+      "p50": 0.0017,
+      "p95": 0.0018,
+      "max": 0.0494
+    },
+    "guardrail_ms": {
+      "p50": 0.0028,
+      "p95": 0.0034,
+      "max": 0.0622
+    },
+    "combined_local_policy_ms": {
+      "p50": 0.0047,
+      "p95": 0.0053,
+      "max": 0.0895
+    },
+    "style_directives_estimated_tokens": {
+      "max": 52,
+      "by_profile_and_signal": {
+        "junior_middle:frustrated": 50,
+        "junior_middle:neutral": 50,
+        "junior_middle:requesting_direct_answer": 50,
+        "junior_middle:requesting_support": 50,
+        "junior_middle:stopping": 50,
+        "neutral:frustrated": 52,
+        "neutral:neutral": 52,
+        "neutral:requesting_direct_answer": 52,
+        "neutral:requesting_support": 52,
+        "neutral:stopping": 52,
+        "primary_lower:frustrated": 47,
+        "primary_lower:neutral": 47,
+        "primary_lower:requesting_direct_answer": 47,
+        "primary_lower:requesting_support": 47,
+        "primary_lower:stopping": 47,
+        "primary_upper:frustrated": 52,
+        "primary_upper:neutral": 51,
+        "primary_upper:requesting_direct_answer": 51,
+        "primary_upper:requesting_support": 52,
+        "primary_upper:stopping": 52
+      },
+      "estimator": "non_ascii_plus_ascii_quarter/v1"
+    }
+  },
+  "status": "passed",
+  "failure_reasons": [],
+  "limitations": [
+    "This benchmark excludes model, database, HTTP, and streaming latency.",
+    "Token count is a conservative tokenizer-free estimate, not a model tokenizer result."
+  ]
+}

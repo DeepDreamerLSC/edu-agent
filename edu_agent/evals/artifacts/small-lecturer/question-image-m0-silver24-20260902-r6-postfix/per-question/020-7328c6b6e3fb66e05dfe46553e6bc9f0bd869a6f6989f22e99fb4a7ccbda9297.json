@@ -1,0 +1,293 @@
+{
+  "sample_id": "pujia-silver-v0:reserved:6a695a176c232e289af525e7:a5f8bc234f84",
+  "pilot_bucket": "reserved:landscape",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:reserved:6a695a176c232e289af525e7:a5f8bc234f84",
+    "status": "pending_gold",
+    "disposition": "ready",
+    "observed": {
+      "scope": "single_question",
+      "stem": "(1) 5/12 的 15 倍是多少？(2) 36 的 4/21 是多少？(3) 一杯果汁重 3/5 kg，5 杯果汁重多少千克？",
+      "numbers_units": [
+        "1",
+        "5",
+        "12 ",
+        "15 ",
+        "2",
+        "36 ",
+        "4",
+        "21 ",
+        "3",
+        "3",
+        "5 ",
+        "5 "
+      ],
+      "formulas": [],
+      "options": [],
+      "ordered_subquestions": [
+        "5/12 的 15 倍是多少？",
+        "36 的 4/21 是多少？",
+        "一杯果汁重 3/5 kg，5 杯果汁重多少千克？"
+      ],
+      "raw_starter_question": "(1) 5/12 的 15 倍是多少？",
+      "starter_question": "(1) 5/12 的 15 倍是多少？",
+      "student_visible_gate": {
+        "policy_version": "small_lecturer_visible_guardrail/v8",
+        "action": "ALLOW",
+        "passed": true,
+        "reason_codes": []
+      },
+      "student_visible_repair": {
+        "applied": false,
+        "strategy": "none",
+        "schema_repaired": false
+      },
+      "starter_active_subquestion_index": 0,
+      "candidate_answer": "(1) 5/12×15=25/4；(2) 36×4/21=24/7；(3) 3/5×5=3",
+      "disposition": "ready",
+      "evidence_completeness": "partial",
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "structured_question": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "passed",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "2adff846339684684bd9511930d884ec6429ed8de0447dcdcbad7ad1ba6ddcc5",
+        "sha256": "a5f8bc234f84a447a3c1c6f00bd7015a103fadf21b18df95ddeee2d503b59e89",
+        "mime_type": "image/jpeg",
+        "size_bytes": 10296
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "d82059b1cb9529d73c8162221f305da34490e656c1dc5933a91051d1c358b664",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_1e6fdcd5f331",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow"
+      },
+      "raw_output": {
+        "model_call_id": "mc_1e6fdcd5f331",
+        "request_id": "tctx_b8c9c658b45bab57e6b458ac:understanding:attempt-1",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"(1) 5/12 的 15 倍是多少？(2) 36 的 4/21 是多少？(3) 一杯果汁重 3/5 kg，5 杯果汁重多少千克？\",\"u\":[\"5/12 的 15 倍是多少？\",\"36 的 4/21 是多少？\",\"一杯果汁重 3/5 kg，5 杯果汁重多少千克？\"],\"o\":[],\"g\":[],\"a\":\"(1) 5/12×15=25/4；(2) 36×4/21=24/7；(3) 3/5×5=3\",\"r\":\"分数乘法：分子乘分子，分母乘分母，能约分的先约分。\",\"k\":[\"分数乘法法则\",\"分数与整数相乘\",\"分数与分数相乘\"],\"p\":[\"(1) 5/12×15=5×15/12=75/12=25/4；(2) 36×4/21=36×4/21=144/21=24/7；(3) 3/5×5=3/5×5/1=3\"],\"e\":[],\"c\":\"p\",\"x\":[],\"n\":[\"分数乘法\"],\"q\":\"(1) 5/12 的 15 倍是多少？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"(1) 5/12 的 15 倍是多少？(2) 36 的 4/21 是多少？(3) 一杯果汁重 3/5 kg，5 杯果汁重多少千克？\",\"u\":[\"5/12 的 15 倍是多少？\",\"36 的 4/21 是多少？\",\"一杯果汁重 3/5 kg，5 杯果汁重多少千克？\"],\"o\":[],\"g\":[],\"a\":\"(1) 5/12×15=25/4；(2) 36×4/21=24/7；(3) 3/5×5=3\",\"r\":\"分数乘法：分子乘分子，分母乘分母，能约分的先约分。\",\"k\":[\"分数乘法法则\",\"分数与整数相乘\",\"分数与分数相乘\"],\"p\":[\"(1) 5/12×15=5×15/12=75/12=25/4；(2) 36×4/21=36×4/21=144/21=24/7；(3) 3/5×5=3/5×5/1=3\"],\"e\":[],\"c\":\"p\",\"x\":[],\"n\":[\"分数乘法\"],\"q\":\"(1) 5/12 的 15 倍是多少？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2151,
+          "completion_tokens": 329,
+          "total_tokens": 2480
+        },
+        "latency_ms": 16630.54,
+        "queue_ms": 0.03,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-879bcfcc05fd40c796847db1623a63d9",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.1,
+          "worker_latency_ms": 16616.17,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.04,
+          "replica_queue_ms": 0.04,
+          "worker_pool_queue_ms": 0.04,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.03,
+          "total_queue_ms": 0.17,
+          "deadline_at": 1788390628.272091,
+          "deadline_remaining_ms": 113320,
+          "queue_deadline_at": 1788390508.3205252,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 16630.54,
+        "queue_ms": 0.03,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_b8c9c658b45bab57e6b458ac",
+      "compile": {
+        "model_call_id": "mc_c683f08acf56",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+        "prompt_sha256": "c904d15ee7d45a22ab72ce39f8e3441473fd9cd53249d026676783b3a0096783",
+        "response_parse_status": "parsed",
+        "raw_output": {
+          "model_call_id": "mc_c683f08acf56",
+          "request_id": "tctx_b8c9c658b45bab57e6b458ac:compile:attempt-1",
+          "agent_run_id": null,
+          "workflow_step": "teaching_context_compile",
+          "invoke_type": "structured",
+          "resolved_model": {
+            "model_id": "qwen36-27b-mlx-worker-v1",
+            "display_name": "Qwen3.6-27B Worker Test",
+            "capability": "teaching_context_compile",
+            "deployment_profile": "test_text_model_worker"
+          },
+          "content": "{\n  \"v\": 1,\n  \"s\": \"m\",\n  \"t\": \"(1) 5/12 的 15 倍是多少？(2) 36 的 4/21 是多少？(3) 一杯果汁重 3/5 kg，5 杯果汁重多少千克？\",\n  \"u\": [\n    [\n      \"5/12 的 15 倍是多少？\",\n      \"25/4\",\n      \"5/12 × 15 = 75/12 = 25/4\"\n    ],\n    [\n      \"36 的 4/21 是多少？\",\n      \"24/7\",\n      \"36 × 4/21 = 144/21 = 24/7\"\n    ],\n    [\n      \"一杯果汁重 3/5 kg，5 杯果汁重多少千克？\",\n      \"3\",\n      \"3/5 × 5 = 3\"\n    ]\n  ],\n  \"o\": [],\n  \"g\": [\n    [\n      \"other\",\n      \"题目包含三个独立的分数乘法计算问题\"\n    ]\n  ],\n  \"a\": \"(1) 25/4；(2) 24/7；(3) 3\",\n  \"r\": \"分数乘法法则：分子乘分子，分母乘分母，能约分的先约分。\",\n  \"k\": [\n    \"分数乘法\",\n    \"分数与整数相乘\",\n    \"约分\"\n  ],\n  \"p\": [\n    \"对于第(1)题，计算 5/12 × 15，分子 5×15=75，分母为 12，得 75/12，约分后为 25/4。\",\n    \"对于第(2)题，计算 36 × 4/21，分子 36×4=144，分母为 21，得 144/21，约分后为 24/7。\",\n    \"对于第(3)题，计算 3/5 × 5，分子 3×5=15，分母为 5，得 15/5，结果为 3。\"\n  ],\n  \"e\": [\n    {\n      \"m\": \"忘记约分，直接写出未化简的分数\",\n      \"h\": \"计算完成后，检查分子和分母是否有公因数，进行约分。\"\n    },\n    {\n      \"m\": \"整数与分数相乘时，将整数与分母相乘\",\n      \"h\": \"整数应与分子相乘，分母保持不变。\"\n    }\n  ],\n  \"c\": \"c\",\n  \"x\": [],\n  \"n\": [\n    \"分数乘法\"\n  ],\n  \"q\": \"5/12 乘以 15 的分子是多少？\"\n}",
+          "parsed": {},
+          "raw_text": "{\n  \"v\": 1,\n  \"s\": \"m\",\n  \"t\": \"(1) 5/12 的 15 倍是多少？(2) 36 的 4/21 是多少？(3) 一杯果汁重 3/5 kg，5 杯果汁重多少千克？\",\n  \"u\": [\n    [\n      \"5/12 的 15 倍是多少？\",\n      \"25/4\",\n      \"5/12 × 15 = 75/12 = 25/4\"\n    ],\n    [\n      \"36 的 4/21 是多少？\",\n      \"24/7\",\n      \"36 × 4/21 = 144/21 = 24/7\"\n    ],\n    [\n      \"一杯果汁重 3/5 kg，5 杯果汁重多少千克？\",\n      \"3\",\n      \"3/5 × 5 = 3\"\n    ]\n  ],\n  \"o\": [],\n  \"g\": [\n    [\n      \"other\",\n      \"题目包含三个独立的分数乘法计算问题\"\n    ]\n  ],\n  \"a\": \"(1) 25/4；(2) 24/7；(3) 3\",\n  \"r\": \"分数乘法法则：分子乘分子，分母乘分母，能约分的先约分。\",\n  \"k\": [\n    \"分数乘法\",\n    \"分数与整数相乘\",\n    \"约分\"\n  ],\n  \"p\": [\n    \"对于第(1)题，计算 5/12 × 15，分子 5×15=75，分母为 12，得 75/12，约分后为 25/4。\",\n    \"对于第(2)题，计算 36 × 4/21，分子 36×4=144，分母为 21，得 144/21，约分后为 24/7。\",\n    \"对于第(3)题，计算 3/5 × 5，分子 3×5=15，分母为 5，得 15/5，结果为 3。\"\n  ],\n  \"e\": [\n    {\n      \"m\": \"忘记约分，直接写出未化简的分数\",\n      \"h\": \"计算完成后，检查分子和分母是否有公因数，进行约分。\"\n    },\n    {\n      \"m\": \"整数与分数相乘时，将整数与分母相乘\",\n      \"h\": \"整数应与分子相乘，分母保持不变。\"\n    }\n  ],\n  \"c\": \"c\",\n  \"x\": [],\n  \"n\": [\n    \"分数乘法\"\n  ],\n  \"q\": \"5/12 乘以 15 的分子是多少？\"\n}",
+          "raw_output_ref": null,
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 692,
+            "total_tokens": 692
+          },
+          "latency_ms": 100607.32,
+          "queue_ms": 0.02,
+          "first_token_ms": null,
+          "degraded": false,
+          "provider_metrics": {
+            "provider": "mlx_text",
+            "upstream_model": "qwen36-27b-mlx-worker-v1",
+            "structured_output_enforced": true,
+            "generation_tps": 7.58,
+            "peak_memory_gb": 20.082,
+            "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+            "worker_provider": "mlx_text",
+            "worker_source_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_source_revision_verified": true,
+            "worker_source_tree_clean": true,
+            "worker_runtime_contract_version": "model-worker-runtime/v1",
+            "worker_runtime_kind": "mlx_text",
+            "worker_runtime_version": "0.31.3",
+            "worker_engine_version": "edu-agent-model-worker/v1",
+            "worker_engine_mode": "provider_serialized",
+            "worker_scheduler_enabled": false,
+            "worker_effective_batching": false,
+            "worker_dynamic_batching": false,
+            "worker_deployment_profile": "local_model_worker",
+            "worker_environment": "test",
+            "worker_shadow_only": false,
+            "worker_weights_identity_sha256": "bd5ddc47eaba8c246ebb3b5f8913e8764bfed2925a74ca095db19c729b3f8f43",
+            "worker_weights_identity_verified": true,
+            "worker_effective_batch_id": "worker-direct-96e0bd5b8f5b4f5bbd07ed2e33bbb41a",
+            "worker_effective_batch_identity_authoritative": false,
+            "worker_batch_correlation_source": "worker_generated_direct_id",
+            "worker_effective_batch_size": 1,
+            "worker_requested_batch_size": 1,
+            "worker_pid": 41384,
+            "worker_model_id": "qwen36-27b-mlx-worker-v1",
+            "worker_internal_concurrency": 1,
+            "worker_serialized": true,
+            "worker_warm_count": 1,
+            "worker_queue_ms": 0.1,
+            "worker_latency_ms": 100594.46,
+            "request_contract": "model_invoke_v1",
+            "endpoint_host": "127.0.0.1:8200",
+            "deployment_id": "qwen36-27b-mlx-worker",
+            "replica_id": "qwen36-27b-mlx-worker-a",
+            "queue_ms": 0.02,
+            "replica_queue_ms": 0.02,
+            "worker_pool_queue_ms": 0.02,
+            "retry_count": 0,
+            "request_priority": "bulk",
+            "gateway_queue_ms": 0.02,
+            "total_queue_ms": 0.14,
+            "deadline_at": 1788390644.954753,
+            "deadline_remaining_ms": 29367,
+            "queue_deadline_at": 1788390524.980077,
+            "queue_deadline_remaining_ms": 0
+          }
+        }
+      },
+      "gold": {
+        "status": "pending",
+        "missing_fields": [
+          "gold_status_complete"
+        ]
+      }
+    },
+    "failure": null
+  }
+}

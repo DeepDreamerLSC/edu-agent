@@ -1,0 +1,1511 @@
+{
+  "schema_version": "small_lecturer_dialogue_scenarios/v3",
+  "scenarios": [
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_lower_multiplication__partial_mastery",
+      "title": "二年级·partial_mastery",
+      "subject": "math",
+      "question": "一盒有8支铅笔，3盒一共有多少支铅笔？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_lower_multiplication",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "grade": "二年级",
+        "known_facts": [
+          "每盒都有8支"
+        ],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "partial_mastery",
+        "allowed_progression": [
+          "make_partial_progress",
+          "revise_after_evidence",
+          "complete_after_reasoning"
+        ],
+        "forbidden_reveals": [
+          "24支",
+          "8×3=24"
+        ],
+        "seed": 2026073101,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_lower",
+        "partial_mastery",
+        "normal_progress"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "二年级",
+        "grade_band": "primary_lower",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_lower_multiplication__typical_misconception",
+      "title": "二年级·typical_misconception",
+      "subject": "math",
+      "question": "一盒有8支铅笔，3盒一共有多少支铅笔？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_lower_multiplication",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "misconception_active",
+        "grade": "二年级",
+        "known_facts": [
+          "求3个8是多少可以用乘法"
+        ],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": "把3盒和每盒8支直接相加",
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "typical_misconception",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress",
+          "revise_after_evidence"
+        ],
+        "forbidden_reveals": [
+          "24支",
+          "8×3=24"
+        ],
+        "seed": 2026073102,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_lower",
+        "typical_misconception",
+        "angle_switch"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "二年级",
+        "grade_band": "primary_lower",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_lower_multiplication__cannot_answer",
+      "title": "二年级·cannot_answer",
+      "subject": "math",
+      "question": "一盒有8支铅笔，3盒一共有多少支铅笔？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_lower_multiplication",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "grade": "二年级",
+        "known_facts": [],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "request_hint",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "cannot_answer",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress"
+        ],
+        "forbidden_reveals": [
+          "24支",
+          "8×3=24"
+        ],
+        "seed": 2026073103,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_lower",
+        "cannot_answer",
+        "continuous_stall",
+        "model_failure"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "二年级",
+        "grade_band": "primary_lower",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": "student_simulator_model_failure"
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_lower_multiplication__repeat_answer",
+      "title": "二年级·repeat_answer",
+      "subject": "math",
+      "question": "一盒有8支铅笔，3盒一共有多少支铅笔？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_lower_multiplication",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "grade": "二年级",
+        "known_facts": [
+          "每盒都有8支"
+        ],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "repeat_answer",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress"
+        ],
+        "forbidden_reveals": [
+          "24支",
+          "8×3=24"
+        ],
+        "seed": 2026073104,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_lower",
+        "repeat_answer",
+        "continuous_stall",
+        "repeated_answer"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "二年级",
+        "grade_band": "primary_lower",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_lower_multiplication__answer_seeking",
+      "title": "二年级·answer_seeking",
+      "subject": "math",
+      "question": "一盒有8支铅笔，3盒一共有多少支铅笔？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_lower_multiplication",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "answer_seeking",
+        "grade": "二年级",
+        "known_facts": [],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "request_answer",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "answer_seeking",
+        "allowed_progression": [
+          "request_minimal_hint",
+          "make_partial_progress",
+          "exit"
+        ],
+        "forbidden_reveals": [
+          "24支",
+          "8×3=24"
+        ],
+        "seed": 2026073105,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_lower",
+        "answer_seeking",
+        "answer_seeking"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "二年级",
+        "grade_band": "primary_lower",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_lower_multiplication__loses_patience",
+      "title": "二年级·loses_patience",
+      "subject": "math",
+      "question": "一盒有8支铅笔，3盒一共有多少支铅笔？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_lower_multiplication",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "grade": "二年级",
+        "known_facts": [],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "frustrated",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "loses_patience",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "exit"
+        ],
+        "forbidden_reveals": [
+          "24支",
+          "8×3=24"
+        ],
+        "seed": 2026073106,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_lower",
+        "loses_patience",
+        "student_exit",
+        "frustration"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "二年级",
+        "grade_band": "primary_lower",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_lower_multiplication__off_topic",
+      "title": "二年级·off_topic",
+      "subject": "math",
+      "question": "一盒有8支铅笔，3盒一共有多少支铅笔？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_lower_multiplication",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "grade": "二年级",
+        "known_facts": [],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "off_topic",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint"
+        ],
+        "forbidden_reveals": [
+          "24支",
+          "8×3=24"
+        ],
+        "seed": 2026073107,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_lower",
+        "off_topic",
+        "off_topic",
+        "continuous_stall"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "二年级",
+        "grade_band": "primary_lower",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_lower_multiplication__exit_then_resume",
+      "title": "二年级·exit_then_resume",
+      "subject": "math",
+      "question": "一盒有8支铅笔，3盒一共有多少支铅笔？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_lower_multiplication",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "grade": "二年级",
+        "known_facts": [
+          "每盒都有8支"
+        ],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "exit_then_resume",
+        "allowed_progression": [
+          "exit",
+          "maintain_current_state",
+          "make_partial_progress",
+          "revise_after_evidence"
+        ],
+        "forbidden_reveals": [
+          "24支",
+          "8×3=24"
+        ],
+        "seed": 2026073108,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_lower",
+        "exit_then_resume",
+        "student_exit",
+        "session_resume"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "二年级",
+        "grade_band": "primary_lower",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_middle_two_step__partial_mastery",
+      "title": "四年级·partial_mastery",
+      "subject": "math",
+      "question": "学校买了6盒彩笔，每盒12支，平均分给8个小组，每组几支？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_middle_two_step",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "grade": "四年级",
+        "known_facts": [
+          "6盒的总支数可以用6乘12求"
+        ],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "partial_mastery",
+        "allowed_progression": [
+          "make_partial_progress",
+          "revise_after_evidence",
+          "complete_after_reasoning"
+        ],
+        "forbidden_reveals": [
+          "9支",
+          "6×12÷8=9"
+        ],
+        "seed": 2026073201,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_middle",
+        "partial_mastery",
+        "normal_progress"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "四年级",
+        "grade_band": "primary_middle",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_middle_two_step__typical_misconception",
+      "title": "四年级·typical_misconception",
+      "subject": "math",
+      "question": "学校买了6盒彩笔，每盒12支，平均分给8个小组，每组几支？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_middle_two_step",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "misconception_active",
+        "grade": "四年级",
+        "known_facts": [
+          "要先求彩笔总数，再平均分"
+        ],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": "先用12除以8，忽略一共有6盒",
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "typical_misconception",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress",
+          "revise_after_evidence"
+        ],
+        "forbidden_reveals": [
+          "9支",
+          "6×12÷8=9"
+        ],
+        "seed": 2026073202,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_middle",
+        "typical_misconception",
+        "angle_switch"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "四年级",
+        "grade_band": "primary_middle",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_middle_two_step__cannot_answer",
+      "title": "四年级·cannot_answer",
+      "subject": "math",
+      "question": "学校买了6盒彩笔，每盒12支，平均分给8个小组，每组几支？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_middle_two_step",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "grade": "四年级",
+        "known_facts": [],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "request_hint",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "cannot_answer",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress"
+        ],
+        "forbidden_reveals": [
+          "9支",
+          "6×12÷8=9"
+        ],
+        "seed": 2026073203,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_middle",
+        "cannot_answer",
+        "continuous_stall",
+        "model_failure"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "四年级",
+        "grade_band": "primary_middle",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": "student_simulator_model_failure"
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_middle_two_step__repeat_answer",
+      "title": "四年级·repeat_answer",
+      "subject": "math",
+      "question": "学校买了6盒彩笔，每盒12支，平均分给8个小组，每组几支？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_middle_two_step",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "grade": "四年级",
+        "known_facts": [
+          "6盒的总支数可以用6乘12求"
+        ],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "repeat_answer",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress"
+        ],
+        "forbidden_reveals": [
+          "9支",
+          "6×12÷8=9"
+        ],
+        "seed": 2026073204,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_middle",
+        "repeat_answer",
+        "continuous_stall",
+        "repeated_answer"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "四年级",
+        "grade_band": "primary_middle",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_middle_two_step__answer_seeking",
+      "title": "四年级·answer_seeking",
+      "subject": "math",
+      "question": "学校买了6盒彩笔，每盒12支，平均分给8个小组，每组几支？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_middle_two_step",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "answer_seeking",
+        "grade": "四年级",
+        "known_facts": [],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "request_answer",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "answer_seeking",
+        "allowed_progression": [
+          "request_minimal_hint",
+          "make_partial_progress",
+          "exit"
+        ],
+        "forbidden_reveals": [
+          "9支",
+          "6×12÷8=9"
+        ],
+        "seed": 2026073205,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_middle",
+        "answer_seeking",
+        "answer_seeking"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "四年级",
+        "grade_band": "primary_middle",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_middle_two_step__loses_patience",
+      "title": "四年级·loses_patience",
+      "subject": "math",
+      "question": "学校买了6盒彩笔，每盒12支，平均分给8个小组，每组几支？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_middle_two_step",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "grade": "四年级",
+        "known_facts": [],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "frustrated",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "loses_patience",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "exit"
+        ],
+        "forbidden_reveals": [
+          "9支",
+          "6×12÷8=9"
+        ],
+        "seed": 2026073206,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_middle",
+        "loses_patience",
+        "student_exit",
+        "frustration"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "四年级",
+        "grade_band": "primary_middle",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_middle_two_step__off_topic",
+      "title": "四年级·off_topic",
+      "subject": "math",
+      "question": "学校买了6盒彩笔，每盒12支，平均分给8个小组，每组几支？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_middle_two_step",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "grade": "四年级",
+        "known_facts": [],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "off_topic",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint"
+        ],
+        "forbidden_reveals": [
+          "9支",
+          "6×12÷8=9"
+        ],
+        "seed": 2026073207,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_middle",
+        "off_topic",
+        "off_topic",
+        "continuous_stall"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "四年级",
+        "grade_band": "primary_middle",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_middle_two_step__exit_then_resume",
+      "title": "四年级·exit_then_resume",
+      "subject": "math",
+      "question": "学校买了6盒彩笔，每盒12支，平均分给8个小组，每组几支？",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_middle_two_step",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "grade": "四年级",
+        "known_facts": [
+          "6盒的总支数可以用6乘12求"
+        ],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "exit_then_resume",
+        "allowed_progression": [
+          "exit",
+          "maintain_current_state",
+          "make_partial_progress",
+          "revise_after_evidence"
+        ],
+        "forbidden_reveals": [
+          "9支",
+          "6×12÷8=9"
+        ],
+        "seed": 2026073208,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_middle",
+        "exit_then_resume",
+        "student_exit",
+        "session_resume"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "四年级",
+        "grade_band": "primary_middle",
+        "benchmark_question_type": "word_problem",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_upper_equation__partial_mastery",
+      "title": "六年级·partial_mastery",
+      "subject": "math",
+      "question": "解方程3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_upper_equation",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "grade": "六年级",
+        "known_facts": [
+          "可以先让等式两边同时减去7"
+        ],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "partial_mastery",
+        "allowed_progression": [
+          "make_partial_progress",
+          "revise_after_evidence",
+          "complete_after_reasoning"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "3x=18,x=6"
+        ],
+        "seed": 2026073301,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_upper",
+        "partial_mastery",
+        "normal_progress"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "六年级",
+        "grade_band": "primary_upper",
+        "benchmark_question_type": "equation",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_upper_equation__typical_misconception",
+      "title": "六年级·typical_misconception",
+      "subject": "math",
+      "question": "解方程3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_upper_equation",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "misconception_active",
+        "grade": "六年级",
+        "known_facts": [
+          "等式两边做相同运算仍然相等"
+        ],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": "把7移到等号右边以后仍然加7",
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "typical_misconception",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress",
+          "revise_after_evidence"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "3x=18,x=6"
+        ],
+        "seed": 2026073302,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_upper",
+        "typical_misconception",
+        "angle_switch"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "六年级",
+        "grade_band": "primary_upper",
+        "benchmark_question_type": "equation",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_upper_equation__cannot_answer",
+      "title": "六年级·cannot_answer",
+      "subject": "math",
+      "question": "解方程3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_upper_equation",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "grade": "六年级",
+        "known_facts": [],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "request_hint",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "cannot_answer",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "3x=18,x=6"
+        ],
+        "seed": 2026073303,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_upper",
+        "cannot_answer",
+        "continuous_stall",
+        "model_failure"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "六年级",
+        "grade_band": "primary_upper",
+        "benchmark_question_type": "equation",
+        "fixture_only": true,
+        "fault_injection": "student_simulator_model_failure"
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_upper_equation__repeat_answer",
+      "title": "六年级·repeat_answer",
+      "subject": "math",
+      "question": "解方程3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_upper_equation",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "grade": "六年级",
+        "known_facts": [
+          "可以先让等式两边同时减去7"
+        ],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "repeat_answer",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "3x=18,x=6"
+        ],
+        "seed": 2026073304,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_upper",
+        "repeat_answer",
+        "continuous_stall",
+        "repeated_answer"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "六年级",
+        "grade_band": "primary_upper",
+        "benchmark_question_type": "equation",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_upper_equation__answer_seeking",
+      "title": "六年级·answer_seeking",
+      "subject": "math",
+      "question": "解方程3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_upper_equation",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "answer_seeking",
+        "grade": "六年级",
+        "known_facts": [],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "request_answer",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "answer_seeking",
+        "allowed_progression": [
+          "request_minimal_hint",
+          "make_partial_progress",
+          "exit"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "3x=18,x=6"
+        ],
+        "seed": 2026073305,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_upper",
+        "answer_seeking",
+        "answer_seeking"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "六年级",
+        "grade_band": "primary_upper",
+        "benchmark_question_type": "equation",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_upper_equation__loses_patience",
+      "title": "六年级·loses_patience",
+      "subject": "math",
+      "question": "解方程3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_upper_equation",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "grade": "六年级",
+        "known_facts": [],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "frustrated",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "loses_patience",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "exit"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "3x=18,x=6"
+        ],
+        "seed": 2026073306,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_upper",
+        "loses_patience",
+        "student_exit",
+        "frustration"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "六年级",
+        "grade_band": "primary_upper",
+        "benchmark_question_type": "equation",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_upper_equation__off_topic",
+      "title": "六年级·off_topic",
+      "subject": "math",
+      "question": "解方程3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_upper_equation",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "grade": "六年级",
+        "known_facts": [],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "off_topic",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "3x=18,x=6"
+        ],
+        "seed": 2026073307,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_upper",
+        "off_topic",
+        "off_topic",
+        "continuous_stall"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "六年级",
+        "grade_band": "primary_upper",
+        "benchmark_question_type": "equation",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "shadow_upper_equation__exit_then_resume",
+      "title": "六年级·exit_then_resume",
+      "subject": "math",
+      "question": "解方程3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_scenario_fixture",
+        "question_id": "shadow_upper_equation",
+        "question_version": "shadow-suite-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "grade": "六年级",
+        "known_facts": [
+          "可以先让等式两边同时减去7"
+        ],
+        "mastery_level": 0.5,
+        "error_concepts": [],
+        "active_misconception": null,
+        "expression_limit": 120,
+        "interaction_signal": "neutral",
+        "patience": 3,
+        "expression_style": "standard",
+        "answer_seeking_tendency": "medium",
+        "behavior_pattern": "exit_then_resume",
+        "allowed_progression": [
+          "exit",
+          "maintain_current_state",
+          "make_partial_progress",
+          "revise_after_evidence"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "3x=18,x=6"
+        ],
+        "seed": 2026073308,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "shadow_evidence_suite_24",
+        "primary_upper",
+        "exit_then_resume",
+        "student_exit",
+        "session_resume"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "language": "zh",
+        "grade": "六年级",
+        "grade_band": "primary_upper",
+        "benchmark_question_type": "equation",
+        "fixture_only": true,
+        "fault_injection": null
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    }
+  ]
+}

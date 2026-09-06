@@ -1,0 +1,297 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a6311cb184f723b3592c8d5:80567c645e64",
+  "pilot_bucket": "development:wide",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a6311cb184f723b3592c8d5:80567c645e64",
+    "status": "pending_gold",
+    "disposition": "ready",
+    "observed": {
+      "scope": "single_question",
+      "stem": "如图，四个圆的半径都是3 cm，圆心分别在四边形的四个顶点上，则涂色部分的面积是( )cm²。",
+      "numbers_units": [
+        "3 "
+      ],
+      "formulas": [],
+      "options": [
+        {
+          "label": "A",
+          "text": "18.84"
+        },
+        {
+          "label": "B",
+          "text": "28.26"
+        },
+        {
+          "label": "C",
+          "text": "25.12"
+        },
+        {
+          "label": "D",
+          "text": "30.86"
+        }
+      ],
+      "ordered_subquestions": [
+        "求涂色部分的面积。"
+      ],
+      "raw_starter_question": "这道小问要我们求涂色部分的面积，你准备先用哪个已知条件？",
+      "starter_question": "这道小问要我们求涂色部分的面积，你准备先用哪个已知条件？",
+      "student_visible_gate": {
+        "policy_version": "small_lecturer_visible_guardrail/v8",
+        "action": "ALLOW",
+        "passed": true,
+        "reason_codes": []
+      },
+      "student_visible_repair": {
+        "applied": false,
+        "strategy": "none",
+        "schema_repaired": true
+      },
+      "starter_active_subquestion_index": 0,
+      "candidate_answer": "25.12",
+      "disposition": "ready",
+      "evidence_completeness": "partial",
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "structured_question": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "passed",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "92999e7e95cfec9770996111931dedee4b77623848077908ddac157f7c116c20",
+        "sha256": "80567c645e644f875a08c9d0e7c79cdbe33e69326c58dde84b7f1ba3f3220d84",
+        "mime_type": "image/jpeg",
+        "size_bytes": 20288
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "e51e47d476549f8a0b414775095eb3cd54711e8cae888f26007a30694ed43ba8",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_b13dda3ab7b2",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow"
+      },
+      "raw_output": {
+        "model_call_id": "mc_b13dda3ab7b2",
+        "request_id": "tctx_8d0a7711de2aea186984baff:understanding:attempt-1",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"如图，四个圆的半径都是3 cm，圆心分别在四边形的四个顶点上，则涂色部分的面积是( )cm²。\",\"u\":[\"求涂色部分的面积\"],\"o\":[{\"m\":\"A\",\"h\":\"18.84\"},{\"m\":\"B\",\"h\":\"28.26\"},{\"m\":\"C\",\"h\":\"25.12\"},{\"m\":\"D\",\"h\":\"30.86\"}],\"g\":[{\"m\":\"四边形\",\"h\":\"四个圆心的连线构成四边形，内角和360°\"},{\"m\":\"四个圆\",\"h\":\"半径均为3cm，圆心在四边形顶点，涂色部分为四个扇形\"},{\"m\":\"涂色区域\",\"h\":\"四个扇形，圆心角之和等于四边形内角和\"}],\"a\":\"25.12\",\"r\":\"四边形内角和360°，四个扇形拼成一个整圆，面积=πr²=3.14×9=28.26，但图中扇形未覆盖整圆，需结合图形判断。\",\"k\":[\"四边形内角和360°\",\"扇形面积公式\"],\"p\":[\"涂色部分由四个扇形组成，圆心角之和等于四边形内角和360°，故总面积=π×3²=28.26，但观察图形，扇形未完全覆盖，实际为25.12。\"],\"e\":[{\"m\":\"误将扇形面积直接相加\",\"h\":\"未考虑圆心角之和为360°\"},{\"m\":\"误用四边形面积公式\",\"h\":\"涂色部分为扇形，非四边形面积\"}],\"c\":\"p\",\"x\":[\"gsu\"],\"n\":[\"四边形内角和\",\"扇形面积\"],\"q\":\"涂色部分由几个扇形组成？它们的圆心角之和是多少？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"如图，四个圆的半径都是3 cm，圆心分别在四边形的四个顶点上，则涂色部分的面积是( )cm²。\",\"u\":[\"求涂色部分的面积\"],\"o\":[{\"m\":\"A\",\"h\":\"18.84\"},{\"m\":\"B\",\"h\":\"28.26\"},{\"m\":\"C\",\"h\":\"25.12\"},{\"m\":\"D\",\"h\":\"30.86\"}],\"g\":[{\"m\":\"四边形\",\"h\":\"四个圆心的连线构成四边形，内角和360°\"},{\"m\":\"四个圆\",\"h\":\"半径均为3cm，圆心在四边形顶点，涂色部分为四个扇形\"},{\"m\":\"涂色区域\",\"h\":\"四个扇形，圆心角之和等于四边形内角和\"}],\"a\":\"25.12\",\"r\":\"四边形内角和360°，四个扇形拼成一个整圆，面积=πr²=3.14×9=28.26，但图中扇形未覆盖整圆，需结合图形判断。\",\"k\":[\"四边形内角和360°\",\"扇形面积公式\"],\"p\":[\"涂色部分由四个扇形组成，圆心角之和等于四边形内角和360°，故总面积=π×3²=28.26，但观察图形，扇形未完全覆盖，实际为25.12。\"],\"e\":[{\"m\":\"误将扇形面积直接相加\",\"h\":\"未考虑圆心角之和为360°\"},{\"m\":\"误用四边形面积公式\",\"h\":\"涂色部分为扇形，非四边形面积\"}],\"c\":\"p\",\"x\":[\"gsu\"],\"n\":[\"四边形内角和\",\"扇形面积\"],\"q\":\"涂色部分由几个扇形组成？它们的圆心角之和是多少？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2140,
+          "completion_tokens": 390,
+          "total_tokens": 2530
+        },
+        "latency_ms": 18893.51,
+        "queue_ms": 0.02,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-e5b8e81d12114d698e277fd167523e05",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.07,
+          "worker_latency_ms": 18878.0,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.03,
+          "replica_queue_ms": 0.03,
+          "worker_pool_queue_ms": 0.03,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.02,
+          "total_queue_ms": 0.12,
+          "deadline_at": 1788389787.245121,
+          "deadline_remaining_ms": 111076,
+          "queue_deadline_at": 1788389667.274765,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 18893.51,
+        "queue_ms": 0.02,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_8d0a7711de2aea186984baff",
+      "compile": {
+        "model_call_id": "mc_005d85a25230",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+        "prompt_sha256": "9548720907ef6b5288a7292afb6aab2f90fe680f7b295bcf8ad369a13ce9c6a0",
+        "response_parse_status": "parsed",
+        "raw_output": {
+          "model_call_id": "mc_005d85a25230",
+          "request_id": "tctx_8d0a7711de2aea186984baff:compile:attempt-1",
+          "agent_run_id": null,
+          "workflow_step": "teaching_context_compile",
+          "invoke_type": "structured",
+          "resolved_model": {
+            "model_id": "qwen36-27b-mlx-worker-v1",
+            "display_name": "Qwen3.6-27B Worker Test",
+            "capability": "teaching_context_compile",
+            "deployment_profile": "test_text_model_worker"
+          },
+          "content": "{\n  \"v\": 1,\n  \"s\": \"s\",\n  \"t\": \"如图，四个圆的半径都是3 cm，圆心分别在四边形的四个顶点上，则涂色部分的面积是( )cm²。\",\n  \"u\": [],\n  \"o\": [\n    [\n      \"A\",\n      \"18.84\"\n    ],\n    [\n      \"B\",\n      \"28.26\"\n    ],\n    [\n      \"C\",\n      \"25.12\"\n    ],\n    [\n      \"D\",\n      \"30.86\"\n    ]\n  ],\n  \"g\": [\n    [\n      \"geometry_figure\",\n      \"四个圆心的连线构成四边形，内角和360°；半径均为3cm，圆心在四边形顶点，涂色部分为四个扇形；四个扇形，圆心角之和等于四边形内角和\"\n    ]\n  ],\n  \"a\": \"B\",\n  \"r\": \"四边形内角和为360°，四个扇形圆心角之和为360°，拼成一个半径为3cm的整圆，面积=πr²=3.14×9=28.26。\",\n  \"k\": [\n    \"四边形内角和\",\n    \"扇形面积\"\n  ],\n  \"p\": [\n    \"识别涂色部分由四个扇形组成，圆心分别在四边形顶点。\",\n    \"利用四边形内角和定理，得出四个扇形圆心角之和为360°。\",\n    \"判断四个扇形可拼成一个半径为3cm的完整圆。\",\n    \"计算圆面积：3.14 × 3² = 28.26 cm²。\"\n  ],\n  \"e\": [\n    {\n      \"m\": \"误将扇形面积直接相加\",\n      \"h\": \"未考虑圆心角之和为360°\"\n    },\n    {\n      \"m\": \"误用四边形面积公式\",\n      \"h\": \"涂色部分为扇形，非四边形面积\"\n    }\n  ],\n  \"c\": \"p\",\n  \"x\": [],\n  \"n\": [\n    \"四边形内角和\",\n    \"扇形面积\"\n  ],\n  \"q\": \"图中四个扇形的圆心角之和是多少度？\"\n}",
+          "parsed": {},
+          "raw_text": "{\n  \"v\": 1,\n  \"s\": \"s\",\n  \"t\": \"如图，四个圆的半径都是3 cm，圆心分别在四边形的四个顶点上，则涂色部分的面积是( )cm²。\",\n  \"u\": [],\n  \"o\": [\n    [\n      \"A\",\n      \"18.84\"\n    ],\n    [\n      \"B\",\n      \"28.26\"\n    ],\n    [\n      \"C\",\n      \"25.12\"\n    ],\n    [\n      \"D\",\n      \"30.86\"\n    ]\n  ],\n  \"g\": [\n    [\n      \"geometry_figure\",\n      \"四个圆心的连线构成四边形，内角和360°；半径均为3cm，圆心在四边形顶点，涂色部分为四个扇形；四个扇形，圆心角之和等于四边形内角和\"\n    ]\n  ],\n  \"a\": \"B\",\n  \"r\": \"四边形内角和为360°，四个扇形圆心角之和为360°，拼成一个半径为3cm的整圆，面积=πr²=3.14×9=28.26。\",\n  \"k\": [\n    \"四边形内角和\",\n    \"扇形面积\"\n  ],\n  \"p\": [\n    \"识别涂色部分由四个扇形组成，圆心分别在四边形顶点。\",\n    \"利用四边形内角和定理，得出四个扇形圆心角之和为360°。\",\n    \"判断四个扇形可拼成一个半径为3cm的完整圆。\",\n    \"计算圆面积：3.14 × 3² = 28.26 cm²。\"\n  ],\n  \"e\": [\n    {\n      \"m\": \"误将扇形面积直接相加\",\n      \"h\": \"未考虑圆心角之和为360°\"\n    },\n    {\n      \"m\": \"误用四边形面积公式\",\n      \"h\": \"涂色部分为扇形，非四边形面积\"\n    }\n  ],\n  \"c\": \"p\",\n  \"x\": [],\n  \"n\": [\n    \"四边形内角和\",\n    \"扇形面积\"\n  ],\n  \"q\": \"图中四个扇形的圆心角之和是多少度？\"\n}",
+          "raw_output_ref": null,
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 544,
+            "total_tokens": 544
+          },
+          "latency_ms": 61887.94,
+          "queue_ms": 0.02,
+          "first_token_ms": null,
+          "degraded": false,
+          "provider_metrics": {
+            "provider": "mlx_text",
+            "upstream_model": "qwen36-27b-mlx-worker-v1",
+            "structured_output_enforced": true,
+            "generation_tps": 10.35,
+            "peak_memory_gb": 20.082,
+            "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+            "worker_provider": "mlx_text",
+            "worker_source_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_source_revision_verified": true,
+            "worker_source_tree_clean": true,
+            "worker_runtime_contract_version": "model-worker-runtime/v1",
+            "worker_runtime_kind": "mlx_text",
+            "worker_runtime_version": "0.31.3",
+            "worker_engine_version": "edu-agent-model-worker/v1",
+            "worker_engine_mode": "provider_serialized",
+            "worker_scheduler_enabled": false,
+            "worker_effective_batching": false,
+            "worker_dynamic_batching": false,
+            "worker_deployment_profile": "local_model_worker",
+            "worker_environment": "test",
+            "worker_shadow_only": false,
+            "worker_weights_identity_sha256": "bd5ddc47eaba8c246ebb3b5f8913e8764bfed2925a74ca095db19c729b3f8f43",
+            "worker_weights_identity_verified": true,
+            "worker_effective_batch_id": "worker-direct-f7b0f31f57d5438f86559cd691483a1b",
+            "worker_effective_batch_identity_authoritative": false,
+            "worker_batch_correlation_source": "worker_generated_direct_id",
+            "worker_effective_batch_size": 1,
+            "worker_requested_batch_size": 1,
+            "worker_pid": 41384,
+            "worker_model_id": "qwen36-27b-mlx-worker-v1",
+            "worker_internal_concurrency": 1,
+            "worker_serialized": true,
+            "worker_warm_count": 1,
+            "worker_queue_ms": 0.19,
+            "worker_latency_ms": 61871.72,
+            "request_contract": "model_invoke_v1",
+            "endpoint_host": "127.0.0.1:8200",
+            "deployment_id": "qwen36-27b-mlx-worker",
+            "replica_id": "qwen36-27b-mlx-worker-a",
+            "queue_ms": 0.02,
+            "replica_queue_ms": 0.02,
+            "worker_pool_queue_ms": 0.02,
+            "retry_count": 0,
+            "request_priority": "bulk",
+            "gateway_queue_ms": 0.02,
+            "total_queue_ms": 0.23,
+            "deadline_at": 1788389806.170516,
+            "deadline_remaining_ms": 68064,
+            "queue_deadline_at": 1788389686.218306,
+            "queue_deadline_remaining_ms": 0
+          }
+        }
+      },
+      "gold": {
+        "status": "pending",
+        "missing_fields": [
+          "gold_status_complete"
+        ]
+      }
+    },
+    "failure": null
+  }
+}

@@ -1,0 +1,1 @@
+{"case_id":"wrong_question_basic","input":{"student_id":"stu_001","question_id":"q_001","student_answer":"2/5","grade":"五年级"},"expected":{"required_keys":["understanding_check","hints","explanation_steps","key_knowledge_points","feedback_actions"]},"metadata":{"agent_id":"wrong_question_tutor"}}

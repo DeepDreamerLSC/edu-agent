@@ -1,0 +1,30 @@
+{
+  "answers_and_analysis_status": "not_provided_by_source",
+  "downloaded_count": 264,
+  "duplicate_image_sha256": [],
+  "duplicate_image_urls": [],
+  "duplicate_question_ids": [],
+  "failed_count": 0,
+  "fetch_status_counts": {
+    "downloaded": 264
+  },
+  "grade": "grade_6",
+  "human_review_status": "pending",
+  "lesson_count": 50,
+  "major_unit_count": 6,
+  "missing_fields": [],
+  "provider": "pujia_school_question_bank",
+  "question_count": 264,
+  "schema_version": "partner_question_inventory_summary/v1",
+  "subject": "math",
+  "tool_version": "partner-question-inventory/v1",
+  "unit_counts": {
+    "1": 18,
+    "2": 54,
+    "3": 49,
+    "4": 58,
+    "5": 65,
+    "6": 17,
+    "unclassified": 3
+  }
+}

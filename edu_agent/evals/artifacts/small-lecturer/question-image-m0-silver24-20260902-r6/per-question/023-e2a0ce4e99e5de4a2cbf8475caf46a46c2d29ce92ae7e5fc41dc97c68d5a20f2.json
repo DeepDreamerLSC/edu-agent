@@ -1,0 +1,181 @@
+{
+  "sample_id": "pujia-silver-v0:reserved:6a699c052ebd2a1afb8782fc:f5ff1c3e5961",
+  "pilot_bucket": "reserved:wide",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:reserved:6a699c052ebd2a1afb8782fc:f5ff1c3e5961",
+    "status": "failed",
+    "disposition": "failed",
+    "observed": {
+      "model_response_received": true,
+      "structured_result": {},
+      "raw_starter_question": null,
+      "student_visible_gate": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "student_visible_repair": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "starter_question": null,
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "failed",
+          "reason_codes": [
+            "MODEL_RESPONSE_PARSE_FAILED"
+          ]
+        },
+        "structured_question": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "not_run",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "db785f5c7143383eb6577a3614e6e5269855681fceee5936a46454f964ca478c",
+        "sha256": "f5ff1c3e59612c6c75b6fc554b940cc44f015c6bccc1ff04b08324b62bd038fd",
+        "mime_type": "image/jpeg",
+        "size_bytes": 17411
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "8f6feeaa6c194c0409c879c2f8c4328ba97cdebaeb297388a10b8668bc5ab60e",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_f32b42dbfc42",
+        "model_call_count": 2,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+        "response_parse_status": "failed",
+        "response_parsed_keys": [],
+        "response_content_length": 425,
+        "response_parse_error_code": "VALIDATIONERROR"
+      },
+      "raw_output": {
+        "model_call_id": "mc_f32b42dbfc42",
+        "request_id": "tctx_f18a294baf760ed203c9afd8:understanding:attempt-2",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"一本杂志各栏目所占页面的比例如图所示，这本杂志共有206页，其中新闻版约占( )页。\",\"u\":[\"这本杂志共有206页，其中新闻版约占( )页。\"],\"o\":[{\"m\":\"A\",\"h\":\"10\"},{\"m\":\"B\",\"h\":\"25\"},{\"m\":\"C\",\"h\":\"75\"},{\"m\":\"D\",\"h\":\"100\"}],\"g\":[{\"m\":\"pie_chart\",\"h\":\"扇形统计图，显示生活、财经、广告、新闻四部分占比，新闻约占半圆\"}],\"a\":\"100\",\"r\":\"新闻约占半圆，即50%\",\"k\":[\"扇形统计图表示部分与整体的关系\"],\"p\":[\"新闻约占半圆，即50%\",\"206×50%≈103，最接近100\"],\"e\":[{\"m\":\"misread\",\"h\":\"误将新闻看作四分之一\"}],\"c\":\"p\",\"x\":[\"gsu\"],\"n\":[\"扇形统计图\"],\"q\":\"新闻版大约占多少比例？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"一本杂志各栏目所占页面的比例如图所示，这本杂志共有206页，其中新闻版约占( )页。\",\"u\":[\"这本杂志共有206页，其中新闻版约占( )页。\"],\"o\":[{\"m\":\"A\",\"h\":\"10\"},{\"m\":\"B\",\"h\":\"25\"},{\"m\":\"C\",\"h\":\"75\"},{\"m\":\"D\",\"h\":\"100\"}],\"g\":[{\"m\":\"pie_chart\",\"h\":\"扇形统计图，显示生活、财经、广告、新闻四部分占比，新闻约占半圆\"}],\"a\":\"100\",\"r\":\"新闻约占半圆，即50%\",\"k\":[\"扇形统计图表示部分与整体的关系\"],\"p\":[\"新闻约占半圆，即50%\",\"206×50%≈103，最接近100\"],\"e\":[{\"m\":\"misread\",\"h\":\"误将新闻看作四分之一\"}],\"c\":\"p\",\"x\":[\"gsu\"],\"n\":[\"扇形统计图\"],\"q\":\"新闻版大约占多少比例？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2157,
+          "completion_tokens": 231,
+          "total_tokens": 2388
+        },
+        "latency_ms": 11477.73,
+        "queue_ms": 0.02,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-17ac14c14fff4134adb5500fca32837b",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.08,
+          "worker_latency_ms": 11463.19,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.02,
+          "total_queue_ms": 0.12,
+          "deadline_at": 1788367982.329776,
+          "deadline_remaining_ms": 118480,
+          "queue_deadline_at": 1788367862.371824,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 11477.73,
+        "queue_ms": 0.02,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_f18a294baf760ed203c9afd8"
+    },
+    "failure": {
+      "stage": "question_image_understanding",
+      "code": "MODEL_RESPONSE_PARSE_FAILED",
+      "summary": "模型已返回题图结果，但结果未通过结构化题图理解解析"
+    }
+  }
+}

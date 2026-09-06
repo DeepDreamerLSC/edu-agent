@@ -1,0 +1,84 @@
+{
+  "schema_version": "small_lecturer_question_image_reliability/v1",
+  "purpose": "internal_regression_only",
+  "source_artifacts": {
+    "directory": "data/test-backend/test/oss-cache/raw/other/test_school/frontend_509e87a6c45ee0a3",
+    "tracked_in_git": false,
+    "privacy_note": "The source images remain outside Git and must be handled only in approved internal evaluation environments."
+  },
+  "cases": [
+    {
+      "case_id": "narrow_text_question",
+      "file_id": "file_ba30d6778165",
+      "sha256": "0cc92d5cdc052e02e03b7020e79a146c6e00c5ad166d1801e681f280d08d759d",
+      "format": "JPEG",
+      "width": 888,
+      "height": 28,
+      "bytes": 11258,
+      "expected_disposition": "ready_after_normalization",
+      "expected_checks": [
+        "clear_but_extreme_aspect_ratio_is_normalized",
+        "no_micro_lesson_error_is_exposed"
+      ]
+    },
+    {
+      "case_id": "fraction_division_comparison",
+      "file_id": "file_a2d8f0f0215b",
+      "sha256": "9c2e7f2ca42ffee54e4457160e49625ceafaf1c32312d6bf49ed23eca916b832",
+      "format": "JPEG",
+      "width": 346,
+      "height": 58,
+      "bytes": 8799,
+      "expected_disposition": "ready",
+      "expected_checks": [
+        "structured_stem_is_available",
+        "first_socratic_question_is_available"
+      ],
+      "send_buffered_response": true,
+      "buffered_response": "我先找一找题目里的已知条件。"
+    },
+    {
+      "case_id": "coordinate_diagram",
+      "file_id": "file_b2adb4a8dd6b",
+      "sha256": "ad743dc44ffd43a51ec2443630a67cb8b630c1e2286421cf69ed99a58c783860",
+      "format": "JPEG",
+      "width": 748,
+      "height": 452,
+      "bytes": 60297,
+      "expected_disposition": "ready",
+      "expected_checks": [
+        "diagram_dependencies_are_preserved",
+        "image_evidence_is_preserved"
+      ]
+    },
+    {
+      "case_id": "translation_diagram",
+      "file_id": "file_538c5eb5f925",
+      "sha256": "31f0b683215098c2f230c64f3d117ed19686007e1e2071fcdbeb08f3084ace7e",
+      "format": "JPEG",
+      "width": 1183,
+      "height": 198,
+      "bytes": 34139,
+      "expected_disposition": "ready",
+      "expected_checks": [
+        "student_visible_text_has_no_raw_latex",
+        "image_placeholders_are_not_used_as_diagram_semantics"
+      ]
+    },
+    {
+      "case_id": "full_page_screenshot",
+      "file_id": "file_098cab6dee2a",
+      "sha256": "b6a5fd5e164847212dd97bc6ec9ba62addab6fdd1ed698101419b1b703fb2a11",
+      "format": "JPEG",
+      "width": 2560,
+      "height": 1600,
+      "bytes": 942798,
+      "expected_disposition": "needs_recrop",
+      "expected_checks": [
+        "full_page_ui_is_not_treated_as_a_question",
+        "no_teaching_context_compile_job_is_created",
+        "student_receives_recrop_guidance"
+      ]
+    }
+  ]
+}

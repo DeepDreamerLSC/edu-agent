@@ -1,0 +1,117 @@
+{
+  "schema_version": "question_bank_fixture/v1",
+  "provider": "target_mode_v3_shadow_bank",
+  "records": [
+    {
+      "provider": "target_mode_v3_shadow_bank",
+      "question_id": "coordinate_notation_full",
+      "question_version": "2026-08-10-v1",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": ["有序数对", "位置表示"],
+      "stem": "学校用有序数对表示座位，8排6号记作（6，8）。请把12排5号写成有序数对，再写出（3，10）表示几排几号。",
+      "answer": "（5，12）；10排3号",
+      "original_analysis": "由8排6号记作（6，8）可知，第一个数表示号，第二个数表示排。因此12排5号记作（5，12），（3，10）表示10排3号。",
+      "verified": false,
+      "verified_at": null,
+      "question_image": null,
+      "fetched_at": "2026-08-10T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "deidentified_real_regression",
+        "candidate_answer_only": true,
+        "promotion_evidence_eligible": false,
+        "image_sha256": "0cc92d5cdc052e02e03b7020e79a146c6e00c5ad166d1801e681f280d08d759d"
+      }
+    },
+    {
+      "provider": "target_mode_v3_shadow_bank",
+      "question_id": "coordinate_notation_encode_only",
+      "question_version": "2026-08-10-v1",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": ["有序数对", "位置表示"],
+      "stem": "8排6号记作（6，8），请写出12排5号对应的有序数对。",
+      "answer": "（5，12）",
+      "original_analysis": "例子说明第一个数表示号、第二个数表示排，所以12排5号写成（5，12）。",
+      "verified": false,
+      "verified_at": null,
+      "question_image": null,
+      "fetched_at": "2026-08-10T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "deidentified_real_regression",
+        "candidate_answer_only": true,
+        "promotion_evidence_eligible": false,
+        "image_sha256": "0cc92d5cdc052e02e03b7020e79a146c6e00c5ad166d1801e681f280d08d759d"
+      }
+    },
+    {
+      "provider": "target_mode_v3_shadow_bank",
+      "question_id": "coordinate_graph_compound",
+      "question_version": "2026-08-10-v1",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": ["有序数对", "坐标图", "方向与距离"],
+      "stem": "观察坐标图。第一小问已给出B点的位置是（2，4），请先根据每格200米，填写B点相对A点向东、向北各多少米；完成后再处理C点等后续小问。",
+      "answer": "B点位于A点向东400米、向北800米。",
+      "original_analysis": "A点是原点，每一格表示200米。B点坐标为（2，4），横向2格是向东400米，纵向4格是向北800米。当前回归只评审第一小问，后续小问必须等第一小问完成后再推进。",
+      "verified": false,
+      "verified_at": null,
+      "question_image": null,
+      "fetched_at": "2026-08-10T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "deidentified_real_regression",
+        "candidate_answer_only": true,
+        "promotion_evidence_eligible": false,
+        "image_sha256": "ad743dc44ffd43a51ec2443630a67cb8b630c1e2286421cf69ed99a58c783860",
+        "active_subquestion_index": 0
+      }
+    },
+    {
+      "provider": "target_mode_v3_shadow_bank",
+      "question_id": "equilateral_triangle_directions",
+      "question_version": "2026-08-10-v1",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": ["方向", "参照点", "等边三角形"],
+      "stem": "一块等边三角形草地的三个顶点分别住着小羊、小兔和小马，边长20米。依次判断小羊在小马、小兔的什么方向，以及小兔、小马在小羊的什么方向。",
+      "answer": "小羊在小马西北方向20米；小羊在小兔东北方向20米；小兔在小羊西南方向20米；小马在小羊东南方向20米。",
+      "original_analysis": "每一问先固定参照点，再从参照点看目标位置。等边三角形三边都是20米；图中上方是北、右方是东。",
+      "verified": false,
+      "verified_at": null,
+      "question_image": null,
+      "fetched_at": "2026-08-10T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "deidentified_real_regression",
+        "candidate_answer_only": true,
+        "promotion_evidence_eligible": false,
+        "image_sha256": "5297142b92240c62ec50b9a4498390454834168de43592eb5802dc1d3238e9d5"
+      }
+    },
+    {
+      "provider": "target_mode_v3_shadow_bank",
+      "question_id": "circular_pond_cat_mouse_race",
+      "question_version": "2026-08-10-v1",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": ["圆周长", "路程时间速度", "数量比较"],
+      "stem": "圆形池塘半径为r，老鼠从圆心O沿半径跑向B，速度1.5米/秒；猫从圆周上的A沿箭头方向跑向B，速度5米/秒。判断谁先到达B。",
+      "answer": "猫先到达B。",
+      "original_analysis": "老鼠走半径r，用时r÷1.5；猫从A沿半圆到B，路程为πr，用时πr÷5。比较π/5和1/1.5，π/5更小，所以猫先到达。",
+      "verified": false,
+      "verified_at": null,
+      "question_image": null,
+      "fetched_at": "2026-08-10T00:00:00Z",
+      "source_metadata": {
+        "evaluation_fixture": true,
+        "source_kind": "deidentified_real_regression",
+        "candidate_answer_only": true,
+        "promotion_evidence_eligible": false,
+        "image_sha256": "3fc57f957437f4721c6dba63ca48eae3db60fb1ad51caf0db2c64fe8b94e581a"
+      }
+    }
+  ]
+}

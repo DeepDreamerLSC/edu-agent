@@ -1,0 +1,141 @@
+{
+  "schema_version": "question_bank_fixture/v1",
+  "provider": "release_acceptance_seed_bank",
+  "records": [
+    {
+      "provider": "release_acceptance_seed_bank",
+      "question_id": "equation_subtract",
+      "question_version": "release-acceptance-2026-08-v1",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": ["简易方程", "等式的性质"],
+      "stem": "解方程 3x+7=25，并说明每一步为什么这样做。",
+      "answer": "x=6",
+      "original_analysis": "等式两边先同时减去7，得到3x=18，再同时除以3得到x=6，代回原式成立。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "release_acceptance_fixture": true,
+        "source_kind": "derived_repo_seed",
+        "promotion_evidence_eligible": false,
+        "derived_from": {
+          "provider": "prompt_lab_seed_bank",
+          "question_id": "equation_subtract",
+          "question_version": "prompt-lab-2026-08-v1"
+        },
+        "acceptable_methods": ["等式两边依次减7、除以3，并代入检验"],
+        "common_mistakes": ["只改变等式一边", "把加7移到右边后仍写成加7"]
+      }
+    },
+    {
+      "provider": "release_acceptance_seed_bank",
+      "question_id": "fraction_addition",
+      "question_version": "release-acceptance-2026-08-v1",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": ["异分母分数加法", "通分"],
+      "stem": "计算四分之三加八分之一，并说明为什么要这样算。",
+      "answer": "7/8",
+      "original_analysis": "先把四分之三通分成八分之六，再与八分之一相加，得到八分之七。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "release_acceptance_fixture": true,
+        "source_kind": "derived_repo_seed",
+        "promotion_evidence_eligible": false,
+        "derived_from": {
+          "provider": "prompt_lab_seed_bank",
+          "question_id": "fraction_addition",
+          "question_version": "prompt-lab-2026-08-v1"
+        },
+        "acceptable_methods": ["先通分成八分之六和八分之一再相加"],
+        "common_mistakes": ["把分子和分母分别直接相加"]
+      }
+    },
+    {
+      "provider": "release_acceptance_seed_bank",
+      "question_id": "triangle_area",
+      "question_version": "release-acceptance-2026-08-v1",
+      "subject": "math",
+      "grade": "五年级",
+      "knowledge_points": ["三角形面积", "图形转化"],
+      "stem": "一个三角形底是10厘米，高是6厘米，面积是多少？为什么要除以2？",
+      "answer": "30平方厘米",
+      "original_analysis": "两个完全相同的三角形可以拼成底10厘米、高6厘米的平行四边形，所以三角形面积是10×6÷2=30平方厘米。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "release_acceptance_fixture": true,
+        "source_kind": "derived_repo_seed",
+        "promotion_evidence_eligible": false,
+        "derived_from": {
+          "provider": "prompt_lab_seed_bank",
+          "question_id": "triangle_area",
+          "question_version": "prompt-lab-2026-08-v1"
+        },
+        "acceptable_methods": ["用底乘高再除以2", "拼成平行四边形后取一半"],
+        "common_mistakes": ["忘记除以2", "不能说明除以2的图形依据"]
+      }
+    },
+    {
+      "provider": "release_acceptance_seed_bank",
+      "question_id": "chicken_rabbit",
+      "question_version": "release-acceptance-2026-08-v1",
+      "subject": "math",
+      "grade": "六年级",
+      "knowledge_points": ["鸡兔同笼", "假设法"],
+      "stem": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+      "answer": "鸡3只，兔5只",
+      "original_analysis": "假设全是鸡共有16只脚，比实际少10只；每把一只鸡换成兔增加2只脚，所以兔有5只，鸡有3只。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "release_acceptance_fixture": true,
+        "source_kind": "derived_repo_seed",
+        "promotion_evidence_eligible": false,
+        "derived_from": {
+          "provider": "prompt_lab_seed_bank",
+          "question_id": "chicken_rabbit",
+          "question_version": "prompt-lab-2026-08-v1"
+        },
+        "acceptable_methods": ["假设全是鸡后按脚数差替换", "列表枚举并同时检验只数和脚数"],
+        "common_mistakes": ["只满足总只数而不检验总脚数", "每次替换的脚数差算错"]
+      }
+    },
+    {
+      "provider": "release_acceptance_seed_bank",
+      "question_id": "library_books",
+      "question_version": "release-acceptance-2026-08-v1",
+      "subject": "math",
+      "grade": "三年级",
+      "knowledge_points": ["加减两步应用题"],
+      "stem": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
+      "answer": "127本",
+      "original_analysis": "先算买来后有120+45=165本，再减去借出的38本，得到127本。",
+      "verified": true,
+      "verified_at": "2026-07-25T00:00:00Z",
+      "question_image": null,
+      "fetched_at": "2026-08-12T00:00:00Z",
+      "source_metadata": {
+        "release_acceptance_fixture": true,
+        "source_kind": "derived_repo_seed",
+        "promotion_evidence_eligible": false,
+        "derived_from": {
+          "provider": "prompt_lab_seed_bank",
+          "question_id": "library_books",
+          "question_version": "prompt-lab-2026-08-v1"
+        },
+        "acceptable_methods": ["先加上买来的数量，再减去借出的数量", "列综合算式120+45-38"],
+        "common_mistakes": ["把借出也当作增加", "只完成第一步"]
+      }
+    }
+  ]
+}

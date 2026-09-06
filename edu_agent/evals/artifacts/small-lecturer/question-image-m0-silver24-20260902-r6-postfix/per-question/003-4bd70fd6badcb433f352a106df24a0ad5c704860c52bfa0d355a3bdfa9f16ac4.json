@@ -1,0 +1,313 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a699b912ef3251197bdfffb:1bb21e9f644c",
+  "pilot_bucket": "development:landscape",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a699b912ef3251197bdfffb:1bb21e9f644c",
+    "status": "failed",
+    "disposition": "ready",
+    "observed": {
+      "scope": "multiple_independent_questions",
+      "stem": "看图写对应关系。(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。",
+      "numbers_units": [
+        "1",
+        "3",
+        "1",
+        "2",
+        "1",
+        "5",
+        "1",
+        "1",
+        "5"
+      ],
+      "formulas": [],
+      "options": [
+        {
+          "label": "A",
+          "text": "故事书线段"
+        },
+        {
+          "label": "B",
+          "text": "科技书线段"
+        },
+        {
+          "label": "C",
+          "text": "梨的质量线段"
+        },
+        {
+          "label": "D",
+          "text": "苹果的质量线段"
+        }
+      ],
+      "ordered_subquestions": [
+        "(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。",
+        "(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。"
+      ],
+      "raw_starter_question": "先看“故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份”，这道小问要求我们做什么？",
+      "starter_question": "先看“故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份”，这道小问要求我们做什么？",
+      "student_visible_gate": {
+        "policy_version": "small_lecturer_visible_guardrail/v8",
+        "action": "ALLOW",
+        "passed": true,
+        "reason_codes": []
+      },
+      "student_visible_repair": {
+        "applied": false,
+        "strategy": "none",
+        "schema_repaired": true
+      },
+      "starter_active_subquestion_index": 0,
+      "candidate_answer": "",
+      "disposition": "ready",
+      "evidence_completeness": "partial",
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "structured_question": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "failed",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "123922bb5a40b8b4f6683c6e456cbb9a575482fbd16d90bb6a66ffb033729962",
+        "sha256": "1bb21e9f644c2f4a646614b390b1e6e74d54f4557825a0bc5806e173f3f2743e",
+        "mime_type": "image/jpeg",
+        "size_bytes": 30443
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "31dee0cbffd3c67d79362d3c3b0d00bd5a56a90bb13d82fd1618901baf7f396f",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_d7afd122e075",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow"
+      },
+      "raw_output": {
+        "model_call_id": "mc_d7afd122e075",
+        "request_id": "tctx_a1d85c995c718c1e5c28ad55:understanding:attempt-1",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"m\",\"t\":\"看图写对应关系。(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。\",\"u\":[\"(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。\",\"(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。\"],\"o\":[{\"m\":\"A\",\"h\":\"故事书线段\"},{\"m\":\"B\",\"h\":\"科技书线段\"},{\"m\":\"C\",\"h\":\"梨的质量线段\"},{\"m\":\"D\",\"h\":\"苹果的质量线段\"}],\"g\":[{\"m\":\"线段图\",\"h\":\"表示数量关系的线段图，用于比较倍数或分数关系\"},{\"m\":\"线段图\",\"h\":\"表示数量关系的线段图，用于比较倍数或分数关系\"}],\"a\":\"\",\"r\":\"线段图直观展示倍数与分数关系，学生需识别单位‘1’及对应份数。\",\"k\":[\"倍数关系\",\"分数关系\",\"单位‘1’的识别\"],\"p\":[\"(1) 故事书为1份，科技书比故事书多3倍，即科技书是故事书的4倍，相差3份。\",\"(2) 梨的质量为1，苹果比梨多1/5，即苹果是梨的6/5。\"],\"e\":[{\"m\":\"混淆倍数与分数\",\"h\":\"学生易将‘多3倍’误认为科技书是3份，实际应为4份。\"},{\"m\":\"单位‘1’定位错误\",\"h\":\"学生易将苹果误认为单位‘1’，导致分数关系理解偏差。\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"倍数关系\",\"分数关系\"],\"q\":\"(1) 故事书看作1份，科技书比故事书多3倍，科技书是几份？相差几份？(2) 梨的质量看作1，苹果比梨多1/5，苹果是梨的几分之几？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"m\",\"t\":\"看图写对应关系。(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。\",\"u\":[\"(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。\",\"(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。\"],\"o\":[{\"m\":\"A\",\"h\":\"故事书线段\"},{\"m\":\"B\",\"h\":\"科技书线段\"},{\"m\":\"C\",\"h\":\"梨的质量线段\"},{\"m\":\"D\",\"h\":\"苹果的质量线段\"}],\"g\":[{\"m\":\"线段图\",\"h\":\"表示数量关系的线段图，用于比较倍数或分数关系\"},{\"m\":\"线段图\",\"h\":\"表示数量关系的线段图，用于比较倍数或分数关系\"}],\"a\":\"\",\"r\":\"线段图直观展示倍数与分数关系，学生需识别单位‘1’及对应份数。\",\"k\":[\"倍数关系\",\"分数关系\",\"单位‘1’的识别\"],\"p\":[\"(1) 故事书为1份，科技书比故事书多3倍，即科技书是故事书的4倍，相差3份。\",\"(2) 梨的质量为1，苹果比梨多1/5，即苹果是梨的6/5。\"],\"e\":[{\"m\":\"混淆倍数与分数\",\"h\":\"学生易将‘多3倍’误认为科技书是3份，实际应为4份。\"},{\"m\":\"单位‘1’定位错误\",\"h\":\"学生易将苹果误认为单位‘1’，导致分数关系理解偏差。\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"倍数关系\",\"分数关系\"],\"q\":\"(1) 故事书看作1份，科技书比故事书多3倍，科技书是几份？相差几份？(2) 梨的质量看作1，苹果比梨多1/5，苹果是梨的几分之几？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2176,
+          "completion_tokens": 522,
+          "total_tokens": 2698
+        },
+        "latency_ms": 21125.1,
+        "queue_ms": 0.03,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-84b774c6bce1486a8d1b44955a82f242",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.31,
+          "worker_latency_ms": 21108.21,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.06,
+          "replica_queue_ms": 0.06,
+          "worker_pool_queue_ms": 0.06,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.03,
+          "total_queue_ms": 0.4,
+          "deadline_at": 1788389290.543086,
+          "deadline_remaining_ms": 108820,
+          "queue_deadline_at": 1788389170.5971699,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 21125.1,
+        "queue_ms": 0.03,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_a1d85c995c718c1e5c28ad55",
+      "compile": {
+        "model_call_id": "mc_115fed9b6288",
+        "resolved_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+        "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+        "worker_deployment_profile": "local_model_worker",
+        "prompt_sha256": "dcfb4d88b3a3b10d046e1459bc6c3db37c046b43be6dc99c4e1a395c91ed4483",
+        "required_capability": "teaching_context_compile",
+        "response_parse_status": "failed",
+        "response_parse_error_code": "COMPACTCOMPILEPAYLOADERROR",
+        "model_call_count": 1,
+        "raw_output": {
+          "model_call_id": "mc_115fed9b6288",
+          "request_id": "tctx_a1d85c995c718c1e5c28ad55:compile:attempt-1",
+          "agent_run_id": null,
+          "workflow_step": "teaching_context_compile",
+          "invoke_type": "structured",
+          "resolved_model": {
+            "model_id": "qwen36-27b-mlx-worker-v1",
+            "display_name": "Qwen3.6-27B Worker Test",
+            "capability": "teaching_context_compile",
+            "deployment_profile": "test_text_model_worker"
+          },
+          "content": "{\n\"v\": 1,\n\"s\": \"m\",\n\"t\": \"看图写对应关系。(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。\",\n\"u\": [\n[\n\"(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。\",\n\"故事书；3；4\",\n\"故事书为单位“1”（1份）；科技书比故事书多3倍，即科技书是故事书的4倍，相差3份。\"\n],\n[\n\"(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。\",\n\"梨的质量；6/5\",\n\"梨的质量为单位“1”；苹果比梨多1/5，即苹果是梨的1+1/5=6/5。\"\n]\n],\n\"o\": [\n[\n\"A\",\n\"故事书线段\"\n],\n[\n\"B\",\n\"科技书线段\"\n],\n[\n\"C\",\n\"梨的质量线段\"\n],\n[\n\"D\",\n\"苹果的质量线段\"\n]\n],\n\"g\": [\n[\n\"diagram\",\n\"表示数量关系的线段图，用于比较倍数或分数关系\"\n]\n],\n\"a\": \"\",\n\"r\": \"\",\n\"k\": [\n\"倍数关系\",\n\"分数关系\"\n],\n\"p\": [\n\"识别第一幅图中故事书为单位“1”，科技书比其多3倍，故科技书为4份，相差3份。\",\n\"识别第二幅图中梨的质量为单位“1”，苹果比其多1/5，故苹果为6/5。\"\n],\n\"e\": [\n{\n\"m\": \"混淆倍数与分数\",\n\"h\": \"学生易将‘多3倍’误认为科技书是3份，实际应为4份。\"\n},\n{\n\"m\": \"单位‘1’定位错误\",\n\"h\": \"学生易将苹果误认为单位‘1’，导致分数关系理解偏差。\"\n}\n],\n\"c\": \"p\",\n\"x\": [],\n\"n\": [\n\"倍数关系\",\n\"分数关系\"\n],\n\"q\": \"在故事书与科技书的线段图中，故事书被看作几份？\"\n}",
+          "parsed": {},
+          "raw_text": "{\n\"v\": 1,\n\"s\": \"m\",\n\"t\": \"看图写对应关系。(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。\",\n\"u\": [\n[\n\"(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。\",\n\"故事书；3；4\",\n\"故事书为单位“1”（1份）；科技书比故事书多3倍，即科技书是故事书的4倍，相差3份。\"\n],\n[\n\"(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。\",\n\"梨的质量；6/5\",\n\"梨的质量为单位“1”；苹果比梨多1/5，即苹果是梨的1+1/5=6/5。\"\n]\n],\n\"o\": [\n[\n\"A\",\n\"故事书线段\"\n],\n[\n\"B\",\n\"科技书线段\"\n],\n[\n\"C\",\n\"梨的质量线段\"\n],\n[\n\"D\",\n\"苹果的质量线段\"\n]\n],\n\"g\": [\n[\n\"diagram\",\n\"表示数量关系的线段图，用于比较倍数或分数关系\"\n]\n],\n\"a\": \"\",\n\"r\": \"\",\n\"k\": [\n\"倍数关系\",\n\"分数关系\"\n],\n\"p\": [\n\"识别第一幅图中故事书为单位“1”，科技书比其多3倍，故科技书为4份，相差3份。\",\n\"识别第二幅图中梨的质量为单位“1”，苹果比其多1/5，故苹果为6/5。\"\n],\n\"e\": [\n{\n\"m\": \"混淆倍数与分数\",\n\"h\": \"学生易将‘多3倍’误认为科技书是3份，实际应为4份。\"\n},\n{\n\"m\": \"单位‘1’定位错误\",\n\"h\": \"学生易将苹果误认为单位‘1’，导致分数关系理解偏差。\"\n}\n],\n\"c\": \"p\",\n\"x\": [],\n\"n\": [\n\"倍数关系\",\n\"分数关系\"\n],\n\"q\": \"在故事书与科技书的线段图中，故事书被看作几份？\"\n}",
+          "raw_output_ref": null,
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 623,
+            "total_tokens": 623
+          },
+          "latency_ms": 80902.43,
+          "queue_ms": 0.02,
+          "first_token_ms": null,
+          "degraded": false,
+          "provider_metrics": {
+            "provider": "mlx_text",
+            "upstream_model": "qwen36-27b-mlx-worker-v1",
+            "structured_output_enforced": true,
+            "generation_tps": 8.81,
+            "peak_memory_gb": 20.082,
+            "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+            "worker_provider": "mlx_text",
+            "worker_source_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_source_revision_verified": true,
+            "worker_source_tree_clean": true,
+            "worker_runtime_contract_version": "model-worker-runtime/v1",
+            "worker_runtime_kind": "mlx_text",
+            "worker_runtime_version": "0.31.3",
+            "worker_engine_version": "edu-agent-model-worker/v1",
+            "worker_engine_mode": "provider_serialized",
+            "worker_scheduler_enabled": false,
+            "worker_effective_batching": false,
+            "worker_dynamic_batching": false,
+            "worker_deployment_profile": "local_model_worker",
+            "worker_environment": "test",
+            "worker_shadow_only": false,
+            "worker_weights_identity_sha256": "bd5ddc47eaba8c246ebb3b5f8913e8764bfed2925a74ca095db19c729b3f8f43",
+            "worker_weights_identity_verified": true,
+            "worker_effective_batch_id": "worker-direct-bb8b9238e45443cc9176206986353be5",
+            "worker_effective_batch_identity_authoritative": false,
+            "worker_batch_correlation_source": "worker_generated_direct_id",
+            "worker_effective_batch_size": 1,
+            "worker_requested_batch_size": 1,
+            "worker_pid": 41384,
+            "worker_model_id": "qwen36-27b-mlx-worker-v1",
+            "worker_internal_concurrency": 1,
+            "worker_serialized": true,
+            "worker_warm_count": 1,
+            "worker_queue_ms": 0.14,
+            "worker_latency_ms": 80881.19,
+            "request_contract": "model_invoke_v1",
+            "endpoint_host": "127.0.0.1:8200",
+            "deployment_id": "qwen36-27b-mlx-worker",
+            "replica_id": "qwen36-27b-mlx-worker-a",
+            "queue_ms": 0.03,
+            "replica_queue_ms": 0.03,
+            "worker_pool_queue_ms": 0.03,
+            "retry_count": 0,
+            "request_priority": "bulk",
+            "gateway_queue_ms": 0.02,
+            "total_queue_ms": 0.19,
+            "deadline_at": 1788389311.728689,
+            "deadline_remaining_ms": 49055,
+            "queue_deadline_at": 1788389191.7703302,
+            "queue_deadline_remaining_ms": 0
+          }
+        },
+        "timing": {
+          "latency_ms": 80902.43,
+          "queue_ms": 0.02,
+          "first_token_ms": null
+        }
+      }
+    },
+    "failure": {
+      "stage": "teaching_context_compile",
+      "code": "TEACHING_CONTEXT_COMPILE_FAILED",
+      "summary": "题图理解已完成，但教学上下文编译未通过结构校验"
+    }
+  }
+}

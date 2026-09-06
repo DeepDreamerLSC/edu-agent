@@ -1,0 +1,181 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a699b912ef3251197bdfffb:1bb21e9f644c",
+  "pilot_bucket": "development:landscape",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a699b912ef3251197bdfffb:1bb21e9f644c",
+    "status": "failed",
+    "disposition": "failed",
+    "observed": {
+      "model_response_received": true,
+      "structured_result": {},
+      "raw_starter_question": null,
+      "student_visible_gate": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "student_visible_repair": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "starter_question": null,
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "failed",
+          "reason_codes": [
+            "MODEL_RESPONSE_PARSE_FAILED"
+          ]
+        },
+        "structured_question": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "not_run",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "123922bb5a40b8b4f6683c6e456cbb9a575482fbd16d90bb6a66ffb033729962",
+        "sha256": "1bb21e9f644c2f4a646614b390b1e6e74d54f4557825a0bc5806e173f3f2743e",
+        "mime_type": "image/jpeg",
+        "size_bytes": 30443
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "118b2eef390175ec2864748b62e5178d1a940eeeed6b8d37425c71c731471a42",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_059e3262dda3",
+        "model_call_count": 2,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+        "response_parse_status": "failed",
+        "response_parsed_keys": [],
+        "response_content_length": 830,
+        "response_parse_error_code": "VALIDATIONERROR"
+      },
+      "raw_output": {
+        "model_call_id": "mc_059e3262dda3",
+        "request_id": "tctx_a1d85c995c718c1e5c28ad55:understanding:attempt-2",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"m\",\"t\":\"看图写对应关系。(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。\",\"u\":[\"(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。\",\"(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。\"],\"o\":[{\"m\":\"A\",\"h\":\"故事书线段\"},{\"m\":\"B\",\"h\":\"科技书线段\"},{\"m\":\"C\",\"h\":\"梨的质量线段\"},{\"m\":\"D\",\"h\":\"苹果的质量线段\"}],\"g\":[{\"m\":\"线段图\",\"h\":\"表示数量关系的线段图，用于比较倍数或分数关系\"},{\"m\":\"线段图\",\"h\":\"表示数量关系的线段图，用于比较倍数或分数关系\"}],\"a\":\"\",\"r\":\"线段图直观展示倍数与分数关系，学生需识别单位‘1’及对应份数。\",\"k\":[\"倍数关系\",\"分数关系\",\"单位‘1’的识别\"],\"p\":[\"(1) 故事书为1份，科技书比故事书多3倍，即科技书是故事书的4倍，相差3份。\",\"(2) 梨的质量为1，苹果比梨多1/5，即苹果是梨的6/5。\"],\"e\":[{\"m\":\"混淆倍数与分数\",\"h\":\"学生易将‘多3倍’误认为科技书是3份，实际应为4份。\"},{\"m\":\"单位‘1’定位错误\",\"h\":\"学生可能将苹果误认为单位‘1’，导致分数关系理解偏差。\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"倍数关系\",\"分数关系\"],\"q\":\"(1) 科技书比故事书多3倍，科技书是故事书的几份？相差几份？(2) 苹果比梨多1/5，苹果是梨的几分之几？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"m\",\"t\":\"看图写对应关系。(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。\",\"u\":[\"(1) 故事书与科技书的线段图：科技书比故事书多3倍。右侧填空：___—1份；相差本数—( )份；科技书—( )份。\",\"(2) 梨的质量与苹果的质量线段图：苹果比梨多1/5。右侧填空：___—“1”；苹果比梨质量多1/5；苹果的质量—( )。\"],\"o\":[{\"m\":\"A\",\"h\":\"故事书线段\"},{\"m\":\"B\",\"h\":\"科技书线段\"},{\"m\":\"C\",\"h\":\"梨的质量线段\"},{\"m\":\"D\",\"h\":\"苹果的质量线段\"}],\"g\":[{\"m\":\"线段图\",\"h\":\"表示数量关系的线段图，用于比较倍数或分数关系\"},{\"m\":\"线段图\",\"h\":\"表示数量关系的线段图，用于比较倍数或分数关系\"}],\"a\":\"\",\"r\":\"线段图直观展示倍数与分数关系，学生需识别单位‘1’及对应份数。\",\"k\":[\"倍数关系\",\"分数关系\",\"单位‘1’的识别\"],\"p\":[\"(1) 故事书为1份，科技书比故事书多3倍，即科技书是故事书的4倍，相差3份。\",\"(2) 梨的质量为1，苹果比梨多1/5，即苹果是梨的6/5。\"],\"e\":[{\"m\":\"混淆倍数与分数\",\"h\":\"学生易将‘多3倍’误认为科技书是3份，实际应为4份。\"},{\"m\":\"单位‘1’定位错误\",\"h\":\"学生可能将苹果误认为单位‘1’，导致分数关系理解偏差。\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"倍数关系\",\"分数关系\"],\"q\":\"(1) 科技书比故事书多3倍，科技书是故事书的几份？相差几份？(2) 苹果比梨多1/5，苹果是梨的几分之几？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2203,
+          "completion_tokens": 513,
+          "total_tokens": 2716
+        },
+        "latency_ms": 24098.12,
+        "queue_ms": 0.03,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-3d1ba585b4de439f98926400d6e1ce76",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.1,
+          "worker_latency_ms": 24084.36,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.03,
+          "total_queue_ms": 0.15,
+          "deadline_at": 1788366870.124293,
+          "deadline_remaining_ms": 105866,
+          "queue_deadline_at": 1788366750.1592152,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 24098.12,
+        "queue_ms": 0.03,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_a1d85c995c718c1e5c28ad55"
+    },
+    "failure": {
+      "stage": "question_image_understanding",
+      "code": "MODEL_RESPONSE_PARSE_FAILED",
+      "summary": "模型已返回题图结果，但结果未通过结构化题图理解解析"
+    }
+  }
+}

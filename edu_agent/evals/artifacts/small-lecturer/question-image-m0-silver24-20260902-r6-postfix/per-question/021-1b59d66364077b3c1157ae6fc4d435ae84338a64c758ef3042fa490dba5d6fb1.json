@@ -1,0 +1,298 @@
+{
+  "sample_id": "pujia-silver-v0:reserved:6a631f46184f723b3592d090:b16d0d587c59",
+  "pilot_bucket": "reserved:portrait",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:reserved:6a631f46184f723b3592d090:b16d0d587c59",
+    "status": "failed",
+    "disposition": "ready",
+    "observed": {
+      "scope": "single_question",
+      "stem": "毕达哥拉斯学派研究了有趣的形数。(1)三角形数：观察图形，填写数与式。(2)选做：五边形数：观察图形，填写数与式。",
+      "numbers_units": [
+        "1",
+        "2"
+      ],
+      "formulas": [],
+      "options": [
+        {
+          "label": "A",
+          "text": "三角形数图形"
+        },
+        {
+          "label": "B",
+          "text": "五边形数图形"
+        }
+      ],
+      "ordered_subquestions": [
+        "(1)三角形数：填写数与式。",
+        "(2)选做：五边形数：填写数与式。"
+      ],
+      "raw_starter_question": "先看“三角形数：填写数与式”，这道小问要求我们做什么？",
+      "starter_question": "先看“三角形数：填写数与式”，这道小问要求我们做什么？",
+      "student_visible_gate": {
+        "policy_version": "small_lecturer_visible_guardrail/v8",
+        "action": "ALLOW",
+        "passed": true,
+        "reason_codes": []
+      },
+      "student_visible_repair": {
+        "applied": false,
+        "strategy": "none",
+        "schema_repaired": true
+      },
+      "starter_active_subquestion_index": 0,
+      "candidate_answer": "",
+      "disposition": "ready",
+      "evidence_completeness": "partial",
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "structured_question": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "failed",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "2c239257bb78b46ea85bddd037e4295b7a242cbe69d1e18b334b57ac6e984e5e",
+        "sha256": "b16d0d587c5986a0f4efd769a4967b68df3a5d07604af38aef78dbfe2528a53c",
+        "mime_type": "image/jpeg",
+        "size_bytes": 30432
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "03989f1c51c52d315585e647765f467d30cf012b289854f4d304cd76de05e1ed",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_7a06fc48f443",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow"
+      },
+      "raw_output": {
+        "model_call_id": "mc_7a06fc48f443",
+        "request_id": "tctx_341650952b353c279a3e8dcc:understanding:attempt-1",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"毕达哥拉斯学派研究了有趣的形数。(1)三角形数：观察图形，填写数与式。(2)选做：五边形数：观察图形，填写数与式。\",\"u\":[\"(1)三角形数：填写数与式\",\"(2)选做：五边形数：填写数与式\"],\"o\":[{\"m\":\"A\",\"h\":\"三角形数图形\"},{\"m\":\"B\",\"h\":\"五边形数图形\"}],\"g\":[{\"m\":\"三角形点阵\",\"h\":\"第n个三角形数由n层小三角形组成，总数为1+2+...+n\"},{\"m\":\"五边形点阵\",\"h\":\"第n个五边形数由n层五边形点组成，总数为1+4+7+...+(3n-2)\"}],\"a\":\"\",\"r\":\"三角形数：1,3,6,10,15；公式n(n+1)/2。五边形数：1,5,12,22,35；公式n(3n-1)/2。\",\"k\":[\"三角形数公式n(n+1)/2\",\"五边形数公式n(3n-1)/2\"],\"p\":[\"三角形数：第1层1个，第2层3个，第3层6个，第4层10个，第5层15个。\",\"五边形数：第1层1个，第2层5个，第3层12个，第4层22个，第5层35个。\"],\"e\":[{\"m\":\"误将五边形数当作三角形数\",\"h\":\"五边形数每层增加3个，不是2个\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"三角形数\",\"五边形数\"],\"q\":\"(1)三角形数：第5个三角形数是多少？(2)五边形数：第5个五边形数是多少？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"毕达哥拉斯学派研究了有趣的形数。(1)三角形数：观察图形，填写数与式。(2)选做：五边形数：观察图形，填写数与式。\",\"u\":[\"(1)三角形数：填写数与式\",\"(2)选做：五边形数：填写数与式\"],\"o\":[{\"m\":\"A\",\"h\":\"三角形数图形\"},{\"m\":\"B\",\"h\":\"五边形数图形\"}],\"g\":[{\"m\":\"三角形点阵\",\"h\":\"第n个三角形数由n层小三角形组成，总数为1+2+...+n\"},{\"m\":\"五边形点阵\",\"h\":\"第n个五边形数由n层五边形点组成，总数为1+4+7+...+(3n-2)\"}],\"a\":\"\",\"r\":\"三角形数：1,3,6,10,15；公式n(n+1)/2。五边形数：1,5,12,22,35；公式n(3n-1)/2。\",\"k\":[\"三角形数公式n(n+1)/2\",\"五边形数公式n(3n-1)/2\"],\"p\":[\"三角形数：第1层1个，第2层3个，第3层6个，第4层10个，第5层15个。\",\"五边形数：第1层1个，第2层5个，第3层12个，第4层22个，第5层35个。\"],\"e\":[{\"m\":\"误将五边形数当作三角形数\",\"h\":\"五边形数每层增加3个，不是2个\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"三角形数\",\"五边形数\"],\"q\":\"(1)三角形数：第5个三角形数是多少？(2)五边形数：第5个五边形数是多少？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2178,
+          "completion_tokens": 411,
+          "total_tokens": 2589
+        },
+        "latency_ms": 21106.74,
+        "queue_ms": 0.03,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-f6daf2211cb64b45b302157a1f64bd30",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.15,
+          "worker_latency_ms": 21090.27,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.03,
+          "total_queue_ms": 0.2,
+          "deadline_at": 1788390745.8178098,
+          "deadline_remaining_ms": 108851,
+          "queue_deadline_at": 1788390625.858999,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 21106.74,
+        "queue_ms": 0.03,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_341650952b353c279a3e8dcc",
+      "compile": {
+        "model_call_id": "mc_900bcdca0dc1",
+        "resolved_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+        "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+        "worker_deployment_profile": "local_model_worker",
+        "prompt_sha256": "e589555d0725c6e71dbeb2f7f1988fc3cde8b2634fcdf5c589ce6c3f391a843e",
+        "required_capability": "teaching_context_compile",
+        "response_parse_status": "failed",
+        "response_parse_error_code": "COMPACTCOMPILEPAYLOADERROR",
+        "model_call_count": 1,
+        "raw_output": {
+          "model_call_id": "mc_900bcdca0dc1",
+          "request_id": "tctx_341650952b353c279a3e8dcc:compile:attempt-1",
+          "agent_run_id": null,
+          "workflow_step": "teaching_context_compile",
+          "invoke_type": "structured",
+          "resolved_model": {
+            "model_id": "qwen36-27b-mlx-worker-v1",
+            "display_name": "Qwen3.6-27B Worker Test",
+            "capability": "teaching_context_compile",
+            "deployment_profile": "test_text_model_worker"
+          },
+          "content": "{\n\"v\": 1,\n\"s\": \"c\",\n\"t\": \"毕达哥拉斯学派研究了有趣的形数。(1)三角形数：观察图形，填写数与式。(2)选做：五边形数：观察图形，填写数与式。\",\n\"u\": [\n[\n\"(1)三角形数：观察图形，填写数与式。\",\n\"\",\n\"\"\n],\n[\n\"(2)选做：五边形数：观察图形，填写数与式。\",\n\"\",\n\"\"\n]\n],\n\"o\": [],\n\"g\": [\n[\n\"other\",\n\"第n个三角形数由n层小三角形组成，总数为1+2+...+n；第n个五边形数由n层五边形点组成，总数为1+4+7+...+(3n-2)\"\n]\n],\n\"a\": \"\",\n\"r\": \"\",\n\"k\": [\n\"三角形数\",\n\"五边形数\"\n],\n\"p\": [\n\"三角形数：第1层1个，第2层3个，第3层6个，第4层10个，第5层15个。\",\n\"五边形数：第1层1个，第2层5个，第3层12个，第4层22个，第5层35个。\"\n],\n\"e\": [\n{\n\"m\": \"误将五边形数当作三角形数\",\n\"h\": \"五边形数每层增加3个，不是2个\"\n}\n],\n\"c\": \"p\",\n\"x\": [],\n\"n\": [\n\"三角形数\",\n\"五边形数\"\n],\n\"q\": \"观察第一个三角形数的图形，它由几个小三角形组成？\"\n}",
+          "parsed": {},
+          "raw_text": "{\n\"v\": 1,\n\"s\": \"c\",\n\"t\": \"毕达哥拉斯学派研究了有趣的形数。(1)三角形数：观察图形，填写数与式。(2)选做：五边形数：观察图形，填写数与式。\",\n\"u\": [\n[\n\"(1)三角形数：观察图形，填写数与式。\",\n\"\",\n\"\"\n],\n[\n\"(2)选做：五边形数：观察图形，填写数与式。\",\n\"\",\n\"\"\n]\n],\n\"o\": [],\n\"g\": [\n[\n\"other\",\n\"第n个三角形数由n层小三角形组成，总数为1+2+...+n；第n个五边形数由n层五边形点组成，总数为1+4+7+...+(3n-2)\"\n]\n],\n\"a\": \"\",\n\"r\": \"\",\n\"k\": [\n\"三角形数\",\n\"五边形数\"\n],\n\"p\": [\n\"三角形数：第1层1个，第2层3个，第3层6个，第4层10个，第5层15个。\",\n\"五边形数：第1层1个，第2层5个，第3层12个，第4层22个，第5层35个。\"\n],\n\"e\": [\n{\n\"m\": \"误将五边形数当作三角形数\",\n\"h\": \"五边形数每层增加3个，不是2个\"\n}\n],\n\"c\": \"p\",\n\"x\": [],\n\"n\": [\n\"三角形数\",\n\"五边形数\"\n],\n\"q\": \"观察第一个三角形数的图形，它由几个小三角形组成？\"\n}",
+          "raw_output_ref": null,
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 394,
+            "total_tokens": 394
+          },
+          "latency_ms": 71148.16,
+          "queue_ms": 0.02,
+          "first_token_ms": null,
+          "degraded": false,
+          "provider_metrics": {
+            "provider": "mlx_text",
+            "upstream_model": "qwen36-27b-mlx-worker-v1",
+            "structured_output_enforced": true,
+            "generation_tps": 6.53,
+            "peak_memory_gb": 20.082,
+            "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+            "worker_provider": "mlx_text",
+            "worker_source_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_source_revision_verified": true,
+            "worker_source_tree_clean": true,
+            "worker_runtime_contract_version": "model-worker-runtime/v1",
+            "worker_runtime_kind": "mlx_text",
+            "worker_runtime_version": "0.31.3",
+            "worker_engine_version": "edu-agent-model-worker/v1",
+            "worker_engine_mode": "provider_serialized",
+            "worker_scheduler_enabled": false,
+            "worker_effective_batching": false,
+            "worker_dynamic_batching": false,
+            "worker_deployment_profile": "local_model_worker",
+            "worker_environment": "test",
+            "worker_shadow_only": false,
+            "worker_weights_identity_sha256": "bd5ddc47eaba8c246ebb3b5f8913e8764bfed2925a74ca095db19c729b3f8f43",
+            "worker_weights_identity_verified": true,
+            "worker_effective_batch_id": "worker-direct-317fada842b14d318e653f9ebf211675",
+            "worker_effective_batch_identity_authoritative": false,
+            "worker_batch_correlation_source": "worker_generated_direct_id",
+            "worker_effective_batch_size": 1,
+            "worker_requested_batch_size": 1,
+            "worker_pid": 41384,
+            "worker_model_id": "qwen36-27b-mlx-worker-v1",
+            "worker_internal_concurrency": 1,
+            "worker_serialized": true,
+            "worker_warm_count": 1,
+            "worker_queue_ms": 0.13,
+            "worker_latency_ms": 71128.85,
+            "request_contract": "model_invoke_v1",
+            "endpoint_host": "127.0.0.1:8200",
+            "deployment_id": "qwen36-27b-mlx-worker",
+            "replica_id": "qwen36-27b-mlx-worker-a",
+            "queue_ms": 0.02,
+            "replica_queue_ms": 0.02,
+            "worker_pool_queue_ms": 0.02,
+            "retry_count": 0,
+            "request_priority": "bulk",
+            "gateway_queue_ms": 0.02,
+            "total_queue_ms": 0.17,
+            "deadline_at": 1788390766.970438,
+            "deadline_remaining_ms": 58698,
+            "queue_deadline_at": 1788390647.123638,
+            "queue_deadline_remaining_ms": 0
+          }
+        },
+        "timing": {
+          "latency_ms": 71148.16,
+          "queue_ms": 0.02,
+          "first_token_ms": null
+        }
+      }
+    },
+    "failure": {
+      "stage": "teaching_context_compile",
+      "code": "TEACHING_CONTEXT_COMPILE_FAILED",
+      "summary": "题图理解已完成，但教学上下文编译未通过结构校验"
+    }
+  }
+}

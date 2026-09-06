@@ -1,0 +1,321 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a61bb0ef0e25247f1ee36c7:3c5c84b5264a",
+  "pilot_bucket": "development:wide",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a61bb0ef0e25247f1ee36c7:3c5c84b5264a",
+    "status": "failed",
+    "disposition": "ready",
+    "observed": {
+      "scope": "single_question",
+      "stem": "选择合适的计算方法计算：2.8×2/7，0.6×4/5，2/9×10.8，2.3×5/46，2.8×1又2/7，0.6×3又4/5，2又2/9×10.8，0.5×1又5/46。反思：当小数乘带分数时，你是怎么算的？",
+      "numbers_units": [
+        "2.8",
+        "2",
+        "7",
+        "0.6",
+        "4",
+        "5",
+        "2",
+        "9",
+        "10.8",
+        "2.3",
+        "5",
+        "46",
+        "2.8",
+        "1",
+        "2",
+        "7",
+        "0.6",
+        "3",
+        "4",
+        "5",
+        "2",
+        "2",
+        "9",
+        "10.8",
+        "0.5",
+        "1",
+        "5",
+        "46"
+      ],
+      "formulas": [],
+      "options": [],
+      "ordered_subquestions": [
+        "2.8×2/7。",
+        "0.6×4/5。",
+        "2/9×10.8。",
+        "2.3×5/46。",
+        "2.8×1又2/7。",
+        "0.6×3又4/5。",
+        "2又2/9×10.8。",
+        "0.5×1又5/46。"
+      ],
+      "raw_starter_question": "先看“8×2/7”，这道小问要求我们做什么？",
+      "starter_question": "先看“8×2/7”，这道小问要求我们做什么？",
+      "student_visible_gate": {
+        "policy_version": "small_lecturer_visible_guardrail/v8",
+        "action": "ALLOW",
+        "passed": true,
+        "reason_codes": []
+      },
+      "student_visible_repair": {
+        "applied": false,
+        "strategy": "none",
+        "schema_repaired": true
+      },
+      "starter_active_subquestion_index": 0,
+      "candidate_answer": "8道算式的计算结果及反思方法",
+      "disposition": "ready",
+      "evidence_completeness": "partial",
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "structured_question": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "failed",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "409ac1099aa5faffa3baba473134c1c1867ff60cd2ca5b06ac8c57a3c3db2453",
+        "sha256": "3c5c84b5264ac50c7c5045d924a1e408346f54c3b4b7ba45cad03602c9d38834",
+        "mime_type": "image/jpeg",
+        "size_bytes": 17916
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "e42a0e3f1890b34498467fab360656fb539cc9335a7296a680fbfd31531f017b",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_ec99eb656759",
+        "model_call_count": 1,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow"
+      },
+      "raw_output": {
+        "model_call_id": "mc_ec99eb656759",
+        "request_id": "tctx_c6e680de9a5baebaa7fac0c2:understanding:attempt-1",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"选择合适的计算方法计算：2.8×2/7，0.6×4/5，2/9×10.8，2.3×5/46，2.8×1又2/7，0.6×3又4/5，2又2/9×10.8，0.5×1又5/46。反思：当小数乘带分数时，你是怎么算的？\",\"u\":[\"2.8×2/7\",\"0.6×4/5\",\"2/9×10.8\",\"2.3×5/46\",\"2.8×1又2/7\",\"0.6×3又4/5\",\"2又2/9×10.8\",\"0.5×1又5/46\"],\"o\":[],\"g\":[{\"m\":\"算式集合\",\"h\":\"8道小数乘分数/带分数算式，含整数、小数、分数、带分数混合运算\"}],\"a\":\"8道算式的计算结果及反思方法\",\"r\":\"小数乘分数可转化为分数乘分数，带分数需先化为假分数或拆分为整数与真分数之和\",\"k\":[\"分数乘法运算法则\",\"小数与分数互化\",\"带分数运算策略\"],\"p\":[\"将小数转化为分数或带分数转化为假分数，统一为分数乘法进行计算，约分简化结果\"],\"e\":[{\"m\":\"混淆小数与分数运算顺序\",\"h\":\"应先统一形式再计算，避免直接混合运算导致错误\"}],\"c\":\"p\",\"x\":[],\"n\":[\"分数乘法\",\"小数与分数互化\",\"带分数运算\"],\"q\":\"请计算2.8×2/7的结果。\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"选择合适的计算方法计算：2.8×2/7，0.6×4/5，2/9×10.8，2.3×5/46，2.8×1又2/7，0.6×3又4/5，2又2/9×10.8，0.5×1又5/46。反思：当小数乘带分数时，你是怎么算的？\",\"u\":[\"2.8×2/7\",\"0.6×4/5\",\"2/9×10.8\",\"2.3×5/46\",\"2.8×1又2/7\",\"0.6×3又4/5\",\"2又2/9×10.8\",\"0.5×1又5/46\"],\"o\":[],\"g\":[{\"m\":\"算式集合\",\"h\":\"8道小数乘分数/带分数算式，含整数、小数、分数、带分数混合运算\"}],\"a\":\"8道算式的计算结果及反思方法\",\"r\":\"小数乘分数可转化为分数乘分数，带分数需先化为假分数或拆分为整数与真分数之和\",\"k\":[\"分数乘法运算法则\",\"小数与分数互化\",\"带分数运算策略\"],\"p\":[\"将小数转化为分数或带分数转化为假分数，统一为分数乘法进行计算，约分简化结果\"],\"e\":[{\"m\":\"混淆小数与分数运算顺序\",\"h\":\"应先统一形式再计算，避免直接混合运算导致错误\"}],\"c\":\"p\",\"x\":[],\"n\":[\"分数乘法\",\"小数与分数互化\",\"带分数运算\"],\"q\":\"请计算2.8×2/7的结果。\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2153,
+          "completion_tokens": 367,
+          "total_tokens": 2520
+        },
+        "latency_ms": 13526.27,
+        "queue_ms": 0.02,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-5d192a1ddb2047f4ab2746c12592476d",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.11,
+          "worker_latency_ms": 13515.41,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.02,
+          "total_queue_ms": 0.15,
+          "deadline_at": 1788390010.4550211,
+          "deadline_remaining_ms": 116447,
+          "queue_deadline_at": 1788389890.481498,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 13526.27,
+        "queue_ms": 0.02,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_c6e680de9a5baebaa7fac0c2",
+      "compile": {
+        "model_call_id": "mc_f8e6b19e883e",
+        "resolved_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_model_id": "qwen36-27b-mlx-worker-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+        "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+        "worker_deployment_profile": "local_model_worker",
+        "prompt_sha256": "c8129615ea7731c6c0e7161af217469e992a62da2f2dfce8ad9feee11ed3f5cf",
+        "required_capability": "teaching_context_compile",
+        "response_parse_status": "failed",
+        "response_parse_error_code": "COMPACTCOMPILEPAYLOADERROR",
+        "model_call_count": 1,
+        "raw_output": {
+          "model_call_id": "mc_f8e6b19e883e",
+          "request_id": "tctx_c6e680de9a5baebaa7fac0c2:compile:attempt-1",
+          "agent_run_id": null,
+          "workflow_step": "teaching_context_compile",
+          "invoke_type": "structured",
+          "resolved_model": {
+            "model_id": "qwen36-27b-mlx-worker-v1",
+            "display_name": "Qwen3.6-27B Worker Test",
+            "capability": "teaching_context_compile",
+            "deployment_profile": "test_text_model_worker"
+          },
+          "content": "{\n  \"v\": 1,\n  \"s\": \"c\",\n  \"t\": \"选择合适的计算方法计算：2.8×2/7，0.6×4/5，2/9×10.8，2.3×5/46，2.8×1又2/7，0.6×3又4/5，2又2/9×10.8，0.5×1又5/46。反思：当小数乘带分数时，你是怎么算的？\",\n  \"u\": [\n    [\n      \"2.8×2/7\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"0.6×4/5\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"2/9×10.8\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"2.3×5/46\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"2.8×1又2/7\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"0.6×3又4/5\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"2又2/9×10.8\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"0.5×1又5/46\",\n      \"\",\n      \"\"\n    ]\n  ],\n  \"o\": [],\n  \"g\": [\n    [\n      \"other\",\n      \"8道小数乘分数/带分数算式，含整数、小数、分数、带分数混合运算\"\n    ]\n  ],\n  \"a\": \"\",\n  \"r\": \"\",\n  \"k\": [\n    \"分数乘法\",\n    \"小数与分数互化\",\n    \"带分数运算\"\n  ],\n  \"p\": [\n    \"将小数转化为分数或带分数转化为假分数，统一为分数乘法进行计算，约分简化结果\"\n  ],\n  \"e\": [\n    {\n      \"m\": \"混淆小数与分数运算顺序\",\n      \"h\": \"应先统一形式再计算，避免直接混合运算导致错误\"\n    }\n  ],\n  \"c\": \"p\",\n  \"x\": [],\n  \"n\": [\n    \"分数乘法\",\n    \"小数与分数互化\",\n    \"带分数运算\"\n  ],\n  \"q\": \"在计算2.8×2/7时，你会先把2.8转化成什么形式？\"\n}",
+          "parsed": {},
+          "raw_text": "{\n  \"v\": 1,\n  \"s\": \"c\",\n  \"t\": \"选择合适的计算方法计算：2.8×2/7，0.6×4/5，2/9×10.8，2.3×5/46，2.8×1又2/7，0.6×3又4/5，2又2/9×10.8，0.5×1又5/46。反思：当小数乘带分数时，你是怎么算的？\",\n  \"u\": [\n    [\n      \"2.8×2/7\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"0.6×4/5\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"2/9×10.8\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"2.3×5/46\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"2.8×1又2/7\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"0.6×3又4/5\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"2又2/9×10.8\",\n      \"\",\n      \"\"\n    ],\n    [\n      \"0.5×1又5/46\",\n      \"\",\n      \"\"\n    ]\n  ],\n  \"o\": [],\n  \"g\": [\n    [\n      \"other\",\n      \"8道小数乘分数/带分数算式，含整数、小数、分数、带分数混合运算\"\n    ]\n  ],\n  \"a\": \"\",\n  \"r\": \"\",\n  \"k\": [\n    \"分数乘法\",\n    \"小数与分数互化\",\n    \"带分数运算\"\n  ],\n  \"p\": [\n    \"将小数转化为分数或带分数转化为假分数，统一为分数乘法进行计算，约分简化结果\"\n  ],\n  \"e\": [\n    {\n      \"m\": \"混淆小数与分数运算顺序\",\n      \"h\": \"应先统一形式再计算，避免直接混合运算导致错误\"\n    }\n  ],\n  \"c\": \"p\",\n  \"x\": [],\n  \"n\": [\n    \"分数乘法\",\n    \"小数与分数互化\",\n    \"带分数运算\"\n  ],\n  \"q\": \"在计算2.8×2/7时，你会先把2.8转化成什么形式？\"\n}",
+          "raw_output_ref": null,
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 575,
+            "total_tokens": 575
+          },
+          "latency_ms": 66583.24,
+          "queue_ms": 0.03,
+          "first_token_ms": null,
+          "degraded": false,
+          "provider_metrics": {
+            "provider": "mlx_text",
+            "upstream_model": "qwen36-27b-mlx-worker-v1",
+            "structured_output_enforced": true,
+            "generation_tps": 10.41,
+            "peak_memory_gb": 20.082,
+            "worker_build_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_instance_id": "LindeMacBook-Pro-3.local:41384:qwen36-27b-mlx-worker-v1",
+            "worker_provider": "mlx_text",
+            "worker_source_revision": "96bc9a80d248521179376f612fed9985cc73db4b",
+            "worker_source_revision_verified": true,
+            "worker_source_tree_clean": true,
+            "worker_runtime_contract_version": "model-worker-runtime/v1",
+            "worker_runtime_kind": "mlx_text",
+            "worker_runtime_version": "0.31.3",
+            "worker_engine_version": "edu-agent-model-worker/v1",
+            "worker_engine_mode": "provider_serialized",
+            "worker_scheduler_enabled": false,
+            "worker_effective_batching": false,
+            "worker_dynamic_batching": false,
+            "worker_deployment_profile": "local_model_worker",
+            "worker_environment": "test",
+            "worker_shadow_only": false,
+            "worker_weights_identity_sha256": "bd5ddc47eaba8c246ebb3b5f8913e8764bfed2925a74ca095db19c729b3f8f43",
+            "worker_weights_identity_verified": true,
+            "worker_effective_batch_id": "worker-direct-1ac981e0635b4eb4844337fcb49fb0c4",
+            "worker_effective_batch_identity_authoritative": false,
+            "worker_batch_correlation_source": "worker_generated_direct_id",
+            "worker_effective_batch_size": 1,
+            "worker_requested_batch_size": 1,
+            "worker_pid": 41384,
+            "worker_model_id": "qwen36-27b-mlx-worker-v1",
+            "worker_internal_concurrency": 1,
+            "worker_serialized": true,
+            "worker_warm_count": 1,
+            "worker_queue_ms": 0.21,
+            "worker_latency_ms": 66567.46,
+            "request_contract": "model_invoke_v1",
+            "endpoint_host": "127.0.0.1:8200",
+            "deployment_id": "qwen36-27b-mlx-worker",
+            "replica_id": "qwen36-27b-mlx-worker-a",
+            "queue_ms": 0.02,
+            "replica_queue_ms": 0.02,
+            "worker_pool_queue_ms": 0.02,
+            "retry_count": 0,
+            "request_priority": "bulk",
+            "gateway_queue_ms": 0.03,
+            "total_queue_ms": 0.26,
+            "deadline_at": 1788390024.012289,
+            "deadline_remaining_ms": 63389,
+            "queue_deadline_at": 1788389904.039592,
+            "queue_deadline_remaining_ms": 0
+          }
+        },
+        "timing": {
+          "latency_ms": 66583.24,
+          "queue_ms": 0.03,
+          "first_token_ms": null
+        }
+      }
+    },
+    "failure": {
+      "stage": "teaching_context_compile",
+      "code": "TEACHING_CONTEXT_COMPILE_FAILED",
+      "summary": "题图理解已完成，但教学上下文编译未通过结构校验"
+    }
+  }
+}

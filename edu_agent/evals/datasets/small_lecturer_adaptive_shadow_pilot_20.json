@@ -1,0 +1,1210 @@
+{
+  "schema_version": "small_lecturer_dialogue_scenarios/v3",
+  "scenarios": [
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_equation_subtract__no_working_knowledge",
+      "title": "方程同减同除·no_working_knowledge",
+      "subject": "math",
+      "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_subtract",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "known_facts": [],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "request_hint",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "3x=18,x=6"
+        ],
+        "seed": 2026072911,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_equation_subtract",
+        "no_working_knowledge"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "detailed",
+        "grade": "七年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "no_working_knowledge",
+        "review_evidence": [
+          "等式两边进行相同运算，等式仍然成立"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_equation_subtract__misconception_active",
+      "title": "方程同减同除·misconception_active",
+      "subject": "math",
+      "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_subtract",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "misconception_active",
+        "known_facts": [
+          "等式两边进行相同运算，等式仍然成立"
+        ],
+        "active_misconception": "把加数移到等号另一边时不改变运算",
+        "expression_limit": 100,
+        "interaction_signal": "neutral",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress",
+          "revise_after_evidence"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "3x=18,x=6"
+        ],
+        "seed": 2026072912,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_equation_subtract",
+        "misconception_active"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "detailed",
+        "grade": "七年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "misconception_active",
+        "review_evidence": [
+          "等式两边进行相同运算，等式仍然成立"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_equation_subtract__partial_understanding",
+      "title": "方程同减同除·partial_understanding",
+      "subject": "math",
+      "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_subtract",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "known_facts": [
+          "应该先消去加上的7"
+        ],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "neutral",
+        "allowed_progression": [
+          "make_partial_progress",
+          "revise_after_evidence",
+          "complete_after_reasoning"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "3x=18,x=6"
+        ],
+        "seed": 2026072913,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_equation_subtract",
+        "partial_understanding"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "detailed",
+        "grade": "七年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "partial_understanding",
+        "review_evidence": [
+          "等式两边进行相同运算，等式仍然成立"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_equation_subtract__answer_seeking",
+      "title": "方程同减同除·answer_seeking",
+      "subject": "math",
+      "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_subtract",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "answer_seeking",
+        "known_facts": [],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "request_answer",
+        "allowed_progression": [
+          "request_minimal_hint",
+          "make_partial_progress",
+          "exit"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "3x=18,x=6"
+        ],
+        "seed": 2026072914,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_equation_subtract",
+        "answer_seeking"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "detailed",
+        "grade": "七年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "answer_seeking",
+        "review_evidence": [
+          "等式两边进行相同运算，等式仍然成立"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_equation_sign__no_working_knowledge",
+      "title": "方程符号误解·no_working_knowledge",
+      "subject": "math",
+      "question": "解方程 2x+5=17，并说明理由。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_sign",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "known_facts": [],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "request_hint",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "2x=12,x=6"
+        ],
+        "seed": 2026072921,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_equation_sign",
+        "no_working_knowledge"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "misconception",
+        "analysis_quality": "detailed",
+        "grade": "七年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "no_working_knowledge",
+        "review_evidence": [
+          "等式两边进行相同运算，等式仍然成立"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_equation_sign__misconception_active",
+      "title": "方程符号误解·misconception_active",
+      "subject": "math",
+      "question": "解方程 2x+5=17，并说明理由。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_sign",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "misconception_active",
+        "known_facts": [
+          "等式两边进行相同运算，等式仍然成立"
+        ],
+        "active_misconception": "把5移到另一边以后仍然加5",
+        "expression_limit": 100,
+        "interaction_signal": "neutral",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress",
+          "revise_after_evidence"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "2x=12,x=6"
+        ],
+        "seed": 2026072922,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_equation_sign",
+        "misconception_active"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "misconception",
+        "analysis_quality": "detailed",
+        "grade": "七年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "misconception_active",
+        "review_evidence": [
+          "等式两边进行相同运算，等式仍然成立"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_equation_sign__partial_understanding",
+      "title": "方程符号误解·partial_understanding",
+      "subject": "math",
+      "question": "解方程 2x+5=17，并说明理由。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_sign",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "known_facts": [
+          "应该让等式两边同时减去5"
+        ],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "neutral",
+        "allowed_progression": [
+          "make_partial_progress",
+          "revise_after_evidence",
+          "complete_after_reasoning"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "2x=12,x=6"
+        ],
+        "seed": 2026072923,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_equation_sign",
+        "partial_understanding"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "misconception",
+        "analysis_quality": "detailed",
+        "grade": "七年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "partial_understanding",
+        "review_evidence": [
+          "等式两边进行相同运算，等式仍然成立"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_equation_sign__answer_seeking",
+      "title": "方程符号误解·answer_seeking",
+      "subject": "math",
+      "question": "解方程 2x+5=17，并说明理由。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_sign",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "answer_seeking",
+        "known_facts": [],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "request_answer",
+        "allowed_progression": [
+          "request_minimal_hint",
+          "make_partial_progress",
+          "exit"
+        ],
+        "forbidden_reveals": [
+          "x=6",
+          "2x=12,x=6"
+        ],
+        "seed": 2026072924,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_equation_sign",
+        "answer_seeking"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "misconception",
+        "analysis_quality": "detailed",
+        "grade": "七年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "answer_seeking",
+        "review_evidence": [
+          "等式两边进行相同运算，等式仍然成立"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_equation_parentheses__no_working_knowledge",
+      "title": "含括号方程·no_working_knowledge",
+      "subject": "math",
+      "question": "解方程 4(x+2)=24，并说明过程。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_parentheses",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "known_facts": [],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "request_hint",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress"
+        ],
+        "forbidden_reveals": [
+          "x=4",
+          "x+2=6,x=4"
+        ],
+        "seed": 2026072931,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_equation_parentheses",
+        "no_working_knowledge"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "detailed",
+        "grade": "七年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "no_working_knowledge",
+        "review_evidence": [
+          "括号外的4乘括号内整个式子"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_equation_parentheses__misconception_active",
+      "title": "含括号方程·misconception_active",
+      "subject": "math",
+      "question": "解方程 4(x+2)=24，并说明过程。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_parentheses",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "misconception_active",
+        "known_facts": [
+          "括号外的4乘括号内整个式子"
+        ],
+        "active_misconception": "先把括号内的x和2直接相加",
+        "expression_limit": 100,
+        "interaction_signal": "neutral",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress",
+          "revise_after_evidence"
+        ],
+        "forbidden_reveals": [
+          "x=4",
+          "x+2=6,x=4"
+        ],
+        "seed": 2026072932,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_equation_parentheses",
+        "misconception_active"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "detailed",
+        "grade": "七年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "misconception_active",
+        "review_evidence": [
+          "括号外的4乘括号内整个式子"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_equation_parentheses__partial_understanding",
+      "title": "含括号方程·partial_understanding",
+      "subject": "math",
+      "question": "解方程 4(x+2)=24，并说明过程。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_parentheses",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "known_facts": [
+          "可以先把等式两边同时除以4"
+        ],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "neutral",
+        "allowed_progression": [
+          "make_partial_progress",
+          "revise_after_evidence",
+          "complete_after_reasoning"
+        ],
+        "forbidden_reveals": [
+          "x=4",
+          "x+2=6,x=4"
+        ],
+        "seed": 2026072933,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_equation_parentheses",
+        "partial_understanding"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "detailed",
+        "grade": "七年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "partial_understanding",
+        "review_evidence": [
+          "括号外的4乘括号内整个式子"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_equation_parentheses__answer_seeking",
+      "title": "含括号方程·answer_seeking",
+      "subject": "math",
+      "question": "解方程 4(x+2)=24，并说明过程。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_equation_parentheses",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "answer_seeking",
+        "known_facts": [],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "request_answer",
+        "allowed_progression": [
+          "request_minimal_hint",
+          "make_partial_progress",
+          "exit"
+        ],
+        "forbidden_reveals": [
+          "x=4",
+          "x+2=6,x=4"
+        ],
+        "seed": 2026072934,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_equation_parentheses",
+        "answer_seeking"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "multi_step",
+        "analysis_quality": "detailed",
+        "grade": "七年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "answer_seeking",
+        "review_evidence": [
+          "括号外的4乘括号内整个式子"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_fraction_addition__no_working_knowledge",
+      "title": "异分母分数加法·no_working_knowledge",
+      "subject": "math",
+      "question": "计算四分之三加八分之一，并说明为什么要这样算。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_fraction_addition",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "known_facts": [],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "request_hint",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress"
+        ],
+        "forbidden_reveals": [
+          "八分之七",
+          "3/4+1/8=7/8"
+        ],
+        "seed": 2026072941,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_fraction_addition",
+        "no_working_knowledge"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "terse",
+        "grade": "五年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "no_working_knowledge",
+        "review_evidence": [
+          "异分母分数要先统一分数单位"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_fraction_addition__misconception_active",
+      "title": "异分母分数加法·misconception_active",
+      "subject": "math",
+      "question": "计算四分之三加八分之一，并说明为什么要这样算。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_fraction_addition",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "misconception_active",
+        "known_facts": [
+          "异分母分数要先统一分数单位"
+        ],
+        "active_misconception": "分子和分母可以分别直接相加",
+        "expression_limit": 100,
+        "interaction_signal": "neutral",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress",
+          "revise_after_evidence"
+        ],
+        "forbidden_reveals": [
+          "八分之七",
+          "3/4+1/8=7/8"
+        ],
+        "seed": 2026072942,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_fraction_addition",
+        "misconception_active"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "terse",
+        "grade": "五年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "misconception_active",
+        "review_evidence": [
+          "异分母分数要先统一分数单位"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_fraction_addition__partial_understanding",
+      "title": "异分母分数加法·partial_understanding",
+      "subject": "math",
+      "question": "计算四分之三加八分之一，并说明为什么要这样算。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_fraction_addition",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "known_facts": [
+          "四分之三可以化成八分之六"
+        ],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "neutral",
+        "allowed_progression": [
+          "make_partial_progress",
+          "revise_after_evidence",
+          "complete_after_reasoning"
+        ],
+        "forbidden_reveals": [
+          "八分之七",
+          "3/4+1/8=7/8"
+        ],
+        "seed": 2026072943,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_fraction_addition",
+        "partial_understanding"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "terse",
+        "grade": "五年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "partial_understanding",
+        "review_evidence": [
+          "异分母分数要先统一分数单位"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_fraction_addition__answer_seeking",
+      "title": "异分母分数加法·answer_seeking",
+      "subject": "math",
+      "question": "计算四分之三加八分之一，并说明为什么要这样算。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_fraction_addition",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "answer_seeking",
+        "known_facts": [],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "request_answer",
+        "allowed_progression": [
+          "request_minimal_hint",
+          "make_partial_progress",
+          "exit"
+        ],
+        "forbidden_reveals": [
+          "八分之七",
+          "3/4+1/8=7/8"
+        ],
+        "seed": 2026072944,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_fraction_addition",
+        "answer_seeking"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "terse",
+        "grade": "五年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "answer_seeking",
+        "review_evidence": [
+          "异分母分数要先统一分数单位"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_decimal_multiply__no_working_knowledge",
+      "title": "小数乘法·no_working_knowledge",
+      "subject": "math",
+      "question": "计算 2.4×0.5，并解释小数点的位置。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_decimal_multiply",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "no_working_knowledge",
+        "known_facts": [],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "request_hint",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress"
+        ],
+        "forbidden_reveals": [
+          "1.2",
+          "2.4×0.5=1.2"
+        ],
+        "seed": 2026072951,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_decimal_multiply",
+        "no_working_knowledge"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "detailed",
+        "grade": "五年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "no_working_knowledge",
+        "review_evidence": [
+          "小数乘法可以先按整数乘法计算"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_decimal_multiply__misconception_active",
+      "title": "小数乘法·misconception_active",
+      "subject": "math",
+      "question": "计算 2.4×0.5，并解释小数点的位置。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_decimal_multiply",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "misconception_active",
+        "known_facts": [
+          "小数乘法可以先按整数乘法计算"
+        ],
+        "active_misconception": "积的小数点只看第一个因数的小数位数",
+        "expression_limit": 100,
+        "interaction_signal": "neutral",
+        "allowed_progression": [
+          "maintain_current_state",
+          "request_minimal_hint",
+          "make_partial_progress",
+          "revise_after_evidence"
+        ],
+        "forbidden_reveals": [
+          "1.2",
+          "2.4×0.5=1.2"
+        ],
+        "seed": 2026072952,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_decimal_multiply",
+        "misconception_active"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "detailed",
+        "grade": "五年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "misconception_active",
+        "review_evidence": [
+          "小数乘法可以先按整数乘法计算"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_decimal_multiply__partial_understanding",
+      "title": "小数乘法·partial_understanding",
+      "subject": "math",
+      "question": "计算 2.4×0.5，并解释小数点的位置。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_decimal_multiply",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "partial_understanding",
+        "known_facts": [
+          "24乘5等于120"
+        ],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "neutral",
+        "allowed_progression": [
+          "make_partial_progress",
+          "revise_after_evidence",
+          "complete_after_reasoning"
+        ],
+        "forbidden_reveals": [
+          "1.2",
+          "2.4×0.5=1.2"
+        ],
+        "seed": 2026072953,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_decimal_multiply",
+        "partial_understanding"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "detailed",
+        "grade": "五年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "partial_understanding",
+        "review_evidence": [
+          "小数乘法可以先按整数乘法计算"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    },
+    {
+      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "id": "stability_decimal_multiply__answer_seeking",
+      "title": "小数乘法·answer_seeking",
+      "subject": "math",
+      "question": "计算 2.4×0.5，并解释小数点的位置。",
+      "question_source": {
+        "provider": "shadow_pilot_bank",
+        "question_id": "stability_decimal_multiply",
+        "question_version": "pilot-2026-07-v1"
+      },
+      "student_profile": {
+        "schema_version": "student_simulator_profile/v1",
+        "starting_knowledge_state": "answer_seeking",
+        "known_facts": [],
+        "active_misconception": null,
+        "expression_limit": 100,
+        "interaction_signal": "request_answer",
+        "allowed_progression": [
+          "request_minimal_hint",
+          "make_partial_progress",
+          "exit"
+        ],
+        "forbidden_reveals": [
+          "1.2",
+          "2.4×0.5=1.2"
+        ],
+        "seed": 2026072954,
+        "max_turns": 6
+      },
+      "trajectory_tags": [
+        "adaptive_shadow_pilot",
+        "stability_decimal_multiply",
+        "answer_seeking"
+      ],
+      "expect": {
+        "ready_to_record": null,
+        "final_states": [],
+        "assistant_contains": [],
+        "failure_category": "expectation"
+      },
+      "metadata": {
+        "minimum_student_turns": 4,
+        "stability_gate": true,
+        "teaching_context_shadow_pilot": true,
+        "promotion_evidence_eligible": false,
+        "coverage_bucket": "calculation",
+        "analysis_quality": "detailed",
+        "grade": "五年级",
+        "adaptive_pilot": "five_questions_four_profiles_v1",
+        "profile_bucket": "answer_seeking",
+        "review_evidence": [
+          "小数乘法可以先按整数乘法计算"
+        ]
+      },
+      "evidence_pool": "synthetic_discovery",
+      "evidence_eligible": false,
+      "promotion_evidence": false
+    }
+  ]
+}

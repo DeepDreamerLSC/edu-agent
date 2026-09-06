@@ -1,0 +1,181 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a61bb0ef0e25247f1ee36c7:3c5c84b5264a",
+  "pilot_bucket": "development:wide",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a61bb0ef0e25247f1ee36c7:3c5c84b5264a",
+    "status": "failed",
+    "disposition": "failed",
+    "observed": {
+      "model_response_received": true,
+      "structured_result": {},
+      "raw_starter_question": null,
+      "student_visible_gate": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "student_visible_repair": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "starter_question": null,
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "failed",
+          "reason_codes": [
+            "MODEL_RESPONSE_PARSE_FAILED"
+          ]
+        },
+        "structured_question": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "not_run",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "409ac1099aa5faffa3baba473134c1c1867ff60cd2ca5b06ac8c57a3c3db2453",
+        "sha256": "3c5c84b5264ac50c7c5045d924a1e408346f54c3b4b7ba45cad03602c9d38834",
+        "mime_type": "image/jpeg",
+        "size_bytes": 17916
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "9ebd3d8de6461bd2abe7ce74617b9fd2f76add9b35f2980ced68c42d20c0fddd",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_7e6fbb40dbaa",
+        "model_call_count": 2,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+        "response_parse_status": "failed",
+        "response_parsed_keys": [],
+        "response_content_length": 478,
+        "response_parse_error_code": "VALIDATIONERROR"
+      },
+      "raw_output": {
+        "model_call_id": "mc_7e6fbb40dbaa",
+        "request_id": "tctx_c6e680de9a5baebaa7fac0c2:understanding:attempt-2",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"s\",\"t\":\"选择合适的计算方法计算：2.8×2/7，0.6×4/5，2/9×10.8，2.3×5/46，2.8×1又2/7，0.6×3又4/5，2又2/9×10.8，0.5×1又5/46。反思：当小数乘带分数时，你是怎么算的？\",\"u\":[\"2.8×2/7\",\"0.6×4/5\",\"2/9×10.8\",\"2.3×5/46\",\"2.8×1又2/7\",\"0.6×3又4/5\",\"2又2/9×10.8\",\"0.5×1又5/46\"],\"o\":[],\"g\":[{\"m\":\"算术运算题\",\"h\":\"小数与分数混合乘法计算\"}],\"a\":\"\",\"r\":\"小数乘分数可转化为分数乘分数，或小数乘整数后约分。\",\"k\":[\"分数乘法\",\"小数乘法\",\"带分数运算\"],\"p\":[\"将小数转化为分数或带分数，利用乘法分配律或约分简化计算。\"],\"e\":[{\"m\":\"混淆整数与分数\",\"h\":\"将带分数误作整数参与运算\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"分数乘法\",\"小数乘法\"],\"q\":\"请计算2.8×2/7的结果。\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"s\",\"t\":\"选择合适的计算方法计算：2.8×2/7，0.6×4/5，2/9×10.8，2.3×5/46，2.8×1又2/7，0.6×3又4/5，2又2/9×10.8，0.5×1又5/46。反思：当小数乘带分数时，你是怎么算的？\",\"u\":[\"2.8×2/7\",\"0.6×4/5\",\"2/9×10.8\",\"2.3×5/46\",\"2.8×1又2/7\",\"0.6×3又4/5\",\"2又2/9×10.8\",\"0.5×1又5/46\"],\"o\":[],\"g\":[{\"m\":\"算术运算题\",\"h\":\"小数与分数混合乘法计算\"}],\"a\":\"\",\"r\":\"小数乘分数可转化为分数乘分数，或小数乘整数后约分。\",\"k\":[\"分数乘法\",\"小数乘法\",\"带分数运算\"],\"p\":[\"将小数转化为分数或带分数，利用乘法分配律或约分简化计算。\"],\"e\":[{\"m\":\"混淆整数与分数\",\"h\":\"将带分数误作整数参与运算\"}],\"c\":\"p\",\"x\":[\"ksu\"],\"n\":[\"分数乘法\",\"小数乘法\"],\"q\":\"请计算2.8×2/7的结果。\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2180,
+          "completion_tokens": 313,
+          "total_tokens": 2493
+        },
+        "latency_ms": 18981.66,
+        "queue_ms": 0.02,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-97213f295d074b27a9837d7b00bdfdd9",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.09,
+          "worker_latency_ms": 18958.28,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.02,
+          "total_queue_ms": 0.13,
+          "deadline_at": 1788367373.3621418,
+          "deadline_remaining_ms": 110959,
+          "queue_deadline_at": 1788367253.420577,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 18981.66,
+        "queue_ms": 0.02,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_c6e680de9a5baebaa7fac0c2"
+    },
+    "failure": {
+      "stage": "question_image_understanding",
+      "code": "MODEL_RESPONSE_PARSE_FAILED",
+      "summary": "模型已返回题图结果，但结果未通过结构化题图理解解析"
+    }
+  }
+}

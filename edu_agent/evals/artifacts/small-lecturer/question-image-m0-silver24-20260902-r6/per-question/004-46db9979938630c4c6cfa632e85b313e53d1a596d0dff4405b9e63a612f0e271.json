@@ -1,0 +1,181 @@
+{
+  "sample_id": "pujia-silver-v0:development:6a695f1e6c232e289af52f6b:28575ffb89f6",
+  "pilot_bucket": "development:tall",
+  "evidence": {
+    "schema_version": "small_lecturer_question_image_eval_evidence/v1",
+    "sample_id": "pujia-silver-v0:development:6a695f1e6c232e289af52f6b:28575ffb89f6",
+    "status": "failed",
+    "disposition": "failed",
+    "observed": {
+      "model_response_received": true,
+      "structured_result": {},
+      "raw_starter_question": null,
+      "student_visible_gate": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "student_visible_repair": {
+        "status": "not_run",
+        "reason": "understanding_parse_failed"
+      },
+      "starter_question": null,
+      "stage_outcomes": {
+        "input_resolution": {
+          "status": "passed",
+          "reason_codes": []
+        },
+        "question_image_understanding": {
+          "status": "failed",
+          "reason_codes": [
+            "MODEL_RESPONSE_PARSE_FAILED"
+          ]
+        },
+        "structured_question": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "active_subquestion_order": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "starter_teaching_action": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_visible_gate": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "student_presentation": {
+          "status": "not_run",
+          "reason_codes": []
+        },
+        "teaching_context_compile": {
+          "status": "not_run",
+          "reason_codes": []
+        }
+      }
+    },
+    "field_results": {},
+    "evidence": {
+      "source": {
+        "source_type": "oss_url",
+        "source_ref_sha256": "9d7d23c32169fba1d20f856589e02e3c2d07d9feaca933433c3679c0c2649f98",
+        "sha256": "28575ffb89f6692ba4a835f48f014f57311088e78c7fa2912dca40c1879415c3",
+        "mime_type": "image/jpeg",
+        "size_bytes": 12629
+      },
+      "prompt": {
+        "version": "teaching_context_compile/v18",
+        "sha256": "23ebf59927023816d1bd12996368e6c7585e8594822e25a6ea3e2bd896b9e920",
+        "required_capability": "question_image_understanding"
+      },
+      "executor": {
+        "version": "question_image_understanding_executor/v1"
+      },
+      "model": {
+        "model_call_id": "mc_6a8fe7bba4cc",
+        "model_call_count": 2,
+        "resolved_model_id": "qwen3-vl-8b-mlx-worker-v1",
+        "deployment_profile": "test_openai_compatible_vlm_shadow",
+        "provider": "openai_compatible",
+        "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+        "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+        "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+        "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+        "response_parse_status": "failed",
+        "response_parsed_keys": [],
+        "response_content_length": 749,
+        "response_parse_error_code": "VALIDATIONERROR"
+      },
+      "raw_output": {
+        "model_call_id": "mc_6a8fe7bba4cc",
+        "request_id": "tctx_70cb98e49940b70fd6a4833d:understanding:attempt-2",
+        "agent_run_id": null,
+        "workflow_step": "question_image_understanding",
+        "invoke_type": "vision_doc_parse",
+        "resolved_model": {
+          "model_id": "qwen3-vl-8b-mlx-worker-v1",
+          "display_name": "Qwen3-VL-8B Worker Test",
+          "capability": "question_image_understanding",
+          "deployment_profile": "test_openai_compatible_vlm_shadow"
+        },
+        "content": "{\"v\":1,\"s\":\"m\",\"t\":\"看图列式计算。(1) 一条线段被平均分成5份，其中3份占总长度的3/5，这3份对应的总长度是320页，求这3份是多少页？(2) 一条线段被平均分成3份，其中2份对应的重量是60kg，求这2份是多少kg？(3) 一个长方形被平均分成6个小长方形，每个小长方形宽为4t，求空白部分的面积是多少t？\",\"u\":[\"求3/5对应的页数\",\"求2/3对应的重量\",\"求空白部分的面积\"],\"o\":[{\"m\":\"A\",\"h\":\"3/5\"}],\"g\":[{\"m\":\"线段图\",\"h\":\"表示3/5与320页的关系\"},{\"m\":\"线段图\",\"h\":\"表示2/3与60kg的关系\"},{\"m\":\"长方形图\",\"h\":\"表示6个等宽小长方形，每个宽4t\"}],\"a\":\"(1) 320页 (2) 60kg (3) 空白部分面积为4t\",\"r\":\"(1) 3/5对应的页数是320页 (2) 2/3对应的重量是60kg (3) 空白部分面积为4t\",\"k\":[\"分数与除法的关系\",\"比例关系\",\"面积计算\"],\"p\":[\"(1) 3/5对应的页数是320页 (2) 2/3对应的重量是60kg (3) 空白部分面积为4t\"],\"e\":[{\"m\":\"分数与除法混淆\",\"h\":\"将分数与除法混淆，导致计算错误\"},{\"m\":\"比例关系理解错误\",\"h\":\"将比例关系理解错误，导致计算错误\"},{\"m\":\"面积计算错误\",\"h\":\"将面积计算错误，导致计算错误\"}],\"c\":\"p\",\"x\":[\"sac\"],\"n\":[\"分数与除法的关系\",\"比例关系\",\"面积计算\"],\"q\":\"(1) 3/5对应的页数是多少？(2) 2/3对应的重量是多少？(3) 空白部分的面积是多少？\"}",
+        "parsed": {},
+        "raw_text": "{\"v\":1,\"s\":\"m\",\"t\":\"看图列式计算。(1) 一条线段被平均分成5份，其中3份占总长度的3/5，这3份对应的总长度是320页，求这3份是多少页？(2) 一条线段被平均分成3份，其中2份对应的重量是60kg，求这2份是多少kg？(3) 一个长方形被平均分成6个小长方形，每个小长方形宽为4t，求空白部分的面积是多少t？\",\"u\":[\"求3/5对应的页数\",\"求2/3对应的重量\",\"求空白部分的面积\"],\"o\":[{\"m\":\"A\",\"h\":\"3/5\"}],\"g\":[{\"m\":\"线段图\",\"h\":\"表示3/5与320页的关系\"},{\"m\":\"线段图\",\"h\":\"表示2/3与60kg的关系\"},{\"m\":\"长方形图\",\"h\":\"表示6个等宽小长方形，每个宽4t\"}],\"a\":\"(1) 320页 (2) 60kg (3) 空白部分面积为4t\",\"r\":\"(1) 3/5对应的页数是320页 (2) 2/3对应的重量是60kg (3) 空白部分面积为4t\",\"k\":[\"分数与除法的关系\",\"比例关系\",\"面积计算\"],\"p\":[\"(1) 3/5对应的页数是320页 (2) 2/3对应的重量是60kg (3) 空白部分面积为4t\"],\"e\":[{\"m\":\"分数与除法混淆\",\"h\":\"将分数与除法混淆，导致计算错误\"},{\"m\":\"比例关系理解错误\",\"h\":\"将比例关系理解错误，导致计算错误\"},{\"m\":\"面积计算错误\",\"h\":\"将面积计算错误，导致计算错误\"}],\"c\":\"p\",\"x\":[\"sac\"],\"n\":[\"分数与除法的关系\",\"比例关系\",\"面积计算\"],\"q\":\"(1) 3/5对应的页数是多少？(2) 2/3对应的重量是多少？(3) 空白部分的面积是多少？\"}",
+        "raw_output_ref": null,
+        "usage": {
+          "prompt_tokens": 2178,
+          "completion_tokens": 438,
+          "total_tokens": 2616
+        },
+        "latency_ms": 29010.66,
+        "queue_ms": 0.03,
+        "first_token_ms": null,
+        "degraded": false,
+        "provider_metrics": {
+          "provider": "openai_compatible",
+          "upstream_model": "qwen35-9b-gguf-vlm-test-v1",
+          "weights_version": "Q4_K_M+mmproj-F16",
+          "worker_model_id": "qwen35-9b-gguf-vlm-test-v1",
+          "worker_build_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_instance_id": "LindeMacBook-Pro-3.local:84711:qwen35-9b-gguf-vlm-test-v1",
+          "worker_provider": "openai_compatible",
+          "worker_source_revision": "cce518dd264f68b132dd602ce4a5e34e53e64e14",
+          "worker_source_revision_verified": true,
+          "worker_source_tree_clean": true,
+          "worker_runtime_contract_version": "model-worker-runtime/v1",
+          "worker_runtime_kind": "openai_compatible",
+          "worker_runtime_version": null,
+          "worker_engine_version": "edu-agent-model-worker/v1",
+          "worker_engine_mode": "provider_serialized",
+          "worker_scheduler_enabled": false,
+          "worker_effective_batching": false,
+          "worker_dynamic_batching": false,
+          "worker_deployment_profile": "test_openai_compatible_vlm_shadow",
+          "worker_environment": "test",
+          "worker_shadow_only": true,
+          "worker_weights_identity_sha256": "db975b66105f08286fdb2f349259ee3247430ab44938a4c1a972f4feb9f83755",
+          "worker_weights_identity_verified": true,
+          "worker_effective_batch_id": "worker-direct-fa77fef5910f42dfbbea40a1109988fc",
+          "worker_effective_batch_identity_authoritative": false,
+          "worker_batch_correlation_source": "worker_generated_direct_id",
+          "worker_effective_batch_size": 1,
+          "worker_requested_batch_size": 1,
+          "worker_pid": 84711,
+          "worker_internal_concurrency": 1,
+          "worker_serialized": true,
+          "worker_warm_count": 1,
+          "worker_queue_ms": 0.11,
+          "worker_latency_ms": 28992.54,
+          "request_contract": "model_invoke_v1",
+          "endpoint_host": "127.0.0.1:8199",
+          "deployment_id": "test_openai_compatible_vlm",
+          "replica_id": "qwen35-9b-vlm-8199",
+          "queue_ms": 0.02,
+          "replica_queue_ms": 0.02,
+          "worker_pool_queue_ms": 0.02,
+          "retry_count": 0,
+          "request_priority": "bulk",
+          "gateway_queue_ms": 0.03,
+          "total_queue_ms": 0.16,
+          "deadline_at": 1788366912.011028,
+          "deadline_remaining_ms": 100942,
+          "queue_deadline_at": 1788366792.0571141,
+          "queue_deadline_remaining_ms": 0
+        }
+      },
+      "timing": {
+        "latency_ms": 29010.66,
+        "queue_ms": 0.03,
+        "first_token_ms": null
+      },
+      "package_id": "tctx_70cb98e49940b70fd6a4833d"
+    },
+    "failure": {
+      "stage": "question_image_understanding",
+      "code": "MODEL_RESPONSE_PARSE_FAILED",
+      "summary": "模型已返回题图结果，但结果未通过结构化题图理解解析"
+    }
+  }
+}
