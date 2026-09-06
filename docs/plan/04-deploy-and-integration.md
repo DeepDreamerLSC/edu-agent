@@ -98,7 +98,7 @@ v1 禁止 feature flag。开关是组合状态爆炸的第一来源。需要的�
 - [ ] `GET /healthz` 实现
 - [ ] `tests/e2e/test_golden_path.py`
 - [x] GitHub 分支保护：**GitHub Free 私有仓库不可用**（升级 Pro 后补开 strict 状态检查 + 禁止直推）；以程序性约定替代，见 02 第 7 节
-- [ ] main 推送报警（无分支保护的补偿，提前自 3.2 节）：push 到 main 的 CI 失败自动开 issue，合并后 30 分钟内未修复则人工 revert
+- [x] main 推送报警（无分支保护的补偿，提前自 3.2 节）：push 到 main 的 CI 失败自动开 issue，合并后 30 分钟内未修复则人工 revert
 - [ ] `.github/workflows/main.yml`：合并后评测冒烟 + 自动部署 test。评测冒烟与部署都需要能访问本机模型服务与 test 环境，
       因此在 Mac 上跑一个 **GitHub self-hosted runner**，PR CI 仍用托管 runner
 - [ ] `scripts/budget.py` 增加：部署脚本行数、PR 触碰包数、分支年龄、`large-pr` 软标签

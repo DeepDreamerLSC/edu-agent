@@ -7,6 +7,8 @@
 
 **提 PR 前 `make check` 必须绿**(等价于完整 PR CI;红灯在本地看,不推到远端)。
 
+**main 红了:30 分钟内 fix 或 revert**(04 §3.2;ci.yml 失败时自动开 `main-red` issue)。
+
 **ponytail(可选辅助,插件本体不进仓库、不进 CI)**:编码前默认启用 ponytail(full 档);不可用不阻塞,仍守最小修改原则。编码后、`make check` 前对完整 diff 执行一次 ponytail-review,合理的 delete/stdlib/native/yagni/shrink 建议直接处理。不设第二审查通道、不开生命周期 Hook;ponytail-debt 只读。
 
 其余硬规则一句话版:agent 只开 PR 不合并;四类结构改动(顶层包、第三方依赖、配置文件、CI 规则/规划文档/`scripts/budget.py`)必须人批;不自建租约/心跳/worker 池/调度器/预载恢复(02 §5);预算超限没有豁免,要加就先删(02 §2)。
