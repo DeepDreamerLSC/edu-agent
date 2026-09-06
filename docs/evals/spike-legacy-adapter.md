@@ -54,3 +54,12 @@
 - [ ] GET conversation 的 messages 分页/口径——中断回合落库语义复核
 - [ ] test_school 题号歧义与 /health 503——环境侧并行事项(issue #3/#34)
 - 实测数字已回填看板 #34:全流程单对话 42–56 s(含 5 回合);安全并发 2 可用(延迟 +60–80%)
+
+## 7. 实测题号与发现方法(复现用)
+
+学生侧**没有**题目列表端点(题号由合作方系统持有);发现路径与管理员账号见 `data/test-backend/private/capacity_admin_credentials.json`(老仓库,只读):
+
+1. 管理员 `POST /api/auth/login`(注意:admin 路由**不带** `/api` 前缀);
+2. `GET /admin/prepared-questions?page=1&page_size=50` → `items[].partner_question_id`(学生侧 qid 即此字段;`status=published` 过滤实测为空,直接取列表后按学生 GET 验证可达)。
+
+本 spike 实际使用并验证可达的 capacity 租户题号:`6a695a01`(涂色/分数乘)、`6a630a37`(圆的面积)、`6a6320a2`(鸽巢问题)。复现流程时注意 §4:同学生重开同题会恢复既有 attempt。
