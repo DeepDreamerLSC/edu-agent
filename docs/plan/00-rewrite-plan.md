@@ -179,3 +179,4 @@ M3 开始前先把这三样迁入本仓库作为合同测试。
 - 测试是规格：改断言必须在 PR 描述里单独说明理由。
 - 没有 Local CI 仪式，CI 就是 GitHub Actions：lint + 单测 + gateway 基准 + 故障注入。
 - 文件上限 800 行，超出即失败，不设豁免。
+- 复杂度预算、PR 必答问题、"修三次就停"、结构性改动人批等规则见 [02-complexity-budget.md](02-complexity-budget.md)。

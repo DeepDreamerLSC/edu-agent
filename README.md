@@ -7,5 +7,6 @@
 
 - 重写计划：[docs/plan/00-rewrite-plan.md](docs/plan/00-rewrite-plan.md)
 - 模型调用链路设计：[docs/plan/01-model-call-chain.md](docs/plan/01-model-call-chain.md)
+- 复杂度预算：[docs/plan/02-complexity-budget.md](docs/plan/02-complexity-budget.md)
 
 老仓库进入冻结维护状态，继续为合作方提供现有接口，直到本仓库在评测上追平并完成接口对齐。
