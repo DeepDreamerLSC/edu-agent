@@ -21,10 +21,13 @@ cd "$ROOT"
 START=$(date +%s)
 say() { echo "[deploy:$ENV_NAME] $*"; }
 finish() {  # 04 §2.1:每次部署写一条 JSONL,成功与失败都记
-  local result="$1" ms=$(( ($(date +%s) - START) * 1000 ))
+  local result="$1" now deploy_id duration_ms
+  now=$(date +%s)
+  duration_ms=$(( (now - START) * 1000 ))
+  deploy_id=$(date -u -r "$now" +%Y%m%dT%H%M%SZ)
   mkdir -p var
   printf '{"deploy_id":"%s","sha":"%s","env":"%s","duration_ms":%s,"result":"%s"}\n' \
-    "$(date -u +%Y%m%dT%H%M%SZ)" "$(git rev-parse --short HEAD)" "$ENV_NAME" "$ms" "$result" >> var/deploy.jsonl
+    "$deploy_id" "$(git rev-parse --short HEAD)" "$ENV_NAME" "$duration_ms" "$result" >> var/deploy.jsonl
 }
 trap 'finish failed' ERR
 
@@ -34,10 +37,15 @@ step_fetch() {
   git reset --hard --quiet "origin/$REF"
 }
 step_sync() { uv sync --frozen; }
-step_restart() {  # bootout+bootstrap:plist 重读,幂等重启
+step_restart() {  # bootout 异步:等卸载完成再 bootstrap,否则撞 "5: Input/output error"
   sed "s|__DEPLOY_ROOT__|$ROOT|" deploy/launchd/com.edu-agent.app.plist \
     > "$HOME/Library/LaunchAgents/$APP_LABEL.plist"
-  launchctl bootout "gui/$(id -u)/$APP_LABEL" 2>/dev/null || true
+  launchctl bootout "gui/$(id -u)/$APP_LABEL" >/dev/null 2>&1 || true
+  local i
+  for i in $(seq 1 20); do
+    launchctl print "gui/$(id -u)/$APP_LABEL" >/dev/null 2>&1 || break
+    sleep 0.5
+  done
   launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$APP_LABEL.plist"
 }
 step_health() {  # 轮询 30s:服务起来且 /healthz 可用
