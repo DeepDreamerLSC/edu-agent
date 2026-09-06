@@ -33,6 +33,8 @@
 
 ## 3. 核心：模型调用链路
 
+整体架构图（组件、边界、评测流程、会话状态机）见 [03-architecture.md](03-architecture.md)。
+
 重写最重要的部分是模型调用链路的**效率**与**稳定性**。详细设计见
 [01-model-call-chain.md](01-model-call-chain.md)。这里只列结论：
 
