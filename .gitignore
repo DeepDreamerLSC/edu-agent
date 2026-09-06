@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+*.jsonl
+!evals/datasets/**/*.jsonl
+.DS_Store
