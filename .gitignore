@@ -7,3 +7,6 @@ __pycache__/
 .DS_Store
 .ruff_cache/
 .pytest_cache/
+
+# mimosa 插件 hook 状态(2026-09-06 误入库,见 issue 后续):本地工具产物,永不入库
+.mimosa/
