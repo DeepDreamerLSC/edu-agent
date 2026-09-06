@@ -101,7 +101,7 @@ def test_stream_truncated(tmp_path):
 
 def test_stream_http_error_maps(tmp_path):
     fake = FakeOpenAI([Reply(status=429)]).start()
-    gateway = gateway_for(fake.url, tmp_path)
+    gateway = gateway_for(fake.url, tmp_path, max_attempts=1)  # 只测类型映射,重试语义见故障注入套件
     with pytest.raises(GatewayError) as excinfo:
         collect(gateway.stream(ModelRequest(role="tutor", messages=[{"role": "user", "content": "hi"}])))
     gateway.close()
@@ -112,7 +112,7 @@ def test_stream_http_error_maps(tmp_path):
 def test_stream_invalid_sse_chunk(tmp_path):
     bad_lines = ["data: {broken json", "data: [DONE]"]
     fake = FakeOpenAI([Reply(sse_lines=bad_lines)]).start()
-    gateway = gateway_for(fake.url, tmp_path)
+    gateway = gateway_for(fake.url, tmp_path, max_attempts=1)  # 只测类型映射,重试语义见故障注入套件
     with pytest.raises(GatewayError) as excinfo:
         collect(gateway.stream(ModelRequest(role="tutor", messages=[{"role": "user", "content": "hi"}])))
     gateway.close()
