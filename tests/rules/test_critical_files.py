@@ -1,0 +1,41 @@
+"""关键文件哨兵(#34 P0 流程修正:已合并内容静默回退的防再发闸)。
+
+#70 事件:堆叠 PR 把已合并内容带回旧版,CI 全绿零报警。本测试断言关键交付物
+存在性——vision plist、models.yaml 角色/主选、kernel schema 字段——任一缺失即红。
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+import yaml
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+MODELS_YAML = REPO_ROOT / "configs" / "models.yaml"
+VISION_PLIST = REPO_ROOT / "deploy" / "launchd" / "com.edu-agent.m0.vision-8303.plist"
+KERNEL = REPO_ROOT / "edu_agent" / "agents" / "small_lecturer" / "kernel.py"
+
+
+def test_vision_plist_exists():
+    assert VISION_PLIST.is_file(), f"丢失 {VISION_PLIST.relative_to(REPO_ROOT)}(#70 回退哨兵)"
+
+
+def test_models_yaml_has_vision_role_and_vl_tutor_primary():
+    config = yaml.safe_load(MODELS_YAML.read_text(encoding="utf-8"))
+    roles = config["roles"]
+    assert "vision" in roles, "models.yaml 缺 vision 角色(#70 回退哨兵)"
+    assert roles["tutor"]["primary"] == "qwen3_vl_8b", (
+        f"tutor primary 应为 qwen3_vl_8b(VL 切换人批 2026-09-07),得到 "
+        f"{roles['tutor']['primary']!r}"
+    )
+    assert len(roles) >= 4, f"models.yaml 角色数 {len(roles)} < 4(#34 流程修正)"
+
+
+def test_kernel_vision_schema_has_transcription():
+    source = KERNEL.read_text(encoding="utf-8")
+    schema_block = re.search(r"VISION_CHECK_SCHEMA = \{(.*?)\n\}", source, re.DOTALL)
+    assert schema_block, "kernel 缺 VISION_CHECK_SCHEMA(#70 回退哨兵)"
+    assert '"transcription"' in schema_block.group(1), (
+        "VISION_CHECK_SCHEMA 缺 transcription 字段(#70 回退哨兵)"
+    )
