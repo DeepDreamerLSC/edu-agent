@@ -19,6 +19,9 @@ providers:
   llama: # 本地 9B(127.0.0.1:8302,launchd 常驻,--reasoning off/--alias 在 plist #17):
     base_url: http://127.0.0.1:8302/v1 # grammar 级 json_schema 真强制
     json_strict: true
+  vision: # Qwen3-VL-8B(127.0.0.1:8303,llama-server,可看图):grammar 级保证同源
+    base_url: http://127.0.0.1:8303/v1
+    json_strict: true
 
 models:
   mlx_27b: # issue #3:mlx-lm 请求体 model 必须传服务广告的权重完整路径
@@ -27,15 +30,18 @@ models:
   llama_9b:
     provider: llama
     name: Qwen3.5-9B-GGUF # 8302 /v1/models 实际通告名(本地冒烟核对)
+  qwen3_vl_8b: # 2026-09-07 人批:tutor 全程使用 VL 模型(看图教学+纯文本更快)
+    provider: vision
+    name: Qwen3-VL-8B-GGUF
   deepseek_chat:
     provider: deepseek
     name: deepseek-chat
 
 roles:
-  tutor: # #34 互换:主选 9B llama(63 tok/s、TTFT 30ms,延迟敏感),备选 27B mlx;
-    primary: llama_9b # 9B 数学可靠性风险(抽测有算术口误)由评测线量化,备选兜底
+  tutor: # 2026-09-07 人批(#34 模型决策):tutor 全程使用 VL 模型——可看图教学、
+    primary: qwen3_vl_8b # 纯文本也比 9B 更快;9B 文本降为备选(定义不删)
     fallback: mlx_27b
-    json_strict: true # 主选 llama grammar 级真强制(#34);备选 mlx 走路线 1 校验
+    json_strict: true # 主选 vision(llama-server)grammar 级真强制;备选 mlx 走路线 1 校验
     concurrency: 2
     first_token_timeout_s: 5
     total_timeout_s: 120

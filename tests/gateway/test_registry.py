@@ -46,8 +46,11 @@ def test_repo_config_loads(tmp_path):
         assert role.primary in registry.models
         assert role.json_strict is True
     assert registry.roles["judge_independent"].fallback is None
-    # #34:tutor 主选 llama(grammar 级),judge 主选 mlx(路线 1)
-    assert registry.roles["tutor"].primary == "llama_9b"
+    # 2026-09-07 人批(#34 模型决策):tutor 全程 VL(8303),judge 主选 mlx;9B 降备选
+    assert registry.roles["tutor"].primary == "qwen3_vl_8b"
+    assert registry.roles["tutor"].fallback == "mlx_27b"
+    assert registry.roles["judge"].primary == "mlx_27b"
+    assert registry.roles["judge"].fallback == "deepseek_chat"
     assert registry.roles["judge"].primary == "mlx_27b"
     assert registry.roles["judge"].fallback == "deepseek_chat"
     # provider 声明=服务端原生保证:mlx 无保证记 false(#32)

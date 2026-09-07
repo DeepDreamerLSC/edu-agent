@@ -1,23 +1,23 @@
 {
   "note": "01 §5 效率基线;更新走 PR(结构路径);ttft/e2e 单位 ms,speed 单位 tok/s",
-  "updated_at": "2026-09-06T17:46:19+00:00",
-  "main_sha": "d2753ff",
+  "updated_at": "2026-09-07T16:24:37+00:00",
+  "main_sha": "a837b7b",
   "roles": {
     "tutor": {
-      "n": 20,
-      "ttft_p50_ms": 92,
-      "ttft_p95_ms": 131,
-      "e2e_p50_ms": 426,
-      "e2e_p95_ms": 3253,
-      "speed_p50": 67.0
+      "n": 19,
+      "ttft_p50_ms": 65,
+      "ttft_p95_ms": 108,
+      "e2e_p50_ms": 929,
+      "e2e_p95_ms": 4282,
+      "speed_p50": 84.7
     },
     "judge": {
       "n": 20,
-      "ttft_p50_ms": 444,
-      "ttft_p95_ms": 533,
-      "e2e_p50_ms": 3860,
-      "e2e_p95_ms": 15698,
-      "speed_p50": 27.5
+      "ttft_p50_ms": 468,
+      "ttft_p95_ms": 596,
+      "e2e_p50_ms": 4344,
+      "e2e_p95_ms": 16138,
+      "speed_p50": 23.5
     }
   }
 }
