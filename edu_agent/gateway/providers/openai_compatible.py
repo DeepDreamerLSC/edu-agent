@@ -40,10 +40,27 @@ def build_messages(request: ModelRequest, repair: GatewayError | None) -> list[d
     ]
 
 
-def validate_schema(schema: dict, text: str) -> None:
-    """路线 1 的本地校验(01 §8/issue #8):不合规抛 schema_violation;detail 不含输出原文。"""
+def _strip_code_fence(text: str) -> str:
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        stripped = stripped.split("\n", 1)[1] if "\n" in stripped else ""
+        if stripped.rstrip().endswith("```"):
+            stripped = stripped.rstrip()[:-3]
+    return stripped.strip()
+
+
+def validate_schema(schema: dict, text: str) -> str:
+    """路线 1 的本地校验(01 §8/issue #8):不合规抛 schema_violation;detail 不含输出原文。
+
+    Markdown 代码围栏(```json … ```)视为包装噪声:剥壳后内容合法即通过——
+    围栏是格式包装,不是结构违规(实测 DeepSeek 独立评分恒带围栏)。
+    返回归一化(剥壳后)文本供调用方写回 ModelResponse.text——校验与消费同源
+    (#54 PM 规格):schema 调用的消费方拿到的就是校验过的内容;失败路径
+    (schema_violation)保持原文,修复提示给模型看它真发的东西。
+    """
+    normalized = _strip_code_fence(text)
     try:
-        payload = json.loads(text)
+        payload = json.loads(normalized)
     except json.JSONDecodeError as exc:
         raise GatewayError(
             FailureType.SCHEMA_VIOLATION, f"输出不是合法 JSON({exc.msg})", output=text
@@ -55,6 +72,7 @@ def validate_schema(schema: dict, text: str) -> None:
             f"{'/'.join(str(p) for p in err.path) or '<root>'} {err.validator}" for err in errors[:5]
         )
         raise GatewayError(FailureType.SCHEMA_VIOLATION, summary, output=text)
+    return normalized
 
 
 def _body(request: ModelRequest, ctx: CallContext, model_name: str, stream: bool) -> dict:
@@ -188,7 +206,7 @@ def invoke_handler(client: httpx.Client, base_url: str, api_key: str | None,
         if error := _finish_reason_error(response):
             raise error
         if request.response_schema is not None:
-            validate_schema(request.response_schema, response.text)
+            response.text = validate_schema(request.response_schema, response.text)
         return response
 
     return handler
@@ -267,5 +285,5 @@ def _iterate_sse(resp: httpx.Response, request: ModelRequest,
     if error := _finish_reason_error(response):
         raise error
     if request.response_schema is not None:
-        validate_schema(request.response_schema, response.text)
+        response.text = validate_schema(request.response_schema, response.text)
     yield StreamEvent(kind="done", response=response)

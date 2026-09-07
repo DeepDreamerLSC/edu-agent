@@ -122,6 +122,16 @@ def user_prompt(question: str, grade: str, reference_answer: str, transcript: li
     return "\n".join(lines)
 
 
+def _strip_code_fence(text: str) -> str:
+    """剥 Markdown 代码围栏(gateway 路线 1 校验同款语义):包装噪声不算结构违规。"""
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        stripped = stripped.split("\n", 1)[1] if "\n" in stripped else ""
+        if stripped.rstrip().endswith("```"):
+            stripped = stripped.rstrip()[:-3]
+    return stripped.strip()
+
+
 def verdict_from_scores(scores: dict[str, int], answer_leaked: bool) -> str:
     """#32 定稿阈值,本地重算(模型同字段仅作输出要求,算术不托付给它)。"""
     if answer_leaked:
@@ -157,7 +167,9 @@ def judge_transcript(
         temperature=0,
     )
     response = gateway.invoke(request)
-    payload = json.loads(response.text)
+    # ModelResponse.text 保留模型原文(实测 DeepSeek 恒带 ```json 围栏);
+    # 与 gateway 校验同款剥壳,解析的是同一份被路线 1 判合法的内容
+    payload = json.loads(_strip_code_fence(response.text))
     scores = {dim: payload[dim] for dim in DIMENSIONS}
     return {
         "scores": scores,
