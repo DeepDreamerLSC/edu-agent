@@ -51,11 +51,12 @@ def test_repo_config_loads(tmp_path):
     assert registry.roles["tutor"].primary == "llama_9b"
     assert registry.roles["judge"].primary == "mlx_27b"
     assert registry.roles["judge"].fallback == "deepseek_chat"
-    # M3 PR7:vision 角色 8303(llama-server grammar 级),单并发长超时(VL 转写慢)
+    # M3 PR7:vision 角色 8303(llama-server grammar 级),单并发;首字 15s 覆盖
+    # 真实手机大图视觉编码 8-12s,总 60s
     vision = registry.roles["vision"]
     assert vision.primary == "vision_8b" and vision.fallback is None
     assert vision.json_strict is True and vision.concurrency == 1
-    assert vision.first_token_timeout_s == 30 and vision.total_timeout_s == 60
+    assert vision.first_token_timeout_s == 15 and vision.total_timeout_s == 60
     assert registry.providers["vision"].base_url == "http://127.0.0.1:8303/v1"
     assert registry.providers["vision"].json_strict is True
     # provider 声明=服务端原生保证:mlx 无保证记 false(#32)

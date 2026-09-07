@@ -73,7 +73,7 @@ roles:
     fallback: null
     json_strict: true
     concurrency: 1 # 题图检查串行(VL 单服务,首问路径本就每题至多一次)
-    first_token_timeout_s: 30 # VL 转写慢于纯文本(#34 冒烟:整页 15s)
+    first_token_timeout_s: 15 # 覆盖真实手机大图视觉编码 8-12s(冒烟小图不具代表性)
     total_timeout_s: 60
     max_attempts: 3
     backoff_base_ms: 400
