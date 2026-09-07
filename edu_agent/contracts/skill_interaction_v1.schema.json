@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "edu-agent/contracts/skill_interaction_v1.schema.json",
+  "title": "skill_interaction/v1",
+  "description": "Skill 交互信封(00 §5.2:多轮/结束响应的权威 interaction)。字段与枚举自老仓库 edu_agent/app/skills/interaction.py 的 SkillInteractionEnvelope pydantic 模型逐字段转换;attempt_state 在老模型中引用 learning_dialogue.attempt_state(实现耦合),此处放宽为 object 并保留原文档,M3 实现层可再收紧。",
+  "type": "object",
+  "properties": {
+    "schema_version": {"const": "skill_interaction/v1"},
+    "skill_session_id": {"type": "string"},
+    "skill_id": {"type": "string"},
+    "skill_version": {"type": "string"},
+    "session_version": {"type": "integer", "minimum": 1, "default": 1},
+    "kind": {"enum": ["input_request", "confirmation", "progress", "result"]},
+    "state": {"type": "string"},
+    "attempt_state": {
+      "type": ["object", "null"],
+      "description": "学习尝试状态(LearningAttemptState 投影;老模型为强类型引用,此处 object 以保持 schema 自洽)"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "label": {"type": "string"},
+          "type": {"type": "string"},
+          "required": {"type": "boolean"},
+          "status": {"enum": ["missing", "received", "invalid", "valid"]},
+          "accept": {"type": "array", "items": {"type": "string"}},
+          "options": {"type": "array", "items": {"type": "string"}},
+          "help": {"type": ["string", "null"]},
+          "message": {"type": ["string", "null"]}
+        },
+        "required": ["id", "label", "type", "status"]
+      },
+      "default": []
+    },
+    "requirements": {"type": "array", "default": []},
+    "missing_input_ids": {"type": "array", "items": {"type": "string"}, "default": []},
+    "confirmation": {"type": ["object", "null"], "default": null},
+    "progress": {"type": ["object", "null"], "default": null},
+    "result": {"type": ["object", "null"], "default": null}
+  },
+  "required": [
+    "schema_version", "skill_session_id", "skill_id", "skill_version",
+    "session_version", "kind", "state"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": "skill_interaction_definition/v1",
+  "inputs": [
+    {
+      "id": "question_text",
+      "label": "题目文字",
+      "type": "text",
+      "required": false,
+      "help": "也可以直接输入一道完整题目"
+    },
+    {
+      "id": "question_image",
+      "label": "题目照片",
+      "type": "image_file",
+      "required": false,
+      "accept": ["image/*"],
+      "help": "上传一张清晰的印刷题照片；多道独立小题会按题图顺序逐题引导"
+    },
+    {
+      "id": "subject",
+      "label": "学科",
+      "type": "select",
+      "required": false,
+      "options": ["math"],
+      "help": "首批题图试点只支持数学"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "question_source",
+      "type": "one_of",
+      "input_ids": ["question_text", "question_image"],
+      "min_valid": 1,
+      "message": "请直接输入完整题目，或上传一张清晰的印刷题照片；识别出多道独立小题时会按题图顺序逐题引导"
+    }
+  ],
+  "confirmation": {
+    "label": "结束本题学习",
+    "description": "兼容字段；达到完成门禁后由服务端自动结束，不展示额外确认步骤"
+  }
+}

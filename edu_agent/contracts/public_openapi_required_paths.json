@@ -1,0 +1,29 @@
+{
+  "contract_version": "public_openapi_required_paths/v1",
+  "source": {
+    "repo": "edu-agent(老仓库)",
+    "path": "scripts/check_public_openapi_contract.py",
+    "symbol": "REQUIRED_PUBLIC_OPENAPI_PATHS",
+    "sha256_prefix": "对账见 tests/contracts 与 PR 描述迁移对账表"
+  },
+  "note": "16 条部署冒烟必需路径,自老仓库合同脚本原样提取(路径字符串逐条一致,不发明)。这些是题库/题图工作台的 openapi 面;小讲师对话面(open/refresh/messages/confirm/身份)见 partner_endpoints.json,两份清单共同构成 00 §5.2 合同快照。",
+  "paths": [
+    {"path": "/api/openapi/v1/workbooks", "methods": ["GET"], "semantics": "题库工作台列表入口"},
+    {"path": "/api/openapi/v1/workbooks/external/{external_workbook_id}/binding", "methods": ["POST"], "semantics": "外部题库绑定"},
+    {"path": "/api/openapi/v1/workbooks/{workbook_id}", "methods": ["GET"], "semantics": "工作台详情"},
+    {"path": "/api/openapi/v1/workbooks/{workbook_id}/directory", "methods": ["GET"], "semantics": "目录(课/页结构)"},
+    {"path": "/api/openapi/v1/workbooks/{workbook_id}/source-files", "methods": ["GET"], "semantics": "源文件清单"},
+    {"path": "/api/openapi/v1/workbooks/{workbook_id}/lessons/{lesson_id}/page-ranges", "methods": ["PUT"], "semantics": "课时页码范围"},
+    {"path": "/api/openapi/v1/workbooks/{workbook_id}/lessons/{lesson_id}/crop", "methods": ["POST"], "semantics": "发起题图切分(必含 target_bbox/visual_region_diff/semantic_check 语义)"},
+    {"path": "/api/openapi/v1/workbooks/{workbook_id}/lessons/{lesson_id}/crop-status", "methods": ["GET"], "semantics": "切分进度轮询"},
+    {"path": "/api/openapi/v1/workbooks/{workbook_id}/lessons/{lesson_id}/questions", "methods": ["GET"], "semantics": "切分题目结果"},
+    {"path": "/api/openapi/v1/workbooks/{workbook_id}/questions/{workbook_question_id}", "methods": ["GET"], "semantics": "单题详情"},
+    {"path": "/api/openapi/v1/workbooks/{workbook_id}/questions/{workbook_question_id}/ignore", "methods": ["POST"], "semantics": "忽略题目"},
+    {"path": "/api/openapi/v1/pdf-question-crops", "methods": ["GET"], "semantics": "题图切分任务列表"},
+    {"path": "/api/openapi/v1/pdf-question-crops/asset-edit-readiness", "methods": ["GET"], "semantics": "素材编辑就绪检查"},
+    {"path": "/api/openapi/v1/pdf-question-crops/{crop_id}/questions/{question_id}/edit-draft", "methods": ["PUT"], "semantics": "编辑草稿"},
+    {"path": "/api/openapi/v1/pdf-question-crops/{crop_id}/questions/{question_id}/edit-confirm", "methods": ["POST"], "semantics": "编辑确认"},
+    {"path": "/api/openapi/v1/pdf-question-crops/{crop_id}/questions/{question_id}/asset-edit-draft", "methods": ["GET"], "semantics": "素材编辑草稿读取"}
+  ],
+  "required_terms": ["target_bbox", "visual_region_diff", "semantic_check"]
+}
