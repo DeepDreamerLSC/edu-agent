@@ -199,9 +199,5 @@ def test_postman_requests_cover_partner_contract(request_name: str, method: str,
     assert path_suffix in normalized
 
 
-# ---- M3 api 层实现后激活(端点回放):桩注释,不写会红的不可能测试 ----
-# - 对每个 partner_endpoints["endpoints"] 用 Postman 请求体回放到新后端,断言
-#   响应字段集与 response_fields 一致、skill_interaction/v1 信封过 schema;
-# - 409 SKILL_SESSION_CONFLICT:以过期 expected_session_version 重放断言 409;
-# - 幂等键:同键二次 open 断言同一 Attempt(00 §5.2 约定 1);
-# - 401:无令牌请求断言 401 且错误结构与合同一致。
+# ---- 端点回放已激活(C 线 api 骨架 + stub 内核):见 test_postman_replay.py ----
+# 全流程/幂等同 Attempt/409 重放/401 结构均已接上;身份两步为 M3 对齐件,在册登记。
