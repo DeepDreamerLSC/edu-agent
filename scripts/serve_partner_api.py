@@ -12,14 +12,11 @@ from __future__ import annotations
 
 import os
 import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from edu_agent.agents.small_lecturer import finish, reply, start  # noqa: E402
-from edu_agent.api import build_server, build_service  # noqa: E402
-from edu_agent.api.identity import IdentityService  # noqa: E402
-from edu_agent.store import MemoryConversationStore  # noqa: E402
+from edu_agent.agents.small_lecturer import finish, reply, start
+from edu_agent.api import build_server, build_service
+from edu_agent.api.identity import IdentityService
+from edu_agent.store import MemoryConversationStore
 
 
 class PartnerKernel:
