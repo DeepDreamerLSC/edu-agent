@@ -93,6 +93,47 @@ def test_full_flow_drives_dialogue_to_terminal(pool_file):
     assert open_request["body"]["idempotency_key"]
 
 
+def test_eval_identity_headers_sent_when_configured(pool_file, monkeypatch):
+    # 可信评测身份:EDU_LEGACY_EVAL_TOKEN 设置时,认证请求带内部服务头(prompt_lab 归属题必需)
+    monkeypatch.setenv("EDU_LEGACY_EVAL_TOKEN", "eval-secret-token")
+    fake = FakeLegacy(["回复一", "完成"]).start()
+    adapter = LegacyAdapter(base_url=fake.url)
+    adapter.run_case({"id": "c1", "question_id": "q", "student_turns": ["1", "2"]})
+    fake.stop()
+    authed = [h for h in fake.captured_headers if h.get("Authorization")]
+    assert authed and all(
+        h.get("X-Internal-Service-Id") == "small_lecturer_dialogue_eval"
+        and h.get("X-Internal-Service-Token") == "eval-secret-token"
+        for h in authed
+    )
+
+
+def test_eval_identity_headers_survive_401_renewal(pool_file, monkeypatch):
+    # 审查点名:401 重登录后的重发请求仍带评测头(open 后撤销 token 的实战形态)
+    monkeypatch.setenv("EDU_LEGACY_EVAL_TOKEN", "eval-secret-token")
+    fake = FakeLegacy(["重试成功后的回复"], revoke_token_after_open=True).start()
+    adapter = LegacyAdapter(base_url=fake.url)
+    transcript = adapter.run_case({"id": "c3", "question_id": "q", "student_turns": ["1", "2"]})
+    fake.stop()
+    assert fake.login_count == 2  # 初始登录 + 401 后重登录
+    assert transcript["final_state"] == "completed"
+    authed = [h for h in fake.captured_headers if h.get("Authorization")]
+    assert all(
+        h.get("X-Internal-Service-Id") == "small_lecturer_dialogue_eval"
+        and h.get("X-Internal-Service-Token") == "eval-secret-token"
+        for h in authed
+    )
+
+
+def test_eval_identity_headers_absent_without_token(pool_file, monkeypatch):
+    monkeypatch.delenv("EDU_LEGACY_EVAL_TOKEN", raising=False)
+    fake = FakeLegacy(["回复一", "完成"]).start()
+    adapter = LegacyAdapter(base_url=fake.url)
+    adapter.run_case({"id": "c2", "question_id": "q", "student_turns": ["1", "2"]})
+    fake.stop()
+    assert all("X-Internal-Service-Id" not in h for h in fake.captured_headers)
+
+
 def test_student_pool_rotates_and_is_stable_per_case(pool_file):
     # 教师账号被过滤;student_index 显式分配:批内不同 index 不同学生,同 index 续跑同学生
     fake = FakeLegacy(["下一问", "很好,结束"]).start()

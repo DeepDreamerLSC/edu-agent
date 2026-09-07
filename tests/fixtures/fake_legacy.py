@@ -42,6 +42,7 @@ class _Handler(BaseHTTPRequestHandler):
         path = self.path
         with self.fixture._lock:
             self.fixture.requests.append({"path": path, "body": body})
+            self.fixture.captured_headers.append(dict(self.headers))
         if path == "/api/auth/login":
             self._handle_login(body)
         elif not self._authed():
@@ -133,6 +134,7 @@ class FakeLegacy:
         self.session_id = "skillsess_fake"
         self.attempt_id = "qat_fake"
         self.requests: list[dict] = []
+        self.captured_headers: list[dict] = []
         self._lock = threading.Lock()
         self._server = ThreadingHTTPServer(("127.0.0.1", 0), type("Handler", (_Handler,), {"fixture": self}))
 

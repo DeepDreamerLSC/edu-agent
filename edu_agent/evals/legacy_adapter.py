@@ -29,16 +29,23 @@ from .runner import EnvironmentFailure
 
 DEFAULT_BASE_URL = "https://edu-test.chiraliumai.cn"
 SKILL_ID = "small_lecturer_coaching"
+EVAL_SERVICE_ID = "small_lecturer_dialogue_eval"
 TERMINAL_STATES = frozenset({"completed", "failed", "cancelled", "incomplete"})
 _TIMEOUT = httpx.Timeout(120.0, connect=10.0)
 
 
-def _headers(token: str) -> dict[str, str]:
-    return {
+def _headers(token: str, eval_token: str | None = None) -> dict[str, str]:
+    headers = {
         "Authorization": f"Bearer {token}",
         "X-Source-Channel": "owned_student_web",
         "X-Request-Id": f"legacy:{uuid.uuid4().hex[:12]}",
     }
+    if eval_token:
+        # 可信评测身份(老系统 provenance 边界):评测线打开 prompt_lab 归属的已发布题
+        # 必需;token 只从环境变量注入,不进代码不进日志(issue #3 判例)
+        headers["X-Internal-Service-Id"] = EVAL_SERVICE_ID
+        headers["X-Internal-Service-Token"] = eval_token
+    return headers
 
 
 def load_student_pool(path: Path | str) -> list[tuple[str, str]]:
@@ -80,7 +87,8 @@ class LegacyAdapter:
         account, password = self._student_for(case)
         started = time.monotonic()
         client = httpx.Client(base_url=self.base_url, timeout=_TIMEOUT)
-        session = {"token": "", "account": account, "password": password}
+        session = {"token": "", "account": account, "password": password,
+                   "eval_token": os.environ.get("EDU_LEGACY_EVAL_TOKEN", "")}
         try:
             login_started = time.monotonic()
             session["token"] = self._login(client, account, password)
@@ -189,14 +197,25 @@ class LegacyAdapter:
             interaction.get("state", ""),
         )
 
+    @staticmethod
+    def _guard_path(path: str) -> str:
+        """请求路径守护:只允许本适配器已知的 /api/ 只读驱动端点模式(信任边界防御)。"""
+        if not path.startswith(("/api/auth/login", "/api/prepared-questions/",
+                                "/api/conversations/")) or ".." in path or "?" in path:
+            raise EnvironmentFailure(f"拒绝请求异常路径:{path[:60]}")
+        return path
+
     def _stream_once(self, client: httpx.Client, session: dict, path: str, body: dict):
         """流式请求;401 时重登录重试一次(幂等键保证重发安全)。"""
-        request = client.build_request("POST", path, json=body, headers=_headers(session["token"]))
+        path = self._guard_path(path)
+        request = client.build_request("POST", path, json=body,
+                                       headers=_headers(session["token"], session.get("eval_token") or None))
         response = client.send(request, stream=True)
         if response.status_code == 401:
             response.close()
             session["token"] = self._login(client, session["account"], session["password"])
-            request = client.build_request("POST", path, json=body, headers=_headers(session["token"]))
+            request = client.build_request("POST", path, json=body,
+                                           headers=_headers(session["token"], session.get("eval_token") or None))
             response = client.send(request, stream=True)
         return response
 
@@ -209,11 +228,14 @@ class LegacyAdapter:
 
     def _send(self, client: httpx.Client, session: dict, method: str, path: str,
               *, json_body: dict | None = None) -> dict:
-        response = client.request(method, path, json=json_body, headers=_headers(session["token"]))
+        path = self._guard_path(path)
+        response = client.request(method, path, json=json_body,
+                                  headers=_headers(session["token"], session.get("eval_token") or None))
         if response.status_code == 401:
             # spike 边界三验:token 过期(401)→ 重登录后重试一次
             session["token"] = self._login(client, session["account"], session["password"])
-            response = client.request(method, path, json=json_body, headers=_headers(session["token"]))
+            response = client.request(method, path, json=json_body,
+                                      headers=_headers(session["token"], session.get("eval_token") or None))
         if response.status_code != 200:
             raise EnvironmentFailure(f"{path} HTTP {response.status_code}:{response.text[:120]}")
         return response.json()
