@@ -26,6 +26,10 @@ _REFRESH_CONV = re.compile(
 )
 _MESSAGES = re.compile(r"^/api/conversations/(?P<conversation_id>[^/]+)/messages$")
 _MESSAGES_STREAM = re.compile(r"^/api/conversations/(?P<conversation_id>[^/]+)/messages/stream$")
+_CREATE = re.compile(r"^/api/conversations$")
+_GET = re.compile(r"^/api/conversations/(?P<conversation_id>[^/]+)$")
+# 00 §5.2 必须保留约定 4:客户端不得提交 answer/analysis/mastery_status
+_FORBIDDEN_FIELDS = frozenset({"answer", "analysis", "mastery_status"})
 _NATIVE_CODES = re.compile(r"^/api/openapi/v1/auth/native-codes$")
 _NATIVE_TOKEN = re.compile(r"^/api/auth/native/token$")
 _HEALTHZ = re.compile(r"^/healthz$")
@@ -87,8 +91,10 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
             return
         match = _OPEN.match(self.path)
         if match and self.command == "POST":
-            body = self._body_keys("idempotency_key")
-            self._json(self.service.open(match["question_id"], body["idempotency_key"], learner={}))
+            self._open_prepared_question(match["question_id"])
+            return
+        if _CREATE.match(self.path) and self.command == "POST":
+            self._create_conversation()
             return
         refresh = _REFRESH_PQ.match(self.path) or _REFRESH_CONV.match(self.path)
         if refresh and self.command == "POST":
@@ -101,8 +107,8 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         match = _MESSAGES_STREAM.match(self.path)
         if match and self.command == "POST":
             self._stream(match["conversation_id"])
-            return
-        self._error(ApiError(404, None, "路径不在合作方合同内"))
+        else:
+            self._error(ApiError(404, None, "路径不在合作方合同内"))
 
     def _stream(self, conversation_id: str) -> None:
         # 流式:请求类错误(409/422 等)在开流前以 JSON 错误返回;内核异常(503)
@@ -131,7 +137,32 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
             from .healthz import snapshot  # 局部导入:快照依赖模型配置,按需加载
             self._json(snapshot())
             return
+        match = _GET.match(self.path)
+        if match:
+            self._json(self.service.status(match["conversation_id"]))
+            return
         self._error(ApiError(404, None, "路径不在合作方合同内"))
+
+    def _open_prepared_question(self, question_id: str) -> None:
+        """POST /api/prepared-questions/{id}/open(#55 既有入口,抽方法保 _dispatch 预算)。"""
+        body = self._body_keys("idempotency_key")
+        self._json(self.service.open(question_id, body["idempotency_key"], learner={}))
+
+    def _create_conversation(self) -> None:
+        """POST /api/conversations:合同字段透传 learner;403 拦截照 00 §5.2 约定 4。"""
+        body = self._read_body()
+        forbidden = sorted(_FORBIDDEN_FIELDS & set(body))
+        if forbidden:
+            # 00 §5.2 约定 4:掌握结论只能服务端产生,客户端不得提交
+            raise ApiError(403, None, f"客户端不得提交字段:{','.join(forbidden)}")
+        question_id = body.get("question_id")
+        idempotency_key = body.get("idempotency_key")
+        if not question_id or not idempotency_key:
+            raise ApiError(422, None, "缺必填字段:question_id,idempotency_key")
+        learner = {k: v for k, v in body.items()
+                   if k not in ("question_id", "idempotency_key")}
+        self._json(self.service.create(str(question_id), str(idempotency_key), learner),
+                   status=201)
 
     def _read_body(self) -> dict:
         length = int(self.headers.get("Content-Length") or 0)
