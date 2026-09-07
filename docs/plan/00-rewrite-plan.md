@@ -316,19 +316,40 @@ json 一次通过率 ≥98%。
       注入接通；GatewayError→错误码映射（connection/timeout 族→503，
       SessionVersionConflict→409 SKILL_SESSION_CONFLICT，内核已承接语义）
 - [ ] A 线·题源适配器：question_id → 题干/答案/解析/图/知识点（release_acceptance
-      题库直读或本地 JSON 起步；`answer_status` 一并填入 learner——R6 首问策略
-      分派与结构化 summary 的信号源，内核侧已就绪）
-- [ ] A 线·vision 接线：models.yaml 加 vision 角色（8303）+ 内核 vision schema 扩
-      transcription；answer/analysis 进教师侧 prompt（configs/ 结构路径，人批）
+      题库直读或本地 JSON 起步）；**`answer_correct`（bool|null）与 `knowledge_points`
+      （[{id,name}]，≤20，name 必填）从 `open` 请求体接收**，在 `service.open`/
+      `server.py` 层构造 `learner` 传给 `kernel.start()`（替换当前写死的 `learner={}`）。
+      映射 `answer_correct → answer_status`：`true→correct`、`false/null/省略→incorrect`
+      （unanswered 默认按做错，等价老系统 `assumed_incorrect`）；保留 `answer_correct_provenance`。
+      —— R6 首问策略分派与结构化 summary 的信号源（内核侧已就绪），**与模型选型解耦**
+- [ ] A 线·模型与角色解耦（vision/多模态接线）：**模型选型不定死，由评测对比决定**
+      （同一 session 上下文下，对比「含图题 `start()` 用一次 Qwen3-VL 多模态」vs
+      「全程单多模态」，看教学+效率指标）。**模型与角色解耦**：角色是“哪些调用用哪个
+      模型”的分组键——要“同会话不同调用用不同模型”，应**分角色 + 改 `roles.*.primary`**
+      （01 §2.6 既有设计），而非给 `ModelRequest` 加模型字段。候选：Qwen3-VL
+      （老系统 `Qwen3-VL-8B-Instruct-4bit`，mlx_vlm，端口 8303 + launchd plist）。
+      若最终独立 vision：含图题模型强制产出 `acceptable/reason` 判定、不过 fail-closed
+      （不落首问）；图片只在 `start()` 消费一次，`reply()` 纯文本不重发图。
+      配置改动走 configs/ 结构路径（人批）
 - [ ] A 线·知识点消费：按 #48 合同确认是否回传合作方；教学侧进 prompt 当追问锚点
       （题库 `knowledge_points` 字段已随 #29 迁入）
-- [ ] B 线·store 与身份路由：会话持久化 v1 内存 → 文件级（additive-only，02：
-      M3 只允许 additive）；identity HTTP 路由挂接（#63 RS256 纯逻辑已有，
-      路由随 api server 扩展）
+- [ ] B 线·store 与身份路由：**上下文保留（必改前提，优先级最高，与模型选型无关）**——
+      api 层现用 `_kernel_session()` 将 `LearnerSession` 投影成 `{question_id, history, state}`
+      三键 dict 传给 `reply()/finish()`，导致 `start()` 在 open 里建立的题面/图理解产物/
+      首问/状态/`session_id` 被丢弃，open→message 无法衔接、`edu.session_id` 无法按
+      合作方会话归因（01 §7 分组键）。store 必须**存 `LearnerSession` 本体**（含 question/
+      图理解/history/first_question/session_version/session_id），而非 3 键投影或只存
+      first_question。会话持久化 v1 内存 → 文件级（additive-only，02：M3 只允许 additive）；
+      identity HTTP 路由挂接（#63 RS256 纯逻辑已有，路由随 api server 扩展；含
+      `POST /api/auth/logout`）
 
 **核心（前置件全合后，串行）**
 - [ ] 合同终审：审查者拿 #48 Postman 全量打真内核（真题图、真断言 PKCE、真题库
-      适配），全绿 = M3 出口前置——#57 的回放测试从 stub 内核切真内核即成
+      适配），全绿 = M3 出口前置——#57 的回放测试从 stub 内核切真内核即成。
+      **终审覆盖点**：SSE 帧序（契约 `start/status/interaction/delta/done/error` 6 型 vs
+      现 `server.py` 只发 4 型，缺 `status`/`error`）；`answer/analysis/mastery_status`
+      拦截（00 §5.2 约定 4，服务端拒绝客户端提交，现 `service.py` 未显式拒绝）；
+      `POST /api/auth/logout` 端点；401 校验（现只查 Authorization 头存在性，需解析 token）
 - [ ] 切换 runbook 成文：cloudflare proxy 上游改指新服务（DNS 不动，切换动作最小）；
       回滚 = proxy 改回；老系统挪内网地址后继续供题库操作面（16 路径，#34 已定案：
       合作方只用对话面 5 + 身份 2，无路径分路）；合作方通知文案
@@ -339,11 +360,17 @@ json 一次通过率 ≥98%。
 - 效率/稳定性在真实流量下达 01 §5/§6 阈值（main CI benchmark 持续绿）；
   报告按 #66 口径披露义务标注（工程模板兑现 vs 模型生成分开陈述）
 
-**开放决策（人批；①③须在合同终审前定）**
+**开放决策（人批；①②③须在合同终审前定）**
 1. 生产基础设施：机器放哪（本机 Mac 不适合作生产）；模型跟不跟（27B/9B 需大内存
-   GPU 机器 vs 生产切云 API——隐私与成本的权衡）
-2. 联调窗口时长与合作方排期（对方 App 发版周期）
-3. 公网部署预案：域名、证书、监控
+   GPU 机器 vs 生产切云 API——隐私与成本的权衡）。**出口“达阈值”依此而定**——本地路线
+   用本地阈值（01 §5：TTFT p95 <3s / 生成速度 p50 >20 tok/s / 并发 2），云路线需先
+   用 01 §5 标定一次云阈值（现无实测）；生产机器未定前出口该条不可达。
+2. 模型选型（由评测对比决定，不定死）：含图题 `start()` 用一次多模态（Qwen3-VL）vs
+   全程单多模态；以及 vision 是否独立角色（`models.yaml` 需加 `vision` 角色与否）。
+   同一 session 上下文下对比教学（M2 11 场景 / judge 六维）+ 效率（TTFT/生成速度/
+   单轮成本）指标，数据说话。
+3. 联调窗口时长与合作方排期（对方 App 发版周期）
+4. 公网部署预案：域名、证书、监控
 
 ## 9. 老仓库处理
 
