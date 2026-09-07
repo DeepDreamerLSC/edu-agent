@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import httpx
 import pytest
+import secrets
 from test_api_service import ScriptedKernel, _serve, post
 
 from edu_agent.api import demo_login
@@ -16,6 +17,7 @@ from edu_agent.api import demo_login
 def base(monkeypatch):
     monkeypatch.setenv("DEMO_ACCOUNT", "student1")
     monkeypatch.setenv("DEMO_PASSWORD", "night-pass-4f1a")
+    monkeypatch.setenv("IDENTITY_TOKEN_HMAC_KEY", "test-" + secrets.token_hex(8))
     url, server = _serve(ScriptedKernel(["先看条件。"]))
     yield url
     server.shutdown()

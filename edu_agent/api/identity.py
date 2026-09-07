@@ -103,11 +103,14 @@ DEMO_ACCOUNT_DEFAULT = "student1"
 DEMO_LOGIN_TTL_S = 7200  # 演示登录与业务 token 同两小时口径
 
 
-def demo_login(account: str, password: str, now: int | None = None) -> dict:
+def demo_login(account: str, password: str, hmac_key: str,
+               now: int | None = None) -> dict:
     """演示登录(DEMO_ACCOUNT/DEMO_PASSWORD 环境变量比对):账密对 → HMAC access_token。
 
     凭据只从环境变量读(缺省 account=student1;密码无 env 时不启用登录);
     演示用途,非合作方 PKCE 通道。失败语义照 #74 错误表:401 USER_LOGIN_FAILED。
+    签名密钥 hmac_key 走 IDENTITY_TOKEN_HMAC_KEY(专职密钥),不得用演示密码
+    充当(审查 P2:低熵密钥反模式+换密码作废 token)。
     """
     expected_account = os.environ.get("DEMO_ACCOUNT", DEMO_ACCOUNT_DEFAULT)
     expected_password = os.environ.get("DEMO_PASSWORD", "")
@@ -118,8 +121,7 @@ def demo_login(account: str, password: str, now: int | None = None) -> dict:
         raise IdentityError(401, "USER_LOGIN_FAILED", "账号或密码不正确")
     issued = now if now is not None else int(time.time())
     token = _hmac_token({"account": expected_account, "role": "student",
-                         "exp": issued + DEMO_LOGIN_TTL_S},
-                        expected_password or DEMO_ACCOUNT_DEFAULT)
+                         "exp": issued + DEMO_LOGIN_TTL_S}, hmac_key)
     return {"access_token": token, "token_type": "bearer",
             "expires_in": DEMO_LOGIN_TTL_S,
             "expires_at": datetime.fromtimestamp(issued + DEMO_LOGIN_TTL_S,
@@ -132,8 +134,15 @@ class IdentityService:
     """单 native_app 的授权码与令牌签发;全内存,进程重启即失效(v1 语义)。"""
 
     def demo_login_body(self, body: dict) -> tuple[int, dict]:
-        """HTTP 形态演示登录:{account, password} → 200 token / 401 USER_LOGIN_FAILED。"""
-        payload = demo_login(str(body.get("account", "")), str(body.get("password", "")))
+        """HTTP 形态演示登录:{account, password} → 200 token / 401 USER_LOGIN_FAILED。
+
+        签名密钥走 IDENTITY_TOKEN_HMAC_KEY 专职密钥(审查 P2:演示密码低熵,
+        不得充当 HMAC 签名密钥);密钥未配置即 fail closed。
+        """
+        if not self.config["hmac_key"]:
+            raise IdentityError(503, None, "IDENTITY_TOKEN_HMAC_KEY 未配置")
+        payload = demo_login(str(body.get("account", "")), str(body.get("password", "")),
+                             hmac_key=self.config["hmac_key"])
         return 200, payload
 
     def __init__(self, config: dict | None = None) -> None:
