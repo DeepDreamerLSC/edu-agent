@@ -8,6 +8,7 @@ edu_agent.store,02 §6)。identity/healthz 同在此包。
 """
 
 from .identity import IdentityError, IdentityService
+from .identity import IdentityService
 from .kernel_adapter import SmallLecturerKernel
 from .question_source import SeedQuestionSource, SnapshotQuestionSource, question_source
 from .service import ApiError, ConversationService, Kernel

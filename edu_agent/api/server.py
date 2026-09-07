@@ -1,9 +1,9 @@
-"""合作方接口 HTTP 面(00 §5.2 四端点;stdlib http.server,不引 web 框架)。
+"""合作方接口 HTTP 面(00 §5.2:对话四端点 + 身份两端点 + healthz;stdlib 不引 web 框架)。
 
 路由与错误信封按 #48 合同快照:错误体 {"error": {code, message, request_id,
-details}}(老仓库 ErrorEnvelope 形态)。SSE 流式端点随 PR2 落地,本模块路由
-表预留路径。401:v1 单合作方试点,Authorization 头存在性校验(合作方 App 侧
-零改动的最小门槛;身份端点属 M3 对齐件)。
+details}}(老仓库 ErrorEnvelope 形态)。SSE 六型帧见 sse_frames。
+鉴权分面:对话端点查 Authorization 头存在性(401 兜底);身份两端点自带鉴权
+(native-codes=partner API Key,token=授权码+PKCE),在全局闸之前路由。
 """
 
 from __future__ import annotations
@@ -12,6 +12,7 @@ import json
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from .identity import IdentityError, IdentityService
 from .service import ApiError, ConversationService
 
 _OPEN = re.compile(r"^/api/prepared-questions/(?P<question_id>[^/]+)/open$")
@@ -25,6 +26,9 @@ _REFRESH_CONV = re.compile(
 )
 _MESSAGES = re.compile(r"^/api/conversations/(?P<conversation_id>[^/]+)/messages$")
 _MESSAGES_STREAM = re.compile(r"^/api/conversations/(?P<conversation_id>[^/]+)/messages/stream$")
+_NATIVE_CODES = re.compile(r"^/api/openapi/v1/auth/native-codes$")
+_NATIVE_TOKEN = re.compile(r"^/api/auth/native/token$")
+_HEALTHZ = re.compile(r"^/healthz$")
 
 
 def sse_frames(response: dict) -> bytes:
@@ -47,8 +51,21 @@ def sse_frames(response: dict) -> bytes:
 
 class PartnerApiHandler(BaseHTTPRequestHandler):
     service: ConversationService  # 经 server 属性注入
+    identity: IdentityService     # 同上(build_server 注入)
+
+    def _identity_post(self) -> tuple[int, dict] | None:
+        """身份两端点自带鉴权(API Key / 授权码+PKCE);非身份路径返回 None。"""
+        if _NATIVE_CODES.match(self.path):
+            return self.identity.native_code(self._read_body(), dict(self.headers))
+        if _NATIVE_TOKEN.match(self.path):
+            return self.identity.native_token(self._read_body())
+        return None
 
     def _dispatch(self) -> None:
+        identity = self._identity_post()
+        if identity is not None:
+            self._json(identity[1], identity[0])
+            return
         if not self.headers.get("Authorization"):
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
@@ -80,6 +97,13 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         self._error(ApiError(404, None, "路径不在合作方合同内"))
 
     do_POST = _dispatch
+
+    def do_GET(self) -> None:
+        if _HEALTHZ.match(self.path):
+            from .healthz import snapshot  # 局部导入:快照依赖模型配置,按需加载
+            self._json(snapshot())
+            return
+        self._error(ApiError(404, None, "路径不在合作方合同内"))
 
     def _read_body(self) -> dict:
         length = int(self.headers.get("Content-Length") or 0)
@@ -114,11 +138,12 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
             status=error.status_code,
         )
 
-    def handle_one_request(self) -> None:  # ApiError 统一出口;未预期异常兜底 503,不静默断连
+    def handle_one_request(self) -> None:  # 统一错误出口;未预期异常兜底 503,不静默断连
         try:
             super().handle_one_request()
-        except ApiError as error:
-            self._error(error)
+        except (ApiError, IdentityError) as error:
+            self._error(ApiError(getattr(error, "status_code", 500),
+                                 getattr(error, "code", None), error.message))
         except Exception as error:  # noqa: BLE001 传输层兜底:基础设施故障(合同表 503)
             self._error(ApiError(503, None, f"服务暂不可用:{type(error).__name__}"))
 
@@ -126,6 +151,8 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         pass  # 访问日志静默(healthz 同款)
 
 
-def build_server(service: ConversationService, host: str = "127.0.0.1", port: int = 0) -> ThreadingHTTPServer:
-    handler = type("BoundPartnerApiHandler", (PartnerApiHandler,), {"service": service})
+def build_server(service: ConversationService, identity: IdentityService | None = None,
+                 host: str = "127.0.0.1", port: int = 0) -> ThreadingHTTPServer:
+    handler = type("BoundPartnerApiHandler", (PartnerApiHandler,),
+                   {"service": service, "identity": identity or IdentityService()})
     return ThreadingHTTPServer((host, port), handler)
