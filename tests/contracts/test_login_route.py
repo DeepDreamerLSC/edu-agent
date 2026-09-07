@@ -9,7 +9,7 @@ import httpx
 import pytest
 from test_api_service import ScriptedKernel, _serve, post
 
-from edu_agent.api.identity import demo_login
+from edu_agent.api import demo_login
 
 
 @pytest.fixture

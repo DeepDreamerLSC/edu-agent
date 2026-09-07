@@ -7,7 +7,7 @@ CI 用假 gateway 零真实模型)。store 类型经本入口再导出(测试公
 edu_agent.store,02 §6)。identity/healthz 同在此包。
 """
 
-from .identity import IdentityError, IdentityService
+from .identity import IdentityError, IdentityService, demo_login
 from .identity import IdentityService
 from .kernel_adapter import SmallLecturerKernel
 from .question_source import SeedQuestionSource, SnapshotQuestionSource, question_source
@@ -17,7 +17,7 @@ from edu_agent.store import Conversation, FileSessionStore, MemoryConversationSt
 
 __all__ = [
     "ApiError", "Conversation", "ConversationService", "FileSessionStore",
-    "SnapshotQuestionSource", "IdentityError", "IdentityService", "Kernel",
+    "SnapshotQuestionSource", "IdentityError", "IdentityService", "Kernel", "demo_login",
     "MemoryConversationStore", "SeedQuestionSource", "SmallLecturerKernel",
     "build_server", "build_service", "question_source",
 ]
