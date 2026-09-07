@@ -1,9 +1,10 @@
 """api 包(00 §5.2 合作方接口面;03 §4 状态机的传输层)。
 
-公开入口:build_service(store, kernel, source=None) / build_server(service) /
-partner_service()——测试与评测线只从本入口取用。M3 前置起 api 经
-kernel_adapter 桥接 agents.small_lecturer 真内核(02 §2.2 未禁 api→agents;
-gateway 经构造注入,CI 用假 gateway 零真实模型)。identity/healthz 同在此包。
+公开入口:build_service(store, kernel, source=None, sessions=None) / build_server(service)
+/ partner_service()——测试与评测线只从本入口取用。M3 前置起 api 经 kernel_adapter
+桥接 agents.small_lecturer 真内核(02 §2.2 未禁 api→agents;gateway 经构造注入,
+CI 用假 gateway 零真实模型)。store 类型经本入口再导出(测试公开入口名单不含
+edu_agent.store,02 §6)。identity/healthz 同在此包。
 """
 
 from .identity import IdentityError, IdentityService
@@ -11,18 +12,21 @@ from .kernel_adapter import SmallLecturerKernel
 from .question_source import SeedQuestionSource, SnapshotQuestionSource, question_source
 from .service import ApiError, ConversationService, Kernel
 from .server import build_server
-from edu_agent.store import MemoryConversationStore
+from edu_agent.store import Conversation, FileSessionStore, MemoryConversationStore
 
 __all__ = [
-    "ApiError", "ConversationService", "SnapshotQuestionSource", "IdentityError",
-    "IdentityService", "Kernel", "SeedQuestionSource", "SmallLecturerKernel",
+    "ApiError", "Conversation", "ConversationService", "FileSessionStore",
+    "SnapshotQuestionSource", "IdentityError", "IdentityService", "Kernel",
+    "MemoryConversationStore", "SeedQuestionSource", "SmallLecturerKernel",
     "build_server", "build_service", "question_source",
 ]
 
 
 def build_service(kernel: Kernel, store: MemoryConversationStore | None = None,
-                  source=None) -> ConversationService:
-    return ConversationService(store or MemoryConversationStore(), kernel, source)
+                  source=None, sessions: FileSessionStore | None = None) -> ConversationService:
+    """source 注入题源(PR1);sessions 注入即开启上下文保留(M3 PR6:内核会话回合后落盘)。"""
+    return ConversationService(store or MemoryConversationStore(), kernel,
+                               source=source, sessions=sessions)
 
 
 def partner_service() -> ConversationService:
