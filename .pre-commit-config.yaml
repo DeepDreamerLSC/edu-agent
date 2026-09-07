@@ -1,0 +1,19 @@
+# 02 §11.5:pre-commit 钩子跑 ruff 与 import-linter(agent 的回路是 make check,人的回路在这里)。
+# 与 CI 同配置源:两个钩子都用 uv run 走仓库锁定的工具版本与同一份 pyproject.toml/.importlinter,
+# 不引独立 hook 仓库的浮动版本(issue #5 方案 A)。
+# 安装:pre-commit install(插件本体不进仓库依赖,AGENTS.md ponytail 同款纪律)。
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff(02 §2.1 函数级度量与危险调用)
+        entry: uv run ruff check .
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: lint-imports
+        name: import-linter(02 §2.2 包依赖方向)
+        entry: uv run lint-imports
+        language: system
+        pass_filenames: false
+        types: [python]
