@@ -1,0 +1,115 @@
+{
+  "schema_version": "partner_question_db_snapshot/v1",
+  "exported_at": "2026-09-07",
+  "source": "edu-agent-test-backend-postgres/edu_agent_test prepared_question_packages WHERE status=published",
+  "records": [
+    {
+      "question_id": "chicken_rabbit",
+      "stem": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+      "answer": "鸡3只，兔5只",
+      "original_analysis": "假设全是鸡共有16只脚，比实际少10只；每把一只鸡换成兔增加2只脚，所以兔有5只，鸡有3只。",
+      "grade": "六年级",
+      "knowledge_points": [
+        "鸡兔同笼",
+        "假设法"
+      ],
+      "question_image": {
+        "file_id": "seed-image_31d187bd823ef66bcc134da3",
+        "content_hash": "f72bce169bddbb4b4ac62f1c0954412d76b869a095e844b3d58c2ee7d065565e",
+        "mime_type": "image/png",
+        "owner_client_id": "prompt_lab_seed_bank"
+      },
+      "subject": "math",
+      "question_version": "prompt-lab-2026-08-v1"
+    },
+    {
+      "question_id": "equation_subtract",
+      "stem": "解方程 3x+7=25，并说明每一步为什么这样做。",
+      "answer": "x=6",
+      "original_analysis": "等式两边先同时减去7，得到3x=18，再同时除以3得到x=6，代回原式成立。",
+      "grade": "五年级",
+      "knowledge_points": [
+        "简易方程",
+        "等式的性质"
+      ],
+      "question_image": {
+        "file_id": "seed-image_1e270a45d5fa808ea5c0d95f",
+        "content_hash": "b65472c139077aa9fbc783bf623c67a18c4f5fb128ec36d899e76428750afa73",
+        "mime_type": "image/png",
+        "owner_client_id": "prompt_lab_seed_bank"
+      },
+      "subject": "math",
+      "question_version": "prompt-lab-2026-08-v1"
+    },
+    {
+      "question_id": "fraction_addition",
+      "stem": "计算四分之三加八分之一，并说明为什么要这样算。",
+      "answer": "7/8",
+      "original_analysis": "先把四分之三通分成八分之六，再与八分之一相加，得到八分之七。",
+      "grade": "五年级",
+      "knowledge_points": [
+        "异分母分数加法",
+        "通分"
+      ],
+      "question_image": {
+        "file_id": "seed-image_f1c017ed40e8b894c8fb7dab",
+        "content_hash": "50ea232a4b75667957dea44ebe8ef97074edaf585bc39f9b08dd210fb18b025c",
+        "mime_type": "image/png",
+        "owner_client_id": "prompt_lab_seed_bank"
+      },
+      "subject": "math",
+      "question_version": "prompt-lab-2026-08-v1"
+    },
+    {
+      "question_id": "library_books",
+      "stem": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
+      "answer": "127本",
+      "original_analysis": "先算买来后有120+45=165本，再减去借出的38本，得到127本。",
+      "grade": "三年级",
+      "knowledge_points": [
+        "加减两步应用题"
+      ],
+      "question_image": {
+        "file_id": "seed-image_a69f8a22aaf4aafc95e49c7d",
+        "content_hash": "e77baea0a315bb51a335d5d410d49b7a56eff39c2f62fbb877e5465e2395f612",
+        "mime_type": "image/png",
+        "owner_client_id": "prompt_lab_seed_bank"
+      },
+      "subject": "math",
+      "question_version": "prompt-lab-2026-08-v1"
+    },
+    {
+      "question_id": "pr163-capacity-minimal-question-v1",
+      "stem": "一盒铅笔有12支，3盒一共有多少支铅笔？",
+      "answer": "36支",
+      "original_analysis": "",
+      "grade": "六年级",
+      "knowledge_points": [
+        "整数乘法",
+        "简单应用题"
+      ],
+      "question_image": null,
+      "subject": "数学",
+      "question_version": "question-sha256:a14a4ba40fe3811041d4a2eda1cb5959b89244bafd92e731389103a07ce5be81"
+    },
+    {
+      "question_id": "triangle_area",
+      "stem": "一个三角形底是10厘米，高是6厘米，面积是多少？为什么要除以2？",
+      "answer": "30平方厘米",
+      "original_analysis": "两个完全相同的三角形可以拼成底10厘米、高6厘米的平行四边形，所以三角形面积是10×6÷2=30平方厘米。",
+      "grade": "五年级",
+      "knowledge_points": [
+        "三角形面积",
+        "图形转化"
+      ],
+      "question_image": {
+        "file_id": "seed-image_26b14d2024b4410f3719396c",
+        "content_hash": "8bbf9e7954307eb2bb96d688e83670ffacc45e7e1f96462dd4203a3f72a6f421",
+        "mime_type": "image/png",
+        "owner_client_id": "prompt_lab_seed_bank"
+      },
+      "subject": "math",
+      "question_version": "prompt-lab-2026-08-v1"
+    }
+  ]
+}
