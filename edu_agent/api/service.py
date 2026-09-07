@@ -161,20 +161,38 @@ class ConversationService:
         }
 
     def _message_response(self, conversation: Conversation, text: str) -> dict:
-        # skill_interaction/v1 最小信封(PR2 按 contracts schema 装配全量)
         return {
             "assistant_message": {"content": text},
-            "skill_interaction": {
-                "schema_version": "skill_interaction/v1",
-                "skill_session_id": conversation.skill_session_id,
-                "skill_id": SKILL_ID,
-                "skill_version": SKILL_VERSION,
-                "session_version": conversation.session_version,
-                "kind": "input_request",
-                "state": conversation.state,
-            },
+            "skill_interaction": self.interaction_envelope(conversation),
             "session_version": conversation.session_version,
         }
+
+    @staticmethod
+    def interaction_envelope(conversation: Conversation) -> dict:
+        """skill_interaction/v1 全量信封(按 #48 edu_agent/contracts 的 schema 装配)。
+
+        kind 映射:dialogue→input_request、ready_to_confirm→confirmation、completed→result
+        (progress 供内核将来报告准备进度);可选集合字段按 schema 默认空载。
+        """
+        kind = {"dialogue": "input_request", "first_question_ready": "input_request",
+                "ready_to_confirm": "confirmation", "completed": "result",
+                "preparing": "progress"}.get(conversation.state, "progress")
+        envelope = {
+            "schema_version": "skill_interaction/v1",
+            "skill_session_id": conversation.skill_session_id,
+            "skill_id": SKILL_ID,
+            "skill_version": SKILL_VERSION,
+            "session_version": conversation.session_version,
+            "kind": kind,
+            "state": conversation.state,
+            "inputs": [],
+            "requirements": [],
+            "missing_input_ids": [],
+            "confirmation": None,
+            "progress": None,
+            "result": conversation.summary,
+        }
+        return envelope
 
     # ---------- 内部 ----------
 
