@@ -7,6 +7,7 @@ gateway 经构造注入,CI 用假 gateway 零真实模型)。identity/healthz �
 """
 
 from .identity import IdentityError, IdentityService
+from .identity import IdentityService
 from .kernel_adapter import SmallLecturerKernel
 from .question_source import SeedQuestionSource, SnapshotQuestionSource, question_source
 from .service import ApiError, ConversationService, Kernel

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!-- M3 合作方对话服务(00 §5.2):合作方 API 四端点 + SSE + 身份两端点,端口 8300。
+     __DEPLOY_ROOT__ 占位符由 deploy.sh 按实际部署 checkout 替换后写入
+     ~/Library/LaunchAgents/;取代 com.edu-agent.app(healthz 专用,healthz 已并入本服务)。
+     凭据走环境变量(IDENTITY_* / EXTERNAL_STUDENT_MAP),由部署环境注入。 -->
+<dict>
+  <key>Label</key>
+  <string>com.edu-agent.partner-api</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/linsuchang/.local/bin/uv</string>
+    <string>run</string>
+    <string>python</string>
+    <string>scripts/serve_partner_api.py</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__DEPLOY_ROOT__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>EDU_PARTNER_API_PORT</key>
+    <string>8300</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+  <key>ThrottleInterval</key>
+  <integer>5</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/linsuchang/Library/Logs/edu-agent/partner-api.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/linsuchang/Library/Logs/edu-agent/partner-api.log</string>
+  <key>LimitLoadToSessionType</key>
+  <array>
+    <string>Aqua</string>
+    <string>Background</string>
+  </array>
+</dict>
+</plist>
