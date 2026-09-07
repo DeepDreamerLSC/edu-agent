@@ -6,13 +6,16 @@
 """
 
 from .identity import IdentityError, IdentityService
+from .kernel_adapter import SmallLecturerKernel
+from .question_source import SeedQuestionSource, SnapshotQuestionSource, question_source
 from .service import ApiError, ConversationService, Kernel
 from .server import build_server
 from edu_agent.store import MemoryConversationStore
 
 __all__ = [
-    "ApiError", "ConversationService", "IdentityError", "IdentityService", "Kernel",
-    "build_server", "build_service",
+    "ApiError", "ConversationService", "SnapshotQuestionSource", "IdentityError",
+    "IdentityService", "Kernel", "SeedQuestionSource", "SmallLecturerKernel",
+    "build_server", "build_service", "question_source",
 ]
 
 

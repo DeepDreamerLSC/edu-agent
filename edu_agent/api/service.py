@@ -39,9 +39,11 @@ class Kernel(Protocol):
 
 
 class ConversationService:
-    def __init__(self, store: MemoryConversationStore, kernel: Kernel) -> None:
+    def __init__(self, store: MemoryConversationStore, kernel: Kernel,
+                 source=None) -> None:
         self.store = store
         self.kernel = kernel
+        self.source = source
 
     # ---------- open(幂等键,同键同 Attempt) ----------
 
@@ -54,12 +56,16 @@ class ConversationService:
                 # 00 §5.2 约定 2:题目在会话内固定,不能中途换题
                 raise ApiError(409, "QUESTION_SOURCE_PINNED", "同一幂等键已固定另一道题,新建学习会话")
             return self._open_response(existing)
+        question, learner, detail = self._resolved(question_id, learner)
         try:
-            turn = self.kernel.start({"question_id": question_id}, learner)
+            turn = self.kernel.start(question, learner)
         except ApiError:
             raise
         except Exception as error:  # 内核/模型基础设施故障 → 503(合同表)
             raise ApiError(503, None, f"服务暂不可用:{type(error).__name__}") from error
+        extras = {"learner": learner, "kernel_session": getattr(turn, "session", None)}
+        if detail is not None:
+            extras["question_detail"] = detail
         conversation = Conversation(
             conversation_id=f"conv_{uuid.uuid4().hex[:12]}",
             question_id=question_id,
@@ -68,10 +74,23 @@ class ConversationService:
             session_version=1,
             state="first_question_ready",
             first_question=str(getattr(turn, "text", "")),
-            extras={"learner": learner},
+            extras=extras,
         )
         conversation = self.store.create(conversation, idempotency_key)
         return self._open_response(conversation)
+
+    def _resolved(self, question_id: str, learner: dict) -> tuple[dict, dict, dict | None]:
+        """题源解析(PR1):内核面最小化(text/image),答案/解析存 extras 供 judge(不进学生面);
+        answer_status/grade 由题源填入 learner(调用方字段优先)。source 未注入时维持旧形态。"""
+        if self.source is None:
+            return {"question_id": question_id}, learner, None
+        resolved = self.source.resolve(question_id)
+        question = {"question_id": question_id, "text": resolved["text"],
+                    "image": resolved["image"]}
+        learner = {"grade": resolved["grade"],
+                   "answer_status": resolved["answer_status"], **learner}
+        detail = {k: resolved[k] for k in ("answer", "analysis", "knowledge_points")}
+        return question, learner, detail
 
     @staticmethod
     def _open_response(conversation: Conversation) -> dict:
@@ -196,8 +215,12 @@ class ConversationService:
 
     # ---------- 内部 ----------
 
-    def _kernel_session(self, conversation: Conversation) -> dict:
-        """内核会话的最小投影(v1 内存态;B 线内核的 Session 形态就绪后对齐)。"""
+    def _kernel_session(self, conversation: Conversation) -> object:
+        """真内核:open 时暂存的 LearnerSession 对象(内存态);
+        夹具内核(无 session 对象):最小投影 dict。"""
+        session = conversation.extras.get("kernel_session")
+        if session is not None:
+            return session
         return {
             "question_id": conversation.question_id,
             "history": conversation.extras.setdefault("history", []),
