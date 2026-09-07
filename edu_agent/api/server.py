@@ -24,6 +24,25 @@ _REFRESH_CONV = re.compile(
     r"^/api/conversations/[^/]+/skill-sessions/(?P<skill_session_id>[^/]+)/refresh$"
 )
 _MESSAGES = re.compile(r"^/api/conversations/(?P<conversation_id>[^/]+)/messages$")
+_MESSAGES_STREAM = re.compile(r"^/api/conversations/(?P<conversation_id>[^/]+)/messages/stream$")
+
+
+def sse_frames(response: dict) -> bytes:
+    """00 §5.2 多轮流式行:服务端先执行校验持久化,再发 interaction → delta → done
+    (frontend-conversations-skills.md §4 帧序;未知事件客户端必须忽略)。"""
+    interaction = response["skill_interaction"]
+    text = response["assistant_message"]["content"]
+    frames = [
+        ("start", {"conversation_running": True}),
+        ("interaction", interaction),
+        ("delta", {"text": text}),
+        ("done", {"assistant_message": response["assistant_message"],
+                  "session_version": response["session_version"]}),
+    ]
+    return b"".join(
+        f"event: {event}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n".encode("utf-8")
+        for event, payload in frames
+    )
 
 
 class PartnerApiHandler(BaseHTTPRequestHandler):
@@ -45,6 +64,18 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         match = _MESSAGES.match(self.path)
         if match and self.command == "POST":
             self._json(self.service.send(match["conversation_id"], self._read_body()))
+            return
+        match = _MESSAGES_STREAM.match(self.path)
+        if match and self.command == "POST":
+            # 流式:校验失败(409 等)在开流前以 JSON 错误返回;成功后帧序固定
+            response = self.service.send(match["conversation_id"], self._read_body())
+            payload = sse_frames(response)
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
             return
         self._error(ApiError(404, None, "路径不在合作方合同内"))
 
