@@ -141,8 +141,9 @@ def reply(session: LearnerSession, student_message: str, *,
          {"role": "user", "content": json.dumps(
              {"题目": session.question, "学生": session.learner, "对话记录": session.history,
               "学生本轮回答": student_message,
-              "输出提醒": "若学生本轮已给出正确最终答案(或明确表示理解并完成检验),"
-                          "ready_to_confirm 置 true;否则 false。"}, ensure_ascii=False)}],
+              "判停证据标准": "学生连续正确作答且对话中无遗留卡点,即掌握证据充分,"
+                              "ready_to_confirm 应置 true——不要为「再多问一轮」而拖延判停;"
+                              "仅当终答未出、答案错误或仍有明确卡点时保持 false。"}, ensure_ascii=False)}],
         TUTOR_TURN_SCHEMA, session,
     ).text)
     safe_text = _guard_output(str(session.question.get("text") or ""), output["reply"],
