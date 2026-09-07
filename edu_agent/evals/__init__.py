@@ -13,6 +13,7 @@ from .judge import (
     verdict_from_scores,
 )
 from .legacy_adapter import LegacyAdapter
+from .report import render_html
 from .runner import (
     EnvironmentFailure,
     EvalRunner,
@@ -26,6 +27,7 @@ __all__ = [
     "DIMENSIONS",
     "EnvironmentFailure",
     "EvalRunner",
+    "render_html",
     "JudgeSubject",
     "LegacyAdapter",
     "ResumeMismatch",
