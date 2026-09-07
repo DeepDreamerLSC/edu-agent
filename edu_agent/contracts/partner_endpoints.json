@@ -1,0 +1,95 @@
+{
+  "contract_version": "partner_endpoints/v1",
+  "source": {
+    "repo": "edu-agent(老仓库)",
+    "paths": [
+      "edu_agent/app/api/public_docs/small-lecturer-partner-pilot.md",
+      "edu_agent/app/api/public_docs/partner-sso.md",
+      "docs/integrations/small-lecturer-partner-pilot.postman_collection.json"
+    ],
+    "spec": "00 §5.2 复用清单(端点行与错误码行的结构化落位)"
+  },
+  "note": "小讲师对话面端点(00 §5.2 表行逐行落位,含 Postman 集合的实际路径)。与 public_openapi_required_paths.json(题库/题图工作台面)共同构成合同快照。",
+  "endpoints": [
+    {
+      "step": "开会话",
+      "method": "POST",
+      "path": "/api/prepared-questions/{question_id}/open",
+      "request": {"idempotency_key": "string(必填,同键重试返回同一 Attempt)"},
+      "response_fields": ["conversation", "skill_session_id", "session_version", "first_question_ready", "retry_after_ms"],
+      "semantics": "题目在会话内固定,不能中途换题;first_question_ready=false 时按 retry_after_ms 重试同一入口;新幂等身份才使用新题目版本(00 §5.2 约定 1/2)"
+    },
+    {
+      "step": "等首问",
+      "method": "POST",
+      "path": "/api/prepared-questions/{question_id}/skill-sessions/{skill_session_id}/refresh",
+      "note": "00 §5.2 表记作 POST .../skill-sessions/{id}/refresh;Postman 集合以 /api/conversations/{conversation_id}/skill-sessions/{skill_session_id}/refresh 形态调用(对话面 refresh),prepared-questions 前缀为专用入口;两形态都保留,差异在 PR 对账表列出",
+      "request": {},
+      "response_fields": ["first_question", "session_version"],
+      "semantics": "返回首问与新 session_version;题图准备期间客户端只调专用 refresh,不让学生输入检查进度"
+    },
+    {
+      "step": "多轮",
+      "method": "POST",
+      "path": "/api/conversations/{conversation_id}/messages",
+      "request": {
+        "content": "string",
+        "skill_id": "small_lecturer_coaching",
+        "input": {
+          "skill_session_id": "string",
+          "expected_session_version": "int(乐观并发,旧版本 409)"
+        }
+      },
+      "response_fields": ["assistant_message", "skill_interaction/v1 envelope"],
+      "semantics": "session_version 乐观并发:旧版本返回 409 不静默覆盖新一轮诊断(00 §5.2 约定 3)"
+    },
+    {
+      "step": "多轮流式",
+      "method": "POST",
+      "path": "/api/conversations/{conversation_id}/messages/stream",
+      "request": "同 /messages",
+      "response_events": ["start", "status", "interaction(权威 skill_interaction/v1)", "delta", "done", "error"],
+      "semantics": "服务端先执行 Skill、校验并持久化学生可见回复,再发 interaction -> delta -> done;未知事件必须忽略(frontend-conversations-skills.md §4)"
+    },
+    {
+      "step": "结束",
+      "method": "POST",
+      "path": "/api/conversations/{conversation_id}/messages",
+      "request": {"interaction_action": "confirm", "input": {"skill_session_id": "string", "expected_session_version": "int"}},
+      "response_fields": ["ready_to_confirm -> completed", "needs_review"],
+      "semantics": "校验掌握证据、答案可信度和会话版本;条件满足写入不可变 learning_summary;服务端不把未复核答案直接作为掌握结论"
+    },
+    {
+      "step": "身份·申请一次性授权码",
+      "method": "POST",
+      "path": "/api/openapi/v1/auth/native-codes",
+      "request": {"assertion": "合作方后端签发的短期身份断言", "external_student_id": "string", "native_app_id": "string", "code_challenge": "S256", "code_challenge_method": "S256"},
+      "response_fields": ["authorization_code(一次性)"],
+      "semantics": "合作方后端用自己登录态生成断言;App 只保存 code_verifier 与短期令牌(partner-sso.md/ADR-0004)"
+    },
+    {
+      "step": "身份·换取访问令牌",
+      "method": "POST",
+      "path": "/api/auth/native/token",
+      "request": {"native_app_id": "string", "authorization_code": "string", "code_verifier": "PKCE verifier"},
+      "response_fields": ["access_token(短期)"],
+      "semantics": "校验授权码、App 与 PKCE;v1 只支持单合作方"
+    }
+  ],
+  "error_codes": [
+    {"status": 401, "code": null, "handling": "重新走合作方无感登录,不把学生带回账号密码页"},
+    {"status": 409, "code": "QUESTION_SOURCE_PINNED", "handling": "同一会话已固定题目:新建学习会话,不能覆盖原题"},
+    {"status": 409, "code": "SKILL_SESSION_CONFLICT", "handling": "过期会话版本:读取最新 interaction,再由学生决定是否重发"},
+    {"status": 409, "code": "TEACHING_CONTEXT_PRELOAD_NOT_READY", "handling": "最小题意未就绪:继续调用专用 refresh;新链路下预期不再触发,仅为合作方既有错误处理兼容而保留"},
+    {"status": 503, "code": null, "handling": "临时服务或模型基础设施故障:保留当前会话与学生回答,按重试策略稍后刷新"}
+  ],
+  "non_error_states": [
+    {"code": "review_required", "handling": "非阻断质量告警:可继续题意引导,不展示已掌握,不依据未复核答案纠错"},
+    {"code": "failed", "handling": "题图来源/范围/安全门禁失败:保留失败原因与事件记录,不自动替换同会话题目"}
+  ],
+  "invariants": [
+    "幂等键开会话,同键重试返回同一 Attempt,不创建第二个会话",
+    "题目在会话内固定,不能中途换题",
+    "session_version 乐观并发,旧版本返回 409,不静默覆盖新一轮诊断"
+  ]
+}

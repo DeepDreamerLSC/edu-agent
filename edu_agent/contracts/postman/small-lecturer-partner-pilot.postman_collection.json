@@ -1,0 +1,159 @@
+{
+  "info": {
+    "name": "EduAgent 小讲师合作方试点",
+    "description": "仅用于测试环境。集合不包含真实密钥，也不调用合作方未公开的题目列表接口。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [],
+  "item": [
+    {
+      "name": "1. 申请一次性授权码",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{partner_api_key}}"},
+          {"key": "Idempotency-Key", "value": "small-lecturer-pilot-login-001"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {"mode": "raw", "raw": "{\n  \"assertion\": \"{{assertion}}\",\n  \"external_student_id\": \"{{external_student_id}}\",\n  \"native_app_id\": \"{{native_app_id}}\",\n  \"code_challenge\": \"{{code_challenge}}\",\n  \"code_challenge_method\": \"S256\"\n}"},
+        "url": {"raw": "{{base_url}}/api/openapi/v1/auth/native-codes", "host": ["{{base_url}}"], "path": ["api", "openapi", "v1", "auth", "native-codes"]}
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "const body = pm.response.json();",
+            "const data = body.data || body;",
+            "pm.test('授权码申请成功', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+            "pm.test('响应包含一次性授权码', () => pm.expect(data.authorization_code).to.be.a('string').and.not.empty);",
+            "if (data.authorization_code) pm.environment.set('authorization_code', data.authorization_code);"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "2. 用 PKCE 换取访问令牌",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"native_app_id\": \"{{native_app_id}}\",\n  \"authorization_code\": \"{{authorization_code}}\",\n  \"code_verifier\": \"{{code_verifier}}\"\n}"},
+        "url": {"raw": "{{base_url}}/api/auth/native/token", "host": ["{{base_url}}"], "path": ["api", "auth", "native", "token"]}
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "const body = pm.response.json();",
+            "const data = body.data || body;",
+            "pm.test('访问令牌换取成功', () => pm.expect(pm.response.code).to.equal(200));",
+            "pm.test('响应包含访问令牌', () => pm.expect(data.access_token).to.be.a('string').and.not.empty);",
+            "if (data.access_token) pm.environment.set('access_token', data.access_token);"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "3. 创建 Conversation",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"title\": \"小讲师数学试点\",\n  \"context_snapshot\": {\"entry\": \"partner_question_list\"}\n}"},
+        "url": {"raw": "{{base_url}}/api/conversations", "host": ["{{base_url}}"], "path": ["api", "conversations"]}
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "const body = pm.response.json();",
+            "const conversation = body.conversation || body.data?.conversation || body.data || {};",
+            "pm.test('创建对话成功', () => pm.expect(pm.response.code).to.equal(200));",
+            "pm.test('响应包含对话编号', () => pm.expect(conversation.conversation_id).to.be.a('string').and.not.empty);",
+            "if (conversation.conversation_id) pm.environment.set('conversation_id', conversation.conversation_id);"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "4. 激活小讲师并固定题目",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"content\": \"开始学习这道题\",\n  \"skill_id\": \"small_lecturer_coaching\",\n  \"input\": {\n    \"interaction_action\": \"activate\",\n    \"values\": {\n      \"question_source\": {\n        \"provider\": \"{{provider}}\",\n        \"question_id\": \"{{question_id}}\",\n        \"question_version\": \"{{question_version}}\"\n      }\n    }\n  }\n}"},
+        "url": {"raw": "{{base_url}}/api/conversations/{{conversation_id}}/messages", "host": ["{{base_url}}"], "path": ["api", "conversations", "{{conversation_id}}", "messages"]}
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "const assistant = body.assistant_message || {};",
+              "const interaction = assistant.metadata?.interaction || body.interaction;",
+              "if (interaction?.skill_session_id) pm.environment.set('skill_session_id', interaction.skill_session_id);",
+              "if (Number.isInteger(interaction?.session_version)) pm.environment.set('session_version', String(interaction.session_version));",
+              "pm.test('session_version is numeric after activation', () => pm.expect(Number(pm.environment.get('session_version'))).to.be.a('number'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. 刷新题目准备和首问",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+        "url": {"raw": "{{base_url}}/api/conversations/{{conversation_id}}/skill-sessions/{{skill_session_id}}/refresh", "host": ["{{base_url}}"], "path": ["api", "conversations", "{{conversation_id}}", "skill-sessions", "{{skill_session_id}}", "refresh"]}
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "const body = pm.response.json();",
+            "const interaction = body.interaction || body.assistant_message?.metadata?.interaction;",
+            "pm.test('刷新请求成功', () => pm.expect(pm.response.code).to.equal(200));",
+            "if (interaction?.skill_session_id) pm.environment.set('skill_session_id', interaction.skill_session_id);",
+            "if (Number.isInteger(interaction?.session_version)) pm.environment.set('session_version', String(interaction.session_version));",
+            "pm.test('刷新后保存最新会话版本', () => pm.expect(Number(pm.environment.get('session_version'))).to.be.a('number'));"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "6. 提交一轮学生回答",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"content\": \"我先说说题目中已经知道的条件。\",\n  \"skill_id\": \"small_lecturer_coaching\",\n  \"input\": {\n    \"skill_session_id\": \"{{skill_session_id}}\",\n    \"expected_session_version\": {{session_version}},\n    \"student_response\": \"我先说说题目中已经知道的条件。\"\n  }\n}"},
+        "url": {"raw": "{{base_url}}/api/conversations/{{conversation_id}}/messages", "host": ["{{base_url}}"], "path": ["api", "conversations", "{{conversation_id}}", "messages"]}
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "const body = pm.response.json();",
+            "const assistant = body.assistant_message || {};",
+            "const interaction = assistant.metadata?.interaction || body.interaction;",
+            "pm.test('学生回答提交成功', () => pm.expect(pm.response.code).to.equal(200));",
+            "if (interaction?.skill_session_id) pm.environment.set('skill_session_id', interaction.skill_session_id);",
+            "if (Number.isInteger(interaction?.session_version)) pm.environment.set('session_version', String(interaction.session_version));",
+            "pm.test('回答后保存最新会话版本', () => pm.expect(Number(pm.environment.get('session_version'))).to.be.a('number'));"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "7. 读取当前会话",
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+        "url": {"raw": "{{base_url}}/api/conversations/{{conversation_id}}", "host": ["{{base_url}}"], "path": ["api", "conversations", "{{conversation_id}}"]}
+      }
+    }
+  ]
+}
