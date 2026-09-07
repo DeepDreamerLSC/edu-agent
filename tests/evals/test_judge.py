@@ -135,6 +135,24 @@ def test_judge_route1_repairs_invalid_output(tmp_path):
     assert "JSON Schema" in fake.requests[1]["messages"][-1]["content"]  # 修复提示带 schema
 
 
+def test_judge_full_chain_parses_fenced_model_output(tmp_path):
+    """#54 PM 规格·judge 全链路集成:假上游返回带 Markdown 围栏的评分 JSON →
+    gateway 校验剥壳且 text 归一(校验与消费同源)→ judge 直接解析出六维,
+    无 JSONDecodeError——DeepSeek 独立评分通道(恒带围栏)的阻塞解除实证。"""
+    fenced = "```json\n" + model_output([1, 2, 2, 1, 2, 1], verdict="pass") + "\n```"
+    fake = FakeOpenAI([completion(fenced)]).start()
+    gateway = gateway_for(fake.url, tmp_path)
+    try:
+        result = judge_transcript(gateway, CASE)
+    finally:
+        gateway.close()
+        fake.stop()
+    assert result["scores"] == dict(zip(DIMENSIONS, [1, 2, 2, 1, 2, 1], strict=True))
+    assert result["total"] == 9
+    assert result["verdict"] == "review"  # 9 分 → 本地重算(PM:算术不托付模型)
+    assert result["judge_model"] == "fake-model"
+
+
 def test_judge_subject_maps_env_vs_content_failures(tmp_path):
     """环境类(connection 等)→ EnvironmentFailure 可补跑;内容类(schema_violation)原样抛。"""
     env_fake = FakeOpenAI([Reply(partial_body="{"), Reply(partial_body="{")]).start()
