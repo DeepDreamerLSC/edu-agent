@@ -33,6 +33,8 @@ class KernelSubject:
         started = time.monotonic()
         question = {"text": case["question"]}
         learner = {"grade": case.get("grade", "")}
+        if case.get("answer_status"):  # R6 首问策略分派信号(评测数据侧)
+            learner["answer_status"] = case["answer_status"]
         turns: list[dict] = []
         try:
             first = start(question, learner, gateway=self.gateway)

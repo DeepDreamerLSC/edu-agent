@@ -44,6 +44,23 @@ _SUMMARY_INSTRUCTION = """\
 【总结要求】基于学生真实表达整理:点出方法、他的关键转折、仍需注意的一处;
 不补写他未说过的标准解法,不宣告超出本题的掌握。"""
 
+# 首问策略分派(老系统 opening_strategy.py 语义,M2 R6 人批:correct≠mastery——
+# 做对了引导反思而非跳过;unknown/缺省不加提示,按普通首问走)。
+OPENING_HINT_CORRECT = "这道题学生已做对。首问引导回顾解题思路或深入理解,不要重新教。"
+OPENING_HINT_INCORRECT = "这道题学生未做对。首问诊断学生的错误意识,引导发现卡点。"
+OPENING_HINT_UNANSWERED = "这道题学生尚未作答。首问引导学生从第一步开始思考。"
+
+_OPENING_HINTS = {
+    "correct": OPENING_HINT_CORRECT,
+    "incorrect": OPENING_HINT_INCORRECT,
+    "unanswered": OPENING_HINT_UNANSWERED,
+}
+
+
+def opening_hint(answer_status: str | None) -> str:
+    """learner.answer_status → 首问策略提示;unknown/缺省返回空串(不加提示)。"""
+    return _OPENING_HINTS.get(answer_status or "", "")
+
 
 @lru_cache(maxsize=1)
 def skill_rules() -> str:

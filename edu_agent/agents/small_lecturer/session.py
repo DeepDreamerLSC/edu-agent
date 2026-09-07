@@ -24,12 +24,14 @@ class TerminalStateError(Exception):
 @dataclass
 class LearnerSession:
     question: dict                     # {"text": str} 或 {"image": ...}(00 §5.1)
-    learner: dict                      # {"grade": "二年级", ...}(风格档案选型输入)
+    learner: dict                      # {"grade": "二年级", ...}(风格档案选型输入;
+                                       #  可选 answer_status: correct/incorrect/unanswered)
     state: str = "preparing"
     session_version: int = 1
     history: list[dict] = field(default_factory=list)
     first_question: str | None = None
     summary: "Summary | None" = None   # completed 后不可变
+    stuck: bool = False                # 卡点标记(R6):对话中出现被护栏替换的输出等未解决质量问题
     session_id: str = field(default_factory=lambda: f"kernel_{uuid.uuid4().hex[:10]}")
 
     @property

@@ -20,7 +20,7 @@ from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 
 from .format_guard import evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
-from .prompting import summary_system_prompt, system_prompt
+from .prompting import opening_hint, summary_system_prompt, system_prompt
 from .session import LearnerSession, SessionVersionConflict, Summary, TerminalStateError, Turn
 from .tone_guardrails import apply_tone_guardrail
 
@@ -83,12 +83,33 @@ def _tone_band(grade: str) -> str:
     return "neutral"
 
 
+def _opening_messages(learner: dict, question: dict) -> dict:
+    """首问消息:user 消息开头拼 answer_status 的策略提示(unknown/缺省不加,#34 R6)。"""
+    context = {"题目": question.get("text") or question.get("image"), "学生": learner,
+               "任务": "生成首问"}
+    hint = opening_hint(learner.get("answer_status"))
+    if hint:
+        return {"role": "user",
+                "content": f"{hint}\n" + json.dumps(context, ensure_ascii=False)}
+    return {"role": "user", "content": json.dumps(context, ensure_ascii=False)}
+
+
 def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
             session: LearnerSession):
     return gateway.invoke(ModelRequest(
         role=role, messages=messages, response_schema=schema,
         session_id=session.session_id, max_tokens=800, temperature=0,
     ))
+
+
+def _opening_user_message(learner: dict, question: dict) -> dict:
+    """首问 user 消息:answer_status 的策略提示拼在开头(unknown/缺省不加,#34 R6)。"""
+    context = {"题目": question.get("text") or question.get("image"), "学生": learner,
+               "任务": "生成首问"}
+    hint = opening_hint(learner.get("answer_status"))
+    if hint:
+        return {"role": "user", "content": f"{hint}\n{json.dumps(context, ensure_ascii=False)}"}
+    return {"role": "user", "content": json.dumps(context, ensure_ascii=False)}
 
 
 def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> Turn:
@@ -113,9 +134,7 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
     first = json.loads(_invoke(
         gateway, "tutor",
         [{"role": "system", "content": system_prompt(learner.get("grade", ""))},
-         {"role": "user", "content": json.dumps(
-             {"题目": question.get("text") or question.get("image"), "学生": learner,
-              "任务": "生成首问"}, ensure_ascii=False)}],
+         _opening_user_message(learner, question)],
         TUTOR_TURN_SCHEMA, session,
     ).text)
     session.state = "first_question_ready"
@@ -147,6 +166,8 @@ def reply(session: LearnerSession, student_message: str, *,
     ).text)
     safe_text = _guard_output(str(session.question.get("text") or ""), output["reply"],
                               session.learner.get("grade", ""))
+    if safe_text != output["reply"]:
+        session.stuck = True  # 卡点标记(R6):护栏替换 = 本轮存在未解决的质量问题
     session.history.append({"role": "user", "content": student_message})
     session.history.append({"role": "assistant", "content": safe_text})
     session.session_version += 1
@@ -156,12 +177,38 @@ def reply(session: LearnerSession, student_message: str, *,
                 session=session)
 
 
+def _structured_summary(session: LearnerSession) -> str:
+    """确定性模板(人批②,00 §8.4 R6):①重述学生做到的事(引原话)②关键思路(题面+学生正确回答)③固定收尾。
+
+    纯文本短句(过语气/格式护栏);引用来自会话历史的学生原话与题面,不从模型生成。
+    """
+    user_turns = [m["content"] for m in session.history if m["role"] == "user"]
+    first = user_turns[0] if user_turns else "你从题目本身开始"
+    last = user_turns[-1] if user_turns else "给出了你的结论"
+    question = str(session.question.get("text") or "")
+    return (
+        f"这一题(「{question}」)是你自己讲下来的:从「{first}」开始,一步步说到「{last}」,"
+        f"每一步都是你自己的思路,结论和题目的要求也对上了。"
+        f"这道题你已经完整讲清楚了,可以再做一道,或者今天先到这里。"
+    )
+
+
 def finish(session: LearnerSession, *, gateway: Gateway | None = None) -> Summary:
-    """学习总结(03 §4 ReadyToConfirm → Completed,summary 不可变;证据不足 needs_review)。"""
+    """学习总结(03 §4 ReadyToConfirm → Completed,summary 不可变;证据不足 needs_review)。
+
+    R6 结构化通路(人批②):learner.answer_status == "correct" 且会话无卡点标记
+    → 掌握已由数据侧证实,直接走确定性模板 completed(零模型调用);
+    条件不满足的会话零经过此分支。"""
     if session.finished:
         if session.state == "completed" and session.summary is not None:
             return session.summary  # completed 终态:finish 幂等返回同一 Summary
         raise TerminalStateError(f"会话已终态({session.state})")
+    if session.learner.get("answer_status") == "correct" and not session.stuck:
+        summary = Summary(text=_structured_summary(session), status="completed",
+                          session_version=session.session_version)
+        session.state = "completed"
+        session.summary = summary
+        return summary
     if session.state != "ready_to_confirm":
         # 证据不足(00 §5.1):不调模型、不写 summary,确定性引导文案
         return Summary(text=NEEDS_REVIEW_TEXT, status="needs_review",
