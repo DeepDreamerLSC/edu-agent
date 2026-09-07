@@ -19,6 +19,9 @@ providers:
   llama: # 本地 9B(127.0.0.1:8302,launchd 常驻,--reasoning off/--alias 在 plist #17):
     base_url: http://127.0.0.1:8302/v1 # grammar 级 json_schema 真强制
     json_strict: true
+  vision: # 本地 VL(M3/#34:Qwen3-VL-8B GGUF+mmproj,launchd 常驻 8303,plist 随 PR7 入库):
+    base_url: http://127.0.0.1:8303/v1 # grammar 级 json_schema 真强制(同 llama)
+    json_strict: true
 
 models:
   mlx_27b: # issue #3:mlx-lm 请求体 model 必须传服务广告的权重完整路径
@@ -27,13 +30,19 @@ models:
   llama_9b:
     provider: llama
     name: Qwen3.5-9B-GGUF # 8302 /v1/models 实际通告名(本地冒烟核对)
+  vision_8b:
+    provider: vision
+    name: Qwen3-VL-8B-GGUF # 8303 /v1/models 实际通告名(--alias,本地核对 2026-09-07)
+  qwen3_vl_8b: # VL tutor(2026-09-07 人批):同 8303 服务,可看图教学+纯文本更快
+    provider: vision
+    name: Qwen3-VL-8B-GGUF
   deepseek_chat:
     provider: deepseek
     name: deepseek-chat
 
 roles:
-  tutor: # #34 互换:主选 9B llama(63 tok/s、TTFT 30ms,延迟敏感),备选 27B mlx;
-    primary: llama_9b # 9B 数学可靠性风险(抽测有算术口误)由评测线量化,备选兜底
+  tutor: # VL tutor 切换(2026-09-07 人批):主选 VL——可看图教学+纯文本更快;
+    primary: qwen3_vl_8b # 原 9B llama 退备选线外;可靠性由 VL M2 复验量化
     fallback: mlx_27b
     json_strict: true # 主选 llama grammar 级真强制(#34);备选 mlx 走路线 1 校验
     concurrency: 2
@@ -58,6 +67,16 @@ roles:
     json_strict: true
     concurrency: 4
     first_token_timeout_s: 15
+    total_timeout_s: 60
+    max_attempts: 3
+    backoff_base_ms: 400
+    backoff_cap_ms: 8000
+  vision: # M3 PR7:题图理解与安全检查(含图题首问前的唯一调用,kernel.start);
+    primary: vision_8b # 无备选:判不可信即 fail closed,不降级放行(00 §5.1)
+    fallback: null
+    json_strict: true
+    concurrency: 1 # 题图检查串行(VL 单服务,首问路径本就每题至多一次)
+    first_token_timeout_s: 15 # 覆盖真实手机大图视觉编码 8-12s(冒烟小图不具代表性)
     total_timeout_s: 60
     max_attempts: 3
     backoff_base_ms: 400

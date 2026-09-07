@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!-- M3 vision 角色模型服务(#34):llama-server + Qwen3-VL-8B GGUF(Q4_K_M 主模型
+     + mmproj Q8_0 投影器,#34 环境侧交付,冒烟三分支通过)。--mmproj 挂载视觉
+     投影器;--jinja 启用 chat template,json_schema 走 llama.cpp grammar 约束;
+     --alias 对齐 configs/models.yaml 的 models.vision_8b.name。 -->
+<dict>
+  <key>Label</key>
+  <string>com.edu-agent.m0.vision-8303</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/llama-server</string>
+    <string>--model</string>
+    <string>/Users/linsuchang/Desktop/work/models/Qwen3-VL-8B-GGUF/Qwen3VL-8B-Instruct-Q4_K_M.gguf</string>
+    <string>--mmproj</string>
+    <string>/Users/linsuchang/Desktop/work/models/Qwen3-VL-8B-GGUF/mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf</string>
+    <string>--host</string>
+    <string>127.0.0.1</string>
+    <string>--port</string>
+    <string>8303</string>
+    <string>--ctx-size</string>
+    <string>8192</string>
+    <string>--jinja</string>
+    <string>--alias</string>
+    <string>Qwen3-VL-8B-GGUF</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/linsuchang/Library/Logs/edu-agent/vision-8303.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/linsuchang/Library/Logs/edu-agent/vision-8303.log</string>
+  <key>LimitLoadToSessionType</key>
+  <array>
+    <string>Aqua</string>
+    <string>Background</string>
+  </array>
+</dict>
+</plist>
