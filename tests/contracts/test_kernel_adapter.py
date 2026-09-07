@@ -44,7 +44,7 @@ class FakeSource:
         return {"text": "解方程 3x+7=25,并说明每一步为什么这样做。", "answer": "x=6",
                 "analysis": "等式两边先同时减去 7。", "image": None,
                 "knowledge_points": ["简易方程"], "grade": "五年级",
-                "answer_status": "partner_question_bank"}
+                "answer_correct_provenance": "partner_question_bank"}
 
 
 @pytest.fixture
@@ -58,14 +58,15 @@ def test_real_kernel_start_uses_question_source(service):
     response = service.open("equation_subtract", "idem-real-1", learner={})
     assert response["first_question_ready"] is True
     conversation = service._conversation_or_404(response["conversation"]["conversation_id"])
-    # answer_status/grade 由题源填入 learner(#34 M3 前置口径)
-    assert conversation.extras["learner"]["answer_status"] == "partner_question_bank"
+    # 出处走 answer_correct_provenance(审查 P1:answer_status 是正确性字段,题源不碰)
+    assert conversation.extras["learner"]["answer_correct_provenance"] == "partner_question_bank"
+    assert "answer_status" not in conversation.extras["learner"]
     assert conversation.extras["learner"]["grade"] == "五年级"
     # 内核面最小化:text/image 进内核,answer/analysis 存 extras(学生可见面不含答案)
     assert conversation.extras["question_detail"]["answer"] == "x=6"
     kernel_session = conversation.extras["kernel_session"]
     assert kernel_session.question["text"].startswith("解方程")
-    assert kernel_session.learner["answer_status"] == "partner_question_bank"
+    assert kernel_session.learner["answer_correct_provenance"] == "partner_question_bank"
 
 
 def test_real_kernel_dialogue_and_version_conflict(service):
@@ -104,6 +105,6 @@ def test_seed_source_resolves_published_question():
     assert resolved["text"].startswith("解方程 3x+7=25")
     assert resolved["answer"] == "x=6"
     assert resolved["grade"] == "五年级"
-    assert resolved["answer_status"] == "partner_question_bank"
+    assert resolved["answer_correct_provenance"] == "partner_question_bank"
     with pytest.raises(KeyError):
         source.resolve("no_such_question")
