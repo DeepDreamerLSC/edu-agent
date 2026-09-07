@@ -84,7 +84,7 @@ def test_stream_emits_contract_frame_order(api):
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     frames = _parse_sse(response.content)
-    assert [event for event, _ in frames] == ["start", "interaction", "delta", "done"]
+    assert [event for event, _ in frames] == ["status", "start", "interaction", "delta", "done"]
     interaction = dict(frames)["interaction"]
     jsonschema.validate(interaction, skill_interaction_schema())
     delta = dict(frames)["delta"]

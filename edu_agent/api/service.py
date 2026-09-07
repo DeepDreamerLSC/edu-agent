@@ -11,6 +11,8 @@ SKILL_SESSION_CONFLICT / TEACHING_CONTEXT_PRELOAD_NOT_READY(兼容保留,新链�
 
 from __future__ import annotations
 
+import hashlib
+import hashlib
 import uuid
 from typing import Protocol
 
@@ -31,6 +33,12 @@ _ATTEMPT_STATES = {
     "failed": "failed",
 }
 EXPECTED_ROUNDS = 5  # 预期轮次:v1 常数默认(基线/评测典型 5 回合),不建跟踪机制
+# 00 §5.2 合同只实现 confirm 与普通对话(null);老通用面的其余 action 明确拒收
+# (M3 全景 B4:一个 if/else,不是工作流引擎)。
+SUPPORTED_ACTIONS = frozenset({None, "confirm"})
+UNSUPPORTED_ACTIONS = frozenset({
+    "activate", "submit_inputs", "diagnose", "pause", "resume", "restart", "cancel", "refresh",
+})
 
 
 class ApiError(Exception):
@@ -58,6 +66,7 @@ class ConversationService:
         self.kernel = kernel
         self.source = source
         self.sessions = sessions  # M3 PR6:上下文保留,未注入时空操作
+        self._turn_cache: dict[str, dict] = {}  # 消息幂等:cache_key → 响应(不重调模型)
 
     # ---------- open(幂等键,同键同 Attempt) ----------
 
@@ -130,8 +139,21 @@ class ConversationService:
         conversation = self.store.find_by_skill_session(skill_session_id)
         if conversation is None:
             raise ApiError(404, None, "skill_session 不存在")
+        # M3 全景 B3:interaction 信封 + assistant_message(首问就绪非空)+ agent_run
+        # (恒 completed——同步架构,不建异步任务系统)
         return {
-            "first_question": conversation.first_question,
+            "assistant_message": {"content": conversation.first_question},
+            "skill_interaction": {
+                "schema_version": "skill_interaction/v1",
+                "skill_session_id": conversation.skill_session_id,
+                "skill_id": SKILL_ID,
+                "skill_version": SKILL_VERSION,
+                "session_version": conversation.session_version,
+                "kind": "input_request",
+                "state": conversation.state,
+            },
+            "agent_run": {"id": f"agent_run_{conversation.attempt_id}",
+                          "status": "completed"},
             "session_version": conversation.session_version,
         }
 
@@ -141,7 +163,13 @@ class ConversationService:
         conversation = self._conversation_or_404(conversation_id)
         if conversation.state == "completed":
             raise ApiError(409, "SKILL_SESSION_CONFLICT", "会话已完成,重开需新幂等键")
+        if body.get("skill_id") not in (None, SKILL_ID):
+            raise ApiError(403, "SKILL_ID_INVALID", "skill_id 与本服务不匹配")
         action = (body.get("input") or {}).get("interaction_action")
+        if action is not None and action not in SUPPORTED_ACTIONS:
+            # M3 全景 B4:老通用面的 action 明确拒收——一个 if/else,不是工作流引擎
+            raise ApiError(400, "UNSUPPORTED_ACTION",
+                           f"interaction_action={action} 不在本合同内(仅 confirm/普通对话)")
         if action == "confirm":
             return self._confirm(conversation)
         return self._dialogue_turn(conversation, body)
@@ -150,6 +178,17 @@ class ConversationService:
         payload = body.get("input") or {}
         if payload.get("skill_session_id") not in (None, conversation.skill_session_id):
             raise ApiError(404, None, "skill_session 不属于该会话")
+        # 消息幂等(M3 全景 B4):message_idempotency_key + 会话 → 命中即原样返回
+        # 已生成 Turn(不重调模型、不 version++)——在版本门之前判(网络重试的本义:
+        # 首次已成功,重试不该被新版本门槛拦住)
+        idem = body.get("message_idempotency_key")
+        cache_key = ""
+        if idem is not None:
+            cache_key = hashlib.sha256(
+                f"{conversation.conversation_id}|{idem}".encode("utf-8")).hexdigest()
+            cached = self._turn_cache.get(cache_key)
+            if cached is not None:
+                return cached
         expected = payload.get("expected_session_version")
         if expected is not None and expected != conversation.session_version:
             # 00 §5.2 约定 3:旧版本 409,不静默覆盖新一轮诊断
@@ -174,7 +213,10 @@ class ConversationService:
         conversation.first_question = conversation.first_question or reply_text
         self.store.update(conversation)
         self._persist_session(conversation)
-        return self._message_response(conversation, reply_text)
+        response = self._message_response(conversation, reply_text)
+        if cache_key:
+            self._turn_cache[cache_key] = response
+        return response
 
     def _confirm(self, conversation: Conversation) -> dict:
         if conversation.state != "ready_to_confirm":
