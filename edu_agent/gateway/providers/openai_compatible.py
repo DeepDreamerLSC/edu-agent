@@ -40,10 +40,23 @@ def build_messages(request: ModelRequest, repair: GatewayError | None) -> list[d
     ]
 
 
+def _strip_code_fence(text: str) -> str:
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        stripped = stripped.split("\n", 1)[1] if "\n" in stripped else ""
+        if stripped.rstrip().endswith("```"):
+            stripped = stripped.rstrip()[:-3]
+    return stripped.strip()
+
+
 def validate_schema(schema: dict, text: str) -> None:
-    """路线 1 的本地校验(01 §8/issue #8):不合规抛 schema_violation;detail 不含输出原文。"""
+    """路线 1 的本地校验(01 §8/issue #8):不合规抛 schema_violation;detail 不含输出原文。
+
+    Markdown 代码围栏(```json … ```)视为包装噪声:剥壳后内容合法即通过——
+    围栏是格式包装,不是结构违规(实测 DeepSeek 独立评分恒带围栏)。
+    """
     try:
-        payload = json.loads(text)
+        payload = json.loads(_strip_code_fence(text))
     except json.JSONDecodeError as exc:
         raise GatewayError(
             FailureType.SCHEMA_VIOLATION, f"输出不是合法 JSON({exc.msg})", output=text

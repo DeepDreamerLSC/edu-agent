@@ -177,6 +177,35 @@ def test_invoke_schema_ok_passes(tmp_path):
     assert facts_line(tmp_path)["edu.outcome"] == "ok"
 
 
+def test_invoke_schema_tolerates_code_fence(tmp_path):
+    # Markdown 围栏是包装噪声,不是结构违规(实测 DeepSeek 独立评分恒带围栏);
+    # 剥壳后内容合法即通过,非 JSON 仍拒(schema_violation 语义不变)
+    fenced = "```json\n" + json.dumps({"answer": "3+4=7"}, ensure_ascii=False) + "\n```"
+    fake = FakeOpenAI([completion(fenced)]).start()
+    gateway = gateway_for(fake.url, tmp_path)
+    response = gateway.invoke(ModelRequest(
+        role="tutor", messages=[{"role": "user", "content": "3+4?"}], response_schema=SCHEMA,
+    ))
+    gateway.close()
+    fake.stop()
+    # ModelResponse.text 保留模型原文(含围栏);路线 1 校验剥壳后通过即 ok
+    assert "3+4=7" in response.text
+    assert facts_line(tmp_path)["edu.outcome"] == "ok"
+
+    still_rejected = FakeOpenAI([
+        completion("```json\n不是 JSON\n```"),
+        completion("```json\n不是 JSON\n```"),  # 修复重试恰一次(#32);第二次仍违规才落 schema_violation
+    ]).start()
+    gateway2 = gateway_for(still_rejected.url, tmp_path, max_attempts=1)
+    with pytest.raises(GatewayError) as excinfo:
+        gateway2.invoke(ModelRequest(
+            role="tutor", messages=[{"role": "user", "content": "3+4?"}], response_schema=SCHEMA,
+        ))
+    gateway2.close()
+    still_rejected.stop()
+    assert excinfo.value.failure is FailureType.SCHEMA_VIOLATION
+
+
 def test_schema_request_rejected_for_non_strict_role(tmp_path):
     fake = FakeOpenAI([]).start()
     gateway = gateway_for(fake.url, tmp_path, json_strict=False)
