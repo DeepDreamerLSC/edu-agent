@@ -6,7 +6,8 @@ from .guardrails import (
     StudentVisibleGuardrailFinding,
     evaluate_student_visible_question,
 )
-from .kernel import finish, reply, start
+from .kernel import SAFE_FALLBACK_TEXT, finish, reply, start
+from .prompting import style_directives, summary_system_prompt, system_prompt
 from .session import (
     LearnerSession,
     SessionVersionConflict,
@@ -19,6 +20,7 @@ from .tone_guardrails import ToneGuardrailResult, apply_tone_guardrail
 __all__ = [
     "FormatGuardResult",
     "LearnerSession",
+    "SAFE_FALLBACK_TEXT",
     "SessionVersionConflict",
     "StudentVisibleGuardrailEvaluation",
     "StudentVisibleGuardrailFinding",
@@ -32,4 +34,7 @@ __all__ = [
     "finish",
     "reply",
     "start",
+    "style_directives",
+    "summary_system_prompt",
+    "system_prompt",
 ]
