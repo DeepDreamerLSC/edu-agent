@@ -2,12 +2,15 @@
 
 一会话一文件:data/sessions/{session_id}.json;不用数据库不用 SQLite。
 additive-only:LearnerSession 新增字段靠 dataclass 默认值从旧文件补齐,
-不删字段、不写迁移。启动扫描 = load_all();api 层在每次内核回合后 save()。
+不删字段、不写迁移(历史文件若带已删字段会 TypeError——本语义下不删字段)。
+启动扫描 = load_all()(坏文件隔离跳过,不炸全部);api 层在每次内核回合后
+save()(tmp+os.replace 原子落盘,#31 runner 同款——进程被杀不留半截 JSON)。
 """
 
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import asdict
 from pathlib import Path
 
@@ -23,7 +26,9 @@ class FileSessionStore:
     def save(self, session: LearnerSession) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
         path = self.root / f"{session.session_id}.json"
-        path.write_text(json.dumps(asdict(session), ensure_ascii=False), encoding="utf-8")
+        tmp = path.with_name(path.name + ".tmp")
+        tmp.write_text(json.dumps(asdict(session), ensure_ascii=False), encoding="utf-8")
+        os.replace(tmp, path)  # 原子替换:重启恢复场景不留半截 JSON(#31 同款)
 
     def load(self, session_id: str) -> LearnerSession | None:
         path = self.root / f"{session_id}.json"
@@ -32,11 +37,19 @@ class FileSessionStore:
         return self._restore(json.loads(path.read_text(encoding="utf-8")))
 
     def load_all(self) -> list[LearnerSession]:
-        """启动扫描:目录内全部会话恢复为可用 session(文件名序,稳定)。"""
+        """启动扫描:目录内全部会话恢复为可用 session(文件名序,稳定)。
+
+        单文件损坏(半截 JSON)只跳过该文件,不炸整个扫描——重启恢复不被
+        一个坏文件全歼(审查 P2)。"""
         if not self.root.exists():
             return []
-        return [self._restore(json.loads(path.read_text(encoding="utf-8")))
-                for path in sorted(self.root.glob("*.json"))]
+        sessions = []
+        for path in sorted(self.root.glob("*.json")):
+            try:
+                sessions.append(self._restore(json.loads(path.read_text(encoding="utf-8"))))
+            except (json.JSONDecodeError, OSError):
+                print(f"[store] 跳过损坏的会话文件:{path}")
+        return sessions
 
     @staticmethod
     def _restore(data: dict) -> LearnerSession:

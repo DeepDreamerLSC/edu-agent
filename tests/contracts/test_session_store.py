@@ -77,6 +77,27 @@ def test_startup_scan_load_all_sorted(tmp_path):
     assert FileSessionStore(tmp_path / "void").load_all() == []  # 目录不存在 → 空表
 
 
+def test_corrupt_file_is_skipped_not_fatal(tmp_path):
+    """审查 P2 回归:一个半截 JSON(进程写入中途被杀的伴生产物)只被隔离跳过,
+    不炸整个启动扫描。"""
+    good = sample_session()
+    FileSessionStore(tmp_path).save(good)
+    (tmp_path / "kernel_broken.json").write_text('{"question": {"text": "半截', encoding="utf-8")
+    (tmp_path / "kernel_stray.tmp").write_text("{}", encoding="utf-8")  # 非会话后缀也不入扫
+    sessions = FileSessionStore(tmp_path).load_all()
+    assert [s.session_id for s in sessions] == [good.session_id]
+
+
+def test_save_is_atomic_no_tmp_left_behind(tmp_path):
+    """save = tmp+os.replace(#31 同款):落盘即完整,目录里不留 .tmp 半成品。"""
+    store = FileSessionStore(tmp_path)
+    session = sample_session()
+    store.save(session)
+    store.save(session)  # 覆盖写同样原子
+    assert sorted(p.name for p in tmp_path.iterdir()) == [f"{session.session_id}.json"]
+    assert store.load(session.session_id) == session
+
+
 def test_additive_only_old_file_loads_with_defaults(tmp_path):
     """旧文件缺新增字段 → dataclass 默认值补齐,不迁移不删字段(additive-only)。"""
     store = FileSessionStore(tmp_path)
