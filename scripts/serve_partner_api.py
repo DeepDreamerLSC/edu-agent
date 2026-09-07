@@ -31,11 +31,16 @@ class PartnerKernel:
     finish = staticmethod(finish)
 
 
-def main() -> int:
+def build() -> ThreadingHTTPServer:
+    """装配(env→config 转换在此发生:IdentityService 必须无参构造,#72 P1 回归钉)。"""
     port = int(os.environ.get("EDU_PARTNER_API_PORT", "8300"))
-    server = build_server(build_service(PartnerKernel()), IdentityService(os.environ),
-                          host="127.0.0.1", port=port)
-    print(f"partner api listening on 127.0.0.1:{port}", flush=True)
+    return build_server(build_service(PartnerKernel()), IdentityService(),
+                        host="127.0.0.1", port=port)
+
+
+def main() -> int:
+    server = build()
+    print(f"partner api listening on 127.0.0.1:{server.server_address[1]}", flush=True)
     server.serve_forever()
     return 0
 
