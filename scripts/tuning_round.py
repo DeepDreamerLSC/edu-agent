@@ -61,12 +61,16 @@ def build_cases() -> list[dict]:
         row = scenario_row(dataset, sid)
         bank_key = sid.removeprefix("stability_") if sid.startswith("stability_") else sid
         record = bank_record(bank_key, row["question"])
+        # R6 评测数据侧(任务书第 3 条):word_problem 补传 answer_status 验证策略分派
+        # 与结构化 summary 通路;其余场景不带(unknown → 首问无提示、finish 走原路径)。
+        answer_status = "correct" if bank_key == "word_problem" else None
         cases.append({
             "id": f"{dataset}_{sid}",
             "question": row["question"],
             "student_turns": row["student_turns"],
             "grade": record.get("grade", ""),
             "reference_answer": record.get("answer", ""),
+            **({"answer_status": answer_status} if answer_status else {}),
         })
     return cases
 

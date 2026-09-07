@@ -7,7 +7,15 @@ from .guardrails import (
     evaluate_student_visible_question,
 )
 from .kernel import SAFE_FALLBACK_TEXT, finish, reply, start
-from .prompting import style_directives, summary_system_prompt, system_prompt
+from .prompting import (
+    OPENING_HINT_CORRECT,
+    OPENING_HINT_INCORRECT,
+    OPENING_HINT_UNANSWERED,
+    opening_hint,
+    style_directives,
+    summary_system_prompt,
+    system_prompt,
+)
 from .session import (
     LearnerSession,
     SessionVersionConflict,
@@ -19,6 +27,9 @@ from .tone_guardrails import ToneGuardrailResult, apply_tone_guardrail
 
 __all__ = [
     "FormatGuardResult",
+    "OPENING_HINT_CORRECT",
+    "OPENING_HINT_INCORRECT",
+    "OPENING_HINT_UNANSWERED",
     "LearnerSession",
     "SAFE_FALLBACK_TEXT",
     "SessionVersionConflict",
@@ -32,6 +43,7 @@ __all__ = [
     "evaluate_student_visible_format",
     "evaluate_student_visible_question",
     "finish",
+    "opening_hint",
     "reply",
     "start",
     "style_directives",
