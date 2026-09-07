@@ -76,7 +76,11 @@ def test_partner_full_flow_replay_with_postman_bodies(api):
     conversation_id = opened["conversation"]["conversation_id"]
 
     refresh = post(base, f"/api/conversations/{conversation_id}/skill-sessions/{sid}/refresh")
-    assert refresh.json()["first_question"] == "我们先看已知条件,题目要我们求什么?"
+    # R6 后 refresh 返回全信封(M3 全景 B3):assistant_message + skill_interaction + agent_run
+    refreshed = refresh.json()
+    assert refreshed["assistant_message"]["content"] == "我们先看已知条件,题目要我们求什么?"
+    assert refreshed["skill_interaction"]["schema_version"] == "skill_interaction/v1"
+    assert refreshed["agent_run"]["status"] == "completed"
 
     # Postman「6. 提交一轮学生回答」请求体,占位符替换为回放上下文
     turn = post(base, f"/api/conversations/{conversation_id}/messages", _fill(

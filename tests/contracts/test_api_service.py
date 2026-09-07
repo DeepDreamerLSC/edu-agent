@@ -147,7 +147,11 @@ def test_refresh_returns_first_question_and_version(api, path_template):
     response = post(base, path)
     assert response.status_code == 200
     body = response.json()
-    assert body["first_question"] == "我们先看已知条件,题目要我们求什么?"
+    # M3 全景 B3:refresh 返回全信封(assistant_message + skill_interaction + agent_run)
+    assert body["assistant_message"]["content"] == "我们先看已知条件,题目要我们求什么?"
+    assert body["skill_interaction"]["schema_version"] == "skill_interaction/v1"
+    assert body["skill_interaction"]["skill_session_id"] == opened["skill_session_id"]
+    assert body["agent_run"]["status"] == "completed"
     assert body["session_version"] == opened["session_version"]
 
 
