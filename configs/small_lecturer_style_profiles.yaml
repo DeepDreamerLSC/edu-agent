@@ -1,0 +1,39 @@
+schema_version: small_lecturer_style_profiles/v1
+style_profile_version: small_lecturer_expression/v2
+profiles:
+  primary_lower:
+    grade_band: primary_lower
+    release_stage: enforce
+    style_directives:
+      sentence_shape: acknowledgement_plus_one_question
+      sentence_length: short
+      abstraction_level: concrete
+      encouragement_style: evidence_specific
+      interaction_pressure: normal
+  primary_upper:
+    grade_band: primary_upper
+    release_stage: enforce
+    style_directives:
+      sentence_shape: acknowledgement_plus_one_question
+      sentence_length: concise
+      abstraction_level: term_with_concrete_anchor
+      encouragement_style: evidence_specific
+      interaction_pressure: normal
+  junior_middle:
+    grade_band: junior_middle
+    release_stage: enforce
+    style_directives:
+      sentence_shape: acknowledgement_plus_one_question
+      sentence_length: standard
+      abstraction_level: abstract_reasoning
+      encouragement_style: evidence_specific
+      interaction_pressure: normal
+  neutral:
+    grade_band: neutral
+    release_stage: enforce
+    style_directives:
+      sentence_shape: acknowledgement_plus_one_question
+      sentence_length: standard
+      abstraction_level: term_with_concrete_anchor
+      encouragement_style: evidence_specific
+      interaction_pressure: normal
