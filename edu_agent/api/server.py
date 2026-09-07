@@ -30,6 +30,7 @@ _CREATE = re.compile(r"^/api/conversations$")
 _GET = re.compile(r"^/api/conversations/(?P<conversation_id>[^/]+)$")
 # 00 §5.2 必须保留约定 4:客户端不得提交 answer/analysis/mastery_status
 _FORBIDDEN_FIELDS = frozenset({"answer", "analysis", "mastery_status"})
+_LOGIN = re.compile(r"^/api/auth/login$")
 _NATIVE_CODES = re.compile(r"^/api/openapi/v1/auth/native-codes$")
 _NATIVE_TOKEN = re.compile(r"^/api/auth/native/token$")
 _HEALTHZ = re.compile(r"^/healthz$")
@@ -74,7 +75,9 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
     identity: IdentityService     # 同上(build_server 注入)
 
     def _identity_post(self) -> tuple[int, dict] | None:
-        """身份两端点自带鉴权(API Key / 授权码+PKCE);非身份路径返回 None。"""
+        """身份与登录端点自带鉴权(API Key / 授权码+PKCE / 演示账密);非身份路径返回 None。"""
+        if _LOGIN.match(self.path):
+            return self.identity.demo_login_body(self._read_body())
         if _NATIVE_CODES.match(self.path):
             return self.identity.native_code(self._read_body(), dict(self.headers))
         if _NATIVE_TOKEN.match(self.path):
@@ -136,6 +139,9 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         if _HEALTHZ.match(self.path):
             from .healthz import snapshot  # 局部导入:快照依赖模型配置,按需加载
             self._json(snapshot())
+            return
+        if not self.headers.get("Authorization"):
+            self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
         match = _GET.match(self.path)
         if match:
