@@ -139,8 +139,7 @@ def test_service_persists_kernel_session_after_turns(tmp_path):
     assert restored.state == "ready_to_confirm" and restored.session_version == 2
 
 
-def test_service_without_session_store_is_noop(tmp_path):
+def test_service_without_session_store_is_noop():
     service = build_service(ReplayKernel())  # 未注入 sessions:空操作,行为不变
     opened = service.open("q-1", "idem-store-2", learner={})
-    assert not (tmp_path / "data").exists()
     assert opened["first_question_ready"] is True
