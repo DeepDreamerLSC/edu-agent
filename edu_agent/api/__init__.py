@@ -1,8 +1,9 @@
 """api 包(00 §5.2 合作方接口面;03 §4 状态机的传输层)。
 
-公开入口:build_service(store=None, kernel) / build_server(service)——测试与
-评测线只从本入口取用(C 线铁律:api 不 import agents 包,内核经 Kernel 协议
-注入,真内核由 B 线提供,测试注入确定性假内核)。healthz(04 §2.2)同在此包。
+公开入口:build_service(store, kernel, source=None) / build_server(service) /
+partner_service()——测试与评测线只从本入口取用。M3 前置起 api 经
+kernel_adapter 桥接 agents.small_lecturer 真内核(02 §2.2 未禁 api→agents;
+gateway 经构造注入,CI 用假 gateway 零真实模型)。identity/healthz 同在此包。
 """
 
 from .identity import IdentityError, IdentityService
@@ -19,6 +20,14 @@ __all__ = [
 ]
 
 
-def build_service(kernel: Kernel,
-                  store: MemoryConversationStore | None = None) -> ConversationService:
-    return ConversationService(store or MemoryConversationStore(), kernel)
+def build_service(kernel: Kernel, store: MemoryConversationStore | None = None,
+                  source=None) -> ConversationService:
+    return ConversationService(store or MemoryConversationStore(), kernel, source)
+
+
+def partner_service() -> ConversationService:
+    """可运行入口装配(M3 前置 PR1):真内核(default_gateway)+题源(EDU_QUESTION_SOURCE 切换)。"""
+    from .kernel_adapter import SmallLecturerKernel
+    from .question_source import question_source as _source
+
+    return build_service(SmallLecturerKernel(), source=_source())

@@ -43,6 +43,10 @@ class SmallLecturerKernel:
         except SessionVersionConflict as error:
             raise ApiError(409, "SKILL_SESSION_CONFLICT",
                            f"会话版本过期,读取最新 interaction 后由学生决定是否重发:{error}") from error
+        except TerminalStateError as error:
+            # 审查 P2:vision fail-closed 后追问等"终态后操作"是 409(客户端可自愈),
+            # 不是 503 基础设施故障
+            raise ApiError(409, "SKILL_SESSION_CONFLICT", f"会话已终态:{error}") from error
         except Exception as error:
             raise self._map(error) from error
 

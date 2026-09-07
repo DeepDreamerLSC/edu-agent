@@ -80,15 +80,19 @@ class ConversationService:
         return self._open_response(conversation)
 
     def _resolved(self, question_id: str, learner: dict) -> tuple[dict, dict, dict | None]:
-        """题源解析(PR1):内核面最小化(text/image),答案/解析存 extras 供 judge(不进学生面);
-        answer_status/grade 由题源填入 learner(调用方字段优先)。source 未注入时维持旧形态。"""
+        """题源解析(PR1):内核面最小化(text/image),答案/解析/考点存 extras 供 judge
+        (不进学生面);出处走 answer_correct_provenance(审查 P1:answer_status 是正确性
+        字段,由 answer_correct 映射填,题源不碰);调用方 learner 字段优先。
+        source 未注入时维持旧形态(ScriptedKernel 夹具路径)。"""
         if self.source is None:
             return {"question_id": question_id}, learner, None
         resolved = self.source.resolve(question_id)
         question = {"question_id": question_id, "text": resolved["text"],
                     "image": resolved["image"]}
-        learner = {"grade": resolved["grade"],
-                   "answer_status": resolved["answer_status"], **learner}
+        provenance = resolved.get("answer_correct_provenance")
+        if provenance:
+            learner = {"answer_correct_provenance": provenance, **learner}
+        learner = {"grade": resolved["grade"], **learner}
         detail = {k: resolved[k] for k in ("answer", "analysis", "knowledge_points")}
         return question, learner, detail
 
