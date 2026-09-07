@@ -18,11 +18,15 @@ import time
 import uuid
 from datetime import datetime, timezone
 
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+
 CODE_TTL_S = 90  # partner-sso.md §3:授权码默认 90 秒,只能消费一次
 TOKEN_TTL_S = 7200  # 访问令牌默认两小时,首版无刷新令牌
 _VERIFIER_RE = re.compile(r"^[A-Za-z0-9\-._~]{43,128}$")
 _CHALLENGE_RE = re.compile(r"^[A-Za-z0-9\-_]{43}$")
-_DIGEST_INFO = bytes.fromhex("3031300d060960864801650304020105000420")  # SHA-256 的 PKCS#1 v1.5 前缀
 
 
 class IdentityError(Exception):
@@ -57,41 +61,14 @@ def load_student_map(raw: str) -> dict[str, dict]:
     return students
 
 
-def _rsa_public_numbers(pem: str) -> tuple[int, int]:
-    """从 SubjectPublicKeyInfo PEM 提取 RSA (n, e):最小 DER TLV 解析,只依赖 stdlib。"""
-    body = "".join(line for line in pem.splitlines() if line and "-----" not in line)
-    der = base64.b64decode(body)
-    cursor = 0
-
-    def read_tlv(data: bytes, at: int) -> tuple[int, bytes, int]:
-        tag = data[at]
-        length = data[at + 1]
-        at += 2
-        if length & 0x80:
-            size = length & 0x7F
-            length = int.from_bytes(data[at:at + size], "big")
-            at += size
-        return tag, data[at:at + length], at + length
-
-    _, spki, _ = read_tlv(der, 0)          # SubjectPublicKeyInfo
-    _, algorithm, cursor = read_tlv(spki, 0)  # AlgorithmIdentifier(跳过)
-    _, bitstring, _ = read_tlv(spki, cursor)  # BIT STRING(RSAPublicKey DER)
-    _, rsa_key, _ = read_tlv(bitstring[1:], 0)
-    _, modulus, cursor = read_tlv(rsa_key, 0)
-    _, exponent, _ = read_tlv(rsa_key, cursor)
-    return (int.from_bytes(modulus, "big"), int.from_bytes(exponent, "big"))
-
-
 def _rs256_verify(pem: str, signed: bytes, signature: bytes) -> bool:
-    """RS256(PKCS#1 v1.5 + SHA-256)验签:signature^e mod n 后核对填充与摘要。"""
-    modulus, exponent = _rsa_public_numbers(pem)
-    recovered = pow(int.from_bytes(signature, "big"), exponent, modulus)
-    padded = recovered.to_bytes((modulus.bit_length() + 7) // 8, "big")
-    digest = hashlib.sha256(signed).digest()
-    padding_end = padded.find(b"\x00", 2)
-    return (padded.startswith(b"\x00\x01") and padding_end > 8
-            and padded[2:padding_end] == b"\xff" * (padding_end - 2)
-            and padded[padding_end + 1:] == _DIGEST_INFO + digest)
+    """RS256(PKCS#1 v1.5 + SHA-256)验签(cryptography 库;人批结构决策,审查 P2)。"""
+    try:
+        load_pem_public_key(pem.encode()).verify(
+            signature, signed, padding.PKCS1v15(), hashes.SHA256())
+        return True
+    except (InvalidSignature, ValueError):
+        return False
 
 
 def _decode_jwt(token: str, pem: str, kid: str, issuer: str, audience: str,

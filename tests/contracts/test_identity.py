@@ -31,38 +31,38 @@ CONFIG = {
 
 
 @pytest.fixture
-def key_pem() -> tuple[str, int, int]:
-    """现场生成 RSA-1024 测试密钥对:PEM 给服务验签,d 给断言签名。"""
-    from partner_fixture import generate_rsa_key
-    n, e, d = generate_rsa_key(1024)
-    return public_pem(n, e), n, d
+def key_pair() -> tuple[str, object]:
+    """(验签用 PEM, 签名用私钥对象)。"""
+    from partner_fixture import generate_key, public_pem
+    key = generate_key(1024)
+    return public_pem(key), key
 
 
 def make_service(key_pem: str) -> IdentityService:
     return IdentityService(dict(CONFIG, verify_key_pem=key_pem))
 
 
-def assertion(key_pem: str, n: int, d: int, **overrides) -> str:
+def assertion(private_key, **overrides) -> str:
     import time
     external_id = overrides.get("external_id", "student-001")
     expired = overrides.get("expired", False)
     stamp = (overrides.get("now") or int(time.time())) - (3600 if expired else 0)
     return sign_rs256(
+        private_key,
         {"alg": "RS256", "kid": overrides.get("kid", "partner-key-2026-01"), "typ": "JWT"},
         {"iss": overrides.get("issuer", "https://partner.example"), "sub": external_id,
          "aud": overrides.get("audience", "edu-agent"), "iat": stamp,
          "nbf": stamp, "exp": stamp + 60, "jti": "jti-" + external_id + str(stamp),
          "external_tenant_id": "partner-school-001", "external_student_id": external_id,
-         "role": "student", "display_name": "张同学"},
-        n, d)
+         "role": "student", "display_name": "张同学"})
 
 
-def code_request(key_pem: str, n: int, d: int, **overrides) -> tuple[dict, dict]:
+def code_request(private_key, **overrides) -> tuple[dict, dict]:
     claim_overrides = {k: overrides[k] for k in
                        ("external_id", "expired", "audience", "issuer", "kid") if k in overrides}
     body = {
         "assertion": overrides.get("assertion_override")
-        or assertion(key_pem, n, d, **claim_overrides),
+        or assertion(private_key, **claim_overrides),
         "external_student_id": overrides.get("external_student_id", "student-001"),
         "native_app_id": overrides.get("native_app_id", "partner_student_app"),
         "code_challenge": overrides.get(
@@ -80,12 +80,12 @@ def partner_challenge(verifier: str) -> str:
     return pkce_challenge(verifier)
 
 
-def test_pkce_full_dance(key_pem):
+def test_pkce_full_dance(key_pair):
     """样例回放(#48/postman 字段):断言+challenge → 201 code → verifier → 200 token。"""
-    pem, n, d = key_pem
+    pem, private_key = key_pair
     service = make_service(pem)
     verifier = base64.urlsafe_b64encode(hashlib.sha256(b"the-verifier").digest()).rstrip(b"=").decode()
-    body, headers = code_request(pem, n, d, code_challenge=partner_challenge(verifier))
+    body, headers = code_request(private_key, code_challenge=partner_challenge(verifier))
     status, payload = service.native_code(body, headers)
     assert status == 201
     data = payload["data"]
@@ -104,11 +104,11 @@ def test_pkce_full_dance(key_pem):
                              "display_name": "张同学", "tenant_id": "school_001"}
 
 
-def test_pkce_wrong_verifier_rejected_then_code_still_valid(key_pem):
-    pem, n, d = key_pem
+def test_pkce_wrong_verifier_rejected_then_code_still_valid(key_pair):
+    pem, private_key = key_pair
     service = make_service(pem)
     verifier = base64.urlsafe_b64encode(hashlib.sha256(b"right").digest()).rstrip(b"=").decode()
-    body, headers = code_request(pem, n, d, code_challenge=partner_challenge(verifier))
+    body, headers = code_request(private_key, code_challenge=partner_challenge(verifier))
     _, payload = service.native_code(body, headers)
     code = payload["data"]["authorization_code"]
     with pytest.raises(IdentityError) as excinfo:
@@ -121,11 +121,11 @@ def test_pkce_wrong_verifier_rejected_then_code_still_valid(key_pem):
     assert token["access_token"]
 
 
-def test_code_single_use_and_expiry(key_pem):
-    pem, n, d = key_pem
+def test_code_single_use_and_expiry(key_pair):
+    pem, private_key = key_pair
     service = make_service(pem)
     verifier = base64.urlsafe_b64encode(hashlib.sha256(b"v").digest()).rstrip(b"=").decode()
-    body, headers = code_request(pem, n, d, code_challenge=partner_challenge(verifier))
+    body, headers = code_request(private_key, code_challenge=partner_challenge(verifier))
     _, payload = service.native_code(body, headers)
     code = payload["data"]["authorization_code"]
     token_body = {"native_app_id": "partner_student_app", "authorization_code": code,
@@ -148,37 +148,37 @@ def test_code_single_use_and_expiry(key_pem):
         (401, "NATIVE_AUTHORIZATION_CODE_EXPIRED")
 
 
-def test_assertion_errors_follow_contract(key_pem):
-    pem, n, d = key_pem
+def test_assertion_errors_follow_contract(key_pair):
+    pem, private_key = key_pair
     service = make_service(pem)
     for overrides in (
         {"expired": True},                     # 断言过期
         {"kid": "someone-else"},               # 未登记的 kid
         {"audience": "other"},                 # 受众不符
     ):
-        body, headers = code_request(pem, n, d, **overrides)
+        body, headers = code_request(private_key, **overrides)
         with pytest.raises(IdentityError) as excinfo:
             service.native_code(body, headers)
         assert (excinfo.value.status_code, excinfo.value.code) == (401, "NATIVE_IDENTITY_INVALID")
 
-    tampered = assertion(pem, n, d)[:-6] + "AAAAAA"  # 篡改签名
-    body, headers = code_request(pem, n, d, assertion_override=tampered)
+    tampered = assertion(private_key)[:-6] + "AAAAAA"  # 篡改签名
+    body, headers = code_request(private_key, assertion_override=tampered)
     with pytest.raises(IdentityError) as excinfo:
         service.native_code(body, headers)
     assert excinfo.value.code == "NATIVE_IDENTITY_INVALID"
 
-    unknown = assertion(pem, n, d, external_id="student-404")
-    body, headers = code_request(pem, n, d, assertion_override=unknown,
+    unknown = assertion(private_key, external_id="student-404")
+    body, headers = code_request(private_key, assertion_override=unknown,
                                  external_student_id="student-404")
     with pytest.raises(IdentityError) as excinfo:
         service.native_code(body, headers)
     assert excinfo.value.code == "NATIVE_IDENTITY_INVALID"  # 映射不存在 fail closed
 
 
-def test_idempotency_same_key_replays_and_conflicts(key_pem):
-    pem, n, d = key_pem
+def test_idempotency_same_key_replays_and_conflicts(key_pair):
+    pem, private_key = key_pair
     service = make_service(pem)
-    body, headers = code_request(pem, n, d)
+    body, headers = code_request(private_key)
     status, payload = service.native_code(body, headers)
     assert status == 201
     # 同键同参:返回仍有效的原授权码合同
@@ -186,7 +186,7 @@ def test_idempotency_same_key_replays_and_conflicts(key_pem):
     assert (replay_status, replay["data"]["authorization_code"]) == \
         (200, payload["data"]["authorization_code"])
     # 同键异参:409
-    body2, headers2 = code_request(pem, n, d, idempotency_key=headers["Idempotency-Key"])
+    body2, headers2 = code_request(private_key, idempotency_key=headers["Idempotency-Key"])
     body2["code_challenge"] = "a" * 43
     with pytest.raises(IdentityError) as excinfo:
         service.native_code(body2, headers2)
@@ -194,22 +194,22 @@ def test_idempotency_same_key_replays_and_conflicts(key_pem):
         (409, "SSO_IDEMPOTENCY_CONFLICT")
 
 
-def test_error_family_follows_contract(key_pem):
-    pem, n, d = key_pem
+def test_error_family_follows_contract(key_pair):
+    pem, private_key = key_pair
     service = make_service(pem)
-    body, headers = code_request(pem, n, d, api_key="also-" + secrets.token_hex(8))
+    body, headers = code_request(private_key, api_key="also-" + secrets.token_hex(8))
     with pytest.raises(IdentityError) as unauthorized:
         service.native_code(body, headers)
     assert (unauthorized.value.status_code, unauthorized.value.code) == \
         (401, "OPENAPI_UNAUTHORIZED")
 
-    body, headers = code_request(pem, n, d, native_app_id="unknown_app")
+    body, headers = code_request(private_key, native_app_id="unknown_app")
     with pytest.raises(IdentityError) as forbidden:
         service.native_code(body, headers)
     assert (forbidden.value.status_code, forbidden.value.code) == \
         (403, "NATIVE_APP_INVALID")
 
-    body, headers = code_request(pem, n, d, code_challenge="short")
+    body, headers = code_request(private_key, code_challenge="short")
     with pytest.raises(IdentityError) as pkce:
         service.native_code(body, headers)
     assert (pkce.value.status_code, pkce.value.code) == (400, "NATIVE_PKCE_INVALID")
