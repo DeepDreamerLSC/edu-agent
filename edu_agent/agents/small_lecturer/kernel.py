@@ -120,6 +120,9 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
     (fail closed,不调 tutor),后续 reply/finish 对该 session 抛 TerminalStateError。
     纯图题(question.text 为空)判可信时,transcription 回填题面(M3 PR7)——
     转写即教师侧 prompt 的题面,学生侧仍只见 tutor 输出经护栏后的文本。
+    两条失败路径正交(审查留审 1 落档):vision 服务不可达/超时 = GatewayError
+    冒泡(环境失败,调用方决定重试降级);vision 可达但判不可信 = fail closed
+    (内容安全,不重试不降级)。
     """
     gateway = gateway or default_gateway()
     session = LearnerSession(question=question, learner=learner)
