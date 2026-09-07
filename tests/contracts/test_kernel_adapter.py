@@ -27,7 +27,8 @@ class FakeGateway:
     def invoke(self, request):
         self.requests.append(request)
         if request.role == "vision":
-            text = json.dumps({"acceptable": True, "reason": "单题清晰"})
+            text = json.dumps({"acceptable": True, "reason": "单题清晰",
+                               "transcription": ""})
         else:
             text = json.dumps({"reply": "你先说说题目给了哪些条件?",
                                "ready_to_confirm": self.ready_to_confirm},
@@ -62,10 +63,12 @@ def test_real_kernel_start_uses_question_source(service):
     assert conversation.extras["learner"]["answer_correct_provenance"] == "partner_question_bank"
     assert "answer_status" not in conversation.extras["learner"]
     assert conversation.extras["learner"]["grade"] == "五年级"
-    # 内核面最小化:text/image 进内核,answer/analysis 存 extras(学生可见面不含答案)
+    # answer/analysis 进内核面=教师侧 prompt(M3 PR2);extras 副本仍供 judge
     assert conversation.extras["question_detail"]["answer"] == "x=6"
     kernel_session = conversation.extras["kernel_session"]
     assert kernel_session.question["text"].startswith("解方程")
+    assert kernel_session.question["answer"] == "x=6"
+    assert kernel_session.question["knowledge_points"] == ["简易方程"]
     assert kernel_session.learner["answer_correct_provenance"] == "partner_question_bank"
 
 

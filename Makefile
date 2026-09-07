@@ -15,7 +15,8 @@ test:
 # ---- 部署与模型服务(04 §2):ENV 只有 local|test,差一个 .env.<ENV>,凭据不进仓库 ----
 
 UID_S := $(shell id -u)
-MODEL_LABELS := com.edu-agent.m0.mlx-tutor-8301 com.edu-agent.m0.llama-judge-8302
+MODEL_LABELS := com.edu-agent.m0.mlx-tutor-8301 com.edu-agent.m0.llama-judge-8302 \
+               com.edu-agent.m0.vision-8303
 APP_URL := http://127.0.0.1:8300/healthz
 
 deploy: ## 一条命令两分钟内(04 §2.1):make deploy ENV=local|test

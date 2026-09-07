@@ -4,12 +4,17 @@
 (tutor 角色走 llama-server grammar 级 json_strict;#54 后口径:校验成功的响应
 text 即已验证 JSON,直接解析,不自行剥壳/二次校验)。GatewayError 按失败类型
 冒泡,内核不吞——调用方(评测线/api 层)决定重试与降级。含图题目经 gateway
-vision 角色做图意理解与「题图不可信/多题混入」检测,不可信即 fail closed
+vision 角色做图意理解与「题图不可信/多题混入」检测(M3 PR7 schema 三字段:
+acceptable/reason/transcription;纯图题——question.text 为空——的可信转写回填
+question.text 进教师侧 prompt),不可信即 fail closed
 (不调 tutor,Turn.state=failed);纯文本题跳过 vision。
 
 PR2:system 消息按 prompting.py 装配(SKILL 剪裁版 + 风格档案 + 攻守图教学
 指令);tutor 输出经三护栏(答案泄露/语气/格式)——护栏不过的文本不进入
-Turn.text,替换为确定性安全问句(M2 清单阶段 2,断言即规格)。
+Turn.text,替换为确定性安全问句(M2 清单阶段 2,断言即规格)。M3 PR7:题目
+段带参考答案/解析进教师侧 prompt(question.answer/analysis/knowledge_points
+由题源适配器填入),泄露护栏对照文本同步扩到 answer/analysis——教师侧看得见
+答案,学生侧永远看不到。
 """
 
 from __future__ import annotations
@@ -20,7 +25,7 @@ from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 
 from .format_guard import evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
-from .prompting import opening_hint, summary_system_prompt, system_prompt
+from .prompting import _user_prompt, opening_hint, summary_system_prompt, system_prompt
 from .session import LearnerSession, SessionVersionConflict, Summary, TerminalStateError, Turn
 from .tone_guardrails import apply_tone_guardrail
 
@@ -41,13 +46,14 @@ TUTOR_SUMMARY_SCHEMA = {
     "required": ["summary"],
     "additionalProperties": False,
 }
-VISION_CHECK_SCHEMA = {
+VISION_CHECK_SCHEMA = {  # M3 PR7(#34):三字段;transcription=可信时的整题转写
     "type": "object",
     "properties": {
         "acceptable": {"type": "boolean"},
         "reason": {"type": "string"},
+        "transcription": {"type": "string"},
     },
-    "required": ["acceptable", "reason"],
+    "required": ["acceptable", "reason", "transcription"],
     "additionalProperties": False,
 }
 
@@ -58,10 +64,17 @@ NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能�
 SAFE_FALLBACK_TEXT = "先回到当前小问,你能说出题目明确给出的一个条件吗?"
 
 
-def _guard_output(question_text: str, reply_text: str, grade: str) -> str:
-    """三护栏(泄露/语气/格式)逐个过;任一命中即替换为安全文案(M2 阶段 2)。"""
+def _guard_output(question: dict, reply_text: str, grade: str) -> str:
+    """三护栏(泄露/语气/格式)逐个过;任一命中即替换为安全文案(M2 阶段 2)。
+
+    M3 PR7:泄露护栏对照文本从题面扩到参考答案/解析——教师侧 prompt 里的
+    answer/analysis 若出现在回复中即拦截(答案不许从教师侧漏到学生侧)。"""
     leak = evaluate_student_visible_question(
-        reply_text, active_subquestion_text=question_text)
+        reply_text,
+        answer_reference=str(question.get("answer") or ""),
+        active_subquestion_text=str(question.get("text") or ""),
+        analysis_reference=str(question.get("analysis") or ""),
+    )
     if leak.fallback_required:
         return SAFE_FALLBACK_TEXT
     tone = apply_tone_guardrail(
@@ -83,15 +96,13 @@ def _tone_band(grade: str) -> str:
     return "neutral"
 
 
-def _opening_messages(learner: dict, question: dict) -> dict:
-    """首问消息:user 消息开头拼 answer_status 的策略提示(unknown/缺省不加,#34 R6)。"""
-    context = {"题目": question.get("text") or question.get("image"), "学生": learner,
-               "任务": "生成首问"}
+def _opening_user_message(learner: dict, question: dict) -> dict:
+    """首问 user 消息:answer_status 的策略提示拼在开头(unknown/缺省不加,#34 R6)。"""
     hint = opening_hint(learner.get("answer_status"))
+    context = _user_prompt(question, {"学生": learner, "任务": "生成首问"})
     if hint:
-        return {"role": "user",
-                "content": f"{hint}\n" + json.dumps(context, ensure_ascii=False)}
-    return {"role": "user", "content": json.dumps(context, ensure_ascii=False)}
+        return {"role": "user", "content": f"{hint}\n{context}"}
+    return {"role": "user", "content": context}
 
 
 def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
@@ -102,21 +113,16 @@ def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
     ))
 
 
-def _opening_user_message(learner: dict, question: dict) -> dict:
-    """首问 user 消息:answer_status 的策略提示拼在开头(unknown/缺省不加,#34 R6)。"""
-    context = {"题目": question.get("text") or question.get("image"), "学生": learner,
-               "任务": "生成首问"}
-    hint = opening_hint(learner.get("answer_status"))
-    if hint:
-        return {"role": "user", "content": f"{hint}\n{json.dumps(context, ensure_ascii=False)}"}
-    return {"role": "user", "content": json.dumps(context, ensure_ascii=False)}
-
-
 def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> Turn:
     """生成首问(03 §4 Preparing → FirstQuestionReady / Failed)。
 
     纯文本题跳过 vision(00 §5.1);含图题 vision 判不可信 → Turn.state=failed
     (fail closed,不调 tutor),后续 reply/finish 对该 session 抛 TerminalStateError。
+    纯图题(question.text 为空)判可信时,transcription 回填题面(M3 PR7)——
+    转写即教师侧 prompt 的题面,学生侧仍只见 tutor 输出经护栏后的文本。
+    两条失败路径正交(审查留审 1 落档):vision 服务不可达/超时 = GatewayError
+    冒泡(环境失败,调用方决定重试降级);vision 可达但判不可信 = fail closed
+    (内容安全,不重试不降级)。
     """
     gateway = gateway or default_gateway()
     session = LearnerSession(question=question, learner=learner)
@@ -131,15 +137,18 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
             session.state = "failed"
             return Turn(text=FAIL_CLOSED_TEXT, session_version=session.session_version,
                         state="failed", session=session)
+        if not question.get("text") and verdict.get("transcription"):
+            # 纯图题:转写回填题面(新 dict,不改调用方入参)
+            session.question = {**session.question, "text": str(verdict["transcription"])}
     first = json.loads(_invoke(
         gateway, "tutor",
         [{"role": "system", "content": system_prompt(learner.get("grade", ""))},
-         _opening_user_message(learner, question)],
+         _opening_user_message(learner, session.question)],
         TUTOR_TURN_SCHEMA, session,
     ).text)
     session.state = "first_question_ready"
     session.first_question = first["reply"]
-    safe_text = _guard_output(str(question.get("text") or ""), first["reply"], learner.get("grade", ""))
+    safe_text = _guard_output(session.question, first["reply"], learner.get("grade", ""))
     return Turn(text=safe_text, session_version=session.session_version,
                 state=session.state, ready_to_confirm=bool(first["ready_to_confirm"]),
                 session=session)
@@ -157,14 +166,14 @@ def reply(session: LearnerSession, student_message: str, *,
     output = json.loads(_invoke(
         gateway, "tutor",
         [{"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
-         {"role": "user", "content": json.dumps(
-             {"题目": session.question, "学生": session.learner, "对话记录": session.history,
-              "学生本轮回答": student_message,
-              "输出提醒": "若学生本轮已给出正确最终答案(或明确表示理解并完成检验),"
-                          "ready_to_confirm 置 true;否则 false。"}, ensure_ascii=False)}],
+         {"role": "user", "content": _user_prompt(session.question, {
+             "学生": session.learner, "对话记录": session.history,
+             "学生本轮回答": student_message,
+             "输出提醒": "若学生本轮已给出正确最终答案(或明确表示理解并完成检验),"
+                         "ready_to_confirm 置 true;否则 false。"})}],
         TUTOR_TURN_SCHEMA, session,
     ).text)
-    safe_text = _guard_output(str(session.question.get("text") or ""), output["reply"],
+    safe_text = _guard_output(session.question, output["reply"],
                               session.learner.get("grade", ""))
     if safe_text != output["reply"]:
         session.stuck = True  # 卡点标记(R6):护栏替换 = 本轮存在未解决的质量问题
@@ -217,9 +226,9 @@ def finish(session: LearnerSession, *, gateway: Gateway | None = None) -> Summar
     output = json.loads(_invoke(
         gateway, "tutor",
         [{"role": "system", "content": summary_system_prompt(session.learner.get("grade", ""))},
-         {"role": "user", "content": json.dumps(
-             {"题目": session.question, "学生": session.learner, "对话记录": session.history,
-              "任务": "生成学习总结"}, ensure_ascii=False)}],
+         {"role": "user", "content": _user_prompt(session.question, {
+             "学生": session.learner, "对话记录": session.history,
+             "任务": "生成学习总结"})}],
         TUTOR_SUMMARY_SCHEMA, session,
     ).text)
     session.state = "completed"
