@@ -14,10 +14,23 @@ from __future__ import annotations
 import uuid
 from typing import Protocol
 
-from edu_agent.store import Conversation, MemoryConversationStore
+from edu_agent.store import Conversation, FileSessionStore, MemoryConversationStore
 
 SKILL_ID = "small_lecturer_coaching"
 SKILL_VERSION = "2026-09-migration-v1"  # #45 SKILL.md 剪裁版的版本串
+
+# M3 PR6:内核态 → 合作方 attempt_state 词汇(老系统 learning_dialogue 口径,
+# #34 基线实录出现 collecting_inputs/ready_to_confirm/completed);马尾梯直读映射。
+_ATTEMPT_STATES = {
+    "preparing": "preparing",
+    "first_question_ready": "collecting_inputs",
+    "dialogue": "collecting_inputs",
+    "ready_to_confirm": "ready_to_confirm",
+    "needs_review": "needs_review",
+    "completed": "completed",
+    "failed": "failed",
+}
+EXPECTED_ROUNDS = 5  # 预期轮次:v1 常数默认(基线/评测典型 5 回合),不建跟踪机制
 
 
 class ApiError(Exception):
@@ -40,10 +53,11 @@ class Kernel(Protocol):
 
 class ConversationService:
     def __init__(self, store: MemoryConversationStore, kernel: Kernel,
-                 source=None) -> None:
+                 source=None, sessions: FileSessionStore | None = None) -> None:
         self.store = store
         self.kernel = kernel
         self.source = source
+        self.sessions = sessions  # M3 PR6:上下文保留,未注入时空操作
 
     # ---------- open(幂等键,同键同 Attempt) ----------
 
@@ -77,6 +91,7 @@ class ConversationService:
             extras=extras,
         )
         conversation = self.store.create(conversation, idempotency_key)
+        self._persist_session(conversation)
         return self._open_response(conversation)
 
     def _resolved(self, question_id: str, learner: dict) -> tuple[dict, dict, dict | None]:
@@ -158,6 +173,7 @@ class ConversationService:
         conversation.state = "ready_to_confirm" if ready else "dialogue"
         conversation.first_question = conversation.first_question or reply_text
         self.store.update(conversation)
+        self._persist_session(conversation)
         return self._message_response(conversation, reply_text)
 
     def _confirm(self, conversation: Conversation) -> dict:
@@ -176,6 +192,7 @@ class ConversationService:
             conversation.summary = {"status": "completed"}  # 不可变:completed 后只读
             conversation.state = "completed"
             self.store.update(conversation)
+            self._persist_session(conversation)
         return {
             "ready_to_confirm": True,
             "status": "completed",
@@ -194,12 +211,24 @@ class ConversationService:
     def interaction_envelope(conversation: Conversation) -> dict:
         """skill_interaction/v1 全量信封(按 #48 edu_agent/contracts 的 schema 装配)。
 
-        kind 映射:dialogue→input_request、ready_to_confirm→confirmation、completed→result
-        (progress 供内核将来报告准备进度);可选集合字段按 schema 默认空载。
+        M3 PR6 运行时填充(马尾梯:直读既有状态,不建状态机/跟踪机制):
+        attempt_state/progress 直读内核 session(无 session 的夹具内核回退
+        conversation);kind/state/confirmation 跟随 conversation(响应面)。
+        inputs/requirements/missing_input_ids 无多步输入流,恒空载。
+        已知结构现状:confirm 在 ready 路径不调 kernel.finish(PR1 最小接线),
+        内核 attempt 停在 ready_to_confirm——随 B 线 PR4 refresh 语义补齐对齐。
         """
+        session = conversation.extras.get("kernel_session")
+        attempt_state_source = str(getattr(session, "state", "") or conversation.state)
         kind = {"dialogue": "input_request", "first_question_ready": "input_request",
                 "ready_to_confirm": "confirmation", "completed": "result",
                 "preparing": "progress"}.get(conversation.state, "progress")
+        confirmation = None
+        if conversation.state == "ready_to_confirm":
+            confirmation = {"ready_to_confirm": True, "completed": False}
+        elif conversation.state == "completed":
+            confirmation = {"ready_to_confirm": True, "completed": True}
+        history = getattr(session, "history", None) or conversation.extras.get("history", [])
         envelope = {
             "schema_version": "skill_interaction/v1",
             "skill_session_id": conversation.skill_session_id,
@@ -208,16 +237,25 @@ class ConversationService:
             "session_version": conversation.session_version,
             "kind": kind,
             "state": conversation.state,
+            "attempt_state": {"state": _ATTEMPT_STATES.get(
+                attempt_state_source, attempt_state_source)},
             "inputs": [],
             "requirements": [],
             "missing_input_ids": [],
-            "confirmation": None,
-            "progress": None,
+            "confirmation": confirmation,
+            "progress": {"current_round": sum(1 for m in history if m.get("role") == "user"),
+                         "expected_rounds": EXPECTED_ROUNDS},
             "result": conversation.summary,
         }
         return envelope
 
     # ---------- 内部 ----------
+
+    def _persist_session(self, conversation: Conversation) -> None:
+        """上下文保留(M3 PR6):内核回合后把 LearnerSession 落盘;未注入即空操作。"""
+        session = conversation.extras.get("kernel_session")
+        if self.sessions is not None and session is not None:
+            self.sessions.save(session)
 
     def _kernel_session(self, conversation: Conversation) -> object:
         """真内核:open 时暂存的 LearnerSession 对象(内存态);

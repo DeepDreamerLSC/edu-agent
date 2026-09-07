@@ -18,3 +18,7 @@ __pycache__/
 
 # 部署台账与基准报告等本地产物(04 §2.1 JSONL / benchmark report)
 var/
+
+# 会话文件 store(M3 PR6 FileSessionStore)的运行时产物,本地状态不入库
+# (同 var/ 口径,04 §2.1)
+data/

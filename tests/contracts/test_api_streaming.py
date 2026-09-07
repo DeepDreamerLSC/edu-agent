@@ -45,10 +45,10 @@ def test_envelope_validates_against_contract_schema(api):
     interaction = response.json()["skill_interaction"]
     jsonschema.validate(interaction, skill_interaction_schema())  # 全字段过 #48 schema
     assert interaction["kind"] == "input_request" and interaction["state"] == "dialogue"
-    assert set(interaction) == {  # 全量字段集(schema properties 逐键在位)
+    assert set(interaction) == {  # 全量字段集(schema properties 逐键在位;M3 PR6 填 attempt_state)
         "schema_version", "skill_session_id", "skill_id", "skill_version",
-        "session_version", "kind", "state", "inputs", "requirements",
-        "missing_input_ids", "confirmation", "progress", "result",
+        "session_version", "kind", "state", "attempt_state", "inputs",
+        "requirements", "missing_input_ids", "confirmation", "progress", "result",
     }
 
 
