@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import hashlib
 import uuid
+from datetime import datetime, timezone
 from typing import Protocol
 
 from edu_agent.store import Conversation, FileSessionStore, MemoryConversationStore
@@ -70,6 +71,22 @@ class ConversationService:
 
     # ---------- open(幂等键,同键同 Attempt) ----------
 
+    def create(self, question_id: str, idempotency_key: str, learner: dict) -> dict:
+        """会话入口形态(POST /api/conversations):与 open 同逻辑,扁平响应(合同字段)。
+
+        幂等重试返回同一 conversation_id(复用 open 的幂等/题目固定校验)。
+        """
+        payload = self.open(question_id, idempotency_key, learner)
+        conversation = self.store.find_by_idempotency(idempotency_key)
+        return {
+            "conversation_id": payload["conversation"]["conversation_id"],
+            "skill_session_id": payload["skill_session_id"],
+            "session_version": payload["session_version"],
+            "first_question_ready": payload["first_question_ready"],
+            "first_question": conversation.first_question if conversation else None,
+            "retry_after_ms": payload["retry_after_ms"],
+        }
+
     def open(self, question_id: str, idempotency_key: str, learner: dict) -> dict:
         if not idempotency_key:
             raise ApiError(422, None, "idempotency_key 必填(00 §5.2:请求只有 idempotency_key)")
@@ -86,7 +103,9 @@ class ConversationService:
             raise
         except Exception as error:  # 内核/模型基础设施故障 → 503(合同表)
             raise ApiError(503, None, f"服务暂不可用:{type(error).__name__}") from error
-        extras = {"learner": learner, "kernel_session": getattr(turn, "session", None)}
+        extras = {"learner": learner, "kernel_session": getattr(turn, "session", None),
+                  "created_at": datetime.now(timezone.utc)
+                  .isoformat().replace("+00:00", "Z")}
         if detail is not None:
             extras["question_detail"] = detail
         conversation = Conversation(
@@ -119,6 +138,18 @@ class ConversationService:
         learner = {"grade": resolved["grade"], **learner}
         detail = {k: resolved[k] for k in ("answer", "analysis", "knowledge_points")}
         return question, learner, detail
+
+    @staticmethod
+    def _create_response(conversation: Conversation) -> dict:
+        """会话入口(POST /api/conversations)的扁平响应(任务书 M3 合同;幂等重试同)。"""
+        return {
+            "conversation_id": conversation.conversation_id,
+            "skill_session_id": conversation.skill_session_id,
+            "session_version": conversation.session_version,
+            "first_question_ready": True,
+            "first_question": conversation.first_question,
+            "retry_after_ms": 0,
+        }
 
     @staticmethod
     def _open_response(conversation: Conversation) -> dict:
@@ -309,6 +340,18 @@ class ConversationService:
             "question_id": conversation.question_id,
             "history": conversation.extras.setdefault("history", []),
             "state": conversation.state,
+        }
+
+    def status(self, conversation_id: str) -> dict:
+        """会话状态视图(GET /api/conversations/{id},M3 最后代码 PR)。"""
+        conversation = self._conversation_or_404(conversation_id)
+        return {
+            "conversation_id": conversation.conversation_id,
+            "state": conversation.state,
+            "session_version": conversation.session_version,
+            "question_id": conversation.question_id,
+            "created_at": conversation.extras.get("created_at"),
+            "turn_count": len(conversation.extras.get("history", [])),
         }
 
     def _conversation_or_404(self, conversation_id: str) -> Conversation:
