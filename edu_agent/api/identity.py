@@ -99,8 +99,42 @@ def _hmac_token(payload: dict, key: str) -> str:
     return f"edu_native_{body}.{signature}"
 
 
+DEMO_ACCOUNT_DEFAULT = "student1"
+DEMO_LOGIN_TTL_S = 7200  # 演示登录与业务 token 同两小时口径
+
+
+def demo_login(account: str, password: str, now: int | None = None) -> dict:
+    """演示登录(DEMO_ACCOUNT/DEMO_PASSWORD 环境变量比对):账密对 → HMAC access_token。
+
+    凭据只从环境变量读(缺省 account=student1;密码无 env 时不启用登录);
+    演示用途,非合作方 PKCE 通道。失败语义照 #74 错误表:401 USER_LOGIN_FAILED。
+    """
+    expected_account = os.environ.get("DEMO_ACCOUNT", DEMO_ACCOUNT_DEFAULT)
+    expected_password = os.environ.get("DEMO_PASSWORD", "")
+    account_ok = _constant_time_equals(account or "", expected_account)
+    password_ok = bool(expected_password) and _constant_time_equals(password or "",
+                                                                   expected_password)
+    if not (account_ok and password_ok):
+        raise IdentityError(401, "USER_LOGIN_FAILED", "账号或密码不正确")
+    issued = now if now is not None else int(time.time())
+    token = _hmac_token({"account": expected_account, "role": "student",
+                         "exp": issued + DEMO_LOGIN_TTL_S},
+                        expected_password or DEMO_ACCOUNT_DEFAULT)
+    return {"access_token": token, "token_type": "bearer",
+            "expires_in": DEMO_LOGIN_TTL_S,
+            "expires_at": datetime.fromtimestamp(issued + DEMO_LOGIN_TTL_S,
+                                                 timezone.utc)
+            .isoformat().replace("+00:00", "Z"),
+            "user": {"user_id": expected_account, "role": "student"}}
+
+
 class IdentityService:
     """单 native_app 的授权码与令牌签发;全内存,进程重启即失效(v1 语义)。"""
+
+    def demo_login_body(self, body: dict) -> tuple[int, dict]:
+        """HTTP 形态演示登录:{account, password} → 200 token / 401 USER_LOGIN_FAILED。"""
+        payload = demo_login(str(body.get("account", "")), str(body.get("password", "")))
+        return 200, payload
 
     def __init__(self, config: dict | None = None) -> None:
         env = os.environ
