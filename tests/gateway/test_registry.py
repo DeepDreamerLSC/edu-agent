@@ -39,7 +39,7 @@ def test_repo_config_loads(tmp_path):
     registry = load(REPO_CONFIG)
     # 01 §10:一份 models.yaml;#34 互换后 tutor/judge 各有主选与备选,
     # judge_independent 为 #32 独立性保险角色(无备选,不许降级到被审计模型)
-    assert set(registry.roles) == {"tutor", "judge", "judge_independent"}
+    assert set(registry.roles) == {"tutor", "judge", "judge_independent", "vision"}
     for name in ("tutor", "judge"):
         role = registry.roles[name]
         assert role.fallback and role.fallback in registry.models

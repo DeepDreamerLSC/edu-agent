@@ -46,8 +46,9 @@ VISION_CHECK_SCHEMA = {
     "properties": {
         "acceptable": {"type": "boolean"},
         "reason": {"type": "string"},
+        "transcription": {"type": "string"},
     },
-    "required": ["acceptable", "reason"],
+    "required": ["acceptable", "reason", "transcription"],
     "additionalProperties": False,
 }
 
@@ -58,10 +59,16 @@ NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能�
 SAFE_FALLBACK_TEXT = "先回到当前小问,你能说出题目明确给出的一个条件吗?"
 
 
-def _guard_output(question_text: str, reply_text: str, grade: str) -> str:
-    """三护栏(泄露/语气/格式)逐个过;任一命中即替换为安全文案(M2 阶段 2)。"""
+def _guard_output(question_text: str, reply_text: str, grade: str,
+                  answer_reference: str = "", analysis_reference: str = "") -> str:
+    """三护栏(泄露/语气/格式)逐个过;任一命中即替换为安全文案(M2 阶段 2)。
+
+    M3 前置 PR2:泄露护栏对照物扩展到参考答案与解析——教师面注入
+    answer/analysis 后,学生可见 reply 不得复现其内容。
+    """
     leak = evaluate_student_visible_question(
-        reply_text, active_subquestion_text=question_text)
+        reply_text, active_subquestion_text=question_text,
+        answer_reference=answer_reference, analysis_reference=analysis_reference)
     if leak.fallback_required:
         return SAFE_FALLBACK_TEXT
     tone = apply_tone_guardrail(
@@ -83,17 +90,6 @@ def _tone_band(grade: str) -> str:
     return "neutral"
 
 
-def _opening_messages(learner: dict, question: dict) -> dict:
-    """首问消息:user 消息开头拼 answer_status 的策略提示(unknown/缺省不加,#34 R6)。"""
-    context = {"题目": question.get("text") or question.get("image"), "学生": learner,
-               "任务": "生成首问"}
-    hint = opening_hint(learner.get("answer_status"))
-    if hint:
-        return {"role": "user",
-                "content": f"{hint}\n" + json.dumps(context, ensure_ascii=False)}
-    return {"role": "user", "content": json.dumps(context, ensure_ascii=False)}
-
-
 def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
             session: LearnerSession):
     return gateway.invoke(ModelRequest(
@@ -103,9 +99,16 @@ def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
 
 
 def _opening_user_message(learner: dict, question: dict) -> dict:
-    """首问 user 消息:answer_status 的策略提示拼在开头(unknown/缺省不加,#34 R6)。"""
-    context = {"题目": question.get("text") or question.get("image"), "学生": learner,
-               "任务": "生成首问"}
+    """首问 user 消息:answer_status 策略提示拼在开头(unknown/缺省不加,#34 R6)。
+
+    M3 前置 PR2:教师面题目段扩为「题目+参考答案+解析」,knowledge_points 作
+    追问锚点;这些字段只在模型上下文(教师侧),学生可见 reply 经泄露护栏。
+    """
+    context = {"题目": question.get("text") or question.get("image"),
+               "参考答案": question.get("answer") or "",
+               "解析": question.get("analysis") or "",
+               "追问锚点": question.get("knowledge_points") or [],
+               "学生": learner, "任务": "生成首问"}
     hint = opening_hint(learner.get("answer_status"))
     if hint:
         return {"role": "user", "content": f"{hint}\n{json.dumps(context, ensure_ascii=False)}"}
@@ -131,6 +134,11 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
             session.state = "failed"
             return Turn(text=FAIL_CLOSED_TEXT, session_version=session.session_version,
                         state="failed", session=session)
+        if not str(question.get("text") or "").strip():
+            # 纯图题(题面缺失):vision 转写进 text,后续 prompt/护栏都以它为题面
+            transcription = str(verdict.get("transcription") or "").strip()
+            if transcription:
+                question["text"] = transcription
     first = json.loads(_invoke(
         gateway, "tutor",
         [{"role": "system", "content": system_prompt(learner.get("grade", ""))},
@@ -139,7 +147,10 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
     ).text)
     session.state = "first_question_ready"
     session.first_question = first["reply"]
-    safe_text = _guard_output(str(question.get("text") or ""), first["reply"], learner.get("grade", ""))
+    safe_text = _guard_output(str(question.get("text") or ""), first["reply"],
+                              learner.get("grade", ""),
+                              answer_reference=str(question.get("answer") or ""),
+                              analysis_reference=str(question.get("analysis") or ""))
     return Turn(text=safe_text, session_version=session.session_version,
                 state=session.state, ready_to_confirm=bool(first["ready_to_confirm"]),
                 session=session)
@@ -158,14 +169,20 @@ def reply(session: LearnerSession, student_message: str, *,
         gateway, "tutor",
         [{"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
          {"role": "user", "content": json.dumps(
-             {"题目": session.question, "学生": session.learner, "对话记录": session.history,
+             {"题目": session.question.get("text") or session.question.get("image"),
+              "参考答案": session.question.get("answer") or "",
+              "解析": session.question.get("analysis") or "",
+              "追问锚点": session.question.get("knowledge_points") or [],
+              "学生": session.learner, "对话记录": session.history,
               "学生本轮回答": student_message,
               "输出提醒": "若学生本轮已给出正确最终答案(或明确表示理解并完成检验),"
                           "ready_to_confirm 置 true;否则 false。"}, ensure_ascii=False)}],
         TUTOR_TURN_SCHEMA, session,
     ).text)
     safe_text = _guard_output(str(session.question.get("text") or ""), output["reply"],
-                              session.learner.get("grade", ""))
+                              session.learner.get("grade", ""),
+                              answer_reference=str(session.question.get("answer") or ""),
+                              analysis_reference=str(session.question.get("analysis") or ""))
     if safe_text != output["reply"]:
         session.stuck = True  # 卡点标记(R6):护栏替换 = 本轮存在未解决的质量问题
     session.history.append({"role": "user", "content": student_message})

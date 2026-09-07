@@ -36,8 +36,9 @@ def tutor_json(reply_text: str, ready: bool = False) -> str:
     return json.dumps({"reply": reply_text, "ready_to_confirm": ready}, ensure_ascii=False)
 
 
-def vision_json(acceptable: bool, reason: str = "") -> str:
-    return json.dumps({"acceptable": acceptable, "reason": reason}, ensure_ascii=False)
+def vision_json(acceptable: bool, reason: str = "", transcription: str = "整张题卡的完整转写") -> str:
+    return json.dumps({"acceptable": acceptable, "reason": reason,
+                       "transcription": transcription}, ensure_ascii=False)
 
 
 def kernel_gateway(facts_dir, tutor_url: str, vision_url: str | None = None) -> Gateway:

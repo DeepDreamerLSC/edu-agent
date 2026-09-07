@@ -76,7 +76,7 @@ class Gateway:
     def _client(self, provider: ProviderConfig) -> httpx.Client:
         client = self._clients.get(provider.name)
         if client is None:
-            client = httpx.Client()
+            client = httpx.Client(trust_env=False)  # 本地/内网上游不走代理(env),CI 假上游同理
             self._clients[provider.name] = client
         return client
 

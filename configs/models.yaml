@@ -19,6 +19,9 @@ providers:
   llama: # 本地 9B(127.0.0.1:8302,launchd 常驻,--reasoning off/--alias 在 plist #17):
     base_url: http://127.0.0.1:8302/v1 # grammar 级 json_schema 真强制
     json_strict: true
+  vision: # 本地 Qwen3-VL-8B(127.0.0.1:8303,launchd 常驻 com.edu-agent.m0.vision-8303):
+    base_url: http://127.0.0.1:8303/v1 # llama-server grammar 级(题图三分支冒烟 #34,1.0-15.0s)
+    json_strict: true
 
 models:
   mlx_27b: # issue #3:mlx-lm 请求体 model 必须传服务广告的权重完整路径
@@ -30,6 +33,9 @@ models:
   deepseek_chat:
     provider: deepseek
     name: deepseek-chat
+  vision_8b: # Qwen3-VL-8B-GGUF(Q4_K_M 4.7GB + mmproj Q8_0 717MB,#34 冒烟评论)
+    provider: vision
+    name: Qwen3-VL-8B-GGUF
 
 roles:
   tutor: # #34 互换:主选 9B llama(63 tok/s、TTFT 30ms,延迟敏感),备选 27B mlx;
@@ -62,3 +68,13 @@ roles:
     max_attempts: 3
     backoff_base_ms: 400
     backoff_cap_ms: 8000
+  vision: # 题图理解与安全检查(acceptable/reason/transcription,#34 冒烟 1.0-15.0s);
+    primary: vision_8b # 任务书定参:并发 1(VL 单流),timeout 30s
+    fallback: null
+    json_strict: true
+    concurrency: 1
+    first_token_timeout_s: 10
+    total_timeout_s: 30
+    max_attempts: 2
+    backoff_base_ms: 500
+    backoff_cap_ms: 4000
