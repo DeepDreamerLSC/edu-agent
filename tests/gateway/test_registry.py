@@ -38,8 +38,9 @@ roles:
 def test_repo_config_loads(tmp_path):
     registry = load(REPO_CONFIG)
     # 01 §10:一份 models.yaml;#34 互换后 tutor/judge 各有主选与备选,
-    # judge_independent 为 #32 独立性保险角色(无备选,不许降级到被审计模型)
-    assert set(registry.roles) == {"tutor", "judge", "judge_independent"}
+    # judge_independent 为 #32 独立性保险角色(无备选,不许降级到被审计模型);
+    # vision 为 M3 PR7 题图检查角色(无备选,不可信即 fail closed 不降级)
+    assert set(registry.roles) == {"tutor", "judge", "judge_independent", "vision"}
     for name in ("tutor", "judge"):
         role = registry.roles[name]
         assert role.fallback and role.fallback in registry.models
@@ -50,6 +51,13 @@ def test_repo_config_loads(tmp_path):
     assert registry.roles["tutor"].primary == "llama_9b"
     assert registry.roles["judge"].primary == "mlx_27b"
     assert registry.roles["judge"].fallback == "deepseek_chat"
+    # M3 PR7:vision 角色 8303(llama-server grammar 级),单并发长超时(VL 转写慢)
+    vision = registry.roles["vision"]
+    assert vision.primary == "vision_8b" and vision.fallback is None
+    assert vision.json_strict is True and vision.concurrency == 1
+    assert vision.first_token_timeout_s == 30 and vision.total_timeout_s == 60
+    assert registry.providers["vision"].base_url == "http://127.0.0.1:8303/v1"
+    assert registry.providers["vision"].json_strict is True
     # provider 声明=服务端原生保证:mlx 无保证记 false(#32)
     assert registry.providers["mlx"].json_strict is False
     assert registry.providers["llama"].json_strict is True

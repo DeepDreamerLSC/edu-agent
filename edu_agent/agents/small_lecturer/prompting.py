@@ -4,13 +4,17 @@ system 消息 = SKILL.md 剪裁版(规则+教学边界,作为代码读入,不改
 + 年级风格指令(风格档案按年级选 profile) + 攻守图教学指令(基线报告 §3:
 守擂台 first_question/grade_fit——题意确认与适龄表述钉死;攻免费区
 socratic/pacing/summary/termination——苏格拉底追问、单步推进、收尾规范给足)。
-用户消息 = 结构化教学上下文(题目/学生/对话记录)。风格档案从 configs/ 读取
+用户消息 = _user_prompt 装配的结构化教学上下文(M3 PR2:题目段 = 题面 text +
+参考答案 answer + 解析 analysis,教师侧专属——answer/analysis 永不出现在学生
+可见回复中,由内核 _guard_output 以同款对照文本把关;knowledge_points 有值时
+追加追问锚点段)。风格档案从 configs/ 读取
 (数据随配置走,装配逻辑是代码)。模块名 prompting 避让包内 prompts/ 目录
 (SKILL.md 所在,命名空间包优先于同名模块)。
 """
 
 from __future__ import annotations
 
+import json
 from functools import lru_cache
 from pathlib import Path
 
@@ -60,6 +64,24 @@ _OPENING_HINTS = {
 def opening_hint(answer_status: str | None) -> str:
     """learner.answer_status → 首问策略提示;unknown/缺省返回空串(不加提示)。"""
     return _OPENING_HINTS.get(answer_status or "", "")
+
+
+def _user_prompt(question: dict, extra: dict | None = None) -> str:
+    """tutor user 消息装配(M3 PR2):题目段 = 题面 + 参考答案 + 解析(教师侧专属)。
+
+    answer/analysis 只住教师侧 prompt;学生可见面由内核 _guard_output 用同款
+    对照文本把关(答案/解析出现在回复中即拦截)。knowledge_points 有值时追加
+    追问锚点段(苏格拉底追问的出题点,一行 if)。"""
+    subject = {"题面": str(question.get("text") or "")}
+    if question.get("answer"):
+        subject["参考答案"] = str(question["answer"])
+    if question.get("analysis"):
+        subject["解析"] = str(question["analysis"])
+    if question.get("image") is not None:
+        subject["题图"] = question["image"]
+    points = question.get("knowledge_points") or []
+    context = {"题目": subject, **({"追问锚点": points} if points else {}), **(extra or {})}
+    return json.dumps(context, ensure_ascii=False)
 
 
 @lru_cache(maxsize=1)
