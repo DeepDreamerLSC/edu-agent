@@ -71,14 +71,13 @@ def _user_prompt(question: dict, extra: dict | None = None) -> str:
 
     answer/analysis 只住教师侧 prompt;学生可见面由内核 _guard_output 用同款
     对照文本把关(答案/解析出现在回复中即拦截)。knowledge_points 有值时追加
-    追问锚点段(苏格拉底追问的出题点,一行 if)。"""
+    追问锚点段(苏格拉底追问的出题点,一行 if);题图引用不进 prompt——tutor
+    是文本模型,图意经 vision 转写进题面。"""
     subject = {"题面": str(question.get("text") or "")}
     if question.get("answer"):
         subject["参考答案"] = str(question["answer"])
     if question.get("analysis"):
         subject["解析"] = str(question["analysis"])
-    if question.get("image") is not None:
-        subject["题图"] = question["image"]
     points = question.get("knowledge_points") or []
     context = {"题目": subject, **({"追问锚点": points} if points else {}), **(extra or {})}
     return json.dumps(context, ensure_ascii=False)
