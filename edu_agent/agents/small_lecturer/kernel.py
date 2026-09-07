@@ -6,6 +6,10 @@ text 即已验证 JSON,直接解析,不自行剥壳/二次校验)。GatewayError
 冒泡,内核不吞——调用方(评测线/api 层)决定重试与降级。含图题目经 gateway
 vision 角色做图意理解与「题图不可信/多题混入」检测,不可信即 fail closed
 (不调 tutor,Turn.state=failed);纯文本题跳过 vision。
+
+PR2:system 消息按 prompting.py 装配(SKILL 剪裁版 + 风格档案 + 攻守图教学
+指令);tutor 输出经三护栏(答案泄露/语气/格式)——护栏不过的文本不进入
+Turn.text,替换为确定性安全问句(M2 清单阶段 2,断言即规格)。
 """
 
 from __future__ import annotations
@@ -14,7 +18,11 @@ import json
 
 from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 
+from .format_guard import evaluate_student_visible_format
+from .guardrails import evaluate_student_visible_question
+from .prompting import summary_system_prompt, system_prompt
 from .session import LearnerSession, SessionVersionConflict, Summary, TerminalStateError, Turn
+from .tone_guardrails import apply_tone_guardrail
 
 # grammar 真强制(llama-server)下模型只可能产出符合 schema 的 JSON;
 # #54 后 gateway.text 即已验证内容,直接 json.loads。
@@ -45,6 +53,34 @@ VISION_CHECK_SCHEMA = {
 
 FAIL_CLOSED_TEXT = "这张题图我没法安全地开始讲解(可能包含多道题或不清晰)。请换一张只包含一道题的清晰照片,或者直接把题目打出来。"
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+# 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
+# 阶段 2:护栏不过的输出不得到达学生可见面)
+SAFE_FALLBACK_TEXT = "先回到当前小问,你能说出题目明确给出的一个条件吗?"
+
+
+def _guard_output(question_text: str, reply_text: str, grade: str) -> str:
+    """三护栏(泄露/语气/格式)逐个过;任一命中即替换为安全文案(M2 阶段 2)。"""
+    leak = evaluate_student_visible_question(
+        reply_text, active_subquestion_text=question_text)
+    if leak.fallback_required:
+        return SAFE_FALLBACK_TEXT
+    tone = apply_tone_guardrail(
+        reply=reply_text, grade_band=_tone_band(grade), interaction_signal="neutral",
+        teaching_move="connect_relation", ready_to_record=False)
+    if tone.applied:
+        return SAFE_FALLBACK_TEXT
+    fmt = evaluate_student_visible_format(reply_text)
+    if not fmt.ok:
+        return fmt.downgrade_prompt or SAFE_FALLBACK_TEXT
+    return reply_text
+
+
+def _tone_band(grade: str) -> str:
+    for token, band in (("一", "primary_lower"), ("二", "primary_lower"), ("三", "primary_lower"),
+                        ("四", "primary_upper"), ("五", "primary_upper"), ("六", "primary_upper")):
+        if token in str(grade):
+            return band
+    return "neutral"
 
 
 def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
@@ -76,14 +112,16 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
                         state="failed", session=session)
     first = json.loads(_invoke(
         gateway, "tutor",
-        [{"role": "user", "content": json.dumps(
-            {"题目": question.get("text") or question.get("image"), "学生": learner},
-            ensure_ascii=False)}],
+        [{"role": "system", "content": system_prompt(learner.get("grade", ""))},
+         {"role": "user", "content": json.dumps(
+             {"题目": question.get("text") or question.get("image"), "学生": learner,
+              "任务": "生成首问"}, ensure_ascii=False)}],
         TUTOR_TURN_SCHEMA, session,
     ).text)
     session.state = "first_question_ready"
     session.first_question = first["reply"]
-    return Turn(text=first["reply"], session_version=session.session_version,
+    safe_text = _guard_output(str(question.get("text") or ""), first["reply"], learner.get("grade", ""))
+    return Turn(text=safe_text, session_version=session.session_version,
                 state=session.state, ready_to_confirm=bool(first["ready_to_confirm"]),
                 session=session)
 
@@ -99,16 +137,19 @@ def reply(session: LearnerSession, student_message: str, *,
     gateway = gateway or default_gateway()
     output = json.loads(_invoke(
         gateway, "tutor",
-        [{"role": "user", "content": json.dumps(
-            {"题目": session.question, "学生": session.learner, "对话记录": session.history,
-             "学生本轮回答": student_message}, ensure_ascii=False)}],
+        [{"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
+         {"role": "user", "content": json.dumps(
+             {"题目": session.question, "学生": session.learner, "对话记录": session.history,
+              "学生本轮回答": student_message}, ensure_ascii=False)}],
         TUTOR_TURN_SCHEMA, session,
     ).text)
+    safe_text = _guard_output(str(session.question.get("text") or ""), output["reply"],
+                              session.learner.get("grade", ""))
     session.history.append({"role": "user", "content": student_message})
-    session.history.append({"role": "assistant", "content": output["reply"]})
+    session.history.append({"role": "assistant", "content": safe_text})
     session.session_version += 1
     session.state = "ready_to_confirm" if output["ready_to_confirm"] else "dialogue"
-    return Turn(text=output["reply"], session_version=session.session_version,
+    return Turn(text=safe_text, session_version=session.session_version,
                 state=session.state, ready_to_confirm=bool(output["ready_to_confirm"]),
                 session=session)
 
@@ -126,9 +167,10 @@ def finish(session: LearnerSession, *, gateway: Gateway | None = None) -> Summar
     gateway = gateway or default_gateway()
     output = json.loads(_invoke(
         gateway, "tutor",
-        [{"role": "user", "content": json.dumps(
-            {"题目": session.question, "学生": session.learner, "对话记录": session.history,
-             "任务": "生成学习总结"}, ensure_ascii=False)}],
+        [{"role": "system", "content": summary_system_prompt(session.learner.get("grade", ""))},
+         {"role": "user", "content": json.dumps(
+             {"题目": session.question, "学生": session.learner, "对话记录": session.history,
+              "任务": "生成学习总结"}, ensure_ascii=False)}],
         TUTOR_SUMMARY_SCHEMA, session,
     ).text)
     session.state = "completed"
