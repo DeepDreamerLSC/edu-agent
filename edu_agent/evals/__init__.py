@@ -1,5 +1,6 @@
 """评测线入口(00 §4/§8.2):runner 骨架、晨间摘要、judge 评分器与老系统适配器雏形。"""
 
+from .kernel_subject import KernelSubject
 from .judge import (
     DIMENSIONS,
     SCHEMA,
@@ -29,6 +30,7 @@ __all__ = [
     "EvalRunner",
     "render_html",
     "JudgeSubject",
+    "KernelSubject",
     "LegacyAdapter",
     "ResumeMismatch",
     "RunnerConfig",

@@ -140,7 +140,9 @@ def reply(session: LearnerSession, student_message: str, *,
         [{"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
          {"role": "user", "content": json.dumps(
              {"题目": session.question, "学生": session.learner, "对话记录": session.history,
-              "学生本轮回答": student_message}, ensure_ascii=False)}],
+              "学生本轮回答": student_message,
+              "输出提醒": "若学生本轮已给出正确最终答案(或明确表示理解并完成检验),"
+                          "ready_to_confirm 置 true;否则 false。"}, ensure_ascii=False)}],
         TUTOR_TURN_SCHEMA, session,
     ).text)
     safe_text = _guard_output(str(session.question.get("text") or ""), output["reply"],

@@ -1,0 +1,64 @@
+"""KernelSubject:runner 被测对象的内核实现(00 §8.4 阶段 3;#41 Subject 协议)。
+
+M1 的被测对象是老系统适配器(legacy_adapter),M2 换成内核三函数——评测线
+代码零改动(00 §8.4「被测对象换内核,runner 已抽象」)。内核经 gateway=None
+注入口接 runner 的 gateway 实例(直调三函数,事实记录不断链);学生消息按
+场景剧本(student_turns)逐轮推进,与适配器同口径。
+"""
+
+from __future__ import annotations
+
+import time
+
+from edu_agent.agents.small_lecturer import TerminalStateError, finish, reply, start
+from edu_agent.gateway import Gateway, GatewayError
+
+from .runner import EnvironmentFailure
+
+# 环境类失败(可补跑)映射自 01 §4 重试资格——与 JudgeSubject 同款口径。
+ENV_FAILURES = frozenset({
+    "connection", "timeout_first_token", "timeout_total", "rate_limited", "upstream_5xx",
+})
+
+
+class KernelSubject:
+    """小讲师内核作为被测对象:run_case 按剧本驱动 start→reply×N→finish。"""
+
+    def __init__(self, gateway: Gateway) -> None:
+        self.gateway = gateway
+
+    name = "kernel-small-lecturer"
+
+    def run_case(self, case: dict) -> dict:
+        started = time.monotonic()
+        question = {"text": case["question"]}
+        learner = {"grade": case.get("grade", "")}
+        turns: list[dict] = []
+        try:
+            first = start(question, learner, gateway=self.gateway)
+            session = first.session
+            turns.append({"student": "", "tutor": first.text,
+                          "state": first.state, "elapsed_ms": 0})
+            for student_message in case.get("student_turns", []):
+                turn = reply(session, student_message, gateway=self.gateway)
+                turns.append({"student": student_message, "tutor": turn.text,
+                              "state": turn.state, "elapsed_ms": turn.session_version})
+                if turn.state == "ready_to_confirm":
+                    break  # 掌握证据充分,余下剧本轮次不再发(判停语义)
+            summary = finish(session, gateway=self.gateway)
+            final_state = summary.status
+            summary_text = summary.text
+        except GatewayError as error:
+            if error.failure.value in ENV_FAILURES:
+                raise EnvironmentFailure(str(error)) from error
+            raise  # 内容类失败:重跑改变不了,runner 记台账
+        except TerminalStateError as error:  # 剧本推进与状态机不符(如 fail closed)
+            raise ValueError(f"内核状态机拒绝推进:{error}") from error
+        return {
+            "question_id": case.get("id", ""),
+            "final_state": final_state,
+            "turns": turns,
+            "summary": summary_text,
+            "total_ms": int((time.monotonic() - started) * 1000),
+            "learner": learner,
+        }
