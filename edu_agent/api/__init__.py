@@ -5,11 +5,15 @@
 注入,真内核由 B 线提供,测试注入确定性假内核)。healthz(04 §2.2)同在此包。
 """
 
+from .identity import IdentityError, IdentityService
 from .service import ApiError, ConversationService, Kernel
 from .server import build_server
 from edu_agent.store import MemoryConversationStore
 
-__all__ = ["ApiError", "ConversationService", "Kernel", "build_server", "build_service"]
+__all__ = [
+    "ApiError", "ConversationService", "IdentityError", "IdentityService", "Kernel",
+    "build_server", "build_service",
+]
 
 
 def build_service(kernel: Kernel,
