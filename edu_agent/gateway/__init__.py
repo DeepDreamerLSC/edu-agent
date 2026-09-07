@@ -76,7 +76,9 @@ class Gateway:
     def _client(self, provider: ProviderConfig) -> httpx.Client:
         client = self._clients.get(provider.name)
         if client is None:
-            client = httpx.Client()
+            # trust_env=False:代理环境变量(HTTP_PROXY/HTTPS_PROXY)不劫持本地
+            # 8301/8302/8303 模型服务调用(127.0.0.1 不走代理,显式钉死)
+            client = httpx.Client(trust_env=False)
             self._clients[provider.name] = client
         return client
 
