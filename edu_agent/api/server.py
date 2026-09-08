@@ -175,6 +175,20 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
             from .healthz import snapshot  # 局部导入:快照依赖模型配置,按需加载
             self._json(snapshot())
             return
+        if self.path in ("/chat", "/chat/", "/static/chat.html"):
+            from pathlib import Path as _Path
+
+            chat_file = _Path(__file__).resolve().parent / "static" / "chat.html"
+            if chat_file.is_file():
+                payload = chat_file.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(payload)))
+                self.end_headers()
+                self.wfile.write(payload)
+            else:
+                self.send_error(404)
+            return
         if not self.headers.get("Authorization"):
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
