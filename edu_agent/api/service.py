@@ -43,13 +43,15 @@ UNSUPPORTED_ACTIONS = frozenset({
 
 
 class ApiError(Exception):
-    """合作方错误(老仓库 AppError 形态:code/message/status)。"""
+    """合作方错误(老仓库 AppError 形态:code/message/status;details 可选)。"""
 
-    def __init__(self, status_code: int, code: str | None, message: str) -> None:
+    def __init__(self, status_code: int, code: str | None, message: str,
+                 details: dict | None = None) -> None:
         super().__init__(message)
         self.status_code = status_code
         self.code = code
         self.message = message
+        self.details = details or {}
 
 
 class Kernel(Protocol):
@@ -107,6 +109,102 @@ class ConversationService:
             "first_question": conversation.first_question if conversation else None,
             "retry_after_ms": payload["retry_after_ms"],
         }
+
+    # ---------- 统一 Open(老系统文档 §5:POST /api/prepared-questions/open) ----------
+
+    _CONTRACT_FIELDS = frozenset({"idempotency_key", "external_question_id", "question_image",
+                                  "question_text", "answer_correct", "knowledge_points"})
+
+    def open_unified(self, body: dict) -> dict:
+        """统一 Open(§5):字段/长度/严格类型照老系统;组合规则:
+        external_question_id+题图允许同传(同题组合);题库命中复用题干/答案/解析/
+        知识点;未命中但有题图走 vision 转写;未命中无图 404
+        QUESTION_BANK_QUESTION_NOT_FOUND;question_text 与任何来源混用 422。
+        内核同步出首问:pending 恒 false,active_session 恒在(retry_after_ms=0)。"""
+        idempotency_key = body.get("idempotency_key")
+        if not isinstance(idempotency_key, str) or not 1 <= len(idempotency_key) <= 128:
+            raise ApiError(422, None, "idempotency_key 必填且长度 1~128(重试原样复用)")
+        if "target_subquestion_id" in body:
+            # 仅可信评测客户端可提交(文档错误码表;details 照 conflicting_fields 口径)
+            raise ApiError(422, "PREPARED_QUESTION_TARGET_SUBQUESTION_FORBIDDEN",
+                           "target_subquestion_id 仅可信评测客户端可提交",
+                           details={"conflicting_fields": ["target_subquestion_id", "question_id"]})
+        external_question_id = self._str_field(body, "external_question_id", 255)
+        question_image = self._str_field(body, "question_image", 128)
+        question_text = self._str_field(body, "question_text", 8000)
+        if question_image and ("://" in question_image or question_image.startswith("data:")):
+            raise ApiError(422, None, "question_image 只接受已上传 file_id,禁 URL/Base64")
+        answer_correct = body.get("answer_correct")
+        if "answer_correct" in body and answer_correct is not None \
+                and not isinstance(answer_correct, bool):
+            raise ApiError(422, None, "answer_correct 必须是严格 JSON boolean 或 null")
+        knowledge_points = self._validated_knowledge_points(body.get("knowledge_points"))
+        if question_text and (external_question_id or question_image):
+            raise ApiError(422, "PREPARED_QUESTION_SOURCE_CONFLICT",
+                           "question_text 不能与 external_question_id/question_image 混用",
+                           details={"conflicting_fields": ["question_text", "question_image",
+                                                           "external_question_id"]})
+        learner = {k: v for k, v in body.items() if k not in self._CONTRACT_FIELDS}
+        material = ({"text": question_text} if question_text
+                    else {"image": question_image} if question_image else None)
+        if material is not None and knowledge_points:
+            # 非题库路径:客户端知识点作追问锚点(题库命中时以题源为准,忽略客户端值)
+            material["knowledge_points"] = knowledge_points
+        if not external_question_id and not material:
+            raise ApiError(422, "PREPARED_QUESTION_SOURCE_MISSING",
+                           "open 请求未提供任何题目来源(external_question_id/question_text/question_image)")
+        bank_hit = False
+        if external_question_id:
+            try:
+                payload = self.open(external_question_id, idempotency_key, learner)
+                bank_hit = True
+            except ApiError as error:
+                # 未命中但有题图 → vision 转写路径;未命中无图 → 404 照合同
+                if error.code != "QUESTION_BANK_QUESTION_NOT_FOUND" or not material:
+                    raise
+                payload = self._open_material(material, learner, idempotency_key,
+                                              external_question_id)
+        else:
+            payload = self._open_material(material, learner, idempotency_key, "")
+        conversation = self.store.find_by_idempotency(idempotency_key)
+        return {
+            "external_question_id": external_question_id or None,
+            "prepared_question_package_id": None,  # v1 题源(seed/snapshot)不带包 id
+            "pending": False,  # 同步内核:首问已就绪,无需重放
+            "answer_correct": answer_correct,
+            "answer_correct_provenance": ("partner_question_bank" if bank_hit else None),
+            "question": {
+                "package_id": None,
+                "active_session": {
+                    "conversation": conversation.conversation_id,
+                    "skill_session_id": conversation.skill_session_id,
+                    "session_version": conversation.session_version,
+                    "first_question_ready": True,
+                    "retry_after_ms": 0,
+                },
+            },
+        }
+
+    @staticmethod
+    def _str_field(body: dict, field: str, limit: int) -> str:
+        value = body.get(field)
+        if value is None:
+            return ""
+        if not isinstance(value, str) or len(value) > limit:
+            raise ApiError(422, None, f"{field} 须为字符串且长度 ≤{limit}")
+        return value
+
+    @staticmethod
+    def _validated_knowledge_points(raw) -> list:
+        """knowledge_points:数组 ≤20,每项 {id?, name 必填}(照 §5 字段表)。"""
+        if raw is None:
+            return []
+        if not isinstance(raw, list) or len(raw) > 20:
+            raise ApiError(422, None, "knowledge_points 须为数组且长度 ≤20")
+        for item in raw:
+            if not isinstance(item, dict) or not str(item.get("name") or "").strip():
+                raise ApiError(422, None, "knowledge_points 每项必须含非空 name")
+        return raw
 
     def open(self, question_id: str, idempotency_key: str, learner: dict) -> dict:
         if not idempotency_key:
