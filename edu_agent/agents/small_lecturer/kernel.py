@@ -133,13 +133,29 @@ def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
     ))
 
 
+_VISION_TASK = {
+    "task": "题图理解与安全检查",
+    "判定标准": (
+        "acceptable=true 当且仅当:一张图片承载一道题——一道题内含多个小问、"
+        "多幅小图、图表或选项,都算一道;主体文字清晰可读即可。"
+        "你解不出这道题、题干看似歧义、数据看似矛盾,都不影响 acceptable——"
+        "照实转写,教学时再处理。"
+        "acceptable=false 仅当:多道独立题目混在同一张图、图片模糊到无法辨认主体文字、"
+        "或图片与题目无关。"
+    ),
+}
+
+
 def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> Turn:
     """生成首问(03 §4 Preparing → FirstQuestionReady / Failed)。
 
-    纯文本题跳过 vision(00 §5.1);含图题 vision 判不可信 → Turn.state=failed
-    (fail closed,不调 tutor),后续 reply/finish 对该 session 抛 TerminalStateError。
-    纯图题(question.text 为空)判可信时,transcription 回填题面(M3 PR7)——
-    转写即教师侧 prompt 的题面,学生侧仍只见 tutor 输出经护栏后的文本。
+    纯文本题跳过 vision(00 §5.1);纯图题(question.text 为空)vision 判不可信 →
+    Turn.state=failed(fail closed,不调 tutor),后续 reply/finish 对该 session 抛
+    TerminalStateError。图文题(题库命中,权威文答在题面)vision 拒图 → 降级纯文
+    教学不终态——判定标准不写明时模型会把「解不出/题干歧义」当不可接受,实测
+    题库误杀 6/12;fail-closed 只留给无文字兜底的纯图题。
+    纯图题判可信时,transcription 回填题面(M3 PR7)——转写即教师侧 prompt 的
+    题面,学生侧仍只见 tutor 输出经护栏后的文本。
     两条失败路径正交(审查留审 1 落档):vision 服务不可达/超时 = GatewayError
     冒泡(环境失败,调用方决定重试降级);vision 可达但判不可信 = fail closed
     (内容安全,不重试不降级)。
@@ -151,11 +167,11 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
         # image 值由 api 层解析为 data URL(file_id 在那里翻译,内核不感知存储)。
         verdict = json.loads(_invoke(
             gateway, "vision",
-            [{"role": "user", "content": json.dumps(
-                {"task": "题图理解与安全检查"}, ensure_ascii=False)}],
+            [{"role": "user", "content": json.dumps(_VISION_TASK, ensure_ascii=False)}],
             VISION_CHECK_SCHEMA, session, images=[str(question["image"])],
         ).text)
-        if not verdict["acceptable"]:  # 题图不可信/多题混入
+        if not verdict["acceptable"] and not question.get("text"):
+            # 纯图题无文字兜底:fail closed;图文题降级纯文教学(题面文答是权威)
             session.state = "failed"
             return Turn(text=FAIL_CLOSED_TEXT, session_version=session.session_version,
                         state="failed", session=session)
