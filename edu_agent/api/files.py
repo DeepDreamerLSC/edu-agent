@@ -7,6 +7,7 @@ PIL 解码校验(jpeg/png/webp 白名单)+ 像素上限 + resize 至 1280×1280(
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import io
 import os
@@ -154,6 +155,15 @@ class FileService:
         if record.status != "uploaded" or record.path is None:
             raise ApiError(404, "FILE_NOT_READY", "文件不存在或尚未就绪")
         return Path(record.path).read_bytes(), record.content_type
+
+    def data_url(self, file_id: str) -> str | None:
+        """题图 file_id → data URL(内核 vision 的多模态输入);未就绪返回 None
+        (空壳语义留给内核 fail-closed,不在此抛错)。"""
+        record = self.records.get(file_id)
+        if record is None or record.status != "uploaded" or record.path is None:
+            return None
+        payload = base64.b64encode(Path(record.path).read_bytes()).decode("ascii")
+        return f"data:{record.content_type};base64,{payload}"
 
     def _record_or_404(self, file_id: str) -> FileRecord:
         record = self.records.get(file_id)
