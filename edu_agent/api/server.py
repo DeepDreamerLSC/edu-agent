@@ -12,6 +12,7 @@ import json
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from .files import FileService
 from .identity import IdentityError, IdentityService
 from .service import ApiError, ConversationService
 
@@ -34,6 +35,9 @@ _LOGIN = re.compile(r"^/api/auth/login$")
 _NATIVE_CODES = re.compile(r"^/api/openapi/v1/auth/native-codes$")
 _NATIVE_TOKEN = re.compile(r"^/api/auth/native/token$")
 _HEALTHZ = re.compile(r"^/healthz$")
+_FILES_UPLOAD = re.compile(r"^/api/files/upload-request$")
+_FILES_COMPLETE = re.compile(r"^/api/files/complete$")
+_FILES_CONTENT = re.compile(r"^/api/files/(?P<file_id>[^/]+)/content$")
 
 
 def sse_frames(response: dict) -> bytes:
@@ -73,6 +77,7 @@ def _encode_sse(frames: list[tuple[str, dict]]) -> bytes:
 class PartnerApiHandler(BaseHTTPRequestHandler):
     service: ConversationService  # 经 server 属性注入
     identity: IdentityService     # 同上(build_server 注入)
+    files: FileService            # 同上(/api/files/** 三步上传)
 
     def _identity_post(self) -> tuple[int, dict] | None:
         """身份与登录端点自带鉴权(API Key / 授权码+PKCE / 演示账密);非身份路径返回 None。"""
@@ -92,26 +97,56 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         if not self.headers.get("Authorization"):
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
+        if self._dialogue_post():
+            return
+        if not self._files_post():
+            self._error(ApiError(404, None, "路径不在合作方合同内"))
+
+    def _dialogue_post(self) -> bool:
+        """对话面 POST 路由;未命中返回 False(404 由 _dispatch 收口)。"""
         match = _OPEN.match(self.path)
         if match and self.command == "POST":
             self._open_prepared_question(match["question_id"])
-            return
+            return True
         if _CREATE.match(self.path) and self.command == "POST":
             self._create_conversation()
-            return
+            return True
         refresh = _REFRESH_PQ.match(self.path) or _REFRESH_CONV.match(self.path)
         if refresh and self.command == "POST":
             self._json(self.service.refresh(refresh["skill_session_id"]))
-            return
+            return True
         match = _MESSAGES.match(self.path)
         if match and self.command == "POST":
             self._json(self.service.send(match["conversation_id"], self._read_body()))
-            return
+            return True
         match = _MESSAGES_STREAM.match(self.path)
         if match and self.command == "POST":
             self._stream(match["conversation_id"])
-        else:
+            return True
+        return False
+
+    def _files_post(self) -> bool:
+        """files 面 POST 路由(三步上传的 1/3 步);未命中返回 False。"""
+        if _FILES_UPLOAD.match(self.path):
+            self._json(self.files.upload_request(self._read_body()), status=201)
+            return True
+        if _FILES_COMPLETE.match(self.path):
+            self._json(self.files.complete(self._read_body()))
+            return True
+        return False
+
+    def do_PUT(self) -> None:
+        """PUT /api/files/{file_id}/content:二进制上传(学生 token 鉴权)。"""
+        match = _FILES_CONTENT.match(self.path)
+        if match is None:
             self._error(ApiError(404, None, "路径不在合作方合同内"))
+            return
+        if not self.headers.get("Authorization"):
+            self._error(ApiError(401, None, "登录令牌无效或已过期"))
+            return
+        length = int(self.headers.get("Content-Length") or 0)
+        payload = self.rfile.read(length)
+        self._json(self.files.store_content(match["file_id"], payload))
 
     def _stream(self, conversation_id: str) -> None:
         # 流式:请求类错误(409/422 等)在开流前以 JSON 错误返回;内核异常(503)
@@ -146,6 +181,15 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         match = _GET.match(self.path)
         if match:
             self._json(self.service.status(match["conversation_id"]))
+            return
+        match = _FILES_CONTENT.match(self.path)
+        if match:
+            payload, content_type = self.files.read_content(match["file_id"])
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
             return
         self._error(ApiError(404, None, "路径不在合作方合同内"))
 
@@ -217,7 +261,9 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
 
 
 def build_server(service: ConversationService, identity: IdentityService | None = None,
+                 files: FileService | None = None,
                  host: str = "127.0.0.1", port: int = 0) -> ThreadingHTTPServer:
     handler = type("BoundPartnerApiHandler", (PartnerApiHandler,),
-                   {"service": service, "identity": identity or IdentityService()})
+                   {"service": service, "identity": identity or IdentityService(),
+                    "files": files or FileService()})
     return ThreadingHTTPServer((host, port), handler)
