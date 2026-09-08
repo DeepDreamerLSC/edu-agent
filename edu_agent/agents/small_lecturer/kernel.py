@@ -75,7 +75,7 @@ _OPENING_FALLBACK = "我们先看看这道题,你能说说题目给了哪些条�
 # 方法名脱敏词表(任务包:代喂窄规则方案②):复讲阶段教师侧解析/知识点里的方法名
 # 替换成「这种方法」,不点名——学生讲完、到总结阶段才由 finish 的教师侧上下文恢复点名。
 _METHOD_TOKENS = (
-    "方程", "通分", "假设法", "抬腿法", "列表法", "移项", "合并同类项",
+    "方程法", "通分", "假设法", "抬腿法", "列表法", "移项", "合并同类项",
     "公分母", "最小公倍数", "底乘高", "图形转化", "等式性质", "异分母", "二元一次",
 )
 
@@ -121,13 +121,45 @@ def _student_signals_stuck(student_message: str) -> bool:
     return bool(re.search(r"我不太会|我猜不出|我猜不出来|我不知道|我想不出|我想不出来|我不会做|不会吧|太难了|没思路", student_message))
 
 
-def _reveal_next_step(session: "LearnerSession") -> str | None:
-    """阶梯逐级揭示(确定性,零模型调用):学生卡住 → 揭示 steps 的下一级。"""
+def _next_step(session: "LearnerSession") -> dict | None:
+    """阶梯逐级揭示:返回 steps 的下一级(推进 hint_level);揭示完毕返回 None。"""
     if session.hint_level < len(session.steps):
         step = session.steps[session.hint_level]
         session.hint_level += 1
-        return f"这一步我们先看:{step['step']}。你接着算下一步。"
+        return step
     return None
+
+
+def _reveal_stuck_hint(session: "LearnerSession", student_message: str,
+                       gateway: Gateway) -> str:
+    """学生卡住 → 揭示下一级阶梯:步骤内容确定性(session.steps),措辞交模型(自然语气);
+    模型代喂 → 退回确定性步骤句;无步骤 → bottom-out 给答案。"""
+    step = _next_step(session)
+    if step is None:
+        answer = str(session.question.get("answer") or "").strip()
+        if not answer and session.steps:
+            answer = str(session.steps[-1].get("value") or "").strip()
+        return (f"这一步我们直接看结果:{answer}。你先记住它,我们回头再讲一遍为什么。"
+                if answer else NEEDS_REVIEW_TEXT)
+    reveal_messages = [
+        {"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
+        {"role": "user", "content": json.dumps({
+            "题目": session.question, "学生": session.learner,
+            "对话记录": session.history,
+            "这一步提示": f"{step['step']}(得到 {step['value']})",
+            "任务": ("学生卡住了。用自然、简短、鼓励的语气,把「这一步提示」讲给学生。"
+                     "只讲这一步,不要报最终答案或方法名,不要讲下一步。")},
+            ensure_ascii=False)},
+    ]
+    output = json.loads(_invoke(gateway, "tutor", reveal_messages,
+                                TUTOR_TURN_SCHEMA, session).text)
+    ctx = _GuardContext(question=session.question, grade=session.learner.get("grade", ""),
+                        gateway=gateway, role="tutor", messages=reveal_messages,
+                        schema=TUTOR_TURN_SCHEMA, student_message=student_message)
+    hint = _guard_output(output["reply"], session, ctx)
+    if _feeds_method(hint):
+        hint = f"这一步我们这样看:{step['step']}。"  # 代喂兜底:退回确定性步骤句
+    return hint
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
@@ -398,15 +430,9 @@ def reply(session: LearnerSession, student_message: str, *,
         return Turn(text=_ELICIT_TEMPLATE, session_version=session.session_version,
                     state="dialogue", ready_to_confirm=False, session=session)
     if _student_signals_stuck(student_message):
-        # 学生说「不会/猜不出」→ 确定性揭示下一级阶梯(不调模型),治 tutor 复读探针。
-        hint = _reveal_next_step(session)
-        if hint is None:
-            answer = str(session.question.get("answer") or "").strip()
-            if not answer and session.steps:
-                answer = str(session.steps[-1].get("value") or "").strip()  # 最后一步的值即答案
-            # 阶梯揭示完毕仍卡住 → bottom-out 给答案(最后一档,不再重复泛泛兜底)
-            hint = (f"这一步我们直接看结果:{answer}。你先记住它,我们回头再讲一遍为什么。"
-                    if answer else NEEDS_REVIEW_TEXT)
+        # 学生说「不会/猜不出」→ 揭示下一级阶梯(内容确定性,措辞交模型,代喂/无步骤兜底)。
+        gateway = gateway or default_gateway()
+        hint = _reveal_stuck_hint(session, student_message, gateway)
         session.history.append({"role": "user", "content": student_message})
         session.history.append({"role": "assistant", "content": hint})
         session.session_version += 1
