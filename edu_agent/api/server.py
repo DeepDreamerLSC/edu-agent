@@ -9,6 +9,7 @@ details}}(老仓库 ErrorEnvelope 形态)。SSE 六型帧见 sse_frames。
 from __future__ import annotations
 
 import json
+import os
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -177,6 +178,38 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     do_POST = _dispatch
+
+    # ---------- CORS(老系统语义移植:白名单 echo,不放行凭据) ----------
+    # 老系统 FastAPI CORSMiddleware:EDU_AGENT_CORS_ALLOWED_ORIGINS 逗号分隔白名单,
+    # allow_credentials=False、方法/头全放行。env 名沿用老系统,部署零改动。
+    def _cors_origin(self) -> str:
+        """请求 Origin 命中白名单 → 原样返回(echo);否则空串(不发 CORS 头)。"""
+        origin = self.headers.get("Origin") or ""
+        allowed = {o.strip() for o in
+                   os.environ.get("EDU_AGENT_CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()}
+        return origin if origin in allowed else ""
+
+    def end_headers(self) -> None:
+        # 统一注入口:所有响应(json/文件/SSE/错误)在头发送前补 CORS
+        origin = self._cors_origin()
+        if origin:
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Vary", "Origin")
+        super().end_headers()
+
+    def do_OPTIONS(self) -> None:
+        """浏览器预检:白名单内 → 204 + 放行头;白名单外 → 400(照老系统 CORSMiddleware
+        的 Disallowed CORS origin 语义),非浏览器客户端不受影响。"""
+        origin = self._cors_origin()
+        if not origin:
+            self.send_response(400)
+            self.end_headers()
+            return
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Methods", "*")
+        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Max-Age", "600")
+        self.end_headers()
 
     # 公开文档(老系统 URL 结构兼容):docs/partner 白名单,无 markdown 依赖——
     # index 单页 HTML + 原文 raw.md(浏览器直接可读,合作方是开发者)。
