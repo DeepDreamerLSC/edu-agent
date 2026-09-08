@@ -16,6 +16,8 @@ from .identity import IdentityError, IdentityService
 from .service import ApiError, ConversationService
 
 _OPEN = re.compile(r"^/api/prepared-questions/(?P<question_id>[^/]+)/open$")
+# 统一 Open(老系统文档 §5):必须在 _OPEN 之前匹配,否则 "open" 被当作路径 question_id
+_OPEN_UNIFIED = re.compile(r"^/api/prepared-questions/open$")
 # refresh 两形态同一语义(#48 对账出入①):00 §5.2 表(prepared-questions 前缀)
 # 与 Postman 集合(conversations 前缀)并存,skill_session_id 中心解析。
 _REFRESH_PQ = re.compile(
@@ -92,9 +94,14 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         if not self.headers.get("Authorization"):
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
-        match = _OPEN.match(self.path)
-        if match and self.command == "POST":
-            self._open_prepared_question(match["question_id"])
+        unified_open = _OPEN_UNIFIED.match(self.path)
+        per_question_open = _OPEN.match(self.path)
+        if self.command == "POST" and (unified_open or per_question_open):
+            # 统一 Open(§5)须先判:否则 "open" 被当作路径 question_id
+            if unified_open:
+                self._open_unified()
+            else:
+                self._open_prepared_question(per_question_open["question_id"])
             return
         if _CREATE.match(self.path) and self.command == "POST":
             self._create_conversation()
@@ -149,6 +156,14 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
             return
         self._error(ApiError(404, None, "路径不在合作方合同内"))
 
+    def _open_unified(self) -> None:
+        """POST /api/prepared-questions/open(§5 统一 Open);403 拦截照 00 §5.2 约定 4。"""
+        body = self._read_body()
+        forbidden = sorted(_FORBIDDEN_FIELDS & set(body))
+        if forbidden:
+            raise ApiError(403, None, f"客户端不得提交字段:{','.join(forbidden)}")
+        self._json(self.service.open_unified(body))
+
     def _open_prepared_question(self, question_id: str) -> None:
         """POST /api/prepared-questions/{id}/open(#55 既有入口,抽方法保 _dispatch 预算)。"""
         body = self._body_keys("idempotency_key")
@@ -193,14 +208,17 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
 
     def _error(self, error: ApiError) -> None:
         self._json(
-            {"error": {"code": error.code, "message": error.message, "request_id": "", "details": {}}},
+            {"error": {"code": error.code, "message": error.message, "request_id": "",
+                       "details": error.details}},
             status=error.status_code,
         )
 
     def handle_one_request(self) -> None:  # 统一错误出口;未预期异常兜底 503,不静默断连
         try:
             super().handle_one_request()
-        except (ApiError, IdentityError) as error:
+        except ApiError as error:
+            self._error(error)  # 原样透传(保留 details 等合同字段)
+        except IdentityError as error:
             self._error(ApiError(getattr(error, "status_code", 500),
                                  getattr(error, "code", None), error.message))
         except Exception as error:  # noqa: BLE001 传输层兜底:基础设施故障(合同表 503)
