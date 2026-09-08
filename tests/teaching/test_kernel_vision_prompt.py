@@ -89,6 +89,35 @@ def test_start_image_travels_as_multimodal_part_not_text(tmp_path):
     assert "QUJD" not in parts[0]["text"]  # 图片引用不进文本
 
 
+def test_vision_task_carries_explicit_criteria(tmp_path):
+    """判定标准随任务下发:解不出/题干歧义不影响 acceptable——修复 8B 模型
+    自创标准把可解题当不可接受(题库实测误杀 6/12)。"""
+    vision = FakeOpenAI([completion(vision_json(True, "单题清晰", ""))]).start()
+    tutor = FakeOpenAI([completion(tutor_json("先读题。"))]).start()
+    gateway = kernel_gateway(tmp_path, tutor.url, vision_url=vision.url)
+    start({"image": "data:image/png;base64,QUJD"}, LEARNER, gateway=gateway)
+    gateway.close()
+    vision.stop()
+    tutor.stop()
+    task_text = vision.requests[0]["messages"][0]["content"][0]["text"]
+    assert "多道独立题目" in task_text and "不影响 acceptable" in task_text
+
+
+def test_text_question_with_rejected_image_degrades_to_text_teaching(tmp_path):
+    """图文题(题库命中,权威文答在题面)vision 拒图 → 降级纯文教学,不终态;
+    fail-closed 只留给无文字兜底的纯图题。"""
+    vision = FakeOpenAI([completion(vision_json(False, "图文不清", ""))]).start()
+    tutor = FakeOpenAI([completion(tutor_json("我们先看已知条件。"))]).start()
+    gateway = kernel_gateway(tmp_path, tutor.url, vision_url=vision.url)
+    turn = start({"text": "鸡兔同笼,共 8 头 26 足。", "answer": "鸡3只,兔5只",
+                  "image": "data:image/png;base64,QUJD"}, LEARNER, gateway=gateway)
+    gateway.close()
+    vision.stop()
+    tutor.stop()
+    assert turn.state == "first_question_ready"
+    assert len(tutor.requests) == 1  # 照常教学(题面文答是权威,图只是辅助)
+
+
 def test_start_image_only_question_fills_transcription_as_text(tmp_path):
     """分支③:纯图题(question.text 为空)的可信转写回填题面——进 tutor prompt
     与泄露护栏对照,且不改调用方入参。"""
