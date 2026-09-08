@@ -21,9 +21,11 @@ class RecordingKernel:
     def __init__(self, replies: list[str]):
         self.replies = list(replies)
         self.questions: list[dict] = []
+        self.learners: list[dict] = []
 
     def start(self, question: dict, learner: dict) -> StubTurn:
         self.questions.append(question)
+        self.learners.append(learner)
         reply = self.replies[min(len(self.questions) - 1, len(self.replies) - 1)]
         return StubTurn(reply)
 
