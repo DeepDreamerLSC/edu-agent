@@ -155,20 +155,14 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         self._json(self.service.open(question_id, body["idempotency_key"], learner={}))
 
     def _create_conversation(self) -> None:
-        """POST /api/conversations:合同字段透传 learner;403 拦截照 00 §5.2 约定 4。"""
+        """POST /api/conversations:统一 Open 字段子集(external_question_id/
+        question_text/question_image,service 内校验与组合规则);403 拦截照 00 §5.2 约定 4。"""
         body = self._read_body()
         forbidden = sorted(_FORBIDDEN_FIELDS & set(body))
         if forbidden:
             # 00 §5.2 约定 4:掌握结论只能服务端产生,客户端不得提交
             raise ApiError(403, None, f"客户端不得提交字段:{','.join(forbidden)}")
-        question_id = body.get("question_id")
-        idempotency_key = body.get("idempotency_key")
-        if not question_id or not idempotency_key:
-            raise ApiError(422, None, "缺必填字段:question_id,idempotency_key")
-        learner = {k: v for k, v in body.items()
-                   if k not in ("question_id", "idempotency_key")}
-        self._json(self.service.create(str(question_id), str(idempotency_key), learner),
-                   status=201)
+        self._json(self.service.create(body), status=201)
 
     def _read_body(self) -> dict:
         length = int(self.headers.get("Content-Length") or 0)
