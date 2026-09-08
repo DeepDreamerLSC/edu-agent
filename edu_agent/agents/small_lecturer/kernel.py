@@ -112,6 +112,22 @@ def _feeds_method(text: str) -> bool:
 def _student_signals_understanding(student_message: str) -> bool:
     """学生表示「懂了/明白了」——教学弧线里这是「请学生讲思路」的触发点。"""
     return bool(re.search(r"都懂了|懂了|明白了|没有不懂|会了|没问题|都明白|没疑问", student_message))
+
+
+def _student_signals_stuck(student_message: str) -> bool:
+    """学生表示「不会/猜不出」——这是「揭示下一级阶梯」的触发点(治 tutor 复读探针)。
+
+    用完整短句(非单字「不会」),避免误伤「我不会」这类出现在其它语境的学生消息。"""
+    return bool(re.search(r"我不太会|我猜不出|我猜不出来|我不知道|我想不出|我想不出来|我不会做|不会吧|太难了|没思路", student_message))
+
+
+def _reveal_next_step(session: "LearnerSession") -> str | None:
+    """阶梯逐级揭示(确定性,零模型调用):学生卡住 → 揭示 steps 的下一级。"""
+    if session.hint_level < len(session.steps):
+        step = session.steps[session.hint_level]
+        session.hint_level += 1
+        return f"这一步我们先看:{step['step']}。你接着算下一步。"
+    return None
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
@@ -380,6 +396,18 @@ def reply(session: LearnerSession, student_message: str, *,
         session.session_version += 1
         session.state = "dialogue"
         return Turn(text=_ELICIT_TEMPLATE, session_version=session.session_version,
+                    state="dialogue", ready_to_confirm=False, session=session)
+    if _student_signals_stuck(student_message):
+        # 学生说「不会/猜不出」→ 确定性揭示下一级阶梯(不调模型),治 tutor 复读探针。
+        hint = _reveal_next_step(session)
+        if hint is None:
+            hint = _OPENING_FALLBACK  # 无分步解可揭示 → 通用兜底(确认一个条件)
+        session.history.append({"role": "user", "content": student_message})
+        session.history.append({"role": "assistant", "content": hint})
+        session.session_version += 1
+        session.state = "dialogue"
+        session.stuck = True
+        return Turn(text=hint, session_version=session.session_version,
                     state="dialogue", ready_to_confirm=False, session=session)
     gateway = gateway or default_gateway()
     _reply_messages = [

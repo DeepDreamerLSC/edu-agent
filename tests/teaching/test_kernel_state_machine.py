@@ -247,7 +247,7 @@ def test_reply_masks_method_names_in_teacher_prompt(tmp_path):
                    "analysis": "用假设法:先假设全是鸡,再按脚差求兔。",
                    "knowledge_points": ["鸡兔同笼", "假设法"]},
                   {"grade": "六年级"}, gateway=gateway)
-    reply(first.session, "我不太会。", gateway=gateway)
+    reply(first.session, "我先说说我的想法。", gateway=gateway)
     gateway.close()
     fake.stop()
     prompt = json.loads(fake.requests[1]["messages"][1]["content"])
@@ -289,3 +289,20 @@ def test_reply_student_says_understood_triggers_elicit_without_model(tmp_path):
                          "先说说你第一步算了什么、为什么这样算。")
     assert turn.ready_to_confirm is False  # 不关对话
     assert len(fake.requests) == calls_before  # 「都懂了」这轮零模型调用
+
+
+def test_reply_stuck_reveals_next_step_without_model(tmp_path):
+    """学生说「我不太会」→ 确定性揭示下一级阶梯(不调模型),治 tutor 复读探针。"""
+    fake = FakeOpenAI([completion(open_json(
+        "你先说说题目给了哪些条件?",
+        steps=[{"step": "两边减7", "value": "18"}, {"step": "除以3", "value": "6"}],
+    ))]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    first = start({"text": "解方程 3x+7=25", "answer": "x=6"}, LEARNER, gateway=gateway)
+    calls_before = len(fake.requests)
+    turn = reply(first.session, "我不太会。", gateway=gateway)
+    gateway.close()
+    fake.stop()
+    assert turn.text == "这一步我们先看:两边减7。你接着算下一步。"
+    assert turn.ready_to_confirm is False
+    assert len(fake.requests) == calls_before  # 零模型调用
