@@ -165,6 +165,55 @@ class FileService:
         payload = base64.b64encode(Path(record.path).read_bytes()).decode("ascii")
         return f"data:{record.content_type};base64,{payload}"
 
+    # ---------- 5) download-url / preview-url(老系统 files API §7 字段形状) ----------
+
+    def _content_path(self, file_id: str) -> str:
+        """本地存储语义:下载/预览地址指向本服务鉴权 content 端点(等效 JSON)。
+        record 必须已 uploaded,否则抛 FILE_NOT_READY(与 read_content 同准)。"""
+        self._record_or_404(file_id)
+        if self.records[file_id].status != "uploaded":
+            raise ApiError(404, "FILE_NOT_READY", "文件不存在或尚未就绪")
+        return f"/api/files/{file_id}/content"
+
+    def download_url(self, file_id: str) -> dict:
+        """GET /api/openapi/v1/files/{id}/download-url(老系统 files §7 字段形状)。
+
+        本地存储:download_url 指向本服务鉴权 content 端点;requires_authorization=true、
+        url_expires_at=null、delivery_mode=authenticated_api_content_proxy(老文档原生 App
+        列)。文档未发明的字段不加;未就绪抛 404 FILE_NOT_READY。"""
+        record = self._record_or_404(file_id)
+        return {
+            "file_id": record.file_id,
+            "download_url": self._content_path(file_id),
+            "requires_authorization": True,
+            "headers": {},
+            "url_expires_at": None,
+            "delivery_mode": "authenticated_api_content_proxy",
+        }
+
+    def preview_url(self, file_id: str) -> dict:
+        """GET /api/openapi/v1/files/{id}/preview-url(老系统 files §7 字段形状)。
+
+        preview_url 与 download_url 同指鉴权 content 端点(图片场景预览=下载,本地语义);
+        head_supported=false(老文档原生前端首版不开放 HEAD)。字段取自老系统
+        FrontendFilePreviewUrlResponse 且为文档认可的核心子集,不发明。"""
+        record = self._record_or_404(file_id)
+        path = self._content_path(file_id)
+        return {
+            "file_id": record.file_id,
+            "preview_url": path,
+            "download_url": path,
+            "preview_mode": "inline_file",
+            "method": "GET",
+            "headers": {},
+            "url_expires_at": None,
+            "requires_authorization": True,
+            "range_supported": True,
+            "head_supported": False,
+            "cache_control": "private, no-store",
+            "delivery_mode": "authenticated_api_content_proxy",
+        }
+
     def _record_or_404(self, file_id: str) -> FileRecord:
         record = self.records.get(file_id)
         if record is None:

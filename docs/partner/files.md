@@ -2,6 +2,19 @@
 
 [在线调试 Swagger](/api/docs) · [返回 API 文档](/api/docs/public-api.md) · [查看原始 Markdown](/api/docs/guides/files/raw.md)
 
+> **v1 范围说明**(新后端,2026-09-08):本文档基于合作方合同原样迁移。v1 后端**支持**:
+> `/api/openapi/v1/files/upload-url`(申请上传地址)、`/{file_id}/content`(PUT 写二进制、
+> GET 读字节)、`/complete`、`/{file_id}/download-url`、`/{file_id}/preview-url` 全套路由
+> (新后端同时保留 `/api/files/**` 第一方路径,两者共用同一文件服务)。存储为**本地磁盘**
+> (FILES_STORAGE_DIR),非对象存储;`download-url`/`preview-url` 返回受认证的
+> `/api/files/{file_id}/content` 地址(requires_authorization=true、delivery_mode=
+> authenticated_api_content_proxy、url_expires_at=null),不返回外部签名直链。
+> v1 后端**不支持**:`purpose` 仅 `micro_lesson_question_image` 与
+> `micro_lesson_student_solution_image` 两类(其余 exam_page / essay_attachment /
+> report_asset / pdf 裁题 / workbook 源 PDF / 微课音频视频等用途调用返回
+> `422 UNSUPPORTED_PURPOSE`);非图片内容(试卷/PDF/音频/视频);多租户跨 Client App
+> scope。文档中超出该范围的项已标注 v1 不支持。
+
 ## 1. 能力说明
 
 文件接口用于上传题图、试卷、PDF、作文附件、音频和视频，也用于预览或下载系统生成的文件。合作方接口统一使用 `Authorization: Bearer <api_key>`；文件始终归属于当前 Client App 和租户，不能跨范围读取。

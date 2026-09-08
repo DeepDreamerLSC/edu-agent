@@ -2,6 +2,14 @@
 
 [在线调试 Swagger](/api/docs) · [返回 API 文档](/api/docs/public-api.md) · [查看原始 Markdown](/api/docs/guides/partner-sso/raw.md)
 
+> **v1 范围说明**(新后端,2026-09-08):本文档基于合作方合同原样迁移。v1 后端**支持**:
+> 原生授权码 + PKCE 全舞步(`POST /api/openapi/v1/auth/native-codes` →
+> `POST /api/auth/native/token`),单合作方。v1 后端**支持**退出
+> (`POST /api/auth/logout`):返回 `{"ok": true}`。因访问令牌为**无状态 HMAC**(非持久
+> 会话),v1 **不做副作用撤销**——不建吊销名单/黑名单(自建状态违反最小实现);语义按老
+> 文档"登出即返回成功",令牌随 `exp` 过期自然失效。v1 后端**不支持**:多合作方、
+> 服务端可撤销会话、刷新令牌(`refresh_token`)、网页 Cookie SSO(自有网页单点登录)。
+
 ## 1. 先选择接入方式
 
 EduAgent 目前保留两套互不混用的登录方式：
