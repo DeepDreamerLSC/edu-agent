@@ -102,9 +102,20 @@ def test_tone_is_prompt_guided_not_hard_guardrail():
 
 
 def test_tone_directive_in_system_prompt():
-    # 语气指令进 system prompt(稳定→cache 友好):亲切活跃/称呼名字/首问打招呼/
-    # 每轮开头鼓励;方向性指令,不硬编码句子
+    # 语气指令进 system prompt(稳定→cache 友好):亲切温暖/不起名/友好开场/
+    # 40 字上限/基调随对错;方向性指令,不硬编码句子
     from edu_agent.agents.small_lecturer import system_prompt
     system_message = system_prompt("六年级")
-    for directive in ("亲切", "温暖", "名字", "打招呼", "鼓励"):
+    for directive in ("亲切", "温暖", "名字", "开场", "40 字", "基调"):
         assert directive in system_message, directive
+
+
+def test_tone_directive_forbids_naming_and_empty_praise():
+    # 称呼与激励方向(演示反馈 2026-09-08):不起名/不借题面人名;答错不空夸——
+    # 方向性约束写进指令,不写死话术
+    from edu_agent.agents.small_lecturer import system_prompt
+    system_message = system_prompt("六年级")
+    assert "不给学习者起名" in system_message
+    assert "题目角色" in system_message
+    assert "不空夸" in system_message
+    assert "没关系" not in system_message  # 不写死具体话术
