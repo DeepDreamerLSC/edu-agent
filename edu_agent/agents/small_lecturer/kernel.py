@@ -19,6 +19,7 @@ Turn.text,替换为确定性安全问句(M2 清单阶段 2,断言即规格)。M3
 
 from __future__ import annotations
 
+import difflib
 import json
 import re
 from dataclasses import dataclass
@@ -71,6 +72,21 @@ SAFE_FALLBACK_TEXT = "先回到当前小问,你能说出题目明确给出的一
 def _question_numbers(text: str) -> set[float]:
     """题面条件数字全集(整数/小数;分数按两个数字处理,与口算习惯一致)。"""
     return {float(m) for m in re.findall(r"\d+(?:\.\d+)?", text or "")}
+
+
+# 复读自批评(业界 self-refine:把 tutor 自己上一条当反面证据喂回;任务包2步3)
+_SELF_CRITIQUE = (
+    "你上一轮已经这样问过,学生仍说不会/没答上来。别重复这个问点:"
+    "要么直接给出这一步的具体数值结果(如「如果全是鸡,8只就是16只脚」),让他接着算下一步;"
+    "要么换一个更小的问点。"
+)
+
+
+def _is_repeat(prev: str, new: str) -> bool:
+    """语义复读检测:新回复与上一轮 tutor 输出高度相似(阈值 0.9,stdlib difflib)。"""
+    if not prev or not new:
+        return False
+    return difflib.SequenceMatcher(None, prev.strip(), new.strip()).ratio() > 0.9
 
 
 # 兜底句情境化(任务包2步2,消灭万能句):接学生原话/按护栏类型的提问式引导。
@@ -140,14 +156,11 @@ def _record_event(session: "LearnerSession | None", guard: str, rule_ids: list[s
 
 
 def _regenerate(ctx: "_GuardContext", session: "LearnerSession | None", reply_text: str,
-                guard: str, rule_ids: list[str]) -> str | None:
-    """修复重生成优先:带 rule_id+命中片段重调 tutor 一次;成功返回干净文本,再命中返回 None。"""
+                critique: str) -> str | None:
+    """带一句 critique 重调 tutor 一次;重调后过护栏(clean)才返回文本,否则 None。"""
     if ctx.gateway is None or ctx.messages is None:
         return None
-    repair_messages = [*ctx.messages, {"role": "user", "content": (
-        f"你上一条回复被教学护栏拦截(规则:{','.join(rule_ids)};命中内容:"
-        f"「{reply_text[:48]}」)。请重写这条回复,直接回应用户当前的问题;"
-        f"不要重复被拦截的内容,不要提前给出答案或方法名。")}]
+    repair_messages = [*ctx.messages, {"role": "user", "content": critique}]
     try:
         repaired = json.loads(_invoke(
             ctx.gateway, ctx.role, repair_messages, ctx.schema or TUTOR_TURN_SCHEMA,
@@ -180,7 +193,10 @@ def _guard_output(reply_text: str, session: "LearnerSession | None" = None,
         and "unverified_source_value_disclosure" in rule_ids
         and not str(ctx.question.get("answer") or "").strip()
     )
-    regenerated = _regenerate(ctx, session, reply_text, guard, rule_ids)
+    critique = (f"你上一条回复被教学护栏拦截(规则:{','.join(rule_ids)};命中内容:"
+                f"「{reply_text[:48]}」)。请重写这条回复,直接回应用户当前的问题;"
+                f"不要重复被拦截的内容,不要提前给出答案或方法名。")
+    regenerated = _regenerate(ctx, session, reply_text, critique)
     if regenerated is not None:
         _record_event(session, guard, rule_ids, reply_text, regenerated=True)
         if session is not None and soft_no_answer:
@@ -307,6 +323,14 @@ def reply(session: LearnerSession, student_message: str, *,
     ctx = _GuardContext(question=session.question, grade=session.learner.get("grade", ""),
                         gateway=gateway, role="tutor", messages=_reply_messages,
                         schema=TUTOR_TURN_SCHEMA, student_message=student_message)
+    # 复读自批评(self-refine):与上一轮 tutor 输出高度相似 → 打回重生成一次,仍复读才降级。
+    prev = session.history[-1]["content"] if session.history else session.first_question
+    if prev and _is_repeat(prev, output["reply"]):
+        refined = _regenerate(ctx, session, output["reply"], _SELF_CRITIQUE)
+        if refined is None or _is_repeat(prev, refined):
+            refined = _contextual_fallback(session, "repeat", [], student_message)
+            session.stuck = True  # 复读打断 = 卡点标记(R6 同款)
+        output["reply"] = refined
     safe_text = _guard_output(output["reply"], session, ctx)
     # 数字漂移守卫(M3):模型自报引用的数字 ⊆ 题面数字全集,超出 = 把口误数字
     # 当题目条件复读 → stuck 标记(不拒答,下一轮提醒纠偏);题面无数字跳过

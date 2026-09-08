@@ -39,7 +39,17 @@ class CapturingFake(FakeOpenAI):
 
 
 def r6_gateway(tmp_path):
-    fake = CapturingFake([completion(tutor_json("我们先确认题意。"))] * 8).start()
+    # 各轮返回不同回复:避免触发内核复读自批评(打回重生成),测试只关心结构不关心文本
+    fake = CapturingFake([
+        completion(tutor_json("我们先确认题意。")),
+        completion(tutor_json("你算对了,很好。")),
+        completion(tutor_json("再确认下一步。")),
+        completion(tutor_json("继续。")),
+        completion(tutor_json("这一步对了。")),
+        completion(tutor_json("很接近了。")),
+        completion(tutor_json("没错。")),
+        completion(tutor_json("好。")),
+    ]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     return gateway, fake
 

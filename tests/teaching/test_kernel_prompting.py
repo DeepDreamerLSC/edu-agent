@@ -126,3 +126,20 @@ def test_guarded_reply_context_matches_student_visible_text(tmp_path):
     assistant_turns = [m["content"] for m in first.session.history if m["role"] == "assistant"]
     # 泄露回复不达学生面:history 记的是重生成后的干净文本,下一轮模型上下文 = 学生实际所见
     assert assistant_turns == ["你刚才回到了条件本身,很好。", json.loads(follow_clean)["reply"]]
+
+
+def test_repeat_self_refine_replaces_repeated_question(tmp_path):
+    """复读自批评(self-refine):学生卡住时 tutor 复读同一问句 → 打回重生成一次换一句推进。"""
+    repeat_q = tutor_json("兔子有几只呢?")
+    refined = tutor_json("我们换一步,你先说说题目给了哪些条件?")
+    fake = FakeOpenAI([completion(repeat_q), completion(repeat_q), completion(refined)]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    first = start({"text": "鸡和兔一共有8只,共有26只脚,鸡和兔各有多少只?说明思路。",
+                   "answer": "鸡3只,兔5只"}, {"grade": "六年级"}, gateway=gateway)
+    turn = reply(first.session, "我不太会。", gateway=gateway)
+    gateway.close()
+    fake.stop()
+    # 首问「兔子有几只呢?」被复读一次 → self-refine 打回重生成 → 换成非复读的推进句
+    assert turn.text == "我们换一步,你先说说题目给了哪些条件?"
+    assert "兔子有几只呢" not in turn.text
+    assert len(fake.requests) == 3  # start + 首轮 reply + 打回重生成 各一次模型调用
