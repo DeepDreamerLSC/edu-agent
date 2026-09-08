@@ -291,18 +291,18 @@ def test_reply_student_says_understood_triggers_elicit_without_model(tmp_path):
     assert len(fake.requests) == calls_before  # 「都懂了」这轮零模型调用
 
 
-def test_reply_stuck_reveals_next_step_with_model_phrasing(tmp_path):
-    """学生说「我不太会」→ 揭示下一级阶梯;步骤内容确定性,措辞交模型(自然语气)。"""
-    fake = FakeOpenAI([
-        completion(open_json("你先说说题目给了哪些条件?",
-                             steps=[{"step": "两边减7", "value": "18"},
-                                    {"step": "除以3", "value": "6"}])),
-        completion(tutor_json("我们先做第一步:把方程两边都减7,右边就剩18了。")),
-    ]).start()
+def test_reply_stuck_reveals_next_step_with_varied_lead(tmp_path):
+    """学生说「我不太会」→ 揭示下一级阶梯(确定性),开场用轮换模板避免固定前缀生硬。"""
+    fake = FakeOpenAI([completion(open_json(
+        "你先说说题目给了哪些条件?",
+        steps=[{"step": "两边减7", "value": "18"}, {"step": "除以3", "value": "6"}],
+    ))]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start({"text": "解方程 3x+7=25", "answer": "x=6"}, LEARNER, gateway=gateway)
+    calls_before = len(fake.requests)
     turn = reply(first.session, "我不太会。", gateway=gateway)
     gateway.close()
     fake.stop()
-    assert turn.text == "我们先做第一步:把方程两边都减7,右边就剩18了。"
+    assert turn.text == "我们从这里入手:两边减7。你接着算下一步。"
     assert turn.ready_to_confirm is False  # 不关对话
+    assert len(fake.requests) == calls_before  # 零模型调用

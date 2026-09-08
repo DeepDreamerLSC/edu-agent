@@ -130,10 +130,16 @@ def _next_step(session: "LearnerSession") -> dict | None:
     return None
 
 
+# 阶梯揭示的多样开场(确定性,轮换)——避免「这一步我们先看」句句重复、显生硬。
+_STEP_LEADS = ("我们从这里入手", "下一步是这样", "再往下看", "你看这一步", "接着这样算", "关键在这一步")
+
+
 def _reveal_stuck_hint(session: "LearnerSession", student_message: str,
                        gateway: Gateway) -> str:
-    """学生卡住 → 揭示下一级阶梯:步骤内容确定性(session.steps),措辞交模型(自然语气);
-    模型代喂 → 退回确定性步骤句;无步骤 → bottom-out 给答案。"""
+    """学生卡住 → 揭示下一级阶梯(确定性,零模型调用,不重复)。
+
+    内容 = session.steps 下一级;开场用 _STEP_LEADS 轮换,避免固定前缀生硬。
+    模型措辞版实测会重复(3/7)且过度揭示,故仍用确定性。"""
     step = _next_step(session)
     if step is None:
         answer = str(session.question.get("answer") or "").strip()
@@ -141,25 +147,8 @@ def _reveal_stuck_hint(session: "LearnerSession", student_message: str,
             answer = str(session.steps[-1].get("value") or "").strip()
         return (f"这一步我们直接看结果:{answer}。你先记住它,我们回头再讲一遍为什么。"
                 if answer else NEEDS_REVIEW_TEXT)
-    reveal_messages = [
-        {"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
-        {"role": "user", "content": json.dumps({
-            "题目": session.question, "学生": session.learner,
-            "对话记录": session.history,
-            "这一步提示": f"{step['step']}(得到 {step['value']})",
-            "任务": ("学生卡住了。用自然、简短、鼓励的语气,把「这一步提示」讲给学生。"
-                     "只讲这一步,不要报最终答案或方法名,不要讲下一步。")},
-            ensure_ascii=False)},
-    ]
-    output = json.loads(_invoke(gateway, "tutor", reveal_messages,
-                                TUTOR_TURN_SCHEMA, session).text)
-    ctx = _GuardContext(question=session.question, grade=session.learner.get("grade", ""),
-                        gateway=gateway, role="tutor", messages=reveal_messages,
-                        schema=TUTOR_TURN_SCHEMA, student_message=student_message)
-    hint = _guard_output(output["reply"], session, ctx)
-    if _feeds_method(hint):
-        hint = f"这一步我们这样看:{step['step']}。"  # 代喂兜底:退回确定性步骤句
-    return hint
+    lead = _STEP_LEADS[(session.hint_level - 1) % len(_STEP_LEADS)]
+    return f"{lead}:{step['step']}。你接着算下一步。"
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
