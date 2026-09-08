@@ -145,6 +145,14 @@ class ConversationService:
                            details={"conflicting_fields": ["question_text", "question_image",
                                                            "external_question_id"]})
         learner = {k: v for k, v in body.items() if k not in self._CONTRACT_FIELDS}
+        # PR-4:answer_correct → 内核 R6 首问策略信号。true/false 显式有值才映射
+        # answer_status 并标 provenance=partner_open;null/省略不填(内核缺省 unknown,
+        # provenance 缺省)。映射值由合同字段推导,覆写同名透传(服务端权威)。
+        client_answer = "answer_correct" in body and answer_correct is not None
+        if client_answer:
+            learner = {**learner,
+                       "answer_status": "correct" if answer_correct else "incorrect",
+                       "answer_correct_provenance": "partner_open"}
         material = ({"text": question_text} if question_text
                     else {"image": question_image} if question_image else None)
         if material is not None and knowledge_points:
@@ -172,7 +180,9 @@ class ConversationService:
             "prepared_question_package_id": None,  # v1 题源(seed/snapshot)不带包 id
             "pending": False,  # 同步内核:首问已就绪,无需重放
             "answer_correct": answer_correct,
-            "answer_correct_provenance": ("partner_question_bank" if bank_hit else None),
+            # 客户端显式有值 > 题库来源 > 缺省 null(答案正确性的出处标记)
+            "answer_correct_provenance": ("partner_open" if client_answer else
+                                          "partner_question_bank" if bank_hit else None),
             "question": {
                 "package_id": None,
                 "active_session": {

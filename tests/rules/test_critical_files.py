@@ -59,3 +59,14 @@ def test_unified_open_test_file_exists():
     assert UNIFIED_OPEN_TEST.is_file(), (
         f"丢失 {UNIFIED_OPEN_TEST.relative_to(REPO_ROOT)}(#87 丢失哨兵)"
     )
+
+
+def test_answer_correct_mapping_exists():
+    source = SERVICE.read_text(encoding="utf-8")
+    assert '"answer_status": "correct"' in source, (
+        "service.py 缺 answer_correct→answer_status 映射(#90 恢复不完整哨兵,"
+        "PR-4/R6 首问策略的生产端接线,丢失即裸奔绿)"
+    )
+    assert '"answer_correct_provenance": "partner_open"' in source, (
+        "service.py 缺 partner_open provenance 标记(#90 恢复不完整哨兵)"
+    )
