@@ -40,9 +40,15 @@ def tutor_json(text: str, ready: bool = False) -> str:
                        "cited_numbers": []}, ensure_ascii=False)
 
 
+def open_json(text: str) -> str:
+    """统一 open 响应(任务包2步4):start 一次调用产出的 schema。"""
+    return json.dumps({"acceptable": True, "transcription": "", "steps": [],
+                       "reply": text}, ensure_ascii=False)
+
+
 def test_run_case_drives_full_script(tmp_path):
     fake = FakeOpenAI([
-        completion(tutor_json("题目要我们求什么?")),
+        completion(open_json("题目要我们求什么?")),
         completion(tutor_json("为什么两边都能减7?")),
         completion(tutor_json("很好,再同时除以3。", ready=True)),
         completion(json.dumps({"summary": "你用等式性质解出 x=6 并检验。"}, ensure_ascii=False)),

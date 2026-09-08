@@ -21,7 +21,7 @@ from edu_agent.agents.small_lecturer import (
     system_prompt,
 )
 
-from test_kernel_state_machine import LEARNER, QUESTION_TEXT, kernel_gateway, tutor_json
+from test_kernel_state_machine import LEARNER, QUESTION_TEXT, kernel_gateway, open_json, tutor_json
 
 
 # ---------- 装配:SKILL + 风格档案 + 攻守图 ----------
@@ -50,7 +50,7 @@ def test_summary_prompt_uses_summary_instruction():
 # ---------- 内核接线:system 消息真实下发 ----------
 
 def test_kernel_sends_assembled_system_message(tmp_path):
-    fake = FakeOpenAI([completion(tutor_json("我们先确认题意:要求什么?"))]).start()
+    fake = FakeOpenAI([completion(open_json("我们先确认题意:要求什么?"))]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     start(QUESTION_TEXT, LEARNER, gateway=gateway)
     gateway.close()
@@ -65,7 +65,7 @@ def test_kernel_sends_assembled_system_message(tmp_path):
 
 def test_kernel_replaces_leaking_tutor_output(tmp_path):
     """泄露终答 → 确定性安全问句(M2 阶段 2;断言即规格,改内核不改测试)。"""
-    leak = tutor_json("答案是 x=6。你能说说理由吗?")
+    leak = open_json("答案是 x=6。你能说说理由吗?")
     fake = FakeOpenAI([completion(leak)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
@@ -77,7 +77,7 @@ def test_kernel_replaces_leaking_tutor_output(tmp_path):
 
 def test_kernel_replaces_abusive_tone(tmp_path):
     rude = tutor_json("这么简单的题你都不会?")
-    fake = FakeOpenAI([completion(tutor_json("第一问?")), completion(rude)]).start()
+    fake = FakeOpenAI([completion(open_json("第一问?")), completion(rude)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
     turn = reply(first.session, "我不会。", gateway=gateway)
@@ -88,7 +88,7 @@ def test_kernel_replaces_abusive_tone(tmp_path):
 
 
 def test_kernel_replaces_markdown_output_with_downgrade(tmp_path):
-    dirty = tutor_json("## 第一步\n先算 **3×4**。")
+    dirty = open_json("## 第一步\n先算 **3×4**。")
     fake = FakeOpenAI([completion(dirty)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
@@ -98,7 +98,7 @@ def test_kernel_replaces_markdown_output_with_downgrade(tmp_path):
 
 
 def test_clean_output_passes_through(tmp_path):
-    clean = tutor_json("题目要我们求什么?先说说你读到了哪些条件。")
+    clean = open_json("题目要我们求什么?先说说你读到了哪些条件。")
     fake = FakeOpenAI([completion(clean)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
@@ -112,7 +112,7 @@ def test_guarded_reply_context_matches_student_visible_text(tmp_path):
     leak = tutor_json("答案是 x=6,就是这样。")
     regen_clean = tutor_json("你刚才回到了条件本身,很好。")
     follow_clean = tutor_json("我们接着看,你能说出题目给的一个条件吗?")
-    fake = FakeOpenAI([completion(tutor_json("第一问?")), completion(leak),
+    fake = FakeOpenAI([completion(open_json("第一问?")), completion(leak),
                        completion(regen_clean), completion(follow_clean)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
@@ -130,9 +130,10 @@ def test_guarded_reply_context_matches_student_visible_text(tmp_path):
 
 def test_repeat_self_refine_replaces_repeated_question(tmp_path):
     """复读自批评(self-refine):学生卡住时 tutor 复读同一问句 → 打回重生成一次换一句推进。"""
-    repeat_q = tutor_json("兔子有几只呢?")
-    refined = tutor_json("我们换一步,你先说说题目给了哪些条件?")
-    fake = FakeOpenAI([completion(repeat_q), completion(repeat_q), completion(refined)]).start()
+    open_q = open_json("兔子有几只呢?")          # start 首问(open schema)
+    repeat_q = tutor_json("兔子有几只呢?")        # reply 复读同一问句(tutor schema)
+    refined = tutor_json("我们换一步,你先说说题目给了哪些条件?")  # 重生成(tutor schema)
+    fake = FakeOpenAI([completion(open_q), completion(repeat_q), completion(refined)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start({"text": "鸡和兔一共有8只,共有26只脚,鸡和兔各有多少只?说明思路。",
                    "answer": "鸡3只,兔5只"}, {"grade": "六年级"}, gateway=gateway)
