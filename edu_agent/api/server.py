@@ -225,37 +225,39 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
         self.wfile.write(payload)
         return True
 
+    def _serve_static(self) -> bool:
+        """GET /chat 与 /static/*(演示页与题库资产);未命中返回 False。"""
+        if not (self.path in ("/chat", "/chat/", "/static/chat.html")
+                or self.path.startswith("/static/")):
+            return False
+        static_root = Path(__file__).resolve().parent / "static"
+        name = "chat.html" if not self.path.startswith("/static/") \
+            else self.path.removeprefix("/static/")
+        asset = (static_root / name).resolve()
+        if static_root not in asset.parents or not asset.is_file():
+            self.send_error(404)
+            return True
+        content_type = ("text/html; charset=utf-8" if asset.suffix == ".html"
+                        else "application/json" if asset.suffix == ".json"
+                        else "image/jpeg" if asset.suffix == ".jpg"
+                        else "image/png" if asset.suffix == ".png"
+                        else "image/webp" if asset.suffix == ".webp"
+                        else "application/octet-stream")
+        payload = asset.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Cache-Control", "max-age=3600")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+        return True
+
     def do_GET(self) -> None:
         if _HEALTHZ.match(self.path):
             from .healthz import snapshot  # 局部导入:快照依赖模型配置,按需加载
             self._json(snapshot())
             return
-        if self._serve_docs():
-            return
-        if self.path in ("/chat", "/chat/", "/static/chat.html") or \
-                self.path.startswith("/static/"):
-            from pathlib import Path as _Path
-
-            static_root = (_Path(__file__).resolve().parent / "static")
-            name = "chat.html" if not self.path.startswith("/static/") \
-                else self.path.removeprefix("/static/")
-            asset = (static_root / name).resolve()
-            if static_root not in asset.parents or not asset.is_file():
-                self.send_error(404)
-                return
-            content_type = ("text/html; charset=utf-8" if asset.suffix == ".html"
-                            else "application/json" if asset.suffix == ".json"
-                            else "image/jpeg" if asset.suffix == ".jpg"
-                            else "image/png" if asset.suffix == ".png"
-                            else "image/webp" if asset.suffix == ".webp"
-                            else "application/octet-stream")
-            payload = asset.read_bytes()
-            self.send_response(200)
-            self.send_header("Content-Type", content_type)
-            self.send_header("Cache-Control", "max-age=3600")
-            self.send_header("Content-Length", str(len(payload)))
-            self.end_headers()
-            self.wfile.write(payload)
+        if self._serve_docs() or self._serve_static():
             return
         if not self.headers.get("Authorization"):
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
