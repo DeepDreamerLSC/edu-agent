@@ -64,11 +64,13 @@ class Kernel(Protocol):
 
 class ConversationService:
     def __init__(self, store: MemoryConversationStore, kernel: Kernel,
-                 source=None, sessions: FileSessionStore | None = None) -> None:
+                 source=None, sessions: FileSessionStore | None = None,
+                 image_resolver=None) -> None:
         self.store = store
         self.kernel = kernel
         self.source = source
         self.sessions = sessions  # M3 PR6:上下文保留,未注入时空操作
+        self.image_resolver = image_resolver  # file_id → data URL(FileService.data_url)
         self._turn_cache: dict[str, dict] = {}  # 消息幂等:cache_key → 响应(不重调模型)
 
     # ---------- open(幂等键,同键同 Attempt) ----------
@@ -92,7 +94,9 @@ class ConversationService:
             "idempotency_key", "external_question_id", "question_text", "question_image")}
         external_question_id = str(body.get("external_question_id") or "")
         if external_question_id:
-            payload = self.open(external_question_id, idempotency_key, learner)
+            # 同题组合与统一 open 同款:题库文答为准,客户端题图合并
+            payload = self.open(external_question_id, idempotency_key, learner,
+                                merge_image=str(image or ""))
         elif text or image:
             material = {"text": str(text)} if text else {"image": str(image)}
             payload = self._open_material(material, learner, idempotency_key,
@@ -164,7 +168,9 @@ class ConversationService:
         bank_hit = False
         if external_question_id:
             try:
-                payload = self.open(external_question_id, idempotency_key, learner)
+                # 同题组合(§5):题库文答为准,客户端题图 file_id 合并进题面
+                payload = self.open(external_question_id, idempotency_key, learner,
+                                    merge_image=question_image)
                 bank_hit = True
             except ApiError as error:
                 # 未命中但有题图 → vision 转写路径;未命中无图 → 404 照合同
@@ -216,7 +222,8 @@ class ConversationService:
                 raise ApiError(422, None, "knowledge_points 每项必须含非空 name")
         return raw
 
-    def open(self, question_id: str, idempotency_key: str, learner: dict) -> dict:
+    def open(self, question_id: str, idempotency_key: str, learner: dict,
+             *, merge_image: str = "") -> dict:
         if not idempotency_key:
             raise ApiError(422, None, "idempotency_key 必填(00 §5.2:请求只有 idempotency_key)")
         existing = self.store.find_by_idempotency(idempotency_key)
@@ -226,7 +233,7 @@ class ConversationService:
                 raise ApiError(409, "QUESTION_SOURCE_PINNED", "同一幂等键已固定另一道题,新建学习会话")
             return self._open_response(existing)
         try:
-            question, learner, detail = self._resolved(question_id, learner)
+            question, learner, detail = self._resolved(question_id, learner, merge_image)
         except KeyError as error:
             # 题源 KeyError = 题库未命中(老系统文档错误码表)
             raise ApiError(404, "QUESTION_BANK_QUESTION_NOT_FOUND",
@@ -245,6 +252,16 @@ class ConversationService:
 
     def _start_conversation(self, question: dict, learner: dict, detail: dict | None,
                             question_id: str, idempotency_key: str) -> dict:
+        image = question.get("image")
+        if image and self.image_resolver:
+            # file_id → data URL(内核 vision 的多模态输入)。解析器只在生产装配注入
+            # (serve_partner_api);未注入(测试/评测)原样透传。解析失败 = file_id
+            # 不存在或未就绪,早期 422(不把坏引用送进模型层变 503)。
+            resolved = self.image_resolver(str(image))
+            if not resolved:
+                raise ApiError(422, "FILE_NOT_READY",
+                               f"question_image 文件不存在或尚未就绪:{image}")
+            question = {**question, "image": resolved}
         try:
             turn = self.kernel.start(question, learner)
         except ApiError:
@@ -270,18 +287,25 @@ class ConversationService:
         self._persist_session(conversation)
         return self._open_response(conversation)
 
-    def _resolved(self, question_id: str, learner: dict) -> tuple[dict, dict, dict | None]:
+    def _resolved(self, question_id: str, learner: dict,
+                  merge_image: str = "") -> tuple[dict, dict, dict | None]:
         """题源解析(PR1):内核面最小化(text/image),答案/解析/考点存 extras 供 judge
         (不进学生面);出处走 answer_correct_provenance(审查 P1:answer_status 是正确性
         字段,由 answer_correct 映射填,题源不碰);调用方 learner 字段优先。
         M3 PR2 叠加:answer/analysis/knowledge_points 进内核面——教师侧 prompt 专用,
         学生可见面由内核护栏把关;extras 副本仍供 judge。
+        merge_image:题库命中时客户端上传的题图 file_id(§5 同题组合)——文答以题源
+        为准,题图用客户端的(与老系统"合作方传图"一致)。
         source 未注入时维持旧形态(ScriptedKernel 夹具路径)。"""
         if self.source is None:
             return {"question_id": question_id}, learner, None
         resolved = self.source.resolve(question_id)
+        bank_image = resolved["image"]
+        # 题库图引用统一为 file_id 字符串(快照 dict 形态取 file_id;内核/解析器只认 str)
+        image_ref = bank_image.get("file_id") if isinstance(bank_image, dict) else bank_image
         question = {"question_id": question_id, "text": resolved["text"],
-                    "image": resolved["image"], "answer": resolved["answer"],
+                    "image": merge_image or image_ref or None,
+                    "answer": resolved["answer"],
                     "analysis": resolved["analysis"],
                     "knowledge_points": resolved["knowledge_points"]}
         provenance = resolved.get("answer_correct_provenance")
