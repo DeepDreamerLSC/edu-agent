@@ -106,8 +106,19 @@ def test_tone_directive_in_system_prompt():
     # 40 字上限/基调随对错;方向性指令,不硬编码句子
     from edu_agent.agents.small_lecturer import system_prompt
     system_message = system_prompt("六年级")
-    for directive in ("亲切", "温暖", "名字", "开场", "40 字", "基调"):
+    for directive in ("亲切", "温暖", "名字", "开场", "40 字", "基调",
+                      "波利亚", "苏格拉底"):
         assert directive in system_message, directive
+
+
+def test_mission_directive_frames_role_and_forbids_method_names():
+    # 角色与方法框架(演示联调定稿):学习指导老师 + 波利亚拆步骤依次引导;
+    # 两个方法名只住教师侧,指令明确对话中不出现
+    from edu_agent.agents.small_lecturer import system_prompt
+    system_message = system_prompt("六年级")
+    assert "学习指导老师" in system_message
+    assert "依次逐个引导" in system_message
+    assert "不出现「波利亚」「苏格拉底」" in system_message
 
 
 def test_tone_directive_forbids_naming_and_empty_praise():

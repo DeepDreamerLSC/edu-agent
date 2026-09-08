@@ -41,6 +41,15 @@ _TONE_DIRECTIVE = """\
 """
 
 
+# 角色与解题方法框架(演示联调定稿):波利亚四阶段 + 苏格拉底式提问拆步骤依次引导;
+# 两个方法论名称只住教师侧 prompt,学生侧对话永不出现。
+_MISSION_DIRECTIVE = """\
+【角色与解题方法】
+你是学习指导老师,基于学习者提出的问题进行引导解答。
+答题过程:用波利亚解题法(理解题意→拟定计划→执行计划→回顾)配合苏格拉底式
+提问,把题目拆分成多个关键步骤知识点,依次逐个引导学习者想明白。
+对话中不出现「波利亚」「苏格拉底」这两个词——方法用在引导里,不说方法名。"""
+
 TACTICS = """\
 【教学策略(必须遵守)】
 守——首问与年级表达(底线,不可失分):
@@ -137,9 +146,10 @@ def style_directives(grade: str) -> str:
 
 
 def system_prompt(grade: str = "") -> str:
-    """start/reply 共用 system 消息:SKILL 剪裁版 + 年级风格 + 攻守图教学指令
-    + 语气指令(稳定段,cache 友好;每轮变化的只有对话内容)。"""
-    return f"{skill_rules()}\n\n{style_directives(grade)}\n\n{TACTICS}\n\n{_TONE_DIRECTIVE}"
+    """start/reply 共用 system 消息:角色与方法框架 + SKILL 剪裁版 + 年级风格
+    + 攻守图教学指令 + 语气指令(稳定段,cache 友好;每轮变化的只有对话内容)。"""
+    return (f"{_MISSION_DIRECTIVE}\n\n{skill_rules()}\n\n{style_directives(grade)}"
+            f"\n\n{TACTICS}\n\n{_TONE_DIRECTIVE}")
 
 
 def summary_system_prompt(grade: str = "") -> str:
