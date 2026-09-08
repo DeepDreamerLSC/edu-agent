@@ -16,14 +16,16 @@ from edu_agent.api import build_server, build_service
 
 
 class RecordingKernel:
-    """确定性内核桩:记录收到的题面 dict,固定回复序列。"""
+    """确定性内核桩:记录收到的题面 dict 与 learner,固定回复序列。"""
 
     def __init__(self, replies: list[str]):
         self.replies = list(replies)
         self.questions: list[dict] = []
+        self.learners: list[dict] = []
 
     def start(self, question: dict, learner: dict) -> StubTurn:
         self.questions.append(question)
+        self.learners.append(learner)
         reply = self.replies[min(len(self.questions) - 1, len(self.replies) - 1)]
         return StubTurn(reply)
 

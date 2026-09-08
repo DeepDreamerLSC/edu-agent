@@ -89,14 +89,15 @@ def test_text_with_external_question_id_is_422_conflict(env):
 
 
 def test_answer_correct_three_states_echoed(env):
-    """answer_correct 严格三态(true/false/null)回显;provenance 标记客户来源。"""
+    """answer_correct 严格三态(true/false/null)回显;显式有值 provenance=partner_open。"""
     base, _ = env
     for value in (True, False, None):
         response = unified(base, {"question_text": "自由题干一", "idempotency_key": f"u-ac-{value}",
                                   "answer_correct": value})
         assert response.status_code == 200, (value, response.text)
         assert response.json()["answer_correct"] is value
-        assert response.json()["answer_correct_provenance"] is None  # PR-4 起改 partner_open
+        assert response.json()["answer_correct_provenance"] == ("partner_open" if value is not None
+                                                                else None)
 
 
 @pytest.mark.parametrize("bad", ["true", "false", 1, 0, "null"])
@@ -200,3 +201,61 @@ def test_per_question_open_route_still_works(env):
                     {"idempotency_key": "u-regress"})
     assert response.status_code == 200
     assert response.json()["conversation"]["question_id"] == "equation_subtract"
+
+
+# ---------- PR-4:answer_correct → 内核 learner.answer_status 接线 ----------
+
+def test_answer_correct_true_wires_learner_correct(env):
+    """answer_correct=true → learner.answer_status="correct",provenance=partner_open。"""
+    base, kernel = env
+    response = unified(base, {"question_text": "自由题干八", "idempotency_key": "u-wire-true",
+                              "answer_correct": True})
+    assert response.status_code == 200
+    assert kernel.learners[0]["answer_status"] == "correct"
+    assert kernel.learners[0]["answer_correct_provenance"] == "partner_open"
+    assert response.json()["answer_correct_provenance"] == "partner_open"
+
+
+def test_answer_correct_false_wires_learner_incorrect(env):
+    base, kernel = env
+    response = unified(base, {"question_text": "自由题干九", "idempotency_key": "u-wire-false",
+                              "answer_correct": False})
+    assert response.status_code == 200
+    assert kernel.learners[0]["answer_status"] == "incorrect"
+    assert kernel.learners[0]["answer_correct_provenance"] == "partner_open"
+
+
+@pytest.mark.parametrize("body_extra", [{"answer_correct": None}, {}])
+def test_answer_correct_null_or_omitted_leaves_learner_clean(env, body_extra):
+    """null/省略 → learner 无 answer_status 键(内核缺省 unknown),provenance 缺省。"""
+    base, kernel = env
+    body = {"question_text": "自由题干十", "idempotency_key": f"u-wire-{len(body_extra)}",
+            **body_extra}
+    response = unified(base, body)
+    assert response.status_code == 200
+    assert "answer_status" not in kernel.learners[0]
+    assert kernel.learners[0].get("answer_correct_provenance") is None
+    assert response.json()["answer_correct_provenance"] is None
+
+
+def test_bank_hit_with_client_answer_wins_provenance(env):
+    """题库命中 + 客户端显式 answer_correct:客户值覆写题源出处,answer_status 照映射。"""
+    base, kernel = env
+    response = unified(base, {"external_question_id": "equation_subtract",
+                              "idempotency_key": "u-wire-bank", "answer_correct": False})
+    assert response.status_code == 200
+    learner = kernel.learners[0]
+    assert learner["answer_status"] == "incorrect"
+    assert learner["answer_correct_provenance"] == "partner_open"  # 客户显式 > 题库来源
+    assert response.json()["answer_correct_provenance"] == "partner_open"
+
+
+def test_bank_hit_without_client_answer_keeps_bank_provenance(env):
+    """题库命中且客户端未带 answer_correct:provenance 保持题库来源(现状不变)。"""
+    base, kernel = env
+    response = unified(base, {"external_question_id": "equation_subtract",
+                              "idempotency_key": "u-wire-bank-plain"})
+    assert response.status_code == 200
+    assert kernel.learners[0].get("answer_correct_provenance") == "partner_question_bank"
+    assert "answer_status" not in kernel.learners[0]  # answer_status 由 answer_correct 映射填,题源不碰
+    assert response.json()["answer_correct_provenance"] == "partner_question_bank"
