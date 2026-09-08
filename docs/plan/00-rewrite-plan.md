@@ -340,8 +340,10 @@ json 一次通过率 ≥98%。
       合作方会话归因（01 §7 分组键）。store 必须**存 `LearnerSession` 本体**（含 question/
       图理解/history/first_question/session_version/session_id），而非 3 键投影或只存
       first_question。会话持久化 v1 内存 → 文件级（additive-only，02：M3 只允许 additive）；
-      identity HTTP 路由挂接（#63 RS256 纯逻辑已有，路由随 api server 扩展；含
-      `POST /api/auth/logout`）
+      identity HTTP 路由挂接（#63 RS256 纯逻辑已有，路由随 api server 扩展）。**已完成**：
+      `POST /api/auth/logout`（返回 `{"ok": true}`，token 无状态 HMAC 不做吊销名单）、
+      files 老合同路径兼容层（`docs/partner/files.md` 的 `/api/openapi/v1/files/*` 五路由
+      别名 + download-url/preview-url，与 `/api/files/**` 共用同一 FileService），见 PR #104
 
 **核心（前置件全合后，串行）**
 - [ ] 合同终审：审查者拿 #48 Postman 全量打真内核（真题图、真断言 PKCE、真题库
