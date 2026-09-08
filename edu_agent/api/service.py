@@ -71,12 +71,33 @@ class ConversationService:
 
     # ---------- open(幂等键,同键同 Attempt) ----------
 
-    def create(self, question_id: str, idempotency_key: str, learner: dict) -> dict:
-        """会话入口形态(POST /api/conversations):与 open 同逻辑,扁平响应(合同字段)。
+    def create(self, body: dict) -> dict:
+        """会话入口(POST /api/conversations,统一 Open 字段子集,老系统文档 §5)。
 
-        幂等重试返回同一 conversation_id(复用 open 的幂等/题目固定校验)。
-        """
-        payload = self.open(question_id, idempotency_key, learner)
+        idempotency_key 必填(重试原样复用);external_question_id 走题源(未命中
+        404 QUESTION_BANK_QUESTION_NOT_FOUND);question_text/question_image 为
+        自由材料二选一(同传 422),题图空壳由内核 vision 处理;合同字段之外
+        透传 learner(调用方字段优先)。幂等重试返回同一 conversation_id。"""
+        idempotency_key = str(body.get("idempotency_key") or "")
+        if not idempotency_key:
+            raise ApiError(422, None, "idempotency_key 必填(重试原样复用)")
+        text = body.get("question_text")
+        image = body.get("question_image")
+        if text and image:
+            raise ApiError(422, "PREPARED_QUESTION_SOURCE_CONFLICT",
+                           "question_text 与 question_image 不能同传(自由材料二选一)")
+        learner = {k: v for k, v in body.items() if k not in (
+            "idempotency_key", "external_question_id", "question_text", "question_image")}
+        external_question_id = str(body.get("external_question_id") or "")
+        if external_question_id:
+            payload = self.open(external_question_id, idempotency_key, learner)
+        elif text or image:
+            material = {"text": str(text)} if text else {"image": str(image)}
+            payload = self._open_material(material, learner, idempotency_key,
+                                          external_question_id)
+        else:
+            raise ApiError(422, "PREPARED_QUESTION_SOURCE_MISSING",
+                           "open 请求未提供任何题目来源(external_question_id/question_text/question_image)")
         conversation = self.store.find_by_idempotency(idempotency_key)
         return {
             "conversation_id": payload["conversation"]["conversation_id"],
@@ -96,7 +117,26 @@ class ConversationService:
                 # 00 §5.2 约定 2:题目在会话内固定,不能中途换题
                 raise ApiError(409, "QUESTION_SOURCE_PINNED", "同一幂等键已固定另一道题,新建学习会话")
             return self._open_response(existing)
-        question, learner, detail = self._resolved(question_id, learner)
+        try:
+            question, learner, detail = self._resolved(question_id, learner)
+        except KeyError as error:
+            # 题源 KeyError = 题库未命中(老系统文档错误码表)
+            raise ApiError(404, "QUESTION_BANK_QUESTION_NOT_FOUND",
+                           f"服务端题库没有该题目:{question_id}") from error
+        return self._start_conversation(question, learner, detail, question_id, idempotency_key)
+
+    def _open_material(self, material: dict, learner: dict, idempotency_key: str,
+                       question_id: str) -> dict:
+        """自由材料入口(question_text/question_image):不走题源,题图空壳由内核 vision 处理。"""
+        existing = self.store.find_by_idempotency(idempotency_key)
+        if existing is not None:
+            if existing.question_id != question_id:
+                raise ApiError(409, "QUESTION_SOURCE_PINNED", "同一幂等键已固定另一道题,新建学习会话")
+            return self._open_response(existing)
+        return self._start_conversation(material, learner, None, question_id, idempotency_key)
+
+    def _start_conversation(self, question: dict, learner: dict, detail: dict | None,
+                            question_id: str, idempotency_key: str) -> dict:
         try:
             turn = self.kernel.start(question, learner)
         except ApiError:
@@ -142,18 +182,6 @@ class ConversationService:
         learner = {"grade": resolved["grade"], **learner}
         detail = {k: resolved[k] for k in ("answer", "analysis", "knowledge_points")}
         return question, learner, detail
-
-    @staticmethod
-    def _create_response(conversation: Conversation) -> dict:
-        """会话入口(POST /api/conversations)的扁平响应(任务书 M3 合同;幂等重试同)。"""
-        return {
-            "conversation_id": conversation.conversation_id,
-            "skill_session_id": conversation.skill_session_id,
-            "session_version": conversation.session_version,
-            "first_question_ready": True,
-            "first_question": conversation.first_question,
-            "retry_after_ms": 0,
-        }
 
     @staticmethod
     def _open_response(conversation: Conversation) -> dict:

@@ -53,7 +53,7 @@ def test_get_conversation_roundtrip_after_login(base):
                  {"account": "student1", "password": "night-pass-4f1a"})
     token = login.json()["access_token"]
     created = httpx.post(f"{base}/api/conversations", json={
-        "question_id": "equation_subtract", "idempotency_key": "a1-001",
+        "external_question_id": "equation_subtract", "idempotency_key": "a1-001",
     }, headers={"Authorization": f"Bearer {token}"}, timeout=5.0, trust_env=False)
     assert created.status_code == 201
     conversation_id = created.json()["conversation_id"]
@@ -65,7 +65,7 @@ def test_get_conversation_roundtrip_after_login(base):
     body = view.json()
     assert body["conversation_id"] == conversation_id
     assert body["state"] == "first_question_ready"
-    assert body["question_id"] == "equation_subtract"
+    assert body["question_id"] == "equation_subtract"  # 题库命中:external_question_id 落 status.question_id
     assert body["turn_count"] == 0
     assert body["session_version"] == 1
 
