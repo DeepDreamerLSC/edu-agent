@@ -71,7 +71,7 @@ def test_opening_hint_constants_semantics():
     assert "禁止出现任何方法名" in OPENING_HINT_CORRECT  # 复讲不代喂方法名/答案(2026-09-08 人定)
     assert "禁方法名" in OPENING_HINT_INCORRECT
     assert "卡点" in OPENING_HINT_INCORRECT
-    for step in ("说出他现在认为的答案", "怎么想出来的", "正确答案", "讲一遍"):
+    for step in ("开场", "选了哪个选项", "怎么想出来的", "正确答案", "讲一遍"):
         assert step in OPENING_HINT_INCORRECT, step
     assert "第一步" in OPENING_HINT_UNANSWERED
     assert opening_hint("correct") == OPENING_HINT_CORRECT
