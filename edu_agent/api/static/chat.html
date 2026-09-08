@@ -24,7 +24,9 @@ body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; hei
 .upload-btn { width:100%; padding:10px; border:2px dashed #bbb; border-radius:8px; background:#fafafa; cursor:pointer; font-size:13px; color:#666; text-align:center; }
 .upload-btn:hover { border-color:#4a90d9; color:#4a90d9; }
 .main { flex:1; display:flex; flex-direction:column; }
-.chat-header { padding:16px 20px; background:#fff; border-bottom:1px solid #e0e0e0; font-size:15px; font-weight:bold; color:#333; }
+.chat-header { padding:16px 20px; background:#fff; border-bottom:1px solid #e0e0e0; font-size:15px; font-weight:bold; color:#333; display:flex; justify-content:space-between; align-items:center; }
+.restart-btn { padding:6px 14px; background:#fff; color:#4a90d9; border:1px solid #4a90d9; border-radius:16px; font-size:13px; cursor:pointer; }
+.restart-btn:hover { background:#e8f0fe; }
 .chat-area { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; }
 .msg { max-width:75%; padding:10px 14px; border-radius:12px; font-size:14px; line-height:1.6; white-space:pre-wrap; word-break:break-word; }
 .msg.tutor { align-self:flex-start; background:#fff; border:1px solid #e0e0e0; border-top-left-radius:4px; }
@@ -55,7 +57,7 @@ body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; hei
   </div>
 </div>
 <div class="main">
-  <div class="chat-header" id="chatTitle">选择一道题开始对话</div>
+  <div class="chat-header"><span id="chatTitle">选择一道题开始对话</span><button class="restart-btn" id="restartBtn" style="display:none" onclick="restartLearning()">🔄 重新开始</button></div>
   <div class="chat-area" id="chatArea">
     <div class="empty-state">← 从左侧选择一道题(自动上传题图),或拍照讲题</div>
   </div>
@@ -66,7 +68,8 @@ body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; hei
 </div>
 <script>
 const BASE = location.origin;
-let TOKEN = '', CONV_ID = '', VERSION = 0, SKILL_SID = '', CURRENT_Q = '', BANK = [];
+let TOKEN = '', CONV_ID = '', VERSION = 0, SKILL_SID = '', CURRENT_Q = '', BANK = [], MODE = null;
+// MODE = {type:'bank', q} | {type:'photo', fid, name}(重新开始所需的最小重开材料)
 
 // ── 登录(演示账密) ──
 async function login() {
@@ -114,12 +117,23 @@ function renderList() {
 function selectQuestion(q, el) {
   document.querySelectorAll('.q-item').forEach(e => e.classList.remove('active'));
   el.classList.add('active');
+  MODE = {type:'bank', q};
   CURRENT_Q = q.id;
   document.getElementById('chatTitle').textContent = q.text || q.id;
   document.getElementById('chatArea').innerHTML = '';
   document.getElementById('msgInput').disabled = false;
   document.getElementById('sendBtn').disabled = false;
   openWithQuestion(q);
+}
+
+// 重新开始:同题新幂等键开全新会话(旧对话已落盘 data/sessions/ 供复盘)
+function restartLearning() {
+  if (!MODE) return;
+  document.getElementById('chatArea').innerHTML = '';
+  document.getElementById('restartBtn').style.display = 'none';
+  if (MODE.type === 'bank') { openWithQuestion(MODE.q); return; }
+  // 拍照题:file_id 复用(已上传文件无需重传),纯图重新开题
+  openByImage(MODE.fid, MODE.name);
 }
 
 // ── 统一 Open:external_question_id + (有题图时)上传后传 file_id ──
@@ -147,6 +161,28 @@ async function openWithQuestion(q) {
     }
     const as = d.question.active_session;
     CONV_ID = as.conversation; SKILL_SID = as.skill_session_id; VERSION = as.session_version || 1;
+    document.getElementById('restartBtn').style.display = '';
+    await showFirstQuestion();
+  } catch (e) {
+    removeTyping();
+    addMsg('tutor', `开题失败: ${e.message || e}`);
+  }
+}
+
+// 纯图开题(拍照讲题与重新开始共用;fid 为已上传 file_id)
+async function openByImage(fid, name) {
+  showTyping();
+  try {
+    const r = await fetch(`${BASE}/api/prepared-questions/open`, {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
+      body: JSON.stringify({question_image: fid, idempotency_key: `demo-photo-${Date.now()}`})
+    });
+    const d = await r.json();
+    removeTyping();
+    const as = d.question?.active_session;
+    if (!as) { addMsg('tutor', d.error?.message || '开题失败'); return; }
+    CONV_ID = as.conversation; SKILL_SID = as.skill_session_id; VERSION = as.session_version || 1;
+    document.getElementById('restartBtn').style.display = '';
     await showFirstQuestion();
   } catch (e) {
     removeTyping();
@@ -275,21 +311,13 @@ async function uploadAndChat(file) {
   try {
     const fid = await uploadFile(file, file.name, file.type);
     addNote('题图上传完成,识别题目中…');
+    MODE = {type:'photo', fid, name:file.name};
     CURRENT_Q = `拍照讲题: ${file.name}`;
     document.getElementById('chatTitle').textContent = CURRENT_Q;
     document.getElementById('chatArea').innerHTML = '';
     document.getElementById('msgInput').disabled = false;
     document.getElementById('sendBtn').disabled = false;
-    const r = await fetch(`${BASE}/api/prepared-questions/open`, {
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
-      body: JSON.stringify({question_image: fid, idempotency_key: `demo-photo-${Date.now()}`})
-    });
-    const d = await r.json();
-    removeTyping();
-    const as = d.question?.active_session;
-    if (!as) { addMsg('tutor', d.error?.message || '开题失败'); return; }
-    CONV_ID = as.conversation; SKILL_SID = as.skill_session_id; VERSION = as.session_version || 1;
-    await showFirstQuestion();
+    await openByImage(fid, file.name);
   } catch(e) {
     removeTyping();
     addMsg('tutor', `上传失败: ${e.message || e}`);
