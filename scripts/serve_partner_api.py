@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import os
+import sys
 
 from edu_agent.agents.small_lecturer import finish, reply, start
 from edu_agent.api import build_server, build_service
