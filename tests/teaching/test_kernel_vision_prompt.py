@@ -71,6 +71,24 @@ def test_start_image_not_acceptable_fails_closed(tmp_path):
     assert len(tutor.requests) == 0
 
 
+def test_start_image_travels_as_multimodal_part_not_text(tmp_path):
+    """题图经 ModelRequest.images 走 image_url 内容块;文本消息不携带图片引用
+    (多模态接线回归:此前 file_id 被拼进 JSON 文本,模型从未见过图)。"""
+    vision = FakeOpenAI([completion(vision_json(True, "单题清晰", ""))]).start()
+    tutor = FakeOpenAI([completion(tutor_json("题图清晰,先读题。"))]).start()
+    gateway = kernel_gateway(tmp_path, tutor.url, vision_url=vision.url)
+    start({"text": "鸡兔同笼,共 10 头 26 足。", "image": "data:image/png;base64,QUJD"},
+          LEARNER, gateway=gateway)
+    gateway.close()
+    vision.stop()
+    tutor.stop()
+    messages = vision.requests[0]["messages"]
+    parts = messages[0]["content"]
+    assert isinstance(parts, list) and [p["type"] for p in parts] == ["text", "image_url"]
+    assert parts[1]["image_url"]["url"] == "data:image/png;base64,QUJD"
+    assert "QUJD" not in parts[0]["text"]  # 图片引用不进文本
+
+
 def test_start_image_only_question_fills_transcription_as_text(tmp_path):
     """分支③:纯图题(question.text 为空)的可信转写回填题面——进 tutor prompt
     与泄露护栏对照,且不改调用方入参。"""
