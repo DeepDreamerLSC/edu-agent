@@ -190,7 +190,7 @@ async function send() {
   input.value = '';
   addMsg('student', text);
   showTyping();
-  VERSION += 1;
+  // expected_session_version = 服务端当前版本(不预自增);成功后从响应取新版本
   const r = await fetch(`${BASE}/api/conversations/${CONV_ID}/messages`, {
     method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
     body: JSON.stringify({
@@ -202,10 +202,20 @@ async function send() {
   removeTyping();
   if (d.assistant_message?.content) {
     addMsg('tutor', d.assistant_message.content);
-    VERSION = d.session_version || VERSION;
+    VERSION = d.session_version || (VERSION + 1);
     const iv = d.interaction || d.skill_interaction || {};
     if (iv.attempt_state) updateTitle(iv.attempt_state);
     if (iv.result?.learning_summary) addSummary(iv.result.learning_summary);
+  } else if (d.error?.code === 'SKILL_SESSION_CONFLICT' && CONV_ID) {
+    // 版本过期自愈:拉最新 interaction 同步版本,学生决定是否重发
+    addNote('会话版本已过期,正在同步最新进度…');
+    try {
+      const rr = await fetch(`${BASE}/api/conversations/${CONV_ID}/skill-sessions/${SKILL_SID}/refresh`, {
+        method:'POST', headers:{'Authorization':`Bearer ${TOKEN}`}});
+      const rd = await rr.json();
+      VERSION = rd.session_version || rd.skill_interaction?.session_version || VERSION;
+      addNote('已同步到最新版本,请重新发送你的回答');
+    } catch { addMsg('tutor', '同步会话失败,请刷新页面重试'); }
   } else if (d.error) {
     addMsg('tutor', `出错了: ${d.error.message || d.error.code || '未知错误'}`);
   }
