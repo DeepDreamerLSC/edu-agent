@@ -274,3 +274,18 @@ def test_reply_replaces_method_feed_with_elicit_and_keeps_open(tmp_path):
                          "先说说你第一步算了什么、为什么这样算。")
     assert turn.ready_to_confirm is False  # 不关对话,继续收集
     assert "假设法" not in turn.text
+
+
+def test_reply_student_says_understood_triggers_elicit_without_model(tmp_path):
+    """学生说「都懂了」→ 确定性请学生讲思路(不调模型),不 confirm、不报答案。"""
+    fake = FakeOpenAI([completion(open_json("你先说说题目给了哪些条件?"))]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
+    calls_before = len(fake.requests)  # start 那次
+    turn = reply(first.session, "都懂了。", gateway=gateway)
+    gateway.close()
+    fake.stop()
+    assert turn.text == ("很好,你已经懂了。那请你从头讲讲你的思路——"
+                         "先说说你第一步算了什么、为什么这样算。")
+    assert turn.ready_to_confirm is False  # 不关对话
+    assert len(fake.requests) == calls_before  # 「都懂了」这轮零模型调用

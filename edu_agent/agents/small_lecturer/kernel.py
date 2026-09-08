@@ -107,6 +107,11 @@ _ELICIT_TEMPLATE = ("很好,你已经懂了。那请你从头讲讲你的思路�
 def _feeds_method(text: str) -> bool:
     """tutor 输出里点名了方法(代喂):学生还没自己讲,tutor 不该报方法名。"""
     return any(token in text for token in _METHOD_TOKENS)
+
+
+def _student_signals_understanding(student_message: str) -> bool:
+    """学生表示「懂了/明白了」——教学弧线里这是「请学生讲思路」的触发点。"""
+    return bool(re.search(r"都懂了|懂了|明白了|没有不懂|会了|没问题|都明白|没疑问", student_message))
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
@@ -367,6 +372,15 @@ def reply(session: LearnerSession, student_message: str, *,
     if expected_session_version is not None and expected_session_version != session.session_version:
         raise SessionVersionConflict(  # 不推进:旧版本不静默覆盖新一轮诊断(00 §5.2 约定 3)
             f"expected_session_version={expected_session_version} != 当前 {session.session_version}")
+    if _student_signals_understanding(student_message):
+        # 学生说「懂了」→ 直接请学生讲思路(确定性,不调模型),不 confirm、不报答案。
+        # 这是教学弧线的固定策略(00 §8.5/人定):学生表示懂,就该由学生自己讲,而非 tutor 复述。
+        session.history.append({"role": "user", "content": student_message})
+        session.history.append({"role": "assistant", "content": _ELICIT_TEMPLATE})
+        session.session_version += 1
+        session.state = "dialogue"
+        return Turn(text=_ELICIT_TEMPLATE, session_version=session.session_version,
+                    state="dialogue", ready_to_confirm=False, session=session)
     gateway = gateway or default_gateway()
     _reply_messages = [
         {"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
