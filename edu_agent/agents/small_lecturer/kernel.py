@@ -83,10 +83,13 @@ _SELF_CRITIQUE = (
 
 
 def _is_repeat(prev: str, new: str) -> bool:
-    """语义复读检测:新回复与上一轮 tutor 输出高度相似(阈值 0.9,stdlib difflib)。"""
+    """语义复读检测:新回复与上一轮 tutor 输出高度相似(阈值 0.85,stdlib difflib)。
+
+    0.85 较 0.9 更严:能多抓「同一个问点换措辞」的语义复读;正常对话里 tutor
+    相近但实质推进的回复通常低于 0.85,仍不触发。"""
     if not prev or not new:
         return False
-    return difflib.SequenceMatcher(None, prev.strip(), new.strip()).ratio() > 0.9
+    return difflib.SequenceMatcher(None, prev.strip(), new.strip()).ratio() > 0.85
 
 
 # 兜底句情境化(任务包2步2,消灭万能句):接学生原话/按护栏类型的提问式引导。
