@@ -13,26 +13,19 @@ from __future__ import annotations
 
 import io
 import threading
-from urllib.parse import urlparse
 
 import httpx
 import pytest
 from PIL import Image
 
 from edu_agent.api import FileService, build_server, build_service
-from test_api_service import ScriptedKernel
+from test_api_service import ScriptedKernel, _assert_local_base
 
 
 def png_bytes(width: int = 64, height: int = 64) -> bytes:
     buffer = io.BytesIO()
     Image.new("RGB", (width, height), color=(30, 144, 255)).save(buffer, format="PNG")
     return buffer.getvalue()
-
-
-def _assert_loopback(base: str) -> None:
-    """SSRF 边界:测试只允许打 127.0.0.1 环回/本地测试服务器。"""
-    parsed = urlparse(base)
-    assert parsed.scheme == "http" and parsed.hostname == "127.0.0.1", base
 
 
 @pytest.fixture
@@ -51,7 +44,7 @@ LEGACY_COMPLETE = "/api/openapi/v1/files/complete"
 
 
 def _post(base, path, payload, status=200):
-    _assert_loopback(base)
+    _assert_local_base(base)
     response = httpx.post(f"{base}{path}", json=payload, headers=AUTH, timeout=5.0,
                           trust_env=False)
     assert response.status_code == status, response.text
@@ -59,7 +52,7 @@ def _post(base, path, payload, status=200):
 
 
 def _put(base, path, payload, content_type="image/png", status=200):
-    _assert_loopback(base)
+    _assert_local_base(base)
     response = httpx.put(f"{base}{path}", content=payload,
                          headers={**AUTH, "Content-Type": content_type},
                          timeout=10.0, trust_env=False)
@@ -68,7 +61,7 @@ def _put(base, path, payload, content_type="image/png", status=200):
 
 
 def _get(base, path, status=200):
-    _assert_loopback(base)
+    _assert_local_base(base)
     response = httpx.get(f"{base}{path}", headers=AUTH, timeout=5.0, trust_env=False)
     assert response.status_code == status, response.text
     return response
@@ -200,7 +193,7 @@ def test_legacy_download_url_missing_404(api):
 def test_legacy_download_url_requires_auth_401(api):
     """老路径 download-url 无 Bearer → 401(现有鉴权闸,不放松)。"""
     base, _ = api
-    _assert_loopback(base)
+    _assert_local_base(base)
     response = httpx.get(f"{base}/api/openapi/v1/files/file_x/download-url",
                          timeout=5.0, trust_env=False)
     assert response.status_code == 401
@@ -218,7 +211,7 @@ def test_logout_returns_ok(api):
 def test_logout_idempotent_without_token(api):
     """logout 无 Bearer 也返回 ok(老系统 logout 幂等,无会话仍成功)。"""
     base, _ = api
-    _assert_loopback(base)
+    _assert_local_base(base)
     response = httpx.post(f"{base}/api/auth/logout", json={}, timeout=5.0, trust_env=False)
     assert response.status_code == 200
     assert response.json() == {"ok": True}
