@@ -401,7 +401,10 @@ def reply(session: LearnerSession, student_message: str, *,
         # 学生说「不会/猜不出」→ 确定性揭示下一级阶梯(不调模型),治 tutor 复读探针。
         hint = _reveal_next_step(session)
         if hint is None:
-            hint = _OPENING_FALLBACK  # 无分步解可揭示 → 通用兜底(确认一个条件)
+            answer = str(session.question.get("answer") or "").strip()
+            # 阶梯揭示完毕仍卡住 → bottom-out 给答案(最后一档,不再重复泛泛兜底)
+            hint = (f"这一步我们直接看结果:{answer}。你先记住它,我们回头再讲一遍为什么。"
+                    if answer else NEEDS_REVIEW_TEXT)
         session.history.append({"role": "user", "content": student_message})
         session.history.append({"role": "assistant", "content": hint})
         session.session_version += 1
