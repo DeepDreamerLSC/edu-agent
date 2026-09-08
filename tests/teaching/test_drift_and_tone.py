@@ -103,10 +103,10 @@ def test_tone_is_prompt_guided_not_hard_guardrail():
 
 def test_tone_directive_in_system_prompt():
     # 语气指令进 system prompt(稳定→cache 友好):亲切温暖/不起名/友好开场/
-    # 40 字上限/基调随对错;方向性指令,不硬编码句子
+    # 长度软上限+结构硬要求/基调随对错;方向性指令,不硬编码句子
     from edu_agent.agents.small_lecturer import system_prompt
     system_message = system_prompt("六年级")
-    for directive in ("亲切", "温暖", "名字", "开场", "40 字", "基调",
+    for directive in ("亲切", "温暖", "名字", "开场", "以问题结尾", "基调",
                       "波利亚", "苏格拉底"):
         assert directive in system_message, directive
 
