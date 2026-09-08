@@ -25,6 +25,7 @@ PURPOSES = frozenset({
 MIME_WHITELIST = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
 MAX_BYTES = 20 * 1024 * 1024
 MAX_PIXELS = 20_000_000
+Image.MAX_IMAGE_PIXELS = MAX_PIXELS  # 双保险(审查 P2):Pillow 解码器级上限对齐业务上限
 RESIZE_MAX = (1280, 1280)
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
@@ -99,6 +100,19 @@ class FileService:
     def _validate_image(self, payload: bytes, declared_type: str) -> str:
         try:
             image = Image.open(io.BytesIO(payload))
+        except Image.DecompressionBombError as error:
+            # 双保险触发(解码器级上限=业务上限):同样归像素超限,不是内容无效
+            raise ApiError(413, "NATIVE_QUESTION_IMAGE_PIXELS_EXCEEDED",
+                           "像素超过 2000 万上限(解码器防护)") from error
+        except Exception as error:
+            raise ApiError(415, "NATIVE_FILE_CONTENT_INVALID",
+                           "内容不是可解码的图片") from error
+        # 解压炸弹防护窗(审查 P2):像素上限在 load() 全量解码**之前**判——
+        # header 的 width/height 此时已可读;高压缩比大图先拒绝再解码。
+        if image.width * image.height > MAX_PIXELS:
+            raise ApiError(413, "NATIVE_QUESTION_IMAGE_PIXELS_EXCEEDED",
+                           f"{image.width}×{image.height} 超过 2000 万像素上限")
+        try:
             image.load()
         except Exception as error:
             raise ApiError(415, "NATIVE_FILE_CONTENT_INVALID",
@@ -111,9 +125,6 @@ class FileService:
         if actual_mime != declared_type:
             raise ApiError(415, "NATIVE_FILE_CONTENT_TYPE_MISMATCH",
                            f"实际 {actual_mime} ≠ 声明 {declared_type}")
-        if image.width * image.height > MAX_PIXELS:
-            raise ApiError(413, "NATIVE_QUESTION_IMAGE_PIXELS_EXCEEDED",
-                           f"{image.width}×{image.height} 超过 2000 万像素上限")
         return ext
 
     def _persist(self, file_id: str, payload: bytes, ext: str) -> Path:

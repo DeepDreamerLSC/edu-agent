@@ -213,6 +213,31 @@ def test_pixels_exceeded_413(api):
     assert response.json()["error"]["code"] == "NATIVE_QUESTION_IMAGE_PIXELS_EXCEEDED"
 
 
+def test_decompression_bomb_rejected_before_decode(tmp_path):
+    """解压炸弹防护窗(审查 P2):header 像素超限在 load() 全量解码**之前**拒绝。
+
+    构造数 MB 压缩体、3 亿+像素声明的 PNG——旧顺序会先 load() 放大出 GB 级
+    内存分配再拒绝;新顺序从 header 直读拒绝,Pillow 解码器级上限双保险同值。
+    """
+    import io as _io
+
+    from edu_agent.api import ApiError, FileService
+
+    service = FileService(tmp_path / "f")
+    buffer = _io.BytesIO()
+    Image.new("RGB", (20000, 16000), color=(0, 0, 0)).save(  # 3.2 亿像素,纯色体积小
+        buffer, format="PNG", optimize=True)
+    bomb = buffer.getvalue()
+    assert len(bomb) < 2 * 1024 * 1024  # 压缩体确实很小(高压缩比)
+    created = service.upload_request({"filename": "bomb.png", "content_type": "image/png",
+                                      "size_bytes": len(bomb),
+                                      "purpose": "micro_lesson_question_image"})
+    with pytest.raises(ApiError) as excinfo:
+        service.store_content(created["file_id"], bomb)
+    assert excinfo.value.code == "NATIVE_QUESTION_IMAGE_PIXELS_EXCEEDED"
+    assert excinfo.value.status_code == 413
+
+
 # ---------- 幂等与完整性 ----------
 
 def test_complete_idempotent(api):
