@@ -20,16 +20,25 @@ from pathlib import Path
 
 _SEED_BANK = Path(__file__).resolve().parents[1] / "evals" / "datasets" / "release_acceptance_seed_question_bank.json"
 _DB_SNAPSHOT = Path(__file__).resolve().parents[1] / "contracts" / "db_snapshot.json"
+_PARTNER_BANK = Path(__file__).resolve().parents[1] / "contracts" / "partner_bank.json"
 ANSWER_CORRECT_PROVENANCE = "partner_question_bank"
 
 
 def question_source(source: str | None = None):
-    """按 EDU_QUESTION_SOURCE 选择题源;显式传参优先(测试注入)。"""
+    """按 EDU_QUESTION_SOURCE 选择题源;显式传参优先(测试注入)。
+
+    - seed(默认):评测种子(离线/CI);
+    - snapshot:老库 published 评测集冻结;
+    - bank:合作方真实题库快照(contracts/partner_bank.json,老库 platform 租户
+      268 题翻转;演示/联调用,题图由客户端上传不在快照内)。
+    """
     source = source or os.environ.get("EDU_QUESTION_SOURCE", "seed")
     if source == "seed":
         return SeedQuestionSource(_SEED_BANK)
     if source == "snapshot":
         return SnapshotQuestionSource(_DB_SNAPSHOT)
+    if source == "bank":
+        return SnapshotQuestionSource(_PARTNER_BANK)
     raise ValueError(f"未知 EDU_QUESTION_SOURCE:{source}")
 
 
