@@ -37,10 +37,18 @@ _FORBIDDEN_FIELDS = frozenset({"answer", "analysis", "mastery_status"})
 _LOGIN = re.compile(r"^/api/auth/login$")
 _NATIVE_CODES = re.compile(r"^/api/openapi/v1/auth/native-codes$")
 _NATIVE_TOKEN = re.compile(r"^/api/auth/native/token$")
+_LOGOUT = re.compile(r"^/api/auth/logout$")
 _HEALTHZ = re.compile(r"^/healthz$")
 _FILES_UPLOAD = re.compile(r"^/api/files/upload-request$")
 _FILES_COMPLETE = re.compile(r"^/api/files/complete$")
 _FILES_CONTENT = re.compile(r"^/api/files/(?P<file_id>[^/]+)/content$")
+# 老合同别名(docs/partner/files.md):同一 service,仅前缀不同——合作方按老文档调
+# /api/openapi/v1/files/* → 转调同名 service 方法,不复制逻辑、不改名新路径(内部演示页在用)。
+_FILES_UPLOAD_LEGACY = re.compile(r"^/api/openapi/v1/files/upload-url$")
+_FILES_COMPLETE_LEGACY = re.compile(r"^/api/openapi/v1/files/complete$")
+_FILES_CONTENT_LEGACY = re.compile(r"^/api/openapi/v1/files/(?P<file_id>[^/]+)/content$")
+_FILES_DOWNLOAD_LEGACY = re.compile(r"^/api/openapi/v1/files/(?P<file_id>[^/]+)/download-url$")
+_FILES_PREVIEW_LEGACY = re.compile(r"^/api/openapi/v1/files/(?P<file_id>[^/]+)/preview-url$")
 
 
 def sse_frames(response: dict) -> bytes:
@@ -90,6 +98,10 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
             return self.identity.native_code(self._read_body(), dict(self.headers))
         if _NATIVE_TOKEN.match(self.path):
             return self.identity.native_token(self._read_body())
+        if _LOGOUT.match(self.path):
+            # 老系统 LogoutResponse = {"ok": true}。token 为无状态 HMAC,不做吊销名单
+            # (最小实现,目标指示);按老文档返回成功即可,offline 后 token 过期即失效。
+            return 200, {"ok": True}
         return None
 
     def _dispatch(self) -> None:
@@ -134,18 +146,21 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         return False
 
     def _files_post(self) -> bool:
-        """files 面 POST 路由(三步上传的 1/3 步);未命中返回 False。"""
-        if _FILES_UPLOAD.match(self.path):
+        """files 面 POST 路由(三步上传的 1/3 步);未命中返回 False。
+
+        老合同别名(/api/openapi/v1/files/upload-url|complete)与现有新路径共用同一
+        FileService 方法——仅前缀不同,不复制逻辑。"""
+        if _FILES_UPLOAD.match(self.path) or _FILES_UPLOAD_LEGACY.match(self.path):
             self._json(self.files.upload_request(self._read_body()), status=201)
             return True
-        if _FILES_COMPLETE.match(self.path):
+        if _FILES_COMPLETE.match(self.path) or _FILES_COMPLETE_LEGACY.match(self.path):
             self._json(self.files.complete(self._read_body()))
             return True
         return False
 
     def do_PUT(self) -> None:
-        """PUT /api/files/{file_id}/content:二进制上传(学生 token 鉴权)。"""
-        match = _FILES_CONTENT.match(self.path)
+        """PUT 上传二进制(学生 token 鉴权):新路径 + 老合同别名共用 store_content。"""
+        match = _FILES_CONTENT.match(self.path) or _FILES_CONTENT_LEGACY.match(self.path)
         if match is None:
             self._error(ApiError(404, None, "路径不在合作方合同内"))
             return
@@ -266,7 +281,16 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
         if match:
             self._json(self.service.status(match["conversation_id"]))
             return
-        match = _FILES_CONTENT.match(self.path)
+        if self._files_get():
+            return
+        self._error(ApiError(404, None, "路径不在合作方合同内"))
+
+    def _files_get(self) -> bool:
+        """files 面 GET:读二进制(content)+ 老合同 download-url/preview-url;未命中 False。
+
+        抽方法保 do_GET 的 return 预算(ruff PLR0911);content 返回二进制字节,
+        download/preview 返回 JSON 地址(本地语义,老文档 §7 字段形状)。"""
+        match = _FILES_CONTENT.match(self.path) or _FILES_CONTENT_LEGACY.match(self.path)
         if match:
             payload, content_type = self.files.read_content(match["file_id"])
             self.send_response(200)
@@ -274,8 +298,16 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
             self.send_header("Content-Length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
-            return
-        self._error(ApiError(404, None, "路径不在合作方合同内"))
+            return True
+        dl = _FILES_DOWNLOAD_LEGACY.match(self.path)
+        if dl:
+            self._json(self.files.download_url(dl["file_id"]))
+            return True
+        pv = _FILES_PREVIEW_LEGACY.match(self.path)
+        if pv:
+            self._json(self.files.preview_url(pv["file_id"]))
+            return True
+        return False
 
     def _open_unified(self) -> None:
         """POST /api/prepared-questions/open(§5 统一 Open);403 拦截照 00 §5.2 约定 4。"""
