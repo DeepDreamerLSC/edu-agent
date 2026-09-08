@@ -41,7 +41,7 @@ def test_plain_text_with_readable_math_symbols_passes(reply: str) -> None:
         ("这个分数写作 `1/2`。", "markdown_structure"),
         ("详见[提示](http://example.com)。", "markdown_structure"),
         ("面积公式是 $S=\\pi r^2$。", "dollar_formula_boundary"),
-        ("\\frac{1}{2} 加 \\frac{1}{3}。", "latex_command"),
+        ("含分式的式子是 \\sqrt{2} 加 \\frac{x+1}{2}。", "latex_command"),
     ],
 )
 def test_markdown_latex_and_dollar_boundaries_are_flagged(reply: str, finding: str) -> None:
@@ -49,6 +49,14 @@ def test_markdown_latex_and_dollar_boundaries_are_flagged(reply: str, finding: s
     assert result.ok is False
     assert finding in result.findings
     assert result.reply == reply
+
+
+def test_latex_fraction_normalized_to_plain_text():
+    """LaTeX 双修(任务包2步2):简单数值分数 \\frac{a}{b} 归一化为 a/b,不判 latex_command。"""
+    result = evaluate_student_visible_format("\\frac{1}{2} 加 \\frac{1}{3}。")
+    assert result.ok is True
+    assert result.findings == ()
+    assert result.reply == "1/2 加 1/3。"
 
 
 def test_downgrade_prompt_is_provided_for_unsafe_format():
@@ -72,5 +80,8 @@ def test_format_guard_gates_model_output_over_fake_upstream(tmp_path):
         gateway.close()
         fake.stop()
     result = evaluate_student_visible_format(response.text)
+    # LaTeX 双修:\frac{12}{1} 归一化为 12/1(不再是 latex_command);Markdown 结构与 $...$ 边界仍需降级
     assert result.ok is False
-    assert "markdown_structure" in result.findings and "latex_command" in result.findings
+    assert "markdown_structure" in result.findings
+    assert "dollar_formula_boundary" in result.findings
+    assert "latex_command" not in result.findings

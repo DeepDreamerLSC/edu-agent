@@ -21,10 +21,11 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import dataclass
 
 from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 
-from .format_guard import evaluate_student_visible_format
+from .format_guard import _DOWNGRADE_PROMPT, evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
 from .prompting import _user_prompt, opening_hint, summary_system_prompt, system_prompt
 from .session import LearnerSession, SessionVersionConflict, Summary, TerminalStateError, Turn
@@ -72,39 +73,122 @@ def _question_numbers(text: str) -> set[float]:
     return {float(m) for m in re.findall(r"\d+(?:\.\d+)?", text or "")}
 
 
-def _guard_output(question: dict, reply_text: str, grade: str,
-                  session: "LearnerSession | None" = None) -> str:
-    """三护栏(泄露/语气/格式)逐个过;任一命中即替换为安全文案(M2 阶段 2)。
+# 兜底句情境化(任务包2步2,消灭万能句):接学生原话/按护栏类型的提问式引导。
+_CONTEXT_FALLBACKS = (
+    "先回到当前小问,你能说出题目明确给出的一个条件吗?",
+    "我们先把题目里的信息理清楚,你能先复述一个已知条件吗?",
+    "先别急,一起看题目给了哪些条件,你能先说其中一个吗?",
+    "回到题目本身,你从题干读到的最直接的一个信息是什么?",
+)
 
-    M3 PR7:泄露护栏对照文本从题面扩到参考答案/解析——教师侧 prompt 里的
-    answer/analysis 若出现在回复中即拦截(答案不许从教师侧漏到学生侧)。
-    任务包1步1 埋点:命中时把 {guard, rule_ids, original, regenerated} 记入
-    session.guard_events(随 FileSessionStore 落盘,评测侧汇总兜底率);
-    regenerated 恒 None——第二步修复重生成实现后回填。"""
-    def _hit(guard: str, rule_ids: list[str], replacement: str) -> str:
-        if session is not None:
-            session.guard_events.append({"guard": guard, "rule_ids": rule_ids,
-                                         "original": reply_text, "regenerated": None})
-        return replacement
 
+def _contextual_fallback(session: "LearnerSession | None", guard: str,
+                         rule_ids: list[str], student_message: str | None = None) -> str:
+    """按情境选一个兜底句;对话轮优先接学生原话(提问式引导,不重复万能句)。"""
+    if student_message:
+        snippet = str(student_message).strip()[:24]
+        return f"先回到你刚说的「{snippet}」——你能从题目里再确认一个已知条件吗?"
+    # 纯图/无权威答案(十字绣/剪绳子/连线题):不逼学生答条件,软性回到看图
+    if guard == "answer_leak" and "unverified_source_value_disclosure" in rule_ids:
+        return "先回到这道题,我们一起看看题目或图片里说了什么——你能先读出一个已知信息吗?"
+    if guard == "format":
+        return _DOWNGRADE_PROMPT
+    return _CONTEXT_FALLBACKS[0]
+
+
+@dataclass(frozen=True)
+class _GuardContext:
+    """护栏重生成上下文:检测输入(question/grade)+ 修复重调所需装配(门控参数)。"""
+    question: dict
+    grade: str
+    gateway: Gateway | None = None
+    role: str = "tutor"
+    messages: list[dict] | None = None
+    schema: dict | None = None
+    images: list[str] | None = None
+    student_message: str | None = None
+
+
+def _guard_check(ctx: "_GuardContext", text: str) -> tuple[str | None, list[str], str | None]:
+    """三护栏(泄露/语气/格式)逐个过;返回 (guard_or_None, rule_ids, normalized_or_downgrade)。"""
     leak = evaluate_student_visible_question(
-        reply_text,
-        answer_reference=str(question.get("answer") or ""),
-        active_subquestion_text=str(question.get("text") or ""),
-        analysis_reference=str(question.get("analysis") or ""),
+        text,
+        answer_reference=str(ctx.question.get("answer") or ""),
+        active_subquestion_text=str(ctx.question.get("text") or ""),
+        analysis_reference=str(ctx.question.get("analysis") or ""),
     )
     if leak.fallback_required:
-        return _hit("answer_leak", [f.finding for f in leak.findings], SAFE_FALLBACK_TEXT)
+        return ("answer_leak", [f.finding for f in leak.findings], None)
     tone = apply_tone_guardrail(
-        reply=reply_text, grade_band=_tone_band(grade), interaction_signal="neutral",
+        reply=text, grade_band=_tone_band(ctx.grade), interaction_signal="neutral",
         teaching_move="connect_relation", ready_to_record=False)
     if tone.applied:
-        return _hit("tone", list(tone.reason_codes), SAFE_FALLBACK_TEXT)
-    fmt = evaluate_student_visible_format(reply_text)
+        return ("tone", list(tone.reason_codes), None)
+    fmt = evaluate_student_visible_format(text)
     if not fmt.ok:
-        return _hit("format", list(fmt.findings),
-                    fmt.downgrade_prompt or SAFE_FALLBACK_TEXT)
-    return reply_text
+        return ("format", list(fmt.findings), fmt.downgrade_prompt)
+    return (None, [], fmt.reply)  # ok → 归一化文本(LaTeX 已转 a/b)
+
+
+def _record_event(session: "LearnerSession | None", guard: str, rule_ids: list[str],
+                  original: str, regenerated: bool) -> None:
+    if session is not None:
+        session.guard_events.append({"guard": guard, "rule_ids": rule_ids,
+                                     "original": original, "regenerated": regenerated})
+        if not regenerated:
+            session.stuck = True  # 硬降级 = 未解决的质量问题(卡点标记,R6)
+
+
+def _regenerate(ctx: "_GuardContext", session: "LearnerSession | None", reply_text: str,
+                guard: str, rule_ids: list[str]) -> str | None:
+    """修复重生成优先:带 rule_id+命中片段重调 tutor 一次;成功返回干净文本,再命中返回 None。"""
+    if ctx.gateway is None or ctx.messages is None:
+        return None
+    repair_messages = [*ctx.messages, {"role": "user", "content": (
+        f"你上一条回复被教学护栏拦截(规则:{','.join(rule_ids)};命中内容:"
+        f"「{reply_text[:48]}」)。请重写这条回复,直接回应用户当前的问题;"
+        f"不要重复被拦截的内容,不要提前给出答案或方法名。")}]
+    try:
+        repaired = json.loads(_invoke(
+            ctx.gateway, ctx.role, repair_messages, ctx.schema or TUTOR_TURN_SCHEMA,
+            session, images=ctx.images,
+        ).text)
+    except Exception as error:  # noqa: BLE001 重生成异常(网络/解析):降级到兜底句
+        return None
+    new_text = str(repaired.get("reply") or "").strip()
+    if not new_text:
+        return None
+    g2, _r2, d2 = _guard_check(ctx, new_text)
+    return d2 if g2 is None else None
+
+
+def _guard_output(reply_text: str, session: "LearnerSession | None" = None,
+                  ctx: "_GuardContext | None" = None) -> str:
+    """三护栏响应策略(任务包2步2;检测规则不动,只改策略与调用方式):
+    - 修复重生成优先:命中 → 带规则 id+命中片段重调 tutor 一次,再命中才降级;
+    - 兜底句情境化:万能句扩为情境变体(接学生原话);
+    - 无答案模式放宽:answer 空时 unverified_source_value_disclosure 走 stuck+重生成;
+    - LaTeX 双修:格式护栏归一化 \frac{a}{b} → a/b。
+    命中埋点 {guard, rule_ids, original, regenerated} 落 session.guard_events。"""
+    if ctx is None:
+        return reply_text
+    guard, rule_ids, normalized = _guard_check(ctx, reply_text)
+    if guard is None:
+        return normalized
+    soft_no_answer = (
+        guard == "answer_leak"
+        and "unverified_source_value_disclosure" in rule_ids
+        and not str(ctx.question.get("answer") or "").strip()
+    )
+    regenerated = _regenerate(ctx, session, reply_text, guard, rule_ids)
+    if regenerated is not None:
+        _record_event(session, guard, rule_ids, reply_text, regenerated=True)
+        if session is not None and soft_no_answer:
+            session.stuck = True  # 无答案放宽:stuck 标记 + 重生成(软信号)
+        return regenerated
+    fallback = _contextual_fallback(session, guard, rule_ids, ctx.student_message)
+    _record_event(session, guard, rule_ids, reply_text, regenerated=False)
+    return fallback
 
 
 def _tone_band(grade: str) -> str:
@@ -143,6 +227,10 @@ _VISION_TASK = {
         "acceptable=false 仅当:多道独立题目混在同一张图、图片模糊到无法辨认主体文字、"
         "或图片与题目无关。"
     ),
+    "转写要求": (
+        "transcription 用纯文本照实转写整题;分数一律写成 a/b 纯文本形式(如 2/3、3/4),"
+        "不要用 LaTeX(不得出现 \\frac、反斜杠命令、$ 公式边界)。"
+    ),
 }
 
 
@@ -178,15 +266,19 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
         if not question.get("text") and verdict.get("transcription"):
             # 纯图题:转写回填题面(新 dict,不改调用方入参)
             session.question = {**session.question, "text": str(verdict["transcription"])}
+    tutor_messages = [
+        {"role": "system", "content": system_prompt(learner.get("grade", ""))},
+        _opening_user_message(learner, session.question),
+    ]
     first = json.loads(_invoke(
-        gateway, "tutor",
-        [{"role": "system", "content": system_prompt(learner.get("grade", ""))},
-         _opening_user_message(learner, session.question)],
-        TUTOR_TURN_SCHEMA, session,
+        gateway, "tutor", tutor_messages, TUTOR_TURN_SCHEMA, session,
     ).text)
+    ctx = _GuardContext(question=session.question, grade=learner.get("grade", ""),
+                        gateway=gateway, role="tutor", messages=tutor_messages,
+                        schema=TUTOR_TURN_SCHEMA)
+    safe_text = _guard_output(first["reply"], session, ctx)
     session.state = "first_question_ready"
-    session.first_question = first["reply"]
-    safe_text = _guard_output(session.question, first["reply"], learner.get("grade", ""), session)
+    session.first_question = safe_text  # 存学生实际所见(可能经护栏重生成),不存泄露原文
     return Turn(text=safe_text, session_version=session.session_version,
                 state=session.state, ready_to_confirm=bool(first["ready_to_confirm"]),
                 session=session)
@@ -201,20 +293,21 @@ def reply(session: LearnerSession, student_message: str, *,
         raise SessionVersionConflict(  # 不推进:旧版本不静默覆盖新一轮诊断(00 §5.2 约定 3)
             f"expected_session_version={expected_session_version} != 当前 {session.session_version}")
     gateway = gateway or default_gateway()
+    _reply_messages = [
+        {"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
+        {"role": "user", "content": _user_prompt(session.question, {
+            "学生": session.learner, "对话记录": session.history,
+            "学生本轮回答": student_message,
+            "输出提醒": "若学生本轮已给出正确最终答案(或明确表示理解并完成检验),"
+                        "ready_to_confirm 置 true;否则 false。"})},
+    ]
     output = json.loads(_invoke(
-        gateway, "tutor",
-        [{"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
-         {"role": "user", "content": _user_prompt(session.question, {
-             "学生": session.learner, "对话记录": session.history,
-             "学生本轮回答": student_message,
-             "输出提醒": "若学生本轮已给出正确最终答案(或明确表示理解并完成检验),"
-                         "ready_to_confirm 置 true;否则 false。"})}],
-        TUTOR_TURN_SCHEMA, session,
+        gateway, "tutor", _reply_messages, TUTOR_TURN_SCHEMA, session,
     ).text)
-    safe_text = _guard_output(session.question, output["reply"],
-                              session.learner.get("grade", ""), session)
-    if safe_text != output["reply"]:
-        session.stuck = True  # 卡点标记(R6):护栏替换 = 本轮存在未解决的质量问题
+    ctx = _GuardContext(question=session.question, grade=session.learner.get("grade", ""),
+                        gateway=gateway, role="tutor", messages=_reply_messages,
+                        schema=TUTOR_TURN_SCHEMA, student_message=student_message)
+    safe_text = _guard_output(output["reply"], session, ctx)
     # 数字漂移守卫(M3):模型自报引用的数字 ⊆ 题面数字全集,超出 = 把口误数字
     # 当题目条件复读 → stuck 标记(不拒答,下一轮提醒纠偏);题面无数字跳过
     cited = [float(n) for n in (output.get("cited_numbers") or [])]

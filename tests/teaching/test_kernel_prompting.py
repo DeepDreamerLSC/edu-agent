@@ -83,7 +83,8 @@ def test_kernel_replaces_abusive_tone(tmp_path):
     turn = reply(first.session, "我不会。", gateway=gateway)
     gateway.close()
     fake.stop()
-    assert turn.text == SAFE_FALLBACK_TEXT  # 语气护栏命中,原文不达学生可见面
+    # 任务包2步2兜底句情境化:语气护栏命中,原文不达学生面,换接学生原话的引导句(非万能句)
+    assert turn.text == "先回到你刚说的「我不会。」——你能从题目里再确认一个已知条件吗?"
 
 
 def test_kernel_replaces_markdown_output_with_downgrade(tmp_path):
@@ -107,17 +108,21 @@ def test_clean_output_passes_through(tmp_path):
 
 
 def test_guarded_reply_context_matches_student_visible_text(tmp_path):
-    """护栏替换后,history 记录安全文本(下一轮模型上下文 = 学生实际所见)。"""
+    """护栏命中 → 修复重生成优先:重调 tutor 拿到干净回复,学生所见/记录是它而非泄露原文。"""
     leak = tutor_json("答案是 x=6,就是这样。")
+    regen_clean = tutor_json("你刚才回到了条件本身,很好。")
+    follow_clean = tutor_json("我们接着看,你能说出题目给的一个条件吗?")
     fake = FakeOpenAI([completion(tutor_json("第一问?")), completion(leak),
-                       completion(tutor_json("你刚才回到了条件本身,很好。"))]).start()
+                       completion(regen_clean), completion(follow_clean)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
     turn = reply(first.session, "不知道。", gateway=gateway)
-    assert turn.text == SAFE_FALLBACK_TEXT
+    assert turn.text == "你刚才回到了条件本身,很好。"  # 泄露 → 重生成成功 → 用重生成文本
+    assert "x=6" not in turn.text
     follow = reply(first.session, "题目说 3x 加 7 等于 25。", gateway=gateway)
     gateway.close()
     fake.stop()
-    assert follow.text == "你刚才回到了条件本身,很好。"
+    assert follow.text == json.loads(follow_clean)["reply"]
     assistant_turns = [m["content"] for m in first.session.history if m["role"] == "assistant"]
-    assert assistant_turns == [SAFE_FALLBACK_TEXT, "你刚才回到了条件本身,很好。"]
+    # 泄露回复不达学生面:history 记的是重生成后的干净文本,下一轮模型上下文 = 学生实际所见
+    assert assistant_turns == ["你刚才回到了条件本身,很好。", json.loads(follow_clean)["reply"]]
