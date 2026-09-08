@@ -63,4 +63,5 @@ class KernelSubject:
             "summary": summary_text,
             "total_ms": int((time.monotonic() - started) * 1000),
             "learner": learner,
+            "guard_events": getattr(session, "guard_events", []),  # 兜底率度量(任务包1步1)
         }
