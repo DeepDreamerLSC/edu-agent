@@ -402,6 +402,8 @@ def reply(session: LearnerSession, student_message: str, *,
         hint = _reveal_next_step(session)
         if hint is None:
             answer = str(session.question.get("answer") or "").strip()
+            if not answer and session.steps:
+                answer = str(session.steps[-1].get("value") or "").strip()  # 最后一步的值即答案
             # 阶梯揭示完毕仍卡住 → bottom-out 给答案(最后一档,不再重复泛泛兜底)
             hint = (f"这一步我们直接看结果:{answer}。你先记住它,我们回头再讲一遍为什么。"
                     if answer else NEEDS_REVIEW_TEXT)
