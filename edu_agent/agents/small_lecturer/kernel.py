@@ -51,16 +51,6 @@ TUTOR_SUMMARY_SCHEMA = {
     "required": ["summary"],
     "additionalProperties": False,
 }
-VISION_CHECK_SCHEMA = {  # M3 PR7(#34):三字段;transcription=可信时的整题转写
-    "type": "object",
-    "properties": {
-        "acceptable": {"type": "boolean"},
-        "reason": {"type": "string"},
-        "transcription": {"type": "string"},
-    },
-    "required": ["acceptable", "reason", "transcription"],
-    "additionalProperties": False,
-}
 # 统一 open schema(任务包2步4):一次调用产出 转写 + 分步解 + 首问。
 # 因 tutor 即 VL 模型,vision 判定(acceptable/transcription)与首问(reply)
 # 合入同一次调用;steps 是阶梯底稿 + 数字校验基准。
@@ -80,6 +70,8 @@ OPEN_SCHEMA = {
 }
 
 FAIL_CLOSED_TEXT = "这张题图我没法安全地开始讲解(可能包含多道题或不清晰)。请换一张只包含一道题的清晰照片,或者直接把题目打出来。"
+# 统一 open 里 reply 留空(图文题 acceptable=false 且模型照"可留空"留空)时的确定性兜底首问
+_OPENING_FALLBACK = "我们先看看这道题,你能说说题目给了哪些条件吗?"
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
@@ -290,23 +282,6 @@ def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
     ))
 
 
-_VISION_TASK = {
-    "task": "题图理解与安全检查",
-    "判定标准": (
-        "acceptable=true 当且仅当:一张图片承载一道题——一道题内含多个小问、"
-        "多幅小图、图表或选项,都算一道;主体文字清晰可读即可。"
-        "你解不出这道题、题干看似歧义、数据看似矛盾,都不影响 acceptable——"
-        "照实转写,教学时再处理。"
-        "acceptable=false 仅当:多道独立题目混在同一张图、图片模糊到无法辨认主体文字、"
-        "或图片与题目无关。"
-    ),
-    "转写要求": (
-        "transcription 用纯文本照实转写整题;分数一律写成 a/b 纯文本形式(如 2/3、3/4),"
-        "不要用 LaTeX(不得出现 \\frac、反斜杠命令、$ 公式边界)。"
-    ),
-}
-
-
 def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> Turn:
     """生成首问(03 §4 Preparing → FirstQuestionReady / Failed)。
 
@@ -340,6 +315,8 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
                         gateway=gateway, role="tutor", messages=open_messages,
                         schema=OPEN_SCHEMA)
     safe_text = _guard_output(str(payload.get("reply") or ""), session, ctx)
+    if not safe_text.strip():
+        safe_text = _OPENING_FALLBACK  # 图文题 acceptable=false 且 reply 留空 → 确定性兜底首问
     session.state = "first_question_ready"
     session.first_question = safe_text
     return Turn(text=safe_text, session_version=session.session_version,

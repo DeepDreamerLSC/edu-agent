@@ -38,10 +38,10 @@ def test_models_yaml_has_vision_role_and_vl_tutor_primary():
 
 def test_kernel_vision_schema_has_transcription():
     source = KERNEL.read_text(encoding="utf-8")
-    schema_block = re.search(r"VISION_CHECK_SCHEMA = \{(.*?)\n\}", source, re.DOTALL)
-    assert schema_block, "kernel 缺 VISION_CHECK_SCHEMA(#70 回退哨兵)"
+    schema_block = re.search(r"OPEN_SCHEMA = \{(.*?)\n\}", source, re.DOTALL)
+    assert schema_block, "kernel 缺 OPEN_SCHEMA(#70 回退哨兵)"
     assert '"transcription"' in schema_block.group(1), (
-        "VISION_CHECK_SCHEMA 缺 transcription 字段(#70 回退哨兵)"
+        "OPEN_SCHEMA 缺 transcription 字段(#70 回退哨兵)"
     )
 
 

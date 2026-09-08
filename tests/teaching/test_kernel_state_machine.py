@@ -218,3 +218,20 @@ def test_kernel_consumes_validated_text_directly(tmp_path):
     gateway.close()
     fake.stop()
     assert first.text == "我们先确认题意。" and turn.state == "ready_to_confirm"
+
+
+def test_start_stores_steps_from_open_payload(tmp_path):
+    """统一 open 的 steps 经 solver 校验(非法过滤)存进 session.steps(阶梯底稿)。"""
+    fake = FakeOpenAI([completion(open_json(
+        "你先说说题目给了哪些条件?",
+        steps=[{"step": "两边减7", "value": "18"},
+               {"step": "", "value": "18"},      # 空 step → 过滤
+               {"step": "除以3", "value": ""},   # 空 value → 过滤
+               {"step": "得 x", "value": "6"}],
+    ))]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
+    gateway.close()
+    fake.stop()
+    assert turn.session.steps == [{"step": "两边减7", "value": "18"},
+                                  {"step": "得 x", "value": "6"}]
