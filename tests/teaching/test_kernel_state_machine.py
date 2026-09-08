@@ -235,3 +235,42 @@ def test_start_stores_steps_from_open_payload(tmp_path):
     fake.stop()
     assert turn.session.steps == [{"step": "两边减7", "value": "18"},
                                   {"step": "得 x", "value": "6"}]
+
+
+def test_reply_masks_method_names_in_teacher_prompt(tmp_path):
+    """复讲阶段方法名脱敏(代喂窄规则方案②):教师侧解析/知识点里的方法名 → 「这种方法」,
+    总结阶段(finish)不脱敏,由教师侧上下文恢复点名。"""
+    fake = FakeOpenAI([completion(open_json("我们先确认题意。")),
+                       completion(tutor_json("你来说说你的思路。"))]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    first = start({"text": "鸡兔同笼,共8只26脚", "answer": "鸡3只兔5只",
+                   "analysis": "用假设法:先假设全是鸡,再按脚差求兔。",
+                   "knowledge_points": ["鸡兔同笼", "假设法"]},
+                  {"grade": "六年级"}, gateway=gateway)
+    reply(first.session, "我不太会。", gateway=gateway)
+    gateway.close()
+    fake.stop()
+    prompt = json.loads(fake.requests[1]["messages"][1]["content"])
+    assert "假设法" not in prompt["题目"]["解析"]
+    assert "这种方法" in prompt["题目"]["解析"]
+    assert prompt["追问锚点"] == ["鸡兔同笼", "这种方法"]  # 方法名脱敏,概念名保留
+    assert prompt["题目"]["参考答案"] == "鸡3只兔5只"      # 答案不脱敏(兜底/校验需要)
+
+
+def test_reply_replaces_method_feed_with_elicit_and_keeps_open(tmp_path):
+    """复讲轮代喂:学生说「都懂了」,tutor 回「你用的是假设法」→ 替换成固定请讲引导,
+    且 ready_to_confirm=False(不关对话,继续收集讲题内容)。"""
+    fake = FakeOpenAI([
+        completion(open_json("你先说说题目给了哪些条件?")),
+        completion(tutor_json("你用的是假设法,对吧?", ready=True)),
+    ]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    first = start({"text": "鸡兔同笼,共8只26脚", "answer": "鸡3只兔5只",
+                   "knowledge_points": ["假设法"]}, {"grade": "六年级"}, gateway=gateway)
+    turn = reply(first.session, "都懂了。", gateway=gateway)
+    gateway.close()
+    fake.stop()
+    assert turn.text == ("很好,你已经懂了。那请你从头讲讲你的思路——"
+                         "先说说你第一步算了什么、为什么这样算。")
+    assert turn.ready_to_confirm is False  # 不关对话,继续收集
+    assert "假设法" not in turn.text
