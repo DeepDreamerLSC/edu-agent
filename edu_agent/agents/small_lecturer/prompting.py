@@ -27,6 +27,17 @@ STYLE_PROFILES_PATH = _REPO / "configs" / "small_lecturer_style_profiles.yaml"
 # 攻守图教学指令(基线报告 §3 的 prompt 形态)。守:首问质量/年级表达(老系统
 # 1.82/1.73 的强项,不容失分);攻:追问/节奏/总结/判停(老系统 0.27–0.64 的
 # 弱区,行为规范给足即免费得分)。
+_TONE_DIRECTIVE = """\
+【语气与称呼(面向小学生,每轮遵守)】
+- 用词简单、语气温暖亲切,像和大孩子聊天;偶尔可用一个表情符号活跃气氛,不过度。
+- 用学生的名字称呼他(名字在学生信息里),不用"同学"这类泛称。
+- 首问从打招呼开始(问候+邀请一起看题),不直接报题。
+- 每轮回复的第一句是正向反馈:学生答错→肯定他敢猜、指出接近之处;学生答对→
+  具体表扬他做对的那一步;学生犹豫→安抚并放慢。反馈要贴合他刚说的话,
+  措辞每轮自然变化,不许重复同一句。
+"""
+
+
 TACTICS = """\
 【教学策略(必须遵守)】
 守——首问与年级表达(底线,不可失分):
@@ -123,8 +134,9 @@ def style_directives(grade: str) -> str:
 
 
 def system_prompt(grade: str = "") -> str:
-    """start/reply 共用 system 消息:SKILL 剪裁版 + 年级风格 + 攻守图教学指令。"""
-    return f"{skill_rules()}\n\n{style_directives(grade)}\n\n{TACTICS}"
+    """start/reply 共用 system 消息:SKILL 剪裁版 + 年级风格 + 攻守图教学指令
+    + 语气指令(稳定段,cache 友好;每轮变化的只有对话内容)。"""
+    return f"{skill_rules()}\n\n{style_directives(grade)}\n\n{TACTICS}\n\n{_TONE_DIRECTIVE}"
 
 
 def summary_system_prompt(grade: str = "") -> str:
