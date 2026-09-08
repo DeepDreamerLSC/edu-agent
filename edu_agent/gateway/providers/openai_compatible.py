@@ -24,20 +24,34 @@ def _headers(api_key: str | None) -> dict[str, str]:
     return {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
 
+def _multimodal(messages: list[dict], images: list[str] | None) -> list[dict]:
+    """多模态渲染:images 有值时,第一条 user 消息(调用方的任务文本)转 OpenAI
+    标准 [text, image_url…] 内容块;schema 指令/修复提示保持纯文本 user 消息
+    追加在后(混合形态,OpenAI 兼容服务端均接受)。"""
+    if not images:
+        return messages
+    index = next(i for i, m in enumerate(messages) if m.get("role") == "user")
+    text = messages[index].get("content") or ""
+    parts = [{"type": "text", "text": text if isinstance(text, str) else json.dumps(text, ensure_ascii=False)},
+             *[{"type": "image_url", "image_url": {"url": url}} for url in images]]
+    return [*messages[:index], {**messages[index], "content": parts}, *messages[index + 1:]]
+
+
 def build_messages(request: ModelRequest, repair: GatewayError | None) -> list[dict]:
     """路线 1(issue #8):schema 附进 prompt;修复重试时附上违规原文与修复提示。"""
     if request.response_schema is None:
-        return request.messages
+        return _multimodal(request.messages, request.images)
     schema_text = json.dumps(request.response_schema, ensure_ascii=False)
     if repair is None:
         instruction = _SCHEMA_INSTRUCTION.format(schema=schema_text)
-        return [*request.messages, {"role": "user", "content": instruction}]
+        return _multimodal([*request.messages, {"role": "user", "content": instruction}],
+                           request.images)
     hint = _REPAIR_HINT.format(errors=repair.detail, schema=schema_text)
-    return [
+    return _multimodal([
         *request.messages,
         {"role": "assistant", "content": repair.output or ""},
         {"role": "user", "content": hint},
-    ]
+    ], request.images)
 
 
 def _strip_code_fence(text: str) -> str:

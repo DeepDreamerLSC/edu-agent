@@ -25,10 +25,15 @@ __all__ = [
 
 
 def build_service(kernel: Kernel, store: MemoryConversationStore | None = None,
-                  source=None, sessions: FileSessionStore | None = None) -> ConversationService:
-    """source 注入题源(PR1);sessions 注入即开启上下文保留(M3 PR6:内核会话回合后落盘)。"""
+                  source=None, sessions: FileSessionStore | None = None,
+                  image_resolver=None) -> ConversationService:
+    """source 注入题源(PR1);sessions 注入即开启上下文保留(M3 PR6:内核会话回合后落盘)。
+
+    image_resolver 注入题图解析(file_id → data URL;生产装配传 FileService.data_url,
+    未注入时题图引用原样透传——测试/评测假网关路径不依赖文件存储)。"""
     return ConversationService(store or MemoryConversationStore(), kernel,
-                               source=source, sessions=sessions)
+                               source=source, sessions=sessions,
+                               image_resolver=image_resolver)
 
 
 def partner_service() -> ConversationService:

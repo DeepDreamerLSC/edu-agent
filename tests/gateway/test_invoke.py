@@ -225,6 +225,52 @@ def test_schema_request_rejected_for_non_strict_role(tmp_path):
     assert fake.requests == []  # 不发给不支持的服务端(01 §8)
 
 
+# ---------- 多模态(images 渲染为 OpenAI image_url 内容块) ----------
+
+def test_images_render_as_content_parts_on_first_user_message(tmp_path, fake):
+    """vision 多模态:第一条 user 消息(任务文本)转 [text, image_url] 内容块,图片不进文本。"""
+    gateway = gateway_for(fake.url, tmp_path)
+    gateway.invoke(ModelRequest(
+        role="tutor",
+        messages=[{"role": "user", "content": "看这张题图"},
+                  {"role": "user", "content": "判断是否单题"}],
+        images=["data:image/png;base64,QUJD"],
+    ))
+    gateway.close()
+    messages = fake.requests[0]["messages"]
+    parts = messages[0]["content"]
+    assert [p["type"] for p in parts] == ["text", "image_url"]
+    assert parts[0]["text"] == "看这张题图"
+    assert parts[1]["image_url"]["url"] == "data:image/png;base64,QUJD"
+    assert messages[1]["content"] == "判断是否单题"  # 其余消息不受影响
+
+
+def test_images_with_schema_keeps_instruction_plain_text(tmp_path):
+    """schema 指令以纯文本 user 消息追加在内容块之后(混合形态,服务端均接受)。"""
+    fake2 = FakeOpenAI([completion(json.dumps({"answer": "ok"}))]).start()
+    gateway = gateway_for(fake2.url, tmp_path)  # 默认 json_strict=True
+    gateway.invoke(ModelRequest(
+        role="tutor",
+        messages=[{"role": "user", "content": "看图答题"}],
+        response_schema=SCHEMA, images=["data:image/png;base64,QUJD"],
+    ))
+    gateway.close()
+    fake2.stop()
+    messages = fake2.requests[0]["messages"]
+    assert isinstance(messages[0]["content"], list)  # 原消息转内容块
+    assert isinstance(messages[-1]["content"], str)  # schema 指令保持纯文本
+    assert "JSON Schema" in messages[-1]["content"]
+
+
+def test_no_images_leaves_messages_unchanged(tmp_path, fake):
+    """images 缺省:消息原样(纯文本路径零变化)。"""
+    gateway = gateway_for(fake.url, tmp_path)
+    gateway.invoke(ModelRequest(
+        role="tutor", messages=[{"role": "user", "content": "纯文本"}]))
+    gateway.close()
+    assert fake.requests[0]["messages"][0]["content"] == "纯文本"
+
+
 def test_api_key_missing_fails_fast(tmp_path):
     from edu_agent.gateway import Gateway, ProviderConfig
     registry = registry_for("http://127.0.0.1:9")

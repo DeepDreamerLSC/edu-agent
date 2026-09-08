@@ -1,0 +1,2388 @@
+{
+ "records": [
+  {
+   "question_id": "6a61a8da",
+   "stem": "如果电影票上的“8排6号”记作(6，8)，那么“12排5号”记作( ， )；(3，10)表示的位置是( )排( )号。",
+   "answer": "(5,12)；10排3号",
+   "original_analysis": "按“号在前、排在后”对应。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61a8e5",
+   "stem": "电影院里，小智的位置是(2，4)，小慧的位置是(2，6)，小聪与他们坐在同一条直线上。小聪的位置可能是（ ）。A.(2，7) B.(7，2) C.(4，6) D.(4，2)",
+   "answer": "A. (2,7)",
+   "original_analysis": "同一直线上的点与前两点有相同的x坐标2。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61a907",
+   "stem": "根据方格图观察并填空：已知B的位置可表示为(2，4)，求其余点的位置、与A的相对位置，以及活动路线经过的地点。",
+   "answer": "B在A的东400米、北800米处；C=(5,8)，在A的东1000米、北1600米处；位于A以东1400米、再往北600米处的是F，位置是(7,3)；路线依次经过D、C、F、G；小慧的位置是(3,4)。",
+   "original_analysis": "以A为原点、每格200米，直接读出各点坐标并做位移换算。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61a927",
+   "stem": "先用数对表示图形四个顶点的位置，再将图形先向右平移4格，再向下平移2格，画出平移后的图形，并用数对表示A1、B1、C1、D1的位置，思考这些顶点与ABCD的位置关系。",
+   "answer": "A(1,5) B(1,3) C(6,3) D(4,5)；A1(5,3) B1(5,1) C1(10,1) D1(8,3)。",
+   "original_analysis": "所有点统一执行(x+4,y-2)。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61aa32",
+   "stem": "等边三角形草地三个顶点分别住着小羊、小兔、小马，边长20m。按方位描述四只题目中的相对位置并写距离。",
+   "answer": "北偏西30°20m；北偏东30°20m；南偏西30°20m；南偏东30°20m。",
+   "original_analysis": "等边三角形三边相等，方向由对称与60°顶角确定。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61aba2",
+   "stem": "小慧从家到学校要穿过一个只允许南北或东西方向通行的小区。下面路线描述不正确的是（ ）。",
+   "answer": "C",
+   "original_analysis": "只允许横着或竖着走，C含斜线。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61abe2",
+   "stem": "根据达卡与广州的位置及四个城市的方位和距离描述，在图中标出海上丝绸之路经过的几个城市的位置。",
+   "answer": "孟买应标在达卡西偏南15°方向2000km处；科伦坡应标在达卡西偏南60°方向2000km处；马斯喀特应标在广州正西方向5500km处；曼谷应标在达卡东偏南45°方向1500km处。",
+   "original_analysis": "先把距离统一换成500km为1单位，再按题给方位作图定位。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61acae",
+   "stem": "老鼠从仓库出发，分别经墙角到捕鼠器、经门缝到猫处。填写方向与路程。",
+   "answer": "先向东偏北20°方向走30m到墙角，再向北走40m到捕鼠器；先向东偏南60°方向走20m到门缝，再向东走50m到猫处。",
+   "original_analysis": "根据图中的20°、60°角标和10m比例尺，分别读取两段折线路线。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61acc7",
+   "stem": "小雅先向北偏西45°方向走30m，又向西偏南45°方向走30m，她现在所在的位置在起点的（ ）方向上。A.正北 B.正西 C.西北 D.西南",
+   "answer": "B. 正西",
+   "original_analysis": "两次位移的南北分量抵消，西向分量相加。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61ace1",
+   "stem": "根据机器人行走路线图，完成到A站、A到B站、B到C站以及全程时间问题。",
+   "answer": "从出发站向北偏西40°方向走16米到A站；再向东偏北20°方向走20米到B站；再向南偏东20°方向走16米到C站；走完全程需要36秒。",
+   "original_analysis": "先按4米刻度数出各段路程，再加上A、B两站的停顿时间。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61af03",
+   "stem": "汽车的初始位置是(2，2)，3小时后位置在(11，2)。在图中标出A、B，并求平均速度；若速度不变，再向北行驶1小时后位置怎样表示。",
+   "answer": "A(2,2)，B(11,2)；平均75千米/时；1小时后到(11,5)。",
+   "original_analysis": "每格25km，3小时走9格。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61af0e",
+   "stem": "在军事演练中，方位代码按钟面编码。根据三段任务路线完成编码、位置说明、路线图和总时间问题。",
+   "answer": "南偏西60°方向86km处的代码是070086；043048表示东偏南45°方向48km处；路线为基地→任务点一(东偏北45°20km)→任务点二(北偏东15°30km)→任务点三(正东50km)→原路返回；总用时3小时。",
+   "original_analysis": "先把代码还原成钟面方向和距离，再累加三段往返路程与三次任务时间。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61af10",
+   "stem": "一瓶水重2kg，求它的1/5是多少重；把（ ）看作单位1，可以求得一瓶水的1/5重（ ）kg。",
+   "answer": "把2kg看作单位1；1/5重0.4kg。",
+   "original_analysis": "求一个数的几分之几，用乘法。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61af96",
+   "stem": "在图框中作图与编码的军事演练题。",
+   "answer": "南偏西60°方向86km处的代码是070086；043048表示东偏南45°方向48km处；部队从基地出发到返回基地共用3小时。",
+   "original_analysis": "按钟面规则解码方向，并把往返行军时间与任务停留时间相加。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61afaa",
+   "stem": "一瓶水重2kg，求它的1/5是多少重。",
+   "answer": "0.4kg",
+   "original_analysis": "整体乘分数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61b319",
+   "stem": "一瓶水重2kg，求它的1/5是多少重。",
+   "answer": "0.4kg",
+   "original_analysis": "求一个数的几分之几。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61b33c",
+   "stem": "单位换算：7/500 m³=( )dm³；1/10 km²=( )公顷；5/8日=( )时。",
+   "answer": "14dm³；10公顷；15时。",
+   "original_analysis": "分别用1m³=1000dm³、1km²=100公顷、1日=24时。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61b366",
+   "stem": "(1)5/12的15倍是多少？ (2)36的4/21是多少？",
+   "answer": "25/4；48/7。",
+   "original_analysis": "都用“整体×分数”。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61b3d4",
+   "stem": "海拔每升高100m，气温平均下降3/5℃。图中A处、B处和山顶的气温大约分别是多少？",
+   "answer": "A处气温约25.8℃，B处气温约24℃，山顶气温约22.8℃。",
+   "original_analysis": "先由图读出大致海拔，再按每升高100m下降3/5℃计算。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61b656",
+   "stem": "李叔叔在一块2/3公顷的地里种菜，1/4种黄瓜。种黄瓜的面积可以列式为（ ），你能在图中表示出来吗？",
+   "answer": "列式2/3×1/4，结果1/6公顷。",
+   "original_analysis": "求“一个分数的几分之几”用分数乘法。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61b65d",
+   "stem": "若a、b都是非零自然数，a×(b/16)<a，a×(b/14)>a，则b的值为（ ）。A.14 B.15 C.16 D.17",
+   "answer": "B. 15",
+   "original_analysis": "把不等式转化为14<b<16。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61b66a",
+   "stem": "下面四个算式的积，哪个在1/4和2/3之间？",
+   "answer": "B",
+   "original_analysis": "逐个算出积并比较。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61b67e",
+   "stem": "小智一家体检，全家体重之和180kg；爸爸体重是全家的一半；小智体重又是爸爸体重的7/18。小智体重占全家体重之和的几分之几？",
+   "answer": "7/36",
+   "original_analysis": "连乘分率：全家的1/2再取7/18。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61ba35",
+   "stem": "下列算式中，得数比3/8×2/9大的是（ ）。",
+   "answer": "C",
+   "original_analysis": "先算基准1/12，再逐项比较。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61ba43",
+   "stem": "两根同样长的绳子，乐乐在第一根上剪下2/5m，皮皮剪下第二根的2/5。谁剪下的部分长？请给出结论并说明理由。",
+   "answer": "无法确定",
+   "original_analysis": "一个是具体长度，一个是占整体的分率，缺少绳子的总长。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61bae5",
+   "stem": "判断三位同学计算1.4×1/4的方法是否正确，并写出一种不同的方法。",
+   "answer": "小明正确；小丽、小刚错误；可用1.4÷4=0.35。",
+   "original_analysis": "乘1/4等于除以4，也可用分配律拆成1和0.4。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61baec",
+   "stem": "亮亮五年级时身高1.35米，进入六年级后，身高是五年级时的1/15。亮亮六年级时身高是多少？下面列式错误的是（ ）。",
+   "answer": "A",
+   "original_analysis": "增长部分应是1.35的1/15，不是直接加1/15。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61bb0e",
+   "stem": "选择合适的方法计算：2.8×2/7，0.6×4/5，2/9×10.8，2.3×5/46，并回答“当小数乘带分数时，你是怎么学的？”",
+   "answer": "0.8，0.48，2.4，0.25；方法是先化分数或先除后乘并尽量约分。",
+   "original_analysis": "把小数与分数混合乘法转化为容易约分的形式。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61bd68",
+   "stem": "下面四个算式中，计算结果与其他三个不同的是（ ）。",
+   "answer": "D",
+   "original_analysis": "前三个都等于101×5/6，D等于100×5/6。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61bd8d",
+   "stem": "算式8.2×（ ）+0.7×（ ）。从①1.8、②0.7、③7.2、④8.7中选择合适的数，使本题可以用乘法分配律进行简便运算。计算最简便的是（ ）。",
+   "answer": "D，结果7。",
+   "original_analysis": "提取公因数0.7。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61bd90",
+   "stem": "怎样简便就怎样算： (5-5/13)×26，5/7×1/4+3/4×5/7，2/9×5/11×27×22，60×(1/12+5/9)×18，1/4+3/4×1/3，19/43×34+53×19/43-19/43。",
+   "answer": "120，5/7，60，690，1/2，38。",
+   "original_analysis": "主要用约分、分配律和先算括号。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61bda7",
+   "stem": "先想简便方法，再计算：(1)5/6×24.25 (2)2019/2020×2019 (3)2008×2006/2007。",
+   "answer": "20又5/24；2018又1/2020；2006又2006/2007。",
+   "original_analysis": "把整数拆成“分母±1”的形式更容易口算。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61c34b",
+   "stem": "比一比，在○里填上“>”“<”或“=”。",
+   "answer": "'=，<，=，>，>，<。",
+   "original_analysis": "用交换律、结合律和分数计算直接比较。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61c351",
+   "stem": "小连在计算13/18×(□+36)时，把算式看成了13/18×□+36，这个结果比正确的多了（ ）。A.10 B.20 C.24 D.36",
+   "answer": "A.10",
+   "original_analysis": "利用乘法分配律比较误算与正确算式，差为10。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61c398",
+   "stem": "在（ ）里填上合适的数，估计计算简便。7/18+11/18×( )；7/13×8/9+8/9×( )；(4/5-3/4)×( )。",
+   "answer": "1；7/13；20",
+   "original_analysis": "分别把式子化成和为1、可提取公因数、乘积为1的形式。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61c3b2",
+   "stem": "请观察并计算下列各题，你发现了什么？1/2×1/3，1/3×1/4，1/4×1/5，1/10×1/11；1/2-1/3，1/3-1/4，1/4-1/5，1/10-1/11；反思：现在你能计算这题了吗？1/2×1/3+1/3×1/4+1/4×1/5+…+1/9×1/10+1/10×1/11。",
+   "answer": "发现1/n×1/(n+1)=1/n-1/(n+1)，所以和为9/22。",
+   "original_analysis": "把连乘改写成相邻分数之差，利用裂项求和。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a61c529",
+   "stem": "写出下面每题的数量关系式。（1）学校图书馆购进一批新书，其中文学类的本数占总本数的2/5，连环画的本数占总本数的1/3。（2）学校图书馆购进一批新书，其中文学类的本数占总本数的2/5，连环画的本数占文学类的1/3。",
+   "answer": "（1）文学类=总本数×2/5，连环画=总本数×1/3；（2）文学类=总本数×2/5，连环画=文学类×1/3。",
+   "original_analysis": "抓住“占总本数的几分之几”“占文学类的几分之几”分别列式。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62bc56",
+   "stem": "妈妈打算绣一幅面积为20dm²的“十字绣”。第一周绣了2/5，第二周绣的是第一周的3/4，妈妈第二周绣了（ ）dm²。A.3/4 B.6 C.8 D.15",
+   "answer": "B.6dm²",
+   "original_analysis": "先求第一周，再按第一周的3/4求第二周。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62bda2",
+   "stem": "妈妈打算织一条长1.4m的围巾，第一周织了这条围巾的2/5，第二周织了这条围巾的3/7，两周一共织了（ ）m长的围巾。",
+   "answer": "1.16m",
+   "original_analysis": "先求两周共占全长的29/35，再乘围巾总长。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62bdae",
+   "stem": "一个球从高处落下，它每次弹起的高度是下落高度的1/6。若该球从18m的高度落下，则第二次弹起的高度是（ ）m。",
+   "answer": "0.5m",
+   "original_analysis": "连续两次都乘1/6。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62bdb9",
+   "stem": "以下图形可以表示1/4×1/4的有（ ）个。A.1 B.2 C.3 D.4",
+   "answer": "B. 2个",
+   "original_analysis": "能表示1/4×1/4的图，结果部分应占整体的1/16；4幅图中只有第2、3幅符合。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62bdbc",
+   "stem": "六（1）班图书角有200本故事书，科技书比故事书少1/5，下面图（ ）能正确表示这两类书的数量关系。",
+   "answer": "C",
+   "original_analysis": "“少1/5”表示现有量是原量的4/5。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62bdbf",
+   "stem": "a和b在直线上的位置如图所示，若a×b=t，则下列描述中正确的是（ ）。A.a<b<t B.a<t<b C.t<a<b D.t<b<a",
+   "answer": "C.t<a<b",
+   "original_analysis": "先由数轴判断a、b都在0和1之间，再利用真分数乘法大小规律。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62bddb",
+   "stem": "用简便方法计算。17×7/25×11/17；3/8×9/17+3/8×8/17；0.75×68-3/4×48；13/88×87+13/88；4×(1/4-1/5)×5；2014×2012/2013。",
+   "answer": "77/25；3/8；15；13；1；2012又2012/2013",
+   "original_analysis": "分别用约分、乘法分配律、提取公因数和平方差进行简算。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62c34b",
+   "stem": "国庆70周年阅兵……总规模约1.5万人次，受阅部队数量如图所示，徒步方队15个，装备方队32个，空中梯队比装备方队少5/8。参加此次阅兵的空中梯队有多少个？",
+   "answer": "12个",
+   "original_analysis": "按“比32少5/8”计算。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62c353",
+   "stem": "爷爷奶奶通过“微信运动”每天记录步行的步数。某天上午爷爷的步数是奶奶的8/9，此时奶奶走了2700步，爷爷比奶奶少走多少步？（先将线段图补充完整，再解答）",
+   "answer": "300步",
+   "original_analysis": "先按8/9求爷爷的步数，再作差。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62c9a9",
+   "stem": "5/9的倒数是（ ），7的倒数是（ ），1的倒数是（ ），（ ）的倒数是0.375，最小的质数与它的倒数之差是（ ）。",
+   "answer": "9/5；1/7；1；8/3；3/2",
+   "original_analysis": "利用倒数定义和0.375=3/8进行求解。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62c9b4",
+   "stem": "2/3×( )=0.375×( )=2又1/2×( )=8×( )=1。",
+   "answer": "3/2；8/3；2/5；1/8",
+   "original_analysis": "都填各数的倒数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62ca00",
+   "stem": "下面四幅图中，若a和b表示不同的数，则（ ）中a与b互为倒数。A.三角形面积为1m²，底a米、高b米；B.总长度为1m，分成a米和b米；C.长方形面积为1m²，长a米、宽b米；D.长方体体积为1m³，长a米、宽b米、高c米。",
+   "answer": "C",
+   "original_analysis": "互为倒数要求ab=1。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62ca09",
+   "stem": "一个自然数与它的倒数之差是21又21/22，这个自然数是多少？",
+   "answer": "22",
+   "original_analysis": "代入检验可知22满足条件。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62ca0e",
+   "stem": "五个连续奇数的和的倒数是1/45，这五个奇数中最大的是几？",
+   "answer": "13",
+   "original_analysis": "先由倒数求和，再利用连续奇数平均数等于中间数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cb20",
+   "stem": "3/10=( )÷40=6÷( )=( )(填小数)。",
+   "answer": "12；20；0.3",
+   "original_analysis": "把3/10改写成同值的除法和小数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cb29",
+   "stem": "把20/13m长的彩带平均剪成4段，每段长是20/13m的（ ），每段长（ ）m。",
+   "answer": "1/4；5/13m",
+   "original_analysis": "平均分成4段，每段是全长的1/4，再求具体长度。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cb36",
+   "stem": "计算，填上符号或数字。4/5÷5○1/5；7/8÷7○7/8；16/7÷4○3/7；5/21÷15=；17/3÷34=；8/19÷16=。",
+   "answer": "<；<；>；1/63；1/6；1/38",
+   "original_analysis": "除以整数等于乘这个整数的倒数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cb44",
+   "stem": "计算4/5÷2=4/5×1/2可以用图（ ）表示。",
+   "answer": "D",
+   "original_analysis": "要先表示4/5，再表示它的一半。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cb47",
+   "stem": "将9/4m长的丝带剪成相同的3段，每段长多少米？数学小组各成员分别写出了自己的解法。（1）你认为解法正确的同学有（ ）。（2）从你认为正确的同学中选择一位，说清楚他的解题思路和计算方法。",
+   "answer": "（1）4位同学都正确；（2）例如小北：9/4÷3=9/4×1/3=3/4m。",
+   "original_analysis": "四种方法本质上都把9/4m平均分成3份，结果相同。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cb51",
+   "stem": "小马虎在计算一个数除以5时，错把除以5看成了乘5，计算结果是3/4。这道算式正确的结果应该是多少？",
+   "answer": "3/100",
+   "original_analysis": "先由误算结果求原数，再按正确运算除以5。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cc86",
+   "stem": "一个数除以分数所得的商（ ）这个数。A.大于 B.小于 C.等于 D.以上都有可能",
+   "answer": "D",
+   "original_analysis": "除数不同，商与被除数的大小关系不同。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cc88",
+   "stem": "一块布长5m，每1/2m剪一段，每剪一次需要10秒，剪完这段布需要（ ）秒。A.100 B.90 C.80 D.20",
+   "answer": "B.90秒",
+   "original_analysis": "先求段数，再用“段数减1”求剪的次数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cc8c",
+   "stem": "在（ ）里填入适当的数，使等式成立。（ ）/21÷4=3/（ ）；2/3÷（ ）=4/15；5/（ ）÷（ ）=1/16；16÷（ ）=8/9；25/12×（ ）=45/48；49÷（ ）=14/15。",
+   "answer": "3和84；5/2；5和16；18；9/20；105/2",
+   "original_analysis": "利用逆运算或把前面的式子化成简单分数，分别填入一组使等式成立的数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cc96",
+   "stem": "一辆汽车行驶36/5千米需要汽油3/4升。照这样计算，这辆汽车行驶1千米需要汽油多少升？1升汽油可以行驶多少千米？",
+   "answer": "1千米需5/48升；1升可行48/5千米。",
+   "original_analysis": "分别求“单位路程耗油量”和“单位油量行驶路程”。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cc9f",
+   "stem": "在计算分数除法时，小贤发现一种简便算法：用分母除以分母、分子除以分子，可以快速计算出正确的商，例如8/9÷2/3=（8÷2）/（9÷3）=4/3。(1)你能按照小贤的方法写出两道算式并计算吗？(2)小贤认为计算任意分数除法算式时，使用这种方法都可以使计算更简便。小贤说的对吗？举例说明。",
+   "answer": "(1)示例：1/2÷1/4=2，3/4÷2/3=9/8。(2)不对，这种方法不一定更简便，例如1/2÷3/4用通常算法更直接。",
+   "original_analysis": "方法可以写出正确结果，但“更简便”取决于具体数据，不能一概而论。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62ce01",
+   "stem": "递等式计算：14×5/7；5/14÷[6/7×(2/3+1/6)]；7/9÷2又1/5+5/11×2/9；20÷13/9-7÷13/9。",
+   "answer": "10；1/2；5/11；9。",
+   "original_analysis": "分别用约分、先算括号、化带分数和提取公因数完成。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62ce0b",
+   "stem": "解方程：x÷4/3=5/12；6-3/8x=0.75；8/15x-14/3=2/7。",
+   "answer": "x=5/9；x=14；x=65/7。",
+   "original_analysis": "分别用等式两边同乘同除、先移项再化简。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62ce18",
+   "stem": "一块梯形草坪的面积是7/24平方米，上底是3/8米，高是3/4米，这块梯形草坪的下底长多少米？",
+   "answer": "29/72米。",
+   "original_analysis": "利用梯形面积公式反求下底。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62ce25",
+   "stem": "规定a×b=(a+1/3)÷(b×1/2)，则17/18×14/9=____。",
+   "answer": "23/14。",
+   "original_analysis": "先按题中定义代换，再计算分数除法。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cee5",
+   "stem": "写一写下面每个算式表示的具体含义。工厂需要加工32个零件，由师傅单独做需要4小时，由徒弟单独做需要8小时。①1÷(1/4+1/8)表示：____。②32÷4+32÷8表示：____。",
+   "answer": "①表示合作完成32个零件需要几小时；②表示合作每小时共加工多少个零件。",
+   "original_analysis": "分别从“工作总量÷工作效率”和“各自每小时加工数量相加”理解。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cef1",
+   "stem": "一批布，只制作校服上衣刚好可制作70件，只制作校服裤子刚好可制作90条。若用这批布制作成套的校服，则最多可以制作( )套。",
+   "answer": "39套。",
+   "original_analysis": "先算1套校服所占的布料份数，再用总量1去除。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cefd",
+   "stem": "一条路长360km，若甲队单独修，则12天修完；若乙队单独修，则18天修完。若两队合作，9天能修完吗？关于这个问题，三位同学想到了不同的解法。A.小丽、小梅和小强的解法都正确 B.只有小丽和小梅的解法正确 C.只有小梅和小强的解法正确 D.只有小丽和小强的解法正确。",
+   "answer": "A。",
+   "original_analysis": "两种精确算法都得7.2天，小强的不等式判断也足以说明9天能修完。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62cf0a",
+   "stem": "某水库有甲、乙两个泄洪口，接到泄洪任务后，若同时打开两个泄洪口，则2个小时完成任务；若只打开甲泄洪口，则5个小时完成任务。那么只打开乙泄洪口，多少小时可以完成任务？",
+   "answer": "10/3小时。",
+   "original_analysis": "合作效率减去甲的效率得到乙的效率。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62d098",
+   "stem": "一段公路，甲队每天能修全长的1/15，乙队每天能修全长的1/10。现在先由甲队单独修5天，剩下的由甲、乙两队共同修，还要几天修完？",
+   "answer": "4天。",
+   "original_analysis": "先算剩余工作量，再除以合作效率。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62f491",
+   "stem": "某企业营业额增加了11%，记作+11%；则-13%表示( )。",
+   "answer": "营业额减少了13%。",
+   "original_analysis": "负百分数表示相对于原量减少。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62f492",
+   "stem": "如果河水的警戒水位记为0m，低于警戒水位0.16m记作-0.16m，那么高于警戒水位0.02m应记作( )。",
+   "answer": "'+0.02m。",
+   "original_analysis": "警戒水位以上取正。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62f493",
+   "stem": "神舟飞船在太空运行时，舱外向阳面温度极高，为( )以上；背阴面温度极低，低于( )。通过隔热和控制，太空舱内的温度能够保持在( )左右，很适合航天员工作。A.21℃ B.100℃ C.0℃ D.-100℃",
+   "answer": "100℃以上；低于-100℃；21℃左右。",
+   "original_analysis": "按生活常识与选项匹配。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62f494",
+   "stem": "2023年10月份，刘军的工资收入为8500元，奖金收入为2100元，支出共计5400元，各项支出占比如下图。请你根据这些信息用正、负数填写下表。项目：工资收入、奖金收入、交房租、伙食费、寄给父母、其他、结余。",
+   "answer": "工资+8500，奖金+2100，房租-1620，伙食费-1080，寄给父母-2160，其他-540，结余+5200（元）。",
+   "original_analysis": "先按扇形图比例求各项支出，再求结余。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62f495",
+   "stem": "“天姥连天向天横，势拔五岳掩赤城，天台四万八千丈，对此欲倒东南倾”这是大诗人李白歌颂了位于绍兴天姥山的横空之势。优优一家过年时回到了天姥山的老家，爸爸告诉优优，可以用山顶温度与山脚温度的差值来推测山的最高海拔，请你帮优优算一算天姥山的最高海拔大约是多少米？（海拔每升高100m，温度大约会下降0.6℃；山顶温度是-2.6℃，山脚温度是28.8℃。）",
+   "answer": "约5233米。",
+   "original_analysis": "用温差除以每100米的降温量，再乘100。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62f58d",
+   "stem": "规定向右为正方向，在直线上表示下列各数，并把它们按照从大到小的顺序排列起来：2.5，-1又1/2，-3，4/3，5，-5。",
+   "answer": "5＞2.5＞4/3＞-1又1/2＞-3＞-5。",
+   "original_analysis": "正数都大于负数，再比较各自大小。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62f66a",
+   "stem": "画圆时，圆规两脚间的距离是10cm，那么这个圆的直径是( )cm。",
+   "answer": "20厘米。",
+   "original_analysis": "直径=2×半径。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62f66f",
+   "stem": "把一张圆形纸片至少对折( )次就能找到圆心。",
+   "answer": "2次。",
+   "original_analysis": "利用两条折痕的交点确定圆心。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62f683",
+   "stem": "井盖平面轮廓采用圆形的一个原因是圆形井盖怎么放都不会掉进井里，而且能恰好盖住井口。这是应用了圆特征中的( )。A.圆心确定圆的位置 B.半径决定圆的大小 C.同一圆内所有直径都相等 D.圆是曲边图形",
+   "answer": "C。",
+   "original_analysis": "圆形井盖无论怎样转动，任一方向的宽度都是直径；同一圆内所有直径都相等，因此不会掉入圆形井口。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62f765",
+   "stem": "下面涂色部分中的角是圆心角的是( )。",
+   "answer": "D。",
+   "original_analysis": "根据圆心角定义判断。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62f767",
+   "stem": "扇形的大小( )。A.只与圆心角的大小有关 B.只与半径的长短有关 C.与半径的长短无关 D.与圆心角的大小、半径的长短都有关系",
+   "answer": "D。",
+   "original_analysis": "扇形由半径和圆心角共同决定。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62f769",
+   "stem": "用相同的圆画图，依据前四幅图的规律，可以知道图n的涂色部分面积是( )个圆的面积。A.n/4 B.n/2 C.n D.3/2n",
+   "answer": "B，即n/2个圆的面积。",
+   "original_analysis": "由前四图得到面积序列1/2，1，3/2，2，按等差规律推广。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62fc94",
+   "stem": "如图，从点A到点B有两条路线，哪条路线近一些？为什么？",
+   "answer": "两条路线一样长",
+   "original_analysis": "半圆弧长只与直径有关，总直径相同则总弧长相同。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62fcb9",
+   "stem": "有一只狗被拴在一个建筑物的墙角处（A点），这个建筑物的底面是边长为8 m的正方形，拴狗的绳子长18 m（打结处忽略不计）。现在将绳子拉紧，狗从P点出发，按顺时针方向跑（如图），最多可跑多少米？（画出示意图）",
+   "answer": "15π m，约47.1 m",
+   "original_analysis": "每绕过一个拐角，剩余绳长减少8 m。总路程为3段四分之一圆弧之和。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a62fef7",
+   "stem": "求下面各圆的面积。（单位：cm）(1) r=3；(2) C=12.56；(3) 正方形边长10，圆内切于正方形。",
+   "answer": "(1)28.26 cm²；(2)12.56 cm²；(3)78.5 cm²",
+   "original_analysis": "分别利用半径、周长和内切圆直径求面积。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a630a1c",
+   "stem": "如图，已知大圆的半径等于小圆的直径，大圆的面积比小圆的面积大9 dm²，那么大圆与小圆的半径比是（ ），大圆与小圆的面积比是（ ），大圆的面积是（ ）dm²。",
+   "answer": "半径比2:1；面积比4:1；大圆面积12 dm²",
+   "original_analysis": "由R=2r先得半径比和面积比，再用面积差9 dm²反推每一份面积。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a630a32",
+   "stem": "文景小区的一个圆形花坛要往外再扩宽1.8 m，一台小型压路机在花坛周围作业，这台小型压路机经过的作业面积是多少平方米？为了改善土壤性质，杨师傅在新拓宽的路基中心撒上了一圈石灰（图中的虚线），这一圈石灰长多少米？（取π=3）",
+   "answer": "作业面积74.52 m²；石灰圈长41.4 m",
+   "original_analysis": "作业区是圆环；石灰圈位于圆环中线。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a630a33",
+   "stem": "圆环的大圆半径和小圆半径同时扩大到原来的2倍，圆环的面积扩大到原来的（ ）倍。",
+   "answer": "4倍",
+   "original_analysis": "面积表达式中半径平方同时乘4，因此圆环面积乘4。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a630a37",
+   "stem": "在一个圆中，作两条互相垂直的直径，连接这两条直径的4个端点，就得到了一个圆内最大的正方形（如图）。先完成表格，再写一写你的发现。",
+   "answer": "表格可填：3.14/2，12.56/8，28.26/18，50.24/32，πa²/4与a²/2；发现：面积比恒为π:2",
+   "original_analysis": "圆面积=π(d/2)²，内接最大正方形面积=d²/2。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a630a64",
+   "stem": "如图，如果AB=BC=CD=4 cm，那么，图1的面积是（ ）cm²，图2的面积是（ ）cm²，图3的面积是（ ）cm²。",
+   "answer": "图1 12.56 cm²；图2 50.24 cm²；图3 113.04 cm²",
+   "original_analysis": "由AB=BC=CD=4得三个圆的直径分别是4、8、12。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a63117a",
+   "stem": "如图是一个半圆，半圆中的△ABC是一个直角三角形，AC:BC:AB=3:4:5，已知AC长6 cm，求空白部分的面积。",
+   "answer": "15.25 cm²",
+   "original_analysis": "利用直角三角形斜边所对半圆直径。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631186",
+   "stem": "如图，大、小两个正方形的边长分别是大、小两个圆的半径，涂色部分的面积是10 cm²。求圆环的面积。",
+   "answer": "31.4 cm²",
+   "original_analysis": "涂色正方形面积差与圆环的半径平方差相同，圆环面积是其3.14倍。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631196",
+   "stem": "如图是一个半圆，半圆中的△ABC是一个直角三角形，AC:BC:AB=3:4:5。已知AC长6 cm，求空白部分的面积。",
+   "answer": "15.25 cm²",
+   "original_analysis": "先由3:4:5求出边长，再用半圆面积减三角形面积。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6311cb",
+   "stem": "如图，四个圆的半径都是3 cm，圆心分别在四边形的四个顶点上，则涂色部分的面积是（ ）cm²。",
+   "answer": "28.26 cm²",
+   "original_analysis": "四个扇形圆心角和为360°，面积和等于一个半径3 cm的整圆面积。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631265",
+   "stem": "汝瓷位居宋代“五大名瓷”之首，有“似玉非玉而胜似玉”之说。某件汝瓷的圆形瓶口一周约为12.56 cm，这件汝瓷瓶口的半径是（ ）cm，瓶口面积是（ ）cm²。",
+   "answer": "半径2 cm；面积12.56 cm²",
+   "original_analysis": "由周长先求半径，再求面积。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631283",
+   "stem": "如图，从点A到点B沿外侧大圆的周长走比较近，还是沿内侧小圆的周长走比较近？A.沿外侧大圆周长 B.沿内侧小圆周长 C.一样近 D.无法确定",
+   "answer": "C.一样近",
+   "original_analysis": "两种路径都是若干半圆弧，半圆弧总长度只由直径总和决定，而两边直径总和相同。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631525",
+   "stem": "说说下列百分数的意义。(1)一份文件已经下载了68%，表示什么占什么的68%；妈妈在“双12”期间买了一大堆商品，生活用品占25%，表示什么占什么的25%。(2)加量不加价，薯片新包装加量20%，表示什么是原来的20%。(3)图中把什么看作100%，什么比什么多生产40%，实际生产量是计划生产量的百分之几。",
+   "answer": "(1)已下载部分占文件总量68%，生活用品占总商品25%；(2)增加量是原来的20%；(3)把计划产量看作100%，实际是140%。",
+   "original_analysis": "百分数要先找准“谁和谁比”，第(3)问由100%加40%得到140%。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631569",
+   "stem": "选择合适的百分数。A.44% B.45% C.75% D.120%。(1)大客车的速度是小轿车速度的（ ）。(2)一天中，小学生睡眠时间约占（ ）。(3)春运期间，火车票涨价，票价可能是平时的（ ）。(4)在一场比赛中，强强投篮20次，投中9次，命中率是（ ）。",
+   "answer": "(1)75%（C）；(2)45%（B）；(3)120%（D）；(4)45%（B）",
+   "original_analysis": "结合生活常识和9÷20=45%判断。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631798",
+   "stem": "一条蚕丝被连袋子共重5.2千克，袋子重0.2千克。被子里填充的“100%双宫桑蚕丝”占整条被子质量的90%。这条被子中的“100%双宫桑蚕丝”共有多少千克？",
+   "answer": "4.5千克",
+   "original_analysis": "先去掉袋子质量，再求90%。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6317bb",
+   "stem": "24K表示足金，12K表示含金量50%。一件质量40克的首饰中，金的含量约有30克，这件首饰的含金量用什么表示比较合理？A.12K B.18K C.20K D.24K",
+   "answer": "B.18K",
+   "original_analysis": "先求含金率75%，再按24K对应100%换算。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6317cc",
+   "stem": "小明和小红参加科学知识竞赛。第一轮结束时小明比小红多得30分，第二轮中小明的得分只有小红的40%。两轮下来两人累计总分恰好相等。第二轮两人各得多少分？",
+   "answer": "小明20分，小红50分",
+   "original_analysis": "第二轮分差正好补回第一轮的30分差。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6317d6",
+   "stem": "花生的出油率在28%~35%。700千克花生最多榨油多少千克？要保证出油700千克，至少需要多少千克花生？",
+   "answer": "最多245千克；至少2500千克",
+   "original_analysis": "最多用最高出油率，保证足量用最低出油率。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6317f3",
+   "stem": "填空：书包原价110元，七折；水杯现价51元，八五折，求原价；台灯原价80元，现价48元，求几折。然后判断优优带200元能否同时买到这三件物品，若可以还能找回多少钱。",
+   "answer": "书包77元；水杯原价60元；台灯六折；可以买到，找回24元",
+   "original_analysis": "先求三件商品的现价或折扣，再合计总价。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631840",
+   "stem": "店铺促销：在原价基础上先打八折，再返还给顾客售价5%的现金红包。活动期间买这套锅具相当于打（ ）折。A.四折 B.七五折 C.七六折 D.九五折",
+   "answer": "C.七六折",
+   "original_analysis": "八折后再返现售价的5%，实际支付占原价76%。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631843",
+   "stem": "书店暑假期间所有的书打八折销售，持有会员卡可以再打七五折。用会员卡买这本书比不用会员卡节省了8.5元。这本书原价是多少元？",
+   "answer": "42.5元",
+   "original_analysis": "普通价与会员价相差原价的20%。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a63185b",
+   "stem": "李明要买6瓶饮料，每瓶原价3元。根据各商店优惠方式算出应付总价：甲商店每瓶降价15%；乙商店买五送一；丙商店九折优惠；丁商店每满10元返2元。",
+   "answer": "甲15.3元；乙15元；丙16.2元；丁16元",
+   "original_analysis": "分别按四种优惠规则计算。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631891",
+   "stem": "优优和两位朋友去吃烤鱼，人均消费130元。若使用100元代金券，每张售价70元，单次限用3张，不足部分现金补齐；若不使用代金券，则可享七五折优惠。两种方式各应付多少元？相差多少元？",
+   "answer": "代金券300元（人均100元）；七五折292.5元（人均97.5元）；总差7.5元，人均差2.5元",
+   "original_analysis": "先求总消费390元，再分别按代金券和七五折计算。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631898",
+   "stem": "商场全部商品先打八折，数码店又推出三种结算方式：现金支付八五折；微信支付每实付500元返100元；支付宝支付随机减免50~200元。爸爸买原价1000元的数码相机，使用支付宝随机减免104元。这次购物选用的结算方式最划算吗？",
+   "answer": "不是，现金支付更划算",
+   "original_analysis": "统一先算八折后的800元，再比较三种结算方式。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6318a4",
+   "stem": "两家旅行社针对原价1200元/人的路线做优惠。四月天旅行社七折优惠；去远方旅行社每满1000元减300元。(1)一家三口去旅游选哪家更省钱，费用多少？(2)当人数为多少时两家旅行社所需花费相同？",
+   "answer": "(1)选四月天，2520元；(2)人数是5的倍数时费用相同",
+   "original_analysis": "先比较3人总价；再分析“每满1000减300”与七折等价出现的条件。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631a53",
+   "stem": "利率表示单位时间内（ ）的比率。A.利息与存期 B.本金与利息 C.利息与本金 D.本息和与本金",
+   "answer": "C.利息与本金",
+   "original_analysis": "按利率定义直接判断。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631a57",
+   "stem": "林老师的定期储蓄存单：本金50000元，存期三年，年利率2.75%。到期时一共可以取回多少钱？",
+   "answer": "54125元",
+   "original_analysis": "本息和=本金+本金×年利率×年数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631a5f",
+   "stem": "某公司向银行申请两种贷款共40万元，每年支付利息2.16万元。甲种贷款年利率5%，乙种贷款年利率6%。甲、乙两种贷款的金额各是多少万元？",
+   "answer": "甲24万元，乙16万元",
+   "original_analysis": "根据总金额和总年利息列方程。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631a6b",
+   "stem": "商场周年庆，所有商品一律打八五折。周铭叔叔分12个月付款买原价6000元的电冰箱，手续费为电冰箱现价的5%。平均每个月需还款多少元？",
+   "answer": "446.25元",
+   "original_analysis": "先求现价，再加手续费，最后平均分12个月。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631a73",
+   "stem": "古题：某人借款750钱，9日后归还，以“每借千钱付息30钱”的月利息计算利息（一个月按30天）。(1)月利率是多少？借款时间是几个月？(2)应付多少利息？",
+   "answer": "月利率3%，借款0.3个月，利息6.75钱",
+   "original_analysis": "先把“月息三十”转化为月利率3%，再按利息=本金×利率×时间计算。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631d0b",
+   "stem": "甲数与乙数的比是5:8，甲数比乙数少( )%，乙数比甲数多( )%。",
+   "answer": "甲数比乙数少37.5%，乙数比甲数多60%。",
+   "original_analysis": "差是3份，分别除以乙的8份和甲的5份。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631d36",
+   "stem": "一项工作，原计划20天完成，实际16天完成。工作时间缩短了( )，工作效率提高了( )。选项：A.20% B.25% C.12.5% D.40%。",
+   "answer": "工作时间缩短了20%（A），工作效率提高了25%（B）。",
+   "original_analysis": "时间缩短用差除原时间；效率按单位工作量的完成速度比较。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631d3e",
+   "stem": "录入同样一份稿件，优优的工作效率比奇奇高百分之几？（百分号前保留一位小数）图中：奇奇“我用了50分钟”，优优“我用时是奇奇的60%”。",
+   "answer": "66.7%",
+   "original_analysis": "先由“60%”求出优优用30分钟，再比较两人的单位时间完成量。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631d51",
+   "stem": "一部流传很广的唐诗选收录了311首唐诗。在这本唐诗选中，七言律诗有50首，七言绝句比七言律诗少44%，七言绝句又比乐府诗少9/23。乐府诗有多少首？（画线段图并解答）",
+   "answer": "46首",
+   "original_analysis": "先由50首求出七言绝句28首，再根据“少9/23”反推乐府诗。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631d6d",
+   "stem": "旅游旺季到了，某快餐店第二周每份套餐比第一周涨价5%，第三周每份套餐比第二周涨价5%，第三周比第一周每份套餐涨价( )%。",
+   "answer": "10.25%",
+   "original_analysis": "连续两次涨5%，应乘1.05再乘1.05。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631d7f",
+   "stem": "某品牌空气净化器降价6%促销，元旦期间在此基础上再降价5%。元旦期间购买该品牌空气净化器，相当于降价百分之几？",
+   "answer": "10.7%",
+   "original_analysis": "连续降价要连乘剩余百分率0.94和0.95。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631d94",
+   "stem": "有一种电视机，三个超市先后两次降价。甲超市：第一次降价7%，第二次降价9%；乙超市：每次都降价8%；丙超市：第一次降价13%，第二次降价3%。现在这种电视机哪家超市的售价最便宜？（可以假设原来每台售价为a元）",
+   "answer": "丙超市最便宜。",
+   "original_analysis": "把原价设为a，分别乘两次剩余百分率后比较。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631db5",
+   "stem": "小学生每天的睡眠时间应不少于10小时，如图是实验小学四(1)班同学“双减”后的睡眠时间统计图。(1)“双减”后睡眠时间达到10小时及以上的有( )人，占全班总人数的( )%。（百分号前保留一位小数）(2)佳佳对每天睡眠时间少于10小时的学生又进行了深入调查，发现洗漱拖拉、做作业慢、做事情没有规划、缺少自我管理是主要问题。对此你有什么好的建议？",
+   "answer": "(1)19人，42.2%；(2)示例：制订作息计划，改掉拖拉习惯，提高作业效率，增强自我管理，保证按时睡觉。",
+   "original_analysis": "先读图得4组人数，再求总人数和达标比例；建议题结合题干原因作答。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631dc9",
+   "stem": "某市2025年春季六年级1分钟跳绳达标检测结果显示：光明小学的达标率是95%，文化路小学的达标率是90%。由此，淘气认为：文化路小学1分钟跳绳达标的人数一定比光明小学少。淘气的想法对吗？为什么？",
+   "answer": "不对，因为只知道达标率，不知道两校总人数，不能直接比较达标人数。",
+   "original_analysis": "比较人数不仅要看百分率，还要看对应的总人数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631dcf",
+   "stem": "毛毛今年12岁，身高140cm，体重50kg。参照以下标准，他属于( )。图中体重分类标准：标准体重(kg)=(身高cm-80)×70%；超重：超过标准体重10%~20%；轻度肥胖：超过标准体重20%~30%；中度肥胖：超过标准体重30%~50%；重度肥胖：超过标准体重50%以上。",
+   "answer": "超重",
+   "original_analysis": "先算标准体重42kg，再比较实际体重比标准多19.0%。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631dd9",
+   "stem": "在体质健康测试中，小明的跳绳成绩是每分钟120下，比规定达标成绩多1/5，小华的成绩比规定达标成绩少10%。小华每分钟跳多少下？",
+   "answer": "90下",
+   "original_analysis": "先由小明的成绩反推达标线100下，再求少10%的结果。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631e4b",
+   "stem": "两袋大米，从甲袋取出1/5，从乙袋取出60%，这时甲袋与乙袋剩下的大米质量比是1:1。已知甲袋原有大米50kg，乙袋原有大米( )kg。",
+   "answer": "100kg",
+   "original_analysis": "先求甲袋剩40kg，再由“剩下的比是1:1”得到乙袋也剩40kg，反推原有100kg。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631e51",
+   "stem": "把a%(a≠0)的“%”去掉，这个数就比原来增加了49.5，这个数原来是( )%。",
+   "answer": "50%",
+   "original_analysis": "把a%转化为a/100，列出去掉百分号前后的差。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631e57",
+   "stem": "右图显示中国自主研发的“复兴号”动车与原来“和谐号”动车的运行速度相比，速度加快了( )%。（保留一位小数）图中“和谐号”为260km/h，“复兴号”为350km/h。",
+   "answer": "34.6%",
+   "original_analysis": "先求速度差90，再除以原来速度260。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631e69",
+   "stem": "食品质量部门分两次抽检某品牌同一批次的大米，第一次抽检100袋，合格率为95%；第二次抽检25袋，全部合格。两次抽检的总合格率是( )。",
+   "answer": "96%",
+   "original_analysis": "先分别算合格袋数，再用总合格数除以总抽检数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631e6f",
+   "stem": "一盒钢笔10支共120元，铅笔的单价是钢笔单价的20%，小强买了2盒钢笔和15支铅笔，付给售货员300元。铅笔的单价是多少？解答这个问题需要用到的信息是( )。选项：A.120元，20%；B.10支，120元，20%；C.120元，20%，2盒；D.10支，120元，2盒，300元。",
+   "answer": "B，铅笔单价2.4元。",
+   "original_analysis": "求铅笔单价只需先算钢笔单价，再乘20%。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631e72",
+   "stem": "甲商品与乙商品原价相同，甲商品先涨价10%，再降价10%出售；乙商品先降价10%，再涨价10%出售。甲商品与乙商品的现价相比，( )。选项：A.甲商品价格高一些；B.乙商品价格高一些；C.两种商品价格相等；D.无法确定。",
+   "answer": "C，两种商品价格相等。",
+   "original_analysis": "两种商品都乘了同样的两个因数1.1和0.9，结果相同。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631e7b",
+   "stem": "周末，小明一家去吃火锅刚好7人桌，总消费在200元以上，结账时有两种付款方式：①团购代金券70元一张，可抵100元消费，每桌限用两张，多余部分不找零，不足部分用现金补齐；②享受消费七五折优惠。两种优惠方式不能同时使用。(1)使用团购代金券，小明家最多可节省( )元。(2)如果采用打折的方式，要想与用代金券节省同样多的钱，小明家需要消费( )元。(3)小明家如果消费220元，使用方式( )付款更划算。（填写序号）",
+   "answer": "(1)60元；(2)240元；(3)①。",
+   "original_analysis": "代金券每张固定省30元，最多两张；折扣方式按25%省钱比较。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631e95",
+   "stem": "一件商品按成本价提高30%后出售。后因季节原因，又以80%出售，售价为104元。现在这种商品卖出一件是赔还是赚？赔或赚多少元？",
+   "answer": "赚4元",
+   "original_analysis": "由“提价30%后再八折”得实际售价是成本价的1.04倍。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631f21",
+   "stem": "夏菲用小棒摆了一些正五边形和正六边形，已知夏菲共用了38根小棒，正好摆了7个图形。她摆的正五边形和正六边形各有多少个？",
+   "answer": "正五边形4个，正六边形3个。",
+   "original_analysis": "列方程组x+y=7，5x+6y=38求解。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631f3d",
+   "stem": "双休日，明明和爸爸开车去动物园，在去的路上，明明画出了汽车的速度随时间的变化情况。如图所示：(1)汽车行驶了多长时间？它的最大速度是多少？(2)出发后8分钟到10分钟这段时间可能出现什么情况？",
+   "answer": "(1)行驶了16分钟，最大速度30千米/时；(2)可能是等红灯、堵车或停车让行。",
+   "original_analysis": "从速度时间图上读出两段有速度的时间和最高平台值。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631f46",
+   "stem": "毕达哥拉斯学派研究了许多有趣的形数。(1)三角形数：图中1，2，3，4对应的点阵数量依次增多，填写“数”和“式”，并求第n个三角形数。(2)选做：五边形数，图中1，2，3，4对应的点阵数量依次增多，填写“数”和“式”，并求第n个五边形数。",
+   "answer": "(1)三角形数：1，3，6，10，…，第n个是n(n+1)/2；(2)五边形数：1，5，12，22，…，第n个是n(3n-1)/2。",
+   "original_analysis": "三角形数按连续自然数累加；五边形数按公差为3的等差数列累加。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a631f4e",
+   "stem": "搭建简易帐篷需要固定支架，如图①的单顶帐篷需要17根钢管，如果将相同的帐篷按图②、图③的方式串起来搭建，则可节省结合处的钢管。(1)将图②和图③的算式补充完整。(2)搭8顶这样的帐篷要多少根钢管？",
+   "answer": "(1)图②：17×2-6；图③：17×3-6×2；(2)94根。",
+   "original_analysis": "n顶帐篷共有n-1个结合处，每处节省6根钢管。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6320a2",
+   "stem": "将4种不同颜色的卡片各5张放入1个盒子里，从中至少抽出( )张，才能保证一定有2张同种颜色的卡片。",
+   "answer": "5张",
+   "original_analysis": "最坏情况下先各抽1张不同颜色，第5张必重复。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6320c2",
+   "stem": "从1~10这10个自然数中，至少要取出( )个不同的数，才能保证其中一定有一个数是偶数。",
+   "answer": "6个",
+   "original_analysis": "先把5个奇数都取完，第6个必是偶数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6320ca",
+   "stem": "小明玩掷骰子游戏，要保证掷出的骰子点数一定有三次相同，他至少要掷几次？",
+   "answer": "13次",
+   "original_analysis": "6种点数每种最多先出现2次，第13次必形成“三次相同”。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6320dd",
+   "stem": "有52名同学每人各答21道题，规定答对1道题得3分，不答得0分，答错扣1分。至少有多少名同学的成绩相同？",
+   "answer": "1名。",
+   "original_analysis": "可取分数共有85种，52人不足以保证出现同分。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6320e7",
+   "stem": "任意给出3个连续的非零自然数，其中一定有一个数是3的倍数。为什么？",
+   "answer": "因为连续3个自然数除以3的余数会包含0、1、2，所以一定有一个是3的倍数。",
+   "original_analysis": "利用模3余数分类说明。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6320fc",
+   "stem": "在下面每一个小方格中写上x、y、z三个字母中的一个，每一列的两个小方格中写的字母不同。(1)按要求填表格。(2)其中至少有2列的写法相同，为什么？用算式解释。",
+   "answer": "(1)示例填法：(x,y)、(x,z)、(y,x)、(y,z)、(z,x)、(z,y)、(x,y)；(2)因为共有3×2=6种不同写法，而图中有7列，所以至少有2列相同。",
+   "original_analysis": "把每一列看成有顺序的字母对，共6种可能，列数比可能种类多1。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a63211d",
+   "stem": "把5条鱼放进3个鱼缸里，不管怎么放，总有1个鱼缸里至少有2条鱼。为什么？图中给出用方框代表鱼缸的提示。(1)请你把优优的过程补充完整。(2)小贤是这样想的：先在每个鱼缸里放进1条鱼，剩下的( )条鱼可以放进任意的1个或2个鱼缸里，所以总有1个鱼缸里至少放进了( )条鱼。",
+   "answer": "(1)5，0，0；4，1，0；3，2，0；3，1，1；2，2，1；(2)2条，2条。",
+   "original_analysis": "可用枚举法，也可用“先每缸1条，还剩2条”说明至少有一缸达到2条。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a63212b",
+   "stem": "某地8月的天气有晴、阴、小雨、多云四种情况，至少有( )天是同一种天气。选项：A.7 B.8 C.9 D.10。",
+   "answer": "B，8天。",
+   "original_analysis": "31天放入4类天气，用31÷4向上取整。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a63212f",
+   "stem": "把9株绿植放在5个房间里，那么总有1个房间里至少有多少株绿植？如果把这9株绿植放在4个房间里，那么总有1个房间里至少有多少株绿植？",
+   "answer": "放在5个房间里至少2株；放在4个房间里至少3株。",
+   "original_analysis": "分别对9÷5和9÷4向上取整。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a63213a",
+   "stem": "优优将48枝花，每3枝扎成一束，插进下面的花瓶内，总有1个花瓶内至少插进多少束花？图中有3个花瓶。",
+   "answer": "6束花",
+   "original_analysis": "先把48枝花化成16束，再按3个花瓶应用鸽巢原理。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a632140",
+   "stem": "希望小学有36人乘车外出春游，最多乘几辆车能保证至少有一辆车上的人数不少于8人？",
+   "answer": "5辆",
+   "original_analysis": "反证：若每辆最多7人，5辆最多35人，装不下36人。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695431",
+   "stem": "一个圆的直径是4 cm，它的周长是（ ）cm。",
+   "answer": "12.56 cm",
+   "original_analysis": "用圆周长公式 C=πd。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695433",
+   "stem": "一辆行驶中的小轿车的前轮压坏了一个苹果，在路上留下了几个印记（如图）。苹果与第一个印记之间的距离大约是2 m，则车轮的周长是（ ）。",
+   "answer": "2 m",
+   "original_analysis": "由相邻同类着地点之间的距离近似等于车轮滚动一周的路程。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695436",
+   "stem": "如果大圆直径是小圆半径的6倍，那么大圆周长是小圆周长的（ ）倍。",
+   "answer": "3倍",
+   "original_analysis": "统一写成半径后比较周长。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695449",
+   "stem": "如图是一个圆形池塘，老鼠在圆心O处，猫在岸上点A处。现在老鼠沿着半径向点B逃跑，同时，猫从点A沿着箭头方向追。已知猫的速度是5米/秒，老鼠的速度是1.5米/秒，则谁会先到达点B？（ ）A.老鼠 B.猫 C.一起到达 D.无法判断",
+   "answer": "B.猫",
+   "original_analysis": "比较时间：猫走半圆弧，老鼠走半径。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69544d",
+   "stem": "一款农用手推车的轮子直径为35 cm，要滚过一段54.95 m长的路，车轮要滚动（ ）周。",
+   "answer": "50周",
+   "original_analysis": "总路程÷轮周长。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69544f",
+   "stem": "一个等边三角形的周长与一个半径为6 cm的圆的周长相等，这个等边三角形的边长是（ ）cm。",
+   "answer": "12.56 cm",
+   "original_analysis": "先求圆周长，再平均分成3边。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69546a",
+   "stem": "李叔叔打算建一个半圆形的鱼池（设计图纸如下），实地测量后发现还比鱼池的直径增加4 m。现在这个鱼池的周长是多少米？",
+   "answer": "30.84 m",
+   "original_analysis": "半圆周长=一半圆周+直径。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69546e",
+   "stem": "李叔叔和张叔叔分别用尼龙绳将4个完全相同的饮料罐捆在一起，这些饮料罐的圆形底面直径是8 cm，谁的捆扎方法更节省尼龙绳？（打结部分长度相同）",
+   "answer": "张叔叔更节省尼龙绳",
+   "original_analysis": "比较包住4个圆的外轮廓周长。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695570",
+   "stem": "填空：15:（ ）=3/8=36÷（ ）=（ ）%=（ ）（填小数）。",
+   "answer": "40，96，37.5%，0.375",
+   "original_analysis": "都先化成3/8，再互相转化。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695593",
+   "stem": "把下面各数改写成百分数：1，0.015，3/4，2又1/8。",
+   "answer": "100%，1.5%，75%，212.5%",
+   "original_analysis": "把各数化成小数后乘100%。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6955a9",
+   "stem": "联系生活实际与所学知识，下面说法正确的是（ ）。A.我家上一周用水2%t B.一件衣服降价了120% C.生产102个产品，全部合格，合格率是102% D.2020年2月份，某药店口罩销量增长了353%",
+   "answer": "D",
+   "original_analysis": "逐项判断：A单位错，B和C不合常理，D可能成立。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6955b3",
+   "stem": "某位篮球运动员最近5场比赛的投篮命中率分别是62.5%、63.2%、58.9%、61.3%、61.9%。关于这位运动员下一场比赛的投篮命中率，下面说法中错误的是（ ）。A.可能在60%左右 B.可能达到70% C.可能低于58.9% D.一定大于50%",
+   "answer": "D",
+   "original_analysis": "预测下一场只能说“可能”，不能说“一定”。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6955b8",
+   "stem": "六(2)班某次数学直播课已观看人数36人，未观看人数4人，求这节直播课的出勤率。",
+   "answer": "90%",
+   "original_analysis": "出勤率=已观看人数÷总人数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6955bb",
+   "stem": "一个数添上百分号，这个数就减小了29.7。这个数是多少？",
+   "answer": "30",
+   "original_analysis": "设原数为x，利用添上百分号后变为原来的1/100列方程。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695661",
+   "stem": "填空：六成=（ ）/10=（ ）%；四成五=（ ）%；25%=（ ）成（ ）",
+   "answer": "6，60，45，二，五（即六成=6/10=60%，四成五=45%，25%=二成五）。",
+   "original_analysis": "1成=10%；按题目各空依次填写分子6、60、45、二、五。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695663",
+   "stem": "新闻中说“到2025年全国普惠性幼儿园将覆盖八成五的适龄幼儿”。“八成五”的含义是什么？",
+   "answer": "覆盖适龄幼儿的85%",
+   "original_analysis": "把“八成五”换成85%。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695670",
+   "stem": "某景区2022年总收入比2021年降低了二成，2023年总收入比2022年增长了二成。该景区2023年总收入与2021年相比怎样？A.增长了 B.降低了 C.不变 D.无法确定",
+   "answer": "B.降低了",
+   "original_analysis": "先降20%再增20%，结果是原来的96%。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695672",
+   "stem": "某种饮料在不同月份的销售情况如下表。8月份销售1000万瓶，9月份比上月增长二成五。9月份销售多少万瓶？",
+   "answer": "1250万瓶",
+   "original_analysis": "8月1000万瓶，增长25%得到1250万瓶。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69568b",
+   "stem": "某企业近五年资产规模统计图显示：2019年2.5亿元，2020年2.7亿元，2021年2.6亿元，2022年3亿元，2023年3.5亿元。(1)2023年的资产规模比2019年增长了几成？(2)该企业2020年的资产规模比2018年减少了一成，2018年的资产规模是多少亿元？",
+   "answer": "(1)增长四成；(2)3亿元",
+   "original_analysis": "第(1)问按增长率求成数；第(2)问把2020年看作2018年的90%反推。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69569b",
+   "stem": "某品牌学习机按进价提高五成定价，后又打八折促销，促销后每台仍可获利500元。求每台学习机的进价。",
+   "answer": "2500元",
+   "original_analysis": "设进价为x，按“提价五成再打八折仍赚500元”列方程。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695759",
+   "stem": "表中给出三位纳税者的信息：科技公司按15%缴企业所得税，应纳税部分4亿元；方叔叔按3%缴购房契税，应纳税部分800万元；胡老师按3%缴个人所得税，应纳税部分7000元。分别求税款。",
+   "answer": "科技公司0.6亿元（6000万元）；方叔叔24万元；胡老师210元",
+   "original_analysis": "税款=应纳税部分×税率。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69575d",
+   "stem": "刘叔叔得到15万元稿费，需按全部稿费的11.2%缴纳个人所得税。刘叔叔需要缴税多少万元？实际获得多少万元稿费？",
+   "answer": "缴税1.68万元，实得13.32万元",
+   "original_analysis": "先求15万元的11.2%，再用总稿费减税款。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695766",
+   "stem": "一套化妆品需缴纳消费税60元，消费税占售价的15%，且消费税包含在售价中。求这套化妆品的售价。",
+   "answer": "400元",
+   "original_analysis": "售价中包含消费税，直接用税额÷税率。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695769",
+   "stem": "某饭店10月份缴纳的增值税是0.9万元，11月份比10月份多缴纳10%。如果按应纳税部分的3%缴纳增值税，那么这家饭店11月份营业额中应纳税部分是多少万元？",
+   "answer": "33万元",
+   "original_analysis": "先求11月税额0.99万元，再除以3%。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695780",
+   "stem": "根据规定，个人年综合所得超过60000元的部分为应纳税所得额，下面是部分征税标准。2023年李叔叔共缴纳个人所得税1480元，他的年综合所得为多少元？表中：不超过36000元的部分税率3%，超过36000元至144000元的部分税率10%，超过144000元至300000元的部分税率20%。",
+   "answer": "100000元",
+   "original_analysis": "先用3%档算出1080元，再用剩余400元反推第二档应纳税所得额4000元，总应纳税所得额40000元，加上起征额60000元得100000元。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69586f",
+   "stem": "以灯塔为观测点，C岛和D岛分别在什么方位上？填“北偏东( )°”“南偏西( )°”等。",
+   "answer": "C岛：北偏东15°，也可说东偏北75°；D岛：南偏西50°，也可说西偏南40°。",
+   "original_analysis": "利用互余角在“北偏东”和“东偏北”之间转换。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695913",
+   "stem": "如右图所示，每个小正方形边长1m、对角线长约1.4m。完成方位与平行四边形问题。",
+   "answer": "A在B的西南方向约2.8m处；D可位于C的东北方向约2.8m处，也可位于C的西南方向约2.8m处；若C=(3,2)，则D可表示为(5,4)或(1,0)。",
+   "original_analysis": "由B到A的位移是西2格、南2格，把这个位移平移到C即可得到两个满足条件的D点。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695a01",
+   "stem": "如右图，将这些圆片的3/4涂上蓝色，那么需要涂（ ）个圆片。",
+   "answer": "9个",
+   "original_analysis": "总数12个，取其3/4。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695a17",
+   "stem": "杯子中原来盛有800mL水，小华将杯中的水倒出一些，如下图。求从杯中倒出了多少毫升水，正确的列式是（ ）。",
+   "answer": "B. 800×3/8",
+   "original_analysis": "量杯图表示倒出的水占原来总量的3/8。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695a81",
+   "stem": "一根绳子长5/6米，它的1/4是多少米？下面列式错误的是（ ）。",
+   "answer": "B",
+   "original_analysis": "“求一个数的几分之几”不能用减法。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695adb",
+   "stem": "爸爸和小红两人分吃一个西瓜，爸爸吃了这个西瓜的2/3，小红吃了2/3千克。谁吃得多？下列说法正确的是（ ）。",
+   "answer": "D. 无法比较",
+   "original_analysis": "单位不统一且缺少西瓜总质量。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695b4f",
+   "stem": "图中斜线部分占整张纸的几分之几？列式：（ ）×（ ）=（ ）。",
+   "answer": "3/4×1/3=1/4",
+   "original_analysis": "先取整体的3/4，再取其中的1/3。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695ba9",
+   "stem": "板报长4m、高1.25m，分成4个版块且版面大小相同；“作业展览”版块的一半用来贴主题，剩下两个学科平均分配。展览数学优秀作业的版面是多少平方米？",
+   "answer": "展览数学优秀作业的版面是0.3125平方米。",
+   "original_analysis": "先求每个等大版块面积，再取作业展览版块的一半，最后在剩余部分中平均分给语文和数学。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695c06",
+   "stem": "直接写出得数：6×1/7，4/5×3/4，11/26×13/22，3/4×1/2，1/10×10，6/7×14/15，3/8×4/11，19/43×0。",
+   "answer": "6/7，3/5，1/4，3/8，1，4/5，3/22，0。",
+   "original_analysis": "分数乘法常规约分与零乘法。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695c85",
+   "stem": "阳阳要步行1.4km去外婆家，走了5分钟后发现忘带小篮点心，这时正好走了全程的5/14，他决定回去取。请在图中标出此时位置，并问照这样计算，阳阳去外婆家实际走了多少千米？",
+   "answer": "5分钟时在离家0.5km处；实际共走2.4km。",
+   "original_analysis": "全程1.4km的5/14是0.5km，再加往返补走。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695cee",
+   "stem": "下面的□里可以填的最大整数是多少？(1)11/12×3/8<11/□；(2)□/9×6/7<7/9；(3)3/4×□/7<1。",
+   "answer": "(1)31；(2)8；(3)9",
+   "original_analysis": "分别化简不等式，再求满足条件的最大整数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a695f1e",
+   "stem": "看图列式计算。（1）线段图中总页数是320页，标出的上方括号对应总页数的3/5，求对应页数。（2）线段图中3份对应60kg，求2份是多少。（3）图中整体是4t，阴影部分是一个底4格、高1格的三角形，求空白部分有几吨。",
+   "answer": "（1）192页；（2）40kg；（3）12/5吨",
+   "original_analysis": "前两问按份数关系求值，第（3）问按阴影与整体的面积比求空白部分占整体的3/5。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a696046",
+   "stem": "某品牌的一款女包原价是1200元。注册普通会员可按原价的49/50购买；再花100元办理“金卡”成为超级会员，可按普通会员价格的6/7购买。办理“金卡”并购买这款女包，一共需要多少元？",
+   "answer": "1108元",
+   "original_analysis": "先算普通会员价，再按6/7求超级会员价，最后加100元办卡费。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a696352",
+   "stem": "将条件和相对应的算式连起来。六（1）班同学捐了图书120本，六（2）班捐的比六（1）班多1/4；六（2）班捐的比六（1）班少1/4；六（2）班捐的是六（1）班的1/4。求六（2）班分别捐多少本。",
+   "answer": "多1/4→150本；少1/4→90本；是1/4→30本。",
+   "original_analysis": "“多/少几分之几”用1±几分之几，“是几分之几”直接乘。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a696381",
+   "stem": "比9t多1/6是（ ）t；比8m少3/4是（ ）m；比4kg多1/2 kg是（ ）kg。",
+   "answer": "10.5t；2m；4.5kg",
+   "original_analysis": "前两空按“多(少)这个数的几分之几”计算，第三空按“多1/2kg”直接相加。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a6963b1",
+   "stem": "2025年4月份，某地晴天天数占这个月的1/3，雨天天数比晴天少3/5，阴天天数比雨天多1/2，其余是多云天气。这个月共有几天多云天气？",
+   "answer": "10天",
+   "original_analysis": "依次求晴天、雨天、阴天，再用总天数减去已知天气天数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a699b24",
+   "stem": "看图列式计算。（1）儿子跑了3.2km，爸爸比儿子多3/4，爸爸跑了多少千米？（2）动车速度280千米/时，火车比动车慢3/5，火车速度是多少千米/时？",
+   "answer": "（1）5.6km；（2）112千米/时",
+   "original_analysis": "根据线段图可知都是在原量基础上增加或减少几分之几。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a699b3a",
+   "stem": "奥运会纪念币……小明说“我有60枚奥运会纪念币”。小丽说“把你的1/6给我之后，我的奥运会纪念币数量就是你的4/5。”小丽原来有多少枚奥运会纪念币？",
+   "answer": "30枚",
+   "original_analysis": "先求转移后的两人数，再倒推小丽原有枚数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a699b91",
+   "stem": "看图写对应关系。（1）故事书与科技书：科技书比故事书多3倍。（2）运来苹果的质量比梨多1/5。根据图填“__是一份”“相差本数（ ）份”“科技书（ ）份”等。",
+   "answer": "（1）故事书一份，相差3份，科技书4份；（2）梨的质量是“1”，苹果的质量是6/5。",
+   "original_analysis": "“多几倍”要在原来的1份基础上再加对应倍数；“多1/5”表示在“1”的基础上再加1/5。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a699baf",
+   "stem": "我国近年来……藏羚羊野外种群数量达到30万只，原来的野外种群数量大约只有现在的1/4。亚洲象野外种群数量原来只有180头，现在增加了大约2/3。（1）原来藏羚羊野外种群数量大约有多少万只？（2）现在亚洲象野外种群数量大约有多少头？",
+   "answer": "（1）7.5万只；（2）300头",
+   "original_analysis": "第（1）问求现有量的1/4，第（2）问求原有量增加2/3后的结果。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a699c05",
+   "stem": "一本杂志各栏目所占页面的比例如图所示，这本杂志共有206页，其中新闻版约占（ ）页。A.10 B.25 C.75 D.100",
+   "answer": "C.75页",
+   "original_analysis": "先由扇形图估出新闻约占3/8，再与选项比较，最接近的是75页。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a699c32",
+   "stem": "下面算式中，和0.375×1又4/5计算结果相同的是（ ）。A.3/8×9/5 B.3/8+3/8×9/5 C.3/8×1×4/5 D.0.375×1×0.8",
+   "answer": "A",
+   "original_analysis": "把小数和带分数都化成分数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a699c53",
+   "stem": "教科书的重复使用可以有效地节约资源，1本教科书每年重复使用一次，可以节约1/5kg纸张。实验小学共有学生3600人，如果有7/12的学生每人每年重复使用1本教科书，那么一年可以节约纸张多少千克？",
+   "answer": "420千克",
+   "original_analysis": "先求参与重复使用的人数，再乘每人节约量。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a699c84",
+   "stem": "玻璃瓶的容量为350mL。第一个瓶子装了1/2的水，之后的每一个瓶子内的水都比上一个瓶子多1/10。那么第二个瓶子应该装多少毫升的水？",
+   "answer": "210mL",
+   "original_analysis": "先求半瓶水175mL，再按图示每次增加整瓶容量的1/10，即增加35mL。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a699cc3",
+   "stem": "判断。（1）因为8×5/8=1，所以5/8是倒数。（ ）（2）虽然4×0.8=1，但是0.8是小数，所以它不可能是4的倒数。（ ）",
+   "answer": "（1）错；（2）错",
+   "original_analysis": "倒数必须满足两个数相乘等于1，是否为小数不影响能否作倒数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a699e5b",
+   "stem": "我是小法官。（对的画“√”，错的画“×”并改正）(1)(7/10×6)÷(7/10×6)=1。(2)11/12-11/12×1/4=0。",
+   "answer": "(1)×，正确结果是36；(2)×，正确结果是11/16。",
+   "original_analysis": "(1)乘除属于同一级运算，应从左到右计算：(7/10×6)÷7/10×6=36；(2)先算乘法，11/12-11/48=11/16。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69af22",
+   "stem": "填空：(___)×4/5=8×(___)=(___)；(___)÷5/3=(___)×0.25=2。",
+   "answer": "5/2，1/4，10/3，8。",
+   "original_analysis": "各部分都等于2：2÷4/5=5/2，2÷8=1/4；若x÷5/3=2，则x=2×5/3=10/3；2÷0.25=8。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69af35",
+   "stem": "两个自然数的和是18，它们倒数的和是1/4，这两个自然数分别是( )和( )。",
+   "answer": "6和12。",
+   "original_analysis": "由倒数和转化出积，再用和与积确定两个数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69af44",
+   "stem": "“太阳升起东山头，鸭子嘎嘎走出窝。一半鸭子坡下走，一半的一半水中游，窝内还剩十八只。”根据这首歌谣可知，一共有( )只鸭子。",
+   "answer": "72只。",
+   "original_analysis": "把三部分鸭子数量相加等于总数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69af4b",
+   "stem": "在《九章算术》中介绍分数除法的运算方法为“经分”，即“先将两个分数通分，再使分子相除”，即a/b÷c/d=ad/bd÷bc/bd=ad/bc。那么5/8÷3/7=( )/( )÷( )/( )=( )/( )。",
+   "answer": "35/56÷24/56=35/24。",
+   "original_analysis": "先通分到同分母56，再分子相除。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69af57",
+   "stem": "有两张大小相同的长方形纸条按图①放置，现在将这两张长方形纸条分别向左、右方向平移至图②所示的位置，则每张长方形纸条的长是( )cm。",
+   "answer": "56厘米。",
+   "original_analysis": "由平移后相对位置看出总长等于1个整长加半个整长。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69af5a",
+   "stem": "若a、b、c都大于0，且a×6/7=b÷2/3=c÷2，则下面排列正确的是( )。A.a>b>c B.c>b>a C.a>c>b D.c>a>b",
+   "answer": "D。",
+   "original_analysis": "设三个式子都等于同一个数k，再分别表示a、b、c。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69af5c",
+   "stem": "甲数和乙数都大于0，且甲÷乙>甲，则在下面直线上表示乙数位置的可能是点( )。A.A B.B C.C D.D",
+   "answer": "A。",
+   "original_analysis": "把不等式转化成0<乙<1。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69af5e",
+   "stem": "火箭的任务是把卫星运载到一定的高度，并以预定的方向和速度把卫星弹射出去，这个过程称作“星箭分离”，“星箭分离”的发射速度一定要等于或者大于环绕速度7.9千米/秒。假设短时间内火箭速度不变。当( )时，可以进行“星箭分离”。A.火箭在12/5秒内移动了18千米 B.火箭在2秒内移动了15千米 C.火箭在1/2秒内移动了3.8千米 D.火箭在7/22秒内移动了2.8千米",
+   "answer": "D。",
+   "original_analysis": "逐项计算速度并与7.9千米/秒比较。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69af60",
+   "stem": "一辆汽车从A城开往B城，已经行驶了全程的5/8，还剩下144km。A、B两城相距多少千米？下面列式正确的是( )。①144÷(8-5)×8 ②144÷(1-5/8) ③设：A、B两城相距x km，x-5/8x=144。④144÷(8-5)×5。A.①② B.①②③ C.②③④ D.①②③④",
+   "answer": "B。",
+   "original_analysis": "判断每个式子所表示的是全程还是已行路程。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69af71",
+   "stem": "科学课上，同学们了解到我国天文科技发展日新月异，“中国天眼”超过了美国著名的天文望远镜阿雷西博，成为全球最大且最灵敏的射电望远镜。阿雷西博的直径为350m，比“中国天眼”的直径短3/10，你能求出“中国天眼”的直径吗？(1)阅读与理解：已知( )和( )，求( )。(2)分析与解答：①画线段图分析。②列方程解答。",
+   "answer": "已知阿雷西博直径350米且比“中国天眼”短3/10，求“中国天眼”直径；答案是500米。",
+   "original_analysis": "列方程x-3/10x=350，解得x=500。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69af81",
+   "stem": "两张纸部分重叠放在桌面上(如下图所示)，重叠部分(涂色部分)的面积是9/4cm²，占长方形纸的面积的3/20，占三角形纸的面积的3/14。这两张纸盖住的桌面面积是多少平方厘米？",
+   "answer": "93/4平方厘米。",
+   "original_analysis": "先由重叠部分反求两张纸的面积，再用容斥求并。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69af9c",
+   "stem": "一本故事书，小华从第一页开始看，第一天看了总页数的1/4多3页，第二天看了余下的1/3少4页，还剩122页没有看。这本故事书一共有多少页？（提示：先画图分析）",
+   "answer": "240页。",
+   "original_analysis": "按两天读书情况列出剩余页数方程。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69afa9",
+   "stem": "一项工程，甲队单独做需要20天完成，乙队单独做需要12天完成。这项工程先由甲队做了若干天，然后由乙队接着做完，从开始到结束一共用了14天，甲队单独做了几天呢？",
+   "answer": "5天。",
+   "original_analysis": "根据“甲完成部分+乙完成部分=1”列方程。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69defa",
+   "stem": "在-7，+9%，+47，-3/4，5，-10%，0，-3.14，7/9中，正整数有( )，负数有( )，( )既不是正数，也不是负数。",
+   "answer": "正整数：+47、5；负数：-7、-3/4、-10%、-3.14；既不是正数也不是负数：0。",
+   "original_analysis": "逐个判断正负和是否为整数。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e05a",
+   "stem": "“五岳”是中华传统文化中五大名山的总称，下面是“五岳”海拔情况的统计图。请你以其中一座山的海拔为0点，用正、负数在下面右图中标出“五岳”的海拔。",
+   "answer": "示例一：以南岳衡山1300米为0点，可标成+200、+700、0、+900、+200；示例二：以西岳华山2200米为0点，可标成-700、-200、-900、0、-700。",
+   "original_analysis": "先读取五岳原海拔，再统一减去选作0点的海拔。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e0d7",
+   "stem": "看图填空。(1)半圆的直径是( )cm。(2)长方形的长是( )dm，长方形的宽是( )dm。(3)圆的半径是( )cm，圆的直径是( )cm。",
+   "answer": "(1)4厘米；(2)长7.5分米，宽5分米；(3)半径4厘米，直径8厘米。",
+   "original_analysis": "分别利用半圆半径、直径与矩形边长关系，以及两圆心距离等于半径来求解。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e0e8",
+   "stem": "如图，从一个长方形上剪下一个最大的正方形后，剩余部分刚好还可以剪出两个半径为3cm的圆。求原来长方形的周长。",
+   "answer": "60厘米。",
+   "original_analysis": "由两个圆确定剩余长方形尺寸，再反推出原长方形长宽。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e11a",
+   "stem": "如图，若AB=16dm，则三角形AOB的面积是多少平方分米？",
+   "answer": "64平方分米。",
+   "original_analysis": "先由270°求出直角，再用弦长求半径，最后算直角三角形面积。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e132",
+   "stem": "下图是琳琳所画的图，第一步中弧所在扇形的半径是1厘米，第四步中弧所在扇形的半径是( )厘米。按照这样的方法继续画下去，第( )步中的弧所在扇形的半径是21厘米。（写出过程）",
+   "answer": "第四步半径3厘米；半径是21厘米的是第8步。",
+   "original_analysis": "各步弧的半径按斐波那契数列1，1，2，3，5，8，13，21……递增，因此第四步为3厘米，21出现在第8步。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e191",
+   "stem": "求下面各图中涂色部分的周长。",
+   "answer": "图1：50.24 cm；图2：53.1 cm；图3：28.98 cm",
+   "original_analysis": "分别按各图实际边界，把半圆弧、四分之一圆弧和必要的直线段相加。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e1a3",
+   "stem": "两个连在一起的皮带轮，大轮的直径为0.54米，小轮的半径为0.09米，大轮转30周，小轮要转多少周？",
+   "answer": "90周",
+   "original_analysis": "皮带通过的长度相同，转数与周长成反比。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e1af",
+   "stem": "公园的广场上有一个周长是37.68 m的圆形花坛，进行扩建后，花坛的周长比原来增加了12.56 m。扩建后的花坛半径比原来的花坛半径长多少米？",
+   "answer": "2 m",
+   "original_analysis": "ΔC=2πΔr。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e20a",
+   "stem": "把一个圆按图平均分切，并拼成近似的长方形。近似的长方形的周长比圆的周长长12 cm，圆的面积是（ ）cm²。",
+   "answer": "113.04 cm²",
+   "original_analysis": "近似长方形周长比圆周长多出的部分是两条宽，即2r。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e21c",
+   "stem": "如图，已知圆的周长是12.56 cm，圆的面积正好等于长方形的面积。求涂色部分的面积。",
+   "answer": "9.42 cm²",
+   "original_analysis": "先由周长求半径，再用长方形面积等于圆面积减去1/4圆。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e22e",
+   "stem": "刘大爷用15.7 m长的篱笆靠墙围了一个半圆形的鸡圈。这个鸡圈的面积是多少平方米？",
+   "answer": "39.25 m²",
+   "original_analysis": "先由半圆弧长求半径，再求半圆面积。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e26a",
+   "stem": "在学习圆的面积时，小明、小刚、小强都把一个圆16等分，通过切割并拼组，转化成其他图形，推导出了圆的面积公式。他们三个推导出的圆的面积公式最后是同一个吗？请说明理由。",
+   "answer": "相同，都是S=πr²",
+   "original_analysis": "转化图形不同，但底和高对应的量相同。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e2b0",
+   "stem": "求下面各图中涂色部分的面积。（单位：厘米）",
+   "answer": "(1)34.54 cm²；(2)175.84 cm²",
+   "original_analysis": "分别按圆环面积和“大圆减半圆”计算。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e2c6",
+   "stem": "文景小区的一个圆形花坛要往外再拓宽1.8 m，一台小型压路机在花坛周围作业，这台小型压路机经过的作业面积是多少平方米？为了改善土壤性质，杨师傅在新拓宽的路体中心撒上了一圈石灰（下图中的虚线），这一圈石灰长多少米？（取3）",
+   "answer": "作业面积74.52 m²；石灰圈长41.4 m",
+   "original_analysis": "把新拓宽部分看作圆环，虚线看作中间圆。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e365",
+   "stem": "图中小圆的面积是30平方厘米，则大圆的面积是多少平方厘米？",
+   "answer": "60 cm²",
+   "original_analysis": "通过中间正方形建立大小圆半径关系。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e3b8",
+   "stem": "下面四个正方形的边长都相等，涂色部分面积的大小关系是（ ）。A.③>②>①>④ B.①>②>③>④ C.①=②=③=④ D.无法比较",
+   "answer": "C.①=②=③=④",
+   "original_analysis": "都可以化成“同一个正方形面积减去同样大小的圆面积”。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e3f8",
+   "stem": "如图，如果AB=BC=CD=4 cm，那么，图1的面积是（ ）cm²，图2的面积是（ ）cm²，图3的面积是（ ）cm²。",
+   "answer": "图1 12.56 cm²；图2 50.24 cm²；图3 113.04 cm²",
+   "original_analysis": "三幅图分别对应直径4 cm、8 cm、12 cm的圆。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e437",
+   "stem": "图中小圆的面积是30平方厘米，则大圆的面积是多少平方厘米？",
+   "answer": "60 cm²",
+   "original_analysis": "同一正方形的外接圆面积是内切圆面积的2倍。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e452",
+   "stem": "某快餐店有直径是6寸、8寸、12寸的三款厚度大致相同的比萨供顾客选择。小章和小陶去吃比萨，点了一份12寸的。服务员说12寸卖完了，同时端来了一份8寸的和一份6寸的来抵换。你同意谁的观点？",
+   "answer": "都不完全对；若二选一，小陶的方向更合理",
+   "original_analysis": "比萨大小应按面积比较，不按直径相加。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e4a6",
+   "stem": "如图，四个圆的半径都是3 cm，圆心分别在四边形的四个顶点上，则涂色部分的面积是（ ）cm²。A.18.84 B.28.26 C.25.12 D.30.86",
+   "answer": "B.28.26",
+   "original_analysis": "4个四分之一圆面积之和。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e4bf",
+   "stem": "某快餐店有直径是6寸、8寸、12寸的三款厚度大致相同的比萨供顾客选择。小章和小陶去吃比萨，点了一份12寸的。服务员客气地说：“很抱歉，12寸的卖完了。”同时，端来了一份8寸的和一份6寸的来抵换。对此，小章和小陶有不同观点。小章说：“可以，8+6=14(寸)，还多了2寸。”小陶说：“不行，拿一份8寸的加两份6寸的，那才差不多。”你同意谁的观点？",
+   "answer": "同意小陶",
+   "original_analysis": "比萨应比较面积，不能直接比较直径相加。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e4f5",
+   "stem": "某件汝瓷的圆形瓶口一周约为12.56 cm，这件汝瓷瓶口的半径是（ ）cm，瓶口面积是（ ）cm²。",
+   "answer": "半径2 cm；面积12.56 cm²",
+   "original_analysis": "先由周长求半径，再求面积。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e501",
+   "stem": "上右图为一个滑轮装置，滑轮的半径是10 cm，当滑轮的一个半径从OA的位置绕轴心O顺时针旋转到OB的位置时（半径OA、OB在一条直线上），重物移动了（ ）cm。",
+   "answer": "31.4 cm",
+   "original_analysis": "转半周，绳子通过长度等于半个圆周。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e55c",
+   "stem": "下左图是一堆摆放成近似梯形的钢管，李叔叔打算用钢丝将这15根直径都是10 cm的钢管都捆在一起。他估计需要捆绑3圈才能绑结实，那么至少需要（ ）cm钢丝。",
+   "answer": "454.2 cm",
+   "original_analysis": "钢丝一圈长度等于圆心凸包周长加一个半径5 cm的整圆周长。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e582",
+   "stem": "关于圆的面积计算。(1)图中阴影正方形面积是5平方厘米，正方形边长等于圆的半径r，求圆的面积。(2)图中等腰直角三角形面积是8平方厘米，求圆的面积。",
+   "answer": "(1)15.7平方厘米；(2)50.24平方厘米。",
+   "original_analysis": "(1)r²=5，圆面积=3.14×5=15.7；(2)阴影等腰直角三角形的两条直角边都是半径r，r²÷2=8，所以r²=16，圆面积=3.14×16=50.24。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e596",
+   "stem": "上右图为一个滑轮装置，滑轮的半径是10 cm，当滑轮的一个半径从OA的位置绕轴心O顺时针转到OB的位置时（半径OA、OB在一条直线上），重物移动了（ ）cm。",
+   "answer": "31.4 cm",
+   "original_analysis": "半径转过180°，绳子移动半个圆周长。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e5a3",
+   "stem": "温泉会馆有两个圆形温泉池：甲池半径20米，可容纳200人；乙池半径12米，可容纳120人。比较两个温泉池的拥挤程度，选择正确选项。A.甲池更拥挤 B.乙池更拥挤 C.一样拥挤 D.无法确定",
+   "answer": "B.乙池更拥挤",
+   "original_analysis": "比较人数与圆面积的比值，乙池单位面积容纳人数更多。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e621",
+   "stem": "学校操场跑道由一个长方形的两条长边和两个半圆组成，长方形长60米，宽40米。求跑道一周长度。",
+   "answer": "245.6米",
+   "original_analysis": "两条直道加上一个整圆的周长。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e62b",
+   "stem": "200米跑道示意图中，每条跑道宽1.25米。相邻两条跑道中，外侧跑道的运动员应在内侧跑道运动员前面多少米处起跑？",
+   "answer": "7.85米",
+   "original_analysis": "相邻跑道整圈长度差等于半径差1.25米形成的整圆周长差。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e63b",
+   "stem": "某400米塑胶跑道直跑道长85.96米，跑道①的半圆形跑道直径72.6米，每条跑道宽1.2米。(1)进行800米比赛时，如果全程不变道，每一道的起跑线应比前一道提前多少米？(2)进行200米比赛时，跑道④的起跑线比跑道①的提前多少米？",
+   "answer": "(1)15.07米；(2)11.30米",
+   "original_analysis": "800米按两圈整圆弯道差计算；200米按一个半圆弯道差计算。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e686",
+   "stem": "两个学校都说本校女生人数占全校学生人数的49%。这两个学校的女生人数一定相同吗？为什么？反思：分别涂出图1、图2面积的25%，涂色的小方块一样多吗？为什么？",
+   "answer": "不一定相同；图1和图2涂出的25%小方块也不一样多。",
+   "original_analysis": "百分数相同不代表对应的具体数量相同，关键看单位“1”是否相同。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e6c8",
+   "stem": "毛毛看一本故事书，第一天看了总页数的40%，如果再看14页，那么正好看了这本书的一半。这本书一共有多少页？",
+   "answer": "140页",
+   "original_analysis": "14页对应全书的10%。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e6d4",
+   "stem": "印刷用纸中A4纸是A3纸的一半，A5纸是A4纸的一半。照这样，A5纸的大小是A2纸的（ ）。A.6.25% B.12.5% C.25% D.50%",
+   "answer": "B.12.5%",
+   "original_analysis": "连续减半3次得到1/8。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e6f9",
+   "stem": "某线上购物平台服饰区活动“全场八折，会员再享折上九折”。(1)非会员原价180元的裙子活动期间可节省多少元？(2)会员购买衣服的价格是原价的百分之多少？(3)会员比非会员少付32元，这款裙子的原价是多少元？",
+   "answer": "(1)36元；(2)72%；(3)400元",
+   "original_analysis": "先求会员价占原价72%，再利用与非会员的8%差额反推原价。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e78b",
+   "stem": "一套排图现在商场搞促销活动，降价9元后售价36元。现价比原价降低了( )%。",
+   "answer": "20%",
+   "original_analysis": "先求原价45元，再用降价9元除以原价。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e799",
+   "stem": "商品销售中，“利润率”的计算方法是“利润率=(售价-进价)÷进价×100%”。(1)进价为20元的玩具，售价是25元，这件玩具的利润率是( )。(2)一款洗衣机的售价为1800元，利润率是20%，这款洗衣机进价是( )元。(3)服装店的一套西装，售价为390元，利润率是30%。因为带销，店长决定按售价的90%出售，这样这套西装的利润率是( )。",
+   "answer": "(1)25%；(2)1500元；(3)17%。",
+   "original_analysis": "按利润率公式正向、逆向分别求解；第(3)先反求进价，再代入新售价。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e7ba",
+   "stem": "一种水果罐头去年12月加价25%销售，今年3月“买三送一”促销。如果要解决“今年3月一次购买，得到4瓶这种罐头，价格相当于去年11月的百分之几”这个问题，下面( )方法是正确的。图中方法选项A、B、C、D。",
+   "answer": "B，93.75%。",
+   "original_analysis": "买三送一相当于4瓶只付3瓶，加价25%后再乘3/4。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e7c5",
+   "stem": "小明在写作业时遇到了这样一道题目：一套图书在“双11”活动当天降价了20%，在“双11”后又涨价了20%。他在计算“双11”前后的价格变化幅度时，列式为：20%-(1-20%)×20%=4%。请结合他的线段图，判断他的方法是否正确，并说明理由。",
+   "answer": "正确，现价比原价低4%。",
+   "original_analysis": "涨价20%是以降价后的价钱为单位“1”，所以不能直接和原来的20%抵消。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e81c",
+   "stem": "张老师使用笔记本电脑时突然听到电量不足的提示声，并看到了右图的提示。照这样计算，它从充满电到现在工作了( )分钟。图中显示还剩6%，剩余24分钟。",
+   "answer": "376分钟",
+   "original_analysis": "由6%对应24分钟求出满电400分钟，再减去剩余时间。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e841",
+   "stem": "根据《道路交通安全违法行为记分管理办法》，某高速路段限速标准：小型车最高时速120km，货车最高时速100km。如果李叔叔驾驶小型车以140千米/时的速度在该高速路段上行驶，那么他会受到记分处罚吗？图中规则：超速50%以上记12分；超速20%以上未达50%记6分；超速10%以上未达20%不记分。",
+   "answer": "不会，超速率约16.7%，属于超速10%以上未达20%，不记分。",
+   "original_analysis": "先算超速率，再与图中记分区间比较。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e85f",
+   "stem": "某公司以每吨500元的价格收购了100吨药材，决定加工后再出售，相关信息如下表。注：①出品率指加工后所得药产品的质量占原药材质量的百分之几；②加工后的废品不产生效益。精加工了5天后，受市场影响，必须尽快将这批药材加工完毕，该公司决定改为粗加工。表中：粗加工每天14吨、出品率80%、售价1000元/吨；精加工每天6吨、出品率60%、售价3000元/吨。按上述加工方案，该公司可获得多少利润？",
+   "answer": "60000元",
+   "original_analysis": "精加工5天处理30吨，余下70吨粗加工；分别算出成品收入后减去收购总成本。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e889",
+   "stem": "探索规律。图1中：4=1+3，9=1+3+5，16=1+3+5+7。图2中：4=1+3，9=3+6，16=6+10。(1)按照图1中的规律，将36写成几个数的和：36=________。(2)古希腊著名的毕达哥拉斯学派提出：把1、4、9、16……这样的数称为“正方形数”；把1、3、6、10……这样的数称为“三角形数”。按照图2规律，将36写成两个数的和：36=________。",
+   "answer": "(1)36=1+3+5+7+9+11；(2)36=15+21。",
+   "original_analysis": "图1是“平方数=前n个奇数和”，图2是“平方数=相邻两个三角形数之和”。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "6a69e89d",
+   "stem": "如图，一个长方体水箱里有一个上部开口的圆柱形容器，它的底部与长方体容器连接在一起，打开水管往水箱里注水。下面几幅图中，( )能准确地描述水的高度与时间的变化关系。选项A、B、C、D为不同折线图。",
+   "answer": "D。",
+   "original_analysis": "水先在圆柱外部上升；到圆柱口后先灌满内部，外部水位短暂停留；内外水面齐平后继续上升，所以图像是上升—水平—上升。",
+   "grade": "",
+   "knowledge_points": [],
+   "question_image": null
+  },
+  {
+   "question_id": "chicken_rabbit",
+   "stem": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+   "answer": "鸡3只，兔5只",
+   "original_analysis": "",
+   "grade": "六年级",
+   "knowledge_points": [
+    "鸡兔同笼",
+    "假设法"
+   ],
+   "question_image": null
+  },
+  {
+   "question_id": "equation_subtract",
+   "stem": "解方程 3x+7=25，并说明每一步为什么这样做。",
+   "answer": "x=6",
+   "original_analysis": "",
+   "grade": "五年级",
+   "knowledge_points": [
+    "简易方程",
+    "等式的性质"
+   ],
+   "question_image": null
+  },
+  {
+   "question_id": "fraction_addition",
+   "stem": "计算四分之三加八分之一，并说明为什么要这样算。",
+   "answer": "7/8",
+   "original_analysis": "",
+   "grade": "五年级",
+   "knowledge_points": [
+    "异分母分数加法",
+    "通分"
+   ],
+   "question_image": null
+  },
+  {
+   "question_id": "library_books",
+   "stem": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
+   "answer": "127本",
+   "original_analysis": "",
+   "grade": "三年级",
+   "knowledge_points": [
+    "加减两步应用题"
+   ],
+   "question_image": null
+  },
+  {
+   "question_id": "pr163-capacity-minimal-question-v1",
+   "stem": "一盒铅笔有12支，3盒一共有多少支铅笔？",
+   "answer": "36支",
+   "original_analysis": "每盒12支，共3盒，用12乘3得到36支。",
+   "grade": "六年级",
+   "knowledge_points": [
+    "整数乘法",
+    "简单应用题"
+   ],
+   "question_image": null
+  },
+  {
+   "question_id": "triangle_area",
+   "stem": "一个三角形底是10厘米，高是6厘米，面积是多少？为什么要除以2？",
+   "answer": "30平方厘米",
+   "original_analysis": "",
+   "grade": "五年级",
+   "knowledge_points": [
+    "三角形面积",
+    "图形转化"
+   ],
+   "question_image": null
+  }
+ ]
+}

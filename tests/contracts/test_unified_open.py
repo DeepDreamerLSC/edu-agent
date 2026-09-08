@@ -259,3 +259,49 @@ def test_bank_hit_without_client_answer_keeps_bank_provenance(env):
     assert kernel.learners[0].get("answer_correct_provenance") == "partner_question_bank"
     assert "answer_status" not in kernel.learners[0]  # answer_status 由 answer_correct 映射填,题源不碰
     assert response.json()["answer_correct_provenance"] == "partner_question_bank"
+
+
+def test_bank_hit_with_client_image_merges_into_question():
+    """同题组合(§5):题库命中 + 客户端题图 → 文答用题库的,题图用客户端的。"""
+    kernel = RecordingKernel(["题图已合并。"])
+    service = build_service(kernel, source=MapSource(),
+                            image_resolver=lambda fid: f"data:image/png;base64,{fid}")
+    server = build_server(service)
+    import threading
+
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        response = post(base, "/api/prepared-questions/open", {
+            "external_question_id": "equation_subtract", "idempotency_key": "u-img-merge",
+            "question_image": "file_abc123"})
+        assert response.status_code == 200
+        question = kernel.questions[0]
+        # 文答以题库为准;题图 = 客户端 file_id 经解析器翻译的 data URL
+        assert question["text"].startswith("解方程 3x+7=25")
+        assert question["answer"] == "x=6"
+        assert question["image"] == "data:image/png;base64,file_abc123"
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_unresolvable_image_file_id_is_early_422():
+    """解析器注入时 file_id 不存在 → 422 FILE_NOT_READY(坏引用不进模型层变 503)。"""
+    kernel = RecordingKernel(["不该被调用"])
+    service = build_service(kernel, source=MapSource(), image_resolver=lambda fid: None)
+    server = build_server(service)
+    import threading
+
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        response = post(base, "/api/prepared-questions/open", {
+            "external_question_id": "equation_subtract", "idempotency_key": "u-img-bad",
+            "question_image": "file_gone"})
+        assert response.status_code == 422
+        assert response.json()["error"]["code"] == "FILE_NOT_READY"
+        assert kernel.questions == []  # 未产生内核调用
+    finally:
+        server.shutdown()
+        server.server_close()

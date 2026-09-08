@@ -114,10 +114,11 @@ def _opening_user_message(learner: dict, question: dict) -> dict:
 
 
 def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
-            session: LearnerSession):
+            session: LearnerSession, images: list[str] | None = None):
     return gateway.invoke(ModelRequest(
         role=role, messages=messages, response_schema=schema,
         session_id=session.session_id, max_tokens=800, temperature=0,
+        images=images,
     ))
 
 
@@ -135,11 +136,13 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
     gateway = gateway or default_gateway()
     session = LearnerSession(question=question, learner=learner)
     if question.get("image") is not None:
+        # 图片经 ModelRequest.images 走多模态内容块(不进文本,见 gateway request);
+        # image 值由 api 层解析为 data URL(file_id 在那里翻译,内核不感知存储)。
         verdict = json.loads(_invoke(
             gateway, "vision",
             [{"role": "user", "content": json.dumps(
-                {"task": "题图理解与安全检查", "image": question["image"]}, ensure_ascii=False)}],
-            VISION_CHECK_SCHEMA, session,
+                {"task": "题图理解与安全检查"}, ensure_ascii=False)}],
+            VISION_CHECK_SCHEMA, session, images=[str(question["image"])],
         ).text)
         if not verdict["acceptable"]:  # 题图不可信/多题混入
             session.state = "failed"

@@ -29,9 +29,19 @@ class PartnerKernel:
 
 
 def build() -> ThreadingHTTPServer:
-    """装配(env→config 转换在此发生:IdentityService 必须无参构造,#72 P1 回归钉)。"""
+    """装配(env→config 转换在此发生:IdentityService 必须无参构造,#72 P1 回归钉)。
+
+    题源默认 bank(合作方真实题库快照,EDU_QUESTION_SOURCE 可切 seed/snapshot);
+    FileService 注入题图解析(file_id → data URL,内核 vision 多模态输入)。"""
+    from edu_agent.api import question_source
+    from edu_agent.api.files import FileService
+
     port = int(os.environ.get("EDU_PARTNER_API_PORT", "8300"))
-    return build_server(build_service(PartnerKernel()), IdentityService(),
+    files = FileService()
+    service = build_service(PartnerKernel(), source=question_source(
+        os.environ.get("EDU_QUESTION_SOURCE", "bank")),
+        image_resolver=files.data_url)
+    return build_server(service, IdentityService(), files=files,
                         host="127.0.0.1", port=port)
 
 
