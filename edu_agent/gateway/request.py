@@ -10,7 +10,10 @@ from .errors import GatewayError
 
 @dataclass(slots=True)
 class ModelRequest:
-    """一次模型调用。messages 为 OpenAI chat 格式;response_schema 触发路线 1(issue #8)。"""
+    """一次模型调用。messages 为 OpenAI chat 格式;response_schema 触发路线 1(issue #8)。
+
+    images 为多模态输入(vision 角色):data URL 列表,provider 渲染为 OpenAI 标准
+    image_url 内容块;不进 messages 文本,redact/record 天然不落图片内容。"""
 
     role: str
     messages: list[dict]
@@ -19,6 +22,7 @@ class ModelRequest:
     trace_id: str | None = None
     max_tokens: int | None = None
     temperature: float | None = None
+    images: list[str] | None = None
 
 
 @dataclass(slots=True)
