@@ -32,8 +32,10 @@ QUESTION_TEXT = {"text": "解方程 3x+7=25,并说明每一步为什么这样做
 LEARNER = {"grade": "六年级"}
 
 
-def tutor_json(reply_text: str, ready: bool = False) -> str:
-    return json.dumps({"reply": reply_text, "ready_to_confirm": ready}, ensure_ascii=False)
+def tutor_json(reply_text: str, ready: bool = False,
+               cited_numbers: list[float] | None = None) -> str:
+    return json.dumps({"reply": reply_text, "ready_to_confirm": ready,
+                       "cited_numbers": cited_numbers or []}, ensure_ascii=False)
 
 
 def vision_json(acceptable: bool, reason: str = "", transcription: str = "") -> str:

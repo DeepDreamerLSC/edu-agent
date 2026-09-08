@@ -36,7 +36,8 @@ CASE = {
 
 
 def tutor_json(text: str, ready: bool = False) -> str:
-    return json.dumps({"reply": text, "ready_to_confirm": ready}, ensure_ascii=False)
+    return json.dumps({"reply": text, "ready_to_confirm": ready,
+                       "cited_numbers": []}, ensure_ascii=False)
 
 
 def test_run_case_drives_full_script(tmp_path):

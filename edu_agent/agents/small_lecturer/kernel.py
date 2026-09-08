@@ -20,6 +20,7 @@ Turn.text,替换为确定性安全问句(M2 清单阶段 2,断言即规格)。M3
 from __future__ import annotations
 
 import json
+import re
 
 from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 
@@ -36,8 +37,10 @@ TUTOR_TURN_SCHEMA = {
     "properties": {
         "reply": {"type": "string"},
         "ready_to_confirm": {"type": "boolean"},
+        # 数字漂移守卫:模型自报本轮回复中引用的题目条件数字(服务端对题面校验)
+        "cited_numbers": {"type": "array", "items": {"type": "number"}},
     },
-    "required": ["reply", "ready_to_confirm"],
+    "required": ["reply", "ready_to_confirm", "cited_numbers"],
     "additionalProperties": False,
 }
 TUTOR_SUMMARY_SCHEMA = {
@@ -62,6 +65,11 @@ NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能�
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
 SAFE_FALLBACK_TEXT = "先回到当前小问,你能说出题目明确给出的一个条件吗?"
+
+
+def _question_numbers(text: str) -> set[float]:
+    """题面条件数字全集(整数/小数;分数按两个数字处理,与口算习惯一致)。"""
+    return {float(m) for m in re.findall(r"\d+(?:\.\d+)?", text or "")}
 
 
 def _guard_output(question: dict, reply_text: str, grade: str) -> str:
@@ -177,6 +185,12 @@ def reply(session: LearnerSession, student_message: str, *,
                               session.learner.get("grade", ""))
     if safe_text != output["reply"]:
         session.stuck = True  # 卡点标记(R6):护栏替换 = 本轮存在未解决的质量问题
+    # 数字漂移守卫(M3):模型自报引用的数字 ⊆ 题面数字全集,超出 = 把口误数字
+    # 当题目条件复读 → stuck 标记(不拒答,下一轮提醒纠偏);题面无数字跳过
+    cited = [float(n) for n in (output.get("cited_numbers") or [])]
+    face_numbers = _question_numbers(str(session.question.get("text") or ""))
+    if face_numbers and any(n not in face_numbers for n in cited):
+        session.stuck = True
     session.history.append({"role": "user", "content": student_message})
     session.history.append({"role": "assistant", "content": safe_text})
     session.session_version += 1
