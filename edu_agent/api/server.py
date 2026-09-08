@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 
 from .files import FileService
 from .identity import IdentityError, IdentityService
@@ -177,10 +178,59 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
 
     do_POST = _dispatch
 
+    # 公开文档(老系统 URL 结构兼容):docs/partner 白名单,无 markdown 依赖——
+    # index 单页 HTML + 原文 raw.md(浏览器直接可读,合作方是开发者)。
+    _DOCS_DIR = Path(__file__).resolve().parents[2] / "docs" / "partner"
+    _DOCS_GUIDES = {  # URL 名 → 文件名(白名单即路径穿越防护)
+        "small-lecturer-v1": "小讲师对话教学(统一 Open/多轮/流式/总结)",
+        "files": "题图三步上传",
+        "partner-sso": "合作方 SSO(native-codes/PKCE)",
+        "response-conventions": "响应与错误码约定",
+    }
+    _DOCS_INDEX = """<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<title>edu-agent 合作方 API 文档</title><style>
+body{{font-family:-apple-system,"PingFang SC",sans-serif;max-width:720px;margin:40px auto;padding:0 16px;color:#333}}
+h1{{font-size:22px}} p{{color:#666;line-height:1.6}} li{{margin:10px 0}}
+a{{color:#4a90d9;text-decoration:none}} code{{background:#f5f5f5;padding:2px 6px;border-radius:4px}}
+.meta{{color:#999;font-size:13px}}</style></head><body>
+<h1>edu-agent 合作方 API 文档</h1>
+<p>小讲师教学对话服务。第一阶段对接建议:登录 → 题图上传(files)→ 统一 Open 开题 →
+refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单独提供。</p>
+<ul>
+{items}
+</ul>
+<p class="meta">本页公开无需鉴权;接口调用需 Bearer token。文档原文均为 Markdown。</p>
+</body></html>"""
+
+    def _serve_docs(self) -> bool:
+        """GET /api/docs*;未命中返回 False。公开路由(鉴权闸之前调用)。"""
+        if self.path in ("/api/docs", "/api/docs/"):
+            items = "".join(
+                f'<li><a href="/api/docs/guides/{name}/raw.md">{title}</a>'
+                f' <span class="meta">/api/docs/guides/{name}/raw.md</span></li>'
+                for name, title in self._DOCS_GUIDES.items())
+            payload = self._DOCS_INDEX.format(items=items).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+        else:
+            guide = re.fullmatch(r"/api/docs/guides/([^/]+)/raw\.md", self.path)
+            if not guide or guide[1] not in self._DOCS_GUIDES:
+                return False
+            payload = (self._DOCS_DIR / f"{guide[1]}.md").read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/markdown; charset=utf-8")
+        self.send_header("Cache-Control", "max-age=300")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+        return True
+
     def do_GET(self) -> None:
         if _HEALTHZ.match(self.path):
             from .healthz import snapshot  # 局部导入:快照依赖模型配置,按需加载
             self._json(snapshot())
+            return
+        if self._serve_docs():
             return
         if self.path in ("/chat", "/chat/", "/static/chat.html") or \
                 self.path.startswith("/static/"):
