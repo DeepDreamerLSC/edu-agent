@@ -51,6 +51,13 @@ body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; hei
 <div class="sidebar">
   <div class="sidebar-header">📚 真实题库(263 题)</div>
   <label class="pv-toggle" title="开题时只传题图,模型仅靠读图教学,不查题库(无权威答案,用于体验降级识别效果)"><input type="checkbox" id="pureVision">🔍 纯识图模式(不查题库)</label>
+  <label class="pv-toggle" title="开题带 answer_correct:做对了→首问问你还有什么疑问;做错了→先采集你的错误答案,再苏格拉底式纠错,懂了之后请你把题讲一遍">📝 做题状态:
+    <select id="answerState">
+      <option value="">未做过</option>
+      <option value="correct">做对了</option>
+      <option value="incorrect">做错了</option>
+    </select>
+  </label>
   <div class="search-box"><input type="text" id="qSearch" placeholder="搜索题目/知识点…" oninput="renderList()"></div>
   <div class="sidebar-list" id="qlist"><div style="padding:20px;color:#999;font-size:13px;">加载中…</div></div>
   <div class="sidebar-footer">
@@ -173,6 +180,8 @@ async function openWithQuestion(q) {
     const body = {external_question_id: q.id,
                   idempotency_key: `demo-${q.id}-${Date.now()}`};
     if (imageFileId) body.question_image = imageFileId;
+    const ac = document.getElementById('answerState').value;
+    if (ac) body.answer_correct = (ac === 'correct');
     const r = await fetch(`${BASE}/api/prepared-questions/open`, {
       method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
       body: JSON.stringify(body)
