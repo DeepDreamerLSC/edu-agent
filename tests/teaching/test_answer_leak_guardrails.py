@@ -300,6 +300,50 @@ def test_missing_primary_question_is_not_a_content_safety_failure() -> None:
     assert evaluation.fallback_required is False
 
 
+def test_full_answer_phrase_is_blocked() -> None:
+    # answer 完整短语出现在回复 → 拦截
+    reply = "答案就是:鸡 3 只,兔 5 只。"
+    evaluation = evaluate_student_visible_question(
+        reply, answer_reference="鸡 3 只,兔 5 只",
+        active_subquestion_text="鸡和兔一共 8 只,共有 26 只脚。",
+    )
+    assert evaluation.action == "FALLBACK"
+
+
+def test_digit_subset_of_answer_is_allowed() -> None:
+    # 回复含"36 只脚"(answer 里的 3 是其子集) → 放行:数字子集不是泄露
+    reply = "题目里一共 36 只脚,所以兔子很多。"
+    evaluation = evaluate_student_visible_question(
+        reply, answer_reference="鸡 3 只,兔 5 只",
+        active_subquestion_text="鸡和兔一共 8 只,共有 26 只脚。",
+    )
+    assert evaluation.action == "ALLOW"
+
+
+def test_analysis_key_sentence_is_blocked() -> None:
+    # analysis 关键结论句被逐字复述(紧凑连续窗口)+有序 cue → 拦截
+    reply = "用等式两边先同时减去 7,得 3x=18,再同时除以 3,就得到答案了。"
+    evaluation = evaluate_student_visible_question(
+        reply,
+        answer_reference="",
+        analysis_reference="等式两边先同时减去 7,得 3x=18,再同时除以 3。",
+        active_subquestion_text="鸡和兔一共 8 只,共有 26 只脚。",
+    )
+    assert evaluation.action == "FALLBACK"
+
+
+def test_intermediate_step_is_allowed() -> None:
+    # 中间计算步骤(非关键结论句连续窗口)→ 放行
+    reply = "先假设全是鸡:2×8=16 只脚,比 26 少 10。"
+    evaluation = evaluate_student_visible_question(
+        reply,
+        answer_reference="鸡 3 只,兔 5 只",
+        analysis_reference="等式两边先同时减去 7,得 3x=18,再同时除以 3。",
+        active_subquestion_text="鸡和兔一共 8 只,共有 26 只脚。",
+    )
+    assert evaluation.action == "ALLOW"
+
+
 def test_guardrail_gates_model_output_over_fake_upstream(tmp_path):
     """新接口形态(02 §6):假上游经 gateway tutor 角色产出回复,护栏在模型输出侧把关。"""
     fake = FakeOpenAI([completion("答案就是24。你能说说怎么来的吗？")]).start()
