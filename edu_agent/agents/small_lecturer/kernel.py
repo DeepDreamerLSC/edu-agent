@@ -134,8 +134,7 @@ def _next_step(session: "LearnerSession") -> dict | None:
 _STEP_LEADS = ("我们从这里入手", "下一步是这样", "再往下看", "你看这一步", "接着这样算", "关键在这一步")
 
 
-def _reveal_stuck_hint(session: "LearnerSession", student_message: str,
-                       gateway: Gateway) -> str:
+def _reveal_stuck_hint(session: "LearnerSession") -> str:
     """学生卡住 → 揭示下一级阶梯(确定性,零模型调用,不重复)。
 
     内容 = session.steps 下一级;开场用 _STEP_LEADS 轮换,避免固定前缀生硬。
@@ -421,7 +420,7 @@ def reply(session: LearnerSession, student_message: str, *,
     if _student_signals_stuck(student_message):
         # 学生说「不会/猜不出」→ 揭示下一级阶梯(内容确定性,措辞交模型,代喂/无步骤兜底)。
         gateway = gateway or default_gateway()
-        hint = _reveal_stuck_hint(session, student_message, gateway)
+        hint = _reveal_stuck_hint(session)
         session.history.append({"role": "user", "content": student_message})
         session.history.append({"role": "assistant", "content": hint})
         session.session_version += 1
