@@ -72,11 +72,21 @@ def _question_numbers(text: str) -> set[float]:
     return {float(m) for m in re.findall(r"\d+(?:\.\d+)?", text or "")}
 
 
-def _guard_output(question: dict, reply_text: str, grade: str) -> str:
+def _guard_output(question: dict, reply_text: str, grade: str,
+                  session: "LearnerSession | None" = None) -> str:
     """三护栏(泄露/语气/格式)逐个过;任一命中即替换为安全文案(M2 阶段 2)。
 
     M3 PR7:泄露护栏对照文本从题面扩到参考答案/解析——教师侧 prompt 里的
-    answer/analysis 若出现在回复中即拦截(答案不许从教师侧漏到学生侧)。"""
+    answer/analysis 若出现在回复中即拦截(答案不许从教师侧漏到学生侧)。
+    任务包1步1 埋点:命中时把 {guard, rule_ids, original, regenerated} 记入
+    session.guard_events(随 FileSessionStore 落盘,评测侧汇总兜底率);
+    regenerated 恒 None——第二步修复重生成实现后回填。"""
+    def _hit(guard: str, rule_ids: list[str], replacement: str) -> str:
+        if session is not None:
+            session.guard_events.append({"guard": guard, "rule_ids": rule_ids,
+                                         "original": reply_text, "regenerated": None})
+        return replacement
+
     leak = evaluate_student_visible_question(
         reply_text,
         answer_reference=str(question.get("answer") or ""),
@@ -84,15 +94,16 @@ def _guard_output(question: dict, reply_text: str, grade: str) -> str:
         analysis_reference=str(question.get("analysis") or ""),
     )
     if leak.fallback_required:
-        return SAFE_FALLBACK_TEXT
+        return _hit("answer_leak", [f.finding for f in leak.findings], SAFE_FALLBACK_TEXT)
     tone = apply_tone_guardrail(
         reply=reply_text, grade_band=_tone_band(grade), interaction_signal="neutral",
         teaching_move="connect_relation", ready_to_record=False)
     if tone.applied:
-        return SAFE_FALLBACK_TEXT
+        return _hit("tone", list(tone.reason_codes), SAFE_FALLBACK_TEXT)
     fmt = evaluate_student_visible_format(reply_text)
     if not fmt.ok:
-        return fmt.downgrade_prompt or SAFE_FALLBACK_TEXT
+        return _hit("format", list(fmt.findings),
+                    fmt.downgrade_prompt or SAFE_FALLBACK_TEXT)
     return reply_text
 
 
@@ -159,7 +170,7 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
     ).text)
     session.state = "first_question_ready"
     session.first_question = first["reply"]
-    safe_text = _guard_output(session.question, first["reply"], learner.get("grade", ""))
+    safe_text = _guard_output(session.question, first["reply"], learner.get("grade", ""), session)
     return Turn(text=safe_text, session_version=session.session_version,
                 state=session.state, ready_to_confirm=bool(first["ready_to_confirm"]),
                 session=session)
@@ -185,7 +196,7 @@ def reply(session: LearnerSession, student_message: str, *,
         TUTOR_TURN_SCHEMA, session,
     ).text)
     safe_text = _guard_output(session.question, output["reply"],
-                              session.learner.get("grade", ""))
+                              session.learner.get("grade", ""), session)
     if safe_text != output["reply"]:
         session.stuck = True  # 卡点标记(R6):护栏替换 = 本轮存在未解决的质量问题
     # 数字漂移守卫(M3):模型自报引用的数字 ⊆ 题面数字全集,超出 = 把口误数字

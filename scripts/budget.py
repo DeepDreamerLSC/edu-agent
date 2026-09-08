@@ -44,7 +44,7 @@ RUFF_REQUIRED_CODES = (
 DOC_REL_PATH = Path("docs/plan/02-complexity-budget.md")
 SKIP_DIRS = frozenset({
     ".git", ".venv", "__pycache__", ".pytest_cache", ".ruff_cache",
-    "node_modules", "build", "dist",
+    "node_modules", "build", "dist", "var",  # var=部署台账/评测本地产物(04 §2.1),非源码
 })
 
 NOQA_RE = re.compile(r"#\s*noqa\b")
@@ -66,10 +66,15 @@ class Metric:
 
 
 def iter_python_files(root: Path):
-    """仓库内全部 *.py,跳过 .git/.venv 等非源码目录。"""
+    """仓库内全部 *.py,跳过 .git/.venv 等非源码目录。
+
+    一级目录(var/ 等本地产物)按相对路径判——绝对路径可能穿过系统的
+    /private/var(macOS tmp),parts 全量匹配会误杀。"""
     for path in sorted(root.rglob("*.py")):
-        if not SKIP_DIRS.intersection(path.parts):
-            yield path
+        rel = path.relative_to(root).parts
+        if rel[0] in SKIP_DIRS or SKIP_DIRS.intersection(rel[1:]):
+            continue
+        yield path
 
 
 def code_lines(path: Path) -> int:
@@ -139,8 +144,8 @@ def config_file_count(root: Path) -> int:
     return sum(
         1
         for path in base.rglob("*")
-        if path.is_file() and not SKIP_DIRS.intersection(path.parts)
-    )
+        if path.is_file() and not SKIP_DIRS.intersection(path.relative_to(root).parts)
+    )  # 相对路径匹配:/private/var 系统路径不算仓库目录(同 iter_python_files)
 
 
 def deploy_script_lines(root: Path) -> tuple[int, list[str]]:
