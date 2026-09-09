@@ -2,14 +2,14 @@
 
 老系统 FastAPI CORSMiddleware 行为对齐:EDU_AGENT_CORS_ALLOWED_ORIGINS 逗号
 分隔白名单;allow_credentials=False;非白名单预检 400。
-请求走 test_api_service 的 SSRF 边界守卫(只允许 127.0.0.1 本地测试服务器)。
+请求走 partner_api 的 SSRF 边界守卫(只允许 127.0.0.1 本地测试服务器)。
 """
 
 from __future__ import annotations
 
 import httpx
 import pytest
-from test_api_service import _assert_local_base
+from partner_api import _assert_local_base
 
 from edu_agent.api import build_server, build_service
 
@@ -32,14 +32,14 @@ def base(monkeypatch):
 
 
 def options(base: str, path: str, origin: str) -> httpx.Response:
-    """OPTIONS 预检形态;SSRF 边界守卫与 post() 同款(test_api_service)。"""
+    """OPTIONS 预检形态;SSRF 边界守卫与 post() 同款(partner_api)。"""
     _assert_local_base(base)
     return httpx.options(f"{base}{path}", headers={"Origin": origin},
                          timeout=5.0, trust_env=False)
 
 
 def get(base: str, path: str, origin: str | None = None) -> httpx.Response:
-    """GET 形态;SSRF 边界守卫与 post() 同款(test_api_service)。"""
+    """GET 形态;SSRF 边界守卫与 post() 同款(partner_api)。"""
     _assert_local_base(base)
     headers = {"Origin": origin} if origin else {}
     return httpx.get(f"{base}{path}", headers=headers, timeout=5.0, trust_env=False)

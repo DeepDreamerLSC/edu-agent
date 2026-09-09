@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import httpx
 import pytest
-from test_api_service import _assert_local_base
+from partner_api import _assert_local_base
 
 from edu_agent.api import build_server, build_service
 

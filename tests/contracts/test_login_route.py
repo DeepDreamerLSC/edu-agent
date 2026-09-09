@@ -8,7 +8,7 @@ from __future__ import annotations
 import httpx
 import pytest
 import secrets
-from test_api_service import ScriptedKernel, _serve, post
+from partner_api import ScriptedKernel, _serve, post
 
 from edu_agent.api import demo_login
 
