@@ -18,6 +18,7 @@ import threading
 import time
 import uuid
 from datetime import datetime, timezone
+from email.message import Message
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
@@ -162,8 +163,13 @@ class IdentityService:
         self.idempotency: dict[str, tuple[str, dict]] = {}
         self._code_lock = threading.Lock()  # P1-3:授权码单次消费原子化(并发兑换竞态)
 
-    def native_code(self, body: dict, headers: dict, now: int | None = None) -> tuple[int, dict]:
-        """POST /api/openapi/v1/auth/native-codes:断言+PKCE challenge → 一次性授权码。"""
+    def native_code(self, body: dict, headers: dict | Message,
+                    now: int | None = None) -> tuple[int, dict]:
+        """POST /api/openapi/v1/auth/native-codes:断言+PKCE challenge → 一次性授权码。
+
+        headers 传 dict(测试)或 email Message(server 的 self.headers):两者 .get
+        均大小写不敏感地取 Authorization/Idempotency-Key(审查 P2:dict(self.headers)
+        会把请求头原始大小写固化成键,小写头被误判 401)。"""
         api_key = headers.get("Authorization", "").removeprefix("Bearer ").strip()
         if not api_key or not _constant_time_equals(api_key, self.config["api_key"]):
             raise IdentityError(401, "OPENAPI_UNAUTHORIZED", "API Key 缺失、无效或已撤销")
