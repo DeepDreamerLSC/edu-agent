@@ -41,7 +41,7 @@ TOLERANCE = 1  # 看板 #34 已批口径:12 分制 1 分
 def build_cases() -> list[dict]:
     """11 场景:dialogue_scenarios 1 + stability_20 5 + teaching_context 5(基线同款)。"""
     bank = {r["question_id"]: r for r in json.loads(
-        (DATASETS / "release_acceptance_seed_question_bank.json").read_text(encoding="utf-8"))["records"]}
+        (REPO / "edu_agent" / "contracts" / "release_acceptance_seed_question_bank.json").read_text(encoding="utf-8"))["records"]}
     stability_ids = ["chicken_rabbit", "equation_subtract", "fraction_addition",
                      "triangle_area", "word_problem"]
     cases = []
