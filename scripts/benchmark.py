@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""gateway 效率基准(01 §5):20 条固定回放 × {tutor stream(本地 8301), judge stream(云 DeepSeek)}。
+"""gateway 效率基准(01 §5):20 条固定回放 × {tutor stream(VL 8303), judge stream(MLX 8301)}。
 
 口径照 01 §5:TTFT 仅 stream 有值;TTFT/端到端/生成速度全部来自 model_call 事实
 记录(指标唯一来源),生成速度 = 输出 tokens / 生成秒数(总时长减 TTFT)。
@@ -29,7 +29,7 @@ BASELINE_PATH = REPO / "baselines" / "efficiency.json"
 REPORT_PATH = REPO / "var" / "benchmark-report.md"
 FACTS_DIR = Path(os.environ.get("EDU_FACTS_DIR") or REPO / "facts")
 DEGRADE = 0.10  # 01 §5:p50 劣化阈值
-ROLES = ("tutor", "judge")  # tutor 主选=本地 8301,judge 主选=云 DeepSeek(configs/models.yaml)
+ROLES = ("tutor", "judge")  # 主选:tutor=VL 8303,judge=MLX 8301(备选 DeepSeek)
 
 # 自造延迟负载:固定 20 条单轮提问,长度与题型错开;不是评测数据集,不做教学断言。
 REPLAYS = (
