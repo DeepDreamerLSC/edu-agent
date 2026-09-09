@@ -98,3 +98,18 @@
 
 - `blind-solve.jsonl` 已先于 Dev B deepseek 落盘(防锚定,#130 SOP s2)。
 - 无应用码改动;仅 docs/evals 产物。
+
+## 5b. 初选建议(初步,待步骤 4/5 + Dev B 剧本复核)
+
+按 SOP 挑选侧(硬门全过 → 三维排序 → 程序约束 → 反循环元原则)。以下为 Dev A 初步建议的 **13 条候选池**,含 6 桶全覆盖 + 正向对照 ≥1,供 WP4 人审砍 8。
+
+**候选(桶覆盖贪心 + required 优先 + 反循环)**:`#3 #5 #4`(text_position 坐标)、`#9 #6`(fraction_formula 分数)、`#14`(application_table 图形)、`#20`(circle_geometry 读刻度)、`#23`(percentage 百分数相对性,含误区种子)、`#26 #27 #29 #30`(visual_statistics_open,开放/规律/图读)。
+
+**校验指标**:
+- 桶覆盖:6 桶全覆盖(text_position ×4 / fraction ×2 / application ×1 / circle ×1 / percentage ×1 / statistics ×4)。
+- `visual_dependency=required` 数:10(#3 #4 #5 #6 #9 #20 #26 #27 #29 #30)≥ 6/8。
+- 难度分布(候选池):easy 2(#1 #6)/ medium 5(#3 #4 #5 #9 #14 #29)/ hard 5(#20 #23 #26 #27 #30)。
+- 正向对照 ≥1:`#1`(纯文字有序数对,当前模型易过)→ 链路 sanity check(反循环:不做主选,只作对照)。
+- 反循环:主选 required + 高对话承载力(#23 #26 #27 #30)避开"模型自然会做"的纯文字单答案题。
+
+> ⚠️ 本建议基于 Dev A 盲解预评(`visual_dependency_prelim`/`difficulty_prelim`)。**待步骤 4(转录仲裁,图是源)+ 步骤 5(Dev B 仅凭转录求解的失败模式仲裁 → required/helpful/none 定稿)+ 步骤 7(可应答性复核)后定稿**,届时据此选 8 提交 WP4 人审。
