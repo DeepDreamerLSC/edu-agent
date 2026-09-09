@@ -38,9 +38,11 @@ class KernelSubject:
             turns.append({"student": "", "tutor": first.text,
                           "state": first.state, "elapsed_ms": 0})
             for student_message in case.get("student_turns", []):
+                t0 = time.monotonic()
                 turn = reply(session, student_message, gateway=self.gateway)
                 turns.append({"student": student_message, "tutor": turn.text,
-                              "state": turn.state, "elapsed_ms": turn.session_version})
+                              "state": turn.state,
+                              "elapsed_ms": int((time.monotonic() - t0) * 1000)})
                 if turn.state == "ready_to_confirm":
                     break  # 掌握证据充分,余下剧本轮次不再发(判停语义)
             summary = finish(session, gateway=self.gateway)
