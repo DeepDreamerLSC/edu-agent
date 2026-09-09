@@ -32,6 +32,8 @@ def morning_summary(run_dir: Path | str) -> str:
     manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
     results = load_results(run_dir)
     total = manifest["total_cases"]
+    if total == 0:
+        return f"# 评测晨间摘要 — {run_dir.name}\n空批,无结果。"
     ok = [r for r in results if r["status"] == "ok"]
     env = [r for r in results if r["status"] == "environment"]
     content = [r for r in results if r["status"] == "content"]
