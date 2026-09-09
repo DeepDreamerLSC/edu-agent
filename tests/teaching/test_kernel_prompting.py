@@ -137,7 +137,7 @@ def test_repeat_self_refine_replaces_repeated_question(tmp_path):
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start({"text": "鸡和兔一共有8只,共有26只脚,鸡和兔各有多少只?说明思路。",
                    "answer": "鸡3只,兔5只"}, {"grade": "六年级"}, gateway=gateway)
-    turn = reply(first.session, "我不太会。", gateway=gateway)
+    turn = reply(first.session, "嗯,我看看。", gateway=gateway)
     gateway.close()
     fake.stop()
     # 首问「兔子有几只呢?」被复读一次 → self-refine 打回重生成 → 换成非复读的推进句

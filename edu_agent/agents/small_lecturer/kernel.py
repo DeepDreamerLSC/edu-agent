@@ -72,6 +72,84 @@ OPEN_SCHEMA = {
 FAIL_CLOSED_TEXT = "这张题图我没法安全地开始讲解(可能包含多道题或不清晰)。请换一张只包含一道题的清晰照片,或者直接把题目打出来。"
 # 统一 open 里 reply 留空(图文题 acceptable=false 且模型照"可留空"留空)时的确定性兜底首问
 _OPENING_FALLBACK = "我们先看看这道题,你能说说题目给了哪些条件吗?"
+# 方法名脱敏词表(任务包:代喂窄规则方案②):复讲阶段教师侧解析/知识点里的方法名
+# 替换成「这种方法」,不点名——学生讲完、到总结阶段才由 finish 的教师侧上下文恢复点名。
+_METHOD_TOKENS = (
+    "方程法", "通分", "假设法", "抬腿法", "列表法", "移项", "合并同类项",
+    "公分母", "最小公倍数", "底乘高", "图形转化", "等式性质", "异分母", "二元一次",
+)
+
+
+def _mask_method_names(text: str) -> str:
+    """复讲阶段方法名脱敏(确定性,零模型调用):方法名 → 「这种方法」。"""
+    for token in _METHOD_TOKENS:
+        text = text.replace(token, "这种方法")
+    return text
+
+
+def _masked_question(question: dict) -> dict:
+    """教师侧题面脱敏副本:解析与知识点里的方法名替换,不点名(题干/答案不动)。"""
+    masked = dict(question)
+    if question.get("analysis"):
+        masked["analysis"] = _mask_method_names(str(question["analysis"]))
+    if question.get("knowledge_points"):
+        masked["knowledge_points"] = [_mask_method_names(str(kp))
+                                      for kp in question["knowledge_points"]]
+    return masked
+
+
+# 复讲轮代喂的确定性兜底(代喂窄规则方案②+):tutor 在引导/确认轮直接点了方法名
+# (学生还没讲) → 替换成固定"请学生讲"引导,且不关对话——继续收集学生的讲题内容。
+_ELICIT_TEMPLATE = ("很好,你已经懂了。那请你从头讲讲你的思路——"
+                    "先说说你第一步算了什么、为什么这样算。")
+
+
+def _feeds_method(text: str) -> bool:
+    """tutor 输出里点名了方法(代喂):学生还没自己讲,tutor 不该报方法名。"""
+    return any(token in text for token in _METHOD_TOKENS)
+
+
+def _student_signals_understanding(student_message: str) -> bool:
+    """学生表示「懂了/明白了」——教学弧线里这是「请学生讲思路」的触发点。
+
+    「会了」用负向断言 (?<!不),避免「我不会了」(卡住)被误判为「懂了」。"""
+    return bool(re.search(r"都懂了|懂了|明白了|没有不懂|(?<!不)会了|没问题|都明白|没疑问", student_message))
+
+
+def _student_signals_stuck(student_message: str) -> bool:
+    """学生表示「不会/猜不出」——这是「揭示下一级阶梯」的触发点(治 tutor 复读探针)。
+
+    用完整短句(非单字「不会」),避免误伤「我不会」这类出现在其它语境的学生消息。"""
+    return bool(re.search(r"我不太会|我猜不出|我猜不出来|我不知道|我想不出|我想不出来|我不会做|我不会了|不会吧|太难了|没思路", student_message))
+
+
+def _next_step(session: "LearnerSession") -> dict | None:
+    """阶梯逐级揭示:返回 steps 的下一级(推进 hint_level);揭示完毕返回 None。"""
+    if session.hint_level < len(session.steps):
+        step = session.steps[session.hint_level]
+        session.hint_level += 1
+        return step
+    return None
+
+
+# 阶梯揭示的多样开场(确定性,轮换)——避免「这一步我们先看」句句重复、显生硬。
+_STEP_LEADS = ("我们从这里入手", "下一步是这样", "再往下看", "你看这一步", "接着这样算", "关键在这一步")
+
+
+def _reveal_stuck_hint(session: "LearnerSession") -> str:
+    """学生卡住 → 揭示下一级阶梯(确定性,零模型调用,不重复)。
+
+    内容 = session.steps 下一级;开场用 _STEP_LEADS 轮换,避免固定前缀生硬。
+    模型措辞版实测会重复(3/7)且过度揭示,故仍用确定性。"""
+    step = _next_step(session)
+    if step is None:
+        answer = str(session.question.get("answer") or "").strip()
+        if not answer and session.steps:
+            answer = str(session.steps[-1].get("value") or "").strip()
+        return (f"这一步我们直接看结果:{answer}。你先记住它,我们回头再讲一遍为什么。"
+                if answer else NEEDS_REVIEW_TEXT)
+    lead = _STEP_LEADS[(session.hint_level - 1) % len(_STEP_LEADS)]
+    return f"{lead}:{step['step']}。你接着算下一步。"
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
@@ -332,10 +410,30 @@ def reply(session: LearnerSession, student_message: str, *,
     if expected_session_version is not None and expected_session_version != session.session_version:
         raise SessionVersionConflict(  # 不推进:旧版本不静默覆盖新一轮诊断(00 §5.2 约定 3)
             f"expected_session_version={expected_session_version} != 当前 {session.session_version}")
+    if _student_signals_understanding(student_message):
+        # 学生说「懂了」→ 直接请学生讲思路(确定性,不调模型),不 confirm、不报答案。
+        # 这是教学弧线的固定策略(00 §8.5/人定):学生表示懂,就该由学生自己讲,而非 tutor 复述。
+        session.history.append({"role": "user", "content": student_message})
+        session.history.append({"role": "assistant", "content": _ELICIT_TEMPLATE})
+        session.session_version += 1
+        session.state = "dialogue"
+        return Turn(text=_ELICIT_TEMPLATE, session_version=session.session_version,
+                    state="dialogue", ready_to_confirm=False, session=session)
+    if _student_signals_stuck(student_message):
+        # 学生说「不会/猜不出」→ 揭示下一级阶梯(内容确定性,措辞交模型,代喂/无步骤兜底)。
+        gateway = gateway or default_gateway()
+        hint = _reveal_stuck_hint(session)
+        session.history.append({"role": "user", "content": student_message})
+        session.history.append({"role": "assistant", "content": hint})
+        session.session_version += 1
+        session.state = "dialogue"
+        session.stuck = True
+        return Turn(text=hint, session_version=session.session_version,
+                    state="dialogue", ready_to_confirm=False, session=session)
     gateway = gateway or default_gateway()
     _reply_messages = [
         {"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
-        {"role": "user", "content": _user_prompt(session.question, {
+        {"role": "user", "content": _user_prompt(_masked_question(session.question), {
             "学生": session.learner, "对话记录": session.history,
             "学生本轮回答": student_message,
             "输出提醒": "若学生本轮已给出正确最终答案(或明确表示理解并完成检验),"
@@ -356,6 +454,12 @@ def reply(session: LearnerSession, student_message: str, *,
             session.stuck = True  # 复读打断 = 卡点标记(R6 同款)
         output["reply"] = refined
     safe_text = _guard_output(output["reply"], session, ctx)
+    if _feeds_method(safe_text):
+        # 复讲轮代喂:换成固定"请学生讲"引导,并强制 ready_to_confirm=False——
+        # 不关对话,继续收集学生的讲题内容(总结轮才由 finish 点名方法)。
+        safe_text = _ELICIT_TEMPLATE
+        output["ready_to_confirm"] = False
+        session.stuck = True  # 代喂 = 未解决的教学质量问题(卡点标记,R6 同款)
     # 数字漂移守卫(M3):模型自报引用的数字 ⊆ 题面数字全集,超出 = 把口误数字
     # 当题目条件复读 → stuck 标记(不拒答,下一轮提醒纠偏);题面无数字跳过
     cited = [float(n) for n in (output.get("cited_numbers") or [])]
