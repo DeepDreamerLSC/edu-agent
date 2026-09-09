@@ -13,6 +13,7 @@ import time
 from edu_agent.agents.small_lecturer import TerminalStateError, finish, reply, start
 from edu_agent.gateway import Gateway, GatewayError
 
+from .image_teaching import question_image_data_url
 from .judge import ENV_FAILURES
 from .runner import EnvironmentFailure
 
@@ -25,9 +26,25 @@ class KernelSubject:
 
     name = "kernel-small-lecturer"
 
+    @staticmethod
+    def _question_payload(raw: object) -> dict:
+        """题面 → 内核 start() 入参:纯文本(旧)或 v1 图文(question.text + image)。
+
+        v1 的 image(path+sha256)读文件、对账后转 data URL,内核 L380 直接消费。
+        """
+        if isinstance(raw, str):
+            return {"text": raw}
+        if not isinstance(raw, dict):
+            raise ValueError(f"question 必须是字符串或 dict,实际 {type(raw).__name__}")
+        payload = {"text": raw.get("text", "")}
+        image = raw.get("image")
+        if image is not None:
+            payload["image"] = question_image_data_url(image)
+        return payload
+
     def run_case(self, case: dict) -> dict:
         started = time.monotonic()
-        question = {"text": case["question"]}
+        question = self._question_payload(case["question"])
         learner = {"grade": case.get("grade", "")}
         if case.get("answer_status"):  # R6 首问策略分派信号(评测数据侧)
             learner["answer_status"] = case["answer_status"]
