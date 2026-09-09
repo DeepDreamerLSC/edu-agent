@@ -282,3 +282,37 @@ def test_stream_no_retry_after_first_event(tmp_path):
     assert excinfo.value.failure is FailureType.CONNECTION
     assert len(fake.requests) == 1
     assert facts_line(tmp_path)["edu.outcome"] == "connection"
+
+
+# ---------- 备选惰性构造(#113 P2:装配期急切构造堵死本地主选) ----------
+
+
+def test_fallback_not_constructed_when_primary_succeeds(tmp_path):
+    """主选成功时,备选 handler 不应被构造——即使其 make_handler 会抛(如缺云凭据)。
+
+    #113 P2 回归钉:此前 fallback.py 装配期急切 make_handler(fallback),
+    缺 DEEPSEEK_API_KEY 的环境连本地主选调用都被堵死。
+    """
+    from edu_agent.gateway import ModelConfig, with_fallback_invoke
+    from edu_agent.gateway import CallContext, ModelResponse
+
+    primary = ModelConfig("m", "fake", "m")
+    fallback = ModelConfig("b", "fake", "b")
+
+    def exploding_make_handler(fb):  # 备选若被构造,立即爆炸
+        raise RuntimeError("备选不应被构造")
+
+    def ok_handler(request, ctx):
+        return ModelResponse(text="主选成功")
+
+    wrapped = with_fallback_invoke(primary, fallback, exploding_make_handler)(ok_handler)
+    ctx = CallContext(provider_name="fake", request_model="m", model_name="m", current_model="m")
+    response = wrapped(ModelRequestStub(), ctx)
+    assert response.text == "主选成功"
+
+
+class ModelRequestStub:
+    role = "tutor"
+    messages = []
+    response_schema = None
+    session_id = "lazy-fb"

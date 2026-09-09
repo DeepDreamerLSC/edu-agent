@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --frozen
-      - name: 效率基准(20 条固定回放 × 本地/云,p95 劣化>10% 失败,01 §5)
+      - name: 效率基准(20 条固定回放 × 本地/云,p50 劣化>10% 失败,01 §5)
         run: uv run python scripts/benchmark.py
       - name: 上传基准报告(artifacts)
         if: always()
