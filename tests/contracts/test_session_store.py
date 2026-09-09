@@ -99,6 +99,21 @@ def test_save_is_atomic_no_tmp_left_behind(tmp_path):
     assert store.load(session.session_id) == session
 
 
+def test_unknown_field_is_skipped_not_fatal(tmp_path):
+    """P1-4 回归:文件带未知字段(字段改名/回滚遗留)→ LearnerSession(**data) 抛
+    TypeError,应同半截 JSON 一样隔离跳过,不炸整个启动扫描(与 docstring 承诺一致)。"""
+    good = sample_session()
+    bad = sample_session()
+    FileSessionStore(tmp_path).save(good)
+    FileSessionStore(tmp_path).save(bad)
+    path = tmp_path / f"{bad.session_id}.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["renamed_field"] = "x"  # 回滚改名遗留的未知字段
+    path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    sessions = FileSessionStore(tmp_path).load_all()
+    assert [s.session_id for s in sessions] == [good.session_id]
+
+
 def test_additive_only_old_file_loads_with_defaults(tmp_path):
     """旧文件缺新增字段 → dataclass 默认值补齐,不迁移不删字段(additive-only)。"""
     store = FileSessionStore(tmp_path)
