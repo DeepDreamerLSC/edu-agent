@@ -47,7 +47,7 @@ class FileSessionStore:
         for path in sorted(self.root.glob("*.json")):
             try:
                 sessions.append(self._restore(json.loads(path.read_text(encoding="utf-8"))))
-            except (json.JSONDecodeError, OSError):
+            except (json.JSONDecodeError, OSError, TypeError):
                 print(f"[store] 跳过损坏的会话文件:{path}")
         return sessions
 
