@@ -20,6 +20,7 @@ from PIL import Image
 
 from edu_agent.api import FileService, build_server, build_service
 from test_api_service import ScriptedKernel, _assert_local_base
+from auth_testing import TEST_TOKEN
 
 
 def png_bytes(width: int = 64, height: int = 64) -> bytes:
@@ -38,7 +39,7 @@ def api(tmp_path):
     server.server_close()
 
 
-AUTH = {"Authorization": "Bearer student-token"}
+AUTH = {"Authorization": f"Bearer {TEST_TOKEN}"}
 LEGACY_UPLOAD = "/api/openapi/v1/files/upload-url"
 LEGACY_COMPLETE = "/api/openapi/v1/files/complete"
 

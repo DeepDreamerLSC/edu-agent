@@ -11,6 +11,7 @@ from __future__ import annotations
 import httpx
 import pytest
 from test_api_service import StubTurn, _assert_local_base, post
+from auth_testing import TEST_TOKEN
 
 from edu_agent.api import build_server, build_service
 
@@ -65,7 +66,7 @@ def env():
 def get(base: str, path: str) -> httpx.Response:
     """GET 形态;SSRF 边界守卫与 post() 同款(test_api_service)。"""
     _assert_local_base(base)
-    headers = {"Authorization": "Bearer test-token"}
+    headers = {"Authorization": f"Bearer {TEST_TOKEN}"}
     return httpx.get(f"{base}{path}", headers=headers, timeout=5.0, trust_env=False)
 
 

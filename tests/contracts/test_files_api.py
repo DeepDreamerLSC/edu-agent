@@ -18,6 +18,7 @@ from PIL import Image
 
 from edu_agent.api import FileService, build_server, build_service
 from test_api_service import ScriptedKernel
+from auth_testing import TEST_TOKEN
 
 
 def png_bytes(width: int = 64, height: int = 64, fmt: str = "PNG",
@@ -43,7 +44,7 @@ def api(tmp_path):
     server.server_close()
 
 
-AUTH = {"Authorization": "Bearer student-token"}
+AUTH = {"Authorization": f"Bearer {TEST_TOKEN}"}
 
 
 def _post(base, path, payload, status=200):
