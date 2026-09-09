@@ -3,14 +3,14 @@
 POST /api/conversations:{external_question_id?|question_text?|question_image?,
 idempotency_key 必填}——external_question_id 走题源,question_text/question_image
 自由材料二选一(题图空壳由内核 vision 处理);GET /api/conversations/{id} 状态视图。
-请求走 test_api_service 的 SSRF 边界守卫(只允许 127.0.0.1 本地测试服务器)。
+请求走 partner_api 的 SSRF 边界守卫(只允许 127.0.0.1 本地测试服务器)。
 """
 
 from __future__ import annotations
 
 import httpx
 import pytest
-from test_api_service import StubTurn, _assert_local_base, post
+from partner_api import StubTurn, _assert_local_base, post
 
 from edu_agent.api import build_server, build_service
 
@@ -63,7 +63,7 @@ def env():
 
 
 def get(base: str, path: str) -> httpx.Response:
-    """GET 形态;SSRF 边界守卫与 post() 同款(test_api_service)。"""
+    """GET 形态;SSRF 边界守卫与 post() 同款(partner_api)。"""
     _assert_local_base(base)
     headers = {"Authorization": "Bearer test-token"}
     return httpx.get(f"{base}{path}", headers=headers, timeout=5.0, trust_env=False)

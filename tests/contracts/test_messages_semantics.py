@@ -13,7 +13,7 @@ import httpx
 import pytest
 
 from edu_agent.api import ApiError, build_server, build_service
-from test_api_service import ScriptedKernel
+from partner_api import ScriptedKernel
 
 REPLIES = ["你列了哪些已知量?", "很好,继续。", "结论对。", "总结:方法你讲清了。",
            "第五轮。", "第六轮。", "第七轮。", "第八轮。"]

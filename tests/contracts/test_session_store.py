@@ -10,7 +10,8 @@ import json
 from dataclasses import dataclass
 
 from edu_agent.agents.small_lecturer import LearnerSession, Summary
-from edu_agent.api import FileSessionStore, build_service
+from edu_agent.api import build_service
+from edu_agent.store import FileSessionStore
 
 
 def sample_session(**overrides) -> LearnerSession:

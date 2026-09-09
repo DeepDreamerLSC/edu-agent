@@ -76,3 +76,21 @@ def test_from_package_import_public_package_passes(base_repo):
     write_test_file(base_repo, "from edu_agent import gateway\nfrom edu_agent import contracts\n")
     result = run_py("check_test_imports.py", "--root", str(base_repo))
     assert result.returncode == 0, result.stdout
+
+
+def test_unknown_test_directory_fails(base_repo):
+    """tests/ 下出现六类(+fixtures)之外目录 → 非零退出(防止目录漂移无 CI 拦截)。"""
+    unknown = base_repo / "tests" / "whatever"
+    unknown.mkdir(parents=True)
+    (unknown / "check.py").write_text("import json\n", encoding="utf-8")
+    result = run_py("check_test_imports.py", "--root", str(base_repo))
+    assert result.returncode != 0
+    assert "whatever" in result.stdout
+
+
+def test_six_classes_and_fixtures_dirs_pass(base_repo):
+    """六类目录 + fixtures 都放行,不误报。"""
+    for name in ("teaching", "gateway", "contracts", "e2e", "rules", "evals", "fixtures"):
+        (base_repo / "tests" / name).mkdir(parents=True)
+    result = run_py("check_test_imports.py", "--root", str(base_repo))
+    assert result.returncode == 0, result.stdout
