@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from dataclasses import dataclass
 
 try:
     from scripts import github_api
@@ -27,6 +28,18 @@ LABEL_COLOR = "d73a4a"
 LABEL_DESCRIPTION = "main CI 红:30 分钟内 fix 或 revert(04 §3.2)"
 
 
+@dataclass(frozen=True)
+class AlertStyle:
+    """报警 issue 的呈现口径(标签/标题前缀/正文首行)。默认 main CI;nightly 传自定义。"""
+
+    label: str = MAIN_RED_LABEL
+    title_prefix: str = "main 红"
+    note: str = ""  # 空 = 默认 main CI 失败口径
+
+
+MAIN_RED_STYLE = AlertStyle()
+
+
 # ---------- 纯逻辑(供 tests/rules 单测) ----------
 
 
@@ -35,13 +48,14 @@ def failed_step_names(steps: list[dict]) -> list[str]:
     return [step["name"] for step in steps if step.get("conclusion") == "failure"]
 
 
-def issue_title(sha: str, step_names: list[str]) -> str:
-    return f"main 红:{sha[:12]} 失败步骤:{', '.join(step_names)}"
+def issue_title(sha: str, step_names: list[str], prefix: str = "main 红") -> str:
+    return f"{prefix}:{sha[:12]} 失败步骤:{', '.join(step_names)}"
 
 
-def issue_body(sha: str, step_names: list[str], run_url: str) -> str:
+def issue_body(sha: str, step_names: list[str], run_url: str, note: str = "") -> str:
+    scope = note or "main 上的 CI 失败(04 §3.2 第三道关卡,无分支保护的兜底报警)。"
     return (
-        "main 上的 CI 失败(04 §3.2 第三道关卡,无分支保护的兜底报警)。\n\n"
+        f"{scope}\n\n"
         f"- commit: {sha}\n"
         f"- 失败步骤: {', '.join(step_names)}\n"
         f"- 运行: {run_url}\n\n"
@@ -49,13 +63,16 @@ def issue_body(sha: str, step_names: list[str], run_url: str) -> str:
     )
 
 
-def alert(api, sha: str, run_id: str, job_name: str | None, run_url: str) -> None:
-    """失败 → 开 main-red issue;已有未关闭的同标签 issue 则跳过。
+def alert(api, sha: str, run_id: str, job_name: str | None, run_url: str,
+          style: AlertStyle = MAIN_RED_STYLE) -> None:
+    """失败 → 开报警 issue;已有未关闭的同标签 issue 则跳过。
 
     job_name 指定时只看该 job 的失败步骤(ci.yml 挂在 checks job 内的用法);
     None = 报警 job 模式(main.yml --all-jobs,#35):收集全部 job 的失败步骤,
     步骤名带 job 前缀(checks/ruff、benchmark/效率基准…)。
+    style 供非 main 场景复用(nightly 流水线传 label=nightly-red)。
     """
+    label = style.label
     jobs = (api.get(f"actions/runs/{run_id}/jobs?per_page=100") or {}).get("jobs", [])
     if job_name is None:
         names = [
@@ -67,16 +84,16 @@ def alert(api, sha: str, run_id: str, job_name: str | None, run_url: str) -> Non
         steps = next((job["steps"] for job in jobs if job.get("name") == job_name), [])
         names = failed_step_names(steps)
     if not names:
-        print("main-red: 没有失败步骤(运行被取消或读不到),不开 issue")
+        print(f"{label}: 没有失败步骤(运行被取消或读不到),不开 issue")
         return
-    existing = api.get(f"issues?state=open&labels={MAIN_RED_LABEL}&per_page=100")
+    existing = api.get(f"issues?state=open&labels={label}&per_page=100")
     if isinstance(existing, list) and existing:
-        print(f"main-red: 已有未关闭的报警 issue #{existing[0]['number']},不重复开")
+        print(f"{label}: 已有未关闭的报警 issue #{existing[0]['number']},不重复开")
         return
-    api.create_label(MAIN_RED_LABEL, LABEL_COLOR, LABEL_DESCRIPTION)
-    title = issue_title(sha, names)
-    issue = api.create_issue(title, issue_body(sha, names, run_url), [MAIN_RED_LABEL]) or {}
-    print(f"main-red: 已开 issue #{issue.get('number', '?')}: {title}")
+    api.create_label(label, LABEL_COLOR, LABEL_DESCRIPTION)
+    title = issue_title(sha, names, style.title_prefix)
+    issue = api.create_issue(title, issue_body(sha, names, run_url, style.note), [label]) or {}
+    print(f"{label}: 已开 issue #{issue.get('number', '?')}: {title}")
 
 
 def main() -> int:
@@ -89,12 +106,18 @@ def main() -> int:
         action="store_true",
         help="报警 job 模式(main.yml alarm,#35):收集本 run 全部 job 的失败步骤",
     )
+    parser.add_argument("--label", default=MAIN_RED_LABEL,
+                        help="报警 issue 标签(默认 main-red;nightly 流水线传 nightly-red)")
+    parser.add_argument("--title-prefix", default="main 红",
+                        help="issue 标题前缀(默认 main 红)")
+    parser.add_argument("--note", default="",
+                        help="正文首行说明(默认 main CI 失败口径;nightly 传测量链路说明)")
     args = parser.parse_args()
     if args.dry_run:
         names = [name for name in args.steps.split(",") if name]
         sha = args.sha or "0" * 40
-        print(f"DRY-RUN title: {issue_title(sha, names)}")
-        print(issue_body(sha, names, "https://github.com/example/actions/runs/0"))
+        print(f"DRY-RUN title: {issue_title(sha, names, args.title_prefix)}")
+        print(issue_body(sha, names, "https://github.com/example/actions/runs/0", args.note))
         return 0
     token = os.environ.get("GITHUB_TOKEN")
     repo = os.environ.get("GITHUB_REPOSITORY")
@@ -113,6 +136,7 @@ def main() -> int:
         run_id,
         None if args.all_jobs else os.environ.get("GITHUB_JOB", "checks"),
         run_url,
+        style=AlertStyle(label=args.label, title_prefix=args.title_prefix, note=args.note),
     )
     return 0
 
