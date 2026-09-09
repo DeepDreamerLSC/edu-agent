@@ -1,29 +1,30 @@
 # 题图教学评测集 v1 · 候选评审(WP4 唯一界面)
 
-> **怎么用**:在浏览器里对下面 12-15 条候选做两件事——**选出 8 条**、**确认二级误区种子**。
-> 每条含:题图链接 / 转录 / 参考答案 / 误区种子(出处分级)/ 剧本摘要 / 三维分(取自 Dev A 评分表)。
-> 状态:本文为 **WP3 起草稿**;`question.text` 待 Dev A 逐字核对(图是源)定稿,
-> 标 ⚠️ 的参考答案待 A 精确图读终审;deepseek 盲测通道待 `DEEPSEEK_API_KEY` 入环境后补跑。
+> **怎么用**:在浏览器里对下面候选做两件事——**选出 8 条**、**确认二级误区种子**。
+> 每条含:题图链接 / 转录(图是源)/ 参考答案 / 误区种子(出处分级)/ 剧本摘要 / 三维分。
+> 状态:`question.text`/`reference_answer` 取自 Dev A 逐字核对(图是源,commit `1654d44`);
+> `student_turns`/`expected.outcome`/`misconception_seed` 为 Dev B(WP3)起草;
+> 标 ⚠️ 的参考答案待 A 精确图读终审;deepseek 盲测通道待密钥注入后补跑。
 
 ## 0. 总览
 
 | # | id | 桶 | 视觉依赖 | 对话承载力 | 答案确定性 | 难度 | 弧线 | 预期结果 |
 |---|---|---|---|---|---|---|---|---|
-| #1 | `image_v1_text_position_movie_ticket` | text_position | none | low | text | easy | 恢复(犯错→引导→自纠) | ready_to_record |
-| #3 | `image_v1_text_position_grid_coordinates` | text_position | required | high | text | medium | 未就绪 | not_ready |
-| #4 | `image_v1_text_position_translation` | text_position | required | medium | text | medium | 需揭示(犯错→需 reveal) | needed_reveal |
-| #5 | `image_v1_text_position_bearing` | text_position | required | medium | text | medium | 未就绪 | not_ready |
-| #6 | `image_v1_fraction_formula_quarter_circles` | fraction_formula | required | low | integer | easy | 恢复(犯错→引导→自纠) | ready_to_record |
-| #9 | `image_v1_fraction_formula_pour_out` | fraction_formula | required | medium | text | medium | 恢复(犯错→引导→自纠) | ready_to_record |
-| #14 | `image_v1_application_table_reciprocal_diagrams` | application_table | helpful | medium | text | medium | 恢复(犯错→引导→自纠) | ready_to_record |
-| #20 | `image_v1_circle_geometry_radius_diameter` | circle_geometry | required | high | text | hard | 需揭示(犯错→需 reveal) | needed_reveal |
-| #23 | `image_v1_percentage_multi_part_two_schools` | percentage_multi_part | helpful | high | text | hard | 恢复(犯错→引导→自纠) | ready_to_record |
-| #26 | `image_v1_visual_statistics_open_square_triangular_numbers` | visual_statistics_open | required | high | text | hard | 未就绪 | not_ready |
-| #27 | `image_v1_visual_statistics_open_water_tank` | visual_statistics_open | required | high | text | hard | 需揭示(犯错→需 reveal) | needed_reveal |
-| #29 | `image_v1_visual_statistics_open_speed_time` | visual_statistics_open | required | medium | text | medium | 恢复(犯错→引导→自纠) | ready_to_record |
-| #30 | `image_v1_visual_statistics_open_polygonal_numbers` | visual_statistics_open | required | high | text | hard | 未就绪 | not_ready |
+| 1 | `image_v1_text_position_01` | text_position | none | low | text | easy | 恢复(犯错→引导→自纠) | ready_to_record |
+| 3 | `image_v1_text_position_03` | text_position | required | high | text | medium | 未就绪 | not_ready |
+| 4 | `image_v1_text_position_04` | text_position | required | medium | text | medium | 需揭示(犯错→需 reveal) | needed_reveal |
+| 5 | `image_v1_text_position_05` | text_position | required | medium | text | medium | 未就绪 | not_ready |
+| 6 | `image_v1_fraction_formula_06` | fraction_formula | required | low | integer | easy | 恢复(犯错→引导→自纠) | ready_to_record |
+| 9 | `image_v1_fraction_formula_09` | fraction_formula | required | medium | text | medium | 恢复(犯错→引导→自纠) | ready_to_record |
+| 14 | `image_v1_application_table_14` | application_table | helpful | medium | text | medium | 恢复(犯错→引导→自纠) | ready_to_record |
+| 20 | `image_v1_circle_geometry_20` | circle_geometry | required | high | text | hard | 需揭示(犯错→需 reveal) | needed_reveal |
+| 23 | `image_v1_percentage_multi_part_23` | percentage_multi_part | helpful | high | text | hard | 恢复(犯错→引导→自纠) | ready_to_record |
+| 26 | `image_v1_visual_statistics_open_26` | visual_statistics_open | required | high | text | hard | 未就绪 | not_ready |
+| 27 | `image_v1_visual_statistics_open_27` | visual_statistics_open | required | high | text | hard | 需揭示(犯错→需 reveal) | needed_reveal |
+| 29 | `image_v1_visual_statistics_open_29` | visual_statistics_open | required | medium | text | medium | 恢复(犯错→引导→自纠) | ready_to_record |
+| 30 | `image_v1_visual_statistics_open_30` | visual_statistics_open | required | high | text | hard | 未就绪 | not_ready |
 
-**程序约束自检**:六桶全覆盖(text_position 4 / visual_statistics_open 4 / fraction_formula 2 / application_table 1 / circle_geometry 1 / percentage_multi_part 1);`visual_dependency=required` **10/13** ≥ 6/8;三弧齐全(恢复 6 / 需揭示 3 / 未就绪 4)。
+**程序约束自检**:六桶全覆盖(text_position 4 / visual_statistics_open 4 / fraction_formula 2 / application_table 1 / circle_geometry 1 / percentage_multi_part 1);`visual_dependency=required` **10/13** ≥ 6/8;三弧齐全(恢复 6 / 需揭示 3 / 未就绪 4);溯源(question_id/sha256)齐备。
 
 ---
 
@@ -34,13 +35,13 @@
 - **桶**:`text_position` · **视觉依赖**:`none` · **难度**:`easy` · **对话承载力**:`low` · **答案确定性**:`text`
 - **溯源**:`question_id=6a61a8dabd464753061efdff` · `pujia_school_question_bank` · `1-1用有序数对确定位置`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-如果电影票上的“8排6号”记作(6, 8)，那么“12排5号”记作(    ，    )；(3, 10)表示的位置是(    )排(    )号。
+如果电影票上的"8排6号"记作(6,8),那么"12排5号"记作( );(3,10)表示的位置是( )排( )号。
 ```
 
-**参考答案**:`(5，12)；(10)排(3)号` (answer_type=`text`, unit=`—`)
+**参考答案**:`(5,12);(10)排(3)号` (answer_type=`text`, unit=`—`)
 
 **误区种子**(单题单误区):把数对顺序写成“排在前、号在后”，即排号颠倒（一级：small_lecturer_target_mode_v3_question_bank.json 的 coordinate_notation 系列同型设计）
 
@@ -59,32 +60,13 @@
 - **桶**:`text_position` · **视觉依赖**:`required` · **难度**:`medium` · **对话承载力**:`high` · **答案确定性**:`text`
 - **溯源**:`question_id=6a61a907bd464753061efe11` · `pujia_school_question_bank` · `1-1用有序数对确定位置`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-200m
-9
-8
-7
-6
-5
-4
-3
-2
-1
-0
-1 2 3 4 5 6 7 8 9 10
-北
-仔细观察，填一填。
-(1)B的位置可以表示为(2，4)，它位于A以东( )米，再往北( )米处。
-(2)C的位置可以表示为( ， )，它位于A以东( )米，再往北( )米处。
-(3)位于A以东1400米，再往北600米处的是( )，它的位置可以表示为( ， )。
-(4)某天，小智的活动路线是(4，2)→(5，8)→(7，3)→(8，5)。
-这天小智先后去了哪些地方？填在括号里：( )→( )→( )→( )。
-(5)小慧从D出发，向东行600米，再向北行800米。在图上用o标出该地的位置，用数对可以表示为( ， )。
+200m 北↑ 网格0-10×0-9,点A,B,C,D,E,F,G。仔细观察,填一填。(1)B位置(2,4),位于A以东( )米再往北( )米。(2)C位置( , ),位于A以东( )米再往北( )米。(3)位于A以东1400米再往北600米的是( ),位置( , )。(4)(4,2)→(5,8)→(7,3)→(8,5)先后去了哪些地方?( )→( )→( )→( )。(5)小慧从D出发向东600米再向北800米,标o,位置( , )
 ```
 
-**参考答案** ⚠️ **参考答案待 A 图读终审**:`需读格：A≈(1,1)，B=(2,4)，C≈(4,7)，D≈(3,2) 等` (answer_type=`text`, unit=`米`)
+**参考答案** ⚠️ **参考答案待 A 图读终审**:`需读格:A≈(1,1),B=(2,4),C≈(4,7),D≈(3,2) 等` (answer_type=`text`, unit=`米`)
 
 **误区种子**(单题单误区):把数对里的行、列读反（先列后行），导致网格点整体错位（二级）
 
@@ -104,30 +86,10 @@
 - **桶**:`text_position` · **视觉依赖**:`required` · **难度**:`medium` · **对话承载力**:`medium` · **答案确定性**:`text`
 - **溯源**:`question_id=6a61a927bd464753061efe1e` · `pujia_school_question_bank` · `1-1用有序数对确定位置`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-先用数对表示图形四个顶点的位置，再将图形先向右平移4格，再向下平移2格，画出平移后的图形，再用数对表示出平移后四个顶点A₁、B₁、C₁、D₁的位置，并想一想，这些顶点与ABCD的位置有什么关系？
-
-网格图：
-- 坐标轴：横轴从0到10，纵轴从0到6。
-- 图形ABCD为一个直角梯形（或折线图形），其四个顶点坐标如下：
-  - A点：位于横轴刻度1，纵轴刻度5，即数对 (1, 5)。
-  - B点：位于横轴刻度1，纵轴刻度3，即数对 (1, 3)。
-  - C点：位于横轴刻度5，纵轴刻度3，即数对 (5, 3)。
-  - D点：位于横轴刻度4，纵轴刻度5，即数对 (4, 5)。
-- 平移后图形A₁B₁C₁D₁：
-  - A₁点：从A点(1, 5)向右平移4格，向下平移2格，得到 (1+4, 5-2) = (5, 3)。
-  - B₁点：从B点(1, 3)向右平移4格，向下平移2格，得到 (1+4, 3-2) = (5, 1)。
-  - C₁点：从C点(5, 3)向右平移4格，向下平移2格，得到 (5+4, 3-2) = (9, 1)。
-  - D₁点：从D点(4, 5)向右平移4格，向下平移2格，得到 (4+4, 5-2) = (8, 3)。
-- 平移后图形A₁B₁C₁D₁的顶点坐标为：
-  - A₁ (5, 3)
-  - B₁ (5, 1)
-  - C₁ (9, 1)
-  - D₁ (8, 3)
-
-这些顶点与ABCD的位置关系：A₁、B₁、C₁、D₁分别是A、B、C、D点经过向右平移4格、向下平移2格后得到的对应点。即每个点的横坐标加4，纵坐标减2。
+先用数对表示图形四个顶点的位置,再将图形先向右平移4格,再向下平移2格,画出平移后的图形,再用数对表示出平移后四个顶点A₁、B₁、C₁、D₁的位置,再想一想,这些顶点与ABCD的位置有什么关系?(网格0-10×0-6)
 ```
 
 **参考答案**:`A₁(5,3) B₁(5,1) C₁(8,1) D₁(8,3)` (answer_type=`text`, unit=`—`)
@@ -149,18 +111,13 @@
 - **桶**:`text_position` · **视觉依赖**:`required` · **难度**:`medium` · **对话承载力**:`medium` · **答案确定性**:`text`
 - **溯源**:`question_id=6a69586fb0ffee286ba75532` · `pujia_school_question_bank` · `1-2描述物体的位置`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-以灯塔为观测点，C岛和D岛分别在什么方位上？
-(1) C岛在灯塔的北偏( )°的方向上。
-(2) D岛在灯塔的南偏( )°的方向上。
-还可以这样描述：
-(3) C岛在灯塔的东偏( )°的方向上。
-(4) D岛在灯塔的( )偏( )°的方向上。
+北↑ C岛 75° 灯塔 西 东 40° D岛 南。以灯塔为观测点,C岛和D岛分别在什么方位上?(1)C岛在灯塔的北偏( )( )°的方向上。(2)D岛在灯塔的南偏( )( )°的方向上。还可以这样描述:(3)C岛在灯塔的东偏( )( )°的方向上。(4)D岛在灯塔的( )偏( )( )°的方向上
 ```
 
-**参考答案**:`(1)北偏东75°；(2)南偏西40°；(3)东偏北15°；(4)西偏南50°` (answer_type=`text`, unit=`—`)
+**参考答案**:`(1)北偏东75°;(2)南偏西40°;(3)东偏北15°;(4)西偏南50°` (answer_type=`text`, unit=`—`)
 
 **误区种子**(单题单误区):方位角只照抄图上标的那个角，不会用“90°−已知角”换另一种描述（北偏东75° ⇄ 东偏北15°）（二级）
 
@@ -179,13 +136,10 @@
 - **桶**:`fraction_formula` · **视觉依赖**:`required` · **难度**:`easy` · **对话承载力**:`low` · **答案确定性**:`integer`
 - **溯源**:`question_id=6a695a01b0ffee286ba75680` · `pujia_school_question_bank` · `2-1分数乘整数`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-○ ○ ○ ○
-○ ○ ○ ○
-○ ○ ○ ○
-如右图，将这些圆片的 3/4 涂上蓝色，那么需要涂( )个圆片。
+如右图,将这些圆片的 3/4 涂上蓝色,那么需要涂( )个圆片。(图:3×4=12个圆)
 ```
 
 **参考答案**:`9` (answer_type=`integer`, unit=`个`)
@@ -207,16 +161,10 @@
 - **桶**:`fraction_formula` · **视觉依赖**:`required` · **难度**:`medium` · **对话承载力**:`medium` · **答案确定性**:`text`
 - **溯源**:`question_id=6a61b366bd464753061f0475` · `pujia_school_question_bank` · `2-1分数乘整数`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-杯子中原来盛有800 mL水，小华将杯中的水倒出一些，如下图。求从杯子中倒出了多少毫升水，正确的列式是()。
-A. 800×3/5
-B. 800×3/8
-C. 800×5/8
-D. 800×5/9
-
-图示：左侧是一个量杯，内有水，水位在量杯刻度的3/5处（从底部算起，液面高度对应刻度线，量杯上标有刻度线，水位在第三条刻度线处，量杯总共有五条刻度线，从下到上依次为0、1/5、2/5、3/5、4/5、5/5，但实际水位在3/5处）。右侧是一个量杯，内有水，水位在量杯刻度的1/4处（从底部算起，液面高度对应刻度线，量杯上标有刻度线，水位在第一条刻度线处，量杯总共有五条刻度线，从下到上依次为0、1/5、2/5、3/5、4/5、5/5，但实际水位在1/5处）。中间有一个向右的箭头，表示水从左边杯子倒到右边杯子。
+杯子中原来盛有800 mL水,小华将杯中的水倒出一些,如下图。求从杯子中倒出了多少毫升水,正确的列式是( )。A.800×3/5 B.800×3/8 C.800×5/8 D.800×5/9(图:两量杯水平对比)
 ```
 
 **参考答案**:`C` (answer_type=`text`, unit=`—`)
@@ -238,18 +186,10 @@ D. 800×5/9
 - **桶**:`application_table` · **视觉依赖**:`helpful` · **难度**:`medium` · **对话承载力**:`medium` · **答案确定性**:`text`
 - **溯源**:`question_id=6a62ca0099bf346827f052e4` · `pujia_school_question_bank` · `3-1倒数的认识`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-下面四幅图中，若a和b表示不同的数，则( )中a与b互为倒数。
-A
-[图示：一个三角形，底边标注为“底a m”，高标注为“高b m”，下方标注“面积为 1 m²”]
-B
-[图示：一条线段被分为两段，左段标注“a m”，右段标注“b m”，下方标注“总长度为 1 m”]
-C
-[图示：一个长方形，长边标注“长a m”，短边标注“宽b m”，下方标注“面积为 1 m²”]
-D
-[图示：一个长方体，长边标注“长a m”，宽边标注“宽b m”，高边标注“高c m”，下方标注“体积为 1 m³”]
+下面四幅图中,若a和b表示不同的数,则( )中a与b互为倒数。A.三角形(高b m 底a m,面积1 m²) B.线段(a m,b m,总长1 m) C.长方形(长a m 宽b m,面积1 m²) D.长方体(长a m 宽b m 高c m,体积1 m³)
 ```
 
 **参考答案**:`C` (answer_type=`text`, unit=`—`)
@@ -271,21 +211,13 @@ D
 - **桶**:`circle_geometry` · **视觉依赖**:`required` · **难度**:`hard` · **对话承载力**:`high` · **答案确定性**:`text`
 - **溯源**:`question_id=6a69e0d72ef3251197be2556` · `pujia_school_question_bank` · `4-1圆的认识`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-看图填空
-(1)
-半圆的直径是( )cm
-(2)
-长方形的长是( )dm
-长方形的宽是( )dm
-(3)
-圆的半径是( )cm
-圆的直径是( )cm
+看图填空。(1)半圆的直径是( )cm。(2)长方形的长是( )dm,宽( )dm,圆的半径( )cm。(3)圆的直径是( )cm。(图:半圆/两圆并排/两圆重叠)
 ```
 
-**参考答案** ⚠️ **参考答案待 A 图读终审**:`(1)4cm；(2)(3)待图读` (answer_type=`text`, unit=`—`)
+**参考答案** ⚠️ **参考答案待 A 图读终审**:`(1)4cm;(2)(3)待图读` (answer_type=`text`, unit=`—`)
 
 **误区种子**(单题单误区):半径当直径用（或直径当半径用）（一级）
 
@@ -304,18 +236,13 @@ D
 - **桶**:`percentage_multi_part` · **视觉依赖**:`helpful` · **难度**:`hard` · **对话承载力**:`high` · **答案确定性**:`text`
 - **溯源**:`question_id=6a69e6862ef3251197be2a0c` · `pujia_school_question_bank` · `5-1百分数的意义(1)`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-我们学校的女生人数占全校学生人数的49%。
-我们学校的女生人数也占全校学生人数的49%。
-这两个学校的女生人数一定相同吗？为什么？
-反思：用彩色笔分别涂出下面各图面积的25%，涂色的小方块一样多吗？想一想这是为什么？
-图 1：一个由10行10列组成的正方形网格，共100个小方格。
-图 2：一个由5行10列组成的长方形网格，共50个小方格。
+我们学校的女生人数占全校学生人数的49%。(两校各49%)这两个学校的女生人数一定相同吗?为什么?反思:用彩色笔分别涂出下面各图面积的25%,涂色的小方块一样多吗?想一想这是为什么?(图1:10×10格 图2:5×10格)
 ```
 
-**参考答案**:`不一定相同（总人数不同）；格子数不同（整体不同）` (answer_type=`text`, unit=`—`)
+**参考答案**:`不一定相同(总人数不同);格子数不同(整体不同)` (answer_type=`text`, unit=`—`)
 
 **误区种子**(单题单误区):把百分比误当绝对数，认为相同百分比就是相同数量（把49%当成49人）（二级）
 
@@ -334,30 +261,13 @@ D
 - **桶**:`visual_statistics_open` · **视觉依赖**:`required` · **难度**:`hard` · **对话承载力**:`high` · **答案确定性**:`text`
 - **溯源**:`question_id=6a69e8892ef3251197be2bec` · `pujia_school_question_bank` · `6-1数与形(1)`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-探索规律
-
-图1
-4=1+3
-9=1+3+5
-16=1+3+5+7
-
-图2
-4=1+3
-9=3+6
-16=6+10
-
-(1) 按照图1中的规律，将36写成几个数的和：36=_________
-
-(2) 古希腊著名的毕达哥拉斯学派提出：
-把1、4、9、16……这样的数称为“正方形数”；
-把1、3、6、10……这样的数称为“三角形数”。
-按照图2中规律，将36写成两个数的和：36=_________
+探索规律。图1(正方形数点阵):4=1+3,9=1+3+5,16=1+3+5+7。图2(三角形数点阵):4=1+3,9=3+6,16=6+10。(1)按图1规律,将36写成几个数的和:36=___。(2)毕达哥拉斯学派:把1,4,9,16…称正方形数;把1,3,6,10…称三角形数。按图2规律,将36写成两个数的和:36=___。
 ```
 
-**参考答案**:`1+3+5+7+9+11；15+21` (answer_type=`text`, unit=`—`)
+**参考答案**:`1+3+5+7+9+11;15+21` (answer_type=`text`, unit=`—`)
 
 **误区种子**(单题单误区):把点阵的“数”和“和式”当成同一种表示，忽略累加项数（只看首尾不数项数）（二级）
 
@@ -376,17 +286,13 @@ D
 - **桶**:`visual_statistics_open` · **视觉依赖**:`required` · **难度**:`hard` · **对话承载力**:`high` · **答案确定性**:`text`
 - **溯源**:`question_id=6a69e89d2ef3251197be2c02` · `pujia_school_question_bank` · `6-1数与形(1)`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-如图，一个长方体水箱里有一个上部开口的圆柱形容器，它的底部与长方体容器连接在一起，打开水管往水箱里注水。下面几幅图中，（）能准确地描述水的高度与时间的变化关系。
-A. 一个直角坐标系，横轴为“时间”，纵轴为“高度”，原点为O。图中是一条从原点出发的折线，第一段是斜率较大的直线段，第二段是斜率较小的直线段，第三段是斜率较大的直线段。三段直线段连接处形成两个拐点。
-B. 一个直角坐标系，横轴为“时间”，纵轴为“高度”，原点为O。图中是一条从原点出发的直线段，斜率恒定，直至终点。
-C. 一个直角坐标系，横轴为“时间”，纵轴为“高度”，原点为O。图中是一条从原点出发的折线，第一段是斜率较大的直线段，第二段是斜率较小的直线段，第三段是斜率较大的直线段。三段直线段连接处形成两个拐点。
-D. 一个直角坐标系，横轴为“时间”，纵轴为“高度”，原点为O。图中是一条从原点出发的折线，第一段是斜率较大的直线段，第二段是斜率较小的直线段，第三段是斜率较大的直线段。三段直线段连接处形成两个拐点。
+一个长方体水箱里有一个上部开口的圆柱形容器,底部与长方体容器连接,打开水管往水箱里注水。下面几幅图中,( )能准确描述水的高度与时间的变化关系。A/B/C/D 四幅height-time折线图。
 ```
 
-**参考答案** ⚠️ **参考答案待 A 图读终审**:`需读折线（先快后慢或先慢后快，取决于圆柱先满还是水箱先满）` (answer_type=`text`, unit=`—`)
+**参考答案** ⚠️ **参考答案待 A 图读终审**:`需读折线(先慢后快→C 或 先快后慢→A)` (answer_type=`text`, unit=`—`)
 
 **误区种子**(单题单误区):只看折线陡/平的外形判断，忽略“水先注圆柱、注满后再溢到长方体”造成的两段不同上升速率（二级）
 
@@ -405,20 +311,13 @@ D. 一个直角坐标系，横轴为“时间”，纵轴为“高度”，原�
 - **桶**:`visual_statistics_open` · **视觉依赖**:`required` · **难度**:`medium` · **对话承载力**:`medium` · **答案确定性**:`text`
 - **溯源**:`question_id=6a631f3d184f723b3592d084` · `pujia_school_question_bank` · `6-2数与形(2)`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-速度(千米/时)
-60
-30
-0   2   4   6   8   10   12   14   16   18   20
-时间(分)
-(1)汽车行驶了多长时间？它的最大速度是多少？
-(2)出发后8分钟到10分钟这段时间可能出现什么情况？
-【小试牛刀】
+明明和爸爸开车去动物园,画了汽车速度随时间变化情况(曲线:0-2升30,2-8保持30,8-10降0,10-12升30,12-16保持30,16-20降0)。(1)汽车行驶了多长时间?最大速度是多少?(2)出发后8分钟到10分钟可能出现什么情况?【小试牛刀】
 ```
 
-**参考答案**:`按图读（约18分钟）；最大速度30千米/时；8-10分钟停车` (answer_type=`text`, unit=`—`)
+**参考答案**:`20分钟;30千米/时;停车` (answer_type=`text`, unit=`—`)
 
 **误区种子**(单题单误区):把“速度保持30”当成还在加速，或把图上最后时刻直接当成实际行驶时间（忽略速度降到0的停车段）（二级）
 
@@ -437,23 +336,13 @@ D. 一个直角坐标系，横轴为“时间”，纵轴为“高度”，原�
 - **桶**:`visual_statistics_open` · **视觉依赖**:`required` · **难度**:`hard` · **对话承载力**:`high` · **答案确定性**:`text`
 - **溯源**:`question_id=6a631f46184f723b3592d090` · `pujia_school_question_bank` · `6-2数与形(2)`
 
-**转录(通道 A · VL,待 A 逐字核对)**:
+**转录(图是源 · Dev A 逐字核对)**:
 
 ```text
-毕达哥拉斯学派研究了许多有趣的形数。
-(1)三角形数
-1   2   3   4   …   n
-    △   △△△   △△△△△△△△   …
-数：______ ______ ______ ______
-式：______ ______ ______ ______
-(2)选做：五边形数
-1   2   3   4   …   n
-    ☆   ☆☆☆   ☆☆☆☆☆☆☆☆   …
-数：______ ______ ______ ______
-式：______ ______ ______ ______
+毕达哥拉斯学派研究了有趣的形数。(1)三角形数(点阵1,2,3,4…n)。数:___ 式:___。(2)选做:五边形数(点阵)。数:___ 式:___。
 ```
 
-**参考答案**:`三角形数1,3,6,10,15…；T_n=n(n+1)/2；五边形数1,5,12,22,35…；P_n=n(3n-1)/2` (answer_type=`text`, unit=`—`)
+**参考答案**:`三角形数1,3,6,10,15…;T_n=n(n+1)/2;五边形数1,5,12,22,35…;P_n=n(3n-1)/2` (answer_type=`text`, unit=`—`)
 
 **误区种子**(单题单误区):只写数列不找通项，或把形数的递推规律（每次多几个点）直接当成通项公式（二级）
 
@@ -467,7 +356,6 @@ D. 一个直角坐标系，横轴为“时间”，纵轴为“高度”，原�
 
 ## 待办(定稿前)
 
-1. `question.text` 逐字核对(Dev A,图是源)——13/13 待定稿。
-2. ⚠️ 三条参考答案待 A 精确图读:`grid_coordinates` / `radius_diameter` / `water_tank`。
-3. deepseek 盲测(visual_dependency 定稿)+ 答案通道——待 `DEEPSEEK_API_KEY`。
-4. WP4:12-15 选 8 + 确认二级种子(本页)。
+1. ⚠️ 三条参考答案待 A 精确图读:`#3`(坐标网读格)/`#20`(看圆读刻度)/`#27`(注水折线)。
+2. deepseek 盲测(visual_dependency 定稿)+ 答案通道——PM 指密钥在 Mac 侧 runner 环境,待注入方式。
+3. WP4:12-15 选 8 + 确认二级种子(本页)。
