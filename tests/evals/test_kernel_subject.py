@@ -62,6 +62,8 @@ def test_run_case_drives_full_script(tmp_path):
     assert [t["student"] for t in transcript["turns"]] == ["", "我想两边都减去7。", "再同时除以3。"]
     # 判停:第三轮 ready 后余下剧本轮("检验通过了。")不再发
     assert len(fake.requests) == 4 and transcript["turns"][-1]["state"] == "ready_to_confirm"
+    # P1-5 回归:elapsed_ms 是真实耗时,不是 session_version 假数据(首问恒 0,回复轮 > 0)
+    assert all(turn["elapsed_ms"] > 0 for turn in transcript["turns"][1:])
 
 
 def test_run_case_environment_failure_is_retryable(tmp_path):
