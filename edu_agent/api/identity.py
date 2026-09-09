@@ -14,6 +14,7 @@ import hmac
 import json
 import os
 import re
+import threading
 import time
 import uuid
 from datetime import datetime, timezone
@@ -159,6 +160,7 @@ class IdentityService:
         }
         self.codes: dict[str, dict] = {}
         self.idempotency: dict[str, tuple[str, dict]] = {}
+        self._code_lock = threading.Lock()  # P1-3:授权码单次消费原子化(并发兑换竞态)
 
     def native_code(self, body: dict, headers: dict, now: int | None = None) -> tuple[int, dict]:
         """POST /api/openapi/v1/auth/native-codes:断言+PKCE challenge → 一次性授权码。"""
@@ -208,21 +210,24 @@ class IdentityService:
 
     def native_token(self, body: dict, now: int | None = None) -> tuple[int, dict]:
         """POST /api/auth/native/token:授权码+code_verifier → 短期访问令牌。"""
+        if not self.config["hmac_key"]:  # P2 对齐:空钥 fail-closed,与 demo_login 同口径
+            raise IdentityError(503, None, "IDENTITY_TOKEN_HMAC_KEY 未配置")
         current = _epoch(now)
         code = str(body.get("authorization_code", ""))
         record = self.codes.get(code)
         if record is None:
             raise IdentityError(401, "NATIVE_AUTHORIZATION_CODE_INVALID", "重新申请授权码")
-        if record["consumed"]:
-            raise IdentityError(401, "NATIVE_AUTHORIZATION_CODE_CONSUMED",
-                                "不重放旧码,重新申请授权码")
-        if current > record["expires"]:
-            raise IdentityError(401, "NATIVE_AUTHORIZATION_CODE_EXPIRED", "重新申请授权码")
-        verifier = str(body.get("code_verifier", ""))
-        if not _VERIFIER_RE.fullmatch(verifier) or not _constant_time_equals(
-                _b64url(hashlib.sha256(verifier.encode()).digest()), record["challenge"]):
-            raise IdentityError(400, "NATIVE_PKCE_INVALID", "丢弃本次 PKCE,重新生成并申请授权码")
-        record["consumed"] = True  # 授权码消费与会话创建同一原子操作
+        with self._code_lock:  # P1-3:消费检查→置位原子化,同码并发兑换只能一个成功
+            if record["consumed"]:
+                raise IdentityError(401, "NATIVE_AUTHORIZATION_CODE_CONSUMED",
+                                    "不重放旧码,重新申请授权码")
+            if current > record["expires"]:
+                raise IdentityError(401, "NATIVE_AUTHORIZATION_CODE_EXPIRED", "重新申请授权码")
+            verifier = str(body.get("code_verifier", ""))
+            if not _VERIFIER_RE.fullmatch(verifier) or not _constant_time_equals(
+                    _b64url(hashlib.sha256(verifier.encode()).digest()), record["challenge"]):
+                raise IdentityError(400, "NATIVE_PKCE_INVALID", "丢弃本次 PKCE,重新生成并申请授权码")
+            record["consumed"] = True  # 授权码消费与会话创建同一原子操作
         student = record["student"]
         expires = current + TOKEN_TTL_S
         token = _hmac_token({"user_id": student["user_id"], "tenant_id": student["tenant_id"],
@@ -235,6 +240,26 @@ class IdentityService:
                      "display_name": student["display_name"],
                      "tenant_id": student["tenant_id"]},
         }
+
+    def verify_token(self, token: str) -> bool:
+        """P1-1:验签访问令牌(HMAC 比签 + exp 检查),复用 _constant_time_equals。
+
+        空 HMAC 密钥 fail-closed(与签发侧同口径);格式不符/签名不符/已过期均 False。
+        """
+        key = self.config["hmac_key"]
+        if not key or not token.startswith("edu_native_") or "." not in token:
+            return False
+        prefixed, signature = token.partition(".")[0], token.partition(".")[2]
+        body = prefixed[len("edu_native_"):]  # 签名按去前缀后的 body 算(_hmac_token 同款)
+        expected = _b64url(hmac.new(key.encode(), body.encode(), hashlib.sha256).digest())
+        if not _constant_time_equals(expected, signature):
+            return False
+        try:
+            payload = json.loads(_b64url_decode(body))
+        except (ValueError, json.JSONDecodeError):
+            return False
+        exp = payload.get("exp")
+        return not (exp is not None and int(exp) < int(time.time()))
 
 
 def _epoch(now: int | None) -> int:

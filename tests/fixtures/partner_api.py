@@ -16,6 +16,8 @@ import httpx
 
 from edu_agent.api import build_service, build_server
 
+from auth_testing import TEST_TOKEN
+
 
 @dataclass
 class StubTurn:
@@ -58,7 +60,8 @@ class ScriptedKernel:
 
     def finish(self, session: dict) -> StubSummary:
         self.finish_calls += 1
-        return StubSummary("学习小结", "needs_review")
+        ready = self.ready_at is not None and self.reply_calls >= self.ready_at
+        return StubSummary("学习小结", "completed" if ready else "needs_review")
 
 
 def _assert_local_base(base: str) -> None:
@@ -69,7 +72,7 @@ def _assert_local_base(base: str) -> None:
 
 def post(base: str, path: str, payload: dict | None = None, auth: bool = True) -> httpx.Response:
     _assert_local_base(base)
-    headers = {"Authorization": "Bearer test-token"} if auth else {}
+    headers = {"Authorization": f"Bearer {TEST_TOKEN}"} if auth else {}
     return httpx.post(f"{base}{path}", json=payload or {}, headers=headers, timeout=5.0, trust_env=False)
 
 

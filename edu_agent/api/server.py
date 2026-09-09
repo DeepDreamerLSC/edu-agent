@@ -105,12 +105,24 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
             return 200, {"ok": True}
         return None
 
+    def _authorized(self) -> bool:
+        """对话面鉴权闸(P1-1):真验签,HMAC 比签 + exp,失败 401。
+
+        EDU_AUTH_ENFORCE=0 熔断跳过验签(联调应急,决策 7);默认强制。
+        """
+        token = self.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+        if not token:
+            return False
+        if os.environ.get("EDU_AUTH_ENFORCE", "1") == "0":
+            return True
+        return self.identity.verify_token(token)
+
     def _dispatch(self) -> None:
         identity = self._identity_post()
         if identity is not None:
             self._json(identity[1], identity[0])
             return
-        if not self.headers.get("Authorization"):
+        if not self._authorized():
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
         unified_open = _OPEN_UNIFIED.match(self.path)
@@ -165,7 +177,7 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         if match is None:
             self._error(ApiError(404, None, "路径不在合作方合同内"))
             return
-        if not self.headers.get("Authorization"):
+        if not self._authorized():
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
         length = int(self.headers.get("Content-Length") or 0)
@@ -307,7 +319,7 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
             return
         if self._serve_docs() or self._serve_static():
             return
-        if not self.headers.get("Authorization"):
+        if not self._authorized():
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
         match = _GET.match(self.path)

@@ -27,8 +27,8 @@ def env():
     server.server_close()
 
 
-def unified(base: str, body: dict, token: str = "test-token") -> httpx.Response:
-    _ = token  # post() 已带 Authorization
+def unified(base: str, body: dict, token: str = "") -> httpx.Response:
+    _ = token  # post() 已带 Authorization(TEST_TOKEN)
     return post(base, "/api/prepared-questions/open", body)
 
 
