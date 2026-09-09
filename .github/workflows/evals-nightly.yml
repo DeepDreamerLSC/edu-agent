@@ -1,0 +1,65 @@
+# 夜评流水线(00 §8.4 阶段 3「每周归档」的人批升级版:每天一帧,#34 2026-09-09):
+# 每晚 23:00(Asia/Shanghai;cron UTC 15:00)跑 11 场景全量评测(真模型,Mac 本地),
+# 报告 + commit ID 贴 run 摘要(不刷 issue);失败开 nightly-red issue(同 main-red 模式,
+# 独立标签不混 30 分钟纪律);**不打 tag**——优化极限/里程碑由人捕捉后再打(标注 SHA)。
+# 与 main.yml 相同的 self-hosted mac runner(本地模型在机);alarm 跑 ubuntu,
+# Mac 挂死时报警仍可达(#35 同款考量)。
+name: nightly
+
+on:
+  schedule:
+    - cron: "0 15 * * *" # 23:00 UTC+8
+  workflow_dispatch: {} # 首帧/补跑/复验(M2 判门重跑 = 手动触发本流水线,同条件可比)
+
+permissions:
+  contents: read
+  issues: write # 失败报警开 issue(main_red.py --label nightly-red)
+  actions: read # 报警收集本 run 各 job 失败步骤
+
+jobs:
+  eval:
+    runs-on: [self-hosted, mac]
+    timeout-minutes: 40 # 11 场景收集+评分 ≈ 15 分钟;挂死变红触发报警(#30 先例)
+    env:
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }} # judge 备选;主选本地 27B(#117 后缺钥不堵)
+      STAMP: ${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5 # 修 #128:astralsh(无连字符)不存在,Set up job 即 404
+      - name: 安装依赖(uv sync,含锁文件)
+        run: uv sync --frozen
+      - name: 夜评(11 场景,真模型;预检失败或评测失败 → 红灯)
+        run: |
+          uv run python scripts/tuning_round.py --nightly --out var/nightly/$STAMP
+          {
+            echo "# 夜评 $(date -u +%Y-%m-%d)"
+            echo
+            echo "- commit: $GITHUB_SHA"
+            echo
+            cat var/nightly/$STAMP/comparison.md
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: 归档(run 目录:transcript/judge 分/manifest 溯源)
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-eval-${{ env.STAMP }}
+          path: var/nightly/
+          retention-days: 90 # 覆盖 M2+M3 复盘窗口
+      - name: 本地目录瘦身(self-hosted 不自清,只留最近 7 夜;历史在 artifact)
+        run: ls -dt var/nightly/* | tail -n +8 | xargs rm -rf
+
+  alarm:
+    needs: eval
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 夜评失败报警(自动开 issue,nightly-red 标签查重)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/main_red.py --all-jobs --label nightly-red \
+            --title-prefix "nightly 红" \
+            --note "夜评流水线失败(23:00 11 场景评测:预检/收集/评分/归档)。main 可能是绿的——这是测量链路故障,当日修复以保证逐日轨迹连续;若因环境(模型服务/网络)失败,manifest.json 里有当夜服务快照。"
