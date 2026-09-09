@@ -110,15 +110,17 @@ def _feeds_method(text: str) -> bool:
 
 
 def _student_signals_understanding(student_message: str) -> bool:
-    """学生表示「懂了/明白了」——教学弧线里这是「请学生讲思路」的触发点。"""
-    return bool(re.search(r"都懂了|懂了|明白了|没有不懂|会了|没问题|都明白|没疑问", student_message))
+    """学生表示「懂了/明白了」——教学弧线里这是「请学生讲思路」的触发点。
+
+    「会了」用负向断言 (?<!不),避免「我不会了」(卡住)被误判为「懂了」。"""
+    return bool(re.search(r"都懂了|懂了|明白了|没有不懂|(?<!不)会了|没问题|都明白|没疑问", student_message))
 
 
 def _student_signals_stuck(student_message: str) -> bool:
     """学生表示「不会/猜不出」——这是「揭示下一级阶梯」的触发点(治 tutor 复读探针)。
 
     用完整短句(非单字「不会」),避免误伤「我不会」这类出现在其它语境的学生消息。"""
-    return bool(re.search(r"我不太会|我猜不出|我猜不出来|我不知道|我想不出|我想不出来|我不会做|不会吧|太难了|没思路", student_message))
+    return bool(re.search(r"我不太会|我猜不出|我猜不出来|我不知道|我想不出|我想不出来|我不会做|我不会了|不会吧|太难了|没思路", student_message))
 
 
 def _next_step(session: "LearnerSession") -> dict | None:

@@ -258,8 +258,11 @@ def test_reply_masks_method_names_in_teacher_prompt(tmp_path):
 
 
 def test_reply_replaces_method_feed_with_elicit_and_keeps_open(tmp_path):
-    """复讲轮代喂:学生说「都懂了」,tutor 回「你用的是假设法」→ 替换成固定请讲引导,
-    且 ready_to_confirm=False(不关对话,继续收集讲题内容)。"""
+    """复讲轮代喂(输出侧兜底):学生给普通回答,tutor 回「你用的是假设法」→ 替换成固定
+    请讲引导,且 ready_to_confirm=False(不关对话,继续收集讲题内容)。
+
+    学生消息必须是普通回答(非「都懂了」/卡住),否则会走理解/卡壳的确定性短路、不调模型,
+    这条输出侧代喂分支就永远测不到(#109 P2-2)。"""
     fake = FakeOpenAI([
         completion(open_json("你先说说题目给了哪些条件?")),
         completion(tutor_json("你用的是假设法,对吧?", ready=True)),
@@ -267,12 +270,13 @@ def test_reply_replaces_method_feed_with_elicit_and_keeps_open(tmp_path):
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start({"text": "鸡兔同笼,共8只26脚", "answer": "鸡3只兔5只",
                    "knowledge_points": ["假设法"]}, {"grade": "六年级"}, gateway=gateway)
-    turn = reply(first.session, "都懂了。", gateway=gateway)
+    turn = reply(first.session, "我先说说我的想法。", gateway=gateway)
     gateway.close()
     fake.stop()
     assert turn.text == ("很好,你已经懂了。那请你从头讲讲你的思路——"
                          "先说说你第一步算了什么、为什么这样算。")
     assert turn.ready_to_confirm is False  # 不关对话,继续收集
+    assert turn.session.stuck is True       # 代喂 = 未解决的教学质量问题(卡点标记)
     assert "假设法" not in turn.text
 
 
@@ -306,3 +310,21 @@ def test_reply_stuck_reveals_next_step_with_varied_lead(tmp_path):
     assert turn.text == "我们从这里入手:两边减7。你接着算下一步。"
     assert turn.ready_to_confirm is False  # 不关对话
     assert len(fake.requests) == calls_before  # 零模型调用
+
+
+def test_reply_negative_huile_goes_stuck_not_understanding(tmp_path):
+    """#109 P2-1:「我不会了」是卡住,不是「懂了」——不能触发请讲思路,要揭示下一级阶梯。
+
+    回归:曾经 `会了` 命中 `不会了` 子串 → understanding 短路,错触发「从头讲讲思路」。"""
+    fake = FakeOpenAI([completion(open_json(
+        "你先说说题目给了哪些条件?",
+        steps=[{"step": "两边减7", "value": "18"}, {"step": "除以3", "value": "6"}],
+    ))]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    first = start({"text": "解方程 3x+7=25", "answer": "x=6"}, LEARNER, gateway=gateway)
+    turn = reply(first.session, "我不会了。", gateway=gateway)
+    gateway.close()
+    fake.stop()
+    assert turn.text == "我们从这里入手:两边减7。你接着算下一步。"  # 揭示阶梯,非请讲
+    assert turn.ready_to_confirm is False
+    assert "讲讲你的思路" not in turn.text
