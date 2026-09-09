@@ -24,7 +24,11 @@ TOTAL = 20
 
 
 class FakeSubject:
-    """可编程假被测对象:按 case id 脚本出牌(ok / "env" / 异常实例),支持可编程延迟。"""
+    """可编程假被测对象:按 case id 脚本出牌(ok / "env" / 异常实例),支持可编程延迟。
+
+    intervals 记录每次 run_case 的 (开始, 结束) 单调钟区间——并发不变量
+    (区间最大重叠数)的直接证据,供 test_concurrency_caps_parallelism。
+    """
 
     name = "fake-subject"
 
@@ -32,18 +36,23 @@ class FakeSubject:
         self.script = script or {}
         self.delay_s = delay_s
         self.calls: list[str] = []
+        self.intervals: list[tuple[float, float]] = []
 
     def run_case(self, case: dict) -> dict:
         case_id = case["id"]
         self.calls.append(case_id)
         queue = self.script.get(case_id)
         outcome = queue.pop(0) if queue else "ok"
-        time.sleep(self.delay_s)
-        if outcome == "env":
-            raise EnvironmentFailure("环境抖动:服务暂不可用")
-        if isinstance(outcome, BaseException):
-            raise outcome
-        return {"case_id": case_id, "messages": [{"role": "assistant", "content": f"答案-{case_id}"}]}
+        started = time.monotonic()
+        try:
+            time.sleep(self.delay_s)
+            if outcome == "env":
+                raise EnvironmentFailure("环境抖动:服务暂不可用")
+            if isinstance(outcome, BaseException):
+                raise outcome
+            return {"case_id": case_id, "messages": [{"role": "assistant", "content": f"答案-{case_id}"}]}
+        finally:
+            self.intervals.append((started, time.monotonic()))
 
 
 @pytest.fixture
@@ -129,16 +138,31 @@ def test_content_failure_not_retried(tmp_path, dataset):
     assert "ValueError" in result["error"]
 
 
+def _max_in_flight(intervals: list[tuple[float, float]]) -> int:
+    """同一时刻在跑的最大数(事件点扫描线;同刻先处理结束再处理开始,交接不算并行)。"""
+    events = [(t, delta) for start, end in intervals for t, delta in ((start, 1), (end, -1))]
+    current = peak = 0
+    for _, delta in sorted(events):
+        current += delta
+        peak = max(peak, current)
+    return peak
+
+
 def test_concurrency_caps_parallelism(tmp_path, dataset):
+    """并发 2 的不变量:任一时刻 ≤2 条在跑,且确实出现 2 条同时在跑。
+
+    用执行区间重叠判定,不用总时长阈值——self-hosted runner 的进程环境会拉伸
+    定时器/调度(2026-09-09 晚 main CI 连续两红 #127:elapsed 0.87/0.90s 顶到
+    0.8s 上限;同机同 commit SSH 直跑全绿,证代码无罪、墙钟阈值对机器状态过敏)。
+    区间重叠只看相对时序,对绝对时长漂移免疫。
+    """
     cases = load_cases(dataset)[:6]
     dataset_six = tmp_path / "six.jsonl"
     dataset_six.write_text("\n".join(json.dumps(c) for c in cases) + "\n", encoding="utf-8")
     subject = FakeSubject(delay_s=0.15)
-    started = time.monotonic()
     make_runner(tmp_path, subject, concurrency=2).run(dataset_six, cases)
-    elapsed = time.monotonic() - started
-    # 6 条 × 0.15s:串行 ≥0.9s;并发 2 ≈ 3 波 0.45s,上下都留余量
-    assert 0.35 <= elapsed < 0.8, elapsed
+    assert len(subject.intervals) == 6
+    assert _max_in_flight(subject.intervals) == 2  # 既真的并发了(≥2),也没超限(≤2)
 
 
 def test_resume_mismatch_refused(tmp_path, dataset):
