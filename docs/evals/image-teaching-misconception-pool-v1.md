@@ -5,7 +5,7 @@
 > **二级** = 教参常见错误(标注「待 WP4 用户确认」,人审时确认后才进数据集)。
 > 本池是草稿,终版随 WP4 人审收敛(12-15 选 8 + 确认二级种子)。
 
-## 桶 1 · coordinate(坐标/位置)
+## 桶 1 · text_position(坐标/位置)
 
 - **一级** 排号顺序颠倒——把「(排, 号)」写成「(号, 排)」或反之。
   出处:`edu_agent/evals/datasets/small_lecturer_target_mode_v3_question_bank.json`
@@ -32,7 +32,7 @@
 - **二级(待 WP4 用户确认)** 半圆周长漏加直径(只算了半条弧)。
 - **二级(待 WP4 用户确认)** 圆规两脚距离=半径,却直接当直径用。
 
-## 桶 4 · percent(百分数)
+## 桶 4 · percentage_multi_part(百分数)
 
 - **一级** 折扣方向颠倒(「打八折」当成「乘 1.8」或「除以 0.8」之类)。
   出处:`small_lecturer_math_gold_candidates.json` 的 `percentage_discount_misconception_repair`。
