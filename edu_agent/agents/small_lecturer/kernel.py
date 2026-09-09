@@ -28,7 +28,7 @@ from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 
 from .format_guard import _DOWNGRADE_PROMPT, evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
-from .prompting import _user_prompt, opening_hint, summary_system_prompt, system_prompt
+from .prompting import _user_prompt, grade_grounding, opening_hint, summary_system_prompt, system_prompt
 from .session import LearnerSession, SessionVersionConflict, Summary, TerminalStateError, Turn
 from .tone_guardrails import apply_tone_guardrail
 
@@ -315,7 +315,9 @@ def _opening_user_message(learner: dict, question: dict) -> dict:
 
 
 def _open_user_message(learner: dict, question: dict) -> dict:
-    """统一 open user 消息:先解分步解(steps),再按 answer_status 策略给首问(reply)。"""
+    """统一 open user 消息:先解分步解(steps),再按 answer_status 策略给首问(reply)。
+
+    命中该年级知识树时向任务注入年级知识点依据;不命中为空,不扰动现有弧线。"""
     hint = opening_hint(learner.get("answer_status"))
     task = {
         "学生": learner,
@@ -331,6 +333,9 @@ def _open_user_message(learner: dict, question: dict) -> dict:
             "acceptable=false 仅当多道独立题目混在同一张图、图片模糊到无法辨认主体文字、或与题目无关;"
             "此时 transcription/reply/steps 可留空。纯文本题 acceptable=true、transcription 空。"),
     }
+    grounding = grade_grounding(learner.get("grade", ""), question.get("knowledge_points"))
+    if grounding:
+        task["年级知识点依据"] = f"本年级({learner.get('grade', '')})可依据的知识点:{grounding}"
     context = _user_prompt(question, task)
     if hint:
         return {"role": "user", "content": f"{hint}\n{context}"}
