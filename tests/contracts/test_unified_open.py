@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import httpx
 import pytest
-from test_api_service import StubTurn, post
+from partner_api import StubTurn, post
 from test_conversation_routes import MapSource, RecordingKernel
 
 from edu_agent.api import build_server, build_service

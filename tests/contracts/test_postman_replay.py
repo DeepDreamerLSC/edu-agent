@@ -18,7 +18,7 @@ import pytest
 from edu_agent.api import build_service, build_server
 from edu_agent.contracts import partner_endpoints, postman_dir
 
-from test_api_service import ScriptedKernel, _serve, post
+from partner_api import ScriptedKernel, _serve, post
 
 _BARE_PLACEHOLDER = re.compile(r":\s*\{\{\w+\}\}")  # 裸值占位("k": {{v}})非合法 JSON
 
