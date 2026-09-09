@@ -11,13 +11,13 @@ from fake_openai import FakeOpenAI, completion
 
 from edu_agent.agents.small_lecturer import reply, start
 
-from test_kernel_state_machine import QUESTION_TEXT, kernel_gateway, tutor_json
+from test_kernel_state_machine import QUESTION_TEXT, kernel_gateway, open_json, tutor_json
 
 
 def test_leak_hit_records_rule_and_original(tmp_path):
     """泄露命中:guard_events 记 {guard:answer_leak, rule_ids, original=违规原文, regenerated}。"""
-    clean = tutor_json("你打算从条件入手,一步步来。")
-    fake = FakeOpenAI([completion(tutor_json("答案是 x=6。对吗?")), completion(clean)]).start()
+    clean = open_json("你打算从条件入手,一步步来。")
+    fake = FakeOpenAI([completion(open_json("答案是 x=6。对吗?")), completion(clean)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     turn = start({"text": "解方程 3x+7=25。", "answer": "x=6"},
                  {"grade": "五年级"}, gateway=gateway)
@@ -36,7 +36,7 @@ def test_leak_hit_records_rule_and_original(tmp_path):
 
 
 def test_clean_output_records_nothing(tmp_path):
-    fake = FakeOpenAI([completion(tutor_json("你打算从哪一步开始?"))]).start()
+    fake = FakeOpenAI([completion(open_json("你打算从哪一步开始?"))]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     turn = start({"text": "解方程 3x+7=25。", "answer": "x=6"},
                  {"grade": "五年级"}, gateway=gateway)
@@ -47,8 +47,8 @@ def test_clean_output_records_nothing(tmp_path):
 
 def test_events_persist_through_file_store(tmp_path):
     """guard_events 随 FileSessionStore 落盘并可恢复(asdict 全字段自动带上)。"""
-    fake = FakeOpenAI([completion(tutor_json("答案是 x=6。")),
-                       completion(tutor_json("你从条件入手,一步步来。")),  # 重生成
+    fake = FakeOpenAI([completion(open_json("答案是 x=6。")),
+                       completion(open_json("你从条件入手,一步步来。")),  # 重生成(open schema)
                        completion(tutor_json("再想想?"))]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start({"text": "解方程 3x+7=25。", "answer": "x=6"},
@@ -71,8 +71,8 @@ def test_kernel_subject_transcript_carries_events(tmp_path):
     from edu_agent.gateway import Gateway, ModelConfig, ModelRegistry, ProviderConfig, RoleConfig
 
     fake = FakeOpenAI([
-        completion(tutor_json("答案是 x=6。")),
-        completion(tutor_json("你打算从题目条件入手,一步步来。")),  # 泄露 → 重生成
+        completion(open_json("答案是 x=6。")),
+        completion(open_json("你打算从题目条件入手,一步步来。")),  # 泄露 → 重生成(open schema)
         completion(tutor_json("很好,你从条件入手了。")),             # student_turn 1
         completion(tutor_json("那你先算算 3x 等于多少?")),          # student_turn 2
     ]).start()

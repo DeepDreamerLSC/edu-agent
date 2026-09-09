@@ -51,18 +51,27 @@ TUTOR_SUMMARY_SCHEMA = {
     "required": ["summary"],
     "additionalProperties": False,
 }
-VISION_CHECK_SCHEMA = {  # M3 PR7(#34):三字段;transcription=可信时的整题转写
+# 统一 open schema(任务包2步4):一次调用产出 转写 + 分步解 + 首问。
+# 因 tutor 即 VL 模型,vision 判定(acceptable/transcription)与首问(reply)
+# 合入同一次调用;steps 是阶梯底稿 + 数字校验基准。
+OPEN_SCHEMA = {
     "type": "object",
     "properties": {
         "acceptable": {"type": "boolean"},
-        "reason": {"type": "string"},
         "transcription": {"type": "string"},
+        "steps": {"type": "array", "items": {
+            "type": "object",
+            "properties": {"step": {"type": "string"}, "value": {"type": "string"}},
+            "required": ["step", "value"], "additionalProperties": False}},
+        "reply": {"type": "string"},
     },
-    "required": ["acceptable", "reason", "transcription"],
+    "required": ["acceptable", "transcription", "steps", "reply"],
     "additionalProperties": False,
 }
 
 FAIL_CLOSED_TEXT = "这张题图我没法安全地开始讲解(可能包含多道题或不清晰)。请换一张只包含一道题的清晰照片,或者直接把题目打出来。"
+# 统一 open 里 reply 留空(图文题 acceptable=false 且模型照"可留空"留空)时的确定性兜底首问
+_OPENING_FALLBACK = "我们先看看这道题,你能说说题目给了哪些条件吗?"
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
@@ -227,6 +236,43 @@ def _opening_user_message(learner: dict, question: dict) -> dict:
     return {"role": "user", "content": context}
 
 
+def _open_user_message(learner: dict, question: dict) -> dict:
+    """统一 open user 消息:先解分步解(steps),再按 answer_status 策略给首问(reply)。"""
+    hint = opening_hint(learner.get("answer_status"))
+    task = {
+        "学生": learner,
+        "任务": ("先给出这道题的完整分步解 steps(每步一句 step + 该步数值/结果 value),"
+                 "再按学生 answer_status 给首问 reply"),
+        "输出要求": (
+            "steps 每步只推进一个最小步骤,value 是该步算出的具体值;"
+            "reply 是首问:correct 只问「还有没有不懂的地方」此轮不提讲一遍,"
+            "incorrect 只采集学生现在认为的答案不评判,unanswered 引导从第一步开始。"
+            "若题目带图:acceptable=true 当且仅当一张图片承载一道题(一道题内含多个小问、"
+            "多幅小图、图表或选项都算一道;主体文字清晰可读即可)。"
+            "你解不出、题干歧义、数据矛盾都不影响 acceptable;"
+            "acceptable=false 仅当多道独立题目混在同一张图、图片模糊到无法辨认主体文字、或与题目无关;"
+            "此时 transcription/reply/steps 可留空。纯文本题 acceptable=true、transcription 空。"),
+    }
+    context = _user_prompt(question, task)
+    if hint:
+        return {"role": "user", "content": f"{hint}\n{context}"}
+    return {"role": "user", "content": context}
+
+
+def _store_steps(session: LearnerSession, steps: list[dict]) -> list[dict]:
+    """solver 职责(独立函数):校验分步解并存进 session.steps(阶梯底稿 + 数字校验基准)。
+
+    只做确定性校验(步骤非空、每步有 step/value),不调模型;不校验通过则弃。
+    """
+    validated = [
+        {"step": str(s.get("step") or "").strip(), "value": str(s.get("value") or "").strip()}
+        for s in (steps or [])
+        if isinstance(s, dict) and str(s.get("step") or "").strip() and str(s.get("value") or "").strip()
+    ]
+    session.steps = validated
+    return validated
+
+
 def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
             session: LearnerSession, images: list[str] | None = None):
     return gateway.invoke(ModelRequest(
@@ -236,70 +282,45 @@ def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
     ))
 
 
-_VISION_TASK = {
-    "task": "题图理解与安全检查",
-    "判定标准": (
-        "acceptable=true 当且仅当:一张图片承载一道题——一道题内含多个小问、"
-        "多幅小图、图表或选项,都算一道;主体文字清晰可读即可。"
-        "你解不出这道题、题干看似歧义、数据看似矛盾,都不影响 acceptable——"
-        "照实转写,教学时再处理。"
-        "acceptable=false 仅当:多道独立题目混在同一张图、图片模糊到无法辨认主体文字、"
-        "或图片与题目无关。"
-    ),
-    "转写要求": (
-        "transcription 用纯文本照实转写整题;分数一律写成 a/b 纯文本形式(如 2/3、3/4),"
-        "不要用 LaTeX(不得出现 \\frac、反斜杠命令、$ 公式边界)。"
-    ),
-}
-
-
 def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> Turn:
     """生成首问(03 §4 Preparing → FirstQuestionReady / Failed)。
 
-    纯文本题跳过 vision(00 §5.1);纯图题(question.text 为空)vision 判不可信 →
-    Turn.state=failed(fail closed,不调 tutor),后续 reply/finish 对该 session 抛
-    TerminalStateError。图文题(题库命中,权威文答在题面)vision 拒图 → 降级纯文
-    教学不终态——判定标准不写明时模型会把「解不出/题干歧义」当不可接受,实测
-    题库误杀 6/12;fail-closed 只留给无文字兜底的纯图题。
-    纯图题判可信时,transcription 回填题面(M3 PR7)——转写即教师侧 prompt 的
-    题面,学生侧仍只见 tutor 输出经护栏后的文本。
-    两条失败路径正交(审查留审 1 落档):vision 服务不可达/超时 = GatewayError
-    冒泡(环境失败,调用方决定重试降级);vision 可达但判不可信 = fail closed
-    (内容安全,不重试不降级)。
+    任务包2步4 统一 open:一次调用产出 {acceptable, transcription, steps, reply}。
+    - 因 tutor 即 VL 模型,vision 判定与首问合入同一次调用(图文题不再两次调用);
+    - steps 由 _store_steps(独立 solver 职责)校验并存 session.steps;
+    - reply 经护栏后即首问。
+    fail-closed 语义保留:纯图题(question.text 为空)判 unacceptable → 不采信 reply/steps,
+    Turn.state=failed。图文题(题库命中)判 unacceptable 仍降级纯文教学(题面文答是权威)。
     """
     gateway = gateway or default_gateway()
     session = LearnerSession(question=question, learner=learner)
-    if question.get("image") is not None:
-        # 图片经 ModelRequest.images 走多模态内容块(不进文本,见 gateway request);
-        # image 值由 api 层解析为 data URL(file_id 在那里翻译,内核不感知存储)。
-        verdict = json.loads(_invoke(
-            gateway, "vision",
-            [{"role": "user", "content": json.dumps(_VISION_TASK, ensure_ascii=False)}],
-            VISION_CHECK_SCHEMA, session, images=[str(question["image"])],
-        ).text)
-        if not verdict["acceptable"] and not question.get("text"):
-            # 纯图题无文字兜底:fail closed;图文题降级纯文教学(题面文答是权威)
-            session.state = "failed"
-            return Turn(text=FAIL_CLOSED_TEXT, session_version=session.session_version,
-                        state="failed", session=session)
-        if not question.get("text") and verdict.get("transcription"):
-            # 纯图题:转写回填题面(新 dict,不改调用方入参)
-            session.question = {**session.question, "text": str(verdict["transcription"])}
-    tutor_messages = [
+    images = [str(question["image"])] if question.get("image") is not None else None
+    open_messages = [
         {"role": "system", "content": system_prompt(learner.get("grade", ""))},
-        _opening_user_message(learner, session.question),
+        _open_user_message(learner, question),
     ]
-    first = json.loads(_invoke(
-        gateway, "tutor", tutor_messages, TUTOR_TURN_SCHEMA, session,
+    payload = json.loads(_invoke(
+        gateway, "tutor", open_messages, OPEN_SCHEMA, session, images=images,
     ).text)
+    if not payload.get("acceptable", True) and not question.get("text"):
+        # 纯图题无文字兜底:fail closed(与旧 vision 语义一致,不采信 reply/steps)
+        session.state = "failed"
+        return Turn(text=FAIL_CLOSED_TEXT, session_version=session.session_version,
+                    state="failed", session=session)
+    if not question.get("text") and payload.get("transcription"):
+        # 纯图题:转写回填题面(新 dict,不改调用方入参)
+        session.question = {**session.question, "text": str(payload["transcription"])}
+    _store_steps(session, payload.get("steps") or [])  # solver 职责:阶梯底稿 + 校验基准
     ctx = _GuardContext(question=session.question, grade=learner.get("grade", ""),
-                        gateway=gateway, role="tutor", messages=tutor_messages,
-                        schema=TUTOR_TURN_SCHEMA)
-    safe_text = _guard_output(first["reply"], session, ctx)
+                        gateway=gateway, role="tutor", messages=open_messages,
+                        schema=OPEN_SCHEMA)
+    safe_text = _guard_output(str(payload.get("reply") or ""), session, ctx)
+    if not safe_text.strip():
+        safe_text = _OPENING_FALLBACK  # 图文题 acceptable=false 且 reply 留空 → 确定性兜底首问
     session.state = "first_question_ready"
-    session.first_question = safe_text  # 存学生实际所见(可能经护栏重生成),不存泄露原文
+    session.first_question = safe_text
     return Turn(text=safe_text, session_version=session.session_version,
-                state=session.state, ready_to_confirm=bool(first["ready_to_confirm"]),
+                state=session.state, ready_to_confirm=False,  # 首问恒非确认
                 session=session)
 
 

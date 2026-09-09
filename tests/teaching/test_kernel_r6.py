@@ -25,6 +25,7 @@ from edu_agent.gateway import GatewayError
 from test_kernel_state_machine import (
     QUESTION_TEXT,
     kernel_gateway,
+    open_json,
     tutor_json,
 )
 
@@ -39,17 +40,8 @@ class CapturingFake(FakeOpenAI):
 
 
 def r6_gateway(tmp_path):
-    # 各轮返回不同回复:避免触发内核复读自批评(打回重生成),测试只关心结构不关心文本
-    fake = CapturingFake([
-        completion(tutor_json("我们先确认题意。")),
-        completion(tutor_json("你算对了,很好。")),
-        completion(tutor_json("再确认下一步。")),
-        completion(tutor_json("继续。")),
-        completion(tutor_json("这一步对了。")),
-        completion(tutor_json("很接近了。")),
-        completion(tutor_json("没错。")),
-        completion(tutor_json("好。")),
-    ]).start()
+    # opening_hint_dispatch 只做 start(统一 open,无 reply),open_json 即可
+    fake = CapturingFake([completion(open_json("我们先确认题意。"))] * 8).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     return gateway, fake
 
@@ -86,7 +78,7 @@ def test_opening_hint_constants_semantics():
 def test_structured_summary_on_correct_with_no_stuck(tmp_path):
     """answer_status=correct + 无卡点 → finish 走确定性模板 completed,零模型调用。"""
     fake = FakeOpenAI([
-        completion(tutor_json("我们先确认题意。")),
+        completion(open_json("我们先确认题意。")),
         completion(tutor_json("很好,继续。")),
         completion(tutor_json("你把每一步都讲清楚了。")),
         completion(json.dumps({"summary": "不该被生成"})),  # 结构化通路不得触达模型(毒饵)
@@ -111,7 +103,12 @@ def test_structured_summary_quotes_student_words_and_passes_guardrails(tmp_path)
     """模板引用学生原话,且整段过语气/格式护栏(任务书:模板必须过护栏)。"""
     from edu_agent.agents.small_lecturer import apply_tone_guardrail, evaluate_student_visible_format
 
-    gateway, fake = r6_gateway(tmp_path)
+    fake = FakeOpenAI([
+        completion(open_json("我们先确认题意。")),
+        completion(tutor_json("很好,继续。")),
+        completion(tutor_json("你把每一步都讲清楚了。")),
+    ]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
     turn = start({"text": "图书馆原有120本书,又买来45本,借出38本,现在有多少本?"},
                  {"grade": "三年级", "answer_status": "correct"}, gateway=gateway)
     reply(turn.session, "先算120加45等于165本。", gateway=gateway)
@@ -132,7 +129,7 @@ def test_stuck_mark_blocks_structured_path(tmp_path):
     """物理隔离:对话中出现护栏替换(卡点标记)→ 即使 answer_status=correct 也不走模板。"""
     leak = tutor_json("答案是 x=6。")
     fake = FakeOpenAI([
-        completion(tutor_json("我们先确认题意。")),
+        completion(open_json("我们先确认题意。")),
         completion(leak),                 # 泄露 → 护栏替换 → stuck 标记
     ]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
