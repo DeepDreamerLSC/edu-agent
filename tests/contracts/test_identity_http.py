@@ -16,6 +16,7 @@ import pytest
 from edu_agent.api import IdentityService, build_server, build_service
 
 from partner_fixture import generate_key, pkce_challenge, public_pem, sign_rs256
+from auth_testing import signed_token
 
 API_KEY = "test-" + secrets.token_hex(8)
 HMAC_KEY = "test-" + secrets.token_hex(8)
@@ -157,6 +158,6 @@ def test_dialogue_routes_reachable_after_identity_wiring(base_url):
 def open_session(base: str) -> dict:
     response = httpx.post(f"{base}/api/prepared-questions/q-1/open", timeout=5.0, trust_env=False,
                           json={"idempotency_key": "idem-" + secrets.token_hex(4)},
-                          headers={"Authorization": "Bearer student-token"})
+                          headers={"Authorization": f"Bearer {signed_token(key=HMAC_KEY)}"})
     assert response.status_code == 200
     return response.json()

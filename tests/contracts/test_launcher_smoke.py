@@ -17,6 +17,7 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 import serve_partner_api  # noqa: E402
+from auth_testing import signed_token
 
 
 def test_launcher_smoke_identity_wiring(monkeypatch):
@@ -24,7 +25,8 @@ def test_launcher_smoke_identity_wiring(monkeypatch):
     monkeypatch.setenv("EDU_PARTNER_API_PORT", "0")  # 随机端口,不碰部署位
     monkeypatch.setenv("IDENTITY_NATIVE_APP_ID", "smoke_student_app")
     monkeypatch.setenv("IDENTITY_PARTNER_API_KEY", "smoke-" + secrets.token_hex(8))
-    monkeypatch.setenv("IDENTITY_TOKEN_HMAC_KEY", "smoke-" + secrets.token_hex(8))
+    smoke_key = "smoke-" + secrets.token_hex(8)
+    monkeypatch.setenv("IDENTITY_TOKEN_HMAC_KEY", smoke_key)
     monkeypatch.setenv("IDENTITY_KID", "smoke-key")
     monkeypatch.setenv("IDENTITY_ISSUER", "https://smoke.example")
     monkeypatch.setenv("IDENTITY_AUDIENCE", "edu-agent")
@@ -46,7 +48,7 @@ def test_launcher_smoke_identity_wiring(monkeypatch):
         # 对话面亦在线(真内核经注入;回合语义由 #55/#74 合同测试覆盖)
         dialogue = httpx.post(f"{base}/api/conversations/none/messages",
                               json={"content": "x"}, timeout=2.0, trust_env=False,
-                              headers={"Authorization": "Bearer smoke-token"})
+                              headers={"Authorization": f"Bearer {signed_token(key=smoke_key)}"})
         assert dialogue.status_code == 404  # 会话不存在 → 路由与存储层在线
     finally:
         server.shutdown()

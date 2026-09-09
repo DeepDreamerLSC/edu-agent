@@ -22,6 +22,7 @@ from PIL import Image
 
 from edu_agent.api import FileService, build_server, build_service
 from partner_api import ScriptedKernel
+from auth_testing import TEST_TOKEN
 
 
 NEW_UPLOAD = "/api/files/upload-request"
@@ -31,7 +32,7 @@ LEGACY_UPLOAD = "/api/openapi/v1/files/upload-url"
 LEGACY_COMPLETE = "/api/openapi/v1/files/complete"
 LEGACY_CONTENT = "/api/openapi/v1/files/{file_id}/content"
 
-AUTH = {"Authorization": "Bearer student-token"}
+AUTH = {"Authorization": f"Bearer {TEST_TOKEN}"}
 
 
 def png_bytes(width: int = 64, height: int = 64, fmt: str = "PNG",

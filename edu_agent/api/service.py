@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import hashlib
+import threading
 import uuid
 from datetime import datetime, timezone
 from typing import Protocol
@@ -72,6 +73,7 @@ class ConversationService:
         self.sessions = sessions  # M3 PR6:上下文保留,未注入时空操作
         self.image_resolver = image_resolver  # file_id → data URL(FileService.data_url)
         self._turn_cache: dict[str, dict] = {}  # 消息幂等:cache_key → 响应(不重调模型)
+        self._locks: dict[str, threading.Lock] = {}  # P1-2:会话级锁,防并发 send 竞态
 
     # ---------- open(幂等键,同键同 Attempt) ----------
 
@@ -279,7 +281,7 @@ class ConversationService:
             attempt_id=f"attempt_{uuid.uuid4().hex[:12]}",
             skill_session_id=f"skill_session_{uuid.uuid4().hex[:12]}",
             session_version=1,
-            state="first_question_ready",
+            state=str(getattr(turn, "state", "first_question_ready")),  # P1-6:内核 fail-closed 的 failed 不再被掩盖
             first_question=str(getattr(turn, "text", "")),
             extras=extras,
         )
@@ -356,8 +358,8 @@ class ConversationService:
 
     def send(self, conversation_id: str, body: dict) -> dict:
         conversation = self._conversation_or_404(conversation_id)
-        if conversation.state == "completed":
-            raise ApiError(409, "SKILL_SESSION_CONFLICT", "会话已完成,重开需新幂等键")
+        if conversation.state in ("completed", "failed"):  # P1-6:failed 终态同 completed 拒续
+            raise ApiError(409, "SKILL_SESSION_CONFLICT", "会话已终态,重开需新幂等键")
         if body.get("skill_id") not in (None, SKILL_ID):
             raise ApiError(403, "SKILL_ID_INVALID", "skill_id 与本服务不匹配")
         action = (body.get("input") or {}).get("interaction_action")
@@ -385,48 +387,50 @@ class ConversationService:
             if cached is not None:
                 return cached
         expected = payload.get("expected_session_version")
-        if expected is not None and expected != conversation.session_version:
-            # 00 §5.2 约定 3:旧版本 409,不静默覆盖新一轮诊断
-            raise ApiError(409, "SKILL_SESSION_CONFLICT",
-                           "会话版本过期,读取最新 interaction 后由学生决定是否重发")
         content = body.get("content") or payload.get("student_response") or ""
         if not str(content).strip():
             raise ApiError(422, None, "content/student_response 不能为空")
-        history = conversation.extras.setdefault("history", [])
-        try:
-            turn = self.kernel.reply(self._kernel_session(conversation), str(content))
-        except ApiError:
-            raise
-        except Exception as error:
-            raise ApiError(503, None, f"服务暂不可用:{type(error).__name__}") from error
-        reply_text = str(getattr(turn, "text", ""))
-        history.append({"role": "user", "content": str(content)})
-        history.append({"role": "assistant", "content": reply_text})
-        ready = bool(getattr(turn, "ready_to_confirm", False))
-        conversation.session_version += 1
-        conversation.state = "ready_to_confirm" if ready else "dialogue"
-        conversation.first_question = conversation.first_question or reply_text
-        self.store.update(conversation)
-        self._persist_session(conversation)
+        lock = self._locks.setdefault(conversation.conversation_id, threading.Lock())
+        with lock:  # ponytail: 会话级锁,有热点再细化
+            if expected is not None and expected != conversation.session_version:
+                # 00 §5.2 约定 3:旧版本 409,不静默覆盖新一轮诊断
+                raise ApiError(409, "SKILL_SESSION_CONFLICT",
+                               "会话版本过期,读取最新 interaction 后由学生决定是否重发")
+            history = conversation.extras.setdefault("history", [])
+            try:
+                turn = self.kernel.reply(self._kernel_session(conversation), str(content))
+            except ApiError:
+                raise
+            except Exception as error:
+                raise ApiError(503, None, f"服务暂不可用:{type(error).__name__}") from error
+            reply_text = str(getattr(turn, "text", ""))
+            history.append({"role": "user", "content": str(content)})
+            history.append({"role": "assistant", "content": reply_text})
+            ready = bool(getattr(turn, "ready_to_confirm", False))
+            conversation.session_version += 1
+            conversation.state = "ready_to_confirm" if ready else "dialogue"
+            conversation.first_question = conversation.first_question or reply_text
+            self.store.update(conversation)
+            self._persist_session(conversation)
         response = self._message_response(conversation, reply_text)
         if cache_key:
             self._turn_cache[cache_key] = response
         return response
 
     def _confirm(self, conversation: Conversation) -> dict:
-        if conversation.state != "ready_to_confirm":
-            # 证据不足:finish 语义返回 needs_review,不写 summary(00 §5.2 结束行)
-            try:
-                summary = self.kernel.finish(self._kernel_session(conversation))
-            except ApiError:
-                raise
-            except Exception as error:
-                raise ApiError(503, None, f"服务暂不可用:{type(error).__name__}") from error
-            status = getattr(summary, "status", "needs_review")
-            if status != "completed":
-                return {"ready_to_confirm": False, "status": "needs_review"}
+        # P1-6:两路都走 kernel.finish,summary 带真实 text(learning_summary 才达合作方)
+        try:
+            summary = self.kernel.finish(self._kernel_session(conversation))
+        except ApiError:
+            raise
+        except Exception as error:
+            raise ApiError(503, None, f"服务暂不可用:{type(error).__name__}") from error
+        status = getattr(summary, "status", "needs_review")
+        if status != "completed":
+            return {"ready_to_confirm": False, "status": "needs_review"}
         if conversation.summary is None:
-            conversation.summary = {"status": "completed"}  # 不可变:completed 后只读
+            conversation.summary = {"status": status,
+                                    "text": str(getattr(summary, "text", ""))}
             conversation.state = "completed"
             self.store.update(conversation)
             self._persist_session(conversation)
@@ -452,8 +456,6 @@ class ConversationService:
         attempt_state/progress 直读内核 session(无 session 的夹具内核回退
         conversation);kind/state/confirmation 跟随 conversation(响应面)。
         inputs/requirements/missing_input_ids 无多步输入流,恒空载。
-        已知结构现状:confirm 在 ready 路径不调 kernel.finish(PR1 最小接线),
-        内核 attempt 停在 ready_to_confirm——随 B 线 PR4 refresh 语义补齐对齐。
         """
         session = conversation.extras.get("kernel_session")
         attempt_state_source = str(getattr(session, "state", "") or conversation.state)

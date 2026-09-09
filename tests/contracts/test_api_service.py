@@ -7,9 +7,13 @@ session_version 乐观并发、题目固定、错误码集与错误信封形态(
 
 from __future__ import annotations
 
+import threading
+import time
+
 import pytest
 
-from partner_api import ScriptedKernel, _serve, open_session, post
+from edu_agent.api import ApiError, build_service
+from partner_api import ScriptedKernel, StubTurn, _serve, open_session, post
 
 
 @pytest.fixture
@@ -141,7 +145,7 @@ def test_confirm_completes_and_summary_is_immutable(api):
     assert confirm.status_code == 200
     body = confirm.json()
     assert body["status"] == "completed" and body["ready_to_confirm"] is True
-    assert body["summary"] == {"status": "completed"}
+    assert body["summary"] == {"status": "completed", "text": "学习小结"}
     # completed 后再 messages → 409(终态不可续)
     after = post(base, f"/api/conversations/{conversation_id}/messages", {
         "content": "再问一句", "input": {"skill_session_id": opened["skill_session_id"]},
@@ -191,3 +195,49 @@ def test_preload_not_ready_is_in_contract_error_family():
 
     error = ApiError(409, "TEACHING_CONTEXT_PRELOAD_NOT_READY", "最小题意尚未准备完成")
     assert (error.status_code, error.code) == (409, "TEACHING_CONTEXT_PRELOAD_NOT_READY")
+
+
+class GatedKernel(ScriptedKernel):
+    """reply 阻塞在闸门上:两个并发 send 都越过版本检查再同时推进(红);加会话锁
+    后第二个线程被拦在锁外,直接 409(绿)。"""
+
+    def __init__(self) -> None:
+        super().__init__(replies=["回答。"])
+        self.entered = threading.Event()
+        self.gate = threading.Event()
+
+    def reply(self, session: dict, student_message: str) -> StubTurn:
+        self.reply_calls += 1
+        self.entered.set()
+        self.gate.wait(timeout=5)
+        return StubTurn("回答。")
+
+
+def test_concurrent_send_second_gets_409():
+    """P1-2 回归:同会话并发 send,第二个(旧版本)必须 409,version 只进到 2。"""
+    kernel = GatedKernel()
+    service = build_service(kernel)
+    opened = service.open("q-1", "idem-cc-1", learner={})
+    cid = opened["conversation"]["conversation_id"]
+    body = {"content": "回答", "input": {"skill_session_id": opened["skill_session_id"],
+                                        "expected_session_version": 1}}
+    results: list[tuple[str, int]] = []
+
+    def send() -> None:
+        try:
+            results.append(("ok", service.send(cid, body)["session_version"]))
+        except ApiError as error:
+            results.append(("err", error.status_code))
+
+    first = threading.Thread(target=send)
+    first.start()
+    assert kernel.entered.wait(timeout=5)  # 第一个线程已进入 reply(并持有会话锁)
+    second = threading.Thread(target=send)
+    second.start()
+    time.sleep(0.1)  # 给第二个线程时间卡在锁上/越过检查
+    kernel.gate.set()
+    first.join(timeout=5)
+    second.join(timeout=5)
+    assert results.count(("err", 409)) == 1
+    assert [r for r in results if r[0] == "ok"] == [("ok", 2)]
+    assert kernel.reply_calls == 1  # 只有一个线程真的调了内核 reply
