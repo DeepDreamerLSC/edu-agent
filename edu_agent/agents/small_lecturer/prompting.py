@@ -23,6 +23,8 @@ import yaml
 _REPO = Path(__file__).resolve().parents[3]
 SKILL_PATH = Path(__file__).resolve().parent / "prompts" / "SKILL.md"
 STYLE_PROFILES_PATH = _REPO / "configs" / "small_lecturer_style_profiles.yaml"
+# 年级知识点树(数据随配置走,装配逻辑是代码):年级 → 领域 → 模块 → 主题 → [四级知识点]。
+KNOWLEDGE_TREE_PATH = _REPO / "configs" / "knowledge_points.json"
 
 # 攻守图教学指令(基线报告 §3 的 prompt 形态)。守:首问质量/年级表达(老系统
 # 1.82/1.73 的强项,不容失分);攻:追问/节奏/总结/判停(老系统 0.27–0.64 的
@@ -144,6 +146,44 @@ def style_directives(grade: str) -> str:
         directives["abstraction_level"], directives["abstraction_level"])
     return (f"【年级表达(学生年级:{grade or '未知'})】{shape};{length};{abstraction};"
             "鼓励要指向具体证据(「这一步你用对了等式性质」),不空泛表扬。")
+
+
+@lru_cache(maxsize=1)
+def _knowledge_tree() -> dict:
+    """年级 → 领域 → 模块 → 主题 → [四级知识点] 四层知识树(数据文件读入)。
+
+    缺文件/损坏返回空 dict,不崩——知识树是增强信号,读不到就退化为无年级依据。"""
+    try:
+        data = json.loads(KNOWLEDGE_TREE_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def grade_grounding(grade: str, knowledge_points: list | None) -> str:
+    """年级 + 题目知识点 → 该年级知识树上可依据的知识点文本(开题 steps 年级恰当化)。
+
+    按题目 knowledge_points 精确命中主题名或子知识点,取该主题的四级清单;
+    未命中(无年级 / 该年级无树 / 无匹配)返回空串,不注入、不扰动现有弧线。"""
+    band = _knowledge_tree().get(str(grade or "").strip(), {})
+    if not isinstance(band, dict) or not band:
+        return ""
+    pts = {str(x) for x in (knowledge_points or []) if x}
+    if not pts:
+        return ""
+    matched: list[str] = []
+    for modules in band.values():
+        if not isinstance(modules, dict):
+            continue
+        for topics in modules.values():
+            if not isinstance(topics, dict):
+                continue
+            for topic, leaves in topics.items():
+                leaves = leaves if isinstance(leaves, list) else []
+                if topic in pts or any(lf in pts for lf in leaves):
+                    detail = "、".join(str(v) for v in leaves if v) if leaves else ""
+                    matched.append(f"{topic}:{detail}" if detail else str(topic))
+    return "；".join(dict.fromkeys(matched))
 
 
 def system_prompt(grade: str = "") -> str:
