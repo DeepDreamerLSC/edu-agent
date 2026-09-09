@@ -9,11 +9,13 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import json
 from pathlib import Path
 
 # 图池目录:issue #130「257 张字节已在 static/bank」,路径相对此目录解析。
 _BANK_DIR = Path(__file__).resolve().parents[1] / "api" / "static" / "bank"
 
+DATASET_SCHEMA_VERSION = "small_lecturer_image_teaching/v1"
 ANSWER_TYPES = frozenset({"integer", "fraction", "decimal_1", "decimal_2", "text"})
 VISUAL_DEPENDENCIES = frozenset({"required", "helpful", "none"})
 OUTCOMES = frozenset({"ready_to_record", "needed_reveal", "not_ready"})
@@ -100,3 +102,32 @@ def validate_scenario(scenario: dict) -> list[str]:
         errors.append(f"{qid}: source 缺 question_id/provider/lesson_name")
 
     return errors
+
+
+def load_scenarios(dataset_path: str | Path) -> list[dict]:
+    """读 v1 数据集并逐条校验;任一错误抛 ValueError(内容缺陷,不静默跳过)。
+
+    数据集定稿前必过此门:sha256 与实际图字节对账、枚举/必填字段齐全。
+    """
+    dataset = json.loads(Path(dataset_path).read_text(encoding="utf-8"))
+    version = dataset.get("schema_version")
+    if version != DATASET_SCHEMA_VERSION:
+        raise ValueError(f"schema_version 不符:期望 {DATASET_SCHEMA_VERSION},实际 {version!r}")
+    scenarios = dataset.get("scenarios")
+    if not isinstance(scenarios, list) or not scenarios:
+        raise ValueError("scenarios 必须是非空列表")
+    errors = [error for scenario in scenarios for error in validate_scenario(scenario)]
+    if errors:
+        raise ValueError("数据集 schema 校验失败:\n" + "\n".join(errors))
+    return scenarios
+
+
+def to_cases(scenarios: list[dict]) -> list[dict]:
+    """v1 场景 → runner case(question 传 dict,KernelSubject 负责透图)。"""
+    return [{
+        "id": scenario["id"],
+        "question": scenario["question"],
+        "student_turns": scenario["student_turns"],
+        "grade": scenario.get("grade", ""),
+        "reference_answer": scenario["reference_answer"]["value"],
+    } for scenario in scenarios]
