@@ -61,8 +61,9 @@ def test_events_persist_through_file_store(tmp_path):
     store.save(first.session)
     restored = store.load(first.session.session_id)
     assert restored is not None
-    assert len(restored.guard_events) == 1  # 泄露事件随 JSON 持久化
+    assert len(restored.guard_events) == 2  # 泄露事件 + 确定性揭示埋点(branch 分流)
     assert restored.guard_events[0]["guard"] == "answer_leak"
+    assert restored.guard_events[1]["branch"] == "reveal"
 
 
 def test_kernel_subject_transcript_carries_events(tmp_path):
@@ -88,5 +89,7 @@ def test_kernel_subject_transcript_carries_events(tmp_path):
         "student_turns": ["我不会", "我想想"]})
     gateway.close()
     fake.stop()
-    assert len(transcript["guard_events"]) == 1
+    assert len(transcript["guard_events"]) == 3  # 泄露 + 两轮模型数字守卫埋点
     assert transcript["guard_events"][0]["guard"] == "answer_leak"
+    assert transcript["guard_events"][1]["branch"] == "model"
+    assert transcript["guard_events"][2]["branch"] == "model"

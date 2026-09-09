@@ -135,7 +135,7 @@ def test_stuck_mark_blocks_structured_path(tmp_path):
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start({"text": "解方程 3x+7=25。"}, {"grade": "五年级", "answer_status": "correct"},
                   gateway=gateway)
-    reply(first.session, "我算出 x=6 了。", gateway=gateway)
+    reply(first.session, "我算出来了。", gateway=gateway)  # 学生未先给出 x=6 → tutor 报答案为泄露
     assert first.session.stuck is True    # 卡点已标记(泄露未解决)
     summary = finish(first.session, gateway=gateway)
     gateway.close()

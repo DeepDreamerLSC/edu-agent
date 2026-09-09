@@ -112,15 +112,17 @@ def _feeds_method(text: str) -> bool:
 def _student_signals_understanding(student_message: str) -> bool:
     """学生表示「懂了/明白了」——教学弧线里这是「请学生讲思路」的触发点。
 
-    「会了」用负向断言 (?<!不),避免「我不会了」(卡住)被误判为「懂了」。"""
-    return bool(re.search(r"都懂了|懂了|明白了|没有不懂|(?<!不)会了|没问题|都明白|没疑问", student_message))
+    「会了」用负向断言 (?<!不),避免「我不会了」(卡住)被误判为「懂了」;「懂了」
+    「明白了」同款负向断言,避免「越来越不懂了/我不明白了」(卡住)被误判为「懂了」。"""
+    return bool(re.search(r"都懂了|(?<!不)懂了|(?<!不)明白了|没有不懂|(?<!不)会了|没问题|都明白|没疑问", student_message))
 
 
 def _student_signals_stuck(student_message: str) -> bool:
     """学生表示「不会/猜不出」——这是「揭示下一级阶梯」的触发点(治 tutor 复读探针)。
 
-    用完整短句(非单字「不会」),避免误伤「我不会」这类出现在其它语境的学生消息。"""
-    return bool(re.search(r"我不太会|我猜不出|我猜不出来|我不知道|我想不出|我想不出来|我不会做|我不会了|不会吧|太难了|没思路", student_message))
+    「不会吧」后接疑问/感叹标点(?!/?/!)是反诘惊讶(「不会吧?!这也能算对?」),不判卡住;
+    单纯「不会吧」仍判卡住;「越来越不懂」补上「不懂了」类卡壳(不被「懂了」误吞)。"""
+    return bool(re.search(r"我不太会|我猜不出|我猜不出来|我不知道|我想不出|我想不出来|我不会做|我不会了|不会吧(?![?!？])|太难了|没思路|越来越不懂", student_message))
 
 
 def _next_step(session: "LearnerSession") -> dict | None:
@@ -143,6 +145,8 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     模型措辞版实测会重复(3/7)且过度揭示,故仍用确定性。"""
     step = _next_step(session)
     if step is None:
+        # 不变量:终答文本只出现在 bottom-out(此处)/ finish / ready_to_confirm 三条
+        # 路径(锁在 tests/teaching/test_kernel_invariants.py);阶梯揭示只给步骤不给终答。
         answer = str(session.question.get("answer") or "").strip()
         if not answer and session.steps:
             answer = str(session.steps[-1].get("value") or "").strip()
@@ -159,6 +163,40 @@ SAFE_FALLBACK_TEXT = "先回到当前小问,你能说出题目明确给出的一
 def _question_numbers(text: str) -> set[float]:
     """题面条件数字全集(整数/小数;分数按两个数字处理,与口算习惯一致)。"""
     return {float(m) for m in re.findall(r"\d+(?:\.\d+)?", text or "")}
+
+
+def _reply_numbers(text: str) -> set[float]:
+    """抽取制数字(替代自报制):回复文本里除「第N」序数语境外的全部数字。
+
+    与 _question_numbers 同口径(整数/小数;分数按两个数字);先剔除「第N」序数
+    (第1/第2步…),避免把序数当数字引用误标漂移。"""
+    stripped = re.sub(r"第\s*\d+(?:\.\d+)?", "", text or "")
+    return _question_numbers(stripped)
+
+
+def _drift_sources(session: LearnerSession, student_message: str | None,
+                   ready_to_confirm: bool) -> tuple[set[float], set[float]]:
+    """数字来源标签池(M2 闭环 #113/#34):允许集 = 题面 ∪ steps 值 ∪ 学生历史数字 ∪
+    [终答数字:仅 ready_to_confirm 态并入]。
+
+    返回 (允许集, 终答数字池)。终答数字在非确认态单独成池、不入允许集,供违规
+    来源标签判定:违规数字若在终答池 → 标签 "answer"(对话态提前说终答),否则
+    "hallucinated"(无任何合法来源)。"""
+    face = _question_numbers(str(session.question.get("text") or ""))
+    steps = set()
+    for step in session.steps:
+        steps |= _question_numbers(str(step.get("value") or ""))
+    student = set()
+    for message in session.history:
+        if message.get("role") == "user":
+            student |= _question_numbers(str(message.get("content") or ""))
+    if student_message:
+        student |= _question_numbers(str(student_message))
+    answer = _question_numbers(str(session.question.get("answer") or ""))
+    if not answer and session.steps:
+        answer = _question_numbers(str(session.steps[-1].get("value") or ""))
+    allowed = face | steps | student | (answer if ready_to_confirm else set())
+    return allowed, answer
 
 
 # 复读自批评(业界 self-refine:把 tutor 自己上一条当反面证据喂回;任务包2步3)
@@ -213,6 +251,7 @@ class _GuardContext:
     schema: dict | None = None
     images: list[str] | None = None
     student_message: str | None = None
+    student_evidence: tuple[str, ...] = ()  # 学生历史 user 消息(泄露护栏对照:已说答案可复述)
 
 
 def _guard_check(ctx: "_GuardContext", text: str) -> tuple[str | None, list[str], str | None]:
@@ -222,6 +261,7 @@ def _guard_check(ctx: "_GuardContext", text: str) -> tuple[str | None, list[str]
         answer_reference=str(ctx.question.get("answer") or ""),
         active_subquestion_text=str(ctx.question.get("text") or ""),
         analysis_reference=str(ctx.question.get("analysis") or ""),
+        student_evidence=list(ctx.student_evidence),
     )
     if leak.fallback_required:
         return ("answer_leak", [f.finding for f in leak.findings], None)
@@ -365,6 +405,18 @@ def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
     ))
 
 
+def _commit_turn(session: LearnerSession, student_message: str, assistant_text: str,
+                 state: str, ready_to_confirm: bool = False) -> Turn:
+    """三处 turn 提交尾部收敛(代喂/揭示/模型路径):append history×2 + version+1 +
+    置态 + 返回 Turn(净减重复行,#113 P2 确定性路径收敛)。"""
+    session.history.append({"role": "user", "content": student_message})
+    session.history.append({"role": "assistant", "content": assistant_text})
+    session.session_version += 1
+    session.state = state
+    return Turn(text=assistant_text, session_version=session.session_version,
+                state=state, ready_to_confirm=ready_to_confirm, session=session)
+
+
 def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> Turn:
     """生成首问(03 §4 Preparing → FirstQuestionReady / Failed)。
 
@@ -418,23 +470,15 @@ def reply(session: LearnerSession, student_message: str, *,
     if _student_signals_understanding(student_message):
         # 学生说「懂了」→ 直接请学生讲思路(确定性,不调模型),不 confirm、不报答案。
         # 这是教学弧线的固定策略(00 §8.5/人定):学生表示懂,就该由学生自己讲,而非 tutor 复述。
-        session.history.append({"role": "user", "content": student_message})
-        session.history.append({"role": "assistant", "content": _ELICIT_TEMPLATE})
-        session.session_version += 1
-        session.state = "dialogue"
-        return Turn(text=_ELICIT_TEMPLATE, session_version=session.session_version,
-                    state="dialogue", ready_to_confirm=False, session=session)
+        session.guard_events.append({"branch": "elicit", "hint_level": session.hint_level})
+        return _commit_turn(session, student_message, _ELICIT_TEMPLATE, "dialogue")
     if _student_signals_stuck(student_message):
         # 学生说「不会/猜不出」→ 揭示下一级阶梯(内容确定性,措辞交模型,代喂/无步骤兜底)。
         gateway = gateway or default_gateway()
         hint = _reveal_stuck_hint(session)
-        session.history.append({"role": "user", "content": student_message})
-        session.history.append({"role": "assistant", "content": hint})
-        session.session_version += 1
-        session.state = "dialogue"
         session.stuck = True
-        return Turn(text=hint, session_version=session.session_version,
-                    state="dialogue", ready_to_confirm=False, session=session)
+        session.guard_events.append({"branch": "reveal", "hint_level": session.hint_level})
+        return _commit_turn(session, student_message, hint, "dialogue")
     gateway = gateway or default_gateway()
     _reply_messages = [
         {"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
@@ -449,7 +493,11 @@ def reply(session: LearnerSession, student_message: str, *,
     ).text)
     ctx = _GuardContext(question=session.question, grade=session.learner.get("grade", ""),
                         gateway=gateway, role="tutor", messages=_reply_messages,
-                        schema=TUTOR_TURN_SCHEMA, student_message=student_message)
+                        schema=TUTOR_TURN_SCHEMA, student_message=student_message,
+                        student_evidence=(tuple(
+                            str(message["content"]) for message in session.history
+                            if message.get("role") == "user"
+                        ) + (student_message,)))
     # 复读自批评(self-refine):与上一轮 tutor 输出高度相似 → 打回重生成一次,仍复读才降级。
     prev = session.history[-1]["content"] if session.history else session.first_question
     if prev and _is_repeat(prev, output["reply"]):
@@ -465,19 +513,28 @@ def reply(session: LearnerSession, student_message: str, *,
         safe_text = _ELICIT_TEMPLATE
         output["ready_to_confirm"] = False
         session.stuck = True  # 代喂 = 未解决的教学质量问题(卡点标记,R6 同款)
-    # 数字漂移守卫(M3):模型自报引用的数字 ⊆ 题面数字全集,超出 = 把口误数字
-    # 当题目条件复读 → stuck 标记(不拒答,下一轮提醒纠偏);题面无数字跳过
-    cited = [float(n) for n in (output.get("cited_numbers") or [])]
-    face_numbers = _question_numbers(str(session.question.get("text") or ""))
-    if face_numbers and any(n not in face_numbers for n in cited):
+    # 数字漂移守卫(抽取制 + 来源标签池,M2 闭环 #113/#34):抽取模型 reply 文本
+    # 里的数字(排除"第N"序数),允许集 = 题面 ∪ steps 值 ∪ 学生历史数字 ∪
+    # [终答:仅 ready_to_confirm 态];cited_numbers 自报集保留(影子对照)。
+    cited = sorted({float(n) for n in (output.get("cited_numbers") or [])})
+    extracted = _reply_numbers(str(output.get("reply") or ""))
+    allowed, answer_pool = _drift_sources(
+        session, student_message, bool(output.get("ready_to_confirm")))
+    drift_violations = sorted(extracted - allowed)
+    session.guard_events.append({
+        "branch": "model",
+        "cited": cited,
+        "extracted": sorted(extracted),
+        "violation_sources": [
+            {"number": n, "source": ("answer" if n in answer_pool else "hallucinated")}
+            for n in drift_violations
+        ],
+    })
+    if drift_violations:
         session.stuck = True
-    session.history.append({"role": "user", "content": student_message})
-    session.history.append({"role": "assistant", "content": safe_text})
-    session.session_version += 1
-    session.state = "ready_to_confirm" if output["ready_to_confirm"] else "dialogue"
-    return Turn(text=safe_text, session_version=session.session_version,
-                state=session.state, ready_to_confirm=bool(output["ready_to_confirm"]),
-                session=session)
+    state = "ready_to_confirm" if output["ready_to_confirm"] else "dialogue"
+    return _commit_turn(session, student_message, safe_text, state,
+                        ready_to_confirm=bool(output["ready_to_confirm"]))
 
 
 def _structured_summary(session: LearnerSession) -> str:
