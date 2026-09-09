@@ -18,7 +18,7 @@ import json
 import os
 from pathlib import Path
 
-_SEED_BANK = Path(__file__).resolve().parents[1] / "evals" / "datasets" / "release_acceptance_seed_question_bank.json"
+_SEED_BANK = Path(__file__).resolve().parents[1] / "contracts" / "release_acceptance_seed_question_bank.json"
 _DB_SNAPSHOT = Path(__file__).resolve().parents[1] / "contracts" / "db_snapshot.json"
 _PARTNER_BANK = Path(__file__).resolve().parents[1] / "contracts" / "partner_bank.json"
 ANSWER_CORRECT_PROVENANCE = "partner_question_bank"
