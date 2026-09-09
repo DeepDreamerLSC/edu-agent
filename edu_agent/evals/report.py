@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import html
 
-DIMENSIONS = ("first_question", "socratic_followup", "grade_fit",
-              "pacing", "summary_mastery", "termination")
+from .judge import DIMENSIONS
+
 DIM_LABELS = {"first_question": "首问质量", "socratic_followup": "追问引导",
               "grade_fit": "年级适配", "pacing": "节奏", "summary_mastery": "总结与掌握",
               "termination": "终止行为"}

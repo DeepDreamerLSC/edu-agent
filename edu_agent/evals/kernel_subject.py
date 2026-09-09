@@ -13,12 +13,8 @@ import time
 from edu_agent.agents.small_lecturer import TerminalStateError, finish, reply, start
 from edu_agent.gateway import Gateway, GatewayError
 
+from .judge import ENV_FAILURES
 from .runner import EnvironmentFailure
-
-# 环境类失败(可补跑)映射自 01 §4 重试资格——与 JudgeSubject 同款口径。
-ENV_FAILURES = frozenset({
-    "connection", "timeout_first_token", "timeout_total", "rate_limited", "upstream_5xx",
-})
 
 
 class KernelSubject:
@@ -51,7 +47,7 @@ class KernelSubject:
             final_state = summary.status
             summary_text = summary.text
         except GatewayError as error:
-            if error.failure.value in ENV_FAILURES:
+            if error.failure in ENV_FAILURES:
                 raise EnvironmentFailure(str(error)) from error
             raise  # 内容类失败:重跑改变不了,runner 记台账
         except TerminalStateError as error:  # 剧本推进与状态机不符(如 fail closed)
