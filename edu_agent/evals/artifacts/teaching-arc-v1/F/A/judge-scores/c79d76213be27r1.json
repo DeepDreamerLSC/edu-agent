@@ -1,0 +1,27 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你先告诉我，你算出的面积是多少？'，仅采集作答，未评判对错或复讲。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师回应学生'10乘6等于60'时立即判定：'这一步是对的！'，违反了采集后不评判的规则。"
+ },
+ "restate": {
+  "asked": false,
+  "delivered": false,
+  "evidence": "对话中教师未出现'讲一遍'、'复述'、'说说你的思路'等明确请学生复讲的指令。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "不过三角形面积和长方形不一样，它没有满铺，所以要除以2",
+   "如果把两个一样的三角形拼起来，是不是刚好能组成一个长方形？",
+   "这个平行四边形的面积就是10×6=60，而三角形面积就是它的一半"
+  ],
+  "evidence": "在学生尚未完整得出答案前，教师直接给出了'除以2'的运算逻辑和'拼成平行四边形'的解题方法。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}
