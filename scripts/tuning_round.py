@@ -24,6 +24,8 @@ import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
+from scripts.json_first_pass import json_first_pass_report
+
 from edu_agent.evals import EvalRunner, KernelSubject, RunnerConfig, judge_transcript, load_results
 from edu_agent.gateway import Gateway, ModelRegistry, load_registry
 
@@ -163,7 +165,8 @@ def main() -> int:
     registry = load_registry(REPO / "configs" / "models.yaml")
     if args.nightly:
         nightly_preflight(registry, out)
-    gateway = Gateway(registry)
+    facts_dir = Path(os.environ.get("EDU_FACTS_DIR") or REPO / "facts")
+    gateway = Gateway(registry, facts_dir=facts_dir)
     try:
         print(f"收集:11 场景,KernelSubject(tutor 主选 {registry.roles['tutor'].primary})")
         run_dir = out / "collect"
@@ -197,6 +200,9 @@ def main() -> int:
         deltas.append(got - (r1 + r2) / 2)
         report.append(f"| {case_id} | {r1} | {r2} | {got} | {tolerance_verdict(got, r1, r2)} |")
     report += ["", f"逐维均分:见 judge-scores.json;对两轮均值差:{sum(deltas) / len(deltas):+.2f}"]
+    # #34 M2 出口条件:json 一次通过率(结构化输出合规率,01 §6)
+    jfp_text = json_first_pass_report(facts_dir)
+    report += jfp_text.splitlines() + [""]
     text = "\n".join(report) + "\n"
     (out / "comparison.md").write_text(text, encoding="utf-8")
     print(text)

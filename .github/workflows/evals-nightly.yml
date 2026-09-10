@@ -28,6 +28,11 @@ jobs:
       - uses: astral-sh/setup-uv@v5 # 修 #128:astralsh(无连字符)不存在,Set up job 即 404
       - name: 安装依赖(uv sync,含锁文件)
         run: uv sync --frozen
+      - name: facts 持久化目录(避开 checkout 清理,跨夜累计;#34 测量窗口)
+        run: |
+          # 2026-09-10 评审:facts 落 checkout 之外,否则每次 actions/checkout 清空,
+          # M2 判门只有当日 40 行样本(40×0.98=39.2,只许 0 失败)。持久化后多日累计可用。
+          echo "EDU_FACTS_DIR=$HOME/edu-agent-facts" >> "$GITHUB_ENV"
       - name: 夜评(11 场景,真模型;预检失败或评测失败 → 红灯)
         run: |
           uv run python scripts/tuning_round.py --nightly --out var/nightly/$STAMP
