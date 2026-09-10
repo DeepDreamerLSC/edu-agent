@@ -1,0 +1,82 @@
+{
+ "id": "cd08ec631b2e9r2",
+ "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit",
+ "repeat": 2,
+ "question": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+ "grade": "六年级",
+ "answer_status": "incorrect",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "你现在的想法是？比如你猜鸡和兔各有多少只？或者你卡在哪个步骤？"
+  },
+  {
+   "role": "user",
+   "content": "我还是觉得鸡有4只,兔有4只。"
+  },
+  {
+   "role": "assistant",
+   "content": "先回到你刚说的「我还是觉得鸡有4只,兔有4只。」——你能从题目里再确认一个已知条件吗?"
+  },
+  {
+   "role": "user",
+   "content": "我还是觉得鸡有4只,兔有4只。"
+  },
+  {
+   "role": "assistant",
+   "content": "我们从这里入手:先假设8只全是鸡，算出脚的总数。。你接着算下一步。"
+  },
+  {
+   "role": "user",
+   "content": "我还是觉得鸡有4只,兔有4只。"
+  },
+  {
+   "role": "assistant",
+   "content": "先回到你刚说的「我还是觉得鸡有4只,兔有4只。」——你能从题目里再确认一个已知条件吗?"
+  },
+  {
+   "role": "user",
+   "content": "我还是觉得鸡有4只,兔有4只。"
+  },
+  {
+   "role": "assistant",
+   "content": "下一步是这样:实际脚数比假设多出多少？。你接着算下一步。"
+  },
+  {
+   "role": "user",
+   "content": "我还是觉得鸡有4只,兔有4只。"
+  },
+  {
+   "role": "assistant",
+   "content": "先回到你刚说的「我还是觉得鸡有4只,兔有4只。」——你能从题目里再确认一个已知条件吗?"
+  },
+  {
+   "role": "user",
+   "content": "我还是觉得鸡有4只,兔有4只。"
+  },
+  {
+   "role": "assistant",
+   "content": "再往下看:每把一只鸡换成兔，脚数多出几只？。你接着算下一步。"
+  },
+  {
+   "role": "user",
+   "content": "我还是觉得鸡有4只,兔有4只。"
+  },
+  {
+   "role": "assistant",
+   "content": "先回到你刚说的「我还是觉得鸡有4只,兔有4只。」——你能从题目里再确认一个已知条件吗?"
+  },
+  {
+   "role": "user",
+   "content": "我还是觉得鸡有4只,兔有4只。"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才说鸡和兔都是4只，我们来检查一下：4只鸡有4×2=8只脚，4只兔有4×4=16只脚，加起来是24只脚，但题目说有26只脚，差了2只。每换一只鸡为兔，脚数多2只，所以需要换1只，也就是兔有5只，鸡有3只。"
+  },
+  {
+   "role": "assistant",
+   "content": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你现在的答案是多少？告诉我你算到哪一步了，我帮你看看哪里卡住了。' 包含友好开场并采集作答，未直接评判对错或给出答案。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师采集到学生'把三个数直接加在一起'后，立即回应'但没考虑借出的书要减掉哦'，属于对作答的纠正和隐含的'错'的判定。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": true,
+  "evidence": "教师请求：'那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。' 学生回应：'我从头讲:图书馆原有120本...'"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未使用'假设法'等特定方法名词，也未在学生说出127之前直接给出该数值答案。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

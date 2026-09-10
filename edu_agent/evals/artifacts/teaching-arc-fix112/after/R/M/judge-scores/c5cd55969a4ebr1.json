@@ -1,0 +1,25 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你现在的想法是？比如你猜鸡和兔各有多少只？或者你卡在哪个步骤？'，包含友好开场并采集学生当前想法，未直接评判对错或给出答案。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师采集到学生想法'我还不知道怎么同时算两种动物'，并在该轮回应中仅表示'想法很真实'，未出现'对/错/不对'等判定词。"
+ },
+ "restate": {
+  "asked": false,
+  "delivered": false,
+  "evidence": "对话中教师未出现'讲一遍''复述''说说你的思路'等明确请学生复讲或讲解思路的指令。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "你用假设法成功解决了鸡兔同笼问题"
+  ],
+  "evidence": "教师在总结中直接说出方法名'假设法'，而学生此前仅说出'可以先假设8只全是鸡'，未明确使用'假设法'这一术语，属于方法名代喂。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

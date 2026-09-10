@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师首问包含'对吗？'，属于对错评判，且未先采集学生作答选项或数值。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师在首问中直接询问'对吗？'，对学生作答进行了对错判定，违反不评判原则。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师多次要求'请你从头讲讲你的思路'，但学生始终重复'我还是觉得面积就是60平方厘米'，未讲出解题过程。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "对话中教师未提及任何方法名称（如公式法、假设法等），也未直接给出正确答案30。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

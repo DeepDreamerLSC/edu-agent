@@ -1,0 +1,19 @@
+{
+ "frame": "before",
+ "worktree": "/root/code/edu-w8-arc-eval",
+ "git_sha": "cc9879276e125d13e5de30cffbd93271b99a3755",
+ "kernel_diff_vs_main_6b69a4e_sha256": "e3b0c44298fc1c14",
+ "kernel_diff_vs_main_empty": true,
+ "prompting_diff_vs_main_empty": true,
+ "models_yaml_sha256": "3feca1b443896d469000859c009d9d3281439c2bf09a740b7fe1a1b4488a862f",
+ "tutor": "qwen3_vl_8b",
+ "judge": "mlx_27b",
+ "repeats": 2,
+ "calibers": [
+  "F",
+  "R",
+  "L",
+  "P"
+ ],
+ "notes": "F=#143 冻结口径原样重跑;R=复讲扩展(S5);L=复读探针(8 轮同句);P=gate 口径现状 wiring(夜评 11 场景同源)。kernel_diff_vs_main_empty=before 帧 True / after 帧 False(仅 fix);prompting_diff_vs_main_empty 两帧均 True(#101 改写不入帧)。"
+}

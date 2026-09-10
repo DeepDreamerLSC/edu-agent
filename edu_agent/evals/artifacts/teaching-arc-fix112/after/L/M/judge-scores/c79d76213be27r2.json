@@ -1,0 +1,27 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师首问包含'对吗？'进行对错评判，且未先采集学生作答选项或数值，而是直接复述学生答案并追问原因。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师在首问中直接说'你刚才说面积是60，对吗？'，对学生作答进行了对错判定（'对吗'），违反了采集时不评判的规则。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师多次要求'请你从头讲讲你的思路'，但学生始终重复'我还是觉得面积就是60平方厘米'，未讲出解题过程。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "先写出三角形面积公式：面积 = 底 × 高 ÷ 2。",
+   "再除以2：60 ÷ 2 = 30。",
+   "这一步我们直接看结果:30。"
+  ],
+  "evidence": "在学生未得出正确答案前，教师直接给出了公式'面积 = 底 × 高 ÷ 2'及计算步骤'60 ÷ 2 = 30'和最终结果'30'。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}
