@@ -24,6 +24,8 @@ import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
+from scripts.json_first_pass import json_first_pass_report
+
 from edu_agent.evals import EvalRunner, KernelSubject, RunnerConfig, judge_transcript, load_results
 from edu_agent.gateway import Gateway, ModelRegistry, load_registry
 
@@ -197,6 +199,10 @@ def main() -> int:
         deltas.append(got - (r1 + r2) / 2)
         report.append(f"| {case_id} | {r1} | {r2} | {got} | {tolerance_verdict(got, r1, r2)} |")
     report += ["", f"逐维均分:见 judge-scores.json;对两轮均值差:{sum(deltas) / len(deltas):+.2f}"]
+    # #34 M2 出口条件:json 一次通过率(结构化输出合规率,01 §6)
+    facts_dir = Path(os.environ.get("EDU_FACTS_DIR") or REPO / "facts")
+    jfp_text = json_first_pass_report(facts_dir)
+    report += jfp_text.splitlines() + [""]
     text = "\n".join(report) + "\n"
     (out / "comparison.md").write_text(text, encoding="utf-8")
     print(text)
