@@ -34,7 +34,9 @@ LEARNER = {"grade": "六年级"}
 
 def tutor_json(reply_text: str, ready: bool = False,
                cited_numbers: list[float] | None = None) -> str:
-    return json.dumps({"reply": reply_text, "ready_to_confirm": ready,
+    # reason 首位(#146 M1):镜像真模型 grammar 输出的字段序;内核不读该值(规划装置)
+    return json.dumps({"reason": "先引导学生自己想到下一步", "reply": reply_text,
+                       "ready_to_confirm": ready,
                        "cited_numbers": cited_numbers or []}, ensure_ascii=False)
 
 

@@ -1,0 +1,26 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "首问中包含复讲指令'告诉我你是怎么想的'，且包含评判性引导'我们一起找找错在哪'，不符合incorrect状态下仅采集作答的要求。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师在采集到学生答案'10乘6等于60'后，立即回应'这个乘法是对的，但三角形面积不是这样算的哦'，进行了对错判定和纠正。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": true,
+  "evidence": "教师首问要求'告诉我你是怎么想的'，学生随后回答'我先算10乘6等于60'，并在后续对话中解释了'两个完全相同的三角形可以拼成...'"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "那现在你知道为什么面积要除以2了吗？",
+   "底×高=60，再除以2，就是30平方厘米。"
+  ],
+  "evidence": "在学生尚未完整得出正确答案前，教师直接给出了计算步骤'底×高=60，再除以2，就是30平方厘米'，代喂了答案数值。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

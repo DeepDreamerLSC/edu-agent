@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'来，我们一起看看这道题，你选了哪个选项或者算出什么结果呀？'，包含友好开场并采集作答，未评判对错。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师采集到学生作答'把三个数直接加在一起'后，在紧随的回应中直接纠正：'买来的书和借出的书是不是都要从原来的书里算进去？'，隐含了对学生'直接加'做法的否定。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求：'那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。'，但学生未再回应，对话以教师再次提问结束。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师全程未提及'假设法'等方法名，且学生已自行算出'127本'，教师未在学生未说出答案前直接给出该数值。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

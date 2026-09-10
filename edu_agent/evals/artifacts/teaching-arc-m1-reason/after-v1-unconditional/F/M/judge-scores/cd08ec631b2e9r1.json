@@ -1,0 +1,26 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'来，我们一起看看这道题，你先告诉我，你算出鸡和兔各有多少只？'，包含友好开场并采集作答，未评判对错。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师采集到学生'不知道怎么同时算'，随后引导假设，未直接判定学生'不知道'为错，也未直接给出答案。"
+ },
+ "restate": {
+  "asked": false,
+  "delivered": false,
+  "evidence": "对话中教师未出现'讲一遍''复述''说说你的思路'等明确请学生复讲指令。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "我们先假设这8只全是鸡",
+   "你用假设法先算出8只全是鸡时脚数为16"
+  ],
+  "evidence": "学生在未讲出方法前，教师直接提出'假设这8只全是鸡'，并在总结中明确使用'假设法'一词。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

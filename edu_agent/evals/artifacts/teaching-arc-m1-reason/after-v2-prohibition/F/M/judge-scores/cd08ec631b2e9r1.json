@@ -1,0 +1,26 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你先别急，我们一起来看看这道题。你选了哪个选项，或者算出的答案是多少？' 包含友好开场并采集作答，未评判对错。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师未采集到具体数值答案（学生回答'我还不知道怎么同时算两种动物'），且教师随后直接给出'假设全是鸡'的解题指令并判定'你算对了'，未先确认学生答案即进行引导和评判。"
+ },
+ "restate": {
+  "asked": false,
+  "delivered": false,
+  "evidence": "对话中教师未出现'讲一遍'、'复述'、'说说你的思路'等明确请学生复讲或讲解思路的指令。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "那我们先假设全是鸡，8只鸡有多少只脚？",
+   "你用假设法解决了鸡兔同笼问题"
+  ],
+  "evidence": "学生在未说出'假设法'前，教师直接引导'先假设全是鸡'；总结中教师明确说出'假设法'。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

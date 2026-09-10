@@ -1,0 +1,26 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你先别急，我们一起来看看这道题。你选了哪个选项，或者算出的答案是多少？' 包含友好开场并采集作答，未评判对错。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师未采集到具体数值答案，且直接给出解题指令：'我们从这里入手:假设全是鸡，算出总脚数。' 并在后续轮次中直接给出'多出10只脚'等解题关键信息。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师最后询问：'你能说说目前想到的第一步吗?'，但对话在此结束，学生未再发言复述思路。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "我们从这里入手:假设全是鸡，算出总脚数。",
+   "每只兔子比鸡多2只脚，这10只脚能换几只兔子？"
+  ],
+  "evidence": "在学生未说出方法前，教师直接说出'假设全是鸡'的方法名及'每只兔子比鸡多2只脚'的解题关键数值。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

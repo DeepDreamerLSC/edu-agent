@@ -6,7 +6,7 @@ from .guardrails import (
     StudentVisibleGuardrailFinding,
     evaluate_student_visible_question,
 )
-from .kernel import SAFE_FALLBACK_TEXT, finish, reply, start
+from .kernel import SAFE_FALLBACK_TEXT, TUTOR_TURN_SCHEMA, finish, reply, start
 from .prompting import (
     OPENING_HINT_CORRECT,
     OPENING_HINT_INCORRECT,
@@ -39,6 +39,7 @@ __all__ = [
     "Summary",
     "TerminalStateError",
     "ToneGuardrailResult",
+    "TUTOR_TURN_SCHEMA",
     "Turn",
     "apply_tone_guardrail",
     "evaluate_student_visible_format",

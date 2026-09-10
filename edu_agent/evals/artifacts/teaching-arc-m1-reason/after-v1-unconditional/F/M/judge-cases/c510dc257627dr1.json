@@ -1,0 +1,50 @@
+{
+ "id": "c510dc257627dr1",
+ "base_id": "small_lecturer_dialogue_stability_20_stability_fraction_addition",
+ "repeat": 1,
+ "question": "计算四分之三加八分之一，并说明为什么要这样算。",
+ "grade": "五年级",
+ "answer_status": "incorrect",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "你先别急，我们一起来看看这道题。你算出的结果是多少？"
+  },
+  {
+   "role": "user",
+   "content": "我能不能直接把分子和分母分别相加？"
+  },
+  {
+   "role": "assistant",
+   "content": "你想到直接加分子分母，这个想法很有趣，就像把半块蛋糕和四分之一块蛋糕直接拼在一起，但它们的大小单位不一样，不能直接拼哦。我们先看看这两个分数的分母有什么不同，再想想怎么让它们变成一样的单位。"
+  },
+  {
+   "role": "user",
+   "content": "直接算成十二分之四好像不对，因为每一份的大小不同。"
+  },
+  {
+   "role": "assistant",
+   "content": "你说到每一份的大小不同，这很关键！那我们怎么把四分之三和八分之一变成相同大小的‘每一份’呢？比如，把四分之三变成八分之几？"
+  },
+  {
+   "role": "user",
+   "content": "我把四分之三化成八分之六，再加八分之一。"
+  },
+  {
+   "role": "assistant",
+   "content": "你把四分之三化成八分之六，这一步很对！现在我们来加八分之六和八分之一，结果是多少？"
+  },
+  {
+   "role": "user",
+   "content": "同分母后分子相加得到八分之七，分母仍然是8。"
+  },
+  {
+   "role": "assistant",
+   "content": "你算出八分之七，分母保持8，这一步完全正确！那我们再想想，为什么要先把四分之三变成八分之六？"
+  },
+  {
+   "role": "assistant",
+   "content": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  }
+ ]
+}

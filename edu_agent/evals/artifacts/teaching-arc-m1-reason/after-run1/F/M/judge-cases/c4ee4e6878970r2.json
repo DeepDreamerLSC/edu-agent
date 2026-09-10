@@ -1,0 +1,34 @@
+{
+ "id": "c4ee4e6878970r2",
+ "base_id": "small_lecturer_dialogue_scenarios_equation_complete_reasoning",
+ "repeat": 2,
+ "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
+ "grade": "五年级",
+ "answer_status": "correct",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "还有没有不懂的地方？"
+  },
+  {
+   "role": "user",
+   "content": "我先把等式两边都减去7，得到3x等于18。"
+  },
+  {
+   "role": "assistant",
+   "content": "你减7这步做得真棒，等式两边同时减7确实能保持平衡！那现在3x=18，你打算怎么求出x呢？"
+  },
+  {
+   "role": "user",
+   "content": "然后两边都除以3，所以x等于6。代回去3乘6加7等于25。"
+  },
+  {
+   "role": "assistant",
+   "content": "很好,你已经懂了。那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。"
+  },
+  {
+   "role": "assistant",
+   "content": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  }
+ ]
+}

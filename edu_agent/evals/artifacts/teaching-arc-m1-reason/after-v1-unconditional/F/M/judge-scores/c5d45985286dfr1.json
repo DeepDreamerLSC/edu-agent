@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你好呀，我们一起来看看这道题！你刚才算出的答案是什么？告诉我你选了哪个选项或者算到哪一步了？'，包含友好开场并采集作答，未评判对错。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师在学生回答'我想两边都减去7，得到3x等于18'后，立即回应'你刚才算对了'，进行了对错判定。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求'那请你从头讲讲你的思路'，但学生未再回应，对话以教师再次提问结束。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未提及任何方法名称（如移项、方程法等），也未在学生说出答案前直接给出最终数值6。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

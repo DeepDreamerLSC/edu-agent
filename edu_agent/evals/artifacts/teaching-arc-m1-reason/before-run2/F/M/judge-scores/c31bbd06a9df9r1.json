@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你好呀，我们一起看看这道关于图书馆的书的题目。你刚才算出的答案是多少呢？' 包含友好开场并采集作答，未评判对错。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师回应学生'我把三个数直接加在一起'时，立即指出'但没考虑借出的书要减掉哦'，属于对作答的纠正和隐含的'错'的判定。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求'那请你从头讲讲你的思路'，但学生未再回应，后续教师直接说'这一题的学习证据还不够'，说明学生未实际复讲。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未提及任何方法名（如假设法、方程法等），也未在学生说出答案前直接给出正确答案数值127。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

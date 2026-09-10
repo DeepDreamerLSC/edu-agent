@@ -1,0 +1,50 @@
+{
+ "id": "cf68b7a6e94b1r1",
+ "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem",
+ "repeat": 1,
+ "question": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
+ "grade": "三年级",
+ "answer_status": "incorrect",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "来，我们一起看看这道题，你选了哪个选项或者算出什么结果呀？"
+  },
+  {
+   "role": "user",
+   "content": "我把三个数直接加在一起。"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才说把三个数直接加在一起，那我们来想想，买来的书和借出的书是不是都要从原来的书里算进去？"
+  },
+  {
+   "role": "user",
+   "content": "借出表示数量减少，不能也加上38。"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才说借出不能加38，这很对！那买来的45本是增加了，借出的38本是减少了，我们得把这两部分和原来的120本一起算，你打算怎么安排这三部分的顺序呢？"
+  },
+  {
+   "role": "user",
+   "content": "先算120加45等于165本。"
+  },
+  {
+   "role": "assistant",
+   "content": "你先算120加45等于165本，这一步是对的！那借出的38本呢？它会让总数变少，你打算怎么从165里去掉它？"
+  },
+  {
+   "role": "user",
+   "content": "再算165减38等于127本，所以现在有127本。"
+  },
+  {
+   "role": "assistant",
+   "content": "很好,你已经懂了。那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。"
+  },
+  {
+   "role": "assistant",
+   "content": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  }
+ ]
+}

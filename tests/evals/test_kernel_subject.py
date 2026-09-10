@@ -36,7 +36,9 @@ CASE = {
 
 
 def tutor_json(text: str, ready: bool = False) -> str:
-    return json.dumps({"reply": text, "ready_to_confirm": ready,
+    # reason 首位(#146 M1):镜像真模型 grammar 输出的字段序;内核不读该值(规划装置)
+    return json.dumps({"reason": "先引导学生自己想到下一步", "reply": text,
+                       "ready_to_confirm": ready,
                        "cited_numbers": []}, ensure_ascii=False)
 
 
