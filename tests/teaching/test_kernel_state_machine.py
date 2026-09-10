@@ -330,3 +330,62 @@ def test_reply_negative_huile_goes_stuck_not_understanding(tmp_path):
     assert turn.text == "我们从这里入手:两边减7。你接着算下一步。"  # 揭示阶梯,非请讲
     assert turn.ready_to_confirm is False
     assert "讲讲你的思路" not in turn.text
+
+
+# ---------- #107 方案 A:题库解析切片优先(确定性阶梯,零模型) ----------
+
+_ANALYSIS = ("先假设8只全是鸡,算出脚的总数8×2=16。再算实际脚数比假设多26-16=10只。"
+             "然后每把一只鸡换成兔,脚数多4-2=2只。最后多出的脚数能换10÷2=5只兔,鸡有8-5=3只。")
+_MODEL_STEPS = [{"step": "模型自拟第一步", "value": "111"}, {"step": "模型自拟第二步", "value": "222"}]
+
+
+def _start_with_question(tmp_path, question: dict, steps: list[dict]):
+    fake = FakeOpenAI([completion(open_json("我们先看看题目条件?", steps=steps))]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    turn = start(question, {"grade": "六年级", "answer_status": "incorrect"}, gateway=gateway)
+    gateway.close()
+    fake.stop()
+    return turn
+
+
+def test_analysis_ladder_takes_priority_over_model_steps(tmp_path):
+    """题库带解析 → 阶梯来自**既定解析**(纯函数切片),不用模型当场生成的分步解。"""
+    question = {"text": "鸡和兔一共8只,26只脚,各多少?", "answer": "鸡3只兔5只",
+                "analysis": _ANALYSIS, "knowledge_points": ["鸡兔同笼"]}
+    turn = _start_with_question(tmp_path, question, _MODEL_STEPS)
+    steps = turn.session.steps
+    assert len(steps) == 4 and all("模型自拟" not in s["step"] for s in steps)
+    assert [s["value"] for s in steps] == ["16", "10", "2", "3"]
+    assert steps[0]["step"].startswith("先假设8只全是鸡")
+    # 末级 value 即终答兜底(_known_answer 同源)→ 解析的结论数字
+    assert steps[-1]["value"] == "3"
+
+
+def test_model_steps_kept_when_analysis_missing_or_unsliceable(tmp_path):
+    """无解析 / 解析切不出 ≥2 步(纯叙述、无数字)→ 保持模型分步解不变(零回归)。"""
+    no_analysis = {"text": "鸡和兔一共8只,26只脚,各多少?", "answer": "", "analysis": "",
+                   "knowledge_points": []}
+    narrative = {"text": "看题目说说你的想法。", "answer": "",
+                 "analysis": "先读题。再想想要求什么。最后说说你的结论。", "knowledge_points": []}
+    for question in (no_analysis, narrative):
+        turn = _start_with_question(tmp_path, question, _MODEL_STEPS)
+        assert turn.session.steps == _MODEL_STEPS
+
+
+def test_analysis_ladder_is_revealed_on_repeat_fallback(tmp_path):
+    """卡住/复读兜底揭示的下一级 = 解析切片(证明阶梯真的接上了揭示路径)。"""
+    question = {"text": "鸡和兔一共8只,26只脚,各多少?", "answer": "鸡3只兔5只",
+                "analysis": _ANALYSIS, "knowledge_points": []}
+    repeated = "兔子有几只呢?"
+    fake = FakeOpenAI([
+        completion(open_json(repeated, steps=_MODEL_STEPS)),
+        completion(tutor_json(repeated)),      # 模型复读首问
+        completion(tutor_json(repeated)),      # 重生成仍复读 → 兜底揭示下一级
+    ]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    first = start(question, {"grade": "六年级", "answer_status": "incorrect"}, gateway=gateway)
+    turn = reply(first.session, "嗯,我看看。", gateway=gateway)
+    gateway.close()
+    fake.stop()
+    assert "先假设8只全是鸡" in turn.text        # 揭开的是题库解析的第一级
+    assert turn.session.hint_level == 1
