@@ -13,6 +13,7 @@
 | judge | `mlx_27b` 单遍 temperature=0(同夜评口径) |
 | 臂 A 代码状态 | = `0902a76`(= `origin/main` `acb5b89` + merge `origin/tune/teaching-arc` `c8935c7`);采集时 HEAD 为 pre-reg 提交 `c961d2b`,该提交只增 docs,运行时行为与 `0902a76` 相同 |
 | 两臂代码差异 | 仅 `edu_agent/agents/small_lecturer/prompting.py`(两常量) + `tests/teaching/test_kernel_r6.py`(测试) |
+| **解读边界** | 臂 M 的内核**已含弧线机制**(分步解、卡点标记、复讲类行为在两臂都存在),臂 A 只差 `prompting.py` 两常量 → 本实验测的是**弧线 prompt 文案改写**,**不是"有弧线 vs 无弧线"**;引用下表须带此前缀 |
 | transcript 总数 | 88 份(11 场景 × 2 重复 × 2 臂 × 2 口径) |
 | judge 评分数 | 88 份 |
 
