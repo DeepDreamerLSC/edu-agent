@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你先告诉我，你算出的答案是多少？'，符合采集作答且无评判。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师回应学生'两边都减去7'时判定：'这一步很聪明！'，并在后续确认'对吗？'，属于对错评判。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求：'那请你从头讲讲你的思路'，但学生未再复述，对话随即结束或转向其他。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未直接说出方法名或最终答案数值，仅通过引导让学生自己说出'两边都减去7'和'x等于6'。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

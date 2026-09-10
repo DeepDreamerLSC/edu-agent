@@ -1,0 +1,11 @@
+{
+ "git_sha": "7bf0f4b7ebf28a41656d157bc34726220b141c93",
+ "models_yaml_sha256": "3feca1b443896d46",
+ "provider_probes": {
+  "deepseek": "ok",
+  "mlx": "ok",
+  "llama": "ok",
+  "vision": "ok"
+ },
+ "launchctl_services": []
+}

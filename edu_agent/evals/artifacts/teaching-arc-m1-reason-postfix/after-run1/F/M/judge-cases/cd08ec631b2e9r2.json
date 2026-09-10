@@ -1,0 +1,50 @@
+{
+ "id": "cd08ec631b2e9r2",
+ "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit",
+ "repeat": 2,
+ "question": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+ "grade": "六年级",
+ "answer_status": "incorrect",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "你好呀，我们一起看看这道鸡兔同笼的题。你刚才算出来鸡和兔各是多少只呢？"
+  },
+  {
+   "role": "user",
+   "content": "我还不知道怎么同时算两种动物。"
+  },
+  {
+   "role": "assistant",
+   "content": "我们从这里入手:假设8只全是鸡，计算脚的总数。你接着算下一步。"
+  },
+  {
+   "role": "user",
+   "content": "可以先假设8只全是鸡，这样有16只脚。"
+  },
+  {
+   "role": "assistant",
+   "content": "你算对了，8只鸡有16只脚，但实际有26只脚，多出10只脚。每只兔子比鸡多2只脚，这10只脚能换多少只兔子呢？"
+  },
+  {
+   "role": "user",
+   "content": "实际比16只多10只，每把一只鸡换成兔会多2只脚。"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才说每换一只鸡为兔会多2只脚，那10只脚能换多少只兔子呢？"
+  },
+  {
+   "role": "user",
+   "content": "所以兔有10除以2等于5只，鸡有3只，检查5乘4加3乘2等于26。"
+  },
+  {
+   "role": "assistant",
+   "content": "很好,你已经懂了。那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。"
+  },
+  {
+   "role": "assistant",
+   "content": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  }
+ ]
+}

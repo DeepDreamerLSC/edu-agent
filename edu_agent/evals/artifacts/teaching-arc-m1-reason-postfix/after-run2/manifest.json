@@ -1,0 +1,15 @@
+{
+ "frame": "after",
+ "worktree": "/root/code/edu-w4-tests",
+ "git_sha": "8dfa8a583675d3cae075df7d221ff7687608ad8f",
+ "kernel_diff_vs_main_6b69a4e_sha256": "a30db3eacb2cc648",
+ "kernel_diff_vs_base_empty": false,
+ "prompting_diff_vs_base_empty": false,
+ "models_yaml_sha256": "3feca1b443896d469000859c009d9d3281439c2bf09a740b7fe1a1b4488a862f",
+ "tutor": "qwen3_vl_8b",
+ "judge": "mlx_27b",
+ "repeats": 2,
+ "calibers": [
+  "F"
+ ]
+}
