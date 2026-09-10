@@ -1,5 +1,6 @@
 """评测线入口(00 §4/§8.2):runner 骨架、晨间摘要、judge 评分器与老系统适配器雏形。"""
 
+from .image_teaching import question_image_data_url, validate_scenario
 from .kernel_subject import KernelSubject
 from .judge import (
     DIMENSIONS,
@@ -40,10 +41,12 @@ __all__ = [
     "judge_transcript",
     "load_results",
     "morning_summary",
+    "question_image_data_url",
     "sample_independent",
     "stability_markdown",
     "stability_report",
     "user_prompt",
+    "validate_scenario",
     "verdict_from_scores",
     "write_summary",
 ]
