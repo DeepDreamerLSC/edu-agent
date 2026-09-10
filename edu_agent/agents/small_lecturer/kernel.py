@@ -234,11 +234,43 @@ def _next_step(session: "LearnerSession") -> dict | None:
 # 阶梯揭示的多样开场(确定性,轮换)——避免「这一步我们先看」句句重复、显生硬。
 _STEP_LEADS = ("我们从这里入手", "下一步是这样", "再往下看", "你看这一步", "接着这样算", "关键在这一步")
 
+# 揭示句里**算式结果**的识别(「10 × 6 = 60」「26-16=10」「10 ÷ 2 = 5」):命中即把结果段收回去
+# (#165 WS4 第 2 条「揭示内容不那么直给」)。只认**含运算符且带等号结果**的片段——
+# 单纯出现数字(如「8只鸡」)不动,避免连题干条件一起吃掉。
+_STEP_ARITHMETIC_RE = re.compile(
+    r"\d+(?:\.\d+)?(?:\s*[×x*÷/+＋－-]\s*\d+(?:\.\d+)?)+\s*=\s*\d+(?:\.\d+)?")
+
+
+def _soften_step_text(step_text: str) -> str:
+    """阶梯揭示的**动作化**改写:把该步算好的结果收回去,只留动作与依据。
+
+    #165 WS4 第 2 条:卡壳路由从**揭示路径**修(#164 已回退词表检测,不再收紧检测)。
+    老行为把模型规划句原样交给学生,而规划句常写成「先算底乘高:10 × 6 = 60」——
+    等于把这一步的结果算给学生,学生只剩抄写(judge 侧读作过度直给、无推进)。
+
+    截断点 = 算式结果**之前**的最后一个**分句边界**(，,、:：;；)——整段丢掉带结果的
+    分句。实测(L 口径帧):按「截到算式起始」会切出残句(「8只鸡有。」「比假设多。」,
+    #148 §6.1 机械截断同款破损),故改为按分句边界切。**找不到边界就原样保留**
+    (宁可直给,不出残句);切出的动作段过短或只是序号(「第二步」)时同样保留原文。
+    """
+    text = str(step_text or "").strip()
+    match = _STEP_ARITHMETIC_RE.search(text)
+    if match is None:
+        return text
+    head = max((text.rfind(sep, 0, match.start()) for sep in "，,、:：;；"), default=-1)
+    if head < 0:
+        return text  # 无分句边界:不做机械截断(避免残句)
+    softened = text[:head].strip()
+    if len(softened) < 4 or re.fullmatch(r"第?\s*[0-9一二三四五六七八九十]+\s*步?", softened):
+        return text  # 动作段过短或只是序号 → 退回原文,不做空揭示
+    return softened
+
 
 def _reveal_stuck_hint(session: "LearnerSession") -> str:
     """学生卡住/复读兜底 → 揭示下一级阶梯(确定性,零模型调用,不重复)。
 
-    内容 = session.steps 下一级;开场用 _STEP_LEADS 轮换,避免固定前缀生硬。
+    内容 = session.steps 下一级(**动作化**后:`_soften_step_text` 收回算式结果);
+    开场用 _STEP_LEADS 轮换,避免固定前缀生硬。
     模型措辞版实测会重复(3/7)且过度揭示,故仍用确定性。
 
     埋点(#112 评审建议):三条调用方(卡壳揭示 / 复读降级 / 输出面背板)统一在此记
@@ -258,7 +290,7 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
         return (f"这一步我们直接看结果:{answer}。你先记住它,我们回头再讲一遍为什么。"
                 if answer else NEEDS_REVIEW_TEXT)
     lead = _STEP_LEADS[(session.hint_level - 1) % len(_STEP_LEADS)]
-    return f"{lead}:{step['step']}。你接着算下一步。"
+    return f"{lead}:{_soften_step_text(str(step.get('step') or ''))}。你接着算下一步。"
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
