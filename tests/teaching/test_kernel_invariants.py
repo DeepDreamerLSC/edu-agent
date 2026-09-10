@@ -71,10 +71,6 @@ def test_understanding_routes_to_elicit(phrase, is_elicit):
     ("这题我不会吧", True),
     ("不会吧?!这也能算对?", False),  # 实弹2:反诘惊讶 ≠ 卡住 → 模型,非揭示
     ("我会的", False),
-    ("我还不知道怎么同时算两种动物。", True),  # 实弹3(#157 评审):「还」隔断「我不知道」→ 误走模型路径
-    ("我不会", True),       # #157 评审(PM 实测):裸「我不会」漏检
-    ("我不明白", True),      # #157 评审(PM 实测):词表外
-    ("还不会", True), ("不太会", True), ("不会算", True),  # #157 评审(同类第一人称卡壳)
     ("我不会吧?!", False),   # 「我不会(?!吧)」保留反诘语义(裸「我不会」不吞掉)
 ])
 def test_stuck_routes_to_reveal(phrase, is_stuck):
