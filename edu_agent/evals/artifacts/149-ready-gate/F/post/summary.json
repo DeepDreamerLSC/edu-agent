@@ -1,0 +1,469 @@
+{
+ "label": "post-F",
+ "cases": [
+  {
+   "id": "small_lecturer_dialogue_scenarios_equation_complete_reasoning__r1",
+   "base_id": "small_lecturer_dialogue_scenarios_equation_complete_reasoning",
+   "answer_status": null,
+   "scripted_turns": 2,
+   "executed_turns": 2,
+   "truncated": false,
+   "last_student": "然后两边都除以3，所以x等于6。代回去3乘6加7等于25。",
+   "student_stated_answer": null,
+   "final_state": "completed",
+   "last_state": "ready_to_confirm",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "ready_to_confirm"
+   ],
+   "elicit_events": 0,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_dialogue_scenarios_equation_complete_reasoning__r2",
+   "base_id": "small_lecturer_dialogue_scenarios_equation_complete_reasoning",
+   "answer_status": null,
+   "scripted_turns": 2,
+   "executed_turns": 2,
+   "truncated": false,
+   "last_student": "然后两边都除以3，所以x等于6。代回去3乘6加7等于25。",
+   "student_stated_answer": null,
+   "final_state": "completed",
+   "last_state": "ready_to_confirm",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "ready_to_confirm"
+   ],
+   "elicit_events": 0,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r1",
+   "base_id": "small_lecturer_dialogue_stability_20_stability_chicken_rabbit",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "所以兔有10除以2等于5只，鸡有3只，检查5乘4加3乘2等于26。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 1
+  },
+  {
+   "id": "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r2",
+   "base_id": "small_lecturer_dialogue_stability_20_stability_chicken_rabbit",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "所以兔有10除以2等于5只，鸡有3只，检查5乘4加3乘2等于26。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 1
+  },
+  {
+   "id": "small_lecturer_dialogue_stability_20_stability_equation_subtract__r1",
+   "base_id": "small_lecturer_dialogue_stability_20_stability_equation_subtract",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_dialogue_stability_20_stability_equation_subtract__r2",
+   "base_id": "small_lecturer_dialogue_stability_20_stability_equation_subtract",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_dialogue_stability_20_stability_fraction_addition__r1",
+   "base_id": "small_lecturer_dialogue_stability_20_stability_fraction_addition",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "同分母后分子相加得到八分之七，分母仍然是8。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 0,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_dialogue_stability_20_stability_fraction_addition__r2",
+   "base_id": "small_lecturer_dialogue_stability_20_stability_fraction_addition",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "同分母后分子相加得到八分之七，分母仍然是8。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 0,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_dialogue_stability_20_stability_triangle_area__r1",
+   "base_id": "small_lecturer_dialogue_stability_20_stability_triangle_area",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "所以三角形面积是10乘6再除以2，等于30平方厘米。",
+   "student_stated_answer": null,
+   "final_state": "completed",
+   "last_state": "ready_to_confirm",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "ready_to_confirm"
+   ],
+   "elicit_events": 0,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_dialogue_stability_20_stability_triangle_area__r2",
+   "base_id": "small_lecturer_dialogue_stability_20_stability_triangle_area",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "所以三角形面积是10乘6再除以2，等于30平方厘米。",
+   "student_stated_answer": null,
+   "final_state": "completed",
+   "last_state": "ready_to_confirm",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "ready_to_confirm"
+   ],
+   "elicit_events": 0,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_dialogue_stability_20_stability_word_problem__r1",
+   "base_id": "small_lecturer_dialogue_stability_20_stability_word_problem",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "再算165减38等于127本，所以现在有127本。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_dialogue_stability_20_stability_word_problem__r2",
+   "base_id": "small_lecturer_dialogue_stability_20_stability_word_problem",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "再算165减38等于127本，所以现在有127本。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r1",
+   "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "所以兔有10除以2等于5只，鸡有3只，检查5乘4加3乘2等于26。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r2",
+   "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "所以兔有10除以2等于5只，鸡有3只，检查5乘4加3乘2等于26。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r1",
+   "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r2",
+   "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1",
+   "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "同分母后分子相加得到八分之七，分母仍然是8。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r2",
+   "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "同分母后分子相加得到八分之七，分母仍然是8。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r1",
+   "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "所以三角形面积是10乘6再除以2，等于30平方厘米。",
+   "student_stated_answer": null,
+   "final_state": "completed",
+   "last_state": "ready_to_confirm",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "ready_to_confirm"
+   ],
+   "elicit_events": 0,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r2",
+   "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "所以三角形面积是10乘6再除以2，等于30平方厘米。",
+   "student_stated_answer": null,
+   "final_state": "completed",
+   "last_state": "ready_to_confirm",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "ready_to_confirm"
+   ],
+   "elicit_events": 0,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r1",
+   "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "再算165减38等于127本，所以现在有127本。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 0
+  },
+  {
+   "id": "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r2",
+   "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem",
+   "answer_status": null,
+   "scripted_turns": 4,
+   "executed_turns": 4,
+   "truncated": false,
+   "last_student": "再算165减38等于127本，所以现在有127本。",
+   "student_stated_answer": null,
+   "final_state": "needs_review",
+   "last_state": "dialogue",
+   "states": [
+    "first_question_ready",
+    "dialogue",
+    "dialogue",
+    "dialogue",
+    "dialogue"
+   ],
+   "elicit_events": 1,
+   "premature_confirm_events": 0
+  }
+ ],
+ "provenance": {
+  "code_root": "/root/code/edu-149-post",
+  "kernel_sha256": "565079a1930546b2a9006476c9d7bbbc7b90394ff8289e541319732f14e1e59c",
+  "git_head": "38028baf1ea6daea34de0a46a56d344a2f3f6f2b",
+  "has_gate": true
+ }
+}

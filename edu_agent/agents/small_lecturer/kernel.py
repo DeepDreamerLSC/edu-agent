@@ -168,10 +168,37 @@ def _student_hits_known_answer(session: "LearnerSession", student_message: str) 
             or any(event.get("branch") == "elicit" for event in session.guard_events)
             or prev == _ELICIT_TEMPLATE):
         return False
-    answer_numbers = _question_numbers(_known_answer(session))
+    return _hits_answer_numbers(session, student_message)
+
+
+def _answer_numbers(session: "LearnerSession") -> set[float]:
+    """已知答案里的 ASCII 数字集(#149 判据底座):空集 = 无法确定性判定 → fail-open。"""
+    return _question_numbers(_known_answer(session))
+
+
+def _hits_answer_numbers(session: "LearnerSession", text: str) -> bool:
+    """确定性判据核心(#149 抽核,#112 触发与判停闸**共用同一套**,禁止出现第二套判据):
+    「已知答案的全部 ASCII 数字都出现在 text 里」(数字集包含,顺序不敏感;学生侧计入
+    中文数字单字)。不要求字面/顺序——「兔5只、鸡3只」同样命中「鸡3只,兔5只」。
+
+    fail-open:答案取不到数字(文字/字母类答案)→ False(不命中、不触发),沿用 #112 既有
+    `if not answer_numbers: return False` 语义。"""
+    answer_numbers = _answer_numbers(session)
     if not answer_numbers:
-        return False  # 无数字答案无法确定性判定 → 模型路径(现状行为)
-    return answer_numbers <= _spoken_numbers(student_message)
+        return False
+    return answer_numbers <= _spoken_numbers(text)
+
+
+def _student_stated_answer(session: "LearnerSession", student_message: str) -> bool:
+    """学生侧是否陈述过命中已知答案的数字集(判停闸判据;跨 answer_status 共用核心)。
+
+    **逐条学生消息独立判定**(不取整段历史的数字并集):跨轮各说一半数字不算「陈述过
+    答案」——与 #112「单条消息数字集包含」同源,避免把分散数字误当结论而放行判停。
+    不预设例外(如「学生说懂了也放行」):证据驱动,实测出现再加(#149 PM 口径)。"""
+    messages = [str(message.get("content") or "") for message in session.history
+                if message.get("role") == "user"]
+    messages.append(student_message)
+    return any(_hits_answer_numbers(session, text) for text in messages)
 
 
 def _next_step(session: "LearnerSession") -> dict | None:
@@ -263,6 +290,14 @@ _SELF_CRITIQUE = (
     "让他接着算下一步;要么换一个更小的问点。"
 )
 
+# 判停闸重写指令(#149,走既有 _regenerate = judge→refiner 的 refiner 路径):
+# 这是**给模型的指令**,不是学生可见模板(不新增模板);不删词、不做解析脱敏。
+_PREMATURE_CONFIRM_CRITIQUE = (
+    "学生还没有自己说出这道题的答案。此轮不能确认收尾:不要置 ready_to_confirm、"
+    "不要说结论性数值(终答与等价改写都不行),也不要替学生把答案讲完。"
+    "改成按教学弧线继续推进:顺着学生刚说的这一步,问一个更小的问题,让他自己往下算。"
+)
+
 
 def _is_repeat(prev: str, new: str) -> bool:
     """语义复读检测:新回复与上一轮 tutor 输出高度相似(阈值 0.85,stdlib difflib)。
@@ -306,6 +341,10 @@ class _GuardContext:
     role: str = "tutor"
     messages: list[dict] | None = None
     schema: dict | None = None
+    # 泄露护栏的答案对照基线(#149):由 `_known_answer(session)` 填入(question.answer
+    # 优先、steps 末值兜底)。此前直接读 question["answer"],评测侧 question 只传
+    # {"text": ...} → 永远"无答案模式",护栏拿不到基准;统一基线后评测帧护栏也能生效。
+    answer_reference: str = ""
     images: list[str] | None = None
     student_message: str | None = None
     student_evidence: tuple[str, ...] = ()  # 学生历史 user 消息(泄露护栏对照:已说答案可复述)
@@ -315,7 +354,9 @@ def _guard_check(ctx: "_GuardContext", text: str) -> tuple[str | None, list[str]
     """三护栏(泄露/语气/格式)逐个过;返回 (guard_or_None, rule_ids, normalized_or_downgrade)。"""
     leak = evaluate_student_visible_question(
         text,
-        answer_reference=str(ctx.question.get("answer") or ""),
+        # #149:答案基线统一走 _known_answer(answer 优先、steps 末值兜底);
+        # ctx 未带基线(旧调用方)时退回 question["answer"],行为与改动前一致。
+        answer_reference=ctx.answer_reference or str(ctx.question.get("answer") or ""),
         active_subquestion_text=str(ctx.question.get("text") or ""),
         analysis_reference=str(ctx.question.get("analysis") or ""),
         student_evidence=list(ctx.student_evidence),
@@ -378,7 +419,7 @@ def _guard_output(reply_text: str, session: "LearnerSession | None" = None,
     soft_no_answer = (
         guard == "answer_leak"
         and "unverified_source_value_disclosure" in rule_ids
-        and not str(ctx.question.get("answer") or "").strip()
+        and not ctx.answer_reference.strip()  # #149:与护栏答案基线同源(此前读 question["answer"])
     )
     critique = (f"你上一条回复被教学护栏拦截(规则:{','.join(rule_ids)};命中内容:"
                 f"「{reply_text[:48]}」)。请重写这条回复,直接回应用户当前的问题;"
@@ -512,7 +553,7 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
     _store_steps(session, payload.get("steps") or [])  # solver 职责:阶梯底稿 + 校验基准
     ctx = _GuardContext(question=session.question, grade=learner.get("grade", ""),
                         gateway=gateway, role="tutor", messages=open_messages,
-                        schema=OPEN_SCHEMA)
+                        schema=OPEN_SCHEMA, answer_reference=_known_answer(session))
     safe_text = _guard_output(str(payload.get("reply") or ""), session, ctx)
     if not safe_text.strip():
         safe_text = _OPENING_FALLBACK  # 图文题 acceptable=false 且 reply 留空 → 确定性兜底首问
@@ -521,6 +562,32 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
     return Turn(text=safe_text, session_version=session.session_version,
                 state=session.state, ready_to_confirm=False,  # 首问恒非确认
                 session=session)
+
+
+def _gate_premature_confirm(session: LearnerSession, ctx: "_GuardContext", output: dict,
+                            safe_text: str, student_message: str) -> str:
+    """判停闸(#149):模型想判停,但学生尚未陈述已知答案 → 闸下并重写。
+
+    `ready_to_confirm` 只是**模型建议**,判停权威在确定性验证层(#112 同源判据,
+    见 `_hits_answer_numbers`)。缺口实测:incorrect 弧线第 3 轮学生尚未说出答案,
+    模型已置 ready_to_confirm 并把答案讲完,而判停语义(kernel_subject.py 的
+    ready_to_confirm break)随即结束对话 → 复讲步/后续步骤永远到不了。
+    处置走既有 `_regenerate`(judge→refiner 的 refiner):不新增学生可见模板、不删词、
+    不做解析脱敏;重写失败落既有阶梯兜底 + stuck。fail-open:答案无数字时不闸。
+
+    返回学生可见文本(闸未触发时原样返回)。"""
+    if not (output.get("ready_to_confirm") and _answer_numbers(session)
+            and not _student_stated_answer(session, student_message)):
+        return safe_text
+    _record_event(session, "premature_confirm", [], str(output.get("reply") or ""),
+                  regenerated=False)
+    refined = _regenerate(ctx, session, safe_text, _PREMATURE_CONFIRM_CRITIQUE)
+    if refined is None:
+        refined = _reveal_stuck_hint(session)
+        session.stuck = True
+    output["reply"] = refined
+    output["ready_to_confirm"] = False
+    return refined
 
 
 def reply(session: LearnerSession, student_message: str, *,
@@ -561,6 +628,7 @@ def reply(session: LearnerSession, student_message: str, *,
     ctx = _GuardContext(question=session.question, grade=session.learner.get("grade", ""),
                         gateway=gateway, role="tutor", messages=_reply_messages,
                         schema=TUTOR_TURN_SCHEMA, student_message=student_message,
+                        answer_reference=_known_answer(session),
                         student_evidence=(tuple(
                             str(message["content"]) for message in session.history
                             if message.get("role") == "user"
@@ -597,9 +665,12 @@ def reply(session: LearnerSession, student_message: str, *,
         output["reply"] = safe_text
         output["ready_to_confirm"] = False
         session.stuck = True
+    # 判停闸(#149):模型建议的 ready_to_confirm 需过确定性校验,见 _gate_premature_confirm
+    safe_text = _gate_premature_confirm(session, ctx, output, safe_text, student_message)
     # 数字漂移守卫(抽取制 + 来源标签池,M2 闭环 #113/#34):抽取模型 reply 文本
     # 里的数字(排除"第N"序数),允许集 = 题面 ∪ steps 值 ∪ 学生历史数字 ∪
     # [终答:仅 ready_to_confirm 态];cited_numbers 自报集保留(影子对照)。
+    # 判停闸在前:被闸下的轮次按非确认态取池,提前说出的终答数字即标 "answer" 违规。
     cited = sorted({float(n) for n in (output.get("cited_numbers") or [])})
     extracted = _reply_numbers(str(output.get("reply") or ""))
     allowed, answer_pool = _drift_sources(
