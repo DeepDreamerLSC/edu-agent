@@ -1,0 +1,244 @@
+{
+ "small_lecturer_dialogue_scenarios_equation_complete_reasoning": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 12,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "你已经知道怎么解了吗？还有没有不懂的地方？",
+   "socratic_followup": "那接下来你打算怎么处理3x等于18呢？",
+   "grade_fit": "因为等式两边同时减去相同的数，等式仍然成立。",
+   "pacing": "你减去7这一步做得很对，因为等式两边同时减去相同的数，等式仍然成立。那接下来你打算怎么处理3x等于18呢？",
+   "summary_mastery": "你用等式性质一步步解方程，先减7再除以3，最后代入验证，方法正确且过程完整。",
+   "termination": "你用等式性质一步步解方程，先减7再除以3，最后代入验证，方法正确且过程完整。仍需注意：每一步操作后要确认等式两边是否保持平衡，避免跳步。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_dialogue_stability_20_stability_chicken_rabbit": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 1,
+   "grade_fit": 2,
+   "pacing": 1,
+   "summary_mastery": 1,
+   "termination": 1
+  },
+  "total": 8,
+  "answer_leaked": true,
+  "evidence": {
+   "first_question": "现在我们先假设全是鸡，看看脚数会是多少？",
+   "socratic_followup": "那剩下的3只就是鸡啦！",
+   "grade_fit": "鸡有2只脚，兔有4只脚。",
+   "pacing": "你算得真棒！用假设全是鸡的方法，发现实际多出10只脚，每换一只鸡为兔就多2只脚，这说明有5只兔。那剩下的3只就是鸡啦！",
+   "summary_mastery": "关键转折是你发现‘每换一只鸡为兔多2只脚’，仍需注意的是：在后续题目中，若动物脚数不同，替换时的脚数差值也会变化，要灵活调整。",
+   "termination": "你用假设全是鸡的方法，正确算出如果全为鸡时脚数是16只，再通过实际多出的10只脚，推导出每换一只鸡为兔多2只脚，从而得出兔有5只、鸡有3只。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_dialogue_stability_20_stability_equation_subtract": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 12,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "你猜怎么去掉？",
+   "socratic_followup": "下一步，你打算怎么从3x=18中求出x？",
+   "grade_fit": "就像天平两边同时拿走同样重的东西",
+   "pacing": "你刚才说两边都减7得到3x=18，这一步完全正确！",
+   "summary_mastery": "解题时要明确每一步操作的依据，比如‘两边同时减7’是为了消除常数项",
+   "termination": "你用等式两边同时减7和除以3的方法解出x=6，思路清晰且每步都保持等式平衡，验证也正确。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_dialogue_stability_20_stability_fraction_addition": {
+  "scores": {
+   "first_question": 1,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 1
+  },
+  "total": 10,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "你想到把分子和分母分别相加，这个想法很有趣，但分数加法不能这样算哦。比如三份四加上一份八，就像分蛋糕，得先找共同的分母，你试试看用八来统一呢？",
+   "socratic_followup": "你注意到每一份的大小不同，这很关键！加法确实要先统一分母，就像把不同大小的蛋糕块换成同样大小的切片再加。你接下来打算怎么处理四分之三和八分之一呢？",
+   "grade_fit": "比如三份四加上一份八，就像分蛋糕，得先找共同的分母",
+   "pacing": "你接下来打算怎么处理四分之三和八分之一呢？",
+   "summary_mastery": "你掌握了分数加法的核心方法：先统一分母，再加分子。关键转折是把四分之三化成八分之六，这一步确保了分母一致。",
+   "termination": "你算出八分之七，分母保持8，这一步完全正确！加法统一分母后分子相加，就像把蛋糕切片对齐再拼起来。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_dialogue_stability_20_stability_triangle_area": {
+  "scores": {
+   "first_question": 0,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 10,
+  "answer_leaked": true,
+  "evidence": {
+   "first_question": "你已经算出面积是30平方厘米，还想知道为什么除以2吗？",
+   "socratic_followup": "那如果用长方形面积60来算，三角形到底占多少呢？",
+   "grade_fit": "两个完全相同的三角形可以拼成一个底10高6的平行四边形。",
+   "pacing": "那平行四边形面积是60，每个三角形就是它的一半，对吧？",
+   "summary_mastery": "你用两个三角形拼平行四边形的思路，把面积关系讲得特别清楚。",
+   "termination": "你算出10乘6再除以2等于30平方厘米，这答案完全正确！"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_dialogue_stability_20_stability_word_problem": {
+  "scores": {
+   "first_question": 0,
+   "socratic_followup": 1,
+   "grade_fit": 2,
+   "pacing": 0,
+   "summary_mastery": 1,
+   "termination": 0
+  },
+  "total": 4,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "小讲师:还有没有不懂的地方？",
+   "socratic_followup": "小讲师:你把三个数直接加在一起，这个想法很有趣，不过借出的书要减掉哦，我们来检查一下减法是不是漏掉了？",
+   "grade_fit": "小讲师:你说到借出要减掉，这步很对！",
+   "pacing": "小讲师:这一题(「图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？」)是你自己讲下来的...",
+   "summary_mastery": "小讲师:这道题你已经完整讲清楚了,可以再做一道，或者今天先到这里。",
+   "termination": "小讲师:这道题你已经完整讲清楚了,可以再做一道，或者今天先到这里。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 1,
+   "grade_fit": 2,
+   "pacing": 1,
+   "summary_mastery": 1,
+   "termination": 1
+  },
+  "total": 8,
+  "answer_leaked": true,
+  "evidence": {
+   "first_question": "现在我们先假设全是鸡，看看脚数会是多少？",
+   "socratic_followup": "那剩下的3只就是鸡啦！",
+   "grade_fit": "鸡有2只脚，兔有4只脚。",
+   "pacing": "你算得真棒！用假设全是鸡的方法，发现实际多出10只脚，每换一只鸡为兔就多2只脚，这说明有5只兔。那剩下的3只就是鸡啦！",
+   "summary_mastery": "关键转折是你发现‘每换一只鸡为兔多2只脚’，仍需注意的是：在后续题目中，若动物脚数不同，替换时的脚数差值也会变化，要灵活调整。",
+   "termination": "你用假设全是鸡的方法，正确算出如果全为鸡时脚数是16只，再通过实际多出的10只脚，推导出每换一只鸡为兔多2只脚，从而得出兔有5只、鸡有3只。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 12,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "你猜怎么去掉？",
+   "socratic_followup": "下一步，你打算怎么从3x=18中求出x？",
+   "grade_fit": "就像天平两边同时拿走同样重的东西",
+   "pacing": "你刚才说两边都减7得到3x=18，这一步完全正确！",
+   "summary_mastery": "解题时要明确每一步操作的依据，比如‘两边同时减7’是为了消除常数项",
+   "termination": "你用等式两边同时减7和除以3的方法解出x=6，思路清晰且每步都保持等式平衡，验证也正确。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition": {
+  "scores": {
+   "first_question": 1,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 1
+  },
+  "total": 10,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "你想到把分子和分母分别相加，这个想法很有趣，但分数加法不能这样算哦。比如三份四加上一份八，就像分蛋糕，得先找共同的分母，你试试看用八来统一呢？",
+   "socratic_followup": "你注意到每一份的大小不同，这很关键！加法确实要先统一分母，就像把不同大小的蛋糕块换成同样大小的切片再加。你接下来打算怎么处理四分之三和八分之一呢？",
+   "grade_fit": "比如三份四加上一份八，就像分蛋糕，得先找共同的分母",
+   "pacing": "你接下来打算怎么处理四分之三和八分之一呢？",
+   "summary_mastery": "你掌握了分数加法的核心方法：先统一分母，再加分子。关键转折是把四分之三化成八分之六，这一步确保了分母一致。",
+   "termination": "你算出八分之七，分母保持8，这一步完全正确！加法统一分母后分子相加，就像把蛋糕切片对齐再拼起来。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area": {
+  "scores": {
+   "first_question": 0,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 10,
+  "answer_leaked": true,
+  "evidence": {
+   "first_question": "你已经算出面积是30平方厘米，还想知道为什么除以2吗？",
+   "socratic_followup": "那如果用长方形面积60来算，三角形到底占多少呢？",
+   "grade_fit": "两个完全相同的三角形可以拼成一个底10高6的平行四边形。",
+   "pacing": "那平行四边形面积是60，每个三角形就是它的一半，对吧？",
+   "summary_mastery": "你用两个三角形拼平行四边形的思路，把面积关系讲得特别清楚。",
+   "termination": "你算出10乘6再除以2等于30平方厘米，这答案完全正确！"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem": {
+  "scores": {
+   "first_question": 0,
+   "socratic_followup": 1,
+   "grade_fit": 2,
+   "pacing": 0,
+   "summary_mastery": 1,
+   "termination": 0
+  },
+  "total": 4,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "小讲师:还有没有不懂的地方？",
+   "socratic_followup": "小讲师:你把三个数直接加在一起，这个想法很有趣，不过借出的书要减掉哦，我们来检查一下减法是不是漏掉了？",
+   "grade_fit": "小讲师:你说到借出要减掉，这步很对！",
+   "pacing": "小讲师:这一题(「图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？」)是你自己讲下来的...",
+   "summary_mastery": "小讲师:这道题你已经完整讲清楚了,可以再做一道，或者今天先到这里。",
+   "termination": "小讲师:这道题你已经完整讲清楚了,可以再做一道，或者今天先到这里。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ }
+}
