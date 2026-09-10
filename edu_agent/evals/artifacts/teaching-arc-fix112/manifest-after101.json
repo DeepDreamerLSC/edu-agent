@@ -1,0 +1,18 @@
+{
+ "frame": "after101",
+ "worktree": "/root/code/edu-w8-arc-eval",
+ "git_sha": "fa94cedbe79a447e4c8710243697ba6dedc28520",
+ "kernel_diff_vs_main_6b69a4e_sha256": "7b1e10486251900c",
+ "kernel_diff_vs_base_empty": false,
+ "prompting_diff_vs_base_empty": true,
+ "models_yaml_sha256": "3feca1b443896d469000859c009d9d3281439c2bf09a740b7fe1a1b4488a862f",
+ "tutor": "qwen3_vl_8b",
+ "judge": "mlx_27b",
+ "repeats": 2,
+ "calibers": [
+  "F",
+  "R"
+ ],
+ "base_sha_for_diff_flags": "origin/main(053133f)",
+ "prompting_layer": "#101 后(新 main)"
+}

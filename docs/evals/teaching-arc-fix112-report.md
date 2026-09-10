@@ -23,7 +23,8 @@ correct / None 路径**逐字零回归**:gate 口径 P(夜评 11 场景同源)21
 | 工作树分支 | `task/arc-eval-fix112-before` @ `cc987927` | `task/arc-eval-fix112-after` @ `179ab3cb` |
 | kernel.py vs main `6b69a4e` | **逐字节相同**(manifest `kernel_diff_vs_main_empty=true`) | 仅含本次修复(两提交) |
 | prompting.py vs main | 逐字节相同 | 逐字节相同(`prompting_diff_vs_main_empty=true`) |
-| 说明 | #101 的 `OPENING_HINT_*` 改写**不入帧**;#112 与 #101 解耦,只变内核 | 同左 |
+| 说明 | #101 的 `OPENING_HINT_*` 改写**不入帧**(帧建于 `6b69a4e`);#112 与 #101 解耦,只变内核 | 同左 |
+| post-#101 帧 | `before101`/`after101` 建于 **#101 合入后的 main `053133f`**(`prompting_diff_vs_base_empty=true`),内核分别为主干/修复 → 见 §2.5 |
 
 ### 1.2 四个口径(每口径 2 重复)
 
@@ -33,6 +34,8 @@ correct / None 路径**逐字零回归**:gate 口径 P(夜评 11 场景同源)21
 | **R** | F 的 10 条 incorrect 各追加 S5「学生从头复讲」句(评测作者撰写,含答案数字) | 20 | 复讲**完成度**度量(F 剧本在第 4 轮即耗尽的对照) |
 | **L** | 2 题 × 8 轮重复同一句(非卡壳词、非懂了词、不含答案数字) | 4 | 复读循环**轮数对照** |
 | **P** | gate 现状 wiring(`tuning_round.build_cases`:10 条 None + 2 条 correct) | 22 | 夜评 11 场景零回归对照 |
+| **before101** | 主干内核 + **#101 合入后的 prompt 层**(新 main `053133f`) | 22 / 20 | §2.5 复测对照格(prompt 层效应归因) |
+| **after101** | 修复内核 + #101 prompt 层 | 22 / 20 | §2.5;本修复在**已合并 prompt 层**上的复测 |
 
 ### 1.3 效度检验
 
@@ -89,6 +92,32 @@ correct / None 路径**逐字零回归**:gate 口径 P(夜评 11 场景同源)21
 | F(22) | 0 | 12 |
 | R(20) | 4(全部来自代喂替换) | 16(12 触发 + 4 替换) |
 | L(4) | 0 | 0(探针不涉答案命中) |
+
+### 2.5 post-#101 复测(2×2:内核 × prompt 层)
+
+#101(教学弧线 prompt 改写)在本次会话期间合入 main(`053133f`),故补测「内核 × prompt 层」四格
+(F 22 例、R 20 例,每格 2 重复,判分同 schema 同 judge):
+
+| 口径 | 帧(内核 + prompt 层) | 首问合规 | 采集不评判 | 复讲达成 | 代喂 | 确定性复讲引导 |
+|---|---|---|---|---|---|---|
+| F | 主干 + pre-#101 | 10/22 | 4/20 | 8/22 | 8/22 | 0/22 |
+| F | 主干 + **#101** | **22/22** | **0/20** | 0/22 | **12/22** | 0/22 |
+| F | **修复** + pre-#101 | 10/22 | 4/20 | 4/22 | 8/22 | **12/22** |
+| F | **修复** + **#101** | **22/22** | **0/20** | 0/22 | 8/22 | **12/22** |
+| R | 主干 + pre-#101 | 8/20 | 4/20 | 8/20 | 8/20 | 4/20 |
+| R | 主干 + **#101** | **20/20** | 0/20 | 4/20 | **12/20** | 4/20 |
+| R | **修复** + pre-#101 | 8/20 | 4/20 | **16/20** | 8/20 | **16/20** |
+| R | **修复** + **#101** | **20/20** | 4/20 | **16/20** | 8/20 | **16/20** |
+
+三点读数(同内核换 prompt、同 prompt 换内核,可分别归因):
+
+1. **本次修复的效果与 prompt 层无关**(构造使然 + 实测):确定性复讲引导 0→12(F)/4→16(R)、
+   R 的复讲达成 8/20→**16/20**,两个 prompt 层上都成立 → #101 合入后本 PR 的数字不作废。
+2. **#101 达成了它自己的目标**:首问合规 10/22→22/22、8/20→20/20。
+3. **#101 另有两处代价(主干内核对照得出,非本修复引入)**:① 采集不评判 F 4/20→**0/20**
+   (主干与修复内核同为 0/20;judge 判词「未采集到具体数值答案…未等待学生完整作答即进行引导」;
+   R 口径修复内核仍 4/20 → 该规则读数不稳,建议 #101 线复核);② 代喂主干内核 8→**12**(F/R 皆升),
+   而**修复内核保持 8 不变** —— 确定性复讲步取代了模型确认轮,#112 顺带抵掉了 #101 带来的代喂增量。
 
 ### 2.4 逐字差异归类(与噪声基线对照)
 
@@ -159,6 +188,12 @@ correct / None 路径**逐字零回归**:gate 口径 P(夜评 11 场景同源)21
 R 口径 after 帧:**复讲引导之后**的教师轮共 12 轮,方法名词表命中 **0/12**——学生实际看到的复讲后回应
 (如「你讲得非常清楚!第一步两边同时减7,是因为等式两边同时减同一个数…」)不含方法名。
 **即:本固定 4 题剧本里,#101 自述的「复讲问句里出现方法名」尚未在学生可见面上出现。**
+
+### 5.1bis 新 prompt 层(#101 已合)上的复测
+
+在 `after101` 帧(#101 prompt + 修复内核)按同一工具重测:**复讲引导之后**的教师轮 12 轮,方法词命中
+**0/12**;`feeds_method` 替换 **4 次**(仍是 fraction 的「通分」——学生复讲里已自己说出,属弧线允许的点名)。
+即 **#101 合入没有引入复讲相位残留**;§6 的护栏路径裁定语料与 pre-#101 一致,结论可直接沿用。
 
 ### 5.2 但「想点名」发生了,且被护栏挡下(新增埋点首次量到)
 
@@ -247,7 +282,7 @@ F/R 的**弱命中下降**(F 14→6、R 12→8):确认轮被确定性复讲引�
 3. **探针帧的采集不评判 2/4→0/4**:L 帧是人工构造的「复读学生」,修复后第 2 轮就是阶梯揭示,
    judge 把揭示读成「对作答做了处置」。F/R 两口径该指标前后完全一致(各 4/20),弧线帧无此影响。
 4. **非相邻自我复读**不被拦(§3 末段),属 `_is_repeat` 的相邻判定设计,本次未扩面。
-5. **未合并 #101**:本帧 prompt 层为 main 版;若 #101 合入,复讲问句的措辞会变,§5 的残留需在新 prompt 层复测。
+5. **#101 已合入 main**(`053133f`):`before`/`after` 两帧的 prompt 层是 `6b69a4e`(pre-#101);已用 `before101`/`after101` 补测新 prompt 层(§2.5),本修复的效果与残留结论在两层上都成立。
 
 ## 7bis. 给夜评的观察口径(评审建议,供 A 线取用)
 
@@ -269,7 +304,18 @@ F/R 的**弱命中下降**(F 14→6、R 12→8):确认轮被确定性复讲引�
 .venv/bin/python scripts/arc_eval_judge.py   --out <工件根>/after
 .venv/bin/python scripts/arc_eval_metrics.py --out <工件根>/before     # 四指标 + 代喂语料
 .venv/bin/python scripts/arc_eval_metrics.py --out <工件根>/after
+# post-#101 复测(2×2):主干内核帧 = origin/main;修复内核帧 = main + 本 PR 的 kernel 提交
+.venv/bin/python scripts/arc_eval_fix112_frames.py --frame before101 --calibers F,R --out <工件根>
+.venv/bin/python scripts/arc_eval_fix112_frames.py --frame after101  --calibers F,R --out <工件根>
+.venv/bin/python scripts/arc_eval_judge.py   --out <工件根>/before101
+.venv/bin/python scripts/arc_eval_judge.py   --out <工件根>/after101
+.venv/bin/python scripts/arc_eval_metrics.py --out <工件根>/before101
+.venv/bin/python scripts/arc_eval_metrics.py --out <工件根>/after101
 ```
+
+清单旗语义:pre-#101 帧以 `6b69a4e` 为基准(`kernel_diff_vs_main_empty` / `prompting_diff_vs_main_empty`),
+post-#101 帧以 `origin/main` 为基准(`kernel_diff_vs_base_empty` / `prompting_diff_vs_base_empty`),
+逐帧读 `manifest-*.json` 即可判定该帧的 prompt 层与内核身份。
 
 校验点(任一不成立则帧不可比):`manifest-{before,after}.json` 的 `kernel_diff_vs_main_empty`
 必须为 `true`/`false`(before/after),两者 `prompting_diff_vs_main_empty` 必须都为 `true`。

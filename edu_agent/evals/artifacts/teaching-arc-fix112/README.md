@@ -9,8 +9,11 @@
 |---|---|---|---|
 | `before/` | 修复前基线 | `main 6b69a4e` 的 `kernel.py`(**逐字节相同**) | `main` 版 `prompting.py`(逐字节相同) |
 | `after/` | 修复后 | `before` + #112 两提交(仅 `kernel.py`) | 同 before |
+| `before101/` | **#101 合入后**、主干内核 | 新 main `053133f` 的 `kernel.py`(逐字节相同) | 新 main 的 `prompting.py`(#101 弧线 prompt) |
+| `after101/` | **#101 合入后**、修复内核 | `before101` + 本 PR 的 kernel 提交 | 同 `before101` |
 
-`manifest-{before,after}.json` 记录 `kernel_diff_vs_main_empty` / `prompting_diff_vs_main_empty`,
+`manifest-{frame}.json` 记录内核/prompt 与基准的差异旗(pre-#101 帧基准 = `6b69a4e`,
+post-#101 帧基准 = `origin/main`,字段名 `*_diff_vs_base_empty`)、
 以及 git sha、`models.yaml` 哈希、tutor/judge 角色——**这两面旗是帧可比性的校验点**。
 
 ## 口径(每口径 2 重复,臂标签恒 M = 主干 prompt 层)
@@ -21,6 +24,7 @@
 | `*/R/M/` | R | 20 | F 的 incorrect 场景各追加 S5「学生从头复讲」句 |
 | `*/L/M/` | L | 4 | 复读探针:2 题 × 8 轮逐字重复同一句学生陈述 |
 | `*/P/M/` | P | 22 | gate 现状 wiring(夜评 11 场景同源):10 条 None + 2 条 correct |
+| `before101`,`after101` 下的 `F`/`R` | F / R | 22 / 20 | post-#101 复测(2×2 的另两格):报告 §2.5/§5.1bis |
 
 ## 文件
 

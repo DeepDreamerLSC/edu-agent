@@ -15,5 +15,7 @@
   "L",
   "P"
  ],
- "notes": "F=#143 冻结口径原样重跑;R=复讲扩展(S5);L=复读探针(8 轮同句);P=gate 口径现状 wiring(夜评 11 场景同源)。kernel_diff_vs_main_empty=before 帧 True / after 帧 False(仅 fix);prompting_diff_vs_main_empty 两帧均 True(#101 改写不入帧)。"
+ "notes": "F=#143 冻结口径原样重跑;R=复讲扩展(S5);L=复读探针(8 轮同句);P=gate 口径现状 wiring(夜评 11 场景同源)。kernel_diff_vs_main_empty=before 帧 True / after 帧 False(仅 fix);prompting_diff_vs_main_empty 两帧均 True(#101 改写不入帧)。",
+ "base_sha_for_diff_flags": "6b69a4e",
+ "prompting_layer": "#101 前(6b69a4e)"
 }
