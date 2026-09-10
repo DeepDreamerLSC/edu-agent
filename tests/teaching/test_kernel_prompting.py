@@ -175,10 +175,17 @@ def test_system_prompt_includes_reason_planning_instruction():
 
 def test_reason_field_never_read_by_app_code():
     """#146 M1 红线:reason 是规划装置,不是验证装置——应用代码(edu_agent/)任何位置
-    不得索引读取 reason(["reason"] / .get("reason"));cited_numbers 前车之鉴:
-    自报字段一进判定逻辑就变成谎报源。vision 的 reason(转写判定)为独立语义,
-    同样无索引读取。"""
-    pattern = re.compile(r"""\[\s*["']reason["']\s*\]|\.get\(\s*["']reason["']""")
+    不得读取 reason;cited_numbers 前车之鉴:自报字段一进判定逻辑就变成谎报源。
+    覆盖 #157 评审加固:索引取值(["reason"]/get)之外的读取面——pop(读取并删除)、
+    setdefault(读取并写入)、裸比较(== "reason" / "reason" ==)。vision 的
+    reason(转写判定)为独立语义,同样无读取。"""
+    pattern = re.compile(
+        r"""\[\s*["']reason["']\s*\]"""
+        r"""|\.get\(\s*["']reason["']"""
+        r"""|\.pop\(\s*["']reason["']"""
+        r"""|\.setdefault\(\s*["']reason["']"""
+        r"""|==\s*["']reason["']"""
+        r"""|["']reason["']\s*==""")
     hits = []
     for path in sorted((REPO_ROOT / "edu_agent").rglob("*.py")):
         for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
