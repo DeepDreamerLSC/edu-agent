@@ -2,11 +2,14 @@
 """M2 调优循环一轮(00 §8.4 阶段 3):收集(内核)→ 评分(judge)→ 对照两轮基线。
 
 用法:uv run python scripts/tuning_round.py --out var/tuning/round-N [--nightly]
+      uv run python scripts/tuning_round.py --render-from <run 目录>   # 不跑批,纯重渲染
 11 场景 = 基线同款三数据集;judge 单遍 primary(调优轮口径;双评留正式轮);
 对照值 = 基线报告 §3 R1×R2 两轮固定值(docs/evals/baseline-run1-run2.md,#58 落盘快照),
 容差口径 = #34 2026-09-09 人批:场景两轮分差 ≤1 → 单值判(本轮 ≥ max(R1,R2) 才达标);
 分差 ≥2 → 区间判([min,max] 落入即"不劣(噪声主导)",不判反超)。
 数字全部落盘不手拼;判停/状态读 transcript 内部字段,不从学生文本反推。
+comparison.md 开头自述四行(2026-09-10 PM 马尾辫审查):口径名 / 剧本截断 N/M /
+逐维均分 / 护栏模式——零新增埋点(纯渲染自落盘工件),既有行逐字节不变(只加信息不改测量)。
 --nightly(每晚 23:00,evals-nightly.yml):先预检(注册表全部 provider 端口可达,
 不可达退出 1)并落溯源 manifest(git sha、models.yaml 哈希、launchctl 服务快照)
 ——劣化起始日的环境可解释性(1b 教训:蹭机服务几个月无人察觉)。
@@ -27,6 +30,8 @@ from urllib.parse import urlparse
 from scripts.json_first_pass import json_first_pass_report
 
 from edu_agent.evals import EvalRunner, KernelSubject, RunnerConfig, judge_transcript, load_results
+from edu_agent.evals.judge import DIMENSIONS
+from edu_agent.evals.report import DIM_LABELS
 from edu_agent.gateway import Gateway, ModelRegistry, load_registry
 
 REPO = Path(__file__).resolve().parents[1]
@@ -153,12 +158,120 @@ def to_judge_cases(rows: list[dict]) -> list[dict]:
 CASES = build_cases()
 
 
+def sent_vs_script(rows: list[dict], cases: list[dict]) -> dict[str, str]:
+    """每场景「实发学生轮/剧本学生轮」(零新增埋点:transcript 轮数 vs 用例剧本长度)。
+
+    ⚠ = 实发 < 剧本,即 KernelSubject 在 `ready_to_confirm` 判停后余轮未发;
+    失败行无 transcript,标「失败」。PM 马尾辫审查:截断必须出现在报告里,不能只活在代码里。
+    """
+    by_id = {r["case_id"]: r for r in rows}
+    out: dict[str, str] = {}
+    for case in cases:
+        row = by_id.get(case["id"])
+        script_n = len(case.get("student_turns", []))
+        if row is None or row.get("status") != "ok":
+            out[case["id"]] = "失败"
+            continue
+        sent = len(row["transcript"]["turns"]) - 1  # 首轮无学生消息
+        out[case["id"]] = f"{sent}/{script_n}" + (" ⚠" if sent < script_n else "")
+    return out
+
+
+def dim_average_line(scores: dict) -> str:
+    """逐维均分一行:复用 report.DIM_LABELS 渲染、维度顺序 = judge.DIMENSIONS(不新造维度表)。"""
+    ok = [v["scores"] for v in scores.values() if isinstance(v, dict) and "scores" in v]
+    if not ok:
+        return "逐维均分(0-2):(无 ok 评分)"
+    parts = [f"{DIM_LABELS[dim]} {sum(s[dim] for s in ok) / len(ok):.2f}" for dim in DIMENSIONS]
+    return "逐维均分(0-2):" + " | ".join(parts)
+
+
+def comparison_report(scores: dict, rows: list[dict], cases: list[dict]) -> list[str]:
+    """comparison.md 的 gate 段行(数字全部从落盘件重算,不手拼)。
+
+    结构:自述四行(纯增量,2026-09-10 PM 审查)+ 既有主表(逐字节不变——验收线
+    「现有报告字段的数字必须逐字节不变」)。
+    """
+    hint_groups: dict[str, list[str]] = {}
+    for case in cases:
+        if case.get("answer_status"):
+            hint_groups.setdefault(case["answer_status"], []).append(case["id"])
+    hinted = sum(len(ids) for ids in hint_groups.values())
+    hint_note = "; ".join(
+        f"`answer_status=\"{status}\"`({'、'.join(ids)})"
+        for status, ids in hint_groups.items())
+    if hint_note:
+        caliber_line = (f"口径:**P(gate 冻结 wiring)** —— `build_cases` {len(cases)} 场景;"
+                        f"hint 注入:{hinted}/{len(cases)} 场景带 {hint_note},"
+                        f"其余 {len(cases) - hinted} 场景不带(unknown → 首问无提示)。")
+    else:
+        caliber_line = (f"口径:**P(gate 冻结 wiring)** —— `build_cases` {len(cases)} 场景;"
+                        "hint 注入:无(全部 unknown → 首问无提示)。")
+    report = ["# 调优轮对照(vs 基线 R1×R2,#34 容差口径:分差≤1 单值判/≥2 区间判)", ""]
+    report += [
+        caliber_line,
+        "",
+        "剧本截断(实发学生轮/剧本学生轮;⚠ = `ready_to_confirm` 提前判停,余轮不再发"
+        "——KernelSubject 判停语义):",
+        "",
+        "| 场景 | 学生轮(实发/剧本) |",
+        "|---|---|",
+    ]
+    for case_id, cell in sent_vs_script(rows, cases).items():
+        report.append(f"| {case_id} | {cell} |")
+    report += ["", dim_average_line(scores),
+               "护栏模式:**无答案** —— 评测侧 KernelSubject 只传题面/年级/answer_status,"
+               "**不传参考答案**;生产侧带答案。本报告的代喂/泄露类读数出自无答案护栏,"
+               "不等于生产读数。", ""]
+    report += ["| 场景 | R1 | R2 | 本轮 | 判定 |", "|---|---:|---:|---:|---|"]
+    deltas = []
+    for case_id, (r1, r2) in BASELINE.items():
+        got = scores.get(case_id, {}).get("total")
+        if got is None:
+            report.append(f"| {case_id} | {r1} | {r2} | 失败 | FAIL |")
+            continue
+        deltas.append(got - (r1 + r2) / 2)
+        report.append(f"| {case_id} | {r1} | {r2} | {got} | {tolerance_verdict(got, r1, r2)} |")
+    report += ["", f"逐维均分:见 judge-scores.json;对两轮均值差:{sum(deltas) / len(deltas):+.2f}"]
+    return report
+
+
+def render_from(run_dir: Path) -> int:
+    """--render-from:不跑批,从既有 run 目录重渲染 comparison.md(Mac 纪律:优先重渲染)。
+
+    gate 段数字从 run 目录落盘件重算(cases.jsonl / collect 结果 / judge-scores.json);
+    json_first_pass 段承接原 comparison.md 原文(facts 记录不在 run 目录,无法重算,承接不改编)。
+    """
+    cases = [json.loads(line) for line
+             in (run_dir / "cases.jsonl").read_text(encoding="utf-8").splitlines() if line]
+    rows = load_results(_latest_run(run_dir / "collect"))
+    scores = json.loads((run_dir / "judge-scores.json").read_text(encoding="utf-8"))
+    report = comparison_report(scores, rows, cases)
+    text = "\n".join(report) + "\n"
+    old_path = run_dir / "comparison.md"
+    if old_path.exists():
+        old = old_path.read_text(encoding="utf-8")
+        jfp_at = old.find("## json_first_pass")
+        if jfp_at >= 0:
+            text += "\n" + old[jfp_at:]
+    old_path.write_text(text, encoding="utf-8")
+    print(text)
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--out", required=True, help="输出目录,如 var/tuning/round-1")
+    parser.add_argument("--out", help="输出目录,如 var/tuning/round-1(跑批模式必填)")
     parser.add_argument("--nightly", action="store_true",
                         help="夜评模式:预检 provider 可达性 + 落溯源 manifest(evals-nightly.yml)")
+    parser.add_argument("--render-from", metavar="RUN_DIR",
+                        help="不跑批:从既有 run 目录(cases.jsonl/collect/judge-scores.json)"
+                             "重渲染 comparison.md;jfp 段承接原文件(facts 不在 run 目录)")
     args = parser.parse_args()
+    if args.render_from:
+        return render_from(Path(args.render_from))
+    if not args.out:
+        parser.error("跑批模式需要 --out;纯重渲染用 --render-from <run 目录>")
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -189,17 +302,7 @@ def main() -> int:
         gateway.close()
 
     (out / "judge-scores.json").write_text(json.dumps(scores, ensure_ascii=False, indent=1), encoding="utf-8")
-    report = ["# 调优轮对照(vs 基线 R1×R2,#34 容差口径:分差≤1 单值判/≥2 区间判)", "",
-              "| 场景 | R1 | R2 | 本轮 | 判定 |", "|---|---:|---:|---:|---|"]
-    deltas = []
-    for case_id, (r1, r2) in BASELINE.items():
-        got = scores.get(case_id, {}).get("total")
-        if got is None:
-            report.append(f"| {case_id} | {r1} | {r2} | 失败 | FAIL |")
-            continue
-        deltas.append(got - (r1 + r2) / 2)
-        report.append(f"| {case_id} | {r1} | {r2} | {got} | {tolerance_verdict(got, r1, r2)} |")
-    report += ["", f"逐维均分:见 judge-scores.json;对两轮均值差:{sum(deltas) / len(deltas):+.2f}"]
+    report = comparison_report(scores, rows, CASES)
     # #34 M2 出口条件:json 一次通过率(结构化输出合规率,01 §6)
     jfp_text = json_first_pass_report(facts_dir)
     report += jfp_text.splitlines() + [""]
