@@ -169,7 +169,7 @@ def test_system_prompt_includes_reason_planning_instruction():
     prompt = system_prompt("六年级")
     assert "reason" in prompt
     assert "含 reason 字段时" in prompt          # schema 作用域限定(start 调用无该字段,指令不生效)
-    assert "不替学生算出最终结果" in prompt
+    assert "用提问让他自己算" in prompt
     assert "学生只会看到 reply" in prompt
 
 
