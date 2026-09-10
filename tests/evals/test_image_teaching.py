@@ -170,3 +170,23 @@ def test_run_case_passes_image_through(tmp_path):
     url = image_blocks[0]["image_url"]["url"]
     assert url.startswith("data:image/jpeg;base64,")
     assert base64.b64decode(url.split(",", 1)[1]) == b"\xff\xd8\xfffake-jpeg"
+
+
+# ---------- 真实图池:根存在性 + 裸文件名解析(审查 #132 建议①) ----------
+
+_BANK = Path(__file__).resolve().parents[2] / "edu_agent" / "api" / "static" / "bank"
+
+
+def test_real_image_bank_root_exists_and_resolves():
+    """图池根是 evals 的路径耦合点:目录迁移会让评测期静默 FileNotFoundError,CI 先拦。
+
+    顺带验证裸文件名(pqfile_*.jpg)按图池根解析 + 真字节 sha256 对账通过。
+    """
+    images = sorted(_BANK.glob("*.jpg"))
+    assert images, f"图池根缺失或为空:{_BANK}"
+    path = images[0]
+    data_url = question_image_data_url({
+        "path": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+    assert data_url.startswith("data:image/jpeg;base64,")
+    assert base64.b64decode(data_url.split(",", 1)[1]) == path.read_bytes()
+

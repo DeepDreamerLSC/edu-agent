@@ -38,6 +38,19 @@ jobs:
             echo
             cat var/nightly/$STAMP/comparison.md
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: 夜评(题图教学 image 段,真模型;独立 step,不进 11 场景 gate 口径)
+        run: |
+          # #130 WP5d:带图能力基线单独一段,不改 gate 段的 11 场景口径(无遗留对照,
+          # 故不 gate 判达标,只看逐题六维分与 pass 数的日间轨迹)。
+          uv run python scripts/image_teaching_round.py \
+            --dataset edu_agent/evals/datasets/small_lecturer_image_teaching_v1.json \
+            --out var/nightly/$STAMP/image-teaching
+          {
+            echo
+            echo "## 题图教学 image 段(#130 WP5)"
+            echo
+            cat var/nightly/$STAMP/image-teaching/comparison.md
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: 归档(run 目录:transcript/judge 分/manifest 溯源)
         uses: actions/upload-artifact@v4
         with:
