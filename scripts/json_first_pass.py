@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """#34 结构化输出合规率(json_schema 一次通过,01 §6)。
 
-从 model_calls-*.jsonl 计算 M2 出口条件:
-- 分母: metadata 型调用(role in {tutor, judge}, edu.attempt==1)
-- 分子: 分母中 edu.outcome != "schema_violation"
-- 输出: 整体率 + 按角色/模型/provider 分解
+从 model_calls-*.jsonl 计算 M2 出口条件。口径(2026-09-10 评审修订,#34):
+- 合规分母 = 产出了模型响应的行(outcome ∈ {ok, schema_violation, truncated, content_filtered});
+  模型没产出响应的基础设施失败(timeout_*/rate_limited/upstream_*/connection)移出分母,
+  单列 availability(那是 01 §6 "成功率/首次成功率"的职责,不混入合规率)。
+- 分子 = outcome == "ok"(产出即合规);truncated/content_filtered/schema_violation 都算不合规。
+- 角色分母:仅 schema 角色(tutor/judge,step p1 确认全部挂 response_schema)。
 
 口径文档: docs/evals/json-first-pass-v1.md
 
@@ -12,7 +14,6 @@
   uv run python scripts/json_first_pass.py
   uv run python scripts/json_first_pass.py --dir /path/to/facts
   uv run python scripts/json_first_pass.py --since 2026-09-09
-  uv run python scripts/json_first_pass.py --strict  # 辅助:仅 outcome=="ok"
 """
 
 from __future__ import annotations
@@ -22,14 +23,18 @@ import json
 import os
 import sys
 from collections import Counter
-from datetime import date
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_FACTS_DIR = Path(os.environ.get("EDU_FACTS_DIR") or REPO / "facts")
 
-# metadata 角色(全部挂 response_schema,step p1 确认)
+# schema 角色(全部挂 response_schema,step p1 确认)
 SCHEMA_ROLES = frozenset({"tutor", "judge"})
+
+# 产出模型响应的 outcome(在合规分母内)
+RESPONDED_OUTCOMES = frozenset({"ok", "schema_violation", "truncated", "content_filtered"})
+# 合规 = 一次产出即合规 JSON
+COMPLIANT_OUTCOME = "ok"
 
 M2_THRESHOLD = 0.98  # 98%
 
@@ -40,14 +45,8 @@ def _read_facts_dir(facts_dir: Path, since: str | None = None) -> list[dict]:
     if not facts_dir.is_dir():
         return rows
     for path in sorted(facts_dir.glob("model_calls-*.jsonl")):
-        if since is not None:
-            # 文件名 model_calls-YYYY-MM-DD.jsonl
-            day_str = path.stem.removeprefix("model_calls-")
-            try:
-                if day_str < since:
-                    continue
-            except ValueError:
-                pass
+        if since is not None and path.stem.removeprefix("model_calls-") < since:
+            continue
         try:
             for line in path.read_text(encoding="utf-8").splitlines():
                 line = line.strip()
@@ -59,15 +58,17 @@ def _read_facts_dir(facts_dir: Path, since: str | None = None) -> list[dict]:
     return rows
 
 
-def _role_outcome_tables(rows: list[dict]) -> tuple[dict[str, Counter], Counter]:
-    """按 role 和 overall 统计 attempt==1 的 outcome 分布。"""
+def _schema_rows(rows: list[dict]) -> list[dict]:
+    """schema 角色 attempt==1 的行(每个调用恰好一行)。"""
+    return [r for r in rows
+            if r.get("edu.role") in SCHEMA_ROLES and r.get("edu.attempt") == 1]
+
+
+def _outcome_counters(rows: list[dict]) -> tuple[dict[str, Counter], Counter]:
+    """按 role 与 overall 统计 outcome 分布(schema 角色 attempt==1)。"""
     by_role: dict[str, Counter] = {}
     overall: Counter = Counter()
-    for row in rows:
-        if row.get("edu.role") not in SCHEMA_ROLES:
-            continue
-        if row.get("edu.attempt") != 1:
-            continue
+    for row in _schema_rows(rows):
         role = row["edu.role"]
         outcome = row.get("edu.outcome", "?")
         if role not in by_role:
@@ -77,14 +78,21 @@ def _role_outcome_tables(rows: list[dict]) -> tuple[dict[str, Counter], Counter]
     return by_role, overall
 
 
+def _availability_note(overall: Counter) -> str:
+    """基础设施失败(未产出响应)单列;那是 01 §6 成功率的职责。"""
+    infra = {o: n for o, n in overall.items() if o not in RESPONDED_OUTCOMES}
+    total = sum(overall.values())
+    if not infra:
+        return ""
+    parts = ", ".join(f"{o}={n}" for o, n in sorted(infra.items()))
+    return (f"\n> **availability**(01 §6 成功率职责,不计入合规分母): "
+            f"基础设施失败 {sum(infra.values())}/{total} 行 —— {parts}")
+
+
 def _model_decomposition(rows: list[dict]) -> str:
-    """按模型分解:caller 看到的 request.model 维度。"""
+    """按模型分解:responded 与 ok 计数。"""
     model_stats: dict[str, Counter] = {}
-    for row in rows:
-        if row.get("edu.role") not in SCHEMA_ROLES:
-            continue
-        if row.get("edu.attempt") != 1:
-            continue
+    for row in _schema_rows(rows):
         model = row.get("gen_ai.request.model", "unknown")
         outcome = row.get("edu.outcome", "?")
         if model not in model_stats:
@@ -93,71 +101,66 @@ def _model_decomposition(rows: list[dict]) -> str:
 
     if not model_stats:
         return ""
-    lines = ["\n| model | calls | first_pass | rate |", "|---|---:|---:|---:|"]
+    lines = ["\n| model | responded | ok | rate |", "|---|---:|---:|---:|"]
     for model in sorted(model_stats):
         c = model_stats[model]
-        calls = sum(c.values())
-        first_pass = calls - c.get("schema_violation", 0)
-        rate = 100.0 * first_pass / calls if calls else 0.0
-        lines.append(f"| {model} | {calls} | {first_pass} | {rate:.1f}% |")
+        responded = sum(n for o, n in c.items() if o in RESPONDED_OUTCOMES)
+        ok = c.get(COMPLIANT_OUTCOME, 0)
+        rate = 100.0 * ok / responded if responded else 0.0
+        lines.append(f"| {model} | {responded} | {ok} | {rate:.1f}% |")
     return "\n".join(lines)
 
 
 def json_first_pass_report(facts_dir: Path, since: str | None = None) -> str:
     """返回 Markdown 报告文本,供 tuning_round.py 挂载。"""
     rows = _read_facts_dir(facts_dir, since)
-    by_role, overall = _role_outcome_tables(rows)
-    total_calls = sum(overall.values())
+    by_role, overall = _outcome_counters(rows)
+    responded_total = sum(n for o, n in overall.items() if o in RESPONDED_OUTCOMES)
 
     lines: list[str] = ["", "## json_first_pass(01 §6 结构化输出合规率)", ""]
 
-    if not total_calls:
-        lines.append("(无 schema 角色 attempt==1 的事实行)")
+    if responded_total == 0:
+        lines.append("(无产出模型响应的 schema 调用行)")
         return "\n".join(lines)
 
-    # 主定义:未发生 schema_violation
-    schema_fails = overall.get("schema_violation", 0)
-    first_pass = total_calls - schema_fails
-    rate = 100.0 * first_pass / total_calls if total_calls else 0.0
+    ok_total = overall.get(COMPLIANT_OUTCOME, 0)
+    rate = 100.0 * ok_total / responded_total if responded_total else 0.0
     pass_icon = "✅" if rate / 100 >= M2_THRESHOLD else "❌"
 
     lines.append(f"M2 门 {M2_THRESHOLD*100:.0f}%: {pass_icon} 当前 **{rate:.1f}%** "
-                 f"({first_pass}/{total_calls})")
+                 f"({ok_total}/{responded_total} 产出了结果)")
 
     # 按角色分解
-    lines.append("\n| role | calls | first_pass | rate | breakdown |")
+    lines.append("\n| role | responded | ok | rate | breakdown |")
     lines.append("|---|---:|---:|---:|---|")
-    sorted_roles = sorted(by_role)
-    for role in sorted_roles:
+    for role in sorted(by_role):
         c = by_role[role]
-        calls = sum(c.values())
-        role_first_pass = calls - c.get("schema_violation", 0)
-        role_rate = 100.0 * role_first_pass / calls if calls else 0.0
-        breakdown_parts = []
-        for outcome in sorted(c):
-            if c[outcome] > 0:
-                breakdown_parts.append(f"{outcome}={c[outcome]}")
-        lines.append(f"| {role} | {calls} | {role_first_pass} | {role_rate:.1f}% "
+        responded = sum(n for o, n in c.items() if o in RESPONDED_OUTCOMES)
+        ok = c.get(COMPLIANT_OUTCOME, 0)
+        role_rate = 100.0 * ok / responded if responded else 0.0
+        breakdown_parts = [f"{o}={c[o]}" for o in sorted(c) if c[o] > 0]
+        lines.append(f"| {role} | {responded} | {ok} | {role_rate:.1f}% "
                      f"| {', '.join(breakdown_parts)} |")
-    lines.append(f"| **合计** | **{total_calls}** | **{first_pass}** | **{rate:.1f}%** |"
-                 f" |")
+    lines.append(f"| **合计** | **{responded_total}** | **{ok_total}** | **{rate:.1f}%** | |")
 
-    # 非 schema 首次失败明细(透明度)
-    non_schema_fails = [(r["edu.outcome"], r["edu.role"], r.get("edu.session_id", "?"))
-                        for r in rows
-                        if r.get("edu.role") in SCHEMA_ROLES
-                        and r.get("edu.attempt") == 1
-                        and r.get("edu.outcome") not in ("ok", "schema_violation")]
-    if non_schema_fails:
-        lines.append("\n> **注意**:按定义计入通过(未发生 schema_violation 事件)的首次失败:")
+    # 不合规明细(透明度):schema_violation/truncated/content_filtered
+    non_compliant = [(r["edu.outcome"], r["edu.role"], r.get("edu.session_id", "?"))
+                     for r in _schema_rows(rows)
+                     if r.get("edu.outcome") in RESPONDED_OUTCOMES
+                     and r.get("edu.outcome") != COMPLIANT_OUTCOME]
+    if non_compliant:
+        lines.append("\n> **不合规明细**(在合规分母内,计入未通过):")
         seen: set[str] = set()
-        for outcome, role, sess in non_schema_fails:
+        for outcome, role, sess in non_compliant:
             key = f"{outcome}:{sess}"
             if key not in seen:
                 lines.append(f"> · {outcome} (role={role}, session={sess})")
                 seen.add(key)
 
-    # 按模型分解
+    avail_note = _availability_note(overall)
+    if avail_note:
+        lines.append(avail_note)
+
     model_section = _model_decomposition(rows)
     if model_section:
         lines.append(model_section)
@@ -171,45 +174,39 @@ def main() -> int:
                         help="facts 目录(默认 facts/)")
     parser.add_argument("--since", type=str, default=None,
                         help="起始日期 YYYY-MM-DD(可选,按文件名过滤)")
-    parser.add_argument("--strict", action="store_true",
-                        help="辅助:严格一次通过(仅 outcome==ok,含非 schema 失败)")
     args = parser.parse_args()
 
     rows = _read_facts_dir(args.dir, args.since)
-    by_role, overall = _role_outcome_tables(rows)
-    total_calls = sum(overall.values())
+    by_role, overall = _outcome_counters(rows)
+    responded_total = sum(n for o, n in overall.items() if o in RESPONDED_OUTCOMES)
 
-    if total_calls == 0:
-        print("json_first_pass: 无 schema 角色 attempt==1 的事实行")
+    if responded_total == 0:
+        print("json_first_pass: 无产出模型响应的 schema 调用行")
         if rows:
-            print(f"  (读取 {len(rows)} 行但未匹配 role in {SCHEMA_ROLES}, attempt==1)")
+            print(f"  (读取 {len(rows)} 行;schema 角色 attempt==1: "
+                  f"{len(_schema_rows(rows))} 行,均无响应)")
         return 1
 
-    # 主口径
-    schema_fails = overall.get("schema_violation", 0)
-    first_pass = total_calls - schema_fails
-    rate = 100.0 * first_pass / total_calls
+    ok_total = overall.get(COMPLIANT_OUTCOME, 0)
+    rate = 100.0 * ok_total / responded_total
     flag = "达标" if rate / 100 >= M2_THRESHOLD else "未达标"
-    print(f"json_first_pass: {first_pass}/{total_calls} = {rate:.1f}% [{flag}]")
+    print(f"json_first_pass: {ok_total}/{responded_total} = {rate:.1f}% "
+          f"(合规分母=产出结果的行)[{flag}]")
     print(f"  M2 门 {M2_THRESHOLD*100:.0f}%: "
           f"{'✅' if rate/100 >= M2_THRESHOLD else '❌'}")
     for role in sorted(by_role):
         c = by_role[role]
-        rc = sum(c.values())
-        rp = rc - c.get("schema_violation", 0)
-        rr = 100.0 * rp / rc if rc else 0.0
-        print(f"  {role}: {rp}/{rc} = {rr:.1f}%")
-        if c.get("schema_violation", 0) > 0:
-            print(f"    schema_violation: {c['schema_violation']}")
+        responded = sum(n for o, n in c.items() if o in RESPONDED_OUTCOMES)
+        ok = c.get(COMPLIANT_OUTCOME, 0)
+        rr = 100.0 * ok / responded if responded else 0.0
+        print(f"  {role}: {ok}/{responded} = {rr:.1f}%")
+        for o in sorted(c):
+            if o in RESPONDED_OUTCOMES and o != COMPLIANT_OUTCOME and c[o] > 0:
+                print(f"    不合规 {o}: {c[o]}")
+    avail_note = _availability_note(overall)
+    if avail_note:
+        print(f"  {avail_note.replace(chr(10), ' ').strip()}")
 
-    # 严格口径(辅助)
-    if args.strict:
-        strict_pass = overall.get("ok", 0)
-        strict_rate = 100.0 * strict_pass / total_calls
-        print(f"\n  --strict: {strict_pass}/{total_calls} = {strict_rate:.1f}% "
-              f"(仅 outcome==ok)")
-
-    # 打印 Markdown 报告
     print("\n---\n")
     print(json_first_pass_report(args.dir, args.since))
 
