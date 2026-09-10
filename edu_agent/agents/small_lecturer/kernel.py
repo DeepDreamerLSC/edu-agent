@@ -188,11 +188,19 @@ _STEP_LEADS = ("我们从这里入手", "下一步是这样", "再往下看", "�
 
 
 def _reveal_stuck_hint(session: "LearnerSession") -> str:
-    """学生卡住 → 揭示下一级阶梯(确定性,零模型调用,不重复)。
+    """学生卡住/复读兜底 → 揭示下一级阶梯(确定性,零模型调用,不重复)。
 
     内容 = session.steps 下一级;开场用 _STEP_LEADS 轮换,避免固定前缀生硬。
-    模型措辞版实测会重复(3/7)且过度揭示,故仍用确定性。"""
+    模型措辞版实测会重复(3/7)且过度揭示,故仍用确定性。
+
+    埋点(#112 评审建议):三条调用方(卡壳揭示 / 复读降级 / 输出面背板)统一在此记
+    `{branch: reveal, hint_level}`,hint_level 为消耗后的级数——记的是**阶梯消耗**
+    (阶梯有限,影子数据要能看「推进次数」与「是否过早烧到 bottom-out」);该轮最终
+    学生可见文本若又被下游护栏替换,以 transcript 为准。bottom-out 与普通推进同记
+    reveal(事件形状不变);bottom-out 率按确定性文本匹配统计(「这一步我们直接看结果:」
+    / NEEDS_REVIEW_TEXT),与复讲引导按 _ELICIT_TEMPLATE 文本统计同口径。"""
     step = _next_step(session)
+    session.guard_events.append({"branch": "reveal", "hint_level": session.hint_level})
     if step is None:
         # 不变量:终答文本只出现在 bottom-out(此处)/ finish / ready_to_confirm 三条
         # 路径(锁在 tests/teaching/test_kernel_invariants.py);阶梯揭示只给步骤不给终答。
@@ -530,9 +538,8 @@ def reply(session: LearnerSession, student_message: str, *,
     if _student_signals_stuck(student_message):
         # 学生说「不会/猜不出」→ 揭示下一级阶梯(内容确定性,措辞交模型,代喂/无步骤兜底)。
         gateway = gateway or default_gateway()
-        hint = _reveal_stuck_hint(session)
+        hint = _reveal_stuck_hint(session)  # 埋点在 _reveal_stuck_hint 内统一记(#112 评审)
         session.stuck = True
-        session.guard_events.append({"branch": "reveal", "hint_level": session.hint_level})
         return _commit_turn(session, student_message, hint, "dialogue")
     if _student_hits_known_answer(session, student_message):
         # incorrect 弧线:学生被纠错后说出已知答案 → 同样确定性请他从头复讲(#112:

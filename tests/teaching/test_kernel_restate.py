@@ -175,6 +175,8 @@ def test_repeat_fallback_advances_ladder():
     assert turn1.text == "我们从这里入手:先算全部按鸡的脚数。你接着算下一步。"
     assert turn1.session.stuck is True           # 复读打断 = 卡点标记(R6 同款)
     assert turn1.session.hint_level == 1
+    # 埋点(#112 评审建议):复读降级路径的阶梯消耗同样记 reveal——此前只有卡壳分支记
+    assert {"branch": "reveal", "hint_level": 1} in turn1.session.guard_events
 
 
 def test_repeat_fallback_ladder_texts_differ_consecutively():
@@ -214,6 +216,7 @@ def test_guard_fallback_repeat_backstop_reveals_ladder():
     assert turn.text != loop_text           # 不再同句复读
     assert turn.session.stuck is True
     assert turn.ready_to_confirm is False
+    assert {"branch": "reveal", "hint_level": 1} in turn.session.guard_events  # 背板路径同记
 
 
 def test_elicit_swap_repeat_backstop_reveals_ladder():
@@ -229,6 +232,7 @@ def test_elicit_swap_repeat_backstop_reveals_ladder():
     assert turn.text != ELICIT              # 不再同句复讲引导
     assert turn.text.startswith(("我们从这里入手", "下一步是这样"))  # 阶梯推进
     assert turn.session.stuck is True
+    assert {"branch": "reveal", "hint_level": 1} in turn.session.guard_events  # 背板路径同记
 
 
 # ---------- 代喂替换埋点(残留度量语料来源) ----------
