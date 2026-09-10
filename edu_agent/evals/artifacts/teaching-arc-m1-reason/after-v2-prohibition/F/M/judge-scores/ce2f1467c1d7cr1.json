@@ -1,0 +1,25 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你算出的结果是多少？'，仅采集作答，未评判对错或复讲。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师采集学生想法后，在紧随的回应中直接判定：'但分数加法不是这样算的哦'，属于对错评判。"
+ },
+ "restate": {
+  "asked": false,
+  "delivered": false,
+  "evidence": "对话中教师未出现'讲一遍'、'复述'或'说说你的思路'等明确请学生复讲的指令。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "关键转折是你把 3/4 正确转化为 6/8，这一步用对了等式性质。"
+  ],
+  "evidence": "教师在总结中使用了方法名'等式性质'，且学生此前未主动提及该方法名。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

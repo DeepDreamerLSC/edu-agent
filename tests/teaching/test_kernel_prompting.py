@@ -8,11 +8,14 @@
 from __future__ import annotations
 
 import json
+import re
+from pathlib import Path
 
 from fake_openai import FakeOpenAI, completion
 
 from edu_agent.agents.small_lecturer import (
     SAFE_FALLBACK_TEXT,
+    TUTOR_TURN_SCHEMA,
     finish,
     reply,
     start,
@@ -22,6 +25,8 @@ from edu_agent.agents.small_lecturer import (
 )
 
 from test_kernel_state_machine import LEARNER, QUESTION_TEXT, kernel_gateway, open_json, tutor_json
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 # ---------- 装配:SKILL + 风格档案 + 攻守图 ----------
@@ -80,11 +85,12 @@ def test_kernel_replaces_abusive_tone(tmp_path):
     fake = FakeOpenAI([completion(open_json("第一问?")), completion(rude)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-    turn = reply(first.session, "我不会。", gateway=gateway)
+    # 「我不会」现路由确定性揭示(#157 评审卡壳修复)→ 语气护栏用中性话术走模型路径
+    turn = reply(first.session, "这题好难。", gateway=gateway)
     gateway.close()
     fake.stop()
     # 任务包2步2兜底句情境化:语气护栏命中,原文不达学生面,换接学生原话的引导句(非万能句)
-    assert turn.text == "先回到你刚说的「我不会。」——你能从题目里再确认一个已知条件吗?"
+    assert turn.text == "先回到你刚说的「这题好难。」——你能从题目里再确认一个已知条件吗?"
 
 
 def test_kernel_replaces_markdown_output_with_downgrade(tmp_path):
@@ -116,7 +122,8 @@ def test_guarded_reply_context_matches_student_visible_text(tmp_path):
                        completion(regen_clean), completion(follow_clean)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-    turn = reply(first.session, "不知道。", gateway=gateway)
+    # 「不知道」现路由确定性揭示(#157 评审卡壳修复)→ 护栏链用中性话术走模型路径
+    turn = reply(first.session, "我再看看。", gateway=gateway)
     assert turn.text == "你刚才回到了条件本身,很好。"  # 泄露 → 重生成成功 → 用重生成文本
     assert "x=6" not in turn.text
     follow = reply(first.session, "题目说 3x 加 7 等于 25。", gateway=gateway)
@@ -144,3 +151,44 @@ def test_repeat_self_refine_replaces_repeated_question(tmp_path):
     assert turn.text == "我们换一步,你先说说题目给了哪些条件?"
     assert "兔子有几只呢" not in turn.text
     assert len(fake.requests) == 3  # start + 首轮 reply + 打回重生成 各一次模型调用
+
+
+# ---------- #146 M1:reason 规划字段(答案泄露防御,05 §5) ----------
+
+def test_tutor_turn_schema_declares_reason_before_reply():
+    """#146 M1:schema 经 json.dumps 进 prompt,声明序即生成序——reason 必须在 reply
+    之前(先承诺策略、再回答);不进 required 模型会跳过,防御即失效。"""
+    props = list(TUTOR_TURN_SCHEMA["properties"])
+    assert props.index("reason") < props.index("reply"), "reason 必须声明在 reply 之前"
+    assert "reason" in TUTOR_TURN_SCHEMA["required"]
+    assert TUTOR_TURN_SCHEMA["properties"]["reason"] == {"type": "string"}
+
+
+def test_system_prompt_includes_reason_planning_instruction():
+    """#146 M1:输出契约含 reason 规划指令——先写引导计划再写 reply,学生只见 reply。"""
+    prompt = system_prompt("六年级")
+    assert "reason" in prompt
+    assert "含 reason 字段时" in prompt          # schema 作用域限定(start 调用无该字段,指令不生效)
+    assert "用提问让他自己算" in prompt
+    assert "学生只会看到 reply" in prompt
+
+
+def test_reason_field_never_read_by_app_code():
+    """#146 M1 红线:reason 是规划装置,不是验证装置——应用代码(edu_agent/)任何位置
+    不得读取 reason;cited_numbers 前车之鉴:自报字段一进判定逻辑就变成谎报源。
+    覆盖 #157 评审加固:索引取值(["reason"]/get)之外的读取面——pop(读取并删除)、
+    setdefault(读取并写入)、裸比较(== "reason" / "reason" ==)。vision 的
+    reason(转写判定)为独立语义,同样无读取。"""
+    pattern = re.compile(
+        r"""\[\s*["']reason["']\s*\]"""
+        r"""|\.get\(\s*["']reason["']"""
+        r"""|\.pop\(\s*["']reason["']"""
+        r"""|\.setdefault\(\s*["']reason["']"""
+        r"""|==\s*["']reason["']"""
+        r"""|["']reason["']\s*==""")
+    hits = []
+    for path in sorted((REPO_ROOT / "edu_agent").rglob("*.py")):
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if pattern.search(line):
+                hits.append(f"{path.relative_to(REPO_ROOT)}:{lineno}")
+    assert hits == [], f"reason 被判定/守卫代码读取(违规): {hits}"

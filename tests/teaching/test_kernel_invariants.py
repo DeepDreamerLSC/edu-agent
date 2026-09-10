@@ -71,6 +71,11 @@ def test_understanding_routes_to_elicit(phrase, is_elicit):
     ("这题我不会吧", True),
     ("不会吧?!这也能算对?", False),  # 实弹2:反诘惊讶 ≠ 卡住 → 模型,非揭示
     ("我会的", False),
+    ("我还不知道怎么同时算两种动物。", True),  # 实弹3(#157 评审):「还」隔断「我不知道」→ 误走模型路径
+    ("我不会", True),       # #157 评审(PM 实测):裸「我不会」漏检
+    ("我不明白", True),      # #157 评审(PM 实测):词表外
+    ("还不会", True), ("不太会", True), ("不会算", True),  # #157 评审(同类第一人称卡壳)
+    ("我不会吧?!", False),   # 「我不会(?!吧)」保留反诘语义(裸「我不会」不吞掉)
 ])
 def test_stuck_routes_to_reveal(phrase, is_stuck):
     gateway = FakeGateway(tutor_payloads=[_open("先看题面:8 只,26 只脚。", STEPS)])
@@ -160,6 +165,38 @@ def test_final_answer_in_dialogue_state_marks_stuck():
     assert turn.session.stuck is True
     assert _drift_event(turn)["violation_sources"] == [
         {"number": 3.0, "source": "answer"}, {"number": 5.0, "source": "answer"}]
+
+
+def test_selfreported_ladder_answer_not_whitelisted_in_dialogue():
+    # #157 评审发现1(洗白半边):无 answer 题面(评测帧口径,KernelSubject 不传答案),
+    # 阶梯末级 = 模型自报答案;对话态照抄末级数字(整段演算)必须被抓——
+    # "自报进白名单"与 cited_numbers 同病。修复:终答数字按值从 steps 允许集剥离。
+    question = {"text": "鸡兔同笼,一共 8 只,26 只脚。鸡和兔各有多少只?", "answer": ""}
+    ladder = [*STEPS, {"step": "结论", "value": "鸡3只兔5只"}]
+    gateway = FakeGateway(tutor_payloads=[
+        _open("先看题面:8 只,26 只脚。", ladder),
+        {"reply": "剩下的就是鸡:8-5=3只,兔5只。", "ready_to_confirm": False,
+         "cited_numbers": [8, 5, 3]},
+        {"reply": "你再想想。", "ready_to_confirm": False, "cited_numbers": []},
+    ])
+    turn = start(question, dict(LEARNER), gateway=gateway)
+    turn = reply(turn.session, "然后呢?", gateway=gateway)
+    assert turn.session.stuck is True
+    assert _drift_event(turn)["violation_sources"] == [
+        {"number": 3.0, "source": "answer"}, {"number": 5.0, "source": "answer"}]
+
+
+def test_last_step_value_not_answer_stays_legal():
+    # 修复按**值**而非按位置(steps[:-1])剥离:阶梯末级未必是答案(题库口径:
+    # 16/10 阶梯、答案 3/5)——诚实引用末级中间值(10)不误伤(#113 初衷)。
+    gateway = FakeGateway(tutor_payloads=[
+        _open("先看题面:8 只,26 只脚。", STEPS),
+        {"reply": "这一步得到 10。", "ready_to_confirm": False, "cited_numbers": [10]},
+    ])
+    turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
+    turn = reply(turn.session, "为什么?", gateway=gateway)
+    assert turn.session.stuck is not True
+    assert _drift_event(turn)["violation_sources"] == []
 
 
 # --------------------------------------------------------------------------- #

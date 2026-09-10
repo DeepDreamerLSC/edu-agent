@@ -37,12 +37,17 @@ from .tone_guardrails import apply_tone_guardrail
 TUTOR_TURN_SCHEMA = {
     "type": "object",
     "properties": {
+        # 答案泄露防御(#146 M1,05 §5):回复前先承诺"本轮如何引导而不给答案"——
+        # schema 经 json.dumps 进 prompt,字段声明顺序即生成顺序,排在 reply 之后等于没加。
+        # 规划装置,不是验证装置:内容不进任何判定/守卫/报告/judge 输入,内核不读它
+        # (cited_numbers 同为自报字段已实测虚报,reason 不重蹈自报歧途)。
+        "reason": {"type": "string"},
         "reply": {"type": "string"},
         "ready_to_confirm": {"type": "boolean"},
         # 数字漂移守卫:模型自报本轮回复中引用的题目条件数字(服务端对题面校验)
         "cited_numbers": {"type": "array", "items": {"type": "number"}},
     },
-    "required": ["reply", "ready_to_confirm", "cited_numbers"],
+    "required": ["reason", "reply", "ready_to_confirm", "cited_numbers"],
     "additionalProperties": False,
 }
 TUTOR_SUMMARY_SCHEMA = {
@@ -121,8 +126,11 @@ def _student_signals_stuck(student_message: str) -> bool:
     """学生表示「不会/猜不出」——这是「揭示下一级阶梯」的触发点(治 tutor 复读探针)。
 
     「不会吧」后接疑问/感叹标点(?!/?/!)是反诘惊讶(「不会吧?!这也能算对?」),不判卡住;
-    单纯「不会吧」仍判卡住;「越来越不懂」补上「不懂了」类卡壳(不被「懂了」误吞)。"""
-    return bool(re.search(r"我不太会|我猜不出|我猜不出来|我不知道|我想不出|我想不出来|我不会做|我不会了|不会吧(?![?!？])|太难了|没思路|越来越不懂", student_message))
+    单纯「不会吧」仍判卡住;「越来越不懂」补上「不懂了」类卡壳(不被「懂了」误吞)。
+    #157 评审补第一人称卡壳缺口(实测漏检):「还不知道」(「还」隔断了「我不知道」)、
+    裸「我不会」「不明白」「不会算」「还不会」——这类轮次误走模型路径 = 泄露+方差双来源;
+    「我不会(?!吧)」保留「我不会吧?!」的反诘语义;「明白了」归理解侧,先于本判据。"""
+    return bool(re.search(r"我不太会|我猜不出|我猜不出来|我不知道|我想不出|我想不出来|我不会做|我不会了|不知道|还不会|不太会|不明白|不会算|我不会(?!吧)|不会吧(?![?!？])|太难了|没思路|越来越不懂", student_message))
 
 
 # 中文数字单字映射(仅学生口述侧:「八分之七」这类说法没有 ASCII 数字)。
@@ -260,12 +268,17 @@ def _reply_numbers(text: str) -> set[float]:
 
 def _drift_sources(session: LearnerSession, student_message: str | None,
                    ready_to_confirm: bool) -> tuple[set[float], set[float]]:
-    """数字来源标签池(M2 闭环 #113/#34):允许集 = 题面 ∪ steps 值 ∪ 学生历史数字 ∪
-    [终答数字:仅 ready_to_confirm 态并入]。
+    """数字来源标签池(M2 闭环 #113/#34 + #157 评审末值边界):允许集 =
+    题面 ∪ (steps 值 − 终答数字) ∪ 学生历史数字 ∪ [终答数字:仅 ready_to_confirm 态并入]。
+
+    终答数字按**值**从 steps 无条件允许集剥离(#157 评审:模型自报阶梯含末值=答案,
+    整段照抄演算会 violations=[] 洗白——"自报进白名单"与 cited_numbers 同病);
+    按值而非按位置(steps[:-1]):阶梯末级未必是答案(题库 16/10 阶梯答案 3/5),
+    按位置会把诚实的末级中间值误伤,按值只锁真正要保护的答案数字。
 
     返回 (允许集, 终答数字池)。终答数字在非确认态单独成池、不入允许集,供违规
     来源标签判定:违规数字若在终答池 → 标签 "answer"(对话态提前说终答),否则
-    "hallucinated"(无任何合法来源)。"""
+    "hallucinated"(无任何合法来源)。学生历史数字无条件放行(学生自己说过的不算喂)。"""
     face = _question_numbers(str(session.question.get("text") or ""))
     steps = set()
     for step in session.steps:
@@ -276,10 +289,8 @@ def _drift_sources(session: LearnerSession, student_message: str | None,
             student |= _question_numbers(str(message.get("content") or ""))
     if student_message:
         student |= _question_numbers(str(student_message))
-    answer = _question_numbers(str(session.question.get("answer") or ""))
-    if not answer and session.steps:
-        answer = _question_numbers(str(session.steps[-1].get("value") or ""))
-    allowed = face | steps | student | (answer if ready_to_confirm else set())
+    answer = _answer_numbers(session)  # #156 统一判据底座:answer 优先,阶梯末级兜底
+    allowed = face | (steps - answer) | student | (answer if ready_to_confirm else set())
     return allowed, answer
 
 
@@ -668,8 +679,9 @@ def reply(session: LearnerSession, student_message: str, *,
     # 判停闸(#149):模型建议的 ready_to_confirm 需过确定性校验,见 _gate_premature_confirm
     safe_text = _gate_premature_confirm(session, ctx, output, safe_text, student_message)
     # 数字漂移守卫(抽取制 + 来源标签池,M2 闭环 #113/#34):抽取模型 reply 文本
-    # 里的数字(排除"第N"序数),允许集 = 题面 ∪ steps 值 ∪ 学生历史数字 ∪
-    # [终答:仅 ready_to_confirm 态];cited_numbers 自报集保留(影子对照)。
+    # 里的数字(排除"第N"序数),允许集 = 题面 ∪ (steps 值 − 终答数字) ∪ 学生历史
+    # 数字 ∪ [终答:仅 ready_to_confirm 态](#157 评审末值边界);cited_numbers
+    # 自报集保留(影子对照)。
     # 判停闸在前:被闸下的轮次按非确认态取池,提前说出的终答数字即标 "answer" 违规。
     cited = sorted({float(n) for n in (output.get("cited_numbers") or [])})
     extracted = _reply_numbers(str(output.get("reply") or ""))

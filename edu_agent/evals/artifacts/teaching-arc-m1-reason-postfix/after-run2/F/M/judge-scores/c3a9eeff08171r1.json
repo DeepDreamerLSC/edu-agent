@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你先告诉我，你算出的面积是多少？或者你选了哪个选项？'，符合采集作答且无评判。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师采集后紧接着问：'你算出10×6=60，这个结果对吗？'，包含对错判定。"
+ },
+ "restate": {
+  "asked": false,
+  "delivered": false,
+  "evidence": "对话中教师未出现'讲一遍'、'复述'或'说说你的思路'等明确复讲指令。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未提及方法名，且学生已自行说出'除以2'和答案'30'，教师后续确认未构成代喂。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你先告诉我，你现在算出的结果是多少？'，符合采集作答且无评判的要求。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师回应学生'我把三个数直接加在一起'时，指出'借出表示数量减少，不能也加上38'，属于对错误思路的纠正。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求'请你从头讲讲你的思路'，但学生未再回应，后续教师直接追问'你能说说目前想到的第一步吗'。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师全程未提及方法名（如假设法、方程法等），也未在学生说出答案前直接给出最终数值127。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

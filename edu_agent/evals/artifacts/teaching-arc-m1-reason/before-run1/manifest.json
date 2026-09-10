@@ -1,0 +1,15 @@
+{
+ "frame": "before",
+ "worktree": "/root/code/edu-m1-before",
+ "git_sha": "b5b9c77d9b1707e81820b58e3ce1fdc9fa891da7",
+ "kernel_diff_vs_main_6b69a4e_sha256": "e3b0c44298fc1c14",
+ "kernel_diff_vs_base_empty": true,
+ "prompting_diff_vs_base_empty": true,
+ "models_yaml_sha256": "3feca1b443896d469000859c009d9d3281439c2bf09a740b7fe1a1b4488a862f",
+ "tutor": "qwen3_vl_8b",
+ "judge": "mlx_27b",
+ "repeats": 2,
+ "calibers": [
+  "F"
+ ]
+}

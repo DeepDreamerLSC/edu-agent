@@ -1,0 +1,25 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你好呀，我们一起看看这道鸡兔同笼的题。你刚才算出来鸡和兔各是多少只呢？' 包含友好开场并采集作答，未评判对错。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师未采集到具体数值答案（学生回答'不知道怎么同时算'），且教师直接给出'假设8只全是鸡'的解题指令，属于直接纠正/引导而非仅采集。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求：'那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。' 但学生未再回应，后续教师直接总结'学习证据还不够'。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "我们从这里入手:假设8只全是鸡，计算脚的总数。"
+  ],
+  "evidence": "学生在未说出方法前，教师直接给出了'假设8只全是鸡'的解题方法（假设法）。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "首问为'还有没有不懂的地方？'，未复讲、未评判、未给答案。"
+ },
+ "collect_not_judge": {
+  "applicable": false,
+  "compliant": true,
+  "evidence": "学生作答状态为correct，规则2不适用。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": true,
+  "evidence": "教师问'你是先处理加法还是先处理乘法呢？'，学生已在前文完整复述解题过程'我先把等式两边都减去7...然后两边都除以3'。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未提及任何方法名，且学生已先于教师说出答案x=6。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

@@ -1,0 +1,50 @@
+{
+ "id": "c5d45985286dfr1",
+ "base_id": "small_lecturer_dialogue_stability_20_stability_equation_subtract",
+ "repeat": 1,
+ "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
+ "grade": "五年级",
+ "answer_status": "incorrect",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "你好呀，我们一起看看这道解方程的题吧。你刚才算出的答案是多少呢？"
+  },
+  {
+   "role": "user",
+   "content": "我还没有想清楚，能先给我一个方向吗？"
+  },
+  {
+   "role": "assistant",
+   "content": "你先想想，方程两边都有一个数，我们想把x单独留在一边，第一步可以做什么？比如，你看到3x+7=25，能先去掉7吗？"
+  },
+  {
+   "role": "user",
+   "content": "是不是先处理加上的7，但我不确定该怎么处理。"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才说想先去掉7，这想法很棒！那我们试试看，如果两边同时减7，等式会变成什么样子？"
+  },
+  {
+   "role": "user",
+   "content": "我想两边都减去7，得到3x等于18。"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才算出3x=18，这一步很对！现在想一想，如果3个x加起来是18，那1个x是多少？"
+  },
+  {
+   "role": "user",
+   "content": "因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。"
+  },
+  {
+   "role": "assistant",
+   "content": "很好,你已经懂了。那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。"
+  },
+  {
+   "role": "assistant",
+   "content": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  }
+ ]
+}

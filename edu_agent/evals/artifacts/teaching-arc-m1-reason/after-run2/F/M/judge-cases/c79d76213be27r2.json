@@ -1,0 +1,50 @@
+{
+ "id": "c79d76213be27r2",
+ "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area",
+ "repeat": 2,
+ "question": "一个三角形底是10厘米，高是6厘米，面积是多少？为什么要除以2？",
+ "grade": "五年级",
+ "answer_status": "incorrect",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "你好呀，我们一起看看这道关于三角形面积的题。你刚才算出的答案是多少呢？"
+  },
+  {
+   "role": "user",
+   "content": "我先算10乘6等于60。"
+  },
+  {
+   "role": "assistant",
+   "content": "你算出10×6=60，这个结果对吗？如果把三角形拼成一个长方形，面积会一样吗？"
+  },
+  {
+   "role": "user",
+   "content": "但三角形不是整个长方形，所以可能还要少一些。"
+  },
+  {
+   "role": "assistant",
+   "content": "你说到三角形不是整个长方形，这很对！那如果把两个一样的三角形拼起来，能变成一个长方形吗？你猜猜看，每个三角形的面积是长方形的几分之几？"
+  },
+  {
+   "role": "user",
+   "content": "两个完全相同的三角形可以拼成一个底10高6的平行四边形。"
+  },
+  {
+   "role": "assistant",
+   "content": "你说到两个三角形能拼成底10高6的平行四边形，这很聪明！那平行四边形面积是底×高，也就是10×6=60，每个三角形面积是它的几分之几呢？"
+  },
+  {
+   "role": "user",
+   "content": "所以三角形面积是10乘6再除以2，等于30平方厘米。"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才说两个三角形拼成平行四边形，面积是60，那每个三角形面积就是60÷2=30，对吗？"
+  },
+  {
+   "role": "assistant",
+   "content": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  }
+ ]
+}
