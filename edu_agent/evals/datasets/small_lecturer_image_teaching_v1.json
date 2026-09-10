@@ -139,7 +139,7 @@
       "title": "分数乘整数·涂色个数(misconception_recovery)",
       "grade": "六年级",
       "question": {
-        "text": "如右图,将这些圆片的 3/4 涂上蓝色,那么需要涂( )个圆片。(图:3×4=12个圆)",
+        "text": "如右图,将这些圆片的 3/4 涂上蓝色,那么需要涂( )个圆片。",
         "image": {
           "path": "pqfile_4ac444b1134e8b753583308b.jpg",
           "sha256": "c97aa892fc2abc5eb330ef0949d367d0379b982e88ebd493d0b52c26e6d69baf"
@@ -165,14 +165,15 @@
         "question_id": "6a695a01b0ffee286ba75680",
         "provider": "pujia_school_question_bank",
         "lesson_name": "2-1分数乘整数"
-      }
+      },
+      "figure_note": "(图:3×4=12个圆)"
     },
     {
       "id": "image_v1_fraction_formula_09",
       "title": "分数乘整数·倒出量列式(misconception_recovery)",
       "grade": "六年级",
       "question": {
-        "text": "杯子中原来盛有800 mL水,小华将杯中的水倒出一些,如下图。求从杯子中倒出了多少毫升水,正确的列式是( )。A.800×3/5 B.800×3/8 C.800×5/8 D.800×5/9(图:两量杯水平对比)",
+        "text": "杯子中原来盛有800 mL水,小华将杯中的水倒出一些,如下图。求从杯子中倒出了多少毫升水,正确的列式是( )。A.800×3/5 B.800×3/8 C.800×5/8 D.800×5/9",
         "image": {
           "path": "pqfile_1767115b0e65e8727d903f95.jpg",
           "sha256": "77c9e35e06095b3310e76ee75b828724b9f675625ecf8d759b4e8f30c30a2979"
@@ -198,7 +199,8 @@
         "question_id": "6a61b366bd464753061f0475",
         "provider": "pujia_school_question_bank",
         "lesson_name": "2-1分数乘整数"
-      }
+      },
+      "figure_note": "(图:两量杯水平对比)"
     },
     {
       "id": "image_v1_application_table_14",
@@ -238,7 +240,7 @@
       "title": "圆·半径与直径(misconception_needs_reveal)",
       "grade": "六年级",
       "question": {
-        "text": "看图填空。(1)半圆的直径是( )cm。(2)长方形的长是( )dm,宽( )dm,圆的半径( )cm。(3)圆的直径是( )cm。(图:半圆/两圆并排/两圆重叠)",
+        "text": "看图填空。(1)半圆的直径是( )cm。(2)长方形的长是( )dm,宽( )dm,圆的半径( )cm。(3)圆的直径是( )cm。",
         "image": {
           "path": "pqfile_d5c2943fff4f637a04a85dad.jpg",
           "sha256": "be22a630f78a463232cb3209ed65a5eee2aab521fd97a6209552c09be254170d"
@@ -264,14 +266,15 @@
         "question_id": "6a69e0d72ef3251197be2556",
         "provider": "pujia_school_question_bank",
         "lesson_name": "4-1圆的认识"
-      }
+      },
+      "figure_note": "(图:半圆/两圆并排/两圆重叠)"
     },
     {
       "id": "image_v1_percentage_multi_part_23",
       "title": "百分数·相对量与整体(misconception_recovery)",
       "grade": "六年级",
       "question": {
-        "text": "我们学校的女生人数占全校学生人数的49%。(两校各49%)这两个学校的女生人数一定相同吗?为什么?反思:用彩色笔分别涂出下面各图面积的25%,涂色的小方块一样多吗?想一想这是为什么?(图1:10×10格 图2:5×10格)",
+        "text": "我们学校的女生人数占全校学生人数的49%。(两校各49%)这两个学校的女生人数一定相同吗?为什么?反思:用彩色笔分别涂出下面各图面积的25%,涂色的小方块一样多吗?想一想这是为什么?",
         "image": {
           "path": "pqfile_04ebc0048b42c1a5fe6e118b.jpg",
           "sha256": "630e69be2d49107aae1d38f3654c859bd7c80d874542569ee76889a774ebc276"
@@ -283,7 +286,7 @@
         "unit": ""
       },
       "bucket": "percentage_multi_part",
-      "visual_dependency": "helpful",
+      "visual_dependency": "required",
       "misconception_seed": "把百分比误当绝对数，认为相同百分比就是相同数量（把49%当成49人）（二级）",
       "student_turns": [
         "两个学校女生都占49%，那女生人数肯定一样多吧？都是49%嘛。",
@@ -297,7 +300,8 @@
         "question_id": "6a69e6862ef3251197be2a0c",
         "provider": "pujia_school_question_bank",
         "lesson_name": "5-1百分数的意义(1)"
-      }
+      },
+      "figure_note": "(图1:10×10格 图2:5×10格)"
     },
     {
       "id": "image_v1_visual_statistics_open_26",
@@ -316,7 +320,7 @@
         "unit": ""
       },
       "bucket": "visual_statistics_open",
-      "visual_dependency": "required",
+      "visual_dependency": "helpful",
       "misconception_seed": "把点阵的“数”和“和式”当成同一种表示，忽略累加项数（只看首尾不数项数）（二级）",
       "student_turns": [
         "36是6的平方，按图1就是1+3+5+7+9+11，一共6个奇数，加起来是36。这个我会。",
@@ -370,7 +374,7 @@
       "title": "折线图·速度与时间(misconception_recovery)",
       "grade": "六年级",
       "question": {
-        "text": "明明和爸爸开车去动物园,画了汽车速度随时间变化情况(曲线:0-2升30,2-8保持30,8-10降0,10-12升30,12-16保持30,16-20降0)。(1)汽车行驶了多长时间?最大速度是多少?(2)出发后8分钟到10分钟可能出现什么情况?【小试牛刀】",
+        "text": "明明和爸爸开车去动物园,画了汽车速度随时间变化情况。(1)汽车行驶了多长时间?最大速度是多少?(2)出发后8分钟到10分钟可能出现什么情况?【小试牛刀】",
         "image": {
           "path": "pqfile_ce99ed9f9b97253cd5eb6c25.jpg",
           "sha256": "281c73713f3ae8912507fc068a89949c3d593d3e575ff2c192e5bc80384f1c6c"
