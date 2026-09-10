@@ -82,6 +82,7 @@ _OPENING_FALLBACK = "我们先看看这道题,你能说说题目给了哪些条�
 _METHOD_TOKENS = (
     "方程法", "通分", "假设法", "抬腿法", "列表法", "移项", "合并同类项",
     "公分母", "最小公倍数", "底乘高", "图形转化", "等式性质", "异分母", "二元一次",
+    "面积公式",  # #148 §5 实测从阶梯揭示句原样漏出(2026-09-10 按证据加词,只加词不改生成端)
 )
 
 
@@ -109,9 +110,21 @@ _ELICIT_TEMPLATE = ("很好,你已经懂了。那请你从头讲讲你的思路�
                     "先说说你第一步算了什么、为什么这样算。")
 
 
-def _feeds_method(text: str) -> bool:
+def _feeds_method_hits(text: str, student_evidence: tuple[str, ...] = ()) -> list[str]:
+    """tutor 输出里点名的方法词中,学生尚未自己说出的那部分(代喂命中,埋点用)。
+
+    #157 裁定 1(#148 §6.3 误伤根因):弧线允许的「学生已说 → 教师复述定名」不算
+    代喂——仅「学生尚未说出」的方法词才算;判定不放宽、词表不删,只是把已说词
+    从命中里剔除(宽表窄记,埋点 rule_ids 精确到未说词)。student_evidence 含当轮
+    学生消息(与泄露护栏的 student_evidence 同源,零新增模型调用)。
+    """
+    said = "".join(student_evidence)
+    return [token for token in _METHOD_TOKENS if token in text and token not in said]
+
+
+def _feeds_method(text: str, student_evidence: tuple[str, ...] = ()) -> bool:
     """tutor 输出里点名了方法(代喂):学生还没自己讲,tutor 不该报方法名。"""
-    return any(token in text for token in _METHOD_TOKENS)
+    return bool(_feeds_method_hits(text, student_evidence))
 
 
 def _student_signals_understanding(student_message: str) -> bool:
@@ -657,13 +670,14 @@ def reply(session: LearnerSession, student_message: str, *,
             session.stuck = True  # 复读打断 = 卡点标记(R6 同款)
         output["reply"] = refined
     safe_text = _guard_output(output["reply"], session, ctx)
-    if _feeds_method(safe_text):
-        # 复讲轮代喂:换成固定"请学生讲"引导,并强制 ready_to_confirm=False——
-        # 不关对话,继续收集学生的讲题内容(总结轮才由 finish 点名方法)。
+    method_hits = _feeds_method_hits(safe_text, ctx.student_evidence)
+    if method_hits:
+        # 复讲轮代喂(仅「学生尚未说出」的方法词,#157 裁定 1):换成固定"请学生讲"
+        # 引导,并强制 ready_to_confirm=False——不关对话,继续收集学生的讲题内容
+        # (总结轮才由 finish 点名方法)。学生已说 → 教师复述定名原文放行。
         # 埋点补齐(#112):此前静默替换不留痕;残留度量需要被换下的原文与命中词
         # (护栏重生成 vs 解析脱敏对照的语料来源),与 _record_event 其余调用同款。
-        _record_event(session, "feeds_method",
-                      [token for token in _METHOD_TOKENS if token in safe_text],
+        _record_event(session, "feeds_method", method_hits,
                       safe_text, regenerated=False)
         safe_text = _ELICIT_TEMPLATE
         output["ready_to_confirm"] = False
