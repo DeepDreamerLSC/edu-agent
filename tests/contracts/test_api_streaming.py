@@ -16,7 +16,7 @@ import pytest
 from edu_agent.api import build_service, build_server
 from edu_agent.contracts import skill_interaction_schema
 
-from test_api_service import ScriptedKernel, _serve, open_session, post
+from partner_api import ScriptedKernel, _serve, open_session, post
 
 
 @pytest.fixture

@@ -1,0 +1,273 @@
+{
+  "schema_version": "small_lecturer_image_teaching/v1",
+  "scenarios": [
+    {
+      "id": "image_v1_text_position_05",
+      "title": "方位描述·两种说法互推(misconception_not_ready)",
+      "grade": "六年级",
+      "question": {
+        "text": "北↑ C岛 75° 灯塔 西 东 40° D岛 南。以灯塔为观测点,C岛和D岛分别在什么方位上?(1)C岛在灯塔的北偏( )( )°的方向上。(2)D岛在灯塔的南偏( )( )°的方向上。还可以这样描述:(3)C岛在灯塔的东偏( )( )°的方向上。(4)D岛在灯塔的( )偏( )( )°的方向上",
+        "image": {
+          "path": "pqfile_ee3a956c1d912c6a70fd014b.jpg",
+          "sha256": "55853c6518b85c5689074e6a8998d9cc5454f740a69ee357bb448958d411832f"
+        }
+      },
+      "reference_answer": {
+        "value": "(1)北偏东75°；(2)南偏西40°；(3)东偏北15°；(4)西偏南50°",
+        "answer_type": "text",
+        "unit": ""
+      },
+      "bucket": "text_position",
+      "visual_dependency": "required",
+      "misconception_seed": "方位角只照抄图上标的那个角，不会用“90°−已知角”换另一种描述（北偏东75° ⇄ 东偏北15°）（二级）",
+      "student_turns": [
+        "C岛在灯塔的北偏东75°，这个我看到了。",
+        "但第(3)问要写“东偏北多少度”，北偏东75°和东偏北15°是一回事吗？我不确定。",
+        "90减75等于15……是这样算的吗？我怕把方向弄反。"
+      ],
+      "expected": {
+        "outcome": "not_ready"
+      },
+      "source": {
+        "question_id": "6a69586fb0ffee286ba75532",
+        "provider": "pujia_school_question_bank",
+        "lesson_name": "1-2描述物体的位置"
+      }
+    },
+    {
+      "id": "image_v1_fraction_formula_06",
+      "title": "分数乘整数·涂色个数(misconception_recovery)",
+      "grade": "六年级",
+      "question": {
+        "text": "如右图,将这些圆片的 3/4 涂上蓝色,那么需要涂( )个圆片。",
+        "image": {
+          "path": "pqfile_4ac444b1134e8b753583308b.jpg",
+          "sha256": "c97aa892fc2abc5eb330ef0949d367d0379b982e88ebd493d0b52c26e6d69baf"
+        }
+      },
+      "reference_answer": {
+        "value": "9",
+        "answer_type": "integer",
+        "unit": "个"
+      },
+      "bucket": "fraction_formula",
+      "visual_dependency": "required",
+      "misconception_seed": "把“3/4涂蓝”理解成“涂3个（或4个）圆片”，而不是求这堆圆片的3/4是多少（二级）",
+      "student_turns": [
+        "3/4涂蓝，是不是就涂3个圆片？图上看着有十几个圆。",
+        "哦不对，3/4是把这堆圆片平均分成4份、涂其中3份。一共12个，12÷4=3，每份3个。",
+        "那3份就是3×3=9个。所以需要涂9个圆片。"
+      ],
+      "expected": {
+        "outcome": "ready_to_record"
+      },
+      "source": {
+        "question_id": "6a695a01b0ffee286ba75680",
+        "provider": "pujia_school_question_bank",
+        "lesson_name": "2-1分数乘整数"
+      },
+      "figure_note": "(图:3×4=12个圆)"
+    },
+    {
+      "id": "image_v1_fraction_formula_09",
+      "title": "分数乘整数·倒出量列式(misconception_recovery)",
+      "grade": "六年级",
+      "question": {
+        "text": "杯子中原来盛有800 mL水,小华将杯中的水倒出一些,如下图。求从杯子中倒出了多少毫升水,正确的列式是( )。A.800×3/5 B.800×3/8 C.800×5/8 D.800×5/9",
+        "image": {
+          "path": "pqfile_1767115b0e65e8727d903f95.jpg",
+          "sha256": "77c9e35e06095b3310e76ee75b828724b9f675625ecf8d759b4e8f30c30a2979"
+        }
+      },
+      "reference_answer": {
+        "value": "C(800×5/8)",
+        "answer_type": "text",
+        "unit": ""
+      },
+      "bucket": "fraction_formula",
+      "visual_dependency": "required",
+      "misconception_seed": "把“倒出多少”当成“剩下多少”，用剩余的分率去乘总量（单位“1”找错）（二级）",
+      "student_turns": [
+        "杯子原来800 mL，倒出一些。图上看剩下的大概是3/8，所以倒出了800×3/8，选B。",
+        "等等，题目问的是“倒出”多少，不是“剩下”多少。剩下3/8，那倒出的就是1−3/8=5/8。",
+        "所以是800×5/8，选C。我刚才把倒出和剩下弄反了。"
+      ],
+      "expected": {
+        "outcome": "ready_to_record"
+      },
+      "source": {
+        "question_id": "6a61b366bd464753061f0475",
+        "provider": "pujia_school_question_bank",
+        "lesson_name": "2-1分数乘整数"
+      },
+      "figure_note": "(图:两量杯水平对比)"
+    },
+    {
+      "id": "image_v1_application_table_14",
+      "title": "倒数·四幅图中找乘积为1(misconception_recovery)",
+      "grade": "六年级",
+      "question": {
+        "text": "下面四幅图中,若a和b表示不同的数,则( )中a与b互为倒数。A.三角形(高b m 底a m,面积1 m²) B.线段(a m,b m,总长1 m) C.长方形(长a m 宽b m,面积1 m²) D.长方体(长a m 宽b m 高c m,体积1 m³)",
+        "image": {
+          "path": "pqfile_8272d0b01d968c374d62c804.jpg",
+          "sha256": "6285f205dd2cd9ad5a8daa48e34469241e0d59d5aa1270aa08498762468b37d3"
+        }
+      },
+      "reference_answer": {
+        "value": "C",
+        "answer_type": "text",
+        "unit": ""
+      },
+      "bucket": "application_table",
+      "visual_dependency": "helpful",
+      "misconception_seed": "看到图里出现“1”就选，不去验证两个量的乘积是否等于1（把面积1/总长1都当成互为倒数）（二级）",
+      "student_turns": [
+        "a和b互为倒数，那a×b=1。A图是三角形，面积1 m²，底a、高b——面积是a×b÷2，所以a×b=2，不是1。",
+        "B图线段a米、b米，总长1米，那是a+b=1，不是乘积。",
+        "C图长方形长a、宽b，面积1 m²，a×b=1，这才互为倒数。所以选C。"
+      ],
+      "expected": {
+        "outcome": "ready_to_record"
+      },
+      "source": {
+        "question_id": "6a62ca0099bf346827f052e4",
+        "provider": "pujia_school_question_bank",
+        "lesson_name": "3-1倒数的认识"
+      }
+    },
+    {
+      "id": "image_v1_circle_geometry_20",
+      "title": "圆·半径与直径(misconception_needs_reveal)",
+      "grade": "六年级",
+      "question": {
+        "text": "看图填空。(1)半圆的直径是( )cm。(2)长方形的长是( )dm,宽( )dm,圆的半径( )cm。(3)圆的直径是( )cm。",
+        "image": {
+          "path": "pqfile_d5c2943fff4f637a04a85dad.jpg",
+          "sha256": "be22a630f78a463232cb3209ed65a5eee2aab521fd97a6209552c09be254170d"
+        }
+      },
+      "reference_answer": {
+        "value": "(1)4cm；(2)长10dm、宽5dm、半径25cm；(3)半径3cm、直径6cm",
+        "answer_type": "text",
+        "unit": ""
+      },
+      "bucket": "circle_geometry",
+      "visual_dependency": "required",
+      "misconception_seed": "半径当直径用（或直径当半径用）（一级）",
+      "student_turns": [
+        "半圆的直径是4 cm吧？我照着刻度数了数……",
+        "圆的半径和直径我老是搞混。图上标的那条线到底是从圆心到边，还是穿过圆心两头？我得看清它画到哪。",
+        "长方形里并排两个圆，长到底是两个直径还是两个半径？我不敢确定。"
+      ],
+      "expected": {
+        "outcome": "needed_reveal"
+      },
+      "source": {
+        "question_id": "6a69e0d72ef3251197be2556",
+        "provider": "pujia_school_question_bank",
+        "lesson_name": "4-1圆的认识"
+      },
+      "figure_note": "(图:半圆/两圆并排/两圆重叠)"
+    },
+    {
+      "id": "image_v1_percentage_multi_part_23",
+      "title": "百分数·相对量与整体(misconception_recovery)",
+      "grade": "六年级",
+      "question": {
+        "text": "我们学校的女生人数占全校学生人数的49%。(两校各49%)这两个学校的女生人数一定相同吗?为什么?反思:用彩色笔分别涂出下面各图面积的25%,涂色的小方块一样多吗?想一想这是为什么?",
+        "image": {
+          "path": "pqfile_04ebc0048b42c1a5fe6e118b.jpg",
+          "sha256": "630e69be2d49107aae1d38f3654c859bd7c80d874542569ee76889a774ebc276"
+        }
+      },
+      "reference_answer": {
+        "value": "不一定相同(总人数不同);格子数不同(整体不同)",
+        "answer_type": "text",
+        "unit": ""
+      },
+      "bucket": "percentage_multi_part",
+      "visual_dependency": "required",
+      "misconception_seed": "把百分比误当绝对数，认为相同百分比就是相同数量（把49%当成49人）（二级）",
+      "student_turns": [
+        "两个学校女生都占49%，那女生人数肯定一样多吧？都是49%嘛。",
+        "可是……如果两个学校总人数不一样，49%算出来的女生人数就不一样。百分数比的是“占谁的”。",
+        "涂25%也一样：整体格子数不一样大，涂出来的小方块数就不一样。"
+      ],
+      "expected": {
+        "outcome": "ready_to_record"
+      },
+      "source": {
+        "question_id": "6a69e6862ef3251197be2a0c",
+        "provider": "pujia_school_question_bank",
+        "lesson_name": "5-1百分数的意义(1)"
+      },
+      "figure_note": "(图1:10×10格 图2:5×10格)"
+    },
+    {
+      "id": "image_v1_visual_statistics_open_27",
+      "title": "折线图·注水高度与时间(misconception_needs_reveal)",
+      "grade": "六年级",
+      "question": {
+        "text": "一个长方体水箱里有一个上部开口的圆柱形容器,底部与长方体容器连接,打开水管往水箱里注水。下面几幅图中,( )能准确描述水的高度与时间的变化关系。A/B/C/D 四幅height-time折线图。",
+        "image": {
+          "path": "pqfile_94305361eb60b442ae5a5725.jpg",
+          "sha256": "be50fbd1a739519aae7d688804393fe2f470852791113b35dacbced856d90bd9"
+        }
+      },
+      "reference_answer": {
+        "value": "A",
+        "answer_type": "text",
+        "unit": ""
+      },
+      "bucket": "visual_statistics_open",
+      "visual_dependency": "required",
+      "misconception_seed": "只看折线陡/平的外形判断，忽略“水先注圆柱、注满后再溢到长方体”造成的两段不同上升速率（二级）",
+      "student_turns": [
+        "水箱里有个圆柱容器，水先注入圆柱，注满后再往外溢到长方体里。",
+        "所以水的高度应该是先快后慢吧？圆柱细，水面升得快；注满后水面在长方体里升得慢。",
+        "到底是哪条折线？我得看清楚哪条是先陡后平。"
+      ],
+      "expected": {
+        "outcome": "needed_reveal"
+      },
+      "source": {
+        "question_id": "6a69e89d2ef3251197be2c02",
+        "provider": "pujia_school_question_bank",
+        "lesson_name": "6-1数与形(1)"
+      }
+    },
+    {
+      "id": "image_v1_visual_statistics_open_30",
+      "title": "形数·三角形数与五边形数(misconception_not_ready)",
+      "grade": "六年级",
+      "question": {
+        "text": "毕达哥拉斯学派研究了有趣的形数。(1)三角形数(点阵1,2,3,4…n)。数:___ 式:___。(2)选做:五边形数(点阵)。数:___ 式:___。",
+        "image": {
+          "path": "pqfile_99173d9ddc5ef6ecc7b2bbf2.jpg",
+          "sha256": "b16d0d587c5986a0f4efd769a4967b68df3a5d07604af38aef78dbfe2528a53c"
+        }
+      },
+      "reference_answer": {
+        "value": "三角形数1,3,6,10,15…;T_n=n(n+1)/2;五边形数1,5,12,22,35…;P_n=n(3n-1)/2",
+        "answer_type": "text",
+        "unit": ""
+      },
+      "bucket": "visual_statistics_open",
+      "visual_dependency": "required",
+      "misconception_seed": "只写数列不找通项，或把形数的递推规律（每次多几个点）直接当成通项公式（二级）",
+      "student_turns": [
+        "三角形数是1,3,6,10,15……每次增加的比上一次多1。",
+        "通项式我只会写出前几项，不会写成n的式子。五边形数1,5,12,22我还没数清楚。",
+        "选做那题太难了，我连点阵怎么摆的都看不清。"
+      ],
+      "expected": {
+        "outcome": "not_ready"
+      },
+      "source": {
+        "question_id": "6a631f46184f723b3592d090",
+        "provider": "pujia_school_question_bank",
+        "lesson_name": "6-2数与形(2)"
+      }
+    }
+  ]
+}

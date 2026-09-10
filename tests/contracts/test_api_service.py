@@ -2,74 +2,18 @@
 
 确定性假内核(固定教学回合),经 HTTP 打本地测试服务器,零真实模型;断言幂等键、
 session_version 乐观并发、题目固定、错误码集与错误信封形态(#48 快照)。
+共享助手(ScriptedKernel/_serve/post/open_session)已移入 tests/fixtures/partner_api(决策 1)。
 """
 
 from __future__ import annotations
 
 import threading
-from dataclasses import dataclass
-from urllib.parse import urlparse
+import time
 
-import httpx
 import pytest
 
-from edu_agent.api import build_service, build_server
-
-
-@dataclass
-class StubTurn:
-    text: str
-    ready_to_confirm: bool = False
-
-
-@dataclass
-class StubSummary:
-    text: str
-    status: str = "needs_review"
-
-
-class ScriptedKernel:
-    """确定性假内核:预置回合序列;第 N 轮后可进入 ready。"""
-
-    def __init__(self, replies: list[str], ready_at: int | None = None,
-                 start_text: str = "我们先看已知条件,题目要我们求什么?",
-                 start_error: Exception | None = None) -> None:
-        self.replies = list(replies)
-        self.ready_at = ready_at
-        self.start_text = start_text
-        self.start_error = start_error
-        self.start_calls = 0
-        self.reply_calls = 0
-        self.finish_calls = 0
-
-    def start(self, question: dict, learner: dict) -> StubTurn:
-        self.start_calls += 1
-        if self.start_error:
-            raise self.start_error
-        return StubTurn(self.start_text)
-
-    def reply(self, session: dict, student_message: str) -> StubTurn:
-        index = min(self.reply_calls, len(self.replies) - 1)
-        text = self.replies[index]
-        self.reply_calls += 1
-        ready = self.ready_at is not None and self.reply_calls >= self.ready_at
-        return StubTurn(text, ready_to_confirm=ready)
-
-    def finish(self, session: dict) -> StubSummary:
-        self.finish_calls += 1
-        return StubSummary("学习小结", "needs_review")
-
-
-def _assert_local_base(base: str) -> None:
-    """SSRF 边界:测试只允许打 127.0.0.1 环回上的本地测试服务器。"""
-    parsed = urlparse(base)
-    assert parsed.scheme == "http" and parsed.hostname == "127.0.0.1", base
-
-
-def post(base: str, path: str, payload: dict | None = None, auth: bool = True) -> httpx.Response:
-    _assert_local_base(base)
-    headers = {"Authorization": "Bearer test-token"} if auth else {}
-    return httpx.post(f"{base}{path}", json=payload or {}, headers=headers, timeout=5.0, trust_env=False)
+from edu_agent.api import ApiError, build_service
+from partner_api import ScriptedKernel, StubTurn, _serve, open_session, post
 
 
 @pytest.fixture
@@ -82,18 +26,6 @@ def api():
     yield base, kernel
     server.shutdown()
     server.server_close()
-
-
-def _serve(kernel: ScriptedKernel) -> tuple[str, object]:
-    server = build_server(build_service(kernel))
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    return f"http://127.0.0.1:{server.server_address[1]}", server
-
-
-def open_session(base: str, question_id: str = "q-101", key: str = "idem-1") -> dict:
-    response = post(base, f"/api/prepared-questions/{question_id}/open", {"idempotency_key": key})
-    assert response.status_code == 200
-    return response.json()
 
 
 # ---------- open:幂等键与题目固定 ----------
@@ -213,7 +145,7 @@ def test_confirm_completes_and_summary_is_immutable(api):
     assert confirm.status_code == 200
     body = confirm.json()
     assert body["status"] == "completed" and body["ready_to_confirm"] is True
-    assert body["summary"] == {"status": "completed"}
+    assert body["summary"] == {"status": "completed", "text": "学习小结"}
     # completed 后再 messages → 409(终态不可续)
     after = post(base, f"/api/conversations/{conversation_id}/messages", {
         "content": "再问一句", "input": {"skill_session_id": opened["skill_session_id"]},
@@ -263,3 +195,49 @@ def test_preload_not_ready_is_in_contract_error_family():
 
     error = ApiError(409, "TEACHING_CONTEXT_PRELOAD_NOT_READY", "最小题意尚未准备完成")
     assert (error.status_code, error.code) == (409, "TEACHING_CONTEXT_PRELOAD_NOT_READY")
+
+
+class GatedKernel(ScriptedKernel):
+    """reply 阻塞在闸门上:两个并发 send 都越过版本检查再同时推进(红);加会话锁
+    后第二个线程被拦在锁外,直接 409(绿)。"""
+
+    def __init__(self) -> None:
+        super().__init__(replies=["回答。"])
+        self.entered = threading.Event()
+        self.gate = threading.Event()
+
+    def reply(self, session: dict, student_message: str) -> StubTurn:
+        self.reply_calls += 1
+        self.entered.set()
+        self.gate.wait(timeout=5)
+        return StubTurn("回答。")
+
+
+def test_concurrent_send_second_gets_409():
+    """P1-2 回归:同会话并发 send,第二个(旧版本)必须 409,version 只进到 2。"""
+    kernel = GatedKernel()
+    service = build_service(kernel)
+    opened = service.open("q-1", "idem-cc-1", learner={})
+    cid = opened["conversation"]["conversation_id"]
+    body = {"content": "回答", "input": {"skill_session_id": opened["skill_session_id"],
+                                        "expected_session_version": 1}}
+    results: list[tuple[str, int]] = []
+
+    def send() -> None:
+        try:
+            results.append(("ok", service.send(cid, body)["session_version"]))
+        except ApiError as error:
+            results.append(("err", error.status_code))
+
+    first = threading.Thread(target=send)
+    first.start()
+    assert kernel.entered.wait(timeout=5)  # 第一个线程已进入 reply(并持有会话锁)
+    second = threading.Thread(target=send)
+    second.start()
+    time.sleep(0.1)  # 给第二个线程时间卡在锁上/越过检查
+    kernel.gate.set()
+    first.join(timeout=5)
+    second.join(timeout=5)
+    assert results.count(("err", 409)) == 1
+    assert [r for r in results if r[0] == "ok"] == [("ok", 2)]
+    assert kernel.reply_calls == 1  # 只有一个线程真的调了内核 reply

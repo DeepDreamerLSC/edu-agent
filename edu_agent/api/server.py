@@ -9,11 +9,12 @@ details}}(老仓库 ErrorEnvelope 形态)。SSE 六型帧见 sse_frames。
 from __future__ import annotations
 
 import json
+import os
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from .files import FileService
+from .files import MAX_BYTES, FileService
 from .identity import IdentityError, IdentityService
 from .service import ApiError, ConversationService
 
@@ -37,10 +38,18 @@ _FORBIDDEN_FIELDS = frozenset({"answer", "analysis", "mastery_status"})
 _LOGIN = re.compile(r"^/api/auth/login$")
 _NATIVE_CODES = re.compile(r"^/api/openapi/v1/auth/native-codes$")
 _NATIVE_TOKEN = re.compile(r"^/api/auth/native/token$")
+_LOGOUT = re.compile(r"^/api/auth/logout$")
 _HEALTHZ = re.compile(r"^/healthz$")
 _FILES_UPLOAD = re.compile(r"^/api/files/upload-request$")
 _FILES_COMPLETE = re.compile(r"^/api/files/complete$")
 _FILES_CONTENT = re.compile(r"^/api/files/(?P<file_id>[^/]+)/content$")
+# 老合同别名(docs/partner/files.md):同一 service,仅前缀不同——合作方按老文档调
+# /api/openapi/v1/files/* → 转调同名 service 方法,不复制逻辑、不改名新路径(内部演示页在用)。
+_FILES_UPLOAD_LEGACY = re.compile(r"^/api/openapi/v1/files/upload-url$")
+_FILES_COMPLETE_LEGACY = re.compile(r"^/api/openapi/v1/files/complete$")
+_FILES_CONTENT_LEGACY = re.compile(r"^/api/openapi/v1/files/(?P<file_id>[^/]+)/content$")
+_FILES_DOWNLOAD_LEGACY = re.compile(r"^/api/openapi/v1/files/(?P<file_id>[^/]+)/download-url$")
+_FILES_PREVIEW_LEGACY = re.compile(r"^/api/openapi/v1/files/(?P<file_id>[^/]+)/preview-url$")
 
 
 def sse_frames(response: dict) -> bytes:
@@ -87,17 +96,34 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         if _LOGIN.match(self.path):
             return self.identity.demo_login_body(self._read_body())
         if _NATIVE_CODES.match(self.path):
-            return self.identity.native_code(self._read_body(), dict(self.headers))
+            return self.identity.native_code(self._read_body(), self.headers)
         if _NATIVE_TOKEN.match(self.path):
             return self.identity.native_token(self._read_body())
+        if _LOGOUT.match(self.path):
+            # 老系统 LogoutResponse = {"ok": true}。token 为无状态 HMAC,不做吊销名单
+            # (最小实现,目标指示);按老文档返回成功即可,offline 后 token 过期即失效。
+            return 200, {"ok": True}
         return None
 
+    def _authorized(self) -> bool:
+        """对话面鉴权闸(P1-1):真验签,HMAC 比签 + exp,失败 401。
+
+        EDU_AUTH_ENFORCE=0 熔断跳过验签(联调应急,决策 7);默认强制。
+        """
+        token = self.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+        if not token:
+            return False
+        if os.environ.get("EDU_AUTH_ENFORCE", "1") == "0":
+            return True
+        return self.identity.verify_token(token)
+
     def _dispatch(self) -> None:
+        self.path = self.path.partition("?")[0]  # 剥 query string(审查 P2:regex $ 锚定不剥 ? 全 404)
         identity = self._identity_post()
         if identity is not None:
             self._json(identity[1], identity[0])
             return
-        if not self.headers.get("Authorization"):
+        if not self._authorized():
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
         unified_open = _OPEN_UNIFIED.match(self.path)
@@ -134,25 +160,29 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         return False
 
     def _files_post(self) -> bool:
-        """files 面 POST 路由(三步上传的 1/3 步);未命中返回 False。"""
-        if _FILES_UPLOAD.match(self.path):
+        """files 面 POST 路由(三步上传的 1/3 步);未命中返回 False。
+
+        老合同别名(/api/openapi/v1/files/upload-url|complete)与现有新路径共用同一
+        FileService 方法——仅前缀不同,不复制逻辑。"""
+        if _FILES_UPLOAD.match(self.path) or _FILES_UPLOAD_LEGACY.match(self.path):
             self._json(self.files.upload_request(self._read_body()), status=201)
             return True
-        if _FILES_COMPLETE.match(self.path):
+        if _FILES_COMPLETE.match(self.path) or _FILES_COMPLETE_LEGACY.match(self.path):
             self._json(self.files.complete(self._read_body()))
             return True
         return False
 
     def do_PUT(self) -> None:
-        """PUT /api/files/{file_id}/content:二进制上传(学生 token 鉴权)。"""
-        match = _FILES_CONTENT.match(self.path)
+        """PUT 上传二进制(学生 token 鉴权):新路径 + 老合同别名共用 store_content。"""
+        self.path = self.path.partition("?")[0]  # 剥 query string(审查 P2)
+        match = _FILES_CONTENT.match(self.path) or _FILES_CONTENT_LEGACY.match(self.path)
         if match is None:
             self._error(ApiError(404, None, "路径不在合作方合同内"))
             return
-        if not self.headers.get("Authorization"):
+        if not self._authorized():
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
-        length = int(self.headers.get("Content-Length") or 0)
+        length = self._content_length()
         payload = self.rfile.read(length)
         self._json(self.files.store_content(match["file_id"], payload))
 
@@ -177,6 +207,38 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     do_POST = _dispatch
+
+    # ---------- CORS(老系统语义移植:白名单 echo,不放行凭据) ----------
+    # 老系统 FastAPI CORSMiddleware:EDU_AGENT_CORS_ALLOWED_ORIGINS 逗号分隔白名单,
+    # allow_credentials=False、方法/头全放行。env 名沿用老系统,部署零改动。
+    def _cors_origin(self) -> str:
+        """请求 Origin 命中白名单 → 原样返回(echo);否则空串(不发 CORS 头)。"""
+        origin = self.headers.get("Origin") or ""
+        allowed = {o.strip() for o in
+                   os.environ.get("EDU_AGENT_CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()}
+        return origin if origin in allowed else ""
+
+    def end_headers(self) -> None:
+        # 统一注入口:所有响应(json/文件/SSE/错误)在头发送前补 CORS
+        origin = self._cors_origin()
+        if origin:
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Vary", "Origin")
+        super().end_headers()
+
+    def do_OPTIONS(self) -> None:
+        """浏览器预检:白名单内 → 204 + 放行头;白名单外 → 400(照老系统 CORSMiddleware
+        的 Disallowed CORS origin 语义),非浏览器客户端不受影响。"""
+        origin = self._cors_origin()
+        if not origin:
+            self.send_response(400)
+            self.end_headers()
+            return
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Methods", "*")
+        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Max-Age", "600")
+        self.end_headers()
 
     # 公开文档(老系统 URL 结构兼容):docs/partner 白名单,无 markdown 依赖——
     # index 单页 HTML + 原文 raw.md(浏览器直接可读,合作方是开发者)。
@@ -253,20 +315,30 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
         return True
 
     def do_GET(self) -> None:
+        self.path = self.path.partition("?")[0]  # 剥 query string(审查 P2)
         if _HEALTHZ.match(self.path):
             from .healthz import snapshot  # 局部导入:快照依赖模型配置,按需加载
             self._json(snapshot())
             return
         if self._serve_docs() or self._serve_static():
             return
-        if not self.headers.get("Authorization"):
+        if not self._authorized():
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
         match = _GET.match(self.path)
         if match:
             self._json(self.service.status(match["conversation_id"]))
             return
-        match = _FILES_CONTENT.match(self.path)
+        if self._files_get():
+            return
+        self._error(ApiError(404, None, "路径不在合作方合同内"))
+
+    def _files_get(self) -> bool:
+        """files 面 GET:读二进制(content)+ 老合同 download-url/preview-url;未命中 False。
+
+        抽方法保 do_GET 的 return 预算(ruff PLR0911);content 返回二进制字节,
+        download/preview 返回 JSON 地址(本地语义,老文档 §7 字段形状)。"""
+        match = _FILES_CONTENT.match(self.path) or _FILES_CONTENT_LEGACY.match(self.path)
         if match:
             payload, content_type = self.files.read_content(match["file_id"])
             self.send_response(200)
@@ -274,8 +346,16 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
             self.send_header("Content-Length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
-            return
-        self._error(ApiError(404, None, "路径不在合作方合同内"))
+            return True
+        dl = _FILES_DOWNLOAD_LEGACY.match(self.path)
+        if dl:
+            self._json(self.files.download_url(dl["file_id"]))
+            return True
+        pv = _FILES_PREVIEW_LEGACY.match(self.path)
+        if pv:
+            self._json(self.files.preview_url(pv["file_id"]))
+            return True
+        return False
 
     def _open_unified(self) -> None:
         """POST /api/prepared-questions/open(§5 统一 Open);403 拦截照 00 §5.2 约定 4。"""
@@ -300,8 +380,23 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
             raise ApiError(403, None, f"客户端不得提交字段:{','.join(forbidden)}")
         self._json(self.service.create(body), status=201)
 
+    def _content_length(self) -> int:
+        """读 Content-Length 并 clamp 到 20MB 上限;非法(非整数/负) → 400。
+
+        读前有界防 OOM(审查 P2:先整读进内存再校验可被超大 Content-Length 打爆);
+        int() 失败原落 503,按「客户端请求格式错误」收口为 400。
+        """
+        raw = self.headers.get("Content-Length") or "0"
+        try:
+            length = int(raw)
+        except ValueError:
+            raise ApiError(400, None, "Content-Length 非法") from None
+        if length < 0:
+            raise ApiError(400, None, "Content-Length 非法") from None
+        return min(length, MAX_BYTES)
+
     def _read_body(self) -> dict:
-        length = int(self.headers.get("Content-Length") or 0)
+        length = self._content_length()
         if not length:
             return {}
         try:

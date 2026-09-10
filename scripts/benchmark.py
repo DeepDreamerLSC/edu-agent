@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""gateway 效率基准(01 §5):20 条固定回放 × {tutor stream(本地 8301), judge stream(云 DeepSeek)}。
+"""gateway 效率基准(01 §5):20 条固定回放 × {tutor stream(VL 8303), judge stream(MLX 8301)}。
 
 口径照 01 §5:TTFT 仅 stream 有值;TTFT/端到端/生成速度全部来自 model_call 事实
 记录(指标唯一来源),生成速度 = 输出 tokens / 生成秒数(总时长减 TTFT)。
 回放是自造的延迟测量负载,不是 M1 评测数据集(教学指标归评测线,01 §8)。
-对比 baselines/efficiency.json:ttft/e2e 的 p95 或生成速度 p50 劣化 >10% 即非零
+对比 baselines/efficiency.json:ttft/e2e/生成速度的 p50 劣化 >10% 即非零
 退出;基线更新走 PR(--write-baseline 生成候选)。DEEPSEEK_API_KEY 走环境变量,
 绝不进日志与报告。
 """
@@ -28,8 +28,12 @@ REPO = Path(__file__).resolve().parents[1]
 BASELINE_PATH = REPO / "baselines" / "efficiency.json"
 REPORT_PATH = REPO / "var" / "benchmark-report.md"
 FACTS_DIR = Path(os.environ.get("EDU_FACTS_DIR") or REPO / "facts")
-DEGRADE = 0.10  # 01 §5:p95 劣化阈值
-ROLES = ("tutor", "judge")  # tutor 主选=本地 8301,judge 主选=云 DeepSeek(configs/models.yaml)
+DEGRADE = 0.10  # 01 §5:p50 劣化阈值
+# 逐指标劣化系数(#142 取证):tutor.ttft_p50_ms 在"双峰空谷"上不可复现——逐题确定性双峰
+# (快簇 13-17ms / 慢簇 54-126ms,中间 20-50ms 为空谷),n=20 时中位数在谷上空跳,实测噪声带
+# +14~37%。故单列 +100%(门槛 86ms)留足余量,只拦真回归;judge.ttft 单峰(334-612)门有效,不陪绑。
+COEFFICIENTS = {("tutor", "ttft_p50_ms"): 1.00}
+ROLES = ("tutor", "judge")  # 主选:tutor=VL 8303,judge=MLX 8301(备选 DeepSeek)
 
 # 自造延迟负载:固定 20 条单轮提问,长度与题型错开;不是评测数据集,不做教学断言。
 REPLAYS = (
@@ -126,9 +130,9 @@ def collect(run_id: str) -> dict:
 
 
 def compare(current: dict, baseline: dict) -> list[str]:
-    """ttft/e2e 的 p50 越高越糟,speed_p50 越低越糟;劣化 >10% 即失败(01 §5,2026-09-07
+    """ttft/e2e 的 p50 越高越糟,speed_p50 越低越糟;劣化超阈值即失败(01 §5,2026-09-07
     口径修订:门从 p95 改 p50——n=20 的 p95 尾部噪声天然超过 10%,六次实证见 #40;
-    p95 保留在报告与基线中,仅记录不阻断)。"""
+    p95 保留在报告与基线中,仅记录不阻断)。逐指标阈值见 COEFFICIENTS,未列出的用 DEGRADE。"""
     failures = []
     for role, metrics in current.items():
         base = baseline.get("roles", {}).get(role, {})
@@ -137,8 +141,9 @@ def compare(current: dict, baseline: dict) -> list[str]:
             now, old = metrics.get(name), base.get(name)
             if now is None or not old:
                 continue
-            if direction * (now - old) > DEGRADE * old:
-                failures.append(f"{role}.{name}: {now} vs 基线 {old}(劣化 >{DEGRADE:.0%})")
+            coeff = COEFFICIENTS.get((role, name), DEGRADE)
+            if direction * (now - old) > coeff * old:
+                failures.append(f"{role}.{name}: {now} vs 基线 {old}(劣化 >{coeff:.0%})")
     return failures
 
 

@@ -3,8 +3,8 @@
 公开入口:build_service(store, kernel, source=None, sessions=None) / build_server(service)
 / partner_service()——测试与评测线只从本入口取用。M3 前置起 api 经 kernel_adapter
 桥接 agents.small_lecturer 真内核(02 §2.2 未禁 api→agents;gateway 经构造注入,
-CI 用假 gateway 零真实模型)。store 类型经本入口再导出(测试公开入口名单不含
-edu_agent.store,02 §6)。identity/healthz 同在此包。
+CI 用假 gateway 零真实模型)。store 类型经本入口再导出(便捷面;store 自 02 §7
+结构性改动后已是测试公开入口,测试可直连 edu_agent.store)。identity/healthz 同在此包。
 """
 
 from .identity import IdentityError, IdentityService, demo_login

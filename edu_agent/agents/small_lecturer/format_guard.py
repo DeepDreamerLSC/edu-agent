@@ -27,6 +27,9 @@ _MARKDOWN_PATTERNS = (
 )
 _LATEX_COMMAND = re.compile(r"\\[A-Za-z]+")       # LaTeX 反斜杠命令(\frac 等)
 _DOLLAR_BOUNDARY = re.compile(r"\$\$?[^$\n]+\$")  # $...$ / $$...$$ 公式边界
+# 常见 LaTeX 分数 \frac{a}{b}(纯字母/数字) → 归一化为 a/b 纯文本(替代丢弃;任务包2步2 LaTeX 双修)。
+# 只认简单 token(无运算符/括号),避免把 \frac{x+1}{2} 误转成含歧义的 x+1/2——那种仍判 latex_command。
+_LATEX_FRACTION = re.compile(r"\\frac\{([A-Za-z0-9]+)\}\{([A-Za-z0-9]+)\}")
 
 
 @dataclass(frozen=True)
@@ -40,15 +43,25 @@ class FormatGuardResult:
 _DOWNGRADE_PROMPT = "这一段我换个说法重新讲,我们继续看这道题的下一步。"
 
 
+def _normalize_latex_fractions(reply: str) -> str:
+    """LaTeX 双修(任务包2步2):\frac{a}{b} → a/b 纯文本,后续判定在归一化文本上做。"""
+    return _LATEX_FRACTION.sub(lambda m: f"{m.group(1)}/{m.group(2)}", reply)
+
+
 def evaluate_student_visible_format(reply: str) -> FormatGuardResult:
-    """检测学生可见文本的格式违规;数学符号白名单不触发。"""
+    """检测学生可见文本的格式违规;数学符号白名单不触发。
+
+    LaTeX 双修:先归一化 \frac{a}{b} → a/b,再判定——归一化只是把常见分数
+    转成学生可直接阅读的纯文本,不丢弃整句(替代原先直接判 latex_command 降级)。
+    """
+    normalized = _normalize_latex_fractions(reply)
     findings: list[str] = []
-    if any(pattern.search(reply) for pattern in _MARKDOWN_PATTERNS):
+    if any(pattern.search(normalized) for pattern in _MARKDOWN_PATTERNS):
         findings.append("markdown_structure")
-    if _LATEX_COMMAND.search(reply):
+    if _LATEX_COMMAND.search(normalized):
         findings.append("latex_command")
-    if _DOLLAR_BOUNDARY.search(reply):
+    if _DOLLAR_BOUNDARY.search(normalized):
         findings.append("dollar_formula_boundary")
     if not findings:
-        return FormatGuardResult(reply, True, (), None)
-    return FormatGuardResult(reply, False, tuple(findings), _DOWNGRADE_PROMPT)
+        return FormatGuardResult(normalized, True, (), None)
+    return FormatGuardResult(normalized, False, tuple(findings), _DOWNGRADE_PROMPT)

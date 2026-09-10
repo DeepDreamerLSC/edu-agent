@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import httpx
 import pytest
-from test_api_service import StubTurn, post
+from partner_api import StubTurn, post
 from test_conversation_routes import MapSource, RecordingKernel
 
 from edu_agent.api import build_server, build_service
@@ -27,8 +27,8 @@ def env():
     server.server_close()
 
 
-def unified(base: str, body: dict, token: str = "test-token") -> httpx.Response:
-    _ = token  # post() 已带 Authorization
+def unified(base: str, body: dict, token: str = "") -> httpx.Response:
+    _ = token  # post() 已带 Authorization(TEST_TOKEN)
     return post(base, "/api/prepared-questions/open", body)
 
 

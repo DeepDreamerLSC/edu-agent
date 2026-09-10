@@ -143,9 +143,8 @@ def test_envelope_falls_back_without_kernel_session():
 def test_live_flow_envelope_fills_from_kernel_session():
     """端到端:真内核 service 流转中,信封 attempt_state/progress 直读内核 session。
 
-    结构现状(如实钉住):confirm 在 ready 路径不调 kernel.finish(PR1 最小接线),
-    故 completed 后 attempt_state 仍是内核 attempt 的 ready_to_confirm——
-    随 B 线 PR4 refresh 语义补齐对齐,彼时本断言同步更新。"""
+    P1-6 后 confirm 两路都走 kernel.finish,completed 后内核 attempt 同步进
+    completed(切片 result 的 attempt_state 与响应面 state 一致)。"""
     service = build_service(SmallLecturerKernel(FakeGateway(ready_at_call=2)))
     opened = service.open("q-1", "idem-env-1", learner={})
     conversation = service._conversation_or_404(opened["conversation"]["conversation_id"])
@@ -168,5 +167,5 @@ def test_live_flow_envelope_fills_from_kernel_session():
     done = service.interaction_envelope(conversation)
     assert done["kind"] == "result" and done["state"] == "completed"
     assert done["confirmation"] == {"ready_to_confirm": True, "completed": True}
-    assert done["attempt_state"] == {"state": "ready_to_confirm"}  # 结构现状,见 docstring
+    assert done["attempt_state"] == {"state": "completed"}  # confirm 走完 finish,内核尝试同步终态
     jsonschema.validate(done, skill_interaction_schema())

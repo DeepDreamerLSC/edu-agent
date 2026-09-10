@@ -13,7 +13,8 @@ import httpx
 import pytest
 
 from edu_agent.api import ApiError, build_server, build_service
-from test_api_service import ScriptedKernel
+from partner_api import ScriptedKernel
+from auth_testing import TEST_TOKEN
 
 REPLIES = ["你列了哪些已知量?", "很好,继续。", "结论对。", "总结:方法你讲清了。",
            "第五轮。", "第六轮。", "第七轮。", "第八轮。"]
@@ -27,7 +28,7 @@ def _serve(kernel) -> tuple[str, object]:
 
 def _post(base: str, path: str, payload: dict | None = None):
     return httpx.post(f"{base}{path}", json=payload, timeout=5.0, trust_env=False,
-                      headers={"Authorization": "Bearer student-token"})
+                      headers={"Authorization": f"Bearer {TEST_TOKEN}"})
 
 
 def open_session(base: str, question_id: str = "q-1") -> dict:

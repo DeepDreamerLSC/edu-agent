@@ -1,0 +1,8 @@
+{
+ "arm": "A",
+ "worktree": "/root/code/edu-w8-arc-eval",
+ "git_sha": "c961d2b58cad0809aae590a0df71fc4d4a29dcb9",
+ "models_yaml_sha256": "3feca1b443896d469000859c009d9d3281439c2bf09a740b7fe1a1b4488a862f",
+ "tutor": "qwen3_vl_8b",
+ "repeats": 2
+}

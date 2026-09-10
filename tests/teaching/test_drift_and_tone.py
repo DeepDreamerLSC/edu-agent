@@ -37,49 +37,51 @@ QUESTION = {"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多
 LEARNER = {"grade": "六年级", "name": "小明"}
 
 
-def test_cited_numbers_within_face_not_stuck():
-    # 模型引用 8/26 都来自题面 → 不标卡点;申报进 schema 输出(模型义务非输入)
+def test_extracted_numbers_within_allowed_not_stuck():
+    # 抽取制:回复文本里的数字全在允许池(题面8/26 + step 值16)→ 不标卡点;
+    # cited_numbers 保留(影子对照),守卫判定改抽 output.reply
     gateway = FakeGateway(tutor_payloads=[
-        {"reply": "先看鸡:8×2=16。", "ready_to_confirm": False, "cited_numbers": [8]},
-        {"reply": "26-16=10,差值是兔脚。", "ready_to_confirm": False,
-         "cited_numbers": [26]},
+        {"reply": "先看题面:8 只,26 只脚。", "ready_to_confirm": False,
+         "cited_numbers": [], "steps": [{"step": "鸡脚", "value": "16"}]},
+        {"reply": "这一步得到 16。", "ready_to_confirm": False, "cited_numbers": [16]},
     ])
     question = dict(QUESTION)
     turn = start(question, dict(LEARNER), gateway=gateway)
-    turn = reply(turn.session, "16 只脚对不上 26", gateway=gateway)
+    turn = reply(turn.session, "为什么?", gateway=gateway)
     assert turn.session.stuck is not True
     turn_request = [r for r in gateway.requests if r["role"] == "tutor"][0]
     assert "cited_numbers" not in json.dumps(turn_request["messages"])
 
 
-def test_cited_number_outside_face_marks_stuck():
-    # 数字漂移:模型把口误数字 36 当题目条件复读(题面只有 8/26)→ stuck
+def test_extracted_hallucinated_number_marks_stuck():
+    # 数字漂移:模型把口误数字 36 当题目条件复读(允许池只有 8/26/16)→ stuck
     gateway = FakeGateway(tutor_payloads=[
-        {"reply": "先看鸡:8×2=16。", "ready_to_confirm": False, "cited_numbers": [8]},
+        {"reply": "先看题面:8 只,26 只脚。", "ready_to_confirm": False,
+         "cited_numbers": [], "steps": [{"step": "鸡脚", "value": "16"}]},
         {"reply": "题目里一共 36 只脚,所以兔子很多。", "ready_to_confirm": False,
          "cited_numbers": [36]},
     ])
     question = dict(QUESTION)
     turn = start(question, dict(LEARNER), gateway=gateway)
-    turn = reply(turn.session, "36 只脚?", gateway=gateway)
+    turn = reply(turn.session, "然后呢?", gateway=gateway)
     assert turn.session.stuck is True  # 下轮提醒(照 R6 卡点模式)
 
 
-def test_student_echoed_number_currently_marks_stuck():
-    # 已知边界(留人裁决,见 #34):学生自己说错的数字被模型纠偏复述时,
-    # 按现行字面规则(⊆ 题面)也标 stuck——纠偏场景会误标,待人定扩集口径
+def test_student_echoed_number_is_allowed_not_stuck():
+    # #34 裁决落地:学生自己说过的数字进入允许池(学生历史数字),纠偏复述不误标;
+    # 旧行为(student 数字 ⊆ 题面 → 误标 stuck)已废弃
     gateway = FakeGateway(tutor_payloads=[
         {"reply": "先看题面:8 只,26 只脚。", "ready_to_confirm": False, "cited_numbers": []},
-        {"reply": "你说 16 只脚,如果全是鸡,8×2=16,和 26 矛盾。", "ready_to_confirm": False,
+        {"reply": "你说 16 只脚,题面一共是 26 只脚。", "ready_to_confirm": False,
          "cited_numbers": [16]},
     ])
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "16 只脚对不上", gateway=gateway)
-    assert turn.session.stuck is True  # 现行行为:学生数字同判漂移(边界待裁决)
+    assert turn.session.stuck is not True  # 学生数字 16 ∈ 允许池,合法回述
 
 
 def test_question_without_numbers_skips_drift_guard():
-    # 题面无数字 → 跳过校验(几何题等)
+    # 题面/回复均无数字 → 无违规数字,不标卡点(几何题等)
     question = {"text": "说明三角形的内角和有什么特点。", "answer": "180 度",
                 "analysis": "", "knowledge_points": []}
     gateway = FakeGateway(tutor_payloads=[

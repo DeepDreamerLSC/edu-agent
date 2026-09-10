@@ -108,7 +108,7 @@ CI 以关键词扫描 `edu_agent/` 中的 `lease`、`heartbeat`、`worker_pool`�
 
 ## 6. 测试只写在合同边界
 
-允许的测试只有五类，各放在固定目录：
+允许的测试只有六类，各放在固定目录：
 
 | 类型 | 目录 | 守护对象 |
 |---|---|---|
@@ -116,6 +116,7 @@ CI 以关键词扫描 `edu_agent/` 中的 `lease`、`heartbeat`、`worker_pool`�
 | gateway 合同 | `tests/gateway/` | 9 种失败类型、重试与备选策略、事实记录、脱敏 |
 | 接口合同 | `tests/contracts/` | 老仓库合作方路径与字段快照、Postman 样例回放 |
 | 黄金路径 | `tests/e2e/` | 一条端到端用例，见 04 文档 3.3 节 |
+| 评测合同 | `tests/evals/` | 评测 runner 单测、judge/legacy-adapter 适配器（假上游返回值对齐老系统形状） |
 | 规则红灯 | `tests/rules/` | 每条预算与 lint 规则会变红，见第 11 节 |
 
 模型输出的语义质量不在这里测，那是评测线的事（第 8 节）。PR CI 里的测试不调用真实模型；
@@ -124,7 +125,7 @@ CI 以关键词扫描 `edu_agent/` 中的 `lease`、`heartbeat`、`worker_pool`�
 
 规则：
 
-- 测试只能导入公开入口（`edu_agent.gateway`、`edu_agent.agents.small_lecturer`、`edu_agent.api`、`edu_agent.contracts`），
+- 测试只能导入公开入口（`edu_agent.gateway`、`edu_agent.evals`、`edu_agent.agents.small_lecturer`、`edu_agent.api`、`edu_agent.contracts`、`edu_agent.store`），
   导入私有模块的测试 CI 失败。
 - 修改任何断言必须在 PR 描述里单独说明理由。
 - 测试与应用代码行数比不超过 1.0（见第 2 节）。分母是 `edu_agent/`，分子**不含** `tests/rules/` 与 `tests/fixtures/`

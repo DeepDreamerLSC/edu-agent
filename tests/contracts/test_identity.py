@@ -10,6 +10,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import secrets
+import threading
 
 import pytest
 
@@ -146,6 +147,38 @@ def test_code_single_use_and_expiry(key_pair):
                               "code_verifier": verifier})
     assert (expired.value.status_code, expired.value.code) == \
         (401, "NATIVE_AUTHORIZATION_CODE_EXPIRED")
+
+
+def test_code_concurrent_consume_only_one_succeeds(key_pair):
+    """P1-3 回归:同码并发兑换,"单次消费"必须只有一个线程成功
+    (无锁时 consumed 检查与置位之间的 check-then-act 窗口会双发 token)。"""
+    pem, private_key = key_pair
+    service = make_service(pem)
+    verifier = base64.urlsafe_b64encode(hashlib.sha256(b"c").digest()).rstrip(b"=").decode()
+    body, headers = code_request(private_key, code_challenge=partner_challenge(verifier))
+    _, payload = service.native_code(body, headers)
+    token_body = {"native_app_id": "partner_student_app",
+                  "authorization_code": payload["data"]["authorization_code"],
+                  "code_verifier": verifier}
+
+    results: list[tuple[str, int]] = []
+    barrier = threading.Barrier(20)
+
+    def redeem() -> None:
+        barrier.wait()
+        try:
+            status, _ = service.native_token(token_body)
+            results.append(("ok", status))
+        except IdentityError as error:
+            results.append(("err", error.status_code))
+
+    threads = [threading.Thread(target=redeem) for _ in range(20)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert [r for r in results if r[0] == "ok"] == [("ok", 200)]
+    assert sum(1 for r in results if r == ("err", 401)) == 19
 
 
 def test_assertion_errors_follow_contract(key_pair):
