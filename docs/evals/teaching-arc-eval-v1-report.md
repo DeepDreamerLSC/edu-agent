@@ -3,6 +3,30 @@
 > 口径、判定规则、judge schema 见 pre-registration `docs/evals/teaching-arc-eval-v1.md`(开跑前冻结)。
 > 本文只报数据与对照表,**不判"可否合入"、不推荐修复路径**——裁定权在用户/PM。
 
+## 0. 口径与效度自述(读报告不读代码)
+
+- 口径 **F**:生产同构 —— answer_status 按剧本首轮语义复原(生产映射 service.py:160)
+- 口径 **P**:gate 冻结 wiring —— answer_status 照 `tuning_round.build_cases` 现状注入
+- hint 注入(answer_status,评测侧注入、非学生陈述):F·A:22/22 用例带(correct 2 用例(equation_complete_reasoning);incorrect 20 用例(10 场景全部));F·M:22/22 用例带(correct 2 用例(equation_complete_reasoning);incorrect 20 用例(10 场景全部));P·A:4/22 用例带(correct 4 用例(shadow_stability_word_problem、stability_20_stability_word_problem));P·M:4/22 用例带(correct 4 用例(shadow_stability_word_problem、stability_20_stability_word_problem))
+- 剧本截断(实发学生轮/剧本学生轮;⚠ = `ready_to_confirm` 提前判停,余轮不再发):
+
+| 场景 | F·A | F·M | P·A | P·M |
+|---|---|---|---|---|
+| equation_complete_reasoning | 2/2 | 2/2 | 2/2 | 2/2 |
+| stability_20_stability_chicken_rabbit | 3/4 ⚠ | 3/4 ⚠ | 3/4 ⚠ | 3/4 ⚠ |
+| stability_20_stability_equation_subtract | 4/4 | 4/4 | 4/4 | 4/4 |
+| stability_20_stability_fraction_addition | 4/4 | 4/4 | 4/4 | 4/4 |
+| stability_20_stability_triangle_area | 4/4 | 4/4 | 4/4 | 4/4 |
+| stability_20_stability_word_problem | 4/4 | 4/4 | 2/4 ⚠ | 2/4 ⚠ |
+| shadow_stability_chicken_rabbit | 3/4 ⚠ | 3/4 ⚠ | 3/4 ⚠ | 3/4 ⚠ |
+| shadow_stability_equation_subtract | 4/4 | 4/4 | 4/4 | 4/4 |
+| shadow_stability_fraction_addition | 4/4 | 4/4 | 4/4 | 4/4 |
+| shadow_stability_triangle_area | 4/4 | 4/4 | 4/4 | 4/4 |
+| shadow_stability_word_problem | 4/4 | 4/4 | 2/4 ⚠ | 2/4 ⚠ |
+
+- 维度视图:四指标(§2)即本报告的维度表;六维 `DIM_LABELS` 口径属夜评 judge schema,不适用于本四指标 judge。
+- 护栏模式:**无答案** —— 评测侧 KernelSubject 只传题面/年级/answer_status,**不传参考答案**;生产侧带答案。本报告的代喂/泄露类读数出自无答案护栏,不等于生产读数。
+
 ## 1. 臂与工件
 
 | 项 | 值 |

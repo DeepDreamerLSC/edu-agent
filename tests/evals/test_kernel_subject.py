@@ -47,10 +47,18 @@ def open_json(text: str) -> str:
 
 
 def test_run_case_drives_full_script(tmp_path):
+    def slow(reply: Reply) -> Reply:
+        """回复轮注入 5ms 延迟:elapsed_ms 的计时断言由 sleep 保证下界(≥5ms)。
+
+        无延迟时快 runner 上亚毫秒往返会被 int() 地板成 0,`> 0` 断言随机红
+        (2026-09-10 run 34470133408 的 flake:同一代码 10:58 绿 / 11:13 红)。"""
+        reply.delay_s = 0.005
+        return reply
+
     fake = FakeOpenAI([
         completion(open_json("题目要我们求什么?")),
-        completion(tutor_json("为什么两边都能减7?")),
-        completion(tutor_json("很好,再同时除以3。", ready=True)),
+        slow(completion(tutor_json("为什么两边都能减7?"))),
+        slow(completion(tutor_json("很好,再同时除以3。", ready=True))),
         completion(json.dumps({"summary": "你用等式性质解出 x=6 并检验。"}, ensure_ascii=False)),
     ]).start()
     gateway = gateway_for(fake.url, tmp_path)
@@ -62,8 +70,10 @@ def test_run_case_drives_full_script(tmp_path):
     assert [t["student"] for t in transcript["turns"]] == ["", "我想两边都减去7。", "再同时除以3。"]
     # 判停:第三轮 ready 后余下剧本轮("检验通过了。")不再发
     assert len(fake.requests) == 4 and transcript["turns"][-1]["state"] == "ready_to_confirm"
-    # P1-5 回归:elapsed_ms 是真实耗时,不是 session_version 假数据(首问恒 0,回复轮 > 0)
-    assert all(turn["elapsed_ms"] > 0 for turn in transcript["turns"][1:])
+    # P1-5 回归:elapsed_ms 是真实耗时,不是 session_version 假数据(首问恒 0;
+    # 回复轮 ≥ 注入延迟 5ms——session_version 假数据 1/2/3 过不了这条)
+    assert transcript["turns"][0]["elapsed_ms"] == 0
+    assert all(turn["elapsed_ms"] >= 5 for turn in transcript["turns"][1:])
 
 
 def test_run_case_environment_failure_is_retryable(tmp_path):
