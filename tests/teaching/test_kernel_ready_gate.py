@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 
-from edu_agent.agents.small_lecturer import reply, start
+from edu_agent.agents.small_lecturer import finish, reply, start
 
 
 class FakeGateway:
@@ -120,3 +120,57 @@ def test_leak_guard_baseline_falls_back_to_steps_value():
     turn = reply(turn.session, "我把三个数直接加在一起。", gateway=gateway)
     assert "127" not in turn.text
     assert any(event.get("guard") == "answer_leak" for event in turn.session.guard_events)
+
+
+# ---------- #165 WS4 第 1 条:守卫粒度(末轮已陈述终答不推 needs_review) ----------
+
+# 实测复现(run 34502985698,chicken_rabbit):模型阶梯末级 value 是**算式**
+# 「8 - 5 = 3」→ 答案数字 {3,5,8};8 是题面已给的总数,学生收束轮不会再复述它。
+CHICKEN_QUESTION_EVAL = {"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?",
+                         "answer": "", "analysis": "", "knowledge_points": []}
+CHICKEN_OPEN = {"reply": "你已经知道鸡和兔一共有8只,脚数是26只,对吗?",
+                "acceptable": True,
+                "steps": [{"step": "假设全是鸡,算脚的总数", "value": "8 × 2 = 16"},
+                          {"step": "算实际多出的脚", "value": "26 - 16 = 10"},
+                          {"step": "算兔有几只", "value": "10 ÷ 2 = 5"},
+                          {"step": "算鸡有几只", "value": "8 - 5 = 3"}]}
+CHICKEN_STATED = "所以兔有10除以2等于5只,鸡有3只,检查5乘4加3乘2等于26。"
+CHICKEN_CONFIRM = {"reply": "你算得完全对!5只兔和3只鸡,脚数正好是26,这方法真棒!",
+                   "ready_to_confirm": True, "cited_numbers": [5, 3, 26]}
+
+
+def test_gate_allows_confirm_when_student_stated_conclusion_numbers():
+    """答案数字里的**题面给定数字不计入**「是否已陈述」判据:学生末轮说出结论(兔5鸡3、
+    验算26)即可收束 —— 不要求复述题面已给的 8(实测该缺口让闸门在收束轮误触发)。"""
+    gateway = FakeGateway([CHICKEN_OPEN, CHICKEN_CONFIRM])
+    turn = start(dict(CHICKEN_QUESTION_EVAL), {"grade": "六年级"}, gateway=gateway)
+    turn = reply(turn.session, CHICKEN_STATED, gateway=gateway)
+    assert turn.state == "ready_to_confirm"        # 闸未触发:合法确认放行
+    assert turn.ready_to_confirm is True
+    assert not any(event.get("guard") == "premature_confirm"
+                   for event in turn.session.guard_events)
+
+
+def test_finish_completes_instead_of_needs_review_after_stated_answer():
+    """验收:学生已陈述终答的末轮 → 会话正常收束 completed,不再落 needs_review。"""
+    gateway = FakeGateway([
+        CHICKEN_OPEN,
+        CHICKEN_CONFIRM,
+        {"summary": "你假设全是鸡,算出脚数差,再把兔子换出来——讲得很清楚。"},
+    ])
+    turn = start(dict(CHICKEN_QUESTION_EVAL), {"grade": "六年级"}, gateway=gateway)
+    turn = reply(turn.session, CHICKEN_STATED, gateway=gateway)
+    summary = finish(turn.session, gateway=gateway)
+    assert summary.status == "completed"
+    assert summary.status != "needs_review"
+
+
+def test_gate_still_blocks_when_student_only_restates_given_numbers():
+    """反向保护:只说题面数字(「一共有8只」)仍不算陈述答案 → 闸照旧拦下。"""
+    gateway = FakeGateway([CHICKEN_OPEN, CHICKEN_CONFIRM, CONTINUE_PAYLOAD])
+    turn = start(dict(CHICKEN_QUESTION_EVAL), {"grade": "六年级"}, gateway=gateway)
+    turn = reply(turn.session, "题目说一共 8 只、26 只脚。", gateway=gateway)
+    assert turn.state == "dialogue"
+    assert turn.ready_to_confirm is False
+    assert any(event.get("guard") == "premature_confirm"
+               for event in turn.session.guard_events)
