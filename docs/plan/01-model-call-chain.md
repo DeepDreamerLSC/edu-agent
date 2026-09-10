@@ -168,6 +168,25 @@ gen_ai.response.finish_reasons, gen_ai.server.time_to_first_token (ms), edu.tota
 - 需要更强的路由、预算、多 key 轮换时，在 gateway 与上游之间放 LiteLLM proxy，
   gateway 代码不变。这一步不在 v1。
 
+### 8.1 单机并发三杠杆（2026-09-10 实测）
+
+同一台 Mac 要同时承载评测批跑、夜评与 CI 时，"谁在等谁"只有三个杠杆，**都不需要引入新软件**：
+
+| 杠杆 | 现状（实测） | 改法 | 收益 |
+|---|---|---|---|
+| ① **服务槽位** | llama-server（8303，tutor）plist **未设 `--parallel`** → 很可能默认单槽；mlx-lm（8301，judge）已开 `--decode-concurrency 5` / `--prompt-concurrency 5` | llama-server 加 `--parallel N`，并同步放大 `-c`（`-c` 按槽位瓜分） | tutor 吞吐 13 → 约 25 调用/分 |
+| ② **runner 并发度** | 批内有效并发：judge 阶段约 1.05（近乎纯串行）、tutor 阶段约 1.6 | 评测脚本 case 级并发 1 → 3（**并发归 runner，见第 9 节**） | 判分批 14.5 → 约 5 分钟 |
+| ③ **点火纪律** | 批跑与主 CI 抢 Mac → 曾一天 3 次 benchmark 红 | 跑批前确认主 CI 已 completed 且无其它 Mac 批跑；两条线**分服务**（一打 judge、一打 tutor） | 撞车红单归零 |
+
+**实测依据**（同机两批跑并行）：两批**分走不同服务**（8301 judge / 8303 tutor）→ 互不抢；
+`edu.queue_ms` **全为 0** → gateway 信号量不是瓶颈；Mac 负载 **2.2 / 18 核** → 机器未饱和。
+瓶颈是**单调用延迟 × 批内串行**：judge 中位 16.9–19.2 s（input 1313 / output 239 token，27B 模型
+decode 主导）、tutor 中位 4.5 s（input 1768 / output 70）。
+
+**顺序与验收**：① 与 ② 上线前都要做"串行 vs 并发"的**同一批对比，判定与转录逐格一致**
+（判门与容差口径都建立在可复现之上）；③ 零成本，可立即生效。
+新网关软件（如 LiteLLM）仍按上文触发条件引入，与本节无关。
+
 ## 9. 不做
 
 - 不自研 worker 池、租约、心跳、预载。
