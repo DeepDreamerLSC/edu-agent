@@ -33,15 +33,18 @@ def build() -> ThreadingHTTPServer:
 
     题源默认 bank(合作方真实题库快照,EDU_QUESTION_SOURCE 可切 seed/snapshot);
     FileService 注入题图解析(file_id → data URL,内核 vision 多模态输入);
-    FileSessionStore 注入上下文落盘(每回合后全量历史写 data/sessions/,演示复盘用)。"""
+    FileSessionStore 注入上下文落盘(每回合后全量历史写 data/sessions/,演示复盘用);
+    FileConversationStore 注入会话表落盘(M3 WS2:data/conversations/,进程重启后
+    open→message→finish 仍可续——会话本体按 kernel_session_id 从 sessions/ 取回)。"""
     from edu_agent.api import question_source
     from edu_agent.api.files import FileService
-    from edu_agent.store import FileSessionStore
+    from edu_agent.store import FileConversationStore, FileSessionStore
 
     port = int(os.environ.get("EDU_PARTNER_API_PORT", "8300"))
     files = FileService()
     service = build_service(PartnerKernel(), source=question_source(
         os.environ.get("EDU_QUESTION_SOURCE", "bank")),
+        store=FileConversationStore(),
         image_resolver=files.data_url,
         sessions=FileSessionStore())
     return build_server(service, IdentityService(), files=files,
