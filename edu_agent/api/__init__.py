@@ -14,20 +14,25 @@ from .kernel_adapter import SmallLecturerKernel
 from .question_source import SeedQuestionSource, SnapshotQuestionSource, question_source
 from .service import ApiError, ConversationService, Kernel
 from .server import build_server
-from edu_agent.store import Conversation, FileSessionStore, MemoryConversationStore
+from edu_agent.store import (Conversation, ConversationStore, FileConversationStore,
+                             FileSessionStore, MemoryConversationStore)
 
 __all__ = [
-    "ApiError", "Conversation", "ConversationService", "FileService", "FileSessionStore",
+    "ApiError", "Conversation", "ConversationService", "ConversationStore", "FileConversationStore",
+    "FileService", "FileSessionStore",
     "SnapshotQuestionSource", "IdentityError", "IdentityService", "Kernel", "demo_login",
     "MemoryConversationStore", "SeedQuestionSource", "SmallLecturerKernel",
     "build_server", "build_service", "question_source",
 ]
 
 
-def build_service(kernel: Kernel, store: MemoryConversationStore | None = None,
+def build_service(kernel: Kernel, store: ConversationStore | None = None,
                   source=None, sessions: FileSessionStore | None = None,
                   image_resolver=None) -> ConversationService:
     """source 注入题源(PR1);sessions 注入即开启上下文保留(M3 PR6:内核会话回合后落盘)。
+
+    store 默认内存会话表;传 FileConversationStore(M3 WS2)即会话表落盘,重启进程后
+    open→message→finish 仍可续(会话本体与路由索引都从文件扫描重建)。
 
     image_resolver 注入题图解析(file_id → data URL;生产装配传 FileService.data_url,
     未注入时题图引用原样透传——测试/评测假网关路径不依赖文件存储)。"""

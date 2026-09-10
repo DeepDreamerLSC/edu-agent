@@ -7,7 +7,8 @@
     unknown 路径零改动 / 确认态不回复讲 / 复讲内容不再触发(防循环);
   · 复读循环治疗:复读自批评重生成仍复读 → 揭示下一级阶梯(每轮不同、推进教学),
     不再以同款问句兜底自我复读;
-  · 代喂替换埋点:静默替换留痕(原文 + 命中词),供残留度量与护栏路径对照。
+  · 代喂命中的处置粒度(#152 follow-up):重生成保留本轮语义 → 失败才确定性脱敏
+    (只隐未说词)→ 模板仅末位兜底;埋点留痕(原文 + 命中词 + 处置路径 mode)。
 """
 
 from __future__ import annotations
@@ -280,37 +281,81 @@ def test_guard_fallback_repeat_backstop_reveals_ladder():
 
 
 def test_elicit_swap_repeat_backstop_reveals_ladder():
-    """代喂替换复读:上一轮已是复讲引导,本轮替换会再现同句(实测 8 连发)→ 阶梯推进。"""
+    """代喂处置后复读:处置结果与上一轮学生可见文本同句(实测 8 连发)→ 阶梯推进。
+
+    #165 WS4 后处置不再整轮换模板:「脱敏」结果可能与 prev 撞句(上一轮本就是脱敏句),
+    输出面防复读背板必须仍然生效。"""
+    masked_prev = "这一步用这种方法就能看出来。"
+    hitting = "这一步用底乘高就能看出来。"
     gateway = FakeGateway(tutor_payloads=[
-        _open_payload(ELICIT),              # 上一轮学生可见文本即复讲引导(构造 prev)
-        _tutor_payload("你用的是底乘高的方法,对吧?"),
+        _open_payload(masked_prev),      # 上一轮学生可见文本即脱敏句(构造 prev)
+        _tutor_payload(hitting),
+        _tutor_payload(hitting),         # 重生成仍点名 → 落脱敏;脱敏结果 == prev
     ])
     first = start({"text": "一个三角形底是10厘米,高是6厘米,面积是多少?",
                    "answer": "", "analysis": "", "knowledge_points": []},
                   {"grade": "六年级"}, gateway=gateway)
     turn = reply(first.session, "我还是觉得面积就是60平方厘米。", gateway=gateway)
-    assert turn.text != ELICIT              # 不再同句复讲引导
+    assert turn.text != masked_prev         # 不再同句复读
     assert turn.text.startswith(("我们从这里入手", "下一步是这样"))  # 阶梯推进
     assert turn.session.stuck is True
     assert {"branch": "reveal", "hint_level": 1} in turn.session.guard_events  # 背板路径同记
 
 
-# ---------- 代喂替换埋点(残留度量语料来源) ----------
+# ---------- 代喂命中的处置粒度(#152 follow-up / #165 WS4)+ 埋点 ----------
 
-def test_method_feed_swap_records_original_event():
-    """代喂替换留痕:{guard, rule_ids, original, regenerated}——不再静默换文本。"""
+def test_method_feed_hit_regenerates_and_records_event():
+    """命中代喂 → **重生成保留本轮语义**(不整轮换复讲模板);埋点留痕原文/命中词/路径。"""
+    repaired = "你说的这个方法很关键,那这一步你打算先算哪一个?"
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你先说说题目给了哪些条件?"),
         _tutor_payload("你用的是假设法,对吧?", ready=True),
+        _tutor_payload(repaired),        # 重生成:守住本轮引导语义、不点名
     ])
     first = start(dict(CHICKEN_QUESTION), {"grade": "六年级"}, gateway=gateway)
     turn = reply(first.session, "我先说说我的想法。", gateway=gateway)
-    assert turn.text == ELICIT                  # 替换为请讲引导
-    assert turn.session.stuck is True
+    assert turn.text == repaired                # 保留本轮引导,不是复讲模板
+    assert "假设法" not in turn.text
+    assert turn.session.stuck is False          # 修好 = 非硬降级(不落卡点)
     events = [e for e in turn.session.guard_events if e.get("guard") == "feeds_method"]
     assert events and events[-1]["original"] == "你用的是假设法,对吧?"
-    assert "假设法" in events[-1]["rule_ids"]
-    assert events[-1]["regenerated"] is False
+    assert events[-1]["rule_ids"] == ["假设法"]
+    assert events[-1]["regenerated"] is True
+    assert events[-1]["mode"] == "regenerated"
+
+
+def test_method_feed_hit_masks_only_unsaid_tokens():
+    """重生成仍点名 → 确定性脱敏:**只**隐去未说出的词,学生已说的词保持点名。"""
+    hitting = "你把通分这步做对了,接下来试试假设法!"
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你先说说题目给了哪些条件?"),
+        _tutor_payload(hitting),
+        _tutor_payload(hitting),        # 重生成仍点名 → 落脱敏
+    ])
+    first = start(dict(FRACTION_QUESTION), {"grade": "六年级"}, gateway=gateway)
+    turn = reply(first.session, "我通分之后把分子相加了。", gateway=gateway)
+    assert "假设法" not in turn.text            # 未说词被隐去
+    assert "通分" in turn.text                  # 学生已说 → 弧线允许的点名保留
+    assert "这种方法" in turn.text
+    events = [e for e in turn.session.guard_events if e.get("guard") == "feeds_method"]
+    assert events and events[-1]["rule_ids"] == ["假设法"]   # 只记未说词
+    assert events[-1]["mode"] == "masked"
+    assert events[-1]["regenerated"] is True    # 确定性修好 = 非硬降级
+
+
+def test_feeds_hit_keeps_confirm_when_student_stated_answer():
+    """末轮例外(#152 实测 12 分→3 分):学生**已陈述终答**时,一次方法词命中
+    不再强制不确认——本轮确认语义保留,会话照常收束(不推 needs_review)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你先说说题目给了哪些条件?"),
+        _tutor_payload("你算得完全对!你用的这个方法和等式性质是一回事。", ready=True),
+        _tutor_payload("你算得完全对!每一步都讲清楚了。", ready=True),
+    ])
+    first = start(dict(CHICKEN_QUESTION), {"grade": "六年级"}, gateway=gateway)
+    turn = reply(first.session, "兔有10除以2等于5只,鸡有3只,验算26只脚。", gateway=gateway)
+    assert turn.ready_to_confirm is True        # 未被强制关掉
+    assert turn.state == "ready_to_confirm"
+    assert "等式性质" not in turn.text          # 未说出的词仍不落文本
 
 
 # ---------- ③ student_evidence 接线(#157 PM 复核裁定 1)+ ④ 补词 ----------
@@ -336,25 +381,30 @@ def test_student_said_method_name_not_swapped():
 
 def test_mixed_hits_record_only_unsaid_tokens():
     """③ 埋点精度:同一句里学生已说(通分)与未说(假设法)并存 → 只换、只记未说的。"""
+    hitting = "你把通分这步做对了,接下来试试假设法!"
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你先说说题目给了哪些条件?"),
-        _tutor_payload("你把通分这步做对了,接下来试试假设法!"),
+        _tutor_payload(hitting),
+        _tutor_payload(hitting),        # 重生成仍点名 → 脱敏只隐未说词
     ])
     first = start(dict(FRACTION_QUESTION), {"grade": "六年级"}, gateway=gateway)
     turn = reply(first.session, "我通分之后把分子相加了。", gateway=gateway)
-    assert turn.text == ELICIT                       # 假设法未说 → 仍替换
+    assert "假设法" not in turn.text                 # 未说词被隐去
+    assert "通分" in turn.text                       # 已说词保留点名
     events = [e for e in turn.session.guard_events if e.get("guard") == "feeds_method"]
     assert events and events[-1]["rule_ids"] == ["假设法"]  # 只记未说词
 
 
 def test_area_formula_token_swapped():
     """④:面积公式 补入 _METHOD_TOKENS(#148 §5 阶梯揭示句原样漏出的词)。"""
+    hitting = "我们从这里入手:先写出三角形面积公式:面积 = 底 × 高 ÷ 2。"
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你先说说题目给了哪些条件?"),
-        _tutor_payload("我们从这里入手:先写出三角形面积公式:面积 = 底 × 高 ÷ 2。"),
+        _tutor_payload(hitting),
+        _tutor_payload(hitting),        # 重生成仍点名 → 脱敏
     ])
     first = start(dict(TRIANGLE_QUESTION), {"grade": "六年级"}, gateway=gateway)
     turn = reply(first.session, "我想想。", gateway=gateway)
-    assert turn.text == ELICIT                       # 学生未说 → 换成请讲引导
+    assert "面积公式" not in turn.text                # 学生未说 → 不落文本
     events = [e for e in turn.session.guard_events if e.get("guard") == "feeds_method"]
-    assert events and "面积公式" in events[-1]["rule_ids"]
+    assert events and events[-1]["rule_ids"] == ["面积公式"]
