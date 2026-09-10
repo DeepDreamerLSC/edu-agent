@@ -37,12 +37,17 @@ from .tone_guardrails import apply_tone_guardrail
 TUTOR_TURN_SCHEMA = {
     "type": "object",
     "properties": {
+        # 答案泄露防御(#146 M1,05 §5):回复前先承诺"本轮如何引导而不给答案"——
+        # schema 经 json.dumps 进 prompt,字段声明顺序即生成顺序,排在 reply 之后等于没加。
+        # 规划装置,不是验证装置:内容不进任何判定/守卫/报告/judge 输入,内核不读它
+        # (cited_numbers 同为自报字段已实测虚报,reason 不重蹈自报歧途)。
+        "reason": {"type": "string"},
         "reply": {"type": "string"},
         "ready_to_confirm": {"type": "boolean"},
         # 数字漂移守卫:模型自报本轮回复中引用的题目条件数字(服务端对题面校验)
         "cited_numbers": {"type": "array", "items": {"type": "number"}},
     },
-    "required": ["reply", "ready_to_confirm", "cited_numbers"],
+    "required": ["reason", "reply", "ready_to_confirm", "cited_numbers"],
     "additionalProperties": False,
 }
 TUTOR_SUMMARY_SCHEMA = {
