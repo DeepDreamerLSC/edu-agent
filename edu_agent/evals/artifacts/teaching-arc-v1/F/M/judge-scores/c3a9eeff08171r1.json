@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师首问包含'对吗？'进行对错评判，且未先采集学生作答选项或数值，直接询问'为什么公式里要除以2'"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师在采集学生作答'10乘6等于60'后，立即回应'这一步是对的！'进行了对错判定"
+ },
+ "restate": {
+  "asked": false,
+  "delivered": false,
+  "evidence": "对话中教师未出现'讲一遍'、'复述'、'说说你的思路'等明确请学生复讲或讲解思路的指令"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未使用'假设法'等方法名，且学生已先说出'10乘6再除以2，等于30'，教师后续确认答案不属于代喂"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

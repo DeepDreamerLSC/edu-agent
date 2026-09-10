@@ -1,0 +1,34 @@
+{
+ "id": "c31bbd06a9df9r1",
+ "base_id": "small_lecturer_dialogue_stability_20_stability_word_problem",
+ "repeat": 1,
+ "question": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
+ "grade": "三年级",
+ "answer_status": "correct",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "还有没有不懂的地方？"
+  },
+  {
+   "role": "user",
+   "content": "我把三个数直接加在一起。"
+  },
+  {
+   "role": "assistant",
+   "content": "你把三个数直接加在一起，这个想法很有趣，不过借出的书要减掉哦，我们来检查一下减法是不是漏掉了？"
+  },
+  {
+   "role": "user",
+   "content": "借出表示数量减少，不能也加上38。"
+  },
+  {
+   "role": "assistant",
+   "content": "你说到借出要减掉，这步很对！那我们来算算现在一共有多少本吧？"
+  },
+  {
+   "role": "assistant",
+   "content": "这一题(「图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？」)是你自己讲下来的:从「我把三个数直接加在一起。」开始,一步步说到「借出表示数量减少，不能也加上38。」,每一步都是你自己的思路,结论和题目的要求也对上了。这道题你已经完整讲清楚了,可以再做一道,或者今天先到这里。"
+  }
+ ]
+}
