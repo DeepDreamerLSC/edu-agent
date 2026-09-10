@@ -34,6 +34,7 @@ class ConversationStore(Protocol):
 
     def find_by_idempotency(self, idempotency_key: str) -> Conversation | None: ...
     def find_by_skill_session(self, skill_session_id: str) -> Conversation | None: ...
+    def find_by_kernel_session(self, kernel_session_id: str) -> Conversation | None: ...
     def create(self, conversation: Conversation, idempotency_key: str) -> Conversation: ...
     def get(self, conversation_id: str) -> Conversation | None: ...
     def update(self, conversation: Conversation) -> None: ...
@@ -49,6 +50,7 @@ class FileConversationStore:
         self._by_idempotency: dict[str, str] = {}
         self._by_skill_session: dict[str, str] = {}
         self._idempotency_of: dict[str, str] = {}  # conversation_id -> idempotency_key
+        self._by_kernel_session: dict[str, str] = {}  # 内核 session_id -> conversation_id
         self._scan()
 
     # ---------- 启动扫描 ----------
@@ -72,6 +74,10 @@ class FileConversationStore:
     def _index(self, conversation: Conversation, idempotency_key: str) -> None:
         self._by_conversation[conversation.conversation_id] = conversation
         self._by_skill_session[conversation.skill_session_id] = conversation.conversation_id
+        kernel_session_id = str((conversation.extras or {}).get("kernel_session_id") or "")
+        if kernel_session_id:
+            # 01 §7 分组键归因:facts 的 edu.session_id 即内核 session_id,由此回到合作方会话
+            self._by_kernel_session[kernel_session_id] = conversation.conversation_id
         if idempotency_key:
             self._by_idempotency[idempotency_key] = conversation.conversation_id
             self._idempotency_of[conversation.conversation_id] = idempotency_key
@@ -114,6 +120,12 @@ class FileConversationStore:
             conversation_id = self._by_skill_session.get(skill_session_id)
             return self._by_conversation.get(conversation_id) if conversation_id else None
 
+    def find_by_kernel_session(self, kernel_session_id: str) -> Conversation | None:
+        """facts 归因(01 §7):edu.session_id = LearnerSession.session_id → 合作方会话。"""
+        with self._lock:
+            conversation_id = self._by_kernel_session.get(kernel_session_id)
+            return self._by_conversation.get(conversation_id) if conversation_id else None
+
     def create(self, conversation: Conversation, idempotency_key: str) -> Conversation:
         with self._lock:
             existing = self._by_idempotency.get(idempotency_key)
@@ -131,4 +143,7 @@ class FileConversationStore:
         with self._lock:
             self._by_conversation[conversation.conversation_id] = conversation
             self._by_skill_session[conversation.skill_session_id] = conversation.conversation_id
+            kernel_session_id = str((conversation.extras or {}).get("kernel_session_id") or "")
+            if kernel_session_id:
+                self._by_kernel_session[kernel_session_id] = conversation.conversation_id
             self._write(conversation)

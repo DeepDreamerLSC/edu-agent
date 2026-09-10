@@ -202,3 +202,49 @@ def test_memory_store_path_unchanged(tmp_path):
     assert service.status(opened["conversation"]["conversation_id"])["turn_count"] == 2
     assert build_service(RecordingKernel()).store.get(
         opened["conversation"]["conversation_id"]) is None
+
+
+# ---------- 验收:facts 的 edu.session_id 可按会话归因(01 §7 分组键) ----------
+
+def test_facts_session_id_maps_to_partner_conversation(tmp_path):
+    """facts 里 edu.session_id(= ModelRequest.session_id = LearnerSession.session_id)
+    经会话文件回到合作方会话(conversation_id/skill_session_id);重启后仍可归因。"""
+    service = _service(tmp_path, RecordingKernel())
+    opened = _open_and_turn(service, idem="idem-attrib")
+    conversation_id = opened["conversation"]["conversation_id"]
+    kernel_session_id = (tmp_path / "conversations" / f"{conversation_id}.json").read_text(
+        encoding="utf-8")
+    kernel_session_id = json.loads(kernel_session_id)["extras"]["kernel_session_id"]
+
+    store = FileConversationStore(tmp_path / "conversations")  # 新进程:重启后归因
+    conversation = store.find_by_kernel_session(kernel_session_id)
+    assert conversation is not None
+    assert conversation.conversation_id == conversation_id
+    assert conversation.skill_session_id == opened["skill_session_id"]
+    assert store.find_by_kernel_session("kernel_not_mine") is None
+
+
+def test_kernel_sends_session_id_to_gateway_for_facts_attribution(tmp_path):
+    """归因链第一跳:内核把 LearnerSession.session_id 放进 ModelRequest(facts 的
+    edu.session_id 即此处取值,01 §7)——与本文件 store 侧查询合起来构成完整归因链。"""
+    from edu_agent.agents.small_lecturer import reply as kernel_reply
+    from edu_agent.agents.small_lecturer import start as kernel_start
+
+    class RecordingGateway:
+        def __init__(self) -> None:
+            self.session_ids: list[str] = []
+
+        def invoke(self, request):
+            self.session_ids.append(request.session_id)
+            payload = json.dumps({"reply": "那下一步怎么算?", "ready_to_confirm": False,
+                                  "cited_numbers": [], "acceptable": True,
+                                  "steps": [{"step": "先算差值", "value": "10"}]})
+            return type("R", (), {"text": payload})()
+
+    gateway = RecordingGateway()
+    turn = kernel_start({"text": "鸡兔同笼,一共 8 只、26 只脚。", "answer": "鸡3兔5"},
+                        {"grade": "六年级"}, gateway=gateway)
+    kernel_reply(turn.session, "每换一只多 2 只脚。", gateway=gateway)
+    assert gateway.session_ids, "内核未调用 gateway"
+    assert set(gateway.session_ids) == {turn.session.session_id}  # 同一会话内归因键一致
+    assert turn.session.session_id.startswith("kernel_")
