@@ -125,6 +125,55 @@ def _student_signals_stuck(student_message: str) -> bool:
     return bool(re.search(r"我不太会|我猜不出|我猜不出来|我不知道|我想不出|我想不出来|我不会做|我不会了|不会吧(?![?!？])|太难了|没思路|越来越不懂", student_message))
 
 
+# 中文数字单字映射(仅学生口述侧:「八分之七」这类说法没有 ASCII 数字)。
+# 只映射单字、不解析复合(「十五」→ 10/5 而非 15)——宁漏勿误:漏 → 走模型路径(现状
+# 行为);误 → 在不该请复讲时请复讲。参考答案侧不映射(题库答案均为 ASCII 写法,
+# 「两直线平行」类文字答案无 ASCII 数字可对,保持不可判定 → 模型路径)。
+_CJK_NUMERALS = {"零": 0.0, "〇": 0.0, "一": 1.0, "二": 2.0, "两": 2.0, "三": 3.0,
+                 "四": 4.0, "五": 5.0, "六": 6.0, "七": 7.0, "八": 8.0, "九": 9.0,
+                 "十": 10.0, "百": 100.0, "千": 1000.0, "万": 10000.0}
+
+
+def _spoken_numbers(text: str) -> set[float]:
+    """学生口述数字全集:ASCII 数字 ∪ 出现的中文数字单字。"""
+    return _question_numbers(text) | {
+        value for char, value in _CJK_NUMERALS.items() if char in (text or "")}
+
+
+def _known_answer(session: "LearnerSession") -> str:
+    """已知终答文本:question.answer 优先,空则阶梯末级 value(与 _reveal_stuck_hint/
+    _drift_sources 同源,三处判定基线一致)。"""
+    answer = str(session.question.get("answer") or "").strip()
+    if not answer and session.steps:
+        answer = str(session.steps[-1].get("value") or "").strip()
+    return answer
+
+
+def _student_hits_known_answer(session: "LearnerSession", student_message: str) -> bool:
+    """incorrect 弧线:学生陈述命中已知答案(#112 触发判据,可复算、零文本相似度)。
+
+    匹配 = 已知答案的全部 ASCII 数字都出现在学生本轮消息里(数字集包含;学生侧含
+    中文数字单字)。不要求字面/顺序——「兔5只、鸡3只」同样命中「鸡3只,兔5只」。
+    误触护栏(③ 为一组):① 仅 answer_status=incorrect(correct/unanswered/unknown
+    路径零改动);② 非确认态;③ 此前未见过学生消息(incorrect 弧线首轮是学生当前
+    (错误)答案的采集,数字撞集不算命中——鸡兔同笼典型错答恰是数字对调)、此前从未
+    请过复讲(guard_events 有 elicit 埋点)、上一条 tutor 消息不是复讲引导(本轮消息
+    即复讲内容,或代喂兜底刚换出的引导)——否则会对复讲内容再次请复讲,循环。"""
+    if session.learner.get("answer_status") != "incorrect":
+        return False
+    if session.state == "ready_to_confirm":
+        return False
+    prev = session.history[-1]["content"] if session.history else session.first_question
+    if (not any(message.get("role") == "user" for message in session.history)
+            or any(event.get("branch") == "elicit" for event in session.guard_events)
+            or prev == _ELICIT_TEMPLATE):
+        return False
+    answer_numbers = _question_numbers(_known_answer(session))
+    if not answer_numbers:
+        return False  # 无数字答案无法确定性判定 → 模型路径(现状行为)
+    return answer_numbers <= _spoken_numbers(student_message)
+
+
 def _next_step(session: "LearnerSession") -> dict | None:
     """阶梯逐级揭示:返回 steps 的下一级(推进 hint_level);揭示完毕返回 None。"""
     if session.hint_level < len(session.steps):
@@ -417,6 +466,13 @@ def _commit_turn(session: LearnerSession, student_message: str, assistant_text: 
                 state=state, ready_to_confirm=ready_to_confirm, session=session)
 
 
+def _ask_restatement(session: LearnerSession, student_message: str) -> Turn:
+    """确定性请学生从头复讲(理解信号/答案命中共用):零模型调用,不 confirm、不报答案,
+    埋点 {branch: elicit, hint_level}——一次会话至多一次(供答案命中触发防循环判定)。"""
+    session.guard_events.append({"branch": "elicit", "hint_level": session.hint_level})
+    return _commit_turn(session, student_message, _ELICIT_TEMPLATE, "dialogue")
+
+
 def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> Turn:
     """生成首问(03 §4 Preparing → FirstQuestionReady / Failed)。
 
@@ -470,8 +526,7 @@ def reply(session: LearnerSession, student_message: str, *,
     if _student_signals_understanding(student_message):
         # 学生说「懂了」→ 直接请学生讲思路(确定性,不调模型),不 confirm、不报答案。
         # 这是教学弧线的固定策略(00 §8.5/人定):学生表示懂,就该由学生自己讲,而非 tutor 复述。
-        session.guard_events.append({"branch": "elicit", "hint_level": session.hint_level})
-        return _commit_turn(session, student_message, _ELICIT_TEMPLATE, "dialogue")
+        return _ask_restatement(session, student_message)
     if _student_signals_stuck(student_message):
         # 学生说「不会/猜不出」→ 揭示下一级阶梯(内容确定性,措辞交模型,代喂/无步骤兜底)。
         gateway = gateway or default_gateway()
@@ -479,6 +534,11 @@ def reply(session: LearnerSession, student_message: str, *,
         session.stuck = True
         session.guard_events.append({"branch": "reveal", "hint_level": session.hint_level})
         return _commit_turn(session, student_message, hint, "dialogue")
+    if _student_hits_known_answer(session, student_message):
+        # incorrect 弧线:学生被纠错后说出已知答案 → 同样确定性请他从头复讲(#112:
+        # 交给模型会直接置 ready_to_confirm 从模型侧确认,复讲步落空——issue 实测
+        # 复讲未达成 3/4 的根因)。人定弧线「答对后学生复讲,讲完讲师才点名方法」。
+        return _ask_restatement(session, student_message)
     gateway = gateway or default_gateway()
     _reply_messages = [
         {"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
@@ -503,16 +563,24 @@ def reply(session: LearnerSession, student_message: str, *,
     if prev and _is_repeat(prev, output["reply"]):
         refined = _regenerate(ctx, session, output["reply"], _SELF_CRITIQUE)
         if refined is None or _is_repeat(prev, refined):
-            refined = _contextual_fallback(session, "repeat", [], student_message)
+            # 复读仍未破 → 阶梯推进替代同款问句兜底(#112 复读循环:旧兜底「先回到你
+            # 刚说的…」以同句反复,自身成为复读源头;实测 chicken_rabbit/triangle_area
+            # 9 轮不推进)。揭示下一级阶梯 = 每轮内容不同且推进教学,阶梯耗尽走
+            # bottom-out(终答仅该路径披露,不变量保持)。
+            refined = _reveal_stuck_hint(session)
             session.stuck = True  # 复读打断 = 卡点标记(R6 同款)
         output["reply"] = refined
     safe_text = _guard_output(output["reply"], session, ctx)
     if _feeds_method(safe_text):
         # 复讲轮代喂:换成固定"请学生讲"引导,并强制 ready_to_confirm=False——
         # 不关对话,继续收集学生的讲题内容(总结轮才由 finish 点名方法)。
+        # 埋点补齐(#112):此前静默替换不留痕;残留度量需要被换下的原文与命中词
+        # (护栏重生成 vs 解析脱敏对照的语料来源),与 _record_event 其余调用同款。
+        _record_event(session, "feeds_method",
+                      [token for token in _METHOD_TOKENS if token in safe_text],
+                      safe_text, regenerated=False)
         safe_text = _ELICIT_TEMPLATE
         output["ready_to_confirm"] = False
-        session.stuck = True  # 代喂 = 未解决的教学质量问题(卡点标记,R6 同款)
     # 数字漂移守卫(抽取制 + 来源标签池,M2 闭环 #113/#34):抽取模型 reply 文本
     # 里的数字(排除"第N"序数),允许集 = 题面 ∪ steps 值 ∪ 学生历史数字 ∪
     # [终答:仅 ready_to_confirm 态];cited_numbers 自报集保留(影子对照)。
