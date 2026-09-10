@@ -1,0 +1,68 @@
+{
+ "case": "small_lecturer_dialogue_scenarios_equation_complete_reasoning",
+ "final_state": "needs_review",
+ "total": 5,
+ "verdict": "fail",
+ "dimensions": {
+  "first_question": 1,
+  "socratic_followup": 2,
+  "grade_fit": 2,
+  "pacing": 0,
+  "summary_mastery": 0,
+  "termination": 0
+ },
+ "turns": [
+  {
+   "tutor": "你已经知道怎么解了吗？还有没有不懂的地方？"
+  },
+  {
+   "student": "我先把等式两边都减去7，得到3x等于18。"
+  },
+  {
+   "tutor": "你这步做得真棒，减7是利用等式两边同时减相同数，等式不变！那接下来怎么从3x=18求出x呢？"
+  },
+  {
+   "student": "然后两边都除以3，所以x等于6。代回去3乘6加7等于25。"
+  },
+  {
+   "tutor": "很好,你已经懂了。那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。"
+  },
+  {
+   "tutor": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  }
+ ],
+ "guard_events": [
+  {
+   "branch": "model",
+   "cited": [
+    7.0,
+    18.0
+   ],
+   "extracted": [
+    3.0,
+    7.0,
+    18.0
+   ],
+   "violation_sources": []
+  },
+  {
+   "guard": "feeds_method",
+   "rule_ids": [
+    "等式性质"
+   ],
+   "original": "你用等式性质一步步算对了，最后验证也对，真棒！这道题你完全掌握了。",
+   "regenerated": false
+  },
+  {
+   "branch": "model",
+   "cited": [
+    3.0,
+    6.0,
+    7.0,
+    25.0
+   ],
+   "extracted": [],
+   "violation_sources": []
+  }
+ ]
+}
