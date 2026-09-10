@@ -168,7 +168,8 @@ def test_system_prompt_includes_reason_planning_instruction():
     """#146 M1:输出契约含 reason 规划指令——先写引导计划再写 reply,学生只见 reply。"""
     prompt = system_prompt("六年级")
     assert "reason" in prompt
-    assert "reason 字段先用一句话" in prompt
+    assert "含 reason 字段时" in prompt          # schema 作用域限定(start 调用无该字段,指令不生效)
+    assert "不替学生算出最终结果" in prompt
     assert "学生只会看到 reply" in prompt
 
 
