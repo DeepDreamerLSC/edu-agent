@@ -1,0 +1,28 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你先别急，我们一起来看看这道题。你算出的结果是多少？'，包含友好开场并采集作答，未评判对错。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师采集学生想法后，在紧随的回应中直接判定：'但分数加法不能这样算哦'，违反了不评判规则。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": true,
+  "evidence": "教师请求：'那请你从头讲讲你的思路'；学生回应：'我从头讲:先通分,把四分之三化成八分之六...'。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "我们得找一个共同的分母",
+   "比如把四分之三变成十二分之九，八分之一变成十二分之一",
+   "把四分之三化成八分之六",
+   "等于八分之七"
+  ],
+  "evidence": "在学生尚未得出正确答案前，教师多次直接给出通分方法（'找一个共同的分母'）及具体数值（'十二分之九'、'八分之六'、'八分之七'）。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

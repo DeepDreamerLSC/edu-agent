@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师首问包含'对吗？'进行对错评判，且直接解释'为什么公式里要除以2'，未先采集学生作答。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师在采集学生作答'10乘6等于60'后，立即回应'这一步是对的！'，进行了对错判定。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": true,
+  "evidence": "教师问'那请你从头讲讲你的思路'，学生随后回答'我从头讲:两个完全相同的三角形能拼成...'。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未使用规则列举的方法名（如假设法、方程法等），且学生已先说出答案30，教师后续提及数值属于确认而非代喂。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

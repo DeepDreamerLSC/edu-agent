@@ -80,7 +80,10 @@ def test_real_kernel_dialogue_and_version_conflict(service):
             "input": {"skill_session_id": first["skill_session_id"],
                       "expected_session_version": version}}
     response = service.send(conversation_id, body)
-    assert "条件" in response["assistant_message"]["content"]
+    # 复读兜底(#112):假 gateway 恒回同一句 → 复读打断走阶梯推进;本 fixture 无
+    # steps → bottom-out 披露终答(终答披露三路径之一,test_kernel_invariants 同款不变量),
+    # 不再以同款问句兜底自我复读。
+    assert "这一步我们直接看结果:x=6" in response["assistant_message"]["content"]
     # 内核 reply 推进版本;旧版本提交 → 409 合同码
     stale = dict(body, input={**body["input"], "expected_session_version": version})
     with pytest.raises(Exception) as excinfo:

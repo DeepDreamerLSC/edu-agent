@@ -1,0 +1,58 @@
+{
+ "id": "cf68b7a6e94b1r2",
+ "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem",
+ "repeat": 2,
+ "question": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
+ "grade": "三年级",
+ "answer_status": "incorrect",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "你先告诉我，你现在算出的结果是多少？"
+  },
+  {
+   "role": "user",
+   "content": "我把三个数直接加在一起。"
+  },
+  {
+   "role": "assistant",
+   "content": "你把三个数直接加在一起，但没考虑借出的书要减掉哦，我们先看看借出的38本该从哪里减。"
+  },
+  {
+   "role": "user",
+   "content": "借出表示数量减少，不能也加上38。"
+  },
+  {
+   "role": "assistant",
+   "content": "你说到借出表示数量减少，这很对，那38本该从哪里减呢？"
+  },
+  {
+   "role": "user",
+   "content": "先算120加45等于165本。"
+  },
+  {
+   "role": "assistant",
+   "content": "你先算120加45等于165，这一步是对的，那借出的38本该从165里减掉吗？"
+  },
+  {
+   "role": "user",
+   "content": "再算165减38等于127本，所以现在有127本。"
+  },
+  {
+   "role": "assistant",
+   "content": "很好,你已经懂了。那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。"
+  },
+  {
+   "role": "user",
+   "content": "我从头讲:图书馆原有120本,又买来45本,先算120加45等于165本;再借出38本,算165减38等于127本,所以现在有127本。"
+  },
+  {
+   "role": "assistant",
+   "content": "你讲得清楚，先算120加45得165，再减38得127，这思路对了！"
+  },
+  {
+   "role": "assistant",
+   "content": "你用先加后减的顺序算对了总数，关键转折是理解借出要从总和里减，仍需注意的是：下次可以更早想到‘先加后减’的步骤，不用等到最后才减。"
+  }
+ ]
+}

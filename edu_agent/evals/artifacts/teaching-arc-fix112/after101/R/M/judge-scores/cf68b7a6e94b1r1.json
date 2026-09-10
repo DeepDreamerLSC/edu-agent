@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你先告诉我，你现在算出的结果是多少？'，符合采集作答且未评判对错的要求。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师回应学生'把三个数直接加在一起'时，立即指出'但没考虑借出的书要减掉哦'，属于对作答的纠正和隐含的否定评判。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": true,
+  "evidence": "教师请求：'那请你从头讲讲你的思路'；学生回应：'我从头讲:图书馆原有120本...'"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师全程未提及'假设法'等具体方法名称，也未在学生说出127之前直接给出该数值答案。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

@@ -1,0 +1,50 @@
+{
+ "id": "cf68b7a6e94b1r2",
+ "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem",
+ "repeat": 2,
+ "question": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
+ "grade": "三年级",
+ "answer_status": "incorrect",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "你现在的答案是多少？告诉我你算到哪一步了，我帮你看看哪里卡住了。"
+  },
+  {
+   "role": "user",
+   "content": "我把三个数直接加在一起。"
+  },
+  {
+   "role": "assistant",
+   "content": "你把三个数直接加在一起，但没考虑借出的书要减掉哦，我们先看看借出的38本该从哪里减。"
+  },
+  {
+   "role": "user",
+   "content": "借出表示数量减少，不能也加上38。"
+  },
+  {
+   "role": "assistant",
+   "content": "你说到借出表示数量减少，这很对，那38本该从哪里减呢？"
+  },
+  {
+   "role": "user",
+   "content": "先算120加45等于165本。"
+  },
+  {
+   "role": "assistant",
+   "content": "你先算120加45等于165，这一步是对的，那借出的38本该从165里减掉吗？"
+  },
+  {
+   "role": "user",
+   "content": "再算165减38等于127本，所以现在有127本。"
+  },
+  {
+   "role": "assistant",
+   "content": "你算出165减38等于127，这一步没错，借出的书确实要从总数里去掉，现在图书馆有127本了。"
+  },
+  {
+   "role": "assistant",
+   "content": "你先算出原有书和新买书的总和165本，再减去借出的38本，得到127本，这一步计算正确。注意以后遇到类似题，要分清楚加和减的顺序，别漏掉减法步骤。"
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你先告诉我，你算出的面积是多少？'，仅采集作答，未评判对错。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师回应学生'10乘6等于60'时立即判定：'这一步是对的！'，违反了采集时不作对错判定的规则。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": true,
+  "evidence": "教师请求：'那请你从头讲讲你的思路'；学生回应：'我从头讲:两个完全相同的三角形能拼成...'"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未在学生说出答案前直接给出'30'或方法名，学生先说出'等于30平方厘米'，教师后续总结中的'三角形面积=底×高÷2'是对学生已掌握思路的归纳，非代喂。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

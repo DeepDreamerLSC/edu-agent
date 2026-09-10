@@ -1,0 +1,28 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "首问为'你现在的想法是？告诉我你认为这道题该怎么算'，未采集具体作答（如选项或数值），且包含复讲指令'告诉我...怎么算'。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师采集到学生想法后，立即回应'但分数加法不能这样算哦'，直接进行了对错判定和纠正。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": true,
+  "evidence": "教师问'那请你从头讲讲你的思路'，学生随后回答'我从头讲:先通分...'。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "我们得找一个共同的分母",
+   "把四分之三变成十二分之九，八分之一变成十二分之一",
+   "把四分之三化成八分之六",
+   "等于八分之七"
+  ],
+  "evidence": "在学生尚未得出正确答案前，教师多次直接给出通分方法（'找一个共同的分母'）及具体数值（'十二分之九'、'八分之六'、'八分之七'）。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

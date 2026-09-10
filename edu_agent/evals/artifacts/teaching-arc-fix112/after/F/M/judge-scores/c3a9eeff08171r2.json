@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师首问包含'对吗？'进行对错评判，且未先采集学生作答选项或数值，而是直接复述学生答案并追问原因。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师在采集学生作答'10乘6等于60'后，立即回应'这一步是对的！'，进行了对错判定。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求'请你从头讲讲你的思路'，但学生未再回应，对话以教师追问'你能说说目前想到的第一步吗'结束。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未直接说出方法名（如'假设法'等）或最终答案数值30，而是通过引导拼合图形让学生自己得出'除以2'和'30'。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}
