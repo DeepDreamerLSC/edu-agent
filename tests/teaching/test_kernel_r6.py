@@ -66,9 +66,15 @@ def test_opening_hint_dispatch_by_answer_status(tmp_path):
 
 
 def test_opening_hint_constants_semantics():
-    """三常量语义:correct≠mastery(引导回顾而非跳过),unanswered 从第一步起。"""
-    assert "不要重新教" in OPENING_HINT_CORRECT
+    """三常量语义:correct 直接问不懂处+懂了复讲;incorrect 教学弧线(采集错误
+    答案→诊断→苏格拉底纠错→学生复讲,2026-09-08 人定);unanswered 从第一步起。"""
+    assert "不重新教" in OPENING_HINT_CORRECT
+    assert "还有没有不懂" in OPENING_HINT_CORRECT and "讲一遍" in OPENING_HINT_CORRECT
+    assert "禁止出现任何方法名" in OPENING_HINT_CORRECT  # 复讲不代喂方法名/答案(2026-09-08 人定)
+    assert "禁方法名" in OPENING_HINT_INCORRECT
     assert "卡点" in OPENING_HINT_INCORRECT
+    for step in ("开场", "选了哪个选项", "怎么想出来的", "正确答案", "讲一遍"):
+        assert step in OPENING_HINT_INCORRECT, step
     assert "第一步" in OPENING_HINT_UNANSWERED
     assert opening_hint("correct") == OPENING_HINT_CORRECT
 
