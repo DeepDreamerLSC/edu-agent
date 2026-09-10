@@ -15,6 +15,29 @@ import pytest
 import scripts.image_teaching_round as round_entry
 from edu_agent.evals import load_scenarios, to_cases
 
+_DATASET = (Path(__file__).resolve().parents[2] / "edu_agent" / "evals" / "datasets"
+            / "small_lecturer_image_teaching_v1.json")
+
+
+def test_landed_dataset_passes_schema_gate():
+    """#132 审查建议②:真实落盘数据集逐场景过门——sha256/图路径手填错误在 CI 拦下。"""
+    scenarios = load_scenarios(_DATASET)
+    assert len(scenarios) == 8
+    required = [s["id"] for s in scenarios if s["visual_dependency"] == "required"]
+    assert len(required) >= 6  # #130 硬规范 1:required ≥ 6/8
+    assert {s["bucket"] for s in scenarios} == {  # 硬规范 7:六桶每桶 ≥1
+        "text_position", "fraction_formula", "application_table",
+        "circle_geometry", "percentage_multi_part", "visual_statistics_open"}
+
+
+def test_landed_dataset_reference_answers_are_concrete():
+    """硬规范 3:参考答案可独立验证——不留「待读/需读」占位。"""
+    for scenario in load_scenarios(_DATASET):
+        value = scenario["reference_answer"]["value"]
+        assert "待" not in value and "需读" not in value, scenario["id"]
+        assert value.strip(), scenario["id"]
+
+
 
 def _write_image(tmp_path: Path) -> tuple[str, str]:
     payload = b"\xff\xd8\xffimage-teaching-round"
