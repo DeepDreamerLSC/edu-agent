@@ -86,7 +86,8 @@ def test_kernel_subject_transcript_carries_events(tmp_path):
     transcript = KernelSubject(gateway).run_case({
         "id": "eq", "question": "解方程 3x+7=25。", "grade": "五年级",
         "reference_answer": "x=6",
-        "student_turns": ["我不会", "我想想"]})
+        # 「我不会」已路由确定性揭示(#157 评审卡壳修复),此处测模型路径埋点 → 用中性话术
+        "student_turns": ["我试试", "我想想"]})
     gateway.close()
     fake.stop()
     assert len(transcript["guard_events"]) == 3  # 泄露 + 两轮模型数字守卫埋点

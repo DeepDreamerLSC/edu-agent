@@ -38,11 +38,14 @@ LEARNER = {"grade": "六年级", "name": "小明"}
 
 
 def test_extracted_numbers_within_allowed_not_stuck():
-    # 抽取制:回复文本里的数字全在允许池(题面8/26 + step 值16)→ 不标卡点;
-    # cited_numbers 保留(影子对照),守卫判定改抽 output.reply
+    # 抽取制:回复文本里的数字全在允许池(题面8/26 + 中间 step 值16)→ 不标卡点;
+    # cited_numbers 保留(影子对照),守卫判定改抽 output.reply。
+    # 阶梯两级(#157 评审末值边界):无 answer 题面下末级 10 是已知答案兜底,
+    # 16 为中间值——引用中间值合法,引用末级见 kernel_invariants 洗白测试
     gateway = FakeGateway(tutor_payloads=[
         {"reply": "先看题面:8 只,26 只脚。", "ready_to_confirm": False,
-         "cited_numbers": [], "steps": [{"step": "鸡脚", "value": "16"}]},
+         "cited_numbers": [], "steps": [{"step": "鸡脚", "value": "16"},
+                                        {"step": "兔脚", "value": "10"}]},
         {"reply": "这一步得到 16。", "ready_to_confirm": False, "cited_numbers": [16]},
     ])
     question = dict(QUESTION)

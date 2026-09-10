@@ -80,11 +80,12 @@ def test_kernel_replaces_abusive_tone(tmp_path):
     fake = FakeOpenAI([completion(open_json("第一问?")), completion(rude)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-    turn = reply(first.session, "我不会。", gateway=gateway)
+    # 「我不会」现路由确定性揭示(#157 评审卡壳修复)→ 语气护栏用中性话术走模型路径
+    turn = reply(first.session, "这题好难。", gateway=gateway)
     gateway.close()
     fake.stop()
     # 任务包2步2兜底句情境化:语气护栏命中,原文不达学生面,换接学生原话的引导句(非万能句)
-    assert turn.text == "先回到你刚说的「我不会。」——你能从题目里再确认一个已知条件吗?"
+    assert turn.text == "先回到你刚说的「这题好难。」——你能从题目里再确认一个已知条件吗?"
 
 
 def test_kernel_replaces_markdown_output_with_downgrade(tmp_path):
@@ -116,7 +117,8 @@ def test_guarded_reply_context_matches_student_visible_text(tmp_path):
                        completion(regen_clean), completion(follow_clean)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-    turn = reply(first.session, "不知道。", gateway=gateway)
+    # 「不知道」现路由确定性揭示(#157 评审卡壳修复)→ 护栏链用中性话术走模型路径
+    turn = reply(first.session, "我再看看。", gateway=gateway)
     assert turn.text == "你刚才回到了条件本身,很好。"  # 泄露 → 重生成成功 → 用重生成文本
     assert "x=6" not in turn.text
     follow = reply(first.session, "题目说 3x 加 7 等于 25。", gateway=gateway)
