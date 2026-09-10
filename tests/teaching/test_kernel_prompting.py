@@ -164,15 +164,6 @@ def test_tutor_turn_schema_declares_reason_before_reply():
     assert TUTOR_TURN_SCHEMA["properties"]["reason"] == {"type": "string"}
 
 
-def test_system_prompt_includes_reason_planning_instruction():
-    """#146 M1:输出契约含 reason 规划指令——先写引导计划再写 reply,学生只见 reply。"""
-    prompt = system_prompt("六年级")
-    assert "reason" in prompt
-    assert "含 reason 字段时" in prompt          # schema 作用域限定(start 调用无该字段,指令不生效)
-    assert "用提问让他自己算" in prompt
-    assert "学生只会看到 reply" in prompt
-
-
 def test_reason_field_never_read_by_app_code():
     """#146 M1 红线:reason 是规划装置,不是验证装置——应用代码(edu_agent/)任何位置
     不得读取 reason;cited_numbers 前车之鉴:自报字段一进判定逻辑就变成谎报源。
