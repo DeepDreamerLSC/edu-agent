@@ -196,6 +196,41 @@ def test_repeat_fallback_ladder_texts_differ_consecutively():
     assert turn2.session.hint_level == 2
 
 
+# ---------- 输出面防复读终极不变量(任何兜底不得与上一轮学生可见文本同句) ----------
+
+def test_guard_fallback_repeat_backstop_reveals_ladder():
+    """泄露兜底复读:同句兜底将连续出现(复读探针实测修复前 8 连发)→ 阶梯推进。"""
+    loop_text = "先回到你刚说的「我还是觉得鸡有4只,兔有4只。」——你能从题目里再确认一个已知条件吗?"
+    leak = "不对,我们来看 26 只脚该怎么分。"
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload(loop_text),            # 首问即该兜底句(构造 prev)
+        _tutor_payload(leak), _tutor_payload(leak),  # 泄露 + 重生成仍泄露 → 兜底同句
+    ])
+    first = start({"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?说明思路。",
+                   "answer": "", "analysis": "", "knowledge_points": []},
+                  {"grade": "六年级"}, gateway=gateway)
+    turn = reply(first.session, "我还是觉得鸡有4只,兔有4只。", gateway=gateway)
+    assert turn.text == "我们从这里入手:先算全部按鸡的脚数。你接着算下一步。"
+    assert turn.text != loop_text           # 不再同句复读
+    assert turn.session.stuck is True
+    assert turn.ready_to_confirm is False
+
+
+def test_elicit_swap_repeat_backstop_reveals_ladder():
+    """代喂替换复读:上一轮已是复讲引导,本轮替换会再现同句(实测 8 连发)→ 阶梯推进。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload(ELICIT),              # 上一轮学生可见文本即复讲引导(构造 prev)
+        _tutor_payload("你用的是底乘高的方法,对吧?"),
+    ])
+    first = start({"text": "一个三角形底是10厘米,高是6厘米,面积是多少?",
+                   "answer": "", "analysis": "", "knowledge_points": []},
+                  {"grade": "六年级"}, gateway=gateway)
+    turn = reply(first.session, "我还是觉得面积就是60平方厘米。", gateway=gateway)
+    assert turn.text != ELICIT              # 不再同句复讲引导
+    assert turn.text.startswith(("我们从这里入手", "下一步是这样"))  # 阶梯推进
+    assert turn.session.stuck is True
+
+
 # ---------- 代喂替换埋点(残留度量语料来源) ----------
 
 def test_method_feed_swap_records_original_event():

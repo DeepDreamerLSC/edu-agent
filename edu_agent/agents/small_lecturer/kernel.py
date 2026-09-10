@@ -581,6 +581,15 @@ def reply(session: LearnerSession, student_message: str, *,
                       safe_text, regenerated=False)
         safe_text = _ELICIT_TEMPLATE
         output["ready_to_confirm"] = False
+    if prev and safe_text == prev:
+        # 输出面防复读(#112 终极不变量,精确等值——不吞正当的相近推进):任何兜底
+        # (护栏兜底/复读自批评降级/代喂替换)的产出若与上一轮学生可见文本完全相同,
+        # 即同句复读 → 阶梯推进给新内容。复读探针实测(修复前):同句兜底可连发
+        # 8 轮——泄露兜底「先回到你刚说的…」×8、代喂替换复讲引导 ×8,9 轮零推进。
+        safe_text = _reveal_stuck_hint(session)
+        output["reply"] = safe_text
+        output["ready_to_confirm"] = False
+        session.stuck = True
     # 数字漂移守卫(抽取制 + 来源标签池,M2 闭环 #113/#34):抽取模型 reply 文本
     # 里的数字(排除"第N"序数),允许集 = 题面 ∪ steps 值 ∪ 学生历史数字 ∪
     # [终答:仅 ready_to_confirm 态];cited_numbers 自报集保留(影子对照)。
