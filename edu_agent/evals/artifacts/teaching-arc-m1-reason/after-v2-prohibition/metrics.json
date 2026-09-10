@@ -1,0 +1,337 @@
+{
+ "by_arm": {
+  "F|M": {
+   "n_cases": 22,
+   "first_question_ok": {
+    "overall": {
+     "n": 22,
+     "k": 18,
+     "rate": 0.818
+    },
+    "r1": {
+     "n": 11,
+     "k": 9,
+     "rate": 0.818
+    },
+    "r2": {
+     "n": 11,
+     "k": 9,
+     "rate": 0.818
+    },
+    "min_max": [
+     0.818,
+     0.818
+    ]
+   },
+   "collect_not_judge_ok": {
+    "overall": {
+     "n": 20,
+     "k": 0,
+     "rate": 0.0
+    },
+    "r1": {
+     "n": 10,
+     "k": 0,
+     "rate": 0.0
+    },
+    "r2": {
+     "n": 10,
+     "k": 0,
+     "rate": 0.0
+    },
+    "min_max": [
+     0.0,
+     0.0
+    ]
+   },
+   "restate_ok": {
+    "overall": {
+     "n": 22,
+     "k": 7,
+     "rate": 0.318
+    },
+    "r1": {
+     "n": 11,
+     "k": 3,
+     "rate": 0.273
+    },
+    "r2": {
+     "n": 11,
+     "k": 4,
+     "rate": 0.364
+    },
+    "min_max": [
+     0.273,
+     0.364
+    ]
+   },
+   "feeding_judge": {
+    "overall": {
+     "n": 22,
+     "k": 10,
+     "rate": 0.455
+    },
+    "r1": {
+     "n": 11,
+     "k": 5,
+     "rate": 0.455
+    },
+    "r2": {
+     "n": 11,
+     "k": 5,
+     "rate": 0.455
+    },
+    "min_max": [
+     0.455,
+     0.455
+    ]
+   },
+   "feeding_any": {
+    "overall": {
+     "n": 22,
+     "k": 16,
+     "rate": 0.727
+    },
+    "r1": {
+     "n": 11,
+     "k": 8,
+     "rate": 0.727
+    },
+    "r2": {
+     "n": 11,
+     "k": 8,
+     "rate": 0.727
+    },
+    "min_max": [
+     0.727,
+     0.727
+    ]
+   }
+  }
+ },
+ "divergence": [
+  {
+   "caliber_arm": "F|M",
+   "base_id": "small_lecturer_dialogue_stability_20_stability_fraction_addition",
+   "metric": "feeding_judge",
+   "r1": false,
+   "r2": true
+  },
+  {
+   "caliber_arm": "F|M",
+   "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit",
+   "metric": "restate_ok",
+   "r1": false,
+   "r2": true
+  },
+  {
+   "caliber_arm": "F|M",
+   "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition",
+   "metric": "feeding_judge",
+   "r1": true,
+   "r2": false
+  }
+ ],
+ "per_case": {
+  "F|M": {
+   "small_lecturer_dialogue_scenarios_equation_complete_reasoning__r1": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": null,
+    "restate_ok": false,
+    "feeding_judge": false,
+    "feeding_deterministic": false,
+    "feeding_any": false,
+    "answer_status": "correct"
+   },
+   "small_lecturer_dialogue_scenarios_equation_complete_reasoning__r2": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": null,
+    "restate_ok": false,
+    "feeding_judge": false,
+    "feeding_deterministic": false,
+    "feeding_any": false,
+    "answer_status": "correct"
+   },
+   "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r1": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": true,
+    "feeding_judge": true,
+    "feeding_deterministic": false,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r2": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": true,
+    "feeding_judge": true,
+    "feeding_deterministic": false,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_dialogue_stability_20_stability_equation_subtract__r1": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": true,
+    "feeding_deterministic": false,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_dialogue_stability_20_stability_equation_subtract__r2": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": true,
+    "feeding_deterministic": false,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_dialogue_stability_20_stability_fraction_addition__r1": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": false,
+    "feeding_deterministic": true,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_dialogue_stability_20_stability_fraction_addition__r2": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": true,
+    "feeding_deterministic": true,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_dialogue_stability_20_stability_triangle_area__r1": {
+    "first_question_ok": false,
+    "collect_not_judge_ok": false,
+    "restate_ok": true,
+    "feeding_judge": false,
+    "feeding_deterministic": true,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_dialogue_stability_20_stability_triangle_area__r2": {
+    "first_question_ok": false,
+    "collect_not_judge_ok": false,
+    "restate_ok": true,
+    "feeding_judge": false,
+    "feeding_deterministic": true,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_dialogue_stability_20_stability_word_problem__r1": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": false,
+    "feeding_deterministic": false,
+    "feeding_any": false,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_dialogue_stability_20_stability_word_problem__r2": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": false,
+    "feeding_deterministic": false,
+    "feeding_any": false,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r1": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": true,
+    "feeding_deterministic": true,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r2": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": true,
+    "feeding_judge": true,
+    "feeding_deterministic": false,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r1": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": true,
+    "feeding_deterministic": false,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r2": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": true,
+    "feeding_deterministic": false,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": true,
+    "feeding_deterministic": true,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r2": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": false,
+    "feeding_deterministic": true,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r1": {
+    "first_question_ok": false,
+    "collect_not_judge_ok": false,
+    "restate_ok": true,
+    "feeding_judge": false,
+    "feeding_deterministic": true,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r2": {
+    "first_question_ok": false,
+    "collect_not_judge_ok": false,
+    "restate_ok": true,
+    "feeding_judge": false,
+    "feeding_deterministic": true,
+    "feeding_any": true,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r1": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": false,
+    "feeding_deterministic": false,
+    "feeding_any": false,
+    "answer_status": "incorrect"
+   },
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r2": {
+    "first_question_ok": true,
+    "collect_not_judge_ok": false,
+    "restate_ok": false,
+    "feeding_judge": false,
+    "feeding_deterministic": false,
+    "feeding_any": false,
+    "answer_status": "incorrect"
+   }
+  }
+ }
+}

@@ -1,0 +1,26 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你好呀，我们一起看看这道关于三角形面积的题，你刚才算出的答案是多少呢？'，包含友好开场并采集作答，未评判对错。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师采集到学生答案'10乘6等于60'后，立即回应'这一步是对的！'，进行了对错判定。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": true,
+  "evidence": "教师请求：'那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。'；学生回应：'所以三角形面积是10乘6再除以2，等于30平方厘米。'"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "不过三角形面积和长方形不一样，它没有满铺，所以要除以2",
+   "你正确地用10×6÷2算出面积30平方厘米"
+  ],
+  "evidence": "在学生尚未完整得出正确结论前，教师直接说出'要除以2'及最终答案'30平方厘米'。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

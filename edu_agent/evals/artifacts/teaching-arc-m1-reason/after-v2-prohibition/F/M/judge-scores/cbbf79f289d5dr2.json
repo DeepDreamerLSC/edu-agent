@@ -1,0 +1,25 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'好，我们一起来看看这道题，你选了哪个选项或者算出的答案是多少？'，符合采集作答且无评判。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师未采集到具体答案，且后续回应中直接判定'这一步完全正确'并给出中间结果'右边会变成18'。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求'请你从头讲讲你的思路'，但学生未再回应，对话以教师再次提问结束。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "如果两边同时减去7，左边会变成3x，右边会变成18"
+  ],
+  "evidence": "在学生未算出答案前，教师直接给出了中间步骤的数值结果'右边会变成18'。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

@@ -1,0 +1,25 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你刚才算出来鸡和兔各是多少只呢？'，仅采集作答，未评判对错或复讲。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师未等待学生给出具体数值答案，直接给出完整解题过程：'我们先假设全是鸡...所以10÷2=5只兔子。'，属于直接纠正和给出答案。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求：'那请你从头讲讲你的思路'，但学生未再回应，对话以教师追问结束。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "我们先假设全是鸡，8只鸡有8×2=16只脚，但实际有26只脚，多出26-16=10只脚。每只兔子比鸡多2只脚，所以10÷2=5只兔子。剩下的就是鸡：8-5=3只。"
+  ],
+  "evidence": "在学生未给出答案前，教师直接使用了'假设法'并给出了完整计算过程和答案数值。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

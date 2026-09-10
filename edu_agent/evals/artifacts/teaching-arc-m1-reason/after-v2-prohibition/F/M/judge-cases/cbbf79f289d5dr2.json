@@ -1,0 +1,50 @@
+{
+ "id": "cbbf79f289d5dr2",
+ "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract",
+ "repeat": 2,
+ "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
+ "grade": "五年级",
+ "answer_status": "incorrect",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "好，我们一起来看看这道题，你选了哪个选项或者算出的答案是多少？"
+  },
+  {
+   "role": "user",
+   "content": "我还没有想清楚，能先给我一个方向吗？"
+  },
+  {
+   "role": "assistant",
+   "content": "你正在解一个方程，目标是找到x等于多少。我们先看等式两边都有什么，左边是3x+7，右边是25。你猜，第一步可以做什么？比如，能不能把两边的7都去掉？"
+  },
+  {
+   "role": "user",
+   "content": "是不是先处理加上的7，但我不确定该怎么处理。"
+  },
+  {
+   "role": "assistant",
+   "content": "你想到要处理加上的7，这很对！那我们来想，如果两边同时减去7，左边会变成3x，右边会变成18，这样就只剩一个未知数了，你觉得为什么这样做不会破坏等式？"
+  },
+  {
+   "role": "user",
+   "content": "我想两边都减去7，得到3x等于18。"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才说两边减7得到3x=18，这一步完全正确！现在我们想让x单独在左边，你猜接下来该对3x=18做什么？比如，能不能把3x变成x？"
+  },
+  {
+   "role": "user",
+   "content": "因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。"
+  },
+  {
+   "role": "assistant",
+   "content": "很好,你已经懂了。那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。"
+  },
+  {
+   "role": "assistant",
+   "content": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  }
+ ]
+}
