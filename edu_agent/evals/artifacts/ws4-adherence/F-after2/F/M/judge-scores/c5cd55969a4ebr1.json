@@ -1,0 +1,25 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你先告诉我，你算出鸡和兔各有多少只？'，符合采集作答且无评判。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师未直接采集到具体数值答案，且后续回应中直接给出计算步骤'实际有26只脚，比16多出10只...每只兔子比鸡多2只脚'，属于直接纠正/讲解。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求：'那请你从头讲讲你的思路'，但学生未再复述，对话随即结束或进入下一轮无效提问。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "现在我们来算一下，实际有26只脚，比16多出10只，这多出来的脚是兔子的，每只兔子比鸡多2只脚，那这10只脚能对应几只兔子呢？"
+  ],
+  "evidence": "在学生尚未算出最终答案前，教师直接给出了'比16多出10只'、'每只兔子比鸡多2只脚'等解题关键步骤和逻辑。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

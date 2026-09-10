@@ -1,0 +1,50 @@
+{
+ "id": "c31bbd06a9df9r2",
+ "base_id": "small_lecturer_dialogue_stability_20_stability_word_problem",
+ "repeat": 2,
+ "question": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
+ "grade": "三年级",
+ "answer_status": "incorrect",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "你先告诉我，你现在算出的结果是多少？"
+  },
+  {
+   "role": "user",
+   "content": "我把三个数直接加在一起。"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才说把三个数直接加在一起，能说说你是怎么想到这一步的吗？"
+  },
+  {
+   "role": "user",
+   "content": "借出表示数量减少，不能也加上38。"
+  },
+  {
+   "role": "assistant",
+   "content": "你发现借出不能加，这很仔细！那我们把‘原有120本’和‘买来45本’放在一起看，它们加起来是现在有多少本吗？"
+  },
+  {
+   "role": "user",
+   "content": "先算120加45等于165本。"
+  },
+  {
+   "role": "assistant",
+   "content": "你算出120加45等于165，这一步是对的！那借出38本后，现在还剩多少本呢？"
+  },
+  {
+   "role": "user",
+   "content": "再算165减38等于127本，所以现在有127本。"
+  },
+  {
+   "role": "assistant",
+   "content": "很好,你已经懂了。那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。"
+  },
+  {
+   "role": "assistant",
+   "content": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  }
+ ]
+}

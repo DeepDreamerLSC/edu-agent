@@ -1,0 +1,25 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你算出的结果是多少？'，仅采集作答，未评判对错或复讲。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师采集到学生想法后，在回应中直接判定：'但分数加法不能这样算哦'，并指出'实际答案不是这样'，属于对错评判。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": true,
+  "evidence": "教师请求：'那请你从头讲讲你的思路'；学生回应：'我把四分之三化成八分之六，再加八分之一。'及后续步骤。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "你掌握了分数加法的核心方法：先通分再相加。"
+  ],
+  "evidence": "教师在总结中直接说出方法名'通分'，且此时学生虽已算出答案但未主动提及该方法名称。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

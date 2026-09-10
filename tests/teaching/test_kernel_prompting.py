@@ -66,6 +66,53 @@ def test_kernel_sends_assembled_system_message(tmp_path):
     assert "六年级" in system_message["content"]
 
 
+# ---------- #165 WS4 第 5 条:incorrect 弧线第②步(追问思路)轮 ----------
+
+DIAGNOSE_LEARNER = {**LEARNER, "answer_status": "incorrect"}
+
+
+def _tutor_prompt_blobs(fake) -> list[str]:
+    """已记录请求的**全文**(网关在末尾追加 schema 提醒,故不取 messages[-1])。"""
+    return ["\n".join(str(m.get("content", "")) for m in (body.get("messages") or []))
+            for body in fake.requests if body.get("messages")]
+
+
+def test_arc_diagnose_hint_only_on_first_reply(tmp_path):
+    """只覆盖弧线第②步(首问后的第一次回应);之后轮次不再限制措辞
+    (扩到②+③ 的版本经 F 口径实测更差,已回退——见 prompting.py 注释)。"""
+    fake = FakeOpenAI([
+        completion(open_json("你算出的结果是多少?")),
+        completion(tutor_json("你是怎么想到把三个数加在一起的?", ready=False)),
+        completion(tutor_json("把这两个条件放在一起看,你觉得哪里会不一样?", ready=False)),
+        completion(tutor_json("我们来看看:如果先减38会怎样?", ready=False)),
+    ]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    first = start(QUESTION_TEXT, dict(DIAGNOSE_LEARNER), gateway=gateway)
+    reply(first.session, "我把三个数直接加在一起。", gateway=gateway)
+    reply(first.session, "因为题目说又买来又借出。", gateway=gateway)
+    reply(first.session, "那我先算加法试试。", gateway=gateway)
+    gateway.close()
+    fake.stop()
+    prompts = _tutor_prompt_blobs(fake)
+    assert "弧线第②步" in prompts[1]                      # 首问后的第一次回应
+    assert "弧线第②步" not in prompts[2]                   # 之后不再限制措辞
+    assert "弧线第②步" not in prompts[3]
+
+
+def test_arc_diagnose_hint_absent_without_incorrect_status(tmp_path):
+    """correct/unknown(缺省)弧线不受影响:零注入(判据与行为面零改动)。"""
+    fake = FakeOpenAI([
+        completion(open_json("我们先确认题意:要求什么?")),
+        completion(tutor_json("你说说看下一步?", ready=False)),
+    ]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    first = start(QUESTION_TEXT, dict(LEARNER), gateway=gateway)
+    reply(first.session, "我想先移项。", gateway=gateway)
+    gateway.close()
+    fake.stop()
+    assert all("弧线第" not in p for p in _tutor_prompt_blobs(fake))
+
+
 # ---------- 第一验收:护栏不过的输出不进入 Turn.text ----------
 
 def test_kernel_replaces_leaking_tutor_output(tmp_path):
