@@ -366,9 +366,21 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
         self._json(self.service.open_unified(body))
 
     def _open_prepared_question(self, question_id: str) -> None:
-        """POST /api/prepared-questions/{id}/open(#55 既有入口,抽方法保 _dispatch 预算)。"""
-        body = self._body_keys("idempotency_key")
-        self._json(self.service.open(question_id, body["idempotency_key"], learner={}))
+        """POST /api/prepared-questions/{id}/open(#55 既有入口,App 主路径,00 §5.2 约定 1-2)。
+
+        A 线 §8.5(M3 WS1):answer_correct(bool|null)/knowledge_points(≤20,name 必填)
+        从请求体接收,经 service.open_request_learner 构造 learner(answer_status 映射
+        + provenance)传给 kernel.start()——替换原写死 learner={};约定 4 拦截与统一
+        open / conversations 同款。"""
+        body = self._read_body()
+        forbidden = sorted(_FORBIDDEN_FIELDS & set(body))
+        if forbidden:
+            raise ApiError(403, None, f"客户端不得提交字段:{','.join(forbidden)}")
+        if not body.get("idempotency_key"):
+            raise ApiError(422, None, "idempotency_key 必填(00 §5.2:请求只有 idempotency_key)")
+        learner, _, _ = ConversationService.open_request_learner(
+            body, frozenset({"idempotency_key"}) | ConversationService._OPEN_LEARNER_FIELDS)
+        self._json(self.service.open(question_id, str(body["idempotency_key"]), learner))
 
     def _create_conversation(self) -> None:
         """POST /api/conversations:统一 Open 字段子集(external_question_id/
@@ -406,13 +418,6 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
         if not isinstance(payload, dict):
             raise ApiError(422, None, "请求体必须是 JSON 对象")
         return payload
-
-    def _body_keys(self, *keys: str) -> dict:
-        body = self._read_body()
-        missing = [key for key in keys if not body.get(key)]
-        if missing:
-            raise ApiError(422, None, f"缺必填字段:{','.join(missing)}")
-        return {key: body[key] for key in keys}
 
     def _json(self, payload: dict, status: int = 200) -> None:
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
