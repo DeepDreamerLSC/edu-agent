@@ -240,7 +240,8 @@ def render_from(run_dir: Path) -> int:
     """--render-from:不跑批,从既有 run 目录重渲染 comparison.md(Mac 纪律:优先重渲染)。
 
     gate 段数字从 run 目录落盘件重算(cases.jsonl / collect 结果 / judge-scores.json);
-    json_first_pass 段承接原 comparison.md 原文(facts 记录不在 run 目录,无法重算,承接不改编)。
+    json_first_pass 段承接原 comparison.md 原文(facts 记录不在 run 目录,无法重算)并
+    标注「未重算」——报告自述哪些段重算、哪些段承接(#154 审查观察 2)。
     """
     cases = [json.loads(line) for line
              in (run_dir / "cases.jsonl").read_text(encoding="utf-8").splitlines() if line]
@@ -253,7 +254,9 @@ def render_from(run_dir: Path) -> int:
         old = old_path.read_text(encoding="utf-8")
         jfp_at = old.find("## json_first_pass")
         if jfp_at >= 0:
-            text += "\n" + old[jfp_at:]
+            marker = ("> 注:json_first_pass 段**承接原 comparison.md、未重算**"
+                      "(facts 记录不在 run 目录;上方 gate 段数字已从落盘件重算)。")
+            text += "\n" + marker + "\n\n" + old[jfp_at:]
     old_path.write_text(text, encoding="utf-8")
     print(text)
     return 0

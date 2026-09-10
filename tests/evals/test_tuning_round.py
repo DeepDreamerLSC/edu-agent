@@ -169,5 +169,7 @@ class TestComparisonSelfDescribe:
         assert tuning_round.render_from(run) == 0
         text = (run / "comparison.md").read_text(encoding="utf-8")
         assert "剧本截断" in text and "2/4 ⚠" in text               # 自述块已生成
+        assert "承接原 comparison.md、未重算" in text               # 承接段显式标注(#154 审查观察 2)
         assert "## json_first_pass(01 §6 结构化输出合规率)\n\n旧段原文" in text
-        assert text.index("对两轮均值差") < text.index("## json_first_pass")
+        assert text.index("对两轮均值差") < text.index("承接原 comparison.md")
+        assert text.index("承接原 comparison.md") < text.index("## json_first_pass")
