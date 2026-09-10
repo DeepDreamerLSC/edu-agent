@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你先告诉我，你算出的答案是多少？'，符合采集作答且无评判。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师未采集到具体答案（学生表示未想清楚），且后续回应中多次出现'这很对''这一步很聪明''这一步是对的'等对错判定。"
+ },
+ "restate": {
+  "asked": false,
+  "delivered": false,
+  "evidence": "对话中教师未出现'讲一遍''复述''说说你的思路'等明确请学生复讲的指令。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未提及'假设法'等方法名，且学生已自行说出'x等于6'，教师后续验证未构成代喂。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

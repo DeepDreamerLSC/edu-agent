@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "首问为'你解这道题时，第一步是想怎么处理 7？能说说你为什么这么做吗？'，未采集学生具体作答（选项或数值），且包含复讲指令'说说你为什么这么做'。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师采集到学生答案后，在回应中直接判定'这一步很对'、'这一步很聪明'、'对吗'，违反了不评判对错的规定。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": true,
+  "evidence": "教师问'能说说你为什么这么做吗'，学生随后回答'我想两边都减去7...因为等式两边做相同运算仍然相等...'。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未提及特定方法名（如移项、方程法等），且学生已先说出答案x=6，教师后续提及x=6属于确认而非代喂。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

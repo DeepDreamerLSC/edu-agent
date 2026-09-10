@@ -1,0 +1,25 @@
+{
+ "first_question": {
+  "applicable": false,
+  "compliant": false,
+  "evidence": "学生作答状态为unknown，无法判定首问合规性"
+ },
+ "collect_not_judge": {
+  "applicable": false,
+  "compliant": false,
+  "evidence": "学生作答状态为unknown，规则2不适用"
+ },
+ "restate": {
+  "asked": false,
+  "delivered": false,
+  "evidence": "教师未出现明确请学生复讲或讲解思路的指令，如'讲一遍'或'说说你的思路'"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "你已经算出面积是30平方厘米"
+  ],
+  "evidence": "教师在首问中直接给出了本题参考答案的数值'30平方厘米'，而学生尚未说出该答案"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}
