@@ -86,6 +86,14 @@ def test_deploy_metric_passes_without_scripts(base_repo):
     assert "BUDGET-OK deploy-script-lines" in result.stdout
 
 
+def test_scripts_total_lines_report_only(base_repo):
+    """scripts/*.py 只登记不设限:500 行脚本不影响绿灯,但行数可见(#154 审查观察 1)。"""
+    write_code_lines(base_repo / "scripts" / "tool_eval_x.py", 500)
+    result = run_py("budget.py", "--root", str(base_repo))
+    assert result.returncode == 0
+    assert "BUDGET-REPORT scripts-total-lines: 500(登记用,不设限)" in result.stdout
+
+
 def test_suppressions_over_limit(base_repo):
     for index in range(budget.LIMIT_SUPPRESSIONS + 1):
         content = f"x{index} = {index}  # noqa: E501\n"

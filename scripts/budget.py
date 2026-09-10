@@ -156,6 +156,15 @@ def deploy_script_lines(root: Path) -> tuple[int, list[str]]:
     return total, [p.name for p in names]
 
 
+def scripts_total_lines(root: Path, py_files: list) -> int:
+    """scripts/ 下 *.py 总行数(非空非注释,同 §2 计法)。
+
+    02 §2 预算只覆盖 edu_agent 包;scripts/*.py 是工具面(进仓的评测工具等),
+    只登记不设限——2026-09-10 PR #154 审查观察 1:工具行数对预算不可见,至少要可见。
+    """
+    return sum(code_lines(p) for p in py_files if is_under(p, root, "scripts"))
+
+
 def test_lines(root: Path, py_files: list) -> int:
     """tests/ 行数,分子不含 tests/rules/ 与 tests/fixtures/(02 §6)。"""
     total = 0
@@ -215,6 +224,7 @@ def collect_metrics(root: Path) -> list[Metric]:
     deps = runtime_deps(root)
     configs = config_file_count(root)
     deploy_total, deploy_names = deploy_script_lines(root)
+    scripts_total = scripts_total_lines(root, py_files)
     suppressions = sum(count_comment_suppressions(p) for p in py_files) + pyproject_suppressions(root)
     return [
         Metric("app-total-lines", f"{total_app} / {LIMIT_APP_TOTAL_LINES}", total_app <= LIMIT_APP_TOTAL_LINES),
@@ -237,6 +247,8 @@ def collect_metrics(root: Path) -> list[Metric]:
         ),
         Metric("suppressions", f"{suppressions} / {LIMIT_SUPPRESSIONS}", suppressions <= LIMIT_SUPPRESSIONS),
         test_ratio_metric(root, py_files, total_app),
+        # 登记(非 02 §2 预算指标,永不阻塞):工具面行数可见性,#154 审查观察 1。
+        Metric("scripts-total-lines", f"{scripts_total}(登记用,不设限)", True, blocking=False),
     ]
 
 
