@@ -70,13 +70,11 @@ def _assertion(key, external_id=EXTERNAL_ID):
 
 
 def _native_codes(base, key, *, idem="login-001", api_key=API_KEY,
-                  external_id=EXTERNAL_ID, with_idem=True):
-    headers = {"Authorization": f"Bearer {api_key}"}
-    if with_idem:
-        headers["Idempotency-Key"] = idem
+                  external_id=EXTERNAL_ID, assertion=None):
+    headers = {"Authorization": f"Bearer {api_key}", "Idempotency-Key": idem}
     return httpx.post(f"{base}/api/openapi/v1/auth/native-codes", headers=headers, timeout=5.0,
                       trust_env=False,
-                      json={"assertion": _assertion(key, external_id=external_id),
+                      json={"assertion": assertion or _assertion(key, external_id=external_id),
                             "external_student_id": external_id,
                             "native_app_id": "partner_student_app",
                             "code_challenge": CHALLENGE, "code_challenge_method": "S256"})
@@ -124,8 +122,12 @@ def test_wrong_verifier_rejected(base_url):
 
 def test_native_codes_idempotency_same_key_same_body(base_url):
     base, key = base_url
-    first = _native_codes(base, key, idem="login-idem-1")
-    second = _native_codes(base, key, idem="login-idem-1")
+    # 幂等指纹是 body 的 json.dumps(含 assertion),而 assertion 内嵌 int(time.time()) 的
+    # iat/nbf/exp——两次现签会跨秒变体,指纹不同被误判 409(CI 实测 flaky)。固定断言
+    # 才是本用例要测的"同键同体"。#113 P2 分支 CI 首次暴露。
+    assertion = _assertion(key)
+    first = _native_codes(base, key, idem="login-idem-1", assertion=assertion)
+    second = _native_codes(base, key, idem="login-idem-1", assertion=assertion)
     assert first.status_code == 201 and second.status_code == 200  # 首发Created/重放OK
     assert second.json() == first.json()  # 同键同体 → 同一授权码载荷(#63 语义)
 

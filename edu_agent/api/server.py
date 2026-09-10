@@ -14,7 +14,7 @@ import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from .files import FileService
+from .files import MAX_BYTES, FileService
 from .identity import IdentityError, IdentityService
 from .service import ApiError, ConversationService
 
@@ -96,7 +96,7 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         if _LOGIN.match(self.path):
             return self.identity.demo_login_body(self._read_body())
         if _NATIVE_CODES.match(self.path):
-            return self.identity.native_code(self._read_body(), dict(self.headers))
+            return self.identity.native_code(self._read_body(), self.headers)
         if _NATIVE_TOKEN.match(self.path):
             return self.identity.native_token(self._read_body())
         if _LOGOUT.match(self.path):
@@ -118,6 +118,7 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         return self.identity.verify_token(token)
 
     def _dispatch(self) -> None:
+        self.path = self.path.partition("?")[0]  # 剥 query string(审查 P2:regex $ 锚定不剥 ? 全 404)
         identity = self._identity_post()
         if identity is not None:
             self._json(identity[1], identity[0])
@@ -173,6 +174,7 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
 
     def do_PUT(self) -> None:
         """PUT 上传二进制(学生 token 鉴权):新路径 + 老合同别名共用 store_content。"""
+        self.path = self.path.partition("?")[0]  # 剥 query string(审查 P2)
         match = _FILES_CONTENT.match(self.path) or _FILES_CONTENT_LEGACY.match(self.path)
         if match is None:
             self._error(ApiError(404, None, "路径不在合作方合同内"))
@@ -180,7 +182,7 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         if not self._authorized():
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
-        length = int(self.headers.get("Content-Length") or 0)
+        length = self._content_length()
         payload = self.rfile.read(length)
         self._json(self.files.store_content(match["file_id"], payload))
 
@@ -313,6 +315,7 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
         return True
 
     def do_GET(self) -> None:
+        self.path = self.path.partition("?")[0]  # 剥 query string(审查 P2)
         if _HEALTHZ.match(self.path):
             from .healthz import snapshot  # 局部导入:快照依赖模型配置,按需加载
             self._json(snapshot())
@@ -377,8 +380,23 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
             raise ApiError(403, None, f"客户端不得提交字段:{','.join(forbidden)}")
         self._json(self.service.create(body), status=201)
 
+    def _content_length(self) -> int:
+        """读 Content-Length 并 clamp 到 20MB 上限;非法(非整数/负) → 400。
+
+        读前有界防 OOM(审查 P2:先整读进内存再校验可被超大 Content-Length 打爆);
+        int() 失败原落 503,按「客户端请求格式错误」收口为 400。
+        """
+        raw = self.headers.get("Content-Length") or "0"
+        try:
+            length = int(raw)
+        except ValueError:
+            raise ApiError(400, None, "Content-Length 非法") from None
+        if length < 0:
+            raise ApiError(400, None, "Content-Length 非法") from None
+        return min(length, MAX_BYTES)
+
     def _read_body(self) -> dict:
-        length = int(self.headers.get("Content-Length") or 0)
+        length = self._content_length()
         if not length:
             return {}
         try:
