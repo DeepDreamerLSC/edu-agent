@@ -1,0 +1,50 @@
+{
+ "id": "c5d45985286dfr1",
+ "base_id": "small_lecturer_dialogue_stability_20_stability_equation_subtract",
+ "repeat": 1,
+ "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
+ "grade": "五年级",
+ "answer_status": "incorrect",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "你解这道题时，第一步是想怎么处理 7？能说说你为什么这么做吗？"
+  },
+  {
+   "role": "user",
+   "content": "我还没有想清楚，能先给我一个方向吗？"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚说还没想清楚，没关系，我们先从方程左边的 7 开始想——为什么要把它去掉？"
+  },
+  {
+   "role": "user",
+   "content": "是不是先处理加上的7，但我不确定该怎么处理。"
+  },
+  {
+   "role": "assistant",
+   "content": "你想到要先处理加上的7，这很对！那我们怎么才能把7从左边去掉呢？"
+  },
+  {
+   "role": "user",
+   "content": "我想两边都减去7，得到3x等于18。"
+  },
+  {
+   "role": "assistant",
+   "content": "你想到两边都减7，这一步很聪明！减7后左边剩3x，右边是25减7等于18，对吗？"
+  },
+  {
+   "role": "user",
+   "content": "因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才说两边同时除以3得到x等于6，这一步很关键！我们来想想，为什么除以3后等式还能保持平衡？"
+  },
+  {
+   "role": "assistant",
+   "content": "你用等式性质正确地通过减7和除以3解出了x=6，关键转折是理解‘两边同时做相同运算’保持等式平衡；仍需注意：每一步都要明确写出‘为什么’，比如除以3时要说明‘因为3x÷3=x，右边18÷3=6’，这样更清晰。"
+  }
+ ]
+}
