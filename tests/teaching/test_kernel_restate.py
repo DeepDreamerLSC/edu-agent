@@ -104,14 +104,17 @@ def test_restatement_after_elicit_does_not_re_elicit():
 
 
 def test_confirm_state_blocks_elicit():
-    """确认态不回复讲:模型已置 ready_to_confirm 后,答案陈述走模型路径。"""
+    """确认态不回复讲:答案陈述走模型路径,不再请复讲。
+
+    (#149 判停闸)确认态须**合法达成**:学生先自己说出答案数字集,模型才允许判停——
+    此前靠模型单方面 ready=True 建态的构造按新不变量改写(断言不变)。"""
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你现在觉得鸡和兔各有多少只?"),
         _tutor_payload("我们把思路理清楚了。", ready=True),
         _tutor_payload("我们再确认一遍。"),
     ])
     session = _incorrect_session(gateway)
-    confirmed = reply(session, "我觉得可以按脚数差来算。", gateway=gateway)
+    confirmed = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
     assert confirmed.state == "ready_to_confirm"
     turn = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
     assert turn.text != ELICIT and turn.session.guard_events[-1]["branch"] == "model"
@@ -203,7 +206,9 @@ def test_repeat_fallback_ladder_texts_differ_consecutively():
 def test_guard_fallback_repeat_backstop_reveals_ladder():
     """泄露兜底复读:同句兜底将连续出现(复读探针实测修复前 8 连发)→ 阶梯推进。"""
     loop_text = "先回到你刚说的「我还是觉得鸡有4只,兔有4只。」——你能从题目里再确认一个已知条件吗?"
-    leak = "不对,我们来看 26 只脚该怎么分。"
+    # (#149 ②)护栏答案基线统一走 _known_answer:本题 answer 空 → steps 末值 "10" 成基线,
+    # 泄露判定由 unverified 分支转为 grounded 分支(命中答案 + 断言线索才算泄露)。
+    leak = "结果是 10,不用再想了。"
     gateway = FakeGateway(tutor_payloads=[
         _open_payload(loop_text),            # 首问即该兜底句(构造 prev)
         _tutor_payload(leak), _tutor_payload(leak),  # 泄露 + 重生成仍泄露 → 兜底同句
