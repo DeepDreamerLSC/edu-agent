@@ -202,6 +202,61 @@ def test_repeat_fallback_ladder_texts_differ_consecutively():
     assert turn2.session.hint_level == 2
 
 
+# ---------- #165 WS4 第 2 条:揭示**动作化**(不再把该步算好的结果交给学生) ----------
+
+def _reveal_after_repeat(step_text: str) -> str:
+    """走公开路径逼出一次阶梯揭示:模型复读首问 → 重生成仍复读 → 兜底揭示下一级。"""
+    repeated = "兔子有几只呢?"
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload(repeated, steps=[{"step": step_text, "value": "x"}]),
+        _tutor_payload(repeated),
+        _tutor_payload(repeated),   # 重生成仍复读 → 走揭示
+    ])
+    first = start(dict(CHICKEN_QUESTION), {"grade": "六年级"}, gateway=gateway)
+    return reply(first.session, "嗯,我看看。", gateway=gateway).text
+
+
+def test_reveal_withholds_computed_result_from_plan_step():
+    """规划句写成「先算两个数相乘：10 × 6 = 60」时,揭示只给动作,结果收回去(学生自己算)。
+
+    用不含方法词的句子构造:揭示句若含方法词会被代喂护栏接走(#165 第 1 条已改为
+    重生成/脱敏,见 PR #168),那是另一条路径,不在本条断言范围。"""
+    text = _reveal_after_repeat("先算两个数相乘：10 × 6 = 60")
+    assert text == "我们从这里入手:先算两个数相乘。你接着算下一步。"
+    assert "60" not in text and "×" not in text
+
+
+def test_reveal_keeps_step_when_it_is_only_an_expression():
+    """整句都是算式(没有动作段)→ 不空揭示,退回原文(宁可少改,不把揭示变空)。"""
+    assert _reveal_after_repeat("26-16=10") == "我们从这里入手:26-16=10。你接着算下一步。"
+
+
+def test_reveal_keeps_step_when_head_is_only_an_ordinal():
+    """动作段只是序号(「第二步」)→ 同样退回原文。"""
+    assert (_reveal_after_repeat("第二步：10 ÷ 2 = 5 只兔")
+            == "我们从这里入手:第二步：10 ÷ 2 = 5 只兔。你接着算下一步。")
+
+
+def test_reveal_cuts_at_clause_boundary_not_mid_sentence():
+    """L 口径实测的残句回归:按「截到算式起始」会切出「8只鸡有。」——
+    改为**按分句边界截断**,整段丢掉带结果的分句(「假设全是鸡」)。"""
+    text = _reveal_after_repeat("假设全是鸡，8只鸡有 8×2=16 只脚")
+    assert text == "我们从这里入手:假设全是鸡。你接着算下一步。"
+    assert "16" not in text and "有。" not in text
+
+
+def test_reveal_keeps_step_when_no_clause_boundary_exists():
+    """没有分句边界可切时**原样保留**(宁可直给,不出残句)——不做机械截断。"""
+    step = "8只鸡有 8×2=16 只脚"
+    assert _reveal_after_repeat(step) == f"我们从这里入手:{step}。你接着算下一步。"
+
+
+def test_reveal_keeps_step_without_arithmetic_unchanged():
+    """无算式结果的规划句原样揭示(条件数字如「8只鸡」不算结果,不动)。"""
+    assert (_reveal_after_repeat("假设8只全是鸡，算出脚的总数")
+            == "我们从这里入手:假设8只全是鸡，算出脚的总数。你接着算下一步。")
+
+
 # ---------- 输出面防复读终极不变量(任何兜底不得与上一轮学生可见文本同句) ----------
 
 def test_guard_fallback_repeat_backstop_reveals_ladder():
