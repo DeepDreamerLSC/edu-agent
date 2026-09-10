@@ -65,7 +65,9 @@ def test_invoke_ok_records_full_fact(tmp_path, fake):
     assert payload["edu.attempt"] == 1
     assert payload["edu.session_id"] == "sess-1"
     assert payload["edu.trace_id"] == "trace-9"
-    assert payload["edu.queue_ms"] == 0
+    # 无争用 ≠ 严格 0:信号量 acquire 在负载机器上有线程调度延迟(实测 2-3ms)。
+    # 放宽为"无排队量级"仍抓得住真排队(真排队是百 ms 起),同时不再随机打红 PR CI。
+    assert 0 <= payload["edu.queue_ms"] < 50
     assert payload["edu.error_detail"] is None
     assert payload["gen_ai.provider.name"] == "fake"
     assert payload["gen_ai.request.model"] == "m"
