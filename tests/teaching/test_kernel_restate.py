@@ -256,3 +256,50 @@ def test_method_feed_swap_records_original_event():
     assert events and events[-1]["original"] == "你用的是假设法,对吧?"
     assert "假设法" in events[-1]["rule_ids"]
     assert events[-1]["regenerated"] is False
+
+
+# ---------- ③ student_evidence 接线(#157 PM 复核裁定 1)+ ④ 补词 ----------
+
+FRACTION_QUESTION = {"text": "计算 3/4 加 1/8,说说你的做法。",
+                     "answer": "7/8", "analysis": "", "knowledge_points": ["异分母加法"]}
+TRIANGLE_QUESTION = {"text": "一个三角形底是10厘米,高是6厘米,面积是多少?",
+                     "answer": "30平方厘米", "analysis": "", "knowledge_points": ["三角形面积"]}
+
+
+def test_student_said_method_name_not_swapped():
+    """③:学生复讲里已自己说出「通分」→ 教师复述定名是弧线允许的点名,不换
+    (#148 §6.3 的 4 次误伤形态——R/fraction「你把通分和分子相加这一步都做对了」)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你先说说题目给了哪些条件?"),
+        _tutor_payload("你把通分和分子相加这一步都做对了,真棒!"),
+    ])
+    first = start(dict(FRACTION_QUESTION), {"grade": "六年级"}, gateway=gateway)
+    turn = reply(first.session, "我先把它们通分,再把分子相加。", gateway=gateway)
+    assert turn.text == "你把通分和分子相加这一步都做对了,真棒!"  # 原文放行
+    assert not [e for e in turn.session.guard_events if e.get("guard") == "feeds_method"]
+
+
+def test_mixed_hits_record_only_unsaid_tokens():
+    """③ 埋点精度:同一句里学生已说(通分)与未说(假设法)并存 → 只换、只记未说的。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你先说说题目给了哪些条件?"),
+        _tutor_payload("你把通分这步做对了,接下来试试假设法!"),
+    ])
+    first = start(dict(FRACTION_QUESTION), {"grade": "六年级"}, gateway=gateway)
+    turn = reply(first.session, "我通分之后把分子相加了。", gateway=gateway)
+    assert turn.text == ELICIT                       # 假设法未说 → 仍替换
+    events = [e for e in turn.session.guard_events if e.get("guard") == "feeds_method"]
+    assert events and events[-1]["rule_ids"] == ["假设法"]  # 只记未说词
+
+
+def test_area_formula_token_swapped():
+    """④:面积公式 补入 _METHOD_TOKENS(#148 §5 阶梯揭示句原样漏出的词)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你先说说题目给了哪些条件?"),
+        _tutor_payload("我们从这里入手:先写出三角形面积公式:面积 = 底 × 高 ÷ 2。"),
+    ])
+    first = start(dict(TRIANGLE_QUESTION), {"grade": "六年级"}, gateway=gateway)
+    turn = reply(first.session, "我想想。", gateway=gateway)
+    assert turn.text == ELICIT                       # 学生未说 → 换成请讲引导
+    events = [e for e in turn.session.guard_events if e.get("guard") == "feeds_method"]
+    assert events and "面积公式" in events[-1]["rule_ids"]
