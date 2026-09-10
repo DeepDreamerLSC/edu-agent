@@ -1,0 +1,219 @@
+#!/usr/bin/env python3
+"""一次性分析:RM 分数与我们 judge 的一致性(Spearman + 分组对比 + 自助置信区间)。
+
+纯标准库实现 Spearman(排序 + 皮尔逊),置信区间用成对自助(2000 次),
+p 值用置换检验(2000 次)。
+"""
+from __future__ import annotations
+
+import json
+import math
+import random
+import statistics
+from collections import defaultdict
+
+RNG = random.Random(42)
+
+
+def rank(xs: list[float]) -> list[float]:
+    order = sorted(range(len(xs)), key=lambda i: xs[i])
+    ranks = [0.0] * len(xs)
+    i = 0
+    while i < len(order):
+        j = i
+        while j + 1 < len(order) and xs[order[j + 1]] == xs[order[i]]:
+            j += 1
+        avg = (i + j) / 2 + 1
+        for k in range(i, j + 1):
+            ranks[order[k]] = avg
+        i = j + 1
+    return ranks
+
+
+def pearson(a: list[float], b: list[float]) -> float:
+    ma, mb = statistics.fmean(a), statistics.fmean(b)
+    num = sum((x - ma) * (y - mb) for x, y in zip(a, b))
+    da = math.sqrt(sum((x - ma) ** 2 for x in a))
+    db = math.sqrt(sum((y - mb) ** 2 for y in b))
+    return num / (da * db) if da and db else float("nan")
+
+
+def spearman(a: list[float], b: list[float]) -> float:
+    if len(a) != len(b) or len(a) < 3:
+        return float("nan")
+    return pearson(rank(a), rank(b))
+
+
+def perm_p(a: list[float], b: list[float], rho: float, n: int = 2000) -> float:
+    """双侧置换 p 值。"""
+    if math.isnan(rho) or len(a) < 4:
+        return float("nan")
+    b2 = list(b)
+    count = 0
+    for _ in range(n):
+        RNG.shuffle(b2)
+        r = spearman(a, b2)
+        if not math.isnan(r) and abs(r) >= abs(rho) - 1e-12:
+            count += 1
+    return (count + 1) / (n + 1)
+
+
+def boot_ci(a: list[float], b: list[float], n: int = 2000) -> tuple[float, float]:
+    idx = list(range(len(a)))
+    rhos = []
+    for _ in range(n):
+        sample = [RNG.choice(idx) for _ in idx]
+        r = spearman([a[i] for i in sample], [b[i] for i in sample])
+        if not math.isnan(r):
+            rhos.append(r)
+    rhos.sort()
+    if len(rhos) < 100:
+        return float("nan"), float("nan")
+    return rhos[int(0.025 * len(rhos))], rhos[int(0.975 * len(rhos))]
+
+
+def fmt(rho: float, lo: float, hi: float, p: float, n: int) -> str:
+    return f"ρ={rho:+.3f}  CI95[{lo:+.3f},{hi:+.3f}]  p≈{p:.3f}  n={n}"
+
+
+def main() -> int:
+    scores = {json.loads(l)["uid"]: json.loads(l)["score"] for l in open("scored.jsonl")}
+    meta = json.load(open("cases_meta.json"))
+
+    # ── 按(源,case)聚合:mean / min / summary 分开 ──
+    cases = defaultdict(lambda: {"turns": [], "summary": None, "m": None})
+    for uid, m in meta.items():
+        if uid not in scores:
+            continue
+        key = (m["source"], m["case_id"])
+        c = cases[key]
+        c["m"] = m
+        (c["turns"] if m["kind"] == "turn" else []).append(scores[uid])
+        if m["kind"] == "summary":
+            c["summary"] = scores[uid]
+
+    six = {k: v for k, v in cases.items() if v["m"]["judge_total"] is not None}
+    four = {k: v for k, v in cases.items() if v["m"]["metrics"]}
+    print(f"六维 case:{len(six)} 四指标 case:{len(four)}")
+
+    # ── ① 总体 + 逐场景 Spearman(六维总分)──
+    print("\n## ① RM 聚合分 vs judge 六维总分(Spearman)")
+    # 分源分解(负相关可能由子集驱动)
+    for src_group, name in ((["149P-pre", "149P-pre-run2"], "149P-pre(main 侧)"),
+                            (["149P-post", "149P-post-run2"], "149P-post(分支侧)"),
+                            (["nightly-34423410484", "nightly-34425091228",
+                              "nightly-34440376286", "nightly-34450995074"], "nightly×4")):
+        sub = {k: v for k, v in six.items() if v["m"]["source"] in src_group}
+        a = [statistics.fmean(v["turns"]) for v in sub.values()]
+        b = [v["m"]["judge_total"] for v in sub.values()]
+        rho = spearman(a, b)
+        print(f"  [{name}] {fmt(rho, *boot_ci(a, b), perm_p(a, b, rho), len(a))}")
+    # P 口径 11 场景 vs 题图 8 题分开
+    for cal, name in (("P", "P 口径(11 场景)"), ("image", "题图(8 题)")):
+        sub = {k: v for k, v in six.items() if v["m"]["caliber"] == cal}
+        a = [statistics.fmean(v["turns"]) for v in sub.values()]
+        b = [v["m"]["judge_total"] for v in sub.values()]
+        rho = spearman(a, b)
+        print(f"  [{name}] {fmt(rho, *boot_ci(a, b), perm_p(a, b, rho), len(a))}")
+    # 场景内中心化(RM 能否像 judge 一样给同场景不同转录排序)
+    resid_a, resid_b, scen_of = [], [], []
+    for v in six.values():
+        scen_of.append(v["m"]["scenario"])
+        resid_a.append(v)
+        resid_b.append(v)
+    ga = defaultdict(list)
+    gb = defaultdict(list)
+    for v in six.values():
+        ga[v["m"]["scenario"]].append(statistics.fmean(v["turns"]))
+        gb[v["m"]["scenario"]].append(v["m"]["judge_total"])
+    ca, cb, cs = [], [], []
+    for v in six.values():
+        sc = v["m"]["scenario"]
+        ca.append(statistics.fmean(v["turns"]) - statistics.fmean(ga[sc]))
+        cb.append(v["m"]["judge_total"] - statistics.fmean(gb[sc]))
+        cs.append(sc)
+    rho = spearman(ca, cb)
+    print(f"  [场景内中心化]      {fmt(rho, *boot_ci(ca, cb), perm_p(ca, cb, rho), len(ca))}")
+    for agg in ("mean", "min"):
+        a = [statistics.fmean(v["turns"]) if agg == "mean" else min(v["turns"]) for v in six.values()]
+        b = [v["m"]["judge_total"] for v in six.values()]
+        rho = spearman(a, b)
+        lo, hi = boot_ci(a, b)
+        print(f"  [六维|{agg:4s}] {fmt(rho, lo, hi, perm_p(a, b, rho), len(a))}")
+    # 逐场景(n=每场景的帧×重复)
+    print("  逐场景(合并全部六维来源):")
+    bysc = defaultdict(lambda: ([], []))
+    for v in six.values():
+        bysc[v["m"]["scenario"]][0].append(statistics.fmean(v["turns"]))
+        bysc[v["m"]["scenario"]][1].append(v["m"]["judge_total"])
+    for sc in sorted(bysc):
+        a, b = bysc[sc]
+        print(f"    {sc[:44]:46s} {fmt(spearman(a, b), *boot_ci(a, b), perm_p(a, b, spearman(a, b)), len(a))}" if len(a) >= 4
+              else f"    {sc[:44]:46s} n={len(a)} 不足")
+
+    # ── ② 逐维相关性 ──
+    print("\n## ② RM mean vs judge 逐维(Spearman,六维来源)")
+    dims = ["first_question", "socratic_followup", "grade_fit", "pacing", "summary_mastery", "termination"]
+    a_all = [statistics.fmean(v["turns"]) for v in six.values()]
+    for d in dims:
+        b = [(v["m"]["judge_scores"] or {}).get(d) for v in six.values()]
+        pairs = [(x, y) for x, y in zip(a_all, b) if y is not None]
+        if len(pairs) < 8:
+            print(f"  {d:20s} 样本不足({len(pairs)})")
+            continue
+        a2, b2 = zip(*pairs)
+        rho = spearman(list(a2), list(b2))
+        print(f"  {d:20s} {fmt(rho, *boot_ci(list(a2), list(b2)), perm_p(list(a2), list(b2), rho), len(a2))}")
+
+    # ── ③ 四指标:分组对比(RM 是否能感知 feeding / 首问 / 复讲)──
+    print("\n## ③ 四指标分组(RM mean,fix112+v1 308 case)")
+    def group_stats(items):
+        if not items:
+            return "n=0"
+        means = [statistics.fmean(v["turns"]) for v in items]
+        mins = [min(v["turns"]) for v in items]
+        return (f"RM_mean={statistics.fmean(means):+.2f}  RM_min中位={statistics.median(mins):+.2f}"
+                f"  n={len(items)}")
+    for label, getter in [
+        ("feeding.fed=True(教师报答案)", lambda m: (m['metrics'].get('feeding') or {}).get('fed') is True),
+        ("feeding.fed=False", lambda m: (m['metrics'].get('feeding') or {}).get('fed') is False),
+        ("first_question.compliant=True", lambda m: (m['metrics'].get('first_question') or {}).get('compliant') is True),
+        ("first_question.compliant=False", lambda m: (m['metrics'].get('first_question') or {}).get('compliant') is False),
+        ("restate.delivered=True", lambda m: (m['metrics'].get('restate') or {}).get('delivered') is True),
+        ("restate.delivered=False", lambda m: (m['metrics'].get('restate') or {}).get('delivered') is False),
+        ("answer_leaked=True(六维)", lambda m: m.get('answer_leaked') is True),
+        ("answer_leaked=False(六维)", lambda m: m.get('answer_leaked') is False),
+    ]:
+        pool = four if '六维' not in label else six
+        items = [v for v in pool.values() if getter(v['m'])]
+        means = [statistics.fmean(v['turns']) for v in items]
+        print(f"  {label:34s} {group_stats(items)}")
+
+    # ── ④ 场景层排序(11 场景:RM 场景均值 vs judge 场景均值)──
+    print("\n## ④ 场景层排序(六维来源,逐场景取均值后 Spearman)")
+    sc_rm, sc_jd = defaultdict(list), defaultdict(list)
+    for v in six.values():
+        sc_rm[v["m"]["scenario"]].append(statistics.fmean(v["turns"]))
+        sc_jd[v["m"]["scenario"]].append(v["m"]["judge_total"])
+    scen = sorted(sc_rm)
+    a = [statistics.fmean(sc_rm[s]) for s in scen]
+    b = [statistics.fmean(sc_jd[s]) for s in scen]
+    rho = spearman(a, b)
+    print(f"  n(场景)={len(scen)}  {fmt(rho, float('nan'), float('nan'), float('nan'), len(scen))}")
+    for s, x, y in zip(scen, a, b):
+        print(f"    {s[:44]:46s} RM={x:+.2f}  judge={y:.1f}")
+
+    json.dump({f"{k[0]}|{k[1]}": {"rm_mean": statistics.fmean(v["turns"]),
+                                  "rm_min": min(v["turns"]),
+                                  "rm_summary": v["summary"],
+                                  "judge_total": v["m"]["judge_total"],
+                                  "judge_scores": v["m"]["judge_scores"],
+                                  "answer_leaked": v["m"]["answer_leaked"],
+                                  "metrics": v["m"]["metrics"]}
+               for k, v in cases.items()}, open("case_level.json", "w"), ensure_ascii=False, indent=1)
+    print("\ncase_level.json 已写出")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+"""一次性:把仓内/夜评工件的全部教师轮组装成 RM 打分集(uid 可回溯聚合)。
+
+输出 to_score.jsonl:{uid, problem, reference_solution, history, response}
+输出 cases_meta.json:{uid → {source, caliber, case_id, scenario, turn_idx, kind}}
+"""
+from __future__ import annotations
+
+import ast
+import glob
+import json
+from pathlib import Path
+
+REPO = Path("/root/code/edu-149-post")
+IMG = Path("/tmp/rmexp/imgframe")
+OUT = Path("/tmp/rmexp")
+
+
+def qtext(question) -> str:
+    """question 可能是 str 或 dict 的字符串形式(题图帧)。"""
+    if isinstance(question, str):
+        s = question.strip()
+        if s.startswith("{") and s.endswith("}"):
+            try:
+                d = ast.literal_eval(s)
+                if isinstance(d, dict):
+                    return str(d.get("text") or question)
+            except (ValueError, SyntaxError):
+                return question
+        return question
+    if isinstance(question, dict):
+        return str(question.get("text") or question)
+    return str(question)
+
+
+def strip_repeat(cid: str) -> str:
+    return cid[:-4] if cid.endswith(("__r1", "__r2")) else cid
+
+
+def case_scenarios(cid: str) -> str:
+    """11 场景名(去掉 small_lecturer_ 前缀与 __rN 后缀)。"""
+    s = cid
+    for pre in ("small_lecturer_", "image_v1_"):
+        if s.startswith(pre):
+            s = s[len(pre):]
+    if s.endswith("__r1") or s.endswith("__r2"):
+        s = s[:-4]
+    return s
+
+
+def emit(records, meta, source, caliber, case, transcript, judge_total=None,
+         judge_scores=None, answer_leaked=None, verdict=None, metrics=None):
+    cid = case["id"]
+    problem = qtext(case.get("question"))
+    ref = str(case.get("reference_answer") or "")
+    turns = transcript.get("turns") or []
+    hist: list[dict] = []
+    idx = 0
+    for t in turns:
+        stu, tut = (t.get("student") or "").strip(), (t.get("tutor") or "").strip()
+        if stu:
+            hist.append({"role": "student", "text": stu})
+        if tut:
+            uid = f"{source}|{caliber}|{cid}|t{idx}"
+            records.append({"uid": uid, "problem": problem, "reference_solution": ref,
+                            "history": [dict(h) for h in hist], "response": tut})
+            meta[uid] = {"source": source, "caliber": caliber, "case_id": cid,
+                         "scenario": case_scenarios(cid), "turn_idx": idx, "kind": "turn",
+                         "judge_total": judge_total, "judge_scores": judge_scores,
+                         "answer_leaked": answer_leaked, "verdict": verdict, "metrics": metrics}
+            hist.append({"role": "teacher", "text": tut})
+            idx += 1
+    summary = (transcript.get("summary") or "").strip()
+    if summary:
+        uid = f"{source}|{caliber}|{cid}|summary"
+        records.append({"uid": uid, "problem": problem, "reference_solution": ref,
+                        "history": [dict(h) for h in hist], "response": summary})
+        meta[uid] = {"source": source, "caliber": caliber, "case_id": cid,
+                     "scenario": case_scenarios(cid), "turn_idx": idx, "kind": "summary",
+                     "judge_total": judge_total, "judge_scores": judge_scores,
+                     "answer_leaked": answer_leaked, "verdict": verdict, "metrics": metrics}
+
+
+def load_results(pattern: str) -> dict:
+    """collect/*/results/*.json → {case_id: transcript}(取每个 case 最新一轮)。"""
+    out = {}
+    for f in sorted(glob.glob(pattern)):
+        d = json.load(open(f))
+        if d.get("transcript"):
+            out[d.get("case_id")] = d["transcript"]
+    return out
+
+
+def load_cases(path) -> dict:
+    return {r["id"]: r for r in (json.loads(l) for l in open(path) if l.strip())}
+
+
+def load_sixdim(path) -> dict:
+    return {k: v for k, v in json.load(open(path)).items()}
+
+
+def main() -> int:
+    records, meta = [], {}
+
+    # ── 1) 我的 149-ready-gate P 帧(4 轮 × 11,六维总分)──
+    for run in ("pre", "pre-run2", "post", "post-run2"):
+        d = REPO / f"edu_agent/evals/artifacts/149-ready-gate/P/{run}"
+        cases = load_cases(d / "cases.jsonl")
+        js = load_sixdim(d / "judge-scores.json")
+        pat = str(d / "collect/*/results/*.json")
+        if not glob.glob(pat):
+            pat = str(d / "results/*.json")   # 入库时拍平的工件
+        trs = load_results(pat)
+        for cid, tr in trs.items():
+            j = js.get(strip_repeat(cid), {}) or js.get(cid, {})
+            emit(records, meta, f"149P-{run}", "P", cases[cid], tr,
+                 judge_total=j.get("total"), judge_scores=j.get("scores"),
+                 answer_leaked=j.get("answer_leaked"), verdict=j.get("verdict"))
+
+    # ── 2) 夜评帧(4 晚 × (11 P + 8 image),六维总分)──
+    for run_dir in sorted(IMG.iterdir()):
+        if not run_dir.is_dir():
+            continue
+        stamp = run_dir.name
+        for sub, cal in ((run_dir, "P"), (run_dir / "image-teaching", "image")):
+            cases_f = sub / "cases.jsonl"
+            js_f = sub / "judge-scores.json"
+            if not (cases_f.exists() and js_f.exists()):
+                continue
+            cases = load_cases(cases_f)
+            js = load_sixdim(js_f)
+            trs = load_results(str(sub / "collect/*/results/*.json"))
+            for cid, tr in trs.items():
+                j = js.get(strip_repeat(cid), {}) or js.get(cid, {})
+                emit(records, meta, f"nightly-{stamp}", cal, cases[cid], tr,
+                     judge_total=j.get("total"), judge_scores=j.get("scores"),
+                     answer_leaked=j.get("answer_leaked"), verdict=j.get("verdict"))
+
+    # ── 3) teaching-arc-v1(#143,88,四指标)──
+    for cal in ("P", "F"):
+        for arm in ("A", "M"):
+            d = REPO / f"edu_agent/evals/artifacts/teaching-arc-v1/{cal}/{arm}"
+            cases = load_cases(d / "cases.jsonl")
+            trs = load_results(str(d / "collect/*/results/*.json"))
+            jmap = judge_fourmetric(d)
+            for cid, tr in trs.items():
+                emit(records, meta, f"v1-{cal}{arm}", cal, cases[cid], tr,
+                     metrics=jmap.get(cid))
+
+    # ── 4) teaching-arc-fix112(#148,220,四指标)──
+    for arm, cals in (("before", "FLPR"), ("after", "FLPR"),
+                      ("before101", "FR"), ("after101", "FR")):
+        for cal in cals:
+            d = REPO / f"edu_agent/evals/artifacts/teaching-arc-fix112/{arm}/{cal}/M"
+            cases = load_cases(d / "cases.jsonl")
+            trs = load_results(str(d / "collect/*/results/*.json"))
+            jmap = judge_fourmetric(d)
+            for cid, tr in trs.items():
+                emit(records, meta, f"fix112-{arm}-{cal}", cal, cases[cid], tr,
+                     metrics=jmap.get(cid))
+
+    with open(OUT / "to_score.jsonl", "w") as f:
+        for r in records:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    with open(OUT / "cases_meta.json", "w") as f:
+        json.dump(meta, f, ensure_ascii=False)
+    n_cases = len({m["case_id"] for m in meta.values()})
+    print(f"打分条目 {len(records)}(教师轮+收尾),覆盖 case {n_cases}")
+    by_src = {}
+    for m in meta.values():
+        by_src[m["source"]] = by_src.get(m["source"], 0) + 1
+    for k in sorted(by_src):
+        print(f"  {k:22s} {by_src[k]}")
+    return 0
+
+
+def judge_fourmetric(d: Path) -> dict:
+    """四指标目录:judge-scores/<hash>.json → {case_id: metrics}。case_id 在 judge-case 正文里。"""
+    out = {}
+    for jc in sorted(glob.glob(str(d / "judge-cases/*.json"))):
+        try:
+            body = json.load(open(jc))
+        except json.JSONDecodeError:
+            continue
+        cid = body.get("case_id") or body.get("id")
+        if body.get("base_id") and body.get("repeat"):
+            cid = f"{body['base_id']}__r{body['repeat']}"
+        h = Path(jc).stem
+        js_f = d / f"judge-scores/{h}.json"
+        if cid and js_f.exists():
+            out[cid] = json.load(open(js_f))
+    return out
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
