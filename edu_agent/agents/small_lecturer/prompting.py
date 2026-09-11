@@ -15,6 +15,7 @@ socratic/pacing/summary/termination——苏格拉底追问、单步推进、收
 from __future__ import annotations
 
 import json
+import re
 from functools import lru_cache
 from pathlib import Path
 
@@ -128,21 +129,26 @@ _OPENING_HINTS = {
     "unanswered": OPENING_HINT_UNANSWERED,
 }
 
-# 首问固定模板(head/tail 组装,逐字定稿)。上面的 OPENING_HINT_* 只是拼进 user 消息的
-# **策略提示**,模型可以违抗——实测首问直接把答案报出来(题「8排6号记作(6,8),那么12排5号
-# 记作(,);(3,10)表示()排()号」的首问写成「…记作(5,12),(3,10)表示10排3号,对吗?」,两个空的
-# 答案都给了)。故首问**可见文本**由内核 start() 覆盖为确定性模板:不含答案数字、不含
-# 方法名,答案只能从学生嘴里出来;模型调用照旧(仍产出 steps/transcription)。
-# head 两选一:转录读出了内容(带图题)→ 招呼语 + 半句复述(贴住学生发的那道题);
+# 首问固定模板(head/tail 组装,五条文案逐字定稿)。上面的 OPENING_HINT_* 只是拼进 user
+# 消息的**策略提示**,模型可以违抗——实测首问直接把答案报出来(题「8排6号记作(6,8),那么
+# 12排5号记作(,);(3,10)表示()排()号」的首问写成「…记作(5,12),(3,10)表示10排3号,对吗?」,
+# 两个空的答案都给了)。故首问**可见文本**由内核 start() 覆盖为确定性模板:不含答案数字、
+# 不含方法名,答案只能从学生嘴里出来;模型调用照旧(仍产出 steps/transcription)。
+# head 两选一:转录读出了内容(带图题)→ 图像招呼语 + 半句复述;
 # 纯文字题 / 图像题没读出内容 → 纯文字招呼语(不出现「…这道题:。」残句)。
-HEAD_TEXT = "你好呀,我们一起看看这道题吧。"
-HEAD_IMAGE_PREFIX = "我看到你发的题啦,我们一起看看:"      # 后面接半句复述 + "。"
-TAIL_CORRECT = "你做对了,真棒!还有没有哪里不太确定的地方?"
-TAIL_COLLECT = "你先说说你的答案(或选项)是什么?你是怎么想的?"
+# tail 三选一:正确档一套(文字/图像共用);采集档——图像题恒用统一那句(不按题型分),
+# 文字题按题型分选择题/非选择题(见 `_is_multiple_choice`)。
+HEAD_TEXT = "你好同学,"
+HEAD_IMAGE_PREFIX = "你好同学,我看到你发的题啦,我们一起看看:"   # 后面接半句复述 + "。"
+TAIL_CORRECT = "这道题你做对啦,真棒!还有哪里不太明白吗?"
+TAIL_COLLECT_CHOICE = "请问这道题你选了什么呀?讲讲你的思路吧!"
+TAIL_COLLECT_OPEN = "请问你算出的答案是多少呀?讲讲你的思路吧!"
+TAIL_COLLECT_IMAGE = "这道题你的答案是什么呀?讲讲你的思路吧!"
 
 # 定稿可见文本的文字题两档(常量形式,供测试与调用方逐字对照):
-FIRST_QUESTION_COLLECT = HEAD_TEXT + TAIL_COLLECT
-FIRST_QUESTION_CORRECT = HEAD_TEXT + TAIL_CORRECT
+FIRST_QUESTION_COLLECT = HEAD_TEXT + TAIL_COLLECT_OPEN              # 文字·采集·非选择题
+FIRST_QUESTION_COLLECT_CHOICE = HEAD_TEXT + TAIL_COLLECT_CHOICE    # 文字·采集·选择题
+FIRST_QUESTION_CORRECT = HEAD_TEXT + TAIL_CORRECT                   # 文字/图像·正确档(文字 head)
 
 # 复述(transcription → brief)的确定性口径:取「半句」——首个逗号或句末标点之前,
 # strip 后 4–16 字(超 16 字截到 16 字加「…」)。
@@ -150,6 +156,22 @@ _BRIEF_MIN_CHARS = 4
 _BRIEF_MAX_CHARS = 16
 _BRIEF_ELLIPSIS = "…"
 _BRIEF_CUTS = ("。", "!", "?", ".", "！", "？", ",", "，")
+
+# 选择题标记(纯规则,零模型调用):字母 + 选项标点,含全角 ＡＢＣＤ 与全角标点(、．)）。
+_OPTION_MARK_RE = re.compile(r"[A-DＡ-Ｄ]\s*[.、．)）]")
+
+
+def _is_multiple_choice(question: dict | None) -> bool:
+    """选择题判定(首问文案分流用;纯规则,零模型调用,无第三方依赖)。
+
+    **主信号 = 题面文本**(评测口径下 question 只有 {text, image}、没有 answer,用题面才能
+    在两条路径上都生效):题面出现 ≥2 个选项标记(形如 A. / B、 / C． / D))即判选择题;
+    题面信号不足时用 `answer`(形如「A. (2,7)」)作**次要**信号(它带选项标记即判选择题)。
+    只有单个标记、或标记全无 → 非选择题。"""
+    source = question or {}
+    if len(_OPTION_MARK_RE.findall(str(source.get("text") or ""))) >= 2:
+        return True
+    return bool(_OPTION_MARK_RE.search(str(source.get("answer") or "")))
 
 
 def _brief_transcription(transcription: str | None) -> str:
@@ -166,15 +188,28 @@ def _brief_transcription(transcription: str | None) -> str:
     return brief
 
 
-def first_question_text(answer_status: str | None, transcription: str | None = None) -> str:
-    """首问固定模板(head + tail 组装):显式做对 → 肯定 + 问不懂处;其余(incorrect/unanswered/
-    缺省/unknown)→ 采集型(问答案 + 问思路)。口径依据 docs/plan/00-rewrite-plan.md:
+def _text_collect_tail(question: dict | None) -> str:
+    """纯文字档采集句:真·文字题按题型分流;图像题读不出内容而退回文字档 → 非选择题句
+    (题型分流只服务文字题,图像档另有统一那句)。"""
+    if (question or {}).get("image") is not None:
+        return TAIL_COLLECT_OPEN
+    return TAIL_COLLECT_CHOICE if _is_multiple_choice(question) else TAIL_COLLECT_OPEN
+
+
+def first_question_text(answer_status: str | None, transcription: str | None = None,
+                        question: dict | None = None) -> str:
+    """首问固定模板(head + tail 组装):显式做对 → 正确档(文字/图像共用同一句);其余
+    (incorrect/unanswered/缺省/unknown)→ 采集档。口径依据 docs/plan/00-rewrite-plan.md:
     「false/null/省略→incorrect(unanswered 默认按做错,等价老系统 assumed_incorrect)」。
-    head 按转录是否读出内容两选一(见 `_brief_transcription`);tail 只分两档。
+    head 按转录是否读出内容两选一(见 `_brief_transcription`);采集档 tail 按题型/图像分流
+    (见 `_is_multiple_choice` 与 `_text_collect_tail`)。
     为什么固定:同一段策略此前作为 prompt 提示被模型违抗过——实测首问直接报出答案数字。"""
     brief = _brief_transcription(transcription)
-    head = f"{HEAD_IMAGE_PREFIX}{brief}。" if brief else HEAD_TEXT
-    return head + (TAIL_CORRECT if answer_status == "correct" else TAIL_COLLECT)
+    if brief:
+        tail = TAIL_CORRECT if answer_status == "correct" else TAIL_COLLECT_IMAGE
+        return f"{HEAD_IMAGE_PREFIX}{brief}。{tail}"
+    tail = TAIL_CORRECT if answer_status == "correct" else _text_collect_tail(question)
+    return HEAD_TEXT + tail
 
 
 def opening_hint(answer_status: str | None) -> str:

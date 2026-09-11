@@ -1,12 +1,13 @@
 """首问固定模板回归钉(实测缺陷:首问直接把答案报出来)。
 
 改动口径:首问**可见文本**由内核 `start()` 覆盖为 `prompting.first_question_text`
-的确定性模板(head + tail 组装:tail 两档——显式做对 → 肯定 + 问不懂处,其余含缺省
-→ 采集型;head 两选一——转录读出内容 → 带图招呼语 + **半句复述**,纯文字题/读不出
-内容 → 纯文字招呼语),不再采信模型生成的 reply 文本;模型调用照旧
-(steps/transcription 仍被采信)。既有两条确定性分支优先级不变:纯图题 fail-closed
-(`FAIL_CLOSED_TEXT`)与图文题 acceptable=false 且 reply 留空(`kernel._OPENING_FALLBACK`)。
-零真实模型(假上游)。
+的确定性模板(head + tail 组装,五条文案定稿):
+- head 两选一:转录读出内容 → 图像招呼语 + 半句复述;纯文字题/读不出内容 → 纯文字招呼语;
+- tail:正确档一套(文字/图像共用);采集档——图像题恒用**统一那句**,文字题按**题型**
+  分选择题/非选择题(`_is_multiple_choice`,纯规则零模型调用)。
+不再采信模型生成的 reply 文本;模型调用照旧(steps/transcription 仍被采信)。既有两条
+确定性分支优先级不变:纯图题 fail-closed(`FAIL_CLOSED_TEXT`)与图文题 acceptable=false
+且 reply 留空(`kernel._OPENING_FALLBACK`)。零真实模型(假上游)。
 """
 
 from __future__ import annotations
@@ -18,10 +19,13 @@ from fake_openai import FakeOpenAI, completion
 
 from edu_agent.agents.small_lecturer import (
     FIRST_QUESTION_COLLECT,
+    FIRST_QUESTION_COLLECT_CHOICE,
     FIRST_QUESTION_CORRECT,
     HEAD_IMAGE_PREFIX,
     HEAD_TEXT,
-    TAIL_COLLECT,
+    TAIL_COLLECT_CHOICE,
+    TAIL_COLLECT_IMAGE,
+    TAIL_COLLECT_OPEN,
     TAIL_CORRECT,
     first_question_text,
     start,
@@ -31,6 +35,7 @@ from test_kernel_state_machine import kernel_gateway, open_json
 
 # 实测缺陷同款题:当时的首问写成「…记作(5,12),(3,10)表示10排3号,对吗?」——
 # 两个空的答案都给了。题面数字(8/6/12/5/3/10)与答案数字同源,故文字档用「无数字」兜底。
+# 题面无可选项 → 文字·采集走**非选择题**那句。
 GRID_QUESTION = {
     "text": "8排6号记作(6,8),那么12排5号记作(  ,  );(3,10)表示(  )排(  )号。",
     "answer": "(5,12);(3,10)表示3排10号",
@@ -43,6 +48,16 @@ LEAKING_REPLY = "12排5号记作(5,12),(3,10)表示10排3号,对吗?"
 # 干净回复(无任何数字):图像档用例只想验模板组装,不额外触发答案泄露护栏
 CLEAN_REPLY = "我们一起看看题目给了哪些条件,好吗?"
 _DIGIT = re.compile(r"\d")
+
+# 选择题(题面带 4 个选项标记 A. B. C. D.)→ 文字·采集走**选择题**那句
+CHOICE_QUESTION = {
+    "text": "下列各数中最大的是(  )。A. 3.14  B. 22/7  C. 3.1415  D. 3.142",
+    "answer": "B. 22/7",
+}
+# 带图的选择题:图像档采集句**统一**,不因题面有选项而改句
+CHOICE_IMAGE_QUESTION = {**CHOICE_QUESTION, "image": "file:photo-choice-1"}
+CHOICE_TRANSCRIPTION = "下列各数中最大的是(  )。"
+CHOICE_BRIEF = "下列各数中最大的是(  )"      # 13 字,未触 16 字上限
 
 # 带图题(应用题,vision 读出头半句):复述只取半句「小明有8本书」(首个逗号之前)。
 # 答案「10本」的结论数字 1/0 既不在题面也不在复述里 → 「答案独有数字」非空,
@@ -69,36 +84,83 @@ def _opening(tmp_path, learner: dict, question: dict | None = None,
         gateway.close()
 
 
+# ---------- 文字档 · 采集(按题型分流) ----------
+
 @pytest.mark.parametrize("status", ["incorrect", "unanswered", "unknown", None])
 def test_non_correct_arcs_get_collect_template(tmp_path, status):
-    """非 correct 弧线(含 answer_status 缺省/unknown)→ 采集型模板,且不含任何数字。"""
+    """非 correct 弧线(含缺省/unknown)+ 题面无选项 → 非选择题采集句,且不含任何数字。"""
     learner = {**LEARNER, **({"answer_status": status} if status else {})}
     turn, fake = _opening(tmp_path, learner)
     fake.stop()
     assert turn.state == "first_question_ready"
     assert turn.text == FIRST_QUESTION_COLLECT
     # 文字档可见文本逐字钉死(与定稿一字不差)
-    assert turn.text == "你好呀,我们一起看看这道题吧。你先说说你的答案(或选项)是什么?你是怎么想的?"
-    assert turn.text == HEAD_TEXT + TAIL_COLLECT
+    assert turn.text == "你好同学,请问你算出的答案是多少呀?讲讲你的思路吧!"
+    assert turn.text == HEAD_TEXT + TAIL_COLLECT_OPEN
     assert turn.session.first_question == FIRST_QUESTION_COLLECT  # 记录面与可见面同源
     assert _DIGIT.search(turn.text) is None
 
 
+def test_choice_question_gets_choice_collect_template(tmp_path):
+    """题面带 A. B. C. D. 四个选项标记 → 选择题采集句。"""
+    turn, fake = _opening(tmp_path, LEARNER, question=CHOICE_QUESTION)
+    fake.stop()
+    assert turn.text == FIRST_QUESTION_COLLECT_CHOICE
+    assert turn.text == "你好同学,请问这道题你选了什么呀?讲讲你的思路吧!"
+    assert turn.text == HEAD_TEXT + TAIL_COLLECT_CHOICE
+    assert _DIGIT.search(turn.text) is None
+
+
+def test_fullwidth_option_marks_are_recognised(tmp_path):
+    """全角选项字母 + 全角标点(Ａ． B、)同样算选项标记。"""
+    question = {"text": "下面哪个是对的? Ａ． 三 B、 四"}
+    turn, fake = _opening(tmp_path, LEARNER, question=question)
+    fake.stop()
+    assert turn.text == FIRST_QUESTION_COLLECT_CHOICE
+
+
+def test_single_option_mark_is_not_choice(tmp_path):
+    """只出现**一个**选项标记 → 不判选择题(走非选择题采集句)。"""
+    question = {"text": "下面哪个是对的? A. 三"}
+    turn, fake = _opening(tmp_path, LEARNER, question=question)
+    fake.stop()
+    assert turn.text == FIRST_QUESTION_COLLECT
+
+
+def test_choice_answer_is_secondary_signal(tmp_path):
+    """题面信号不足时,answer 的选项标记(形如「A. (2,7)」)作次要信号 → 选择题句。"""
+    question = {"text": "这道题应该选哪个?", "answer": "A. (2,7)"}
+    turn, fake = _opening(tmp_path, LEARNER, question=question)
+    fake.stop()
+    assert turn.text == FIRST_QUESTION_COLLECT_CHOICE
+
+
+# ---------- 正确档(文字/图像共用同一句) ----------
+
 def test_correct_arc_gets_affirmative_template(tmp_path):
-    """显式做对 → 肯定 + 问不懂处(文字档 head + TAIL_CORRECT);同样不含任何数字。"""
+    """显式做对 → 正确档文案;同样不含任何数字。"""
     turn, fake = _opening(tmp_path, {**LEARNER, "answer_status": "correct"})
     fake.stop()
     assert turn.text == FIRST_QUESTION_CORRECT
-    assert turn.text == "你好呀,我们一起看看这道题吧。你做对了,真棒!还有没有哪里不太确定的地方?"
+    assert turn.text == "你好同学,这道题你做对啦,真棒!还有哪里不太明白吗?"
     assert turn.text == HEAD_TEXT + TAIL_CORRECT
     assert _DIGIT.search(turn.text) is None
 
 
-# ---------- 图像档:head = 带图招呼语 + 半句复述,tail 仍分两档 ----------
+def test_correct_arc_ignores_question_type(tmp_path):
+    """正确档不按题型分:选择题做对也是同一句(题面有选项也不加「选了什么」)。"""
+    turn, fake = _opening(tmp_path, {**LEARNER, "answer_status": "correct"},
+                          question=CHOICE_QUESTION)
+    fake.stop()
+    assert turn.text == FIRST_QUESTION_CORRECT
+    assert "选了什么" not in turn.text
+
+
+# ---------- 图像档:head = 图像招呼语 + 半句复述 ----------
 
 @pytest.mark.parametrize("status, tail", [
-    (None, TAIL_COLLECT), ("incorrect", TAIL_COLLECT),
-    ("unanswered", TAIL_COLLECT), ("correct", TAIL_CORRECT),
+    (None, TAIL_COLLECT_IMAGE), ("incorrect", TAIL_COLLECT_IMAGE),
+    ("unanswered", TAIL_COLLECT_IMAGE), ("correct", TAIL_CORRECT),
 ])
 def test_image_question_head_restates_half_sentence_and_keeps_tier_tail(tmp_path, status, tail):
     """带图题 + 转录读出内容 → 首问 = HEAD_IMAGE_PREFIX + 半句复述 + 「。」 + 对应档 tail。"""
@@ -107,30 +169,42 @@ def test_image_question_head_restates_half_sentence_and_keeps_tier_tail(tmp_path
                           reply_text=CLEAN_REPLY, transcription=WORD_TRANSCRIPTION)
     fake.stop()
     assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF}。{tail}"
-    assert turn.text.startswith(HEAD_IMAGE_PREFIX)     # 带图招呼语打头
+    assert turn.text.startswith(HEAD_IMAGE_PREFIX)     # 图像招呼语打头
     assert WORD_BRIEF in turn.text                     # 含半句复述(贴住学生发的那道题)
     assert turn.text.endswith(tail)                    # 以对应档 tail 结尾
     assert turn.session.first_question == turn.text    # 记录面与可见面同源
 
 
+def test_image_collect_sentence_is_uniform_even_with_options(tmp_path):
+    """图像档采集句**统一**:题面带 A. B. C. D. 也不改句(图像档不判题型)。"""
+    turn, fake = _opening(tmp_path, LEARNER, question=CHOICE_IMAGE_QUESTION,
+                          reply_text=CLEAN_REPLY, transcription=CHOICE_TRANSCRIPTION)
+    fake.stop()
+    assert turn.text == f"{HEAD_IMAGE_PREFIX}{CHOICE_BRIEF}。{TAIL_COLLECT_IMAGE}"
+    assert "选了什么" not in turn.text and "算出的答案" not in turn.text
+
+
 def test_image_only_question_also_restates_transcription(tmp_path):
-    """纯图题(question.text 为空)读出了转写 → 同样走带图 head + 半句复述。"""
+    """纯图题(question.text 为空)读出了转写 → 同样走图像 head + 半句复述。"""
     turn, fake = _opening(tmp_path, LEARNER, question=IMAGE_ONLY_QUESTION,
                           reply_text=CLEAN_REPLY, transcription=WORD_TRANSCRIPTION)
     fake.stop()
-    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF}。{TAIL_COLLECT}"
+    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF}。{TAIL_COLLECT_IMAGE}"
     assert turn.session.question["text"] == WORD_TRANSCRIPTION  # 转写仍回填题面
 
 
-@pytest.mark.parametrize("question", [IMAGE_WORD_QUESTION, IMAGE_ONLY_QUESTION])
+@pytest.mark.parametrize("question", [IMAGE_WORD_QUESTION, IMAGE_ONLY_QUESTION,
+                                      CHOICE_IMAGE_QUESTION])
 @pytest.mark.parametrize("transcription", ["", "   ", "好", "嗯。"])
 def test_blank_or_too_short_transcription_falls_back_to_text_head(tmp_path, question,
                                                                   transcription):
-    """转录空/过短(<4 字)→ 退回 HEAD_TEXT(纯文字招呼语),不出「…这道题:。」残句。"""
+    """转录空/过短(<4 字)→ 退回纯文字档,不出「…这道题:。」残句。
+
+    退回时一律用**非选择题**那句(图像题读不出内容 → 与「评测口径无 answer」同归非选择)。"""
     turn, fake = _opening(tmp_path, LEARNER, question=question,
                           reply_text=CLEAN_REPLY, transcription=transcription)
     fake.stop()
-    assert turn.text == HEAD_TEXT + TAIL_COLLECT
+    assert turn.text == HEAD_TEXT + TAIL_COLLECT_OPEN
     assert turn.text == FIRST_QUESTION_COLLECT
     assert HEAD_IMAGE_PREFIX not in turn.text and ":" not in turn.text
 
@@ -141,7 +215,7 @@ def test_long_transcription_is_capped_at_16_chars_with_ellipsis(tmp_path):
     turn, fake = _opening(tmp_path, LEARNER, question=IMAGE_WORD_QUESTION,
                           reply_text=CLEAN_REPLY, transcription=long_text)
     fake.stop()
-    brief = turn.text[len(HEAD_IMAGE_PREFIX):-len("。" + TAIL_COLLECT)]
+    brief = turn.text[len(HEAD_IMAGE_PREFIX):-len("。" + TAIL_COLLECT_IMAGE)]
     assert brief.endswith("…")
     assert brief[:-1] == long_text[:16]              # 截断位置确定
     assert len(brief[:-1]) <= 16                     # 上限 16 字(省略号另计)
@@ -154,38 +228,41 @@ def test_brief_rules_boundaries():
     keep16 = keep15 + "六"                            # 16 字
     keep17 = keep16 + "七"                            # 17 字
     assert first_question_text(None, transcription=keep15) == (
-        f"{HEAD_IMAGE_PREFIX}{keep15}。{TAIL_COLLECT}")
+        f"{HEAD_IMAGE_PREFIX}{keep15}。{TAIL_COLLECT_IMAGE}")
     assert first_question_text(None, transcription=keep16) == (
-        f"{HEAD_IMAGE_PREFIX}{keep16}。{TAIL_COLLECT}")          # 16 字不加省略号
+        f"{HEAD_IMAGE_PREFIX}{keep16}。{TAIL_COLLECT_IMAGE}")     # 16 字不加省略号
     assert first_question_text(None, transcription=keep17) == (
-        f"{HEAD_IMAGE_PREFIX}{keep16}…。{TAIL_COLLECT}")         # 17 字截到 16 + 「…」
+        f"{HEAD_IMAGE_PREFIX}{keep16}…。{TAIL_COLLECT_IMAGE}")    # 17 字截到 16 + 「…」
     # 首个逗号优先:逗号(,)比句末标点(。)更早 → 取逗号(全角逗号同款)
     for text in ("先算乘法,再算加法。结果是几", "先算乘法，再算加法。", "先算乘法,再算加法,"):
         assert first_question_text(None, transcription=text) == (
-            f"{HEAD_IMAGE_PREFIX}先算乘法。{TAIL_COLLECT}")
+            f"{HEAD_IMAGE_PREFIX}先算乘法。{TAIL_COLLECT_IMAGE}")
     # 句末标点更早 → 取句末标点
     assert first_question_text(None, transcription="先算乘法。再算加法,然后呢") == (
-        f"{HEAD_IMAGE_PREFIX}先算乘法。{TAIL_COLLECT}")
+        f"{HEAD_IMAGE_PREFIX}先算乘法。{TAIL_COLLECT_IMAGE}")
     # 首尾空白先 strip
     assert first_question_text(None, transcription="  先算乘法。") == (
-        f"{HEAD_IMAGE_PREFIX}先算乘法。{TAIL_COLLECT}")
-    # 不足 4 字 → 不复述,退回纯文字招呼语
+        f"{HEAD_IMAGE_PREFIX}先算乘法。{TAIL_COLLECT_IMAGE}")
+    # 不足 4 字 → 不复述,退回纯文字档(非选择题句)
     for too_short in ("好。", "先算。", "先算乘。"):
-        assert first_question_text(None, transcription=too_short) == HEAD_TEXT + TAIL_COLLECT
+        assert first_question_text(None, transcription=too_short) == HEAD_TEXT + TAIL_COLLECT_OPEN
 
 
 # ---------- 答案泄露:分档回归钉 ----------
 
 def test_text_opening_carries_no_digits_at_all(tmp_path):
-    """文字档回归钉:head 是纯文字招呼语 → 首问零数字(题面/答案一个都不出现)。"""
-    answer_digits = set(_DIGIT.findall(str(GRID_QUESTION["answer"])))
+    """文字档回归钉:head 是纯文字招呼语 → 首问零数字(题面/答案一个都不出现);
+    采集档与正确档、非选择题与选择题都钉。"""
+    answer_digits = set(_DIGIT.findall(str(GRID_QUESTION["answer"]))) | set(
+        _DIGIT.findall(str(CHOICE_QUESTION["answer"])))
     assert answer_digits  # 题目本身带数字答案,断言才有意义
-    for status in ("correct", "incorrect", None):
-        learner = {**LEARNER, **({"answer_status": status} if status else {})}
-        turn, fake = _opening(tmp_path, learner)
-        fake.stop()
-        assert not (answer_digits & set(_DIGIT.findall(turn.text))), f"status={status}"
-        assert _DIGIT.search(turn.text) is None, f"status={status}"
+    for question in (GRID_QUESTION, CHOICE_QUESTION):
+        for status in ("correct", "incorrect", None):
+            learner = {**LEARNER, **({"answer_status": status} if status else {})}
+            turn, fake = _opening(tmp_path, learner, question=question)
+            fake.stop()
+            assert not (answer_digits & set(_DIGIT.findall(turn.text))), f"{status}"
+            assert _DIGIT.search(turn.text) is None, f"{status}"
 
 
 def test_image_opening_carries_no_answer_only_digits(tmp_path):
@@ -200,7 +277,7 @@ def test_image_opening_carries_no_answer_only_digits(tmp_path):
     turn, fake = _opening(tmp_path, LEARNER, question=IMAGE_WORD_QUESTION,
                           reply_text=CLEAN_REPLY, transcription=WORD_TRANSCRIPTION)
     fake.stop()
-    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF}。{TAIL_COLLECT}"
+    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF}。{TAIL_COLLECT_IMAGE}"
     assert _DIGIT.search(turn.text) is not None             # 首问确实带数字(非空断言)
     assert not (word_only & set(_DIGIT.findall(turn.text)))
 
