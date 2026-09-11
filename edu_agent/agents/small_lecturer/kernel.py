@@ -616,10 +616,25 @@ def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
     ))
 
 
+def _stamp_turn(session: LearnerSession, turn: int) -> None:
+    """给本轮新产生的 guard_events 补打轮号(`turn`,additive 字段;#146 M2 逐轮列)。
+
+    轮号 = 该轮在 KernelSubject transcript 里的下标(首问 0、第一回复 1…)。
+    `setdefault` 语义:已带轮号的事件不动 → 只需在提交点各调一次,
+    不必在每个埋点调用处穿参数。消费侧拿到精确配对;旧工件无该字段时按序退回。
+    """
+    for event in session.guard_events:
+        event.setdefault("turn", turn)
+
+
 def _commit_turn(session: LearnerSession, student_message: str, assistant_text: str,
                  state: str, ready_to_confirm: bool = False) -> Turn:
     """三处 turn 提交尾部收敛(代喂/揭示/模型路径):append history×2 + version+1 +
-    置态 + 返回 Turn(净减重复行,#113 P2 确定性路径收敛)。"""
+    置态 + 返回 Turn(净减重复行,#113 P2 确定性路径收敛)。
+
+    提交前给本轮事件打轮号:已提交的 assistant 轮数 + 首问
+    (首问由 start() 产出且不入 history,故显式 +1)。"""
+    _stamp_turn(session, len(session.history) // 2 + (1 if session.first_question else 0))
     session.history.append({"role": "user", "content": student_message})
     session.history.append({"role": "assistant", "content": assistant_text})
     session.session_version += 1
@@ -672,6 +687,7 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
         safe_text = _OPENING_FALLBACK  # 图文题 acceptable=false 且 reply 留空 → 确定性兜底首问
     session.state = "first_question_ready"
     session.first_question = safe_text
+    _stamp_turn(session, 0)  # 首问轮 = transcript 第 0 轮(其 guard 事件如首问泄露)
     return Turn(text=safe_text, session_version=session.session_version,
                 state=session.state, ready_to_confirm=False,  # 首问恒非确认
                 session=session)

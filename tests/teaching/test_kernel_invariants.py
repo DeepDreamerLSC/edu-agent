@@ -222,9 +222,9 @@ def test_deterministic_branches_record_guard_events():
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     assert turn.session.guard_events == []  # start 不跑数字守卫/分支埋点
     turn = reply(turn.session, "都懂了", gateway=gateway)
-    assert turn.session.guard_events[-1] == {"branch": "elicit", "hint_level": 0}
+    assert turn.session.guard_events[-1] == {"branch": "elicit", "hint_level": 0, "turn": 1}
     turn = reply(turn.session, "我不太会", gateway=gateway)
-    assert turn.session.guard_events[-1] == {"branch": "reveal", "hint_level": 1}
+    assert turn.session.guard_events[-1] == {"branch": "reveal", "hint_level": 1, "turn": 2}
 
 
 # --------------------------------------------------------------------------- #

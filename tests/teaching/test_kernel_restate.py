@@ -56,7 +56,7 @@ def test_answer_hit_elicits_restatement_without_model():
     assert turn.text == ELICIT
     assert turn.state == "dialogue" and turn.ready_to_confirm is False
     assert len(gateway.requests) == calls  # 确定性分支不调模型
-    assert turn.session.guard_events[-1] == {"branch": "elicit", "hint_level": 0}
+    assert turn.session.guard_events[-1] == {"branch": "elicit", "hint_level": 0, "turn": 2}
 
 
 def test_collection_turn_number_clash_does_not_elicit():
@@ -147,7 +147,7 @@ def test_steps_value_fallback_as_known_answer():
     reply(session, "我先两边减7。", gateway=gateway)
     turn = reply(session, "得到x等于6,代回去是对的。", gateway=gateway)
     assert turn.text == ELICIT
-    assert turn.session.guard_events[-1] == {"branch": "elicit", "hint_level": 0}
+    assert turn.session.guard_events[-1] == {"branch": "elicit", "hint_level": 0, "turn": 2}
 
 
 def test_cjk_spoken_numbers_hit():
@@ -180,7 +180,7 @@ def test_repeat_fallback_advances_ladder():
     assert turn1.session.stuck is True           # 复读打断 = 卡点标记(R6 同款)
     assert turn1.session.hint_level == 1
     # 埋点(#112 评审建议):复读降级路径的阶梯消耗同样记 reveal——此前只有卡壳分支记
-    assert {"branch": "reveal", "hint_level": 1} in turn1.session.guard_events
+    assert {"branch": "reveal", "hint_level": 1, "turn": 1} in turn1.session.guard_events
 
 
 def test_repeat_fallback_ladder_texts_differ_consecutively():
@@ -277,7 +277,7 @@ def test_guard_fallback_repeat_backstop_reveals_ladder():
     assert turn.text != loop_text           # 不再同句复读
     assert turn.session.stuck is True
     assert turn.ready_to_confirm is False
-    assert {"branch": "reveal", "hint_level": 1} in turn.session.guard_events  # 背板路径同记
+    assert {"branch": "reveal", "hint_level": 1, "turn": 1} in turn.session.guard_events  # 背板路径同记
 
 
 def test_elicit_swap_repeat_backstop_reveals_ladder():
@@ -299,7 +299,7 @@ def test_elicit_swap_repeat_backstop_reveals_ladder():
     assert turn.text != masked_prev         # 不再同句复读
     assert turn.text.startswith(("我们从这里入手", "下一步是这样"))  # 阶梯推进
     assert turn.session.stuck is True
-    assert {"branch": "reveal", "hint_level": 1} in turn.session.guard_events  # 背板路径同记
+    assert {"branch": "reveal", "hint_level": 1, "turn": 1} in turn.session.guard_events  # 背板路径同记
 
 
 # ---------- 代喂命中的处置粒度(#152 follow-up / #165 WS4)+ 埋点 ----------
