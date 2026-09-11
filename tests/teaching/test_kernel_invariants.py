@@ -30,9 +30,11 @@ def _open(reply_text: str, steps: list[dict] | None = None) -> dict:
 
 
 def _drift_event(turn) -> dict:
+    """本轮模型路径的数字守卫埋点:优先返回**带违规归因**的那条(#184 起每轮至少一条:
+    候选文本与重生成文本各判一次,只有前者可能带 violation_sources)。"""
     events = [e for e in turn.session.guard_events if e.get("branch") == "model"]
     assert events, "缺少模型路径数字守卫埋点"
-    return events[-1]
+    return next((e for e in events if e.get("violation_sources")), events[-1])
 
 
 def _route_branch(session, phrase: str, gateway) -> str:
@@ -136,21 +138,24 @@ def test_final_answer_in_confirm_state_is_legal_not_stuck():
     assert _drift_event(turn)["violation_sources"] == []
 
 
-def test_hallucinated_number_marks_stuck():
-    # 幻觉数字(36)不在任何来源池 → stuck + 来源标签 hallucinated
+def test_hallucinated_number_is_intercepted_but_not_stuck():
+    # #184:幻觉数字(36)不在任何来源池 → 拦截 + 来源标签 hallucinated;
+    # **重生成修好 = 不置卡点**(stuck 只在修复失败落兜底句时置)
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "题目里一共 36 只脚。", "ready_to_confirm": False, "cited_numbers": [36]},
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
-    assert turn.session.stuck is True
+    assert "36" not in turn.text
+    assert turn.session.stuck is not True
     assert _drift_event(turn)["violation_sources"] == [{"number": 36.0, "source": "hallucinated"}]
+    assert _drift_event(turn)["gate"] == "blocked"
 
 
-def test_final_answer_in_dialogue_state_marks_stuck():
+def test_final_answer_in_dialogue_state_is_intercepted():
     # 对话态(ready_to_confirm=false)说终答:终答数字在终答池但不在允许集 →
-    # 来源标签 "answer"(提前说终答);泄露护栏另行兜底文本,两护栏各管各。
+    # 来源标签 "answer"(提前说终答) → 同一漏斗拦下;检测到且修好 → 不置卡点
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "答案是 3 只鸡和 5 只兔。", "ready_to_confirm": False,
@@ -159,12 +164,16 @@ def test_final_answer_in_dialogue_state_marks_stuck():
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
-    assert turn.session.stuck is True
+    assert turn.text == "你再想想。" and turn.session.stuck is not True
     assert _drift_event(turn)["violation_sources"] == [
         {"number": 3.0, "source": "answer"}, {"number": 5.0, "source": "answer"}]
+    assert _drift_event(turn)["gate"] == "blocked"
+    leak = [e for e in turn.session.guard_events if e.get("guard") == "answer_leak"][-1]
+    assert leak["regenerated"] is True
+    assert leak["rule_ids"] == ["source_value_disclosure:answer"]
 
 
-def test_selfreported_ladder_answer_not_whitelisted_in_dialogue():
+def test_selfreported_ladder_answer_not_whitelisted_but_intercepted():
     # #157 评审发现1(洗白半边):无 answer 题面(评测帧口径,KernelSubject 不传答案),
     # 阶梯末级 = 模型自报答案;对话态照抄末级数字(整段演算)必须被抓——
     # "自报进白名单"与 cited_numbers 同病。修复:终答数字按值从 steps 允许集剥离。
@@ -178,9 +187,10 @@ def test_selfreported_ladder_answer_not_whitelisted_in_dialogue():
     ])
     turn = start(question, dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
-    assert turn.session.stuck is True
+    assert turn.session.stuck is not True        # #184:修好不置卡点
     assert _drift_event(turn)["violation_sources"] == [
         {"number": 3.0, "source": "answer"}, {"number": 5.0, "source": "answer"}]
+    assert "3" not in turn.text and "5" not in turn.text  # 末值答案数字不达学生面
 
 
 def test_last_step_value_not_answer_stays_legal():
@@ -201,7 +211,8 @@ def test_last_step_value_not_answer_stays_legal():
 # --------------------------------------------------------------------------- #
 
 def test_model_branch_records_shadow_event():
-    # 模型路径埋点含 {branch, cited(自报集), extracted(抽取集), violation_sources(来源标签)}
+    # 模型路径埋点含 {branch, cited(自报集), extracted(抽取集), violation_sources(来源标签),
+    # gate(#184:检测到≠拦下,blocked/observed)}
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "题目里一共 36 只脚。", "ready_to_confirm": False, "cited_numbers": [36]},

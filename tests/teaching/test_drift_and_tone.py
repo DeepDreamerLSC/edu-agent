@@ -56,8 +56,9 @@ def test_extracted_numbers_within_allowed_not_stuck():
     assert "cited_numbers" not in json.dumps(turn_request["messages"])
 
 
-def test_extracted_hallucinated_number_marks_stuck():
-    # 数字漂移:模型把口误数字 36 当题目条件复读(允许池只有 8/26/16)→ stuck
+def test_extracted_hallucinated_number_is_intercepted_not_stuck():
+    # #184:幻觉数字 36(允许池只有 8/26/16)→ 拦截并重生成;**修好不置卡点**
+    # (stuck 只在修复失败走兜底句时置,否则一次幻觉就把对话推向 needs_review)
     gateway = FakeGateway(tutor_payloads=[
         {"reply": "先看题面说的 8 只、26 只脚,你打算先算什么?", "ready_to_confirm": False,
          "cited_numbers": [], "steps": [{"step": "鸡脚", "value": "16"}]},
@@ -67,7 +68,11 @@ def test_extracted_hallucinated_number_marks_stuck():
     question = dict(QUESTION)
     turn = start(question, dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
-    assert turn.session.stuck is True  # 下轮提醒(照 R6 卡点模式)
+    assert "36" not in turn.text            # 幻觉数字不达学生面
+    assert turn.session.stuck is not True   # 重生成修好 → 非卡点
+    intercepted = [e for e in turn.session.guard_events if e.get("guard") == "answer_leak"]
+    assert intercepted and intercepted[-1]["regenerated"] is True
+    assert intercepted[-1]["rule_ids"] == ["source_value_disclosure:hallucinated"]
 
 
 def test_student_echoed_number_is_allowed_not_stuck():
@@ -98,13 +103,14 @@ def test_question_without_numbers_skips_drift_guard():
 def test_tone_is_prompt_guided_not_hard_guardrail():
     # 语气是 prompt 引导:直白无鼓励的合法教学回复不被硬护栏拦截
     # (首问恒为固定模板,不参与语气判定;语气面在本 reply 轮验证)
+    # 数字全在允许池(题面 8/26 + 学生本轮已说的 16)→ 数值门不干预,语气面照常放行
     blunt = "16 只脚对应 8 只鸡,与题面 26 只脚矛盾。"
     gateway = FakeGateway(tutor_payloads=[
         {"reply": "先看题面说的 8 只、26 只脚,你打算先算什么?", "ready_to_confirm": False, "cited_numbers": []},
         {"reply": blunt, "ready_to_confirm": False, "cited_numbers": [16, 26]},
     ])
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
-    turn = reply(turn.session, "8 只鸡吗?", gateway=gateway)
+    turn = reply(turn.session, "我算得 16 只脚", gateway=gateway)
     assert turn.text == blunt  # 无鼓励措辞也照常达学生面(语气靠 prompt,非硬护栏)
 
 

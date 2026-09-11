@@ -273,7 +273,10 @@ def test_guard_fallback_repeat_backstop_reveals_ladder():
     gateway = FakeGateway(tutor_payloads=[
         _open_payload(FIRST_QUESTION_COLLECT),
         _tutor_payload(leak), _tutor_payload(leak),  # 第 1 轮:泄露 + 重生成仍泄露 → 兜底同句
-        _tutor_payload(leak), _tutor_payload(leak),  # 第 2 轮:兜底同句 == prev → 背板推进
+        # 第 2 轮:模型照旧泄露(1)→ 护栏重生成仍泄露(2)→ 复读自批评重生成仍泄露(3)
+        # → 背板揭示下一级阶梯(确定性,零模型)
+        _tutor_payload(leak), _tutor_payload(leak),
+        _tutor_payload(leak), _tutor_payload(leak),
     ])
     first = start({"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?说明思路。",
                    "answer": "", "analysis": "", "knowledge_points": []},
@@ -408,7 +411,9 @@ def test_mixed_hits_record_only_unsaid_tokens():
 
 def test_area_formula_token_swapped():
     """④:面积公式 补入 _METHOD_TOKENS(#148 §5 阶梯揭示句原样漏出的词)。"""
-    hitting = "我们从这里入手:先写出三角形面积公式:面积 = 底 × 高 ÷ 2。"
+    # 数字门在代喂护栏之前:命中句里的数字必须是允许池内的(题面 10/6),否则先被
+    # 数值披露门接走(那条路径见 test_leak_gate_numeric.py),测不到代喂分支
+    hitting = "我们从这里入手:先写出三角形面积公式,再看底乘高这一步。"
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你先说说题目给了哪些条件?"),
         _tutor_payload(hitting),
@@ -418,4 +423,4 @@ def test_area_formula_token_swapped():
     turn = reply(first.session, "我想想。", gateway=gateway)
     assert "面积公式" not in turn.text                # 学生未说 → 不落文本
     events = [e for e in turn.session.guard_events if e.get("guard") == "feeds_method"]
-    assert events and events[-1]["rule_ids"] == ["面积公式"]
+    assert events and sorted(events[-1]["rule_ids"]) == ["底乘高", "面积公式"]  # 词表序,非文本序
