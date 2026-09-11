@@ -1,0 +1,25 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你算出的结果是多少？'，仅采集作答，未评判对错或复讲。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师在学生回答'直接算成十二分之四好像不对'后，虽未直接否定，但在后续轮次中明确判定'这一步完全正确'，且在学生未给出最终答案前，教师已说出'通分'这一方法名。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": true,
+  "evidence": "教师问'能说说你是怎么想到这个办法的吗？'，学生随后回答'直接算成十二分之四好像不对，因为每一份的大小不同'，解释了思路。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "你用'通分'的方法把四分之三换成八分之六"
+  ],
+  "evidence": "学生在对话中未主动提及'通分'一词，教师却在总结中直接说出'你用通分的方法'，属于方法名代喂。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

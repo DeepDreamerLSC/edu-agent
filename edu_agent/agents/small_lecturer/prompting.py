@@ -99,6 +99,29 @@ OPENING_HINT_INCORRECT = (
 )
 OPENING_HINT_UNANSWERED = "这道题学生尚未作答。首问引导学生从第一步开始思考。"
 
+# incorrect 弧线第②步(**逐轮**)提示:首问完成采集后,紧随的那一轮只追问思路。
+# 缺口实测(#165 WS4 第 5 条;F 口径 20 例「采集不评判」= 4/20):弧线提示只在首问注入,
+# 后续轮次没有步骤指引 → 模型从①采集直接跳到③纠正,把②「追问他怎么想的」跳过,
+# 于是「采集轮 + 紧随回应」窗口内出现对错判定/纠正(judge 原句:「但分数加法不能这样算哦」
+# 「这一步很准!」「借出的书要从总数里去掉」)。本提示只改**那一轮**的措辞取向,
+# 不动任何判据/基线,也不新增模板(仍是模型生成)。
+_DIAGNOSE_TURN_HINT = (
+    "【弧线第②步 · 这一轮只做一件事】学生刚说出他的作答。请**只追问他是怎么想出来的**"
+    "(例如「你是怎么想到这一步的?」),听他把思路讲完:"
+    "这一轮**不要判定对错**(不出现「对/很准/真棒/不能这样算」这类评价)、"
+    "**不要纠正**、**不要给反例或下一步**。"
+)
+
+# 第③步(**找卡点**)提示:实测定为**不用**——把不评判窗口从「只第②轮」扩到②+③ 后,
+# F 口径「采集不评判」反而 8/20 → 4/20(判词显示判定后移、且两例被复讲引导接走)。
+# 按数据回退到只覆盖第②轮;此处只留结论,不留常量(避免死代码)。
+_DIAGNOSE_TURN_HINT = (
+    "【弧线第②步 · 这一轮只做一件事】学生刚说出他的作答。请**只追问他是怎么想出来的**"
+    "(例如「你是怎么想到这一步的?」),听他把思路讲完:"
+    "这一轮**不要判定对错**(不出现「对/很准/真棒/不能这样算」这类评价)、"
+    "**不要纠正**、**不要给反例或下一步**。"
+)
+
 _OPENING_HINTS = {
     "correct": OPENING_HINT_CORRECT,
     "incorrect": OPENING_HINT_INCORRECT,
@@ -109,6 +132,18 @@ _OPENING_HINTS = {
 def opening_hint(answer_status: str | None) -> str:
     """learner.answer_status → 首问策略提示;unknown/缺省返回空串(不加提示)。"""
     return _OPENING_HINTS.get(answer_status or "", "")
+
+
+def diagnose_turn_hint(answer_status: str | None, reply_index: int) -> str:
+    """incorrect 弧线第②步提示:**仅**「首问后的第一次回应」(reply_index=0)返回非空。
+
+    实测依据(#165 WS4 第 5 条,F 口径「采集不评判」4/20 → 8/20):判词显示②「追问他
+    怎么想的」被跳过(采集后直接判定/纠正)。只覆盖那一轮是**两版对照后的选择**:
+    扩到②+③ 反而 4/20(判定后移 + 复讲引导接走两例)。非 incorrect 状态一律空串。
+    """
+    if answer_status == "incorrect" and reply_index == 0:
+        return _DIAGNOSE_TURN_HINT
+    return ""
 
 
 def _user_prompt(question: dict, extra: dict | None = None) -> str:

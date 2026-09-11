@@ -28,7 +28,8 @@ from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 
 from .format_guard import _DOWNGRADE_PROMPT, evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
-from .prompting import _user_prompt, grade_grounding, opening_hint, summary_system_prompt, system_prompt
+from .prompting import (_user_prompt, diagnose_turn_hint, grade_grounding, opening_hint,
+                        summary_system_prompt, system_prompt)
 from .session import LearnerSession, SessionVersionConflict, Summary, TerminalStateError, Turn
 from .tone_guardrails import apply_tone_guardrail
 
@@ -849,13 +850,18 @@ def reply(session: LearnerSession, student_message: str, *,
         # 复讲未达成 3/4 的根因)。人定弧线「答对后学生复讲,讲完讲师才点名方法」。
         return _ask_restatement(session, student_message)
     gateway = gateway or default_gateway()
+    # 弧线诊断阶段(#165 WS4 第 5 条):incorrect 弧线「首问后的前两次回应」= ②追问思路 + ③找卡点
+    # (首问不入 history → 每次 reply 提交两条 → reply_index = len(history)//2)。只影响这两轮。
+    arc_hint = diagnose_turn_hint(session.learner.get("answer_status"),
+                                  reply_index=len(session.history) // 2)
     _reply_messages = [
         {"role": "system", "content": system_prompt(session.learner.get("grade", ""))},
         {"role": "user", "content": _user_prompt(_masked_question(session.question), {
             "学生": session.learner, "对话记录": session.history,
             "学生本轮回答": student_message,
             "输出提醒": "若学生本轮已给出正确最终答案(或明确表示理解并完成检验),"
-                        "ready_to_confirm 置 true;否则 false。"})},
+                        "ready_to_confirm 置 true;否则 false。"}
+            | ({"弧线步": arc_hint} if arc_hint else {}))},
     ]
     output = json.loads(_invoke(
         gateway, "tutor", _reply_messages, TUTOR_TURN_SCHEMA, session,
