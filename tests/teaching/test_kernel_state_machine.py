@@ -390,3 +390,64 @@ def test_analysis_ladder_is_revealed_on_repeat_fallback(tmp_path):
     fake.stop()
     assert "先假设8只全是鸡" in turn.text        # 揭开的是题库解析的第一级
     assert turn.session.hint_level == 1
+
+
+# ---------- #107 / #146 M3:脚手架渐隐(掌握度信号 → 撤一级支持) ----------
+
+_FADE_STEPS = [{"step": "先算全部按鸡的脚数", "value": "16"},
+               {"step": "再算脚数差", "value": "10"}]
+
+
+def _stuck_session(tmp_path, extra_payloads: list | None = None):
+    """开一个带两级阶梯的会话(卡住/复读/命中等确定性路径不调模型)。"""
+    fakes = [completion(open_json("你现在算到哪一步了?", steps=_FADE_STEPS))]
+    fakes.extend(extra_payloads or [])
+    fake = FakeOpenAI(fakes).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    turn = start({"text": "鸡兔同笼,共8只26脚", "answer": "鸡3只兔5只", "knowledge_points": []},
+                 {"grade": "六年级", "answer_status": "incorrect"}, gateway=gateway)
+    return fake, gateway, turn.session
+
+
+def test_scaffold_fades_after_student_performs_revealed_step(tmp_path):
+    """揭示一级 → 学生**自己做出来**(值出现在本轮消息)→ 再卡住先问不揭示;再卡住升回揭示。"""
+    fake, gateway, session = _stuck_session(tmp_path, [completion(tutor_json("对,继续往下想。"))])
+    revealed = reply(session, "我不会做。", gateway=gateway)
+    assert "先算全部按鸡的脚数" in revealed.text and session.hint_level == 1
+    assert session.scaffold_faded is False                      # 还没掌握度证据 → 支持不动
+    reply(session, "我算了一下,是不是 16 只脚?", gateway=gateway)
+    assert session.scaffold_faded is True                       # 学生自己做出来了 → 撤一级支持
+    faded = reply(session, "我不会了。", gateway=gateway)
+    assert faded.text.startswith("这一步你先自己想想")           # 先问不揭示
+    assert session.hint_level == 1                               # 不消耗阶梯
+    fade_events = [e for e in session.guard_events if e.get("branch") == "fade"]
+    assert fade_events and fade_events[0]["hint_level"] == 1   # #169 起事件另带 turn 字段
+    escalated = reply(session, "我不会做。", gateway=gateway)
+    assert "再算脚数差" in escalated.text and session.hint_level == 2   # 升回全支持
+    gateway.close()
+    fake.stop()
+
+
+def test_scaffold_keeps_full_support_without_performance_signal(tmp_path):
+    """学生没有做出刚揭示的那一步 → **不撤支持**:下次卡住继续揭示下一级,且无 fade 事件。"""
+    fake, gateway, session = _stuck_session(tmp_path)
+    reply(session, "我不会做。", gateway=gateway)
+    reply(session, "我不会了。", gateway=gateway)
+    assert session.scaffold_faded is False
+    assert session.hint_level == 2
+    assert not any(event.get("branch") == "fade" for event in session.guard_events)
+    gateway.close()
+    fake.stop()
+
+
+def test_scaffold_fade_is_one_shot_per_performance(tmp_path):
+    """渐隐只用一次:触发后标志复位(下一次卡住仍给揭示,除非学生又做出了一步)。"""
+    fake, gateway, session = _stuck_session(tmp_path, [completion(tutor_json("对,继续往下想。"))])
+    reply(session, "我不会做。", gateway=gateway)
+    reply(session, "我算了一下,是不是 16 只脚?", gateway=gateway)
+    reply(session, "我不会了。", gateway=gateway)        # 渐隐触发
+    assert session.scaffold_faded is False
+    again = reply(session, "我不会做。", gateway=gateway)
+    assert "再算脚数差" in again.text                            # 直接给下一级
+    gateway.close()
+    fake.stop()
