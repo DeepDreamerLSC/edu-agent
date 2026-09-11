@@ -1,0 +1,25 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你好呀，我们一起看看这道鸡兔同笼的题，你刚才算出来鸡和兔各是多少只呢？'，包含友好开场并采集作答，未评判对错。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师采集到学生思路'可以先假设8只全是鸡，这样有16只脚'，并在该轮回应中仅肯定想法'这个想法很棒'，未直接判定对错或纠正。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求'请你从头讲讲你的思路'，但学生未再回应，后续教师直接说'这一题的学习证据还不够'，说明学生未完成复讲。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "现在我们来算一下，实际有26只脚，比16多出10只，这多出来的脚是兔子的，每只兔子比鸡多2只脚，那这10只脚能对应几只兔子呢？"
+  ],
+  "evidence": "在学生仅说出'假设8只全是鸡'后，教师直接给出了'比16多出10只'、'每只兔子比鸡多2只脚'等解题关键步骤和数值推导，属于代喂。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

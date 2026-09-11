@@ -226,14 +226,15 @@ def test_answer_correct_false_wires_learner_incorrect(env):
 
 
 @pytest.mark.parametrize("body_extra", [{"answer_correct": None}, {}])
-def test_answer_correct_null_or_omitted_leaves_learner_clean(env, body_extra):
-    """null/省略 → learner 无 answer_status 键(内核缺省 unknown),provenance 缺省。"""
+def test_answer_correct_null_or_omitted_maps_assumed_incorrect(env, body_extra):
+    """A 线 §8.5(M3 WS1):null/省略 → answer_status="incorrect"(unanswered 默认按做错,
+    等价老系统 assumed_incorrect);provenance 缺省(假设不是出处,不标 partner_open)。"""
     base, kernel = env
     body = {"question_text": "自由题干十", "idempotency_key": f"u-wire-{len(body_extra)}",
             **body_extra}
     response = unified(base, body)
     assert response.status_code == 200
-    assert "answer_status" not in kernel.learners[0]
+    assert kernel.learners[0]["answer_status"] == "incorrect"
     assert kernel.learners[0].get("answer_correct_provenance") is None
     assert response.json()["answer_correct_provenance"] is None
 
@@ -251,14 +252,58 @@ def test_bank_hit_with_client_answer_wins_provenance(env):
 
 
 def test_bank_hit_without_client_answer_keeps_bank_provenance(env):
-    """题库命中且客户端未带 answer_correct:provenance 保持题库来源(现状不变)。"""
+    """题库命中且客户端未带 answer_correct:provenance 保持题库来源;answer_status 走
+    A 线 assumed_incorrect 映射(省略 ≠ unknown——R6 首问策略信号源要求默认值落地)。"""
     base, kernel = env
     response = unified(base, {"external_question_id": "equation_subtract",
                               "idempotency_key": "u-wire-bank-plain"})
     assert response.status_code == 200
     assert kernel.learners[0].get("answer_correct_provenance") == "partner_question_bank"
-    assert "answer_status" not in kernel.learners[0]  # answer_status 由 answer_correct 映射填,题源不碰
+    assert kernel.learners[0]["answer_status"] == "incorrect"  # A 线:省略按做错
     assert response.json()["answer_correct_provenance"] == "partner_question_bank"
+
+
+# ---------- A 线 §8.5(M3 WS1):per-question open 请求体 → learner ----------
+
+def test_per_question_open_receives_answer_correct_and_knowledge_points(env):
+    """per-question open(App 主路径,#55):answer_correct/knowledge_points 从请求体
+    接收 → learner 映射;替换原写死 learner={}。三分支(true/false/省略)各一例。"""
+    base, kernel = env
+    for key, extra, expected in [
+            ("t", {"answer_correct": True}, "correct"),
+            ("f", {"answer_correct": False}, "incorrect"),
+            ("o", {}, "incorrect")]:
+        response = post(base, "/api/prepared-questions/equation_subtract/open",
+                        {"idempotency_key": f"pq-ac-{key}",
+                         "knowledge_points": [{"id": "kp-9", "name": "简易方程"}],
+                         "grade": "六年级", **extra})
+        assert response.status_code == 200, (key, response.text)
+        learner = kernel.learners[-1]
+        assert learner["answer_status"] == expected
+        assert learner["knowledge_points"] == [{"id": "kp-9", "name": "简易方程"}]
+        # 非合同字段照旧透传且优先于题源(同统一 open:equation_subtract 题源为五年级)
+        assert learner["grade"] == "六年级"
+        assert learner["answer_correct_provenance"] == (
+            "partner_open" if extra else "partner_question_bank")
+
+
+def test_per_question_open_forbidden_fields_rejected(env):
+    """约定 4(00 §5.2)与统一 open 同款:客户端提交 answer/analysis/mastery_status → 403。"""
+    base, kernel = env
+    response = post(base, "/api/prepared-questions/equation_subtract/open",
+                    {"idempotency_key": "pq-forbidden", "analysis": "先移项再合并"})
+    assert response.status_code == 403
+    assert "analysis" in response.json()["error"]["message"]
+    assert kernel.learners == []  # 未产生内核调用
+
+
+def test_per_question_open_missing_idempotency_key_is_422(env):
+    base, kernel = env
+    response = post(base, "/api/prepared-questions/equation_subtract/open",
+                    {"answer_correct": True})
+    assert response.status_code == 422
+    assert "idempotency_key" in response.json()["error"]["message"]
+    assert kernel.learners == []
 
 
 def test_bank_hit_with_client_image_merges_into_question():

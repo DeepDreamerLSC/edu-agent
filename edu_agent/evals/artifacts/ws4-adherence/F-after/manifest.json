@@ -1,0 +1,15 @@
+{
+ "frame": "after",
+ "worktree": "/root/code/edu-ws4-adherence",
+ "git_sha": "4232fdaad0ae1d9298653f9dde622e24796fcb4b",
+ "kernel_diff_vs_main_6b69a4e_sha256": "e3b0c44298fc1c14",
+ "kernel_diff_vs_base_empty": true,
+ "prompting_diff_vs_base_empty": true,
+ "models_yaml_sha256": "3feca1b443896d469000859c009d9d3281439c2bf09a740b7fe1a1b4488a862f",
+ "tutor": "qwen3_vl_8b",
+ "judge": "mlx_27b",
+ "repeats": 2,
+ "calibers": [
+  "F"
+ ]
+}

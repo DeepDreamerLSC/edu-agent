@@ -18,7 +18,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Protocol
 
-from edu_agent.store import Conversation, FileSessionStore, MemoryConversationStore
+from edu_agent.store import Conversation, ConversationStore, FileSessionStore
 
 SKILL_ID = "small_lecturer_coaching"
 SKILL_VERSION = "2026-09-migration-v1"  # #45 SKILL.md 剪裁版的版本串
@@ -64,10 +64,10 @@ class Kernel(Protocol):
 
 
 class ConversationService:
-    def __init__(self, store: MemoryConversationStore, kernel: Kernel,
+    def __init__(self, store: ConversationStore, kernel: Kernel,
                  source=None, sessions: FileSessionStore | None = None,
                  image_resolver=None) -> None:
-        self.store = store
+        self.store = store  # Memory(默认)/File(WS2):同一最小面,后者重启可续
         self.kernel = kernel
         self.source = source
         self.sessions = sessions  # M3 PR6:上下文保留,未注入时空操作
@@ -92,8 +92,11 @@ class ConversationService:
         if text and image:
             raise ApiError(422, "PREPARED_QUESTION_SOURCE_CONFLICT",
                            "question_text 与 question_image 不能同传(自由材料二选一)")
-        learner = {k: v for k, v in body.items() if k not in (
-            "idempotency_key", "external_question_id", "question_text", "question_image")}
+        # A 线 §8.5(M3 WS1):与统一 open / per-question open 同款 learner 构造
+        # (answer_correct→answer_status 映射 + knowledge_points 接收),三入口零分叉。
+        learner, _, knowledge_points = self.open_request_learner(
+            body, frozenset({"idempotency_key", "external_question_id",
+                             "question_text", "question_image"}))
         external_question_id = str(body.get("external_question_id") or "")
         if external_question_id:
             # 同题组合与统一 open 同款:题库文答为准,客户端题图合并
@@ -101,6 +104,9 @@ class ConversationService:
                                 merge_image=str(image or ""))
         elif text or image:
             material = {"text": str(text)} if text else {"image": str(image)}
+            if knowledge_points:
+                # 自由材料路径同统一 open:客户端知识点作追问锚点
+                material["knowledge_points"] = knowledge_points
             payload = self._open_material(material, learner, idempotency_key,
                                           external_question_id)
         else:
@@ -120,6 +126,37 @@ class ConversationService:
 
     _CONTRACT_FIELDS = frozenset({"idempotency_key", "external_question_id", "question_image",
                                   "question_text", "answer_correct", "knowledge_points"})
+    # A 线 §8.5(M3 WS1):answer_correct/knowledge_points 从 open 请求体接收——
+    # 三个 open 入口(统一 open / per-question open / conversations create)共用。
+    _OPEN_LEARNER_FIELDS = frozenset({"answer_correct", "knowledge_points"})
+
+    @classmethod
+    def open_request_learner(cls, body: dict,
+                             contract_fields: frozenset) -> tuple[dict, object, list]:
+        """open 请求体 → (learner, answer_correct, knowledge_points)。
+
+        A 线 §8.5 映射:answer_correct 严格校验(bool|null)后映射 answer_status——
+        true→correct、false/null/省略→incorrect(unanswered 默认按做错,等价老系统
+        assumed_incorrect);客户端显式非空 bool 标 answer_correct_provenance=
+        partner_open(题源出处在 _resolved 只补缺,不覆盖客户端值)。
+        knowledge_points 照 §5 校验(数组 ≤20,每项 name 必填)后进 learner
+        (A 线「从 open 请求体接收」;prompt 追问锚点仍以题源 question.knowledge_points
+        为准,自由材料路径由调用方另行放入题面)。其余非合同字段透传(调用方优先)。"""
+        answer_correct = body.get("answer_correct")
+        if "answer_correct" in body and answer_correct is not None \
+                and not isinstance(answer_correct, bool):
+            raise ApiError(422, None, "answer_correct 必须是严格 JSON boolean 或 null")
+        knowledge_points = cls._validated_knowledge_points(body.get("knowledge_points"))
+        learner = {k: v for k, v in body.items() if k not in contract_fields}
+        # 映射值由合同字段推导,覆写同名透传(服务端权威);显式非 null(含 false)
+        # 即标 partner_open——出处是「客户端显式提交」这一事实,与对错无关;
+        # null/省略的 incorrect 是服务端假设(assumed_incorrect),无出处不标。
+        learner["answer_status"] = "correct" if answer_correct is True else "incorrect"
+        if answer_correct is not None:
+            learner["answer_correct_provenance"] = "partner_open"
+        if knowledge_points:
+            learner["knowledge_points"] = knowledge_points
+        return learner, answer_correct, knowledge_points
 
     def open_unified(self, body: dict) -> dict:
         """统一 Open(§5):字段/长度/严格类型照老系统;组合规则:
@@ -140,25 +177,13 @@ class ConversationService:
         question_text = self._str_field(body, "question_text", 8000)
         if question_image and ("://" in question_image or question_image.startswith("data:")):
             raise ApiError(422, None, "question_image 只接受已上传 file_id,禁 URL/Base64")
-        answer_correct = body.get("answer_correct")
-        if "answer_correct" in body and answer_correct is not None \
-                and not isinstance(answer_correct, bool):
-            raise ApiError(422, None, "answer_correct 必须是严格 JSON boolean 或 null")
-        knowledge_points = self._validated_knowledge_points(body.get("knowledge_points"))
+        learner, answer_correct, knowledge_points = self.open_request_learner(
+            body, self._CONTRACT_FIELDS)
         if question_text and (external_question_id or question_image):
             raise ApiError(422, "PREPARED_QUESTION_SOURCE_CONFLICT",
                            "question_text 不能与 external_question_id/question_image 混用",
                            details={"conflicting_fields": ["question_text", "question_image",
                                                            "external_question_id"]})
-        learner = {k: v for k, v in body.items() if k not in self._CONTRACT_FIELDS}
-        # PR-4:answer_correct → 内核 R6 首问策略信号。true/false 显式有值才映射
-        # answer_status 并标 provenance=partner_open;null/省略不填(内核缺省 unknown,
-        # provenance 缺省)。映射值由合同字段推导,覆写同名透传(服务端权威)。
-        client_answer = "answer_correct" in body and answer_correct is not None
-        if client_answer:
-            learner = {**learner,
-                       "answer_status": "correct" if answer_correct else "incorrect",
-                       "answer_correct_provenance": "partner_open"}
         material = ({"text": question_text} if question_text
                     else {"image": question_image} if question_image else None)
         if material is not None and knowledge_points:
@@ -189,7 +214,7 @@ class ConversationService:
             "pending": False,  # 同步内核:首问已就绪,无需重放
             "answer_correct": answer_correct,
             # 客户端显式有值 > 题库来源 > 缺省 null(答案正确性的出处标记)
-            "answer_correct_provenance": ("partner_open" if client_answer else
+            "answer_correct_provenance": ("partner_open" if answer_correct is not None else
                                           "partner_question_bank" if bank_hit else None),
             "question": {
                 "package_id": None,
@@ -491,15 +516,35 @@ class ConversationService:
     # ---------- 内部 ----------
 
     def _persist_session(self, conversation: Conversation) -> None:
-        """上下文保留(M3 PR6):内核回合后把 LearnerSession 落盘;未注入即空操作。"""
-        session = conversation.extras.get("kernel_session")
+        """上下文保留(M3 PR6):内核回合后把 LearnerSession 落盘;未注入即空操作。
+        重启恢复的会话先按 id 取回本体(WS2),保证后续回合写回的是本体最新状态。"""
+        session = self._rehydrate(conversation) or conversation.extras.get("kernel_session")
         if self.sessions is not None and session is not None:
             self.sessions.save(session)
 
-    def _kernel_session(self, conversation: Conversation) -> object:
-        """真内核:open 时暂存的 LearnerSession 对象(内存态);
-        夹具内核(无 session 对象):最小投影 dict。"""
+    def _rehydrate(self, conversation: Conversation) -> object | None:
+        """重启后把 LearnerSession 本体接回会话(M3 WS2)。
+
+        会话表落盘时本体抽成 ``extras["kernel_session_id"]``(本体由 FileSessionStore
+        存,一份真相),新进程读回 conversation 后此处按 id 取回对象并缓存回 extras
+        ——此后 reply()/finish() 拿到的仍是本体(question/steps/history/
+        first_question/session_version/session_id 全在),不是三键投影。
+        未注入 sessions 或文件不在(夹具内核路径)返回 None,行为与从前一致。"""
         session = conversation.extras.get("kernel_session")
+        if session is not None:
+            return session
+        session_id = conversation.extras.get("kernel_session_id")
+        if not session_id or self.sessions is None:
+            return None
+        session = self.sessions.load(str(session_id))
+        if session is not None:
+            conversation.extras["kernel_session"] = session  # 缓存:后续回合不再读盘
+        return session
+
+    def _kernel_session(self, conversation: Conversation) -> object:
+        """真内核:open 时暂存的 LearnerSession 本体,或重启后按 id 取回的本体;
+        夹具内核(无 session 对象):最小投影 dict。"""
+        session = self._rehydrate(conversation)
         if session is not None:
             return session
         return {

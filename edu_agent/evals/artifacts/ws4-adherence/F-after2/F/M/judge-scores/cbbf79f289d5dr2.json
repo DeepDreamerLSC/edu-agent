@@ -1,0 +1,25 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你好呀，我们一起看看这道解方程的题，你刚才算出的答案是多少呢？'，包含友好开场并采集作答，未评判对错。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": false,
+  "evidence": "教师在学生回答'我想两边都减去7，得到3x等于18'后，立即回应'这一步很对！'，进行了对错判定。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求'请你从头讲讲你的思路'，但学生未再回应，对话以教师再次提问结束。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "那如果两边同时减去7，等式会变成什么样子呢？试试看，左边会变成3x，右边会变成18，对吗？"
+  ],
+  "evidence": "在学生尚未算出具体数值时，教师直接给出了'左边会变成3x，右边会变成18'的中间结果。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

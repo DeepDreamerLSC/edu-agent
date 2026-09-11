@@ -1,0 +1,50 @@
+{
+ "id": "ce2f1467c1d7cr1",
+ "base_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition",
+ "repeat": 1,
+ "question": "计算四分之三加八分之一，并说明为什么要这样算。",
+ "grade": "五年级",
+ "answer_status": "incorrect",
+ "messages": [
+  {
+   "role": "assistant",
+   "content": "你好呀，我们一起看看这道题，你刚才算出的答案是多少呢？"
+  },
+  {
+   "role": "user",
+   "content": "我能不能直接把分子和分母分别相加？"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才说想把分子和分母分别相加，能说说你是怎么想到这个办法的吗？比如，你是不是觉得加法就像拼积木，把两部分凑在一起？"
+  },
+  {
+   "role": "user",
+   "content": "直接算成十二分之四好像不对，因为每一份的大小不同。"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才说每一份的大小不同，这很关键！那我们怎么才能让它们变成同样大小的‘每份’呢？比如，把四分之三换成多少分之几？"
+  },
+  {
+   "role": "user",
+   "content": "我把四分之三化成八分之六，再加八分之一。"
+  },
+  {
+   "role": "assistant",
+   "content": "你刚才把四分之三换成八分之六，这一步很聪明，因为这样两个分数就用同样的‘每份’了！那接下来，八分之六加八分之一等于多少呢？"
+  },
+  {
+   "role": "user",
+   "content": "同分母后分子相加得到八分之七，分母仍然是8。"
+  },
+  {
+   "role": "assistant",
+   "content": "很好,你已经懂了。那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。"
+  },
+  {
+   "role": "assistant",
+   "content": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  }
+ ]
+}

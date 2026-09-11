@@ -63,10 +63,11 @@ def test_unified_open_test_file_exists():
 
 def test_answer_correct_mapping_exists():
     source = SERVICE.read_text(encoding="utf-8")
-    assert '"answer_status": "correct"' in source, (
-        "service.py 缺 answer_correct→answer_status 映射(#90 恢复不完整哨兵,"
-        "PR-4/R6 首问策略的生产端接线,丢失即裸奔绿)"
+    # A 线 §8.5(M3 WS1)映射:open_request_learner 一处装配,三个 open 入口共用
+    assert 'learner["answer_status"] = "correct" if answer_correct is True else "incorrect"' in source, (
+        "service.py 缺 answer_correct→answer_status 映射(A 线 §8.5 assumed_incorrect;"
+        "#90 恢复不完整哨兵,R6 首问策略的生产端接线,丢失即裸奔绿)"
     )
-    assert '"answer_correct_provenance": "partner_open"' in source, (
+    assert 'learner["answer_correct_provenance"] = "partner_open"' in source, (
         "service.py 缺 partner_open provenance 标记(#90 恢复不完整哨兵)"
     )

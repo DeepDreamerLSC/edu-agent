@@ -1,0 +1,23 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "首问为'还有没有不懂的地方？'，未复讲、未评判、未给答案。"
+ },
+ "collect_not_judge": {
+  "applicable": false,
+  "compliant": true,
+  "evidence": "学生作答状态为correct，规则2不适用。"
+ },
+ "restate": {
+  "asked": false,
+  "delivered": false,
+  "evidence": "教师未明确要求学生复讲或讲解思路，学生主动陈述解题过程。"
+ },
+ "feeding": {
+  "fed": false,
+  "quotes": [],
+  "evidence": "教师未提及任何方法名，也未在学生说出答案前给出参考答案数值。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}
