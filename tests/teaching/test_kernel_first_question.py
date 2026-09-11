@@ -184,8 +184,34 @@ def test_image_collect_sentence_is_uniform_even_with_options(tmp_path):
     assert "选了什么" not in turn.text and "算出的答案" not in turn.text
 
 
+@pytest.mark.parametrize("status, expected", [
+    (None, FIRST_QUESTION_COLLECT), ("incorrect", FIRST_QUESTION_COLLECT),
+    ("unanswered", FIRST_QUESTION_COLLECT), ("correct", FIRST_QUESTION_CORRECT),
+])
+def test_text_question_never_uses_image_head_even_with_transcription(tmp_path, status, expected):
+    """部署实测修正(#182,线上题 6a61a8da):**纯文字题**下模型也会把 transcription 填成
+    一句废话(实测「你先别急。」)→ 绝不能用「transcription 非空」当"带图"判据;
+    文字题永远用 HEAD_TEXT,且那句废话既不进 head 也不进复述。"""
+    learner = {**LEARNER, **({"answer_status": status} if status else {})}
+    turn, fake = _opening(tmp_path, learner, reply_text=CLEAN_REPLY, transcription="你先别急。")
+    fake.stop()
+    assert turn.text == expected
+    assert turn.text.startswith(HEAD_TEXT)
+    assert "我看到你发的题啦" not in turn.text
+    assert "你先别急" not in turn.text
+
+
+def test_image_question_prefers_question_text_over_transcription(tmp_path):
+    """带图题 + 题面非空 → 半句**优先取题面**,转录(可能是一句废话)不参与复述。"""
+    turn, fake = _opening(tmp_path, LEARNER, question=IMAGE_WORD_QUESTION,
+                          reply_text=CLEAN_REPLY, transcription="这是一段无关的转录废话。")
+    fake.stop()
+    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF}。{TAIL_COLLECT_IMAGE}"
+    assert "废话" not in turn.text
+
+
 def test_image_only_question_also_restates_transcription(tmp_path):
-    """纯图题(question.text 为空)读出了转写 → 同样走图像 head + 半句复述。"""
+    """纯图题(question.text 为空)读出了转写 → 题面确无内容,才用转录当半句来源。"""
     turn, fake = _opening(tmp_path, LEARNER, question=IMAGE_ONLY_QUESTION,
                           reply_text=CLEAN_REPLY, transcription=WORD_TRANSCRIPTION)
     fake.stop()
@@ -193,12 +219,14 @@ def test_image_only_question_also_restates_transcription(tmp_path):
     assert turn.session.question["text"] == WORD_TRANSCRIPTION  # 转写仍回填题面
 
 
-@pytest.mark.parametrize("question", [IMAGE_WORD_QUESTION, IMAGE_ONLY_QUESTION,
-                                      CHOICE_IMAGE_QUESTION])
-@pytest.mark.parametrize("transcription", ["", "   ", "好", "嗯。"])
-def test_blank_or_too_short_transcription_falls_back_to_text_head(tmp_path, question,
-                                                                  transcription):
-    """转录空/过短(<4 字)→ 退回纯文字档,不出「…这道题:。」残句。
+@pytest.mark.parametrize("question, transcription", [
+    (IMAGE_ONLY_QUESTION, ""), (IMAGE_ONLY_QUESTION, "   "),
+    (IMAGE_ONLY_QUESTION, "好"), (IMAGE_ONLY_QUESTION, "嗯。"),
+    # 题面非空但本身太短(不足 4 字)→ 也不拿转录顶上(题面优先);图像档退回文字档
+    ({"text": "好。", "image": "file:photo-short-1"}, WORD_TRANSCRIPTION),
+])
+def test_no_readable_brief_falls_back_to_text_head(tmp_path, question, transcription):
+    """读不出半句(转录空/过短,或题面本身太短)→ 退回纯文字档,不出「…这道题:。」残句。
 
     退回时一律用**非选择题**那句(图像题读不出内容 → 与「评测口径无 answer」同归非选择)。"""
     turn, fake = _opening(tmp_path, LEARNER, question=question,
@@ -209,10 +237,10 @@ def test_blank_or_too_short_transcription_falls_back_to_text_head(tmp_path, ques
     assert HEAD_IMAGE_PREFIX not in turn.text and ":" not in turn.text
 
 
-def test_long_transcription_is_capped_at_16_chars_with_ellipsis(tmp_path):
-    """长转录(半句边界前 > 16 字)→ 复述截到 16 字并以「…」结尾。"""
+def test_long_brief_is_capped_at_16_chars_with_ellipsis(tmp_path):
+    """长半句(边界前 > 16 字)→ 复述截到 16 字并以「…」结尾(纯图题走转录这条来源)。"""
     long_text = "鸡兔同笼共有头八个脚二十六只问笼中各有多少只鸡和兔"   # 24 字,内部无逗号/句末标点
-    turn, fake = _opening(tmp_path, LEARNER, question=IMAGE_WORD_QUESTION,
+    turn, fake = _opening(tmp_path, LEARNER, question=IMAGE_ONLY_QUESTION,
                           reply_text=CLEAN_REPLY, transcription=long_text)
     fake.stop()
     brief = turn.text[len(HEAD_IMAGE_PREFIX):-len("。" + TAIL_COLLECT_IMAGE)]
@@ -223,29 +251,52 @@ def test_long_transcription_is_capped_at_16_chars_with_ellipsis(tmp_path):
 
 def test_brief_rules_boundaries():
     """半句截断计数边界(公开函数直接钉):逗号/句末标点谁更早取谁;16 字上限;
-    不足 4 字不复述;先 strip。"""
+    不足 4 字不复述;先 strip。半句来源走**纯图题**(题面为空 → 只能用转录)。"""
+    pure_image = {"image": "file:photo-boundary"}
     keep15 = "一二三四五六七八九十一二三四五"           # 15 字
     keep16 = keep15 + "六"                            # 16 字
     keep17 = keep16 + "七"                            # 17 字
-    assert first_question_text(None, transcription=keep15) == (
+    assert first_question_text(None, transcription=keep15, question=pure_image) == (
         f"{HEAD_IMAGE_PREFIX}{keep15}。{TAIL_COLLECT_IMAGE}")
-    assert first_question_text(None, transcription=keep16) == (
+    assert first_question_text(None, transcription=keep16, question=pure_image) == (
         f"{HEAD_IMAGE_PREFIX}{keep16}。{TAIL_COLLECT_IMAGE}")     # 16 字不加省略号
-    assert first_question_text(None, transcription=keep17) == (
+    assert first_question_text(None, transcription=keep17, question=pure_image) == (
         f"{HEAD_IMAGE_PREFIX}{keep16}…。{TAIL_COLLECT_IMAGE}")    # 17 字截到 16 + 「…」
     # 首个逗号优先:逗号(,)比句末标点(。)更早 → 取逗号(全角逗号同款)
     for text in ("先算乘法,再算加法。结果是几", "先算乘法，再算加法。", "先算乘法,再算加法,"):
-        assert first_question_text(None, transcription=text) == (
+        assert first_question_text(None, transcription=text, question=pure_image) == (
             f"{HEAD_IMAGE_PREFIX}先算乘法。{TAIL_COLLECT_IMAGE}")
     # 句末标点更早 → 取句末标点
-    assert first_question_text(None, transcription="先算乘法。再算加法,然后呢") == (
+    assert first_question_text(None, transcription="先算乘法。再算加法,然后呢",
+                               question=pure_image) == (
         f"{HEAD_IMAGE_PREFIX}先算乘法。{TAIL_COLLECT_IMAGE}")
     # 首尾空白先 strip
-    assert first_question_text(None, transcription="  先算乘法。") == (
+    assert first_question_text(None, transcription="  先算乘法。", question=pure_image) == (
         f"{HEAD_IMAGE_PREFIX}先算乘法。{TAIL_COLLECT_IMAGE}")
     # 不足 4 字 → 不复述,退回纯文字档(非选择题句)
     for too_short in ("好。", "先算。", "先算乘。"):
-        assert first_question_text(None, transcription=too_short) == HEAD_TEXT + TAIL_COLLECT_OPEN
+        assert first_question_text(None, transcription=too_short,
+                                   question=pure_image) == HEAD_TEXT + TAIL_COLLECT_OPEN
+
+
+def test_image_gate_and_brief_source_priority():
+    """两条硬规则(部署实测修正 #182):①**不带图** → 永远 HEAD_TEXT(哪怕转录很长);
+    ②**带图** → 半句优先取题面,仅当题面为空(真·纯图题)才用转录。"""
+    long_trans = "鸡兔同笼共有头八个脚二十六只问笼中各有多少只鸡和兔"
+    # ① 不带图:图像 head 与复述一律不出现
+    assert first_question_text(None, transcription=long_trans,
+                               question={"text": "解方程 3x+7=25。"}) == (
+        HEAD_TEXT + TAIL_COLLECT_OPEN)
+    assert first_question_text(None, transcription=long_trans, question=None) == (
+        HEAD_TEXT + TAIL_COLLECT_OPEN)
+    # ② 带图 + 题面非空 → 取题面(无关转录不参与)
+    assert first_question_text(None, transcription="你一定要加油哦。", question={
+        "text": "小明有8本书,借出3本后又买了5本,现在有多少本?", "image": "file:x"}) == (
+        f"{HEAD_IMAGE_PREFIX}小明有8本书。{TAIL_COLLECT_IMAGE}")
+    # ③ 带图 + 题面为空 → 才用转录
+    assert first_question_text(None, transcription="小明有8本书,借出3本。",
+                               question={"image": "file:x"}) == (
+        f"{HEAD_IMAGE_PREFIX}小明有8本书。{TAIL_COLLECT_IMAGE}")
 
 
 # ---------- 答案泄露:分档回归钉 ----------
@@ -267,12 +318,12 @@ def test_text_opening_carries_no_digits_at_all(tmp_path):
 
 def test_image_opening_carries_no_answer_only_digits(tmp_path):
     """图像档回归钉:复述题面必然带题面数字,故只钉「答案独有数字」= 答案数字集 −
-    题面/转录数字集,一个都不许出现。
+    **题面**数字集,一个都不许出现(半句来自题面,故不再看转录)。
 
-    应用题「10本」的 1/0 既不在题面也不在转录里 → 差集 {"1","0"} 非空,这条钉不空转
+    应用题「10本」的 1/0 不在题面里 → 差集 {"1","0"} 非空,这条钉不空转
     (网格题那一差集为空、断言必然通过,故不拿它当唯一见证)。"""
     word_only = set(_DIGIT.findall(str(IMAGE_WORD_QUESTION["answer"]))) - set(
-        _DIGIT.findall(IMAGE_WORD_QUESTION["text"] + WORD_TRANSCRIPTION))
+        _DIGIT.findall(IMAGE_WORD_QUESTION["text"]))
     assert word_only == {"1", "0"}   # 非空,下面的断言才有约束力
     turn, fake = _opening(tmp_path, LEARNER, question=IMAGE_WORD_QUESTION,
                           reply_text=CLEAN_REPLY, transcription=WORD_TRANSCRIPTION)

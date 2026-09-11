@@ -134,8 +134,8 @@ _OPENING_HINTS = {
 # 12排5号记作(,);(3,10)表示()排()号」的首问写成「…记作(5,12),(3,10)表示10排3号,对吗?」,
 # 两个空的答案都给了)。故首问**可见文本**由内核 start() 覆盖为确定性模板:不含答案数字、
 # 不含方法名,答案只能从学生嘴里出来;模型调用照旧(仍产出 steps/transcription)。
-# head 两选一:转录读出了内容(带图题)→ 图像招呼语 + 半句复述;
-# 纯文字题 / 图像题没读出内容 → 纯文字招呼语(不出现「…这道题:。」残句)。
+# head 两选一:**真·带图**(question.image 非空)且读出半句 → 图像招呼语 + 半句复述;
+# 其余(纯文字题 / 图像题没读出内容) → 纯文字招呼语(不出现「…这道题:。」残句)。
 # tail 三选一:正确档一套(文字/图像共用);采集档——图像题恒用统一那句(不按题型分),
 # 文字题按题型分选择题/非选择题(见 `_is_multiple_choice`)。
 HEAD_TEXT = "你好同学,"
@@ -196,19 +196,38 @@ def _text_collect_tail(question: dict | None) -> str:
     return TAIL_COLLECT_CHOICE if _is_multiple_choice(question) else TAIL_COLLECT_OPEN
 
 
+def _has_image(question: dict | None) -> bool:
+    """是否**真·带图**:判据只看 `question["image"]`。
+
+    实测教训(部署抓到,#182):**绝不能拿「transcription 非空」当"这题带图"的判据**——
+    纯文字题下模型也会把 transcription 填上一句废话,于是文字题错用了图像档 head
+    (线上题 6a61a8da:「你好同学,我看到你发的题啦,我们一起看看:你先别急。…」)。"""
+    return (question or {}).get("image") is not None
+
+
+def _brief_source(question: dict | None, transcription: str | None) -> str:
+    """半句来源:**题面文本优先**(权威),仅当题面为空(真·纯图题)才退回转录。
+
+    与 `_has_image` 同一教训:转录可能是一句与题目无关的废话,只有当题面本身没有内容
+    (纯图题)时才不得不采信它。"""
+    text = str((question or {}).get("text") or "").strip()
+    return text or str(transcription or "")
+
+
 def first_question_text(answer_status: str | None, transcription: str | None = None,
                         question: dict | None = None) -> str:
     """首问固定模板(head + tail 组装):显式做对 → 正确档(文字/图像共用同一句);其余
     (incorrect/unanswered/缺省/unknown)→ 采集档。口径依据 docs/plan/00-rewrite-plan.md:
     「false/null/省略→incorrect(unanswered 默认按做错,等价老系统 assumed_incorrect)」。
-    head 按转录是否读出内容两选一(见 `_brief_transcription`);采集档 tail 按题型/图像分流
-    (见 `_is_multiple_choice` 与 `_text_collect_tail`)。
+    head **只在真·带图且读出半句**时用图像招呼语(见 `_has_image` / `_brief_source`);
+    采集档 tail 按题型/图像分流(见 `_is_multiple_choice` 与 `_text_collect_tail`)。
     为什么固定:同一段策略此前作为 prompt 提示被模型违抗过——实测首问直接报出答案数字。"""
-    brief = _brief_transcription(transcription)
+    source = question or {}
+    brief = _brief_transcription(_brief_source(source, transcription)) if _has_image(source) else ""
     if brief:
         tail = TAIL_CORRECT if answer_status == "correct" else TAIL_COLLECT_IMAGE
         return f"{HEAD_IMAGE_PREFIX}{brief}。{tail}"
-    tail = TAIL_CORRECT if answer_status == "correct" else _text_collect_tail(question)
+    tail = TAIL_CORRECT if answer_status == "correct" else _text_collect_tail(source)
     return HEAD_TEXT + tail
 
 
