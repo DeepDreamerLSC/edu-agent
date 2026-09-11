@@ -145,7 +145,7 @@ def test_kernel_replaces_abusive_tone(tmp_path):
 
 def test_kernel_replaces_markdown_output_with_downgrade(tmp_path):
     """格式护栏命中:Markdown 原文不达学生面,换下的是降级引导句(埋点记 rule_ids)。"""
-    dirty = open_json("## 第一步\n先算 **3×4**。")
+    dirty = open_json("## 第一步\n先看 **3 和 7**。")
     fake = FakeOpenAI([completion(dirty)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)

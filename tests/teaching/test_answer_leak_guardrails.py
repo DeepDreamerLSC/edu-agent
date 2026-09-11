@@ -68,31 +68,34 @@ def test_only_grounded_answer_disclosures_require_fallback(
     assert evaluation.fallback_required is True
 
 
-def test_unverified_answer_shaped_text_fails_closed() -> None:
+def test_non_numeric_answer_shaped_text_outside_this_module() -> None:
+    """#184 语义变更:句级「未验证答案断言」判据已删,本模块只判接地事实。
+
+    无参考答案 + 无数字的候选值(字母/文字答案)不属本模块判据范围:该判据的唯一
+    实现是内核数字级归因(`_drift_sources` + `answer_pool`,见
+    tests/teaching/test_leak_gate_numeric.py)——「禁止出现第二套判据」。
+    """
     evaluation = evaluate_student_visible_question(
         "答案是B。你为什么这样选择？",
         answer_reference="",
         active_subquestion_text="当前小问",
     )
 
-    assert evaluation.action == "FALLBACK"
+    assert evaluation.action == "ALLOW"
     assert evaluation.text == "答案是B。你为什么这样选择？"
-    assert "unverified_answer_assertion" in {
-        item.finding for item in evaluation.findings
-    }
+    assert evaluation.findings == ()
 
 
-def test_computed_answer_is_blocked_without_authoritative_answer_reference() -> None:
+def test_numeric_answer_shaped_text_outside_this_module() -> None:
+    """同样口径:带数字的候选值也交给内核数字归因(有基线时句级分支恒不可达)。"""
     evaluation = evaluate_student_visible_question(
         "答案是12。你能说说为什么吗？",
         answer_reference="",
         active_subquestion_text="计算3×4。",
     )
 
-    assert evaluation.action == "FALLBACK"
-    assert "unverified_answer_assertion" in {
-        item.finding for item in evaluation.findings
-    }
+    assert evaluation.action == "ALLOW"
+    assert evaluation.findings == ()
 
 
 @pytest.mark.parametrize(
@@ -106,17 +109,17 @@ def test_computed_answer_is_blocked_without_authoritative_answer_reference() -> 
         "你觉得答案是什么？我猜应该是东南方向，对吗？",
     ],
 )
-def test_unverified_text_answer_confirmation_fails_closed(reply: str) -> None:
+def test_unverified_text_answer_confirmation_outside_this_module(reply: str) -> None:
+    """#184:这组「无参考答案 + 候选值确认」不再由句级判据拦——数值形态的候选值走
+    内核数字归因(题面之外的数字即违规),非数值形态不在任何判据的确定性范围内。"""
     evaluation = evaluate_student_visible_question(
         reply,
         answer_reference="",
         active_subquestion_text="请判断当前小问。",
     )
 
-    assert evaluation.action == "FALLBACK"
-    assert "unverified_answer_assertion" in {
-        item.finding for item in evaluation.findings
-    }
+    assert evaluation.action == "ALLOW"
+    assert evaluation.findings == ()
 
 
 @pytest.mark.parametrize(
@@ -152,23 +155,6 @@ def test_tutor_may_confirm_answer_candidate_already_said_by_student() -> None:
     assert evaluation.action == "ALLOW"
 
 
-def test_unverified_correction_cannot_supply_a_new_value_from_the_question() -> None:
-    evaluation = evaluate_student_visible_question(
-        "题目中C岛是北偏东75°，不是30°。请再看一遍，C岛的角度是多少？",
-        answer_reference="",
-        active_subquestion_text=(
-            "以灯塔为观测点，C岛在灯塔北偏东75°方向；"
-            "D岛在灯塔南偏西40°方向。"
-        ),
-        student_evidence=["30度"],
-    )
-
-    assert evaluation.action == "FALLBACK"
-    assert "unverified_source_value_disclosure" in {
-        item.finding for item in evaluation.findings
-    }
-
-
 def test_unverified_tutor_may_repeat_a_value_the_student_already_stated() -> None:
     evaluation = evaluate_student_visible_question(
         "你说C岛是北偏东75°。接下来D岛在哪个方向？",
@@ -183,7 +169,11 @@ def test_unverified_tutor_may_repeat_a_value_the_student_already_stated() -> Non
     assert evaluation.action == "ALLOW"
 
 
-def test_unverified_tutor_cannot_supply_a_new_compound_direction() -> None:
+def test_new_compound_direction_is_not_a_sentence_level_case() -> None:
+    """#184:纯方向词(无数字)的「新值」不在句级判据内——本模块只判接地事实。
+
+    数字形态的同款越界由内核数字归因拦(题面/学生未给过的数字即违规),见
+    tests/teaching/test_leak_gate_numeric.py 的门用例。"""
     evaluation = evaluate_student_visible_question(
         "C岛方向确认了。D岛在灯塔南偏西多少度？",
         answer_reference="",
@@ -194,10 +184,7 @@ def test_unverified_tutor_cannot_supply_a_new_compound_direction() -> None:
         student_evidence=["C岛是北偏东75度"],
     )
 
-    assert evaluation.action == "FALLBACK"
-    assert "unverified_source_value_disclosure" in {
-        item.finding for item in evaluation.findings
-    }
+    assert evaluation.action == "ALLOW"
 
 
 def test_unverified_tutor_may_point_to_a_known_condition_without_correcting() -> None:
