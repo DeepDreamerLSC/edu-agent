@@ -15,6 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from .files import MAX_BYTES, FileService
+from .healthz import snapshot  # 顶层导入:自述在**进程 import 时**冻结,见 healthz 模块
 from .identity import IdentityError, IdentityService
 from .service import ApiError, ConversationService
 
@@ -317,7 +318,6 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
     def do_GET(self) -> None:
         self.path = self.path.partition("?")[0]  # 剥 query string(审查 P2)
         if _HEALTHZ.match(self.path):
-            from .healthz import snapshot  # 局部导入:快照依赖模型配置,按需加载
             self._json(snapshot())
             return
         if self._serve_docs() or self._serve_static():
