@@ -7,11 +7,11 @@ roundtrip 相等、重启恢复(写文件→新实例→读文件→session 可�
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 
 from edu_agent.agents.small_lecturer import LearnerSession, Summary
 from edu_agent.api import build_service
 from edu_agent.store import FileSessionStore
+from partner_api import StubTurn
 
 
 def sample_session(**overrides) -> LearnerSession:
@@ -130,13 +130,6 @@ def test_additive_only_old_file_loads_with_defaults(tmp_path):
 
 
 # ---------- service 注入:内核回合后落盘 ----------
-
-@dataclass
-class StubTurn:
-    text: str
-    session: object = None
-    ready_to_confirm: bool = False
-
 
 class ReplayKernel:
     """带真 LearnerSession 的最小内核桩:start/reply/finish 推进 session 状态。"""

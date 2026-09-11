@@ -5,35 +5,19 @@
 
 from __future__ import annotations
 
-import httpx
 import pytest
-from partner_api import _assert_local_base
-
-from edu_agent.api import build_server, build_service
+from partner_api import ScriptedKernel, get, serving
 
 
 @pytest.fixture
 def base():
-    class StubKernel:
-        def start(self, question, learner): ...
-    server = build_server(build_service(StubKernel()))
-    import threading
-
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    url = f"http://127.0.0.1:{server.server_address[1]}"
-    yield url
-    server.shutdown()
-    server.server_close()
-
-
-def get(base: str, path: str) -> httpx.Response:
-    _assert_local_base(base)
-    return httpx.get(f"{base}{path}", timeout=5.0, trust_env=False)
+    with serving(ScriptedKernel([])) as url:
+        yield url
 
 
 def test_docs_index_lists_all_guides_without_auth(base):
     """索引页公开可访问,列出全部 guide 链接(无 Authorization 头)。"""
-    response = get(base, "/api/docs")
+    response = get(base, "/api/docs", token=None)
     assert response.status_code == 200
     assert "text/html" in response.headers["Content-Type"]
     for name in ("small-lecturer-v1", "files", "partner-sso", "response-conventions"):
@@ -42,7 +26,7 @@ def test_docs_index_lists_all_guides_without_auth(base):
 
 def test_guide_raw_markdown_served(base):
     """guide 原文:markdown Content-Type,内容来自 docs/partner(非空且有标题)。"""
-    response = get(base, "/api/docs/guides/small-lecturer-v1/raw.md")
+    response = get(base, "/api/docs/guides/small-lecturer-v1/raw.md", token=None)
     assert response.status_code == 200
     assert "text/markdown" in response.headers["Content-Type"]
     assert "小讲师" in response.text
@@ -55,5 +39,5 @@ def test_guide_raw_markdown_served(base):
 ])
 def test_non_whitelisted_docs_paths_are_not_served(base, path):
     """白名单外/穿越路径不落文档路由(401 鉴权闸或 404,绝不 200)。"""
-    response = get(base, path)
+    response = get(base, path, token=None)
     assert response.status_code != 200

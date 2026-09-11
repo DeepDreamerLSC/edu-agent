@@ -2,7 +2,8 @@
 
 确定性校验不碰真模型:validate_scenario 逐字段过门(必填/枚举/sha256/图路径),
 question_image_data_url 走假文件对账,run_case 透图走 FakeOpenAI 断言
-image_url 内容块进请求体。零真实模型。
+image_url 内容块进请求体。零真实模型;Gateway 构造与剧本构造器在
+tests/fixtures/teachkit.py。
 """
 
 from __future__ import annotations
@@ -13,21 +14,11 @@ import json
 from pathlib import Path
 
 import pytest
-from fake_openai import FakeOpenAI, completion
+from fake_openai import completion
 
 from edu_agent.evals import KernelSubject, question_image_data_url, validate_scenario
-from edu_agent.gateway import Gateway, ModelConfig, ModelRegistry, ProviderConfig, RoleConfig
 
-
-def gateway_for(base_url: str, facts_dir) -> Gateway:
-    providers = {"fake": ProviderConfig("fake", base_url, None, True)}
-    models = {"m": ModelConfig("m", "fake", "fake-model")}
-    role = RoleConfig(
-        name="tutor", primary="m", fallback=None, json_strict=True,
-        concurrency=2, first_token_timeout_s=2.0, total_timeout_s=5.0,
-        max_attempts=2, backoff_base_ms=1, backoff_cap_ms=8,
-    )
-    return Gateway(ModelRegistry(providers=providers, models=models, roles={"tutor": role}), facts_dir)
+from teachkit import kernel_env, open_json
 
 
 def _write_image(tmp_path: Path, payload: bytes = b"\xff\xd8\xfffake-jpeg") -> tuple[str, str]:
@@ -83,35 +74,38 @@ def test_missing_image_spec(tmp_path):
     assert any("question.image" in e for e in validate_scenario(scenario))
 
 
-@pytest.mark.parametrize("answer_type", ["integer", "fraction", "decimal_1", "decimal_2", "text"])
-def test_answer_type_enum_ok(tmp_path, answer_type):
-    assert validate_scenario(_scenario(tmp_path, reference_answer={
-        "value": "1", "answer_type": answer_type})) == []
+_ENUM_BUILDERS = {
+    "answer_type": lambda tmp_path, v: _scenario(
+        tmp_path, reference_answer={"value": "1", "answer_type": v}),
+    "visual_dependency": lambda tmp_path, v: _scenario(tmp_path, visual_dependency=v),
+    "expected_outcome": lambda tmp_path, v: _scenario(tmp_path, expected={"outcome": v}),
+}
+_ENUM_INVALID_HINTS = {
+    "answer_type": "answer_type 非法",
+    "visual_dependency": "visual_dependency 非法",
+    "expected_outcome": "expected.outcome",
+}
+_ENUM_CASES = (
+    [("answer_type", v, True) for v in ["integer", "fraction", "decimal_1", "decimal_2", "text"]]
+    + [("answer_type", "percent", False)]
+    + [("visual_dependency", v, True) for v in ["required", "helpful", "none"]]
+    + [("visual_dependency", "partial", False)]
+    + [("expected_outcome", v, True) for v in ["ready_to_record", "needed_reveal", "not_ready"]]
+    + [("expected_outcome", "yes", False)]
+)
 
 
-def test_answer_type_enum_invalid(tmp_path):
-    scenario = _scenario(tmp_path, reference_answer={"value": "1", "answer_type": "percent"})
-    assert any("answer_type 非法" in e for e in validate_scenario(scenario))
+_ENUM_IDS = [f"{field}-{value}" for field, value, _ in _ENUM_CASES]
 
 
-@pytest.mark.parametrize("dep", ["required", "helpful", "none"])
-def test_visual_dependency_enum_ok(tmp_path, dep):
-    assert validate_scenario(_scenario(tmp_path, visual_dependency=dep)) == []
-
-
-def test_visual_dependency_enum_invalid(tmp_path):
-    scenario = _scenario(tmp_path, visual_dependency="partial")
-    assert any("visual_dependency 非法" in e for e in validate_scenario(scenario))
-
-
-@pytest.mark.parametrize("outcome", ["ready_to_record", "needed_reveal", "not_ready"])
-def test_outcome_enum_ok(tmp_path, outcome):
-    assert validate_scenario(_scenario(tmp_path, expected={"outcome": outcome})) == []
-
-
-def test_outcome_enum_invalid(tmp_path):
-    scenario = _scenario(tmp_path, expected={"outcome": "yes"})
-    assert any("expected.outcome" in e for e in validate_scenario(scenario))
+@pytest.mark.parametrize("field,value,is_valid", _ENUM_CASES, ids=_ENUM_IDS)
+def test_enum_gates(tmp_path, field, value, is_valid):
+    """三处枚举门(参考答案形态/题图依赖/预期收束):合法值全过,非法值逐个拦。"""
+    errors = validate_scenario(_ENUM_BUILDERS[field](tmp_path, value))
+    if is_valid:
+        assert errors == []
+    else:
+        assert any(_ENUM_INVALID_HINTS[field] in e for e in errors)
 
 
 # ---------- sha256 与实际文件一致 / 图路径存在 ----------
@@ -146,30 +140,22 @@ def test_question_image_data_url_sha_mismatch_raises(tmp_path):
 # ---------- 内核透图:假 gateway 断言 image_url 进请求体 ----------
 
 
-def _open_json(text: str) -> str:
-    return json.dumps({"acceptable": True, "transcription": "", "steps": [],
-                       "reply": text}, ensure_ascii=False)
-
-
 def test_run_case_passes_image_through(tmp_path):
     # 只验 start 首问透图:清空剧本,start+finish 两次调用
     case = _scenario(tmp_path, student_turns=[])
-    fake = FakeOpenAI([
-        completion(_open_json("先找题目里的已知条件。")),
+    with kernel_env(tmp_path, [
+        completion(open_json("先找题目里的已知条件。")),
         completion(json.dumps({"summary": "你算出了池塘半径 10 米。"}, ensure_ascii=False)),
-    ]).start()
-    gateway = gateway_for(fake.url, tmp_path)
-    KernelSubject(gateway).run_case(case)
-    gateway.close()
-    fake.stop()
-    # 首问调用(request[0])的第一条 user 消息应被渲染为 [text, image_url] 内容块
-    first_messages = fake.requests[0]["messages"]
-    user_content = next(m["content"] for m in first_messages if m["role"] == "user")
-    image_blocks = [p for p in user_content if p.get("type") == "image_url"]
-    assert len(image_blocks) == 1
-    url = image_blocks[0]["image_url"]["url"]
-    assert url.startswith("data:image/jpeg;base64,")
-    assert base64.b64decode(url.split(",", 1)[1]) == b"\xff\xd8\xfffake-jpeg"
+    ]) as (fake, gateway):
+        KernelSubject(gateway).run_case(case)
+        # 首问调用(request[0])的第一条 user 消息应被渲染为 [text, image_url] 内容块
+        first_messages = fake.requests[0]["messages"]
+        user_content = next(m["content"] for m in first_messages if m["role"] == "user")
+        image_blocks = [p for p in user_content if p.get("type") == "image_url"]
+        assert len(image_blocks) == 1
+        url = image_blocks[0]["image_url"]["url"]
+        assert url.startswith("data:image/jpeg;base64,")
+        assert base64.b64decode(url.split(",", 1)[1]) == b"\xff\xd8\xfffake-jpeg"
 
 
 # ---------- 真实图池:根存在性 + 裸文件名解析(审查 #132 建议①) ----------
@@ -189,4 +175,3 @@ def test_real_image_bank_root_exists_and_resolves():
         "path": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
     assert data_url.startswith("data:image/jpeg;base64,")
     assert base64.b64decode(data_url.split(",", 1)[1]) == path.read_bytes()
-

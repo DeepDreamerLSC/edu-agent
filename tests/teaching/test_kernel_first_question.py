@@ -31,7 +31,7 @@ from edu_agent.agents.small_lecturer import (
     start,
 )
 
-from test_kernel_state_machine import kernel_gateway, open_json
+from teachkit import kernel_gateway, open_json
 
 # 实测缺陷同款题:当时的首问写成「…记作(5,12),(3,10)表示10排3号,对吗?」——
 # 两个空的答案都给了。题面数字(8/6/12/5/3/10)与答案数字同源,故文字档用「无数字」兜底。
@@ -77,7 +77,7 @@ def _opening(tmp_path, learner: dict, question: dict | None = None,
              reply_text: str = LEAKING_REPLY, **open_kwargs):
     """走公开路径取首问(假上游 + 真 Gateway),并返回 (turn, fake)。"""
     fake = FakeOpenAI([completion(open_json(reply_text, **open_kwargs))]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
+    gateway = kernel_gateway(fake.url, tmp_path)
     try:
         return start(dict(question or GRID_QUESTION), learner, gateway=gateway), fake
     finally:

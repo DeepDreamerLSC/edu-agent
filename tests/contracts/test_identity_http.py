@@ -8,14 +8,14 @@ PKCE 全舞步走 HTTP:native-codes(断言+challenge→一次性码)→ token(�
 from __future__ import annotations
 
 import secrets
-import threading
 
 import httpx
 import pytest
 
-from edu_agent.api import IdentityService, build_server, build_service
+from edu_agent.api import IdentityService
 
-from partner_fixture import generate_key, pkce_challenge, public_pem, sign_rs256
+from partner_api import ScriptedKernel, serving
+from partner_fixture import generate_key, identity_config, pkce_challenge, public_pem, sign_rs256
 from auth_testing import signed_token
 
 API_KEY = "test-" + secrets.token_hex(8)
@@ -25,38 +25,15 @@ CHALLENGE = pkce_challenge(VERIFIER)
 EXTERNAL_ID = "student-001"
 
 
-def _fake_kernel_reply(session, student_message):
-    return type("Turn", (), {"text": "第一问", "ready_to_confirm": False})
-
-
-class StubKernel:
-    name = "stub"
-    start = staticmethod(lambda question, learner: type("T", (), {"text": "第一问"})())
-    reply = staticmethod(_fake_kernel_reply)
-    finish = staticmethod(lambda session: type("S", (), {"text": "小结", "status": "needs_review"})())
-
-
 @pytest.fixture
-def base_url(tmp_path):
+def base_url():
     """完整对话服务(stub 内核 + 真身份):PKCE 舞步打的就是部署形态的 HTTP 面。"""
-    config = {
-        "native_app_id": "partner_student_app",
-        "api_key": API_KEY,
-        "kid": "partner-key-2026-01",
-        "issuer": "https://partner.example",
-        "audience": "edu-agent",
-        "hmac_key": HMAC_KEY,
-        "verify_key_pem": "",
-        "students": {EXTERNAL_ID: {"user_id": "usr_001", "display_name": "张同学",
-                                   "tenant_id": "school_001"}},
-    }
+    config = dict(identity_config(API_KEY, HMAC_KEY), verify_key_pem="")
     key = generate_key(1024)
     config["verify_key_pem"] = public_pem(key)
-    server = build_server(build_service(StubKernel()), IdentityService(config))
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    yield f"http://127.0.0.1:{server.server_address[1]}", key
-    server.shutdown()
-    server.server_close()
+    with serving(ScriptedKernel(["第一问"], start_text="第一问"),
+                 identity=IdentityService(config)) as base:
+        yield base, key
 
 
 def _assertion(key, external_id=EXTERNAL_ID):
@@ -158,6 +135,7 @@ def test_dialogue_routes_reachable_after_identity_wiring(base_url):
 
 
 def open_session(base: str) -> dict:
+    """本文件专属:该服务用随机 HMAC 密钥(与全库 TEST_TOKEN 不同源),须现签。"""
     response = httpx.post(f"{base}/api/prepared-questions/q-1/open", timeout=5.0, trust_env=False,
                           json={"idempotency_key": "idem-" + secrets.token_hex(4)},
                           headers={"Authorization": f"Bearer {signed_token(key=HMAC_KEY)}"})

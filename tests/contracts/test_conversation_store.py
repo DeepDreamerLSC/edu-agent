@@ -9,19 +9,11 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 
 from edu_agent.agents.small_lecturer import LearnerSession
 from edu_agent.api import ApiError, build_service
 from edu_agent.store import Conversation, FileConversationStore, FileSessionStore
-
-
-@dataclass
-class StubTurn:
-    text: str
-    session: object = None
-    ready_to_confirm: bool = False
-    status: str = "completed"
+from partner_api import StubTurn
 
 
 class RecordingKernel:

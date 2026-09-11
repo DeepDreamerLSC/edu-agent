@@ -6,74 +6,38 @@
 
 from __future__ import annotations
 
-import threading
-
-import httpx
 import pytest
 
-from edu_agent.api import build_server, build_service
-from partner_api import ScriptedKernel, _assert_local_base
+from partner_api import ScriptedKernel, get, serving
 from auth_testing import TEST_TOKEN, signed_token
 
 
-def _serve() -> tuple[str, object]:
-    server = build_server(build_service(ScriptedKernel(["先看条件。"])))
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    return f"http://127.0.0.1:{server.server_address[1]}", server
-
-
-def _get(base: str, token: str) -> httpx.Response:
-    _assert_local_base(base)
-    headers = {"Authorization": f"Bearer {token}"} if token else {}
-    return httpx.get(f"{base}/api/conversations/conv_x", headers=headers,
-                     timeout=5.0, trust_env=False)
-
-
 def test_valid_signed_token_passes_gate():
-    base, server = _serve()
-    try:
+    with serving(ScriptedKernel(["先看条件。"])) as base:
         # 404(会话不存在)= 已过鉴权闸;401 才是被闸拦下
-        assert _get(base, TEST_TOKEN).status_code == 404
-    finally:
-        server.shutdown()
-        server.server_close()
+        assert get(base, "/api/conversations/conv_x", token=TEST_TOKEN).status_code == 404
 
 
-def test_fake_token_is_401():
-    base, server = _serve()
-    try:
-        assert _get(base, "whatever").status_code == 401
-    finally:
-        server.shutdown()
-        server.server_close()
-
-
-def test_expired_token_is_401():
-    base, server = _serve()
-    try:
-        assert _get(base, signed_token(exp=1)).status_code == 401  # exp 在 1970,已过期
-    finally:
-        server.shutdown()
-        server.server_close()
+@pytest.mark.parametrize("token", [
+    "whatever",
+    signed_token(exp=1),  # exp=1(1970 年):已过期
+], ids=["test_fake_token_is_401", "test_expired_token_is_401"])
+def test_unverified_tokens_are_401(token):
+    """假签 / 过期 token 一律 401(任意非空 Authorization 头不再过闸)。"""
+    with serving(ScriptedKernel(["先看条件。"])) as base:
+        assert get(base, "/api/conversations/conv_x", token=token).status_code == 401
 
 
 def test_empty_hmac_key_fails_closed(monkeypatch):
+    # 空钥 fail-closed:即便是格式合法的真签 token 也拒(与签发侧同口径);
+    # HMAC 密钥在 build_server 时读 env,须在 serving 之前摘除
     monkeypatch.delenv("IDENTITY_TOKEN_HMAC_KEY", raising=False)
-    base, server = _serve()
-    try:
-        # 空钥 fail-closed:即便是格式合法的真签 token 也拒(与签发侧同口径)
-        assert _get(base, TEST_TOKEN).status_code == 401
-    finally:
-        server.shutdown()
-        server.server_close()
+    with serving(ScriptedKernel(["先看条件。"])) as base:
+        assert get(base, "/api/conversations/conv_x", token=TEST_TOKEN).status_code == 401
 
 
 def test_enforce_kill_switch_bypasses_verification(monkeypatch):
-    monkeypatch.setenv("EDU_AUTH_ENFORCE", "0")
-    base, server = _serve()
-    try:
+    monkeypatch.setenv("EDU_AUTH_ENFORCE", "0")  # 开关在 build_server 时读 env
+    with serving(ScriptedKernel(["先看条件。"])) as base:
         # 熔断(联调应急):跳过验签,仅要求非空 Authorization → 404 即已过闸
-        assert _get(base, "whatever").status_code == 404
-    finally:
-        server.shutdown()
-        server.server_close()
+        assert get(base, "/api/conversations/conv_x", token="whatever").status_code == 404

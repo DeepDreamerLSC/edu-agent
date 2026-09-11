@@ -1,6 +1,7 @@
 """M3 收官合同:数字漂移守卫 + 教学语气(prompt 引导非硬护栏)。
 
 gateway 对象注入(零网络零端口,确定性);断言即规格。
+FakeGateway 收拢在 tests/fixtures/teachkit.py(一处定义、多处引用)。
 """
 
 from __future__ import annotations
@@ -9,26 +10,7 @@ import json
 
 from edu_agent.agents.small_lecturer import reply, start
 
-
-class FakeGateway:
-    """对象注入假 gateway:vision/tutor 按脚本出牌,记录全部请求。"""
-
-    def __init__(self, tutor_payloads: list[dict],
-                 vision_payloads: list[dict] | None = None):
-        self.tutor_queue = list(tutor_payloads)
-        self.vision_queue = list(vision_payloads or [])
-        self.requests: list[dict] = []
-
-    def invoke(self, request):
-        self.requests.append({"role": request.role, "messages": request.messages})
-        payload = (self.vision_queue.pop(0) if request.role == "vision" and self.vision_queue
-                   else self.tutor_queue.pop(0) if self.tutor_queue
-                   else {"reply": "先回到当前小问。", "ready_to_confirm": False,
-                         "cited_numbers": []})
-        response = type("R", (), {})()
-        response.text = json.dumps(payload, ensure_ascii=False)
-        return response
-
+from teachkit import FakeGateway
 
 # 漂移/语气测试与泄露护栏正交:题面不含 answer/analysis(泄露对照误判数字
 # 回复的根因修复走独立 guardrails PR,见 #34)

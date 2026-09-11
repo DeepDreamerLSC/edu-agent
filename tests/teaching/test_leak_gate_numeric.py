@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from edu_agent.agents.small_lecturer import reply, start
 
-from test_drift_and_tone import FakeGateway
+from teachkit import FakeGateway
 
 # 终答题面:answer 数字(3/5)既不在题面(8/26)也不在 step 值(16/10)里
 QUESTION = {"text": "鸡兔同笼,一共 8 只,26 只脚。鸡和兔各有多少只?",

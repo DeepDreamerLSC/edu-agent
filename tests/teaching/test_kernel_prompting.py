@@ -2,7 +2,7 @@
 
 断言即规格:tests/teaching 的既有护栏断言零改动;本文件验证内核侧的装配与
 护栏接线——system 消息含 SKILL/风格/攻守指令,tutor 输出经三护栏替换。
-零真实模型(假上游)。
+零真实模型(假上游);剧本构造器与 Gateway 构造收拢在 tests/fixtures/teachkit.py。
 """
 
 from __future__ import annotations
@@ -11,12 +11,11 @@ import json
 import re
 from pathlib import Path
 
-from fake_openai import FakeOpenAI, completion
+from fake_openai import completion
 
 from edu_agent.agents.small_lecturer import (
     FIRST_QUESTION_COLLECT,
     TUTOR_TURN_SCHEMA,
-    finish,
     reply,
     start,
     style_directives,
@@ -24,7 +23,8 @@ from edu_agent.agents.small_lecturer import (
     system_prompt,
 )
 
-from test_kernel_state_machine import LEARNER, QUESTION_TEXT, kernel_gateway, open_json, tutor_json
+from teachkit import kernel_env, open_json, tutor_json
+from test_kernel_state_machine import LEARNER, QUESTION_TEXT
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -55,15 +55,12 @@ def test_summary_prompt_uses_summary_instruction():
 # ---------- 内核接线:system 消息真实下发 ----------
 
 def test_kernel_sends_assembled_system_message(tmp_path):
-    fake = FakeOpenAI([completion(open_json("我们先确认题意:要求什么?"))]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    start(QUESTION_TEXT, LEARNER, gateway=gateway)
-    gateway.close()
-    fake.stop()
-    system_message = fake.requests[0]["messages"][0]
-    assert system_message["role"] == "system"
-    assert "苏格拉底式追问" in system_message["content"]
-    assert "六年级" in system_message["content"]
+    with kernel_env(tmp_path, [completion(open_json("我们先确认题意:要求什么?"))]) as (fake, gateway):
+        start(QUESTION_TEXT, LEARNER, gateway=gateway)
+        system_message = fake.requests[0]["messages"][0]
+        assert system_message["role"] == "system"
+        assert "苏格拉底式追问" in system_message["content"]
+        assert "六年级" in system_message["content"]
 
 
 # ---------- #165 WS4 第 5 条:incorrect 弧线第②步(追问思路)轮 ----------
@@ -80,37 +77,31 @@ def _tutor_prompt_blobs(fake) -> list[str]:
 def test_arc_diagnose_hint_only_on_first_reply(tmp_path):
     """只覆盖弧线第②步(首问后的第一次回应);之后轮次不再限制措辞
     (扩到②+③ 的版本经 F 口径实测更差,已回退——见 prompting.py 注释)。"""
-    fake = FakeOpenAI([
+    with kernel_env(tmp_path, [
         completion(open_json("你算出的结果是多少?")),
         completion(tutor_json("你是怎么想到把三个数加在一起的?", ready=False)),
         completion(tutor_json("把这两个条件放在一起看,你觉得哪里会不一样?", ready=False)),
         completion(tutor_json("我们来看看:如果先减38会怎样?", ready=False)),
-    ]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    first = start(QUESTION_TEXT, dict(DIAGNOSE_LEARNER), gateway=gateway)
-    reply(first.session, "我把三个数直接加在一起。", gateway=gateway)
-    reply(first.session, "因为题目说又买来又借出。", gateway=gateway)
-    reply(first.session, "那我先算加法试试。", gateway=gateway)
-    gateway.close()
-    fake.stop()
-    prompts = _tutor_prompt_blobs(fake)
-    assert "弧线第②步" in prompts[1]                      # 首问后的第一次回应
-    assert "弧线第②步" not in prompts[2]                   # 之后不再限制措辞
-    assert "弧线第②步" not in prompts[3]
+    ]) as (fake, gateway):
+        first = start(QUESTION_TEXT, dict(DIAGNOSE_LEARNER), gateway=gateway)
+        reply(first.session, "我把三个数直接加在一起。", gateway=gateway)
+        reply(first.session, "因为题目说又买来又借出。", gateway=gateway)
+        reply(first.session, "那我先算加法试试。", gateway=gateway)
+        prompts = _tutor_prompt_blobs(fake)
+        assert "弧线第②步" in prompts[1]                      # 首问后的第一次回应
+        assert "弧线第②步" not in prompts[2]                   # 之后不再限制措辞
+        assert "弧线第②步" not in prompts[3]
 
 
 def test_arc_diagnose_hint_absent_without_incorrect_status(tmp_path):
     """correct/unknown(缺省)弧线不受影响:零注入(判据与行为面零改动)。"""
-    fake = FakeOpenAI([
+    with kernel_env(tmp_path, [
         completion(open_json("我们先确认题意:要求什么?")),
         completion(tutor_json("你说说看下一步?", ready=False)),
-    ]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    first = start(QUESTION_TEXT, dict(LEARNER), gateway=gateway)
-    reply(first.session, "我想先移项。", gateway=gateway)
-    gateway.close()
-    fake.stop()
-    assert all("弧线第" not in p for p in _tutor_prompt_blobs(fake))
+    ]) as (fake, gateway):
+        first = start(QUESTION_TEXT, dict(LEARNER), gateway=gateway)
+        reply(first.session, "我想先移项。", gateway=gateway)
+        assert all("弧线第" not in p for p in _tutor_prompt_blobs(fake))
 
 
 # ---------- 第一验收:护栏不过的输出不进入 Turn.text ----------
@@ -118,53 +109,42 @@ def test_arc_diagnose_hint_absent_without_incorrect_status(tmp_path):
 def test_kernel_replaces_leaking_tutor_output(tmp_path):
     """泄露终答 → 不达学生面:护栏换下原文,首问可见文本恒为固定模板。"""
     leak = open_json("答案是 x=6。你能说说理由吗?")
-    fake = FakeOpenAI([completion(leak)]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-    gateway.close()
-    fake.stop()
-    assert "x=6" not in turn.text
-    assert turn.text == FIRST_QUESTION_COLLECT   # 首问恒为固定模板(prompting.first_question_text)
-    events = turn.session.guard_events
-    assert [e["guard"] for e in events if e.get("guard")] == ["answer_leak"]
-    assert "x=6" in events[0]["original"]                     # 被拦原文在案
+    with kernel_env(tmp_path, [completion(leak)]) as (fake, gateway):
+        turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
+        assert "x=6" not in turn.text
+        assert turn.text == FIRST_QUESTION_COLLECT   # 首问恒为固定模板(prompting.first_question_text)
+        events = turn.session.guard_events
+        assert [e["guard"] for e in events if e.get("guard")] == ["answer_leak"]
+        assert "x=6" in events[0]["original"]                     # 被拦原文在案
 
 
 def test_kernel_replaces_abusive_tone(tmp_path):
     rude = tutor_json("这么简单的题你都不会?")
-    fake = FakeOpenAI([completion(open_json("第一问?")), completion(rude)]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-    # 「我不会」现路由确定性揭示(#157 评审卡壳修复)→ 语气护栏用中性话术走模型路径
-    turn = reply(first.session, "这题好难。", gateway=gateway)
-    gateway.close()
-    fake.stop()
-    # 任务包2步2兜底句情境化:语气护栏命中,原文不达学生面,换接学生原话的引导句(非万能句)
-    assert turn.text == "先回到你刚说的「这题好难。」——你能从题目里再确认一个已知条件吗?"
+    with kernel_env(tmp_path, [completion(open_json("第一问?")), completion(rude)]) as (fake, gateway):
+        first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
+        # 「我不会」现路由确定性揭示(#157 评审卡壳修复)→ 语气护栏用中性话术走模型路径
+        turn = reply(first.session, "这题好难。", gateway=gateway)
+        # 任务包2步2兜底句情境化:语气护栏命中,原文不达学生面,换接学生原话的引导句(非万能句)
+        assert turn.text == "先回到你刚说的「这题好难。」——你能从题目里再确认一个已知条件吗?"
 
 
 def test_kernel_replaces_markdown_output_with_downgrade(tmp_path):
     """格式护栏命中:Markdown 原文不达学生面,换下的是降级引导句(埋点记 rule_ids)。"""
     dirty = open_json("## 第一步\n先看 **3 和 7**。")
-    fake = FakeOpenAI([completion(dirty)]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-    gateway.close()
-    fake.stop()
-    assert turn.text == FIRST_QUESTION_COLLECT and "##" not in turn.text  # 首问恒为固定模板
-    assert [e["guard"] for e in turn.session.guard_events if e.get("guard")] == ["format"]
+    with kernel_env(tmp_path, [completion(dirty)]) as (fake, gateway):
+        turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
+        assert turn.text == FIRST_QUESTION_COLLECT and "##" not in turn.text  # 首问恒为固定模板
+        assert [e["guard"] for e in turn.session.guard_events if e.get("guard")] == ["format"]
 
 
 def test_clean_output_passes_through(tmp_path):
     """干净输出过三护栏:零埋点;首问可见文本仍是固定模板。"""
     clean = open_json("题目要我们求什么?先说说你读到了哪些条件。")
-    fake = FakeOpenAI([completion(clean)]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-    gateway.close()
-    fake.stop()
-    assert turn.session.guard_events == []           # 护栏零埋点(模板覆盖不是埋点)
-    assert turn.text == FIRST_QUESTION_COLLECT
+    clean = open_json("题目要我们求什么?先说说你读到了哪些条件。")
+    with kernel_env(tmp_path, [completion(clean)]) as (fake, gateway):
+        turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
+        assert turn.session.guard_events == []           # 护栏零埋点(模板覆盖不是埋点)
+        assert turn.text == FIRST_QUESTION_COLLECT
 
 
 def test_guarded_reply_context_matches_student_visible_text(tmp_path):
@@ -172,21 +152,18 @@ def test_guarded_reply_context_matches_student_visible_text(tmp_path):
     leak = tutor_json("答案是 x=6,就是这样。")
     regen_clean = tutor_json("你刚才回到了条件本身,很好。")
     follow_clean = tutor_json("我们接着看,你能说出题目给的一个条件吗?")
-    fake = FakeOpenAI([completion(open_json("第一问?")), completion(leak),
-                       completion(regen_clean), completion(follow_clean)]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-    # 「不知道」现路由确定性揭示(#157 评审卡壳修复)→ 护栏链用中性话术走模型路径
-    turn = reply(first.session, "我再看看。", gateway=gateway)
-    assert turn.text == "你刚才回到了条件本身,很好。"  # 泄露 → 重生成成功 → 用重生成文本
-    assert "x=6" not in turn.text
-    follow = reply(first.session, "题目说 3x 加 7 等于 25。", gateway=gateway)
-    gateway.close()
-    fake.stop()
-    assert follow.text == json.loads(follow_clean)["reply"]
-    assistant_turns = [m["content"] for m in first.session.history if m["role"] == "assistant"]
-    # 泄露回复不达学生面:history 记的是重生成后的干净文本,下一轮模型上下文 = 学生实际所见
-    assert assistant_turns == ["你刚才回到了条件本身,很好。", json.loads(follow_clean)["reply"]]
+    with kernel_env(tmp_path, [completion(open_json("第一问?")), completion(leak),
+                               completion(regen_clean), completion(follow_clean)]) as (fake, gateway):
+        first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
+        # 「不知道」现路由确定性揭示(#157 评审卡壳修复)→ 护栏链用中性话术走模型路径
+        turn = reply(first.session, "我再看看。", gateway=gateway)
+        assert turn.text == "你刚才回到了条件本身,很好。"  # 泄露 → 重生成成功 → 用重生成文本
+        assert "x=6" not in turn.text
+        follow = reply(first.session, "题目说 3x 加 7 等于 25。", gateway=gateway)
+        assert follow.text == json.loads(follow_clean)["reply"]
+        assistant_turns = [m["content"] for m in first.session.history if m["role"] == "assistant"]
+        # 泄露回复不达学生面:history 记的是重生成后的干净文本,下一轮模型上下文 = 学生实际所见
+        assert assistant_turns == ["你刚才回到了条件本身,很好。", json.loads(follow_clean)["reply"]]
 
 
 def test_repeat_self_refine_replaces_repeated_question(tmp_path):
@@ -194,17 +171,14 @@ def test_repeat_self_refine_replaces_repeated_question(tmp_path):
     open_q = open_json("兔子有几只呢?")          # start 首问(open schema)
     repeat_q = tutor_json(FIRST_QUESTION_COLLECT)      # reply 复读首问模板原文(prev)
     refined = tutor_json("我们换一步,你先说说题目给了哪些条件?")  # 重生成(tutor schema)
-    fake = FakeOpenAI([completion(open_q), completion(repeat_q), completion(refined)]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    first = start({"text": "鸡和兔一共有8只,共有26只脚,鸡和兔各有多少只?说明思路。",
-                   "answer": "鸡3只,兔5只"}, {"grade": "六年级"}, gateway=gateway)
-    turn = reply(first.session, "嗯,我看看。", gateway=gateway)
-    gateway.close()
-    fake.stop()
-    # 首问固定模板被复读一次 → self-refine 打回重生成 → 换成非复读的推进句
-    assert turn.text == "我们换一步,你先说说题目给了哪些条件?"
-    assert turn.text != FIRST_QUESTION_COLLECT
-    assert len(fake.requests) == 3  # start + 首轮 reply + 打回重生成 各一次模型调用
+    with kernel_env(tmp_path, [completion(open_q), completion(repeat_q), completion(refined)]) as (fake, gateway):
+        first = start({"text": "鸡和兔一共有8只,共有26只脚,鸡和兔各有多少只?说明思路。",
+                       "answer": "鸡3只,兔5只"}, {"grade": "六年级"}, gateway=gateway)
+        turn = reply(first.session, "嗯,我看看。", gateway=gateway)
+        # 首问固定模板被复读一次 → self-refine 打回重生成 → 换成非复读的推进句
+        assert turn.text == "我们换一步,你先说说题目给了哪些条件?"
+        assert turn.text != FIRST_QUESTION_COLLECT
+        assert len(fake.requests) == 3  # start + 首轮 reply + 打回重生成 各一次模型调用
 
 
 # ---------- #146 M1:reason 规划字段(答案泄露防御,05 §5) ----------

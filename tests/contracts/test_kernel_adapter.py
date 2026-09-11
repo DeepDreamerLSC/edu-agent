@@ -22,6 +22,7 @@ from edu_agent.agents.small_lecturer import (
     OPENING_HINT_INCORRECT,
 )
 from edu_agent.gateway import FailureType, GatewayError
+from partner_api import VISION_OK, MapSource, text_response
 
 
 class FakeGateway:
@@ -34,8 +35,7 @@ class FakeGateway:
     def invoke(self, request):
         self.requests.append(request)
         if request.role == "vision":
-            text = json.dumps({"acceptable": True, "reason": "单题清晰",
-                               "transcription": ""})
+            text = json.dumps(VISION_OK)
         else:
             # 首问轮(reply 轮带「对话记录」段)用不同句:首问恒为固定模板,reply 轮若与
             # 首问同句会撞上输出面防复读背板(阶梯推进)——那是另一条路径的语义,本条合同
@@ -46,25 +46,13 @@ class FakeGateway:
             text = json.dumps({"reply": reply_text,
                                "ready_to_confirm": self.ready_to_confirm},
                               ensure_ascii=False)
-        response = type("R", (), {})()
-        response.text = text
-        return response
-
-
-class FakeSource:
-    """确定性题源:seed bank 同构输出面。"""
-
-    def resolve(self, question_id):
-        return {"text": "解方程 3x+7=25,并说明每一步为什么这样做。", "answer": "x=6",
-                "analysis": "等式两边先同时减去 7。", "image": None,
-                "knowledge_points": ["简易方程"], "grade": "五年级",
-                "answer_correct_provenance": "partner_question_bank"}
+        return text_response(text)
 
 
 @pytest.fixture
 def service():
     service = build_service(SmallLecturerKernel(FakeGateway()))
-    service.source = FakeSource()
+    service.source = MapSource()
     return service
 
 
@@ -107,14 +95,12 @@ def test_real_kernel_dialogue_and_version_conflict(service):
 
 
 def test_gateway_failure_maps_to_503():
-    from edu_agent.gateway import Gateway
-
     class ExplodingGateway:
         def invoke(self, request):
             raise GatewayError(FailureType.UPSTREAM_5XX, "上游 5xx")
 
     service = build_service(SmallLecturerKernel(ExplodingGateway()))
-    service.source = FakeSource()
+    service.source = MapSource()
     with pytest.raises(Exception) as excinfo:
         service.open("equation_subtract", "idem-real-3", learner={})
     assert getattr(excinfo.value, "status_code", None) == 503
@@ -144,9 +130,7 @@ class SequencedGateway:
 
     def invoke(self, request):
         self.requests.append(request)
-        response = type("R", (), {})()
-        response.text = json.dumps(self.replies.pop(0), ensure_ascii=False)
-        return response
+        return text_response(json.dumps(self.replies.pop(0), ensure_ascii=False))
 
 
 def test_open_message_finish_e2e_real_kernel_with_bank_image():

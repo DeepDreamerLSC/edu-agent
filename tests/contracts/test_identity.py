@@ -15,26 +15,22 @@ import threading
 import pytest
 
 from edu_agent.api import IdentityError, IdentityService
-from partner_fixture import public_pem, sign_rs256
+from partner_fixture import (
+    generate_key,
+    identity_config,
+    pkce_challenge,
+    public_pem,
+    sign_rs256,
+)
 
 API_KEY = "test-" + secrets.token_hex(8)
 HMAC_KEY = "test-" + secrets.token_hex(8)
-CONFIG = {
-    "native_app_id": "partner_student_app",
-    "api_key": API_KEY,
-    "kid": "partner-key-2026-01",
-    "issuer": "https://partner.example",
-    "audience": "edu-agent",
-    "hmac_key": HMAC_KEY,
-    "students": {"student-001": {"user_id": "usr_001", "display_name": "张同学",
-                                 "tenant_id": "school_001"}},
-}
+CONFIG = identity_config(API_KEY, HMAC_KEY)
 
 
 @pytest.fixture
 def key_pair() -> tuple[str, object]:
     """(验签用 PEM, 签名用私钥对象)。"""
-    from partner_fixture import generate_key, public_pem
     key = generate_key(1024)
     return public_pem(key), key
 
@@ -76,17 +72,12 @@ def code_request(private_key, **overrides) -> tuple[dict, dict]:
     return body, headers
 
 
-def partner_challenge(verifier: str) -> str:
-    from partner_fixture import pkce_challenge
-    return pkce_challenge(verifier)
-
-
 def test_pkce_full_dance(key_pair):
     """样例回放(#48/postman 字段):断言+challenge → 201 code → verifier → 200 token。"""
     pem, private_key = key_pair
     service = make_service(pem)
     verifier = base64.urlsafe_b64encode(hashlib.sha256(b"the-verifier").digest()).rstrip(b"=").decode()
-    body, headers = code_request(private_key, code_challenge=partner_challenge(verifier))
+    body, headers = code_request(private_key, code_challenge=pkce_challenge(verifier))
     status, payload = service.native_code(body, headers)
     assert status == 201
     data = payload["data"]
@@ -109,7 +100,7 @@ def test_pkce_wrong_verifier_rejected_then_code_still_valid(key_pair):
     pem, private_key = key_pair
     service = make_service(pem)
     verifier = base64.urlsafe_b64encode(hashlib.sha256(b"right").digest()).rstrip(b"=").decode()
-    body, headers = code_request(private_key, code_challenge=partner_challenge(verifier))
+    body, headers = code_request(private_key, code_challenge=pkce_challenge(verifier))
     _, payload = service.native_code(body, headers)
     code = payload["data"]["authorization_code"]
     with pytest.raises(IdentityError) as excinfo:
@@ -126,7 +117,7 @@ def test_code_single_use_and_expiry(key_pair):
     pem, private_key = key_pair
     service = make_service(pem)
     verifier = base64.urlsafe_b64encode(hashlib.sha256(b"v").digest()).rstrip(b"=").decode()
-    body, headers = code_request(private_key, code_challenge=partner_challenge(verifier))
+    body, headers = code_request(private_key, code_challenge=pkce_challenge(verifier))
     _, payload = service.native_code(body, headers)
     code = payload["data"]["authorization_code"]
     token_body = {"native_app_id": "partner_student_app", "authorization_code": code,
@@ -140,7 +131,7 @@ def test_code_single_use_and_expiry(key_pair):
     # 过期:直接向服务注入一条已过期的码
     service.codes["edu_ncode_expired"] = {
         "student": CONFIG["students"]["student-001"],
-        "challenge": partner_challenge(verifier), "expires": 1, "consumed": False}
+        "challenge": pkce_challenge(verifier), "expires": 1, "consumed": False}
     with pytest.raises(IdentityError) as expired:
         service.native_token({"native_app_id": "partner_student_app",
                               "authorization_code": "edu_ncode_expired",
@@ -155,7 +146,7 @@ def test_code_concurrent_consume_only_one_succeeds(key_pair):
     pem, private_key = key_pair
     service = make_service(pem)
     verifier = base64.urlsafe_b64encode(hashlib.sha256(b"c").digest()).rstrip(b"=").decode()
-    body, headers = code_request(private_key, code_challenge=partner_challenge(verifier))
+    body, headers = code_request(private_key, code_challenge=pkce_challenge(verifier))
     _, payload = service.native_code(body, headers)
     token_body = {"native_app_id": "partner_student_app",
                   "authorization_code": payload["data"]["authorization_code"],
