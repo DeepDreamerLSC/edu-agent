@@ -4,9 +4,11 @@
 # 即断点续跑(已完成步骤廉价重放)。部署目标 origin/main(04 §3.5);本 checkout
 # 是专用部署目录,reset --hard 丢弃被跟踪文件的本地改动(.env.* 与 var/ 不受影响)。
 # DEPLOY_REF 仅限本地自验候选分支,ENV=test 的正式部署一律用默认 main。
-set -euo pipefail
+# 被部署的服务**只有一个**:合作方对话服务(含 /healthz,端口 8300,04 §2.1)。
+set -eEuo pipefail   # -E:函数内失败也要触发 ERR trap → 失败同样写台账(finish failed)
 
-ENV_NAME="" DRY_RUN=0 APP_PORT=8300 APP_LABEL=com.edu-agent.app REF="${DEPLOY_REF:-main}"
+ENV_NAME="" DRY_RUN=0 APP_PORT=8300 APP_LABEL=com.edu-agent.partner-api \
+  REF="${DEPLOY_REF:-main}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --env) ENV_NAME="$2"; shift 2 ;;
@@ -35,11 +37,17 @@ step_fetch() {
   git fetch --quiet origin "$REF"
   git checkout --quiet --detach "origin/$REF"
   git reset --hard --quiet "origin/$REF"
+  # 本脚本就在这个 checkout 里:reset 会换掉自己的文件,而 bash 是按偏移增量读脚本的
+  # → 新旧混用(2026-09-11 实测:旧的 APP_LABEL 去读已被新代码删掉的 plist)。更新完
+  # 代码换一份跑,保证全程按同一版本执行;重跑幂等(拉取/同步/重启均可廉价重放)。
+  [ -n "${DEPLOY_REEXEC:-}" ] || exec env DEPLOY_REEXEC=1 "$0" --env "$ENV_NAME"
 }
 step_sync() { uv sync --frozen; }
 step_restart() {  # bootout 异步:等卸载完成再 bootstrap,否则撞 "5: Input/output error"
-  sed "s|__DEPLOY_ROOT__|$ROOT|" deploy/launchd/com.edu-agent.app.plist \
-    > "$HOME/Library/LaunchAgents/$APP_LABEL.plist"
+  # 模板随 APP_LABEL 走:同一环境一个服务(04 §2.1)。__ENV_NAME__ 只传环境名,
+  # 凭据仍在部署目录的 .env.<ENV>,由启动器读(launchd 不继承 shell 环境)。
+  sed -e "s|__DEPLOY_ROOT__|$ROOT|" -e "s|__ENV_NAME__|$ENV_NAME|" \
+    "deploy/launchd/$APP_LABEL.plist" > "$HOME/Library/LaunchAgents/$APP_LABEL.plist"
   launchctl bootout "gui/$(id -u)/$APP_LABEL" >/dev/null 2>&1 || true
   local i
   for i in $(seq 1 20); do
