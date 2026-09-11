@@ -13,6 +13,7 @@ import pytest
 from fake_openai import FakeOpenAI, Reply, completion
 
 from edu_agent.agents.small_lecturer import (
+    FIRST_QUESTION_COLLECT,
     SessionVersionConflict,
     TerminalStateError,
     finish,
@@ -80,13 +81,14 @@ def kernel_gateway(facts_dir, tutor_url: str, vision_url: str | None = None) -> 
 # ---------- start:Preparing → FirstQuestionReady / Failed ----------
 
 def test_start_text_question_skips_vision(tmp_path):
-    """纯文本题统一 open(一次调用);首问就绪,Turn 携带 session 供后续调用。"""
+    """纯文本题统一 open(一次调用);首问就绪且可见文本 = 固定模板(缺省 status → 采集档)。"""
     fake = FakeOpenAI([completion(open_json("题目要我们求什么?先说说已知条件。"))]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
     gateway.close()
     fake.stop()
-    assert turn.state == "first_question_ready" and turn.text == "题目要我们求什么?先说说已知条件。"
+    assert turn.state == "first_question_ready" and turn.text == FIRST_QUESTION_COLLECT
+    assert turn.session.guard_events == []
     assert turn.session is not None and turn.session.state == "first_question_ready"
     assert len(fake.requests) == 1  # 统一 open:只有 tutor 一次
 
@@ -211,7 +213,10 @@ def test_finish_ready_writes_immutable_summary(tmp_path):
 
 def test_kernel_consumes_validated_text_directly(tmp_path):
     """#54 口径:gateway.text 即已验证 JSON(grammar/路线 1 归一),内核直接 json.loads
-    不二次剥壳——带围栏输出经 gateway 归一后内核同样直解析。"""
+    不二次剥壳——带围栏输出经 gateway 归一后内核同样直解析。
+
+    首问可见文本恒为固定模板(prompting.first_question_text),故解析成功的见证
+    落在 Turn.state(模型产出照旧被 json.loads,不经二次剥壳)。"""
     fenced = "```json\n" + open_json("我们先确认题意。") + "\n```"
     fake = FakeOpenAI([completion(fenced), completion(tutor_json("第二问?", ready=True))]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
@@ -219,7 +224,7 @@ def test_kernel_consumes_validated_text_directly(tmp_path):
     turn = reply(first.session, "知道了。", gateway=gateway)
     gateway.close()
     fake.stop()
-    assert first.text == "我们先确认题意。" and turn.state == "ready_to_confirm"
+    assert first.text == FIRST_QUESTION_COLLECT and turn.state == "ready_to_confirm"
 
 
 def test_start_stores_steps_from_open_payload(tmp_path):
@@ -377,10 +382,10 @@ def test_analysis_ladder_is_revealed_on_repeat_fallback(tmp_path):
     """卡住/复读兜底揭示的下一级 = 解析切片(证明阶梯真的接上了揭示路径)。"""
     question = {"text": "鸡和兔一共8只,26只脚,各多少?", "answer": "鸡3只兔5只",
                 "analysis": _ANALYSIS, "knowledge_points": []}
-    repeated = "兔子有几只呢?"
+    repeated = FIRST_QUESTION_COLLECT   # 首问固定模板 = 第一轮被复读的上一轮文本
     fake = FakeOpenAI([
         completion(open_json(repeated, steps=_MODEL_STEPS)),
-        completion(tutor_json(repeated)),      # 模型复读首问
+        completion(tutor_json(repeated)),      # 模型复读首问模板
         completion(tutor_json(repeated)),      # 重生成仍复读 → 兜底揭示下一级
     ]).start()
     gateway = kernel_gateway(tmp_path, fake.url)

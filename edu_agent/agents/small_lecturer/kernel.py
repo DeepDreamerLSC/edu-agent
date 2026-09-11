@@ -28,8 +28,8 @@ from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 
 from .format_guard import _DOWNGRADE_PROMPT, evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
-from .prompting import (_user_prompt, diagnose_turn_hint, grade_grounding, opening_hint,
-                        summary_system_prompt, system_prompt)
+from .prompting import (_user_prompt, diagnose_turn_hint, first_question_text, grade_grounding,
+                        opening_hint, summary_system_prompt, system_prompt)
 from .session import LearnerSession, SessionVersionConflict, Summary, TerminalStateError, Turn
 from .tone_guardrails import apply_tone_guardrail
 
@@ -767,6 +767,12 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
     safe_text = _guard_output(str(payload.get("reply") or ""), session, ctx)
     if not safe_text.strip():
         safe_text = _OPENING_FALLBACK  # 图文题 acceptable=false 且 reply 留空 → 确定性兜底首问
+    else:
+        # 首问固定模板(见 prompting.first_question_text):模型生成的可见文本一律不用——
+        # 实测首问会把答案数字报出来;模型调用照旧,仍产出 steps/transcription。
+        # transcription 供模板复述题面(读出内容 → 带图招呼语 + 半句复述)。
+        safe_text = first_question_text(learner.get("answer_status"),
+                                       str(payload.get("transcription") or ""))
     session.state = "first_question_ready"
     session.first_question = safe_text
     _stamp_turn(session, 0)  # 首问轮 = transcript 第 0 轮(其 guard 事件如首问泄露)

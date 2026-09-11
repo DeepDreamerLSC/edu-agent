@@ -12,7 +12,7 @@ import json
 
 from fake_openai import FakeOpenAI, completion
 
-from edu_agent.agents.small_lecturer import SAFE_FALLBACK_TEXT, start
+from edu_agent.agents.small_lecturer import FIRST_QUESTION_COLLECT, start
 
 from test_kernel_state_machine import LEARNER, kernel_gateway, open_json, tutor_json
 
@@ -159,15 +159,19 @@ def test_user_prompt_omits_anchor_when_knowledge_points_absent(tmp_path):
 # ---------- 泄露护栏:对照文本扩到 answer/analysis ----------
 
 def test_reply_containing_answer_text_is_intercepted(tmp_path):
-    """answer 文本出现在回复中 → 拦截(答案不许从教师侧漏到学生侧)。"""
+    """answer 文本出现在回复中 → 拦截(答案不许从教师侧漏到学生侧)。
+
+    首问可见文本恒为固定模板(prompting.first_question_text),故「拦截」由埋点 +
+    模板不含答案数字共同见证,不再靠兜底句文本断言。"""
     leak = open_json("答案是 x=6。你能说说为什么吗?")
     fake = FakeOpenAI([completion(leak)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     turn = start(dict(QUESTION_WITH_ANSWER), LEARNER, gateway=gateway)
     gateway.close()
     fake.stop()
-    assert turn.text == SAFE_FALLBACK_TEXT
+    assert turn.text == FIRST_QUESTION_COLLECT
     assert "x=6" not in turn.text
+    assert [e["guard"] for e in turn.session.guard_events if e.get("guard")] == ["answer_leak"]
 
 
 def test_reply_copying_analysis_solution_path_is_intercepted(tmp_path):
@@ -178,15 +182,18 @@ def test_reply_copying_analysis_solution_path_is_intercepted(tmp_path):
     turn = start(dict(QUESTION_WITH_ANSWER), LEARNER, gateway=gateway)
     gateway.close()
     fake.stop()
-    assert turn.text == SAFE_FALLBACK_TEXT
+    assert turn.text == FIRST_QUESTION_COLLECT
+    assert "3x" not in turn.text and "x=6" not in turn.text
+    assert [e["guard"] for e in turn.session.guard_events if e.get("guard")] == ["answer_leak"]
 
 
 def test_clean_socratic_reply_passes_with_answer_reference_present(tmp_path):
-    """普通苏格拉底问句不受教师侧对照文本影响(窄判定,不误伤)。"""
+    """普通苏格拉底问句不受教师侧对照文本影响(窄判定,不误伤):零护栏埋点。"""
     clean = open_json("题目要我们求什么?先说说你读到了哪些条件。")
     fake = FakeOpenAI([completion(clean)]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     turn = start(dict(QUESTION_WITH_ANSWER), LEARNER, gateway=gateway)
     gateway.close()
     fake.stop()
-    assert turn.text == "题目要我们求什么?先说说你读到了哪些条件。"
+    assert [e for e in turn.session.guard_events if e.get("guard")] == []
+    assert turn.text == FIRST_QUESTION_COLLECT

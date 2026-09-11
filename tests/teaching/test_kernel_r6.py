@@ -39,9 +39,17 @@ class CapturingFake(FakeOpenAI):
         return messages[0]["content"], messages[1]["content"]
 
 
+# 首问句:首问可见文本恒为固定模板(prompting.first_question_text),这里给模型句只为
+# 让假上游序列对齐统一 open 的一次调用(分档模板本身另有回归钉
+# tests/teaching/test_kernel_first_question.py)。
+_OPENING_TEXT = {
+    "correct": "你做对了!还有没有哪里不太确定的地方?",
+    None: "这道题要我们求什么?",
+}
+
+
 def r6_gateway(tmp_path):
-    # opening_hint_dispatch 只做 start(统一 open,无 reply),open_json 即可
-    fake = CapturingFake([completion(open_json("我们先确认题意。"))] * 8).start()
+    fake = CapturingFake([completion(open_json("这道题要我们求什么?"))] * 8).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     return gateway, fake
 
@@ -53,9 +61,10 @@ def test_opening_hint_dispatch_by_answer_status(tmp_path):
     gateway, fake = r6_gateway(tmp_path)
     hints = {}
     for status in ("correct", "incorrect", "unanswered", None):
+        before = len(fake.requests)      # 首问违规回落会多耗调用 → 按真实下标取本次请求
         start({"text": "3x+7=25"}, {"grade": "五年级", **({"answer_status": status} if status else {})},
               gateway=gateway)
-        hints[status or "unknown"] = fake.system_and_user(len(hints))[1]
+        hints[status or "unknown"] = fake.system_and_user(before)[1]
     gateway.close()
     fake.stop()
     assert hints["correct"].startswith("这道题学生已做对。")
@@ -84,9 +93,9 @@ def test_opening_hint_constants_semantics():
 def test_structured_summary_on_correct_with_no_stuck(tmp_path):
     """answer_status=correct + 无卡点 → finish 走确定性模板 completed,零模型调用。"""
     fake = FakeOpenAI([
-        completion(open_json("我们先确认题意。")),
-        completion(tutor_json("很好,继续。")),
-        completion(tutor_json("你把每一步都讲清楚了。")),
+        completion(open_json(_OPENING_TEXT["correct"])),
+        completion(tutor_json("你说说为什么两边都减去 7?")),
+        completion(tutor_json("这一步的依据是什么?")),
         completion(json.dumps({"summary": "不该被生成"})),  # 结构化通路不得触达模型(毒饵)
     ]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
@@ -110,9 +119,9 @@ def test_structured_summary_quotes_student_words_and_passes_guardrails(tmp_path)
     from edu_agent.agents.small_lecturer import apply_tone_guardrail, evaluate_student_visible_format
 
     fake = FakeOpenAI([
-        completion(open_json("我们先确认题意。")),
-        completion(tutor_json("很好,继续。")),
-        completion(tutor_json("你把每一步都讲清楚了。")),
+        completion(open_json(_OPENING_TEXT["correct"])),
+        completion(tutor_json("你说说先算的是什么?")),          # 首轮:引导(不复读首问)
+        completion(tutor_json("你把两步都说清楚了。", ready=True)),  # 末轮:确认收束
     ]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     turn = start({"text": "图书馆原有120本书,又买来45本,借出38本,现在有多少本?"},
@@ -135,7 +144,7 @@ def test_stuck_mark_blocks_structured_path(tmp_path):
     """物理隔离:对话中出现护栏替换(卡点标记)→ 即使 answer_status=correct 也不走模板。"""
     leak = tutor_json("答案是 x=6。")
     fake = FakeOpenAI([
-        completion(open_json("我们先确认题意。")),
+        completion(open_json(_OPENING_TEXT["correct"])),
         completion(leak),                 # 泄露 → 护栏替换 → stuck 标记
     ]).start()
     gateway = kernel_gateway(tmp_path, fake.url)

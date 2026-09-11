@@ -128,6 +128,54 @@ _OPENING_HINTS = {
     "unanswered": OPENING_HINT_UNANSWERED,
 }
 
+# 首问固定模板(head/tail 组装,逐字定稿)。上面的 OPENING_HINT_* 只是拼进 user 消息的
+# **策略提示**,模型可以违抗——实测首问直接把答案报出来(题「8排6号记作(6,8),那么12排5号
+# 记作(,);(3,10)表示()排()号」的首问写成「…记作(5,12),(3,10)表示10排3号,对吗?」,两个空的
+# 答案都给了)。故首问**可见文本**由内核 start() 覆盖为确定性模板:不含答案数字、不含
+# 方法名,答案只能从学生嘴里出来;模型调用照旧(仍产出 steps/transcription)。
+# head 两选一:转录读出了内容(带图题)→ 招呼语 + 半句复述(贴住学生发的那道题);
+# 纯文字题 / 图像题没读出内容 → 纯文字招呼语(不出现「…这道题:。」残句)。
+HEAD_TEXT = "你好呀,我们一起看看这道题吧。"
+HEAD_IMAGE_PREFIX = "我看到你发的题啦,我们一起看看:"      # 后面接半句复述 + "。"
+TAIL_CORRECT = "你做对了,真棒!还有没有哪里不太确定的地方?"
+TAIL_COLLECT = "你先说说你的答案(或选项)是什么?你是怎么想的?"
+
+# 定稿可见文本的文字题两档(常量形式,供测试与调用方逐字对照):
+FIRST_QUESTION_COLLECT = HEAD_TEXT + TAIL_COLLECT
+FIRST_QUESTION_CORRECT = HEAD_TEXT + TAIL_CORRECT
+
+# 复述(transcription → brief)的确定性口径:取「半句」——首个逗号或句末标点之前,
+# strip 后 4–16 字(超 16 字截到 16 字加「…」)。
+_BRIEF_MIN_CHARS = 4
+_BRIEF_MAX_CHARS = 16
+_BRIEF_ELLIPSIS = "…"
+_BRIEF_CUTS = ("。", "!", "?", ".", "！", "？", ",", "，")
+
+
+def _brief_transcription(transcription: str | None) -> str:
+    """转录 → 首问里的半句复述短语(确定性,零依赖,纯字符串、零模型调用):
+    取首个逗号或句末标点**之前**(谁更早取谁)→ strip → 上限 16 字(超出截到 16 字加「…」);
+    不足 4 字视为没读出内容,返回空串(head 退回 HEAD_TEXT,不出「…这道题:。」残句)。"""
+    text = str(transcription or "").strip()
+    cut = min((text.index(ch) for ch in _BRIEF_CUTS if ch in text), default=len(text))
+    brief = text[:cut].strip()
+    if len(brief) < _BRIEF_MIN_CHARS:
+        return ""
+    if len(brief) > _BRIEF_MAX_CHARS:
+        return brief[:_BRIEF_MAX_CHARS] + _BRIEF_ELLIPSIS
+    return brief
+
+
+def first_question_text(answer_status: str | None, transcription: str | None = None) -> str:
+    """首问固定模板(head + tail 组装):显式做对 → 肯定 + 问不懂处;其余(incorrect/unanswered/
+    缺省/unknown)→ 采集型(问答案 + 问思路)。口径依据 docs/plan/00-rewrite-plan.md:
+    「false/null/省略→incorrect(unanswered 默认按做错,等价老系统 assumed_incorrect)」。
+    head 按转录是否读出内容两选一(见 `_brief_transcription`);tail 只分两档。
+    为什么固定:同一段策略此前作为 prompt 提示被模型违抗过——实测首问直接报出答案数字。"""
+    brief = _brief_transcription(transcription)
+    head = f"{HEAD_IMAGE_PREFIX}{brief}。" if brief else HEAD_TEXT
+    return head + (TAIL_CORRECT if answer_status == "correct" else TAIL_COLLECT)
+
 
 def opening_hint(answer_status: str | None) -> str:
     """learner.answer_status → 首问策略提示;unknown/缺省返回空串(不加提示)。"""
