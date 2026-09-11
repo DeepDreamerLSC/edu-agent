@@ -93,6 +93,18 @@ def _mask_method_names(text: str) -> str:
     return text
 
 
+def _mask_hit_tokens(text: str, tokens: list[str]) -> str:
+    """只把**命中(学生尚未说出)**的方法词换成「这种方法」(确定性,零模型调用)。
+
+    #165 WS4「守卫替换粒度」的末位确定性手段:重生成失败时也不整轮换模板——保留本轮
+    引导/确认语义,只把不该点名的词隐去;学生已说出的词不动(弧线允许的点名保持原样)。
+    词表内无互为子串的词(无「公分母/分母」这类),故一次替换即可清空命中。
+    """
+    for token in tokens:
+        text = text.replace(token, "这种方法")
+    return text
+
+
 def _masked_question(question: dict) -> dict:
     """教师侧题面脱敏副本:解析与知识点里的方法名替换,不点名(题干/答案不动)。"""
     masked = dict(question)
@@ -173,8 +185,9 @@ def _known_answer(session: "LearnerSession") -> str:
 def _student_hits_known_answer(session: "LearnerSession", student_message: str) -> bool:
     """incorrect 弧线:学生陈述命中已知答案(#112 触发判据,可复算、零文本相似度)。
 
-    匹配 = 已知答案的全部 ASCII 数字都出现在学生本轮消息里(数字集包含;学生侧含
-    中文数字单字)。不要求字面/顺序——「兔5只、鸡3只」同样命中「鸡3只,兔5只」。
+    匹配 = 已知答案的**结论数字**(`_answer_focus_numbers`:答案数字 − 题面已给数字)
+    都出现在学生本轮消息里(数字集包含;学生侧含中文数字单字)。不要求字面/顺序——
+    「兔5只、鸡3只」同样命中「鸡3只,兔5只」。
     误触护栏(③ 为一组):① 仅 answer_status=incorrect(correct/unanswered/unknown
     路径零改动);② 非确认态;③ 此前未见过学生消息(incorrect 弧线首轮是学生当前
     (错误)答案的采集,数字撞集不算命中——鸡兔同笼典型错答恰是数字对调)、此前从未
@@ -197,24 +210,53 @@ def _answer_numbers(session: "LearnerSession") -> set[float]:
     return _question_numbers(_known_answer(session))
 
 
+def _answer_focus_numbers(session: "LearnerSession") -> set[float]:
+    """答案数字里**剔除题面已给数字**后的结论数字(#165 WS4 守卫粒度)。
+
+    实测(#152 / 夜评 run 34502985698):chicken_rabbit 的阶梯末级 value 是**算式**
+    「8 - 5 = 3」→ 答案数字 {3,5,8},其中 8 是题面给定的总数;学生末轮
+    「所以兔有10除以2等于5只,鸡有3只,检查…」**永远不会再复述题面数字** →
+    「学生是否已陈述终答」恒 False → 判停闸在学生已说出终答的末轮误触发,确认句被
+    换走 + 强制不确认 → needs_review(实测把 equation/chicken_rabbit 这类收束轮压分)。
+    剔掉题面数字后,判据只要求说出**答案里真正新增的结论数字**;
+    兜底:剔完为空(答案数字全在题面里)→ 退回原集,不放行任何判定(fail-closed)。
+
+    注意与 `_answer_numbers` 的分工(两处口径不同,各有依据):
+    - **漂移池**(`_drift_sources`)用全量 `_answer_numbers`——凡能泄露答案的数字都算;
+    - **「是否已陈述」判据**(本函数)用结论数字——不逼学生复述题面给定的数。
+    """
+    numbers = _answer_numbers(session)
+    given = _question_numbers(str(session.question.get("text") or ""))
+    return (numbers - given) or numbers
+
+
+def _hits_numbers(numbers: set[float], text: str) -> bool:
+    """判据核心(唯一实现):「数字集非空且全部出现在 text 里」(顺序不敏感)。
+
+    fail-open:数字集为空(答案取不到数字,如文字/字母类答案)→ False(不命中、不触发),
+    沿用 #112 既有 `if not answer_numbers: return False` 语义。text 计数含中文数字单字。
+    """
+    if not numbers:
+        return False
+    return numbers <= _spoken_numbers(text)
+
+
 def _hits_answer_numbers(session: "LearnerSession", text: str) -> bool:
     """确定性判据核心(#149 抽核,#112 触发与判停闸**共用同一套**,禁止出现第二套判据):
-    「已知答案的全部 ASCII 数字都出现在 text 里」(数字集包含,顺序不敏感;学生侧计入
-    中文数字单字)。不要求字面/顺序——「兔5只、鸡3只」同样命中「鸡3只,兔5只」。
+    「已知答案的结论数字全部出现在 text 里」(数字集包含,顺序不敏感;学生侧计入中文数字
+    单字)。不要求字面/顺序——「兔5只、鸡3只」同样命中「鸡3只,兔5只」;题面已给的数字
+    不算答案(见 `_answer_focus_numbers`)。"""
+    return _hits_numbers(_answer_focus_numbers(session), text)
 
-    fail-open:答案取不到数字(文字/字母类答案)→ False(不命中、不触发),沿用 #112 既有
-    `if not answer_numbers: return False` 语义。"""
-    answer_numbers = _answer_numbers(session)
-    if not answer_numbers:
-        return False
-    return answer_numbers <= _spoken_numbers(text)
 
 
 def _student_stated_answer(session: "LearnerSession", student_message: str) -> bool:
-    """学生侧是否陈述过命中已知答案的数字集(判停闸判据;跨 answer_status 共用核心)。
+    """学生侧是否陈述过命中已知答案的结论数字集(判停闸判据;跨 answer_status 共用核心)。
 
     **逐条学生消息独立判定**(不取整段历史的数字并集):跨轮各说一半数字不算「陈述过
     答案」——与 #112「单条消息数字集包含」同源,避免把分散数字误当结论而放行判停。
+    用 `_answer_focus_numbers`(结论数字):学生在收束轮复述结论即可,不要求复述题面
+    给定的数字(#152 实测:算式型阶梯末级「8 - 5 = 3」曾让已说出终答的末轮恒判未陈述)。
     不预设例外(如「学生说懂了也放行」):证据驱动,实测出现再加(#149 PM 口径)。"""
     messages = [str(message.get("content") or "") for message in session.history
                 if message.get("role") == "user"]
@@ -234,11 +276,43 @@ def _next_step(session: "LearnerSession") -> dict | None:
 # 阶梯揭示的多样开场(确定性,轮换)——避免「这一步我们先看」句句重复、显生硬。
 _STEP_LEADS = ("我们从这里入手", "下一步是这样", "再往下看", "你看这一步", "接着这样算", "关键在这一步")
 
+# 揭示句里**算式结果**的识别(「10 × 6 = 60」「26-16=10」「10 ÷ 2 = 5」):命中即把结果段收回去
+# (#165 WS4 第 2 条「揭示内容不那么直给」)。只认**含运算符且带等号结果**的片段——
+# 单纯出现数字(如「8只鸡」)不动,避免连题干条件一起吃掉。
+_STEP_ARITHMETIC_RE = re.compile(
+    r"\d+(?:\.\d+)?(?:\s*[×x*÷/+＋－-]\s*\d+(?:\.\d+)?)+\s*=\s*\d+(?:\.\d+)?")
+
+
+def _soften_step_text(step_text: str) -> str:
+    """阶梯揭示的**动作化**改写:把该步算好的结果收回去,只留动作与依据。
+
+    #165 WS4 第 2 条:卡壳路由从**揭示路径**修(#164 已回退词表检测,不再收紧检测)。
+    老行为把模型规划句原样交给学生,而规划句常写成「先算底乘高:10 × 6 = 60」——
+    等于把这一步的结果算给学生,学生只剩抄写(judge 侧读作过度直给、无推进)。
+
+    截断点 = 算式结果**之前**的最后一个**分句边界**(，,、:：;；)——整段丢掉带结果的
+    分句。实测(L 口径帧):按「截到算式起始」会切出残句(「8只鸡有。」「比假设多。」,
+    #148 §6.1 机械截断同款破损),故改为按分句边界切。**找不到边界就原样保留**
+    (宁可直给,不出残句);切出的动作段过短或只是序号(「第二步」)时同样保留原文。
+    """
+    text = str(step_text or "").strip()
+    match = _STEP_ARITHMETIC_RE.search(text)
+    if match is None:
+        return text
+    head = max((text.rfind(sep, 0, match.start()) for sep in "，,、:：;；"), default=-1)
+    if head < 0:
+        return text  # 无分句边界:不做机械截断(避免残句)
+    softened = text[:head].strip()
+    if len(softened) < 4 or re.fullmatch(r"第?\s*[0-9一二三四五六七八九十]+\s*步?", softened):
+        return text  # 动作段过短或只是序号 → 退回原文,不做空揭示
+    return softened
+
 
 def _reveal_stuck_hint(session: "LearnerSession") -> str:
     """学生卡住/复读兜底 → 揭示下一级阶梯(确定性,零模型调用,不重复)。
 
-    内容 = session.steps 下一级;开场用 _STEP_LEADS 轮换,避免固定前缀生硬。
+    内容 = session.steps 下一级(**动作化**后:`_soften_step_text` 收回算式结果);
+    开场用 _STEP_LEADS 轮换,避免固定前缀生硬。
     模型措辞版实测会重复(3/7)且过度揭示,故仍用确定性。
 
     埋点(#112 评审建议):三条调用方(卡壳揭示 / 复读降级 / 输出面背板)统一在此记
@@ -258,7 +332,7 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
         return (f"这一步我们直接看结果:{answer}。你先记住它,我们回头再讲一遍为什么。"
                 if answer else NEEDS_REVIEW_TEXT)
     lead = _STEP_LEADS[(session.hint_level - 1) % len(_STEP_LEADS)]
-    return f"{lead}:{step['step']}。你接着算下一步。"
+    return f"{lead}:{_soften_step_text(str(step.get('step') or ''))}。你接着算下一步。"
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
@@ -320,6 +394,16 @@ _PREMATURE_CONFIRM_CRITIQUE = (
     "学生还没有自己说出这道题的答案。此轮不能确认收尾:不要置 ready_to_confirm、"
     "不要说结论性数值(终答与等价改写都不行),也不要替学生把答案讲完。"
     "改成按教学弧线继续推进:顺着学生刚说的这一步,问一个更小的问题,让他自己往下算。"
+)
+
+# 代喂命中重写指令(#152 follow-up / #165 WS4「守卫替换粒度」):一次方法词命中
+# **不再整轮换成复讲模板**——那会连本轮的引导/确认语义一起丢掉,并强制不确认,
+# 把「学生已说出答案、本该收束」的末轮推向 needs_review(实测 12 分场景压到 3 分)。
+# 这是**给模型的指令**(沿用既有 _regenerate 路径,不新增学生可见模板)。
+_FEEDS_METHOD_CRITIQUE = (
+    "这一轮不要说出方法名/术语(如「等式性质」「通分」「假设法」这类词的名称),"
+    "也不要说出答案数字。保留这一轮原有的作用(该引导就继续引导、该确认就确认),"
+    "只是不要替学生把方法的名字点出来——用学生已经说过的话来推进,重写这一轮回复。"
 )
 
 
@@ -399,10 +483,15 @@ def _guard_check(ctx: "_GuardContext", text: str) -> tuple[str | None, list[str]
 
 
 def _record_event(session: "LearnerSession | None", guard: str, rule_ids: list[str],
-                  original: str, regenerated: bool) -> None:
+                  original: str, regenerated: bool, mode: str | None = None) -> None:
+    """护栏埋点。`mode`(可选,additive)记处置路径:regenerated / masked / template
+    ——度量侧要区分「重生成修好」与「确定性脱敏」两类处置(#165 WS4 替换粒度)。"""
     if session is not None:
-        session.guard_events.append({"guard": guard, "rule_ids": rule_ids,
-                                     "original": original, "regenerated": regenerated})
+        event = {"guard": guard, "rule_ids": rule_ids,
+                 "original": original, "regenerated": regenerated}
+        if mode is not None:
+            event["mode"] = mode
+        session.guard_events.append(event)
         if not regenerated:
             session.stuck = True  # 硬降级 = 未解决的质量问题(卡点标记,R6)
 
@@ -569,10 +658,25 @@ def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
     ))
 
 
+def _stamp_turn(session: LearnerSession, turn: int) -> None:
+    """给本轮新产生的 guard_events 补打轮号(`turn`,additive 字段;#146 M2 逐轮列)。
+
+    轮号 = 该轮在 KernelSubject transcript 里的下标(首问 0、第一回复 1…)。
+    `setdefault` 语义:已带轮号的事件不动 → 只需在提交点各调一次,
+    不必在每个埋点调用处穿参数。消费侧拿到精确配对;旧工件无该字段时按序退回。
+    """
+    for event in session.guard_events:
+        event.setdefault("turn", turn)
+
+
 def _commit_turn(session: LearnerSession, student_message: str, assistant_text: str,
                  state: str, ready_to_confirm: bool = False) -> Turn:
     """三处 turn 提交尾部收敛(代喂/揭示/模型路径):append history×2 + version+1 +
-    置态 + 返回 Turn(净减重复行,#113 P2 确定性路径收敛)。"""
+    置态 + 返回 Turn(净减重复行,#113 P2 确定性路径收敛)。
+
+    提交前给本轮事件打轮号:已提交的 assistant 轮数 + 首问
+    (首问由 start() 产出且不入 history,故显式 +1)。"""
+    _stamp_turn(session, len(session.history) // 2 + (1 if session.first_question else 0))
     session.history.append({"role": "user", "content": student_message})
     session.history.append({"role": "assistant", "content": assistant_text})
     session.session_version += 1
@@ -631,6 +735,7 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
         safe_text = _OPENING_FALLBACK  # 图文题 acceptable=false 且 reply 留空 → 确定性兜底首问
     session.state = "first_question_ready"
     session.first_question = safe_text
+    _stamp_turn(session, 0)  # 首问轮 = transcript 第 0 轮(其 guard 事件如首问泄露)
     return Turn(text=safe_text, session_version=session.session_version,
                 state=session.state, ready_to_confirm=False,  # 首问恒非确认
                 session=session)
@@ -660,6 +765,24 @@ def _gate_premature_confirm(session: LearnerSession, ctx: "_GuardContext", outpu
     output["reply"] = refined
     output["ready_to_confirm"] = False
     return refined
+
+
+def _repair_feeds_method(ctx: "_GuardContext", session: LearnerSession, text: str,
+                         hits: list[str]) -> tuple[str, str]:
+    """代喂命中的处置(#165 WS4「守卫替换粒度」):重生成 → 脱敏 → 模板兜底。
+
+    返回 `(学生可见文本, 处置路径)`;路径取值 `regenerated` / `masked` / `template`,
+    落 `guard_events[].mode` 供度量区分。原实现一律整轮换成复讲模板,连本轮引导/确认
+    语义一并丢掉(并强制不确认)→ 学生已说出终答的末轮被推成 needs_review。
+    不变量的最后一道:任何路径下学生可见文本都不含未说出的方法词。
+    """
+    regenerated = _regenerate(ctx, session, text, _FEEDS_METHOD_CRITIQUE)
+    if regenerated is not None and not _feeds_method_hits(regenerated, ctx.student_evidence):
+        return regenerated, "regenerated"
+    masked = _mask_hit_tokens(text, hits)
+    if not _feeds_method_hits(masked, ctx.student_evidence):
+        return masked, "masked"
+    return _ELICIT_TEMPLATE, "template"  # 兜底:词表无互为子串项,脱敏理论上必清空命中
 
 
 def reply(session: LearnerSession, student_message: str, *,
@@ -720,15 +843,19 @@ def reply(session: LearnerSession, student_message: str, *,
     safe_text = _guard_output(output["reply"], session, ctx)
     method_hits = _feeds_method_hits(safe_text, ctx.student_evidence)
     if method_hits:
-        # 复讲轮代喂(仅「学生尚未说出」的方法词,#157 裁定 1):换成固定"请学生讲"
-        # 引导,并强制 ready_to_confirm=False——不关对话,继续收集学生的讲题内容
-        # (总结轮才由 finish 点名方法)。学生已说 → 教师复述定名原文放行。
-        # 埋点补齐(#112):此前静默替换不留痕;残留度量需要被换下的原文与命中词
-        # (护栏重生成 vs 解析脱敏对照的语料来源),与 _record_event 其余调用同款。
-        _record_event(session, "feeds_method", method_hits,
-                      safe_text, regenerated=False)
-        safe_text = _ELICIT_TEMPLATE
-        output["ready_to_confirm"] = False
+        # 复讲轮代喂(仅「学生尚未说出」的方法词,#157 裁定 1)。**替换粒度**(#152
+        # follow-up / #165 WS4):命中 ≠ 整轮作废——先带指令重生成(保留本轮引导/确认
+        # 语义),失败再确定性脱敏(只隐去命中词),模板仅末位兜底。埋点补齐(#112):
+        # 记被换下的原文 + 命中词 + 处置路径 mode(护栏重生成 vs 解析脱敏对照口径)。
+        repaired, mode = _repair_feeds_method(ctx, session, safe_text, method_hits)
+        _record_event(session, "feeds_method", method_hits, safe_text,
+                      regenerated=(mode != "template"), mode=mode)
+        safe_text = repaired
+        if not _student_stated_answer(session, student_message):
+            # 学生尚未说出终答 → 不关对话,继续收集学生的讲题内容(原语义)。
+            # 学生**已陈述终答**的末轮不再强制不确认:一次方法词命中不该把本该收束的
+            # 轮次推向 needs_review(#152 实测把 12 分场景压到 3 分)。
+            output["ready_to_confirm"] = False
     if prev and safe_text == prev:
         # 输出面防复读(#112 终极不变量,精确等值——不吞正当的相近推进):任何兜底
         # (护栏兜底/复读自批评降级/代喂替换)的产出若与上一轮学生可见文本完全相同,
