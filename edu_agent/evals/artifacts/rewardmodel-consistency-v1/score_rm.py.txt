@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+"""一次性:用 Qwen2.5-1.5B-pedagogical-rewardmodel 给教师回复打分。
+
+格式【严格照抄 MathTutorBench 官方 compute_scaffolding_score.py】(eth-lre/mathtutorbench):
+  system  = 官方英文判分提示(原文,不改一字)
+  user#1  = "Problem: {problem}\nReference Solution: {reference_solution}"
+  历史    = Teacher/Tutor → assistant,Student → user
+  末条    = assistant = 待评教师回复
+  打分    = tokenizer.apply_chat_template(conversation, tokenize=True, return_tensors="pt")
+            → model(inputs) → logits[0][0].item()
+加载:num_labels=1、bf16、禁 dropout、eval —— 全部同官方脚本。
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+
+import torch
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+MODEL_DIR = "/Users/linsuchang/Desktop/work/models/Qwen2.5-1.5B-pedagogical-rewardmodel"
+SYSTEM_PROMPT = (
+    "Judge the pedagogical quality of the responses provided by two teachers. "
+    "Focus on the quality of the scaffolding guidance, correctness, and actionability "
+    "of the feedback through nudges, questions and hints. Do not give high scores "
+    "for revealing the full answer."
+)
+
+
+def load() -> tuple:
+    tok = AutoTokenizer.from_pretrained(MODEL_DIR, trust_remote_code=True)
+    try:
+        model = AutoModelForSequenceClassification.from_pretrained(
+            MODEL_DIR, torch_dtype=torch.bfloat16, trust_remote_code=True, num_labels=1)
+    except TypeError:  # transformers 新版参数改名
+        model = AutoModelForSequenceClassification.from_pretrained(
+            MODEL_DIR, dtype=torch.bfloat16, trust_remote_code=True, num_labels=1)
+    for m in model.modules():
+        if isinstance(m, torch.nn.Dropout):
+            m.p = 0
+    model = model.eval()
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    return tok, model.to(device), device
+
+
+def build_conversation(rec: dict) -> list[dict]:
+    conv = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": "Problem: " + rec["problem"] + "\nReference Solution: "
+         + rec["reference_solution"]},
+    ]
+    for e in rec["history"]:
+        conv.append({"role": "assistant" if e["role"] == "teacher" else "user",
+                     "content": e["text"]})
+    conv.append({"role": "assistant", "content": rec["response"]})
+    return conv
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("infile")   # JSONL: {uid, problem, reference_solution, history, response}
+    ap.add_argument("outfile")  # JSONL: {uid, score, seconds}
+    args = ap.parse_args()
+    tok, model, device = load()
+    print(f"device={device}", file=sys.stderr)
+    n, t0 = 0, time.time()
+    with open(args.infile) as fi, open(args.outfile, "w") as fo:
+        for line in fi:
+            rec = json.loads(line)
+            inputs = tok.apply_chat_template(
+                build_conversation(rec), tokenize=True, return_tensors="pt",
+                return_dict=False).to(device)
+            with torch.no_grad():
+                score = model(inputs).logits[0][0].item()
+            fo.write(json.dumps({"uid": rec["uid"], "score": score},
+                                ensure_ascii=False) + "\n")
+            n += 1
+            if n % 50 == 0:
+                print(f"  {n} 条, {time.time()-t0:.0f}s", file=sys.stderr, flush=True)
+    print(f"完成 {n} 条, 用时 {time.time()-t0:.0f}s", file=sys.stderr)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
