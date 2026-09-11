@@ -607,6 +607,48 @@ def _store_steps(session: LearnerSession, steps: list[dict]) -> list[dict]:
     return validated
 
 
+# 题库解析切片的**分步标记**(#107 方案 A:确定性切片,零模型)。
+# 只认「成句边界」与「序列词开头」两类,不做语义切分——切粗一点不影响任何判据
+# (阶梯只用于「卡住时揭示下一级」)。
+_ANALYSIS_SPLIT_RE = re.compile(r"[。;；\n]+|(?=(?:先|再|然后|接着|最后|其次))")
+_SLICE_TRIM_RE = re.compile(r"^[\s,、:：]+|[\s,、:：]+$")
+
+
+def _step_value(fragment: str) -> str:
+    """切片 → **该步结果**:有等号取最后一个等号右侧的数字,否则取最后一个数字。
+
+    取不到数字(纯叙述步)返回空串 → 该片不入选阶梯(与 `_store_steps`「无 value 不用」同口径)。
+    """
+    tail = fragment.rsplit("=", 1)[-1] if "=" in fragment else fragment
+    numbers = re.findall(r"\d+(?:\.\d+)?", tail)
+    if not numbers and tail != fragment:
+        numbers = re.findall(r"\d+(?:\.\d+)?", fragment)  # 等号右侧没数字 → 退回整片
+    return numbers[-1] if numbers else ""
+
+
+def _analysis_steps(analysis: str) -> list[dict]:
+    """题库 `analysis` → 分步阶梯(#107 方案 A:纯函数、零模型调用)。
+
+    为什么要有它:现有阶梯**只**来自模型 `start()` 当场生成的分步解(`_store_steps`),
+    而「现场生成中间值」正是会幻觉的那一环(#107 背景:实测给出「脚总数就是8」实为 16)。
+    题库带解析时把既定解析切成阶梯 → 学生卡住只揭示**既定步骤**,模型做「选择并复述」,
+    不做「现场生成数值」。
+
+    切片规则:按句末标点与序列词(先/再/然后/接着/最后/其次)切;丢弃过短片(≤3 字)
+    与无数字片;至少 2 片才返回(否则调用方退回模型分步解)。
+    """
+    fragments = [_SLICE_TRIM_RE.sub("", f)
+                 for f in _ANALYSIS_SPLIT_RE.split(str(analysis or ""))]
+    steps = []
+    for fragment in fragments:
+        if len(fragment) <= 3:
+            continue
+        value = _step_value(fragment)
+        if value:
+            steps.append({"step": fragment, "value": value})
+    return steps if len(steps) >= 2 else []
+
+
 def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
             session: LearnerSession, images: list[str] | None = None):
     return gateway.invoke(ModelRequest(
@@ -679,6 +721,12 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
         # 纯图题:转写回填题面(新 dict,不改调用方入参)
         session.question = {**session.question, "text": str(payload["transcription"])}
     _store_steps(session, payload.get("steps") or [])  # solver 职责:阶梯底稿 + 校验基准
+    # #107 方案 A:题库解析存在时,**既定分步**优先于模型当场生成的分步解
+    # (确定性切片、零模型调用;题源适配器填 analysis → 生产面生效,评测用例不带
+    #  analysis → 评测面零触达)。切不出 ≥2 步时保持模型分步解不变。
+    ladder = _analysis_steps(str(session.question.get("analysis") or ""))
+    if ladder:
+        session.steps = ladder
     ctx = _GuardContext(question=session.question, grade=learner.get("grade", ""),
                         gateway=gateway, role="tutor", messages=open_messages,
                         schema=OPEN_SCHEMA, answer_reference=_known_answer(session))
