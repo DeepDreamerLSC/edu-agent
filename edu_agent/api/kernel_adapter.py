@@ -14,7 +14,7 @@ from edu_agent.agents.small_lecturer.session import (
     SessionVersionConflict,
     TerminalStateError,
 )
-from edu_agent.gateway import Gateway
+from edu_agent.gateway import Gateway, GatewayError
 
 from .service import ApiError
 
@@ -62,5 +62,9 @@ class SmallLecturerKernel:
 
     @staticmethod
     def _map(error: Exception) -> ApiError:
-        """网关失败按失败类型映射合同错误码表(#34):模型基础设施故障 → 503。"""
+        """网关失败按失败类型映射合同错误码表(#34 / A 线 §8.5):模型基础设施
+        故障 → 503。GatewayError(connection/timeout 族等九型)是显式分支:消息带
+        失败类型值(01 §4 枚举),可观测不发明——九型统一 503,不做逐型细分。"""
+        if isinstance(error, GatewayError):
+            return ApiError(503, None, f"服务暂不可用:{error.failure.value}")
         return ApiError(503, None, f"服务暂不可用:{type(error).__name__}")
