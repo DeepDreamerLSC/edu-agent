@@ -8,9 +8,19 @@ from .guardrails import (
 )
 from .kernel import SAFE_FALLBACK_TEXT, TUTOR_TURN_SCHEMA, finish, reply, start
 from .prompting import (
+    FIRST_QUESTION_COLLECT,
+    FIRST_QUESTION_COLLECT_CHOICE,
+    FIRST_QUESTION_CORRECT,
+    HEAD_IMAGE_PREFIX,
+    HEAD_TEXT,
     OPENING_HINT_CORRECT,
     OPENING_HINT_INCORRECT,
     OPENING_HINT_UNANSWERED,
+    TAIL_COLLECT_CHOICE,
+    TAIL_COLLECT_IMAGE,
+    TAIL_COLLECT_OPEN,
+    TAIL_CORRECT,
+    first_question_text,
     grade_grounding,
     opening_hint,
     style_directives,
@@ -27,7 +37,12 @@ from .session import (
 from .tone_guardrails import ToneGuardrailResult, apply_tone_guardrail
 
 __all__ = [
+    "FIRST_QUESTION_COLLECT",
+    "FIRST_QUESTION_COLLECT_CHOICE",
+    "FIRST_QUESTION_CORRECT",
     "FormatGuardResult",
+    "HEAD_IMAGE_PREFIX",
+    "HEAD_TEXT",
     "OPENING_HINT_CORRECT",
     "OPENING_HINT_INCORRECT",
     "OPENING_HINT_UNANSWERED",
@@ -37,6 +52,10 @@ __all__ = [
     "StudentVisibleGuardrailEvaluation",
     "StudentVisibleGuardrailFinding",
     "Summary",
+    "TAIL_COLLECT_CHOICE",
+    "TAIL_COLLECT_IMAGE",
+    "TAIL_COLLECT_OPEN",
+    "TAIL_CORRECT",
     "TerminalStateError",
     "ToneGuardrailResult",
     "TUTOR_TURN_SCHEMA",
@@ -45,6 +64,7 @@ __all__ = [
     "evaluate_student_visible_format",
     "evaluate_student_visible_question",
     "finish",
+    "first_question_text",
     "grade_grounding",
     "opening_hint",
     "reply",

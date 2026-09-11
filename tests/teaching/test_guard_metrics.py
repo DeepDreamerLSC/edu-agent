@@ -5,11 +5,9 @@
 
 from __future__ import annotations
 
-import json
-
 from fake_openai import FakeOpenAI, completion
 
-from edu_agent.agents.small_lecturer import reply, start
+from edu_agent.agents.small_lecturer import FIRST_QUESTION_COLLECT, reply, start
 
 from test_kernel_state_machine import QUESTION_TEXT, kernel_gateway, open_json, tutor_json
 
@@ -29,9 +27,10 @@ def test_leak_hit_records_rule_and_original(tmp_path):
     assert event["guard"] == "answer_leak"
     assert "grounded_answer_disclosure" in event["rule_ids"]
     assert "x=6" in event["original"]  # 被替换原文在案(judge 可见)
-    # 任务包2步2 修复重生成优先:命中后重调 tutor 拿到干净回复
+    # 任务包2步2 修复重生成优先:命中后重调 tutor 拿到干净回复(埋点 regenerated=True);
+    # 首问可见文本恒为固定模板(prompting.first_question_text)→ 重生成文本不达学生面。
     assert event["regenerated"] is True
-    assert turn.text == json.loads(clean)["reply"]  # 重生成成功,干净回复到达学生面
+    assert turn.text == FIRST_QUESTION_COLLECT
     assert "x=6" not in turn.text
 
 
@@ -61,7 +60,8 @@ def test_events_persist_through_file_store(tmp_path):
     store.save(first.session)
     restored = store.load(first.session.session_id)
     assert restored is not None
-    assert len(restored.guard_events) == 2  # 泄露事件 + 确定性揭示埋点(branch 分流)
+    # 泄露事件 + 确定性揭示埋点(branch 分流);首问另经模板覆盖,不额外留痕
+    assert len(restored.guard_events) == 2
     assert restored.guard_events[0]["guard"] == "answer_leak"
     assert restored.guard_events[1]["branch"] == "reveal"
 
