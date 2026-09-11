@@ -90,6 +90,20 @@ uv run python scripts/tuning_round.py --render-from <解包出的 run 目录>
 验收基线:重渲染对既有字段逐字节不变(只加自述块)——已在 2026-09-10 夜评帧 34450995074 上验证
 (diff 仅新增 22 行自述块,word_problem 两变体 2/4 ⚠,chicken_rabbit 两变体 3/4 ⚠)。
 
+### 3.1 逐轮结构段(#146 M2,纯增量)
+
+`comparison.md` 主表**之前**新增「逐轮结构」段:每场景每轮一行,列 = 轮号 / 学生 / 教师 /
+状态 / 分支 / 护栏-守卫 / 数字(字段口径预注册写在报告里)。用途:#146 M2「结构性结论从
+人工通读变为报告可读」——`premature_confirm` 命中落在哪一轮、终答复述轮的违规数字是哪个,
+直接从表读。
+
+- **事件归属**:内核在提交点(`_commit_turn` / `start()`)给本轮新产生的事件补打
+  `turn`(= transcript 轮下标,首问 0);`guard_events[].turn` 是 additive 字段,
+  报告优先按它归并,旧工件(无该字段)按序退回配对(首问只吃 `answer_leak/tone/format` 类)。
+- **既有字段不动**:主表/自述行逐字节不变(`TestComparisonSelfDescribe` 与
+  `TestTurnLedger::test_ledger_sits_before_main_table_and_keeps_tail_bytes` 双向锁定)。
+- 失败行如实标注「失败(无 transcript)」,不静默跳过。
+
 ## 4. 边界(明确不做)
 
 - 不改任何口径语义:P/F/R/L 协议、judge 判据、数据集、`baselines/` 一律不动;

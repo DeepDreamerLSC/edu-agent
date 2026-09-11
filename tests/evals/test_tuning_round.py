@@ -170,6 +170,105 @@ class TestComparisonSelfDescribe:
         text = (run / "comparison.md").read_text(encoding="utf-8")
         assert "剧本截断" in text and "2/4 ⚠" in text               # 自述块已生成
         assert "承接原 comparison.md、未重算" in text               # 承接段显式标注(#154 审查观察 2)
+        assert "## 逐轮结构" in text                                # #146 M2 逐轮列随重渲染一起产出
         assert "## json_first_pass(01 §6 结构化输出合规率)\n\n旧段原文" in text
         assert text.index("对两轮均值差") < text.index("承接原 comparison.md")
         assert text.index("承接原 comparison.md") < text.index("## json_first_pass")
+
+
+# ---------- #146 M2:逐轮判定字段并入夜评口径 ----------
+
+def _ledger_rows() -> list[dict]:
+    """首问挂 guard 事件 + 模型轮(feeds 命中 + 违规数字)+ 确定性 elicit 轮。"""
+    return [{
+        "case_id": _WORD_PROBLEM, "status": "ok",
+        "transcript": {
+            "turns": [
+                {"student": "", "tutor": "首问:你已经解出 x=6 了吗?", "state": "first_question_ready"},
+                {"student": "我先把两边都减7。", "tutor": "你用的是假设法,对吧?", "state": "dialogue"},
+                {"student": "都懂了。", "tutor": "请你从头讲讲思路。", "state": "dialogue"},
+            ],
+            "guard_events": [
+                {"guard": "answer_leak", "rule_ids": ["grounded_answer_disclosure"],
+                 "original": "你已经解出 x=6 了吗?", "regenerated": True, "turn": 0},
+                {"guard": "feeds_method", "rule_ids": ["假设法"],
+                 "original": "你用的是假设法,对吧?", "regenerated": True, "mode": "masked",
+                 "turn": 1},
+                {"branch": "model", "cited": [1.0], "extracted": [1.0, 2.0],
+                 "violation_sources": [{"number": 2.0, "source": "answer"}], "turn": 1},
+                {"branch": "elicit", "hint_level": 0, "turn": 2},
+            ],
+        },
+    }]
+
+
+def _ledger_rows_legacy() -> list[dict]:
+    """旧工件样本:事件**不带** `turn`(打号前产出的帧)→ 退回按序尽力配对。"""
+    rows = _ledger_rows()
+    for event in rows[0]["transcript"]["guard_events"]:
+        event.pop("turn", None)
+    return rows
+
+
+def _ledger_cells(block: str) -> dict[str, list[str]]:
+    """逐轮表 → {轮号: 单元格列表}(单元格内不含裸竖线,渲染侧已用 `; ` 分隔)。"""
+    out: dict[str, list[str]] = {}
+    for line in block.splitlines():
+        if not line.startswith("| ") or line.startswith("| 场景 |"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if len(cells) == 8 and cells[1].isdigit():
+            out[cells[1]] = cells
+    return out
+
+
+class TestTurnLedger:
+    """#146 M2 验收:夜间报告出现逐轮列;字段口径预注册、事件按轮配对。"""
+
+    def test_every_turn_has_row_and_events_pair_by_turn(self):
+        block = "\n".join(tuning_round.turn_ledger_report(_ledger_rows(), _fake_cases()))
+        assert "| 场景 | 轮 | 学生 | 教师 | 状态 | 分支 | 护栏/守卫 | 数字 |" in block
+        rows = _ledger_cells(block)
+        assert set(rows) == {"0", "1", "2"}                      # 每轮一行、不合并
+        # 首问轮:start() 不落 branch 事件(分支/数字空),但挂在其前的 guard 事件落在这一行
+        assert rows["0"][6] == "answer_leak(grounded_answer_disclosure)"
+        assert rows["0"][5] == "—" and rows["0"][7] == "—"
+        # 模型轮:命中词 + 处置路径 + 三个数字口径(自报/抽取/违规来源标签)
+        assert rows["1"][5] == "model"
+        assert rows["1"][6] == "feeds_method(假设法;masked)"
+        assert rows["1"][7] == "cited 1; extracted 1,2; 违规 answer:2"
+        # 确定性轮:分支即 elicit(hint=N),无漂移数字口径
+        assert rows["2"][5] == "elicit(hint=0)" and rows["2"][7] == "—"
+
+    def test_legacy_events_without_turn_still_pair(self):
+        """旧工件(无 `turn`)退回按序配对:首问只吃 `_guard_output` 类护栏,
+        其余轮照序 → 与精确路径同结果(**不加轮号也能读史**)。"""
+        exact = _ledger_cells("\n".join(
+            tuning_round.turn_ledger_report(_ledger_rows(), _fake_cases())))
+        legacy = _ledger_cells("\n".join(
+            tuning_round.turn_ledger_report(_ledger_rows_legacy(), _fake_cases())))
+        assert legacy == exact
+
+    def test_events_beyond_last_turn_are_not_dropped(self):
+        """余额事件挂末轮(如实呈现,不静默丢)。"""
+        rows = _ledger_rows()
+        rows[0]["transcript"]["guard_events"].append(
+            {"guard": "format", "rule_ids": ["latex"], "original": "x", "regenerated": True, "turn": 99})
+        cells = _ledger_cells("\n".join(tuning_round.turn_ledger_report(rows, _fake_cases())))
+        assert "format(latex)" in cells["2"][6]
+
+    def test_failed_case_marked_not_skipped(self):
+        block = "\n".join(tuning_round.turn_ledger_report([], _fake_cases()))
+        assert block.count("失败(无 transcript)") == len(_fake_cases())   # 失败行如实标注
+
+    def test_field_pre_registration_is_declared(self):
+        block = "\n".join(tuning_round.turn_ledger_report(_ledger_rows(), _fake_cases()))
+        assert "字段预注册" in block and "#143 口径" in block
+
+    def test_ledger_sits_before_main_table_and_keeps_tail_bytes(self):
+        lines = tuning_round.comparison_report(_fake_scores(), _ledger_rows(), _fake_cases())
+        ledger_at = lines.index("## 逐轮结构(#146 M2;结构性结论从人工通读变为报告可读)")
+        main_at = lines.index("| 场景 | R1 | R2 | 本轮 | 判定 |")
+        assert ledger_at < main_at                       # 增量插在主表之前
+        old = _legacy_inline_lines(_fake_scores())
+        assert lines[-(len(old) - 2):] == old[2:]        # 主表 + 均值差行仍逐字节不变

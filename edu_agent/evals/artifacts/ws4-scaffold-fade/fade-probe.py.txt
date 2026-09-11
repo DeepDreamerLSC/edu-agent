@@ -1,0 +1,48 @@
+"""脚手架渐隐探针(#107 / #146 M3):真模型 + 脚本化学生,验证「自己做出来 → 下次卡住先问不揭示」。
+
+用法:cd <含本次改动的树> && PYTHONPATH=. <venv>/python /tmp/ws4_fade_probe.py <树根>
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+REPO = Path(sys.argv[1] if len(sys.argv) > 1 else ".")
+sys.path.insert(0, str(REPO))
+
+from edu_agent.agents.small_lecturer import finish, reply, start  # noqa: E402
+from edu_agent.gateway import Gateway, load_registry  # noqa: E402
+
+QUESTION = {"text": "鸡和兔一共8只,共有26只脚。鸡和兔各有多少只?", "answer": "",
+            "knowledge_points": ["鸡兔同笼"]}
+
+registry = load_registry(REPO / "configs" / "models.yaml")
+gateway = Gateway(registry, facts_dir=Path("/tmp/ws4_fade_facts"))
+try:
+    turn = start(dict(QUESTION), {"grade": "六年级", "answer_status": "incorrect"}, gateway=gateway)
+    session = turn.session
+    print(f"首问: {turn.text[:70]!r}")
+    print("阶梯(session.steps):")
+    for i, step in enumerate(session.steps):
+        print(f"   [{i}] {step['step'][:40]!r} → value={step['value']!r}")
+    performed_value = str(session.steps[0]["value"]) if session.steps else "16"
+
+    script = [
+        ("我不会做。", "① 卡住 → 期望:揭示第 1 级"),
+        (f"我算了一下,答案是 {performed_value} 对吗?", "② 学生自己做出来该步 → 期望:撤一级支持"),
+        ("我不会了。", "③ 再卡住 → 期望:渐隐(先问不揭示)"),
+        ("我不会做。", "④ 再卡住 → 期望:升回揭示第 2 级"),
+    ]
+    for message, expect in script:
+        out = reply(session, message, gateway=gateway)
+        print(f"\n[S] {message}   ({expect})")
+        print(f"[T] {out.text[:96]!r}  hint_level={session.hint_level} "
+              f"faded={session.scaffold_faded}")
+    print("\n守卫事件:")
+    for event in session.guard_events:
+        if event.get("branch") in ("reveal", "fade") or event.get("guard"):
+            print(f"   {event}")
+    summary = finish(session, gateway=gateway)
+    print(f"\nfinish → {summary.status}")
+finally:
+    gateway.close()

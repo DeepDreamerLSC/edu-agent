@@ -1,0 +1,26 @@
+{
+ "first_question": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师首问：'你先告诉我，你算出鸡和兔各有多少只？'，符合采集作答且无评判。"
+ },
+ "collect_not_judge": {
+  "applicable": true,
+  "compliant": true,
+  "evidence": "教师采集到学生思路'可以先假设8只全是鸡'，后续回应中未直接判定对错或纠正，而是引导推导。"
+ },
+ "restate": {
+  "asked": true,
+  "delivered": false,
+  "evidence": "教师请求：'那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。'，但学生未再回应，对话结束。"
+ },
+ "feeding": {
+  "fed": true,
+  "quotes": [
+   "比如，你有没有试着先假设一种动物的数量？",
+   "你假设8只全是鸡，脚数是16只，但题目说总共有26只脚，差了10只脚，这说明有兔子，每只兔子比鸡多2只脚"
+  ],
+  "evidence": "教师在学生未完整讲出方法前，主动提及'假设'并给出'每只兔子比鸡多2只脚'的解题关键逻辑。"
+ },
+ "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+}

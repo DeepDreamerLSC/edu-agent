@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<!-- M3 合作方对话服务(00 §5.2):合作方 API 四端点 + SSE + 身份两端点,端口 8300。
-     __DEPLOY_ROOT__ 占位符由 deploy.sh 按实际部署 checkout 替换后写入
-     ~/Library/LaunchAgents/;取代 com.edu-agent.app(healthz 专用,healthz 已并入本服务)。
-     凭据走环境变量(IDENTITY_* / EXTERNAL_STUDENT_MAP),由部署环境注入。 -->
+<!-- 合作方对话服务(00 §5.2):四端点 + SSE + 身份两端点 + /healthz,端口 8300。
+     同一环境只此一个服务、一个端口(04 §2.1;M0 的 healthz 独立进程已删)。
+     __DEPLOY_ROOT__ / __ENV_NAME__ 占位符由 deploy.sh 按实际部署替换后写入
+     ~/Library/LaunchAgents/。凭据不进本文件:启动器按 EDU_ENV 读部署目录的
+     .env.<ENV>(600、gitignored)——launchd 不继承 shell 环境,读文件是唯一真相源。 -->
 <dict>
   <key>Label</key>
   <string>com.edu-agent.partner-api</string>
@@ -19,6 +20,8 @@
   <string>__DEPLOY_ROOT__</string>
   <key>EnvironmentVariables</key>
   <dict>
+    <key>EDU_ENV</key>
+    <string>__ENV_NAME__</string>
     <key>EDU_PARTNER_API_PORT</key>
     <string>8300</string>
   </dict>

@@ -162,7 +162,10 @@ def _status_error(status: int, headers) -> GatewayError:
 
 
 def _usage_fields(usage: dict) -> tuple[int | None, int | None, int | None]:
-    cache_read = (usage.get("prompt_tokens_details") or {}).get("cache_read_input_tokens")
+    details = usage.get("prompt_tokens_details") or {}
+    cache_read = details.get("cache_read_input_tokens")
+    if cache_read is None:
+        cache_read = details.get("cached_tokens")  # llama.cpp 命名(本地 8302/8303,#142 step2)
     if cache_read is None:
         cache_read = usage.get("prompt_cache_hit_tokens")  # DeepSeek 命名(issue #3)
     return usage.get("prompt_tokens"), usage.get("completion_tokens"), cache_read
