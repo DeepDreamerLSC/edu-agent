@@ -3,6 +3,7 @@
 覆盖:①意图分类器对抗样例(c2 实弹:越来越不懂 / 不会吧?!,走 reply 路由断言);
 ②数字守卫抽取制(c1 合法三例不卡 / 幻觉数字卡 / 对话态说终答卡);
 ③guard_events 落盘(模型路径 {自报集,抽取集,来源标签} + 确定性 {branch,hint_level});
+(首问可见文本恒为固定模板,本文件的首问句只为对齐统一 open 的假上游序列);
 ④终答披露只走 bottom-out / finish / ready_to_confirm 三路径。
 """
 
@@ -54,7 +55,7 @@ def _route_branch(session, phrase: str, gateway) -> str:
     ("我不会了", False),
 ])
 def test_understanding_routes_to_elicit(phrase, is_elicit):
-    gateway = FakeGateway(tutor_payloads=[_open("先看题面:8 只,26 只脚。", STEPS)])
+    gateway = FakeGateway(tutor_payloads=[_open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS)])
     session = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway).session
     branch = _route_branch(session, phrase, gateway)
     assert (branch == "elicit") is is_elicit
@@ -74,7 +75,7 @@ def test_understanding_routes_to_elicit(phrase, is_elicit):
     ("我不会吧?!", False),   # 「我不会(?!吧)」保留反诘语义(裸「我不会」不吞掉)
 ])
 def test_stuck_routes_to_reveal(phrase, is_stuck):
-    gateway = FakeGateway(tutor_payloads=[_open("先看题面:8 只,26 只脚。", STEPS)])
+    gateway = FakeGateway(tutor_payloads=[_open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS)])
     session = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway).session
     branch = _route_branch(session, phrase, gateway)
     assert (branch == "reveal") is is_stuck
@@ -87,7 +88,7 @@ def test_stuck_routes_to_reveal(phrase, is_stuck):
 def test_ordinal_numbers_in_reply_not_flagged_as_drift():
     # 抽取制排除「第N」序数:「第2步」的 2 不算数字引用;step 值 16 合法
     gateway = FakeGateway(tutor_payloads=[
-        _open("先看题面:8 只,26 只脚。", STEPS),
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "第2步我们得到16。", "ready_to_confirm": False, "cited_numbers": [16]},
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
@@ -99,7 +100,7 @@ def test_ordinal_numbers_in_reply_not_flagged_as_drift():
 def test_step_value_in_reply_is_legal_not_stuck():
     # 合法例1:回复引用 step 值(16 ∈ steps)
     gateway = FakeGateway(tutor_payloads=[
-        _open("先看题面:8 只,26 只脚。", STEPS),
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "这一步得到 16。", "ready_to_confirm": False, "cited_numbers": [16]},
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
@@ -111,7 +112,7 @@ def test_step_value_in_reply_is_legal_not_stuck():
 def test_student_number_in_reply_is_legal_not_stuck():
     # 合法例2:回复复述学生数字(16 ∈ 学生历史数字)
     gateway = FakeGateway(tutor_payloads=[
-        _open("先看题面:8 只,26 只脚。", STEPS),
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "你算的 16 和题面 26 对不上。", "ready_to_confirm": False,
          "cited_numbers": [16, 26]},
     ])
@@ -124,7 +125,7 @@ def test_student_number_in_reply_is_legal_not_stuck():
 def test_final_answer_in_confirm_state_is_legal_not_stuck():
     # 合法例3:ready_to_confirm 态说终答(3/5 ∈ 终答池并入允许集)
     gateway = FakeGateway(tutor_payloads=[
-        _open("先看题面:8 只,26 只脚。", STEPS),
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "对,就是 3 只鸡和 5 只兔。", "ready_to_confirm": True,
          "cited_numbers": [3, 5]},
         {"reply": "你再想想。", "ready_to_confirm": False, "cited_numbers": []},
@@ -138,7 +139,7 @@ def test_final_answer_in_confirm_state_is_legal_not_stuck():
 def test_hallucinated_number_marks_stuck():
     # 幻觉数字(36)不在任何来源池 → stuck + 来源标签 hallucinated
     gateway = FakeGateway(tutor_payloads=[
-        _open("先看题面:8 只,26 只脚。", STEPS),
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "题目里一共 36 只脚。", "ready_to_confirm": False, "cited_numbers": [36]},
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
@@ -151,7 +152,7 @@ def test_final_answer_in_dialogue_state_marks_stuck():
     # 对话态(ready_to_confirm=false)说终答:终答数字在终答池但不在允许集 →
     # 来源标签 "answer"(提前说终答);泄露护栏另行兜底文本,两护栏各管各。
     gateway = FakeGateway(tutor_payloads=[
-        _open("先看题面:8 只,26 只脚。", STEPS),
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "答案是 3 只鸡和 5 只兔。", "ready_to_confirm": False,
          "cited_numbers": [3, 5]},
         {"reply": "你再想想。", "ready_to_confirm": False, "cited_numbers": []},
@@ -170,7 +171,7 @@ def test_selfreported_ladder_answer_not_whitelisted_in_dialogue():
     question = {"text": "鸡兔同笼,一共 8 只,26 只脚。鸡和兔各有多少只?", "answer": ""}
     ladder = [*STEPS, {"step": "结论", "value": "鸡3只兔5只"}]
     gateway = FakeGateway(tutor_payloads=[
-        _open("先看题面:8 只,26 只脚。", ladder),
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", ladder),
         {"reply": "剩下的就是鸡:8-5=3只,兔5只。", "ready_to_confirm": False,
          "cited_numbers": [8, 5, 3]},
         {"reply": "你再想想。", "ready_to_confirm": False, "cited_numbers": []},
@@ -186,7 +187,7 @@ def test_last_step_value_not_answer_stays_legal():
     # 修复按**值**而非按位置(steps[:-1])剥离:阶梯末级未必是答案(题库口径:
     # 16/10 阶梯、答案 3/5)——诚实引用末级中间值(10)不误伤(#113 初衷)。
     gateway = FakeGateway(tutor_payloads=[
-        _open("先看题面:8 只,26 只脚。", STEPS),
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "这一步得到 10。", "ready_to_confirm": False, "cited_numbers": [10]},
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
@@ -202,7 +203,7 @@ def test_last_step_value_not_answer_stays_legal():
 def test_model_branch_records_shadow_event():
     # 模型路径埋点含 {branch, cited(自报集), extracted(抽取集), violation_sources(来源标签)}
     gateway = FakeGateway(tutor_payloads=[
-        _open("先看题面:8 只,26 只脚。", STEPS),
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "题目里一共 36 只脚。", "ready_to_confirm": False, "cited_numbers": [36]},
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
@@ -217,7 +218,7 @@ def test_model_branch_records_shadow_event():
 def test_deterministic_branches_record_guard_events():
     # 确定性分支埋点:elicit/reveal 记 {branch, hint_level}
     gateway = FakeGateway(tutor_payloads=[
-        _open("先看题面:8 只,26 只脚。", STEPS),
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     assert turn.session.guard_events == []  # start 不跑数字守卫/分支埋点
@@ -234,7 +235,7 @@ def test_deterministic_branches_record_guard_events():
 def test_final_answer_only_disclosed_via_bottomout_not_elicit_or_step_reveal():
     # elicit(请讲思路)/ 阶梯揭示(给步骤)确定性文本均不含终答;阶梯耗尽才 bottom-out 给终答。
     gateway = FakeGateway(tutor_payloads=[
-        _open("先看题面:8 只,26 只脚。", STEPS),
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     elicit = reply(turn.session, "都懂了", gateway=gateway)
