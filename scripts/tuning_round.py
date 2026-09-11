@@ -10,6 +10,9 @@
 数字全部落盘不手拼;判停/状态读 transcript 内部字段,不从学生文本反推。
 comparison.md 开头自述四行(2026-09-10 PM 马尾辫审查):口径名 / 剧本截断 N/M /
 逐维均分 / 护栏模式——零新增埋点(纯渲染自落盘工件),既有行逐字节不变(只加信息不改测量)。
+随后**另加一行**「五维总分(0-10,去 first_question)」试算(2026-09-10 PM 裁定:撤回
+judge 退休、改零成本替代):同一批六维分去首问后再报一个 10 分制读数,六维 judge 与门判定
+(12 分制 vs 老基线)一字不动,该行不参与判定。
 --nightly(每晚 23:00,evals-nightly.yml):先预检(注册表全部 provider 端口可达,
 不可达退出 1)并落溯源 manifest(git sha、models.yaml 哈希、launchctl 服务快照)
 ——劣化起始日的环境可解释性(1b 教训:蹭机服务几个月无人察觉)。
@@ -186,6 +189,27 @@ def dim_average_line(scores: dict) -> str:
     return "逐维均分(0-2):" + " | ".join(parts)
 
 
+def five_dim_total_line(scores: dict) -> str:
+    """五维总分(0-10,去 first_question)试算一行:纯渲染既有 judge 分数,**零新增埋点、零重算**。
+
+    口径来源(2026-09-10 PM 裁定「撤回退休、改零成本替代」):六维 judge、判决阈值与门
+    (R1×R2 12 分制「不劣」)全部不动,本行只是把同一批六维分去掉 first_question 后再报一个
+    10 分制数,供新口径有数可看。**门仍按 12 分制与老基线比,本行不参与判定。**
+    不换算老基线的理由:老基线逐 case 逐维数据已丢失,无法反推 10 分制;且首问是「带图能力」
+    的测量落点,不能退休 —— 故只加一行读数,不改测量。维度名复用 report.DIM_LABELS(不新造表)。
+    """
+    first = DIMENSIONS[0]  # first_question(judge.DIMENSIONS 首维;标签由 report.DIM_LABELS 提供)
+    ok = [(cid, v["scores"]) for cid, v in scores.items()
+          if isinstance(v, dict) and "scores" in v]
+    if not ok:
+        return f"五维总分(0-10,去 {first};新口径试算,门仍按 12 分制与老基线比):(无 ok 评分)"
+    per_case = [(cid, sum(s[dim] for dim in DIMENSIONS) - s[first]) for cid, s in ok]
+    listed = "、".join(f"{cid} {total}" for cid, total in per_case)
+    avg = sum(total for _, total in per_case) / len(per_case)
+    return (f"五维总分(0-10,去 {first};新口径试算,门仍按 12 分制与老基线比):"
+            f"均分 {avg:.2f}(逐 case:{listed})")
+
+
 # ---------- #146 M2:逐轮判定字段并入夜评口径 ----------
 # **字段预注册**(复用 #143 预注册口径 + kernel 侧结构化留痕,不即兴加列):
 #   轮      = 0 起(0 = 首问);
@@ -347,6 +371,7 @@ def comparison_report(scores: dict, rows: list[dict], cases: list[dict]) -> list
     for case_id, cell in sent_vs_script(rows, cases).items():
         report.append(f"| {case_id} | {cell} |")
     report += ["", dim_average_line(scores),
+               five_dim_total_line(scores),  # 新口径试算行(纯渲染;门判定不变)
                "护栏模式:**无答案** —— 评测侧 KernelSubject 只传题面/年级/answer_status,"
                "**不传参考答案**;生产侧带答案。本报告的代喂/泄露类读数出自无答案护栏,"
                "不等于生产读数。", ""]
