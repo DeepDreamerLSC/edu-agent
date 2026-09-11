@@ -1,22 +1,28 @@
 """GET /healthz(04 §2.2):git sha、models.yaml 哈希、上游 /v1/models 可达性、启动时间。
 
-M0 的最小应用进程:stdlib http.server——不引 web 框架,那是 02 §7 第②类第三方
-依赖,M3 api 层真需要时再议。launchd 托管(deploy/launchd),deploy.sh 每次部署
-重启。只绑定 127.0.0.1;探测目标仅取 models.yaml 声明的 provider 地址(白名单
-来自配置,不接收外部输入)。
+由对话服务内联提供(`api/server.py` 调 `snapshot()`)。M0 那个 stdlib http.server
+独立进程已删除:同一台机器同一个环境只留一个端口、一个服务(04 §2.1),
+healthz 并入对话服务——合同测试里早有此断言(`test_identity_http.py`:
+「healthz 并入对话服务(8300 一个服务全包)」)。
+
+**自述按进程启动时冻结**:sha / 配置哈希 / 上游地址在 import 时各求值一次。
+原先三者在请求时读磁盘,于是谁在部署目录里 `git pull` 一下,运行中的旧进程立刻
+开始自述新 sha(2026-09-11 实测:未重启的进程自述了新 commit,部署验收可被欺骗)。
+自述必须描述"本进程加载了什么",不是"磁盘现在是什么"。
+
+只绑定 127.0.0.1;探测目标仅取 models.yaml 声明的 provider 地址(白名单来自配置,
+不接收外部输入)。
 """
 
 from __future__ import annotations
 
 import hashlib
 import ipaddress
-import json
 import os
 import socket
 import subprocess
 import time
 from datetime import datetime, timezone
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -32,7 +38,7 @@ def config_path() -> Path:
     return Path(os.environ.get("EDU_MODELS_YAML") or _REPO / "configs" / "models.yaml")
 
 
-def git_sha() -> str:
+def _resolve_sha() -> str:
     """部署 sha:环境变量优先(deploy 时注入),否则问 git;都拿不到报 unknown。"""
     sha = os.environ.get("EDU_DEPLOY_SHA")
     if sha:
@@ -49,11 +55,11 @@ def git_sha() -> str:
         return "unknown"
 
 
-def config_digest() -> str:
+def _resolve_config_digest() -> str:
     return hashlib.sha256(config_path().read_bytes()).hexdigest()
 
 
-def provider_urls() -> dict[str, str]:
+def _resolve_provider_urls() -> dict[str, str]:
     """models.yaml 的 providers 段;配置损坏时返回空表,健康检查不因此崩。"""
     try:
         data = yaml.safe_load(config_path().read_text(encoding="utf-8")) or {}
@@ -64,6 +70,12 @@ def provider_urls() -> dict[str, str]:
         for name, spec in (data.get("providers") or {}).items()
         if spec.get("base_url")
     }
+
+
+# 进程启动时冻结一次(见模块 docstring:自述不许被后来的 pull 改写)
+_GIT_SHA = _resolve_sha()
+_CONFIG_DIGEST = _resolve_config_digest()
+_PROVIDER_URLS = _resolve_provider_urls()
 
 
 def probe_target_allowed(hostname: str) -> bool:
@@ -98,36 +110,9 @@ def reachable(base_url: str) -> bool:
 
 def snapshot() -> dict:
     return {
-        "git_sha": git_sha(),
-        "models_yaml_sha256": config_digest(),
-        "upstreams": {name: reachable(url) for name, url in sorted(provider_urls().items())},
+        "git_sha": _GIT_SHA,
+        "models_yaml_sha256": _CONFIG_DIGEST,
+        "upstreams": {name: reachable(url) for name, url in sorted(_PROVIDER_URLS.items())},
         "started_at": _STARTED_AT,
         "uptime_s": int(time.monotonic() - _STARTED_MONOTONIC),
     }
-
-
-class Handler(BaseHTTPRequestHandler):
-    def do_GET(self) -> None:
-        if self.path != "/healthz":
-            self.send_error(404)
-            return
-        payload = json.dumps(snapshot(), ensure_ascii=False).encode("utf-8")
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
-
-    def log_message(self, format: str, *args: object) -> None:
-        pass  # 访问日志静默:launchd 日志只留错误
-
-
-def main() -> None:
-    port = int(os.environ.get("EDU_HEALTHZ_PORT", "8300"))
-    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print(f"healthz listening on 127.0.0.1:{port}", flush=True)
-    server.serve_forever()
-
-
-if __name__ == "__main__":
-    main()

@@ -186,6 +186,133 @@ def dim_average_line(scores: dict) -> str:
     return "逐维均分(0-2):" + " | ".join(parts)
 
 
+# ---------- #146 M2:逐轮判定字段并入夜评口径 ----------
+# **字段预注册**(复用 #143 预注册口径 + kernel 侧结构化留痕,不即兴加列):
+#   轮      = 0 起(0 = 首问);
+#   状态    = 该轮末 KernelSubject 状态(dialogue/ready_to_confirm/…;会话终态另段);
+#   分支    = 该轮的确定性/模型路径,取自 `guard_events` 的 branch(model/elicit/reveal/…);
+#   护栏/守卫 = 该轮 guard 命中(guard 名 + rule_ids + mode,如 `feeds_method(假设法;regenerated)`);
+#   数字    = 该轮 `cited`(模型自报,影子)/`extracted`(确定性抽取)/违规(来源标签 answer|hallucinated)。
+# 事件配对零新增埋点:`guard_events` 按轮序消费——确定性轮恰一个 branch 事件,模型轮以
+# `branch:"model"` 收尾(其前可挂 guard 事件)。数值口径与 `_record_event`/漂移事件同源。
+_TURN_LEDGER_LEGEND = (
+    "字段预注册(#143 口径,全部从落盘件复算):**状态**=该轮末 KernelSubject 状态;"
+    "**分支**=`guard_events` 的 branch(确定性 elicit/reveal vs 模型轮);"
+    "**护栏/守卫**=该轮 guard 命中 `名(rule_ids;mode)`;"
+    "**数字**=`cited`(模型自报,影子)/`extracted`(抽取)/违规(来源标签 answer|hallucinated)。"
+)
+
+# 首问轮(start(),不入 history)只可能产生的护栏:`_guard_output` 的三类
+# (answer_leak/tone/format)——旧工件无事件轮号时据此做**尽力**配对(新工件有 `turn`)。
+_OPEN_PATH_GUARDS = frozenset({"answer_leak", "tone", "format"})
+
+
+def _clip(text: object, limit: int) -> str:
+    """表格单元格截断 + 竖线转义(不破坏 Markdown 表结构)。"""
+    flat = " ".join(str(text or "").split()).replace("|", "\\|")
+    return flat[:limit] + ("…" if len(flat) > limit else "") or "—"
+
+
+def _turn_events(transcript: dict) -> list[tuple[dict, list[dict]]]:
+    """transcript → [(轮 dict, 该轮事件)]:**优先按事件自带轮号 `turn` 归并**
+    (`_stamp_turn` 在提交点写入,精确;旧工件无该字段时按序退回配对)。
+
+    退回规则(与 kernel 埋点写入顺序一一对应):
+    - **首问**(轮 0)由 `start()` 产出 → **没有** `branch:"model"` 漂移事件,只可能有
+      挂在其前的 guard 事件(如首问泄露被 `answer_leak` 换掉):只消费 branch 前的事件;
+    - 其余轮:确定性轮(elicit/reveal)恰一个 branch 事件;模型轮以 `branch:"model"`
+      收尾(其前可挂 guard 事件)。
+    事件数不足/多余时余额挂最后一轮(如实呈现,不静默丢)。
+    """
+    turns = transcript.get("turns") or []
+    events = list(transcript.get("guard_events") or [])
+    if events and all("turn" in e for e in events):  # 精确路径:事件自带轮号(_stamp_turn 写入)
+        buckets: dict[int, list[dict]] = {}
+        for event in events:
+            buckets.setdefault(int(event["turn"]), []).append(event)
+        pairs = [(turn, buckets.get(index, [])) for index, turn in enumerate(turns)]
+        for index in sorted(k for k in buckets if k >= len(turns)):  # 余额如实挂末轮
+            if pairs:
+                pairs[-1][1].extend(buckets[index])
+        return pairs
+    index, pairs = 0, []
+    for turn_no, turn in enumerate(turns):
+        mine: list[dict] = []
+        if turn_no == 0:  # 首问:start() 只可能落 _guard_output 的护栏事件(answer_leak/tone/format)
+            while (index < len(events) and "branch" not in events[index]
+                   and events[index].get("guard") in _OPEN_PATH_GUARDS):
+                mine.append(events[index])
+                index += 1
+        else:
+            while index < len(events):
+                event = events[index]
+                mine.append(event)
+                index += 1
+                if "branch" in event:  # 该轮最后一个事件
+                    break
+        pairs.append((turn, mine))
+    if index < len(events) and pairs:
+        pairs[-1][1].extend(events[index:])  # 余额挂末轮(报告如实呈现,不静默丢)
+    return pairs
+
+
+def _cell_guards(events: list[dict]) -> str:
+    """该轮护栏/守卫命中摘要:`guard(rule_ids;mode)`;漂移违规另由 `_cell_numbers` 记。"""
+    parts = []
+    for event in events:
+        guard = event.get("guard")
+        if not guard:
+            continue
+        rules = ",".join(str(r) for r in (event.get("rule_ids") or []))
+        mode = event.get("mode")
+        detail = ";".join(x for x in (rules, mode) if x)
+        parts.append(f"{guard}({detail})" if detail else str(guard))
+    return " ".join(parts) or "—"
+
+
+def _cell_numbers(events: list[dict]) -> str:
+    """该轮数字口径:cited(自报影子)/extracted(抽取)/违规(来源标签)。
+
+    分隔用 `; `(Markdown 表格单元格内不能出现裸竖线)。"""
+    for event in reversed(events):
+        if event.get("branch") == "model":
+            cited = ",".join(f"{n:g}" for n in (event.get("cited") or []))
+            extracted = ",".join(f"{n:g}" for n in (event.get("extracted") or []))
+            violations = ",".join(
+                f"{v.get('source')}:{v.get('number'):g}" for v in (event.get("violation_sources") or []))
+            cell = f"cited {cited or '—'}; extracted {extracted or '—'}"
+            return f"{cell}; 违规 {violations}" if violations else cell
+    return "—"
+
+
+def turn_ledger_report(rows: list[dict], cases: list[dict]) -> list[str]:
+    """逐轮结构表(#146 M2 验收:夜评 comparison 出现逐轮列)。
+
+    纯增量:插在主表**之前**,既有行(标题/自述/截断表/主表/均值差)逐字节不变。
+    失败行如实标注、不静默跳过(与截断表同口径)。
+    """
+    report = ["", "## 逐轮结构(#146 M2;结构性结论从人工通读变为报告可读)", "",
+              _TURN_LEDGER_LEGEND, "",
+              "| 场景 | 轮 | 学生 | 教师 | 状态 | 分支 | 护栏/守卫 | 数字 |",
+              "|---|---:|---|---|---|---|---|---|"]
+    by_id = {r["case_id"]: r for r in rows}
+    for case in cases:
+        case_id = case["id"]
+        row = by_id.get(case_id)
+        short = case_id.split("stability_")[-1]
+        if row is None or row.get("status") != "ok":
+            report.append(f"| {short} | — | — | — | — | — | — | 失败(无 transcript) |")
+            continue
+        for turn_no, (turn, events) in enumerate(_turn_events(row["transcript"])):
+            branch = next((str(e["branch"]) for e in events if e.get("branch")), "—")
+            hint = next((f"(hint={e['hint_level']})" for e in events if "hint_level" in e), "")
+            report.append("| {} | {} | {} | {} | {} | {}{} | {} | {} |".format(
+                short, turn_no, _clip(turn.get("student"), 14), _clip(turn.get("tutor"), 26),
+                _clip(turn.get("state"), 16), branch, hint,
+                _cell_guards(events), _cell_numbers(events)))
+    return report
+
+
 def comparison_report(scores: dict, rows: list[dict], cases: list[dict]) -> list[str]:
     """comparison.md 的 gate 段行(数字全部从落盘件重算,不手拼)。
 
@@ -223,7 +350,8 @@ def comparison_report(scores: dict, rows: list[dict], cases: list[dict]) -> list
                "护栏模式:**无答案** —— 评测侧 KernelSubject 只传题面/年级/answer_status,"
                "**不传参考答案**;生产侧带答案。本报告的代喂/泄露类读数出自无答案护栏,"
                "不等于生产读数。", ""]
-    report += ["| 场景 | R1 | R2 | 本轮 | 判定 |", "|---|---:|---:|---:|---|"]
+    report += turn_ledger_report(rows, cases)  # #146 M2:逐轮列(主表之前,既有行不动)
+    report += ["", "| 场景 | R1 | R2 | 本轮 | 判定 |", "|---|---:|---:|---:|---|"]
     deltas = []
     for case_id, (r1, r2) in BASELINE.items():
         got = scores.get(case_id, {}).get("total")

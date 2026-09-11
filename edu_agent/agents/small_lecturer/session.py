@@ -35,6 +35,8 @@ class LearnerSession:
     steps: list[dict] = field(default_factory=list)   # 分步解(统一 open 求解):阶梯底稿 +
     # 数字校验基准(引用值须 ⊆ steps 的 value),随 FileSessionStore asdict 持久化
     hint_level: int = 0                # 阶梯揭示进度:学生卡住时揭示 steps 的第几级(0 起)
+    scaffold_faded: bool = False       # 脚手架渐隐(#107 / #146 M3):学生把刚揭示的那一步
+    # 自己做出来了 → 下一次卡住**先问不揭示**(撤一级支持);再卡住则升回揭示。随 asdict 持久化。
     guard_events: list = field(default_factory=list)  # 护栏埋点(任务包1步1):命中的
     # 规则与被替换原文随会话落盘(FileSessionStore asdict 自动持久化),供兜底率度量
     session_id: str = field(default_factory=lambda: f"kernel_{uuid.uuid4().hex[:10]}")

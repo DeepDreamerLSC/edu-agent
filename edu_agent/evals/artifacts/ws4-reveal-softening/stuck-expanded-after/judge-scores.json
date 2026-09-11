@@ -1,0 +1,244 @@
+{
+ "small_lecturer_dialogue_scenarios_equation_complete_reasoning": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 12,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "你已经知道怎么解了吗？还有没有不懂的地方？",
+   "socratic_followup": "接下来，我们怎么从3x=18得到x的值呢？",
+   "grade_fit": "就像把两边的苹果都拿走7个，天平还平衡。",
+   "pacing": "你这步做得对，减7后得到3x=18，就像把两边的苹果都拿走7个，天平还平衡。",
+   "summary_mastery": "你用等式性质一步步解方程，先减7再除以3，每步都保持天平平衡；关键转折是除以3得到x=6，仍需注意检查代入验证，确保答案正确。",
+   "termination": "你用等式性质一步步解方程，先减7再除以3，每步都保持天平平衡；关键转折是除以3得到x=6，仍需注意检查代入验证，确保答案正确。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_dialogue_stability_20_stability_chicken_rabbit": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 1,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 7,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "小讲师:你已经知道鸡和兔一共有8只，脚数是26只，对吗？现在我们先假设全是鸡，看看脚数会是多少？",
+   "socratic_followup": "小讲师:你刚才说每换一只鸡为兔会多2只脚，那10只脚能换几只兔子呢？",
+   "grade_fit": "小讲师:我们从这里入手:假设8只全是鸡，算出脚的总数。你接着算下一步。",
+   "pacing": "小讲师:你刚才算出兔有5只、鸡有3只，现在我们来检查一下：5只兔有20只脚，3只鸡有6只脚，加起来是26只脚，对吗？",
+   "summary_mastery": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+   "termination": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  },
+  "verdict": "review",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_dialogue_stability_20_stability_equation_subtract": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 12,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "你先看看方程左边是 3x+7，右边是 25，想一想，要让 x 单独出来，第一步该做什么？",
+   "socratic_followup": "那如果两边同时减7，等式会保持平衡吗？",
+   "grade_fit": "你通过‘两边同时减7’和‘两边同时除以3’两步成功解出x=6，并验证了答案正确，这说明你掌握了用等式性质解方程的方法。",
+   "pacing": "你刚才说两边都减7得到3x=18，这一步完全正确！那接下来，怎么把3x变成x呢？",
+   "summary_mastery": "仍需注意：每一步都要明确说明‘为什么这样做’，比如减7是为了消去常数项，除以3是为了消去系数，这样能更清晰地表达解题逻辑。",
+   "termination": "你已经完全理解了方程的解法，可以确认掌握了。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_dialogue_stability_20_stability_fraction_addition": {
+  "scores": {
+   "first_question": 1,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 11,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "你试试看，把四分之三和八分之一都换成分母是8的分数，再加一加？",
+   "socratic_followup": "你算得没错，八分之七就是最终答案！这说明你明白为什么分母要先统一，对吧？",
+   "grade_fit": "比如三份四加一份八，就像分蛋糕，得先切成同样大小的块才能加起来，对吧？",
+   "pacing": "你把四分之三换成八分之六，这一步做得特别棒！现在再加八分之一，结果是多少呢？",
+   "summary_mastery": "你掌握了分数加法的核心方法：先通分再相加。关键转折是你正确将四分之三化为八分之六，这一步体现了对等价分数的理解。",
+   "termination": "你算得没错，八分之七就是最终答案！这说明你明白为什么分母要先统一，对吧？"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_dialogue_stability_20_stability_triangle_area": {
+  "scores": {
+   "first_question": 0,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 1,
+   "summary_mastery": 1,
+   "termination": 1
+  },
+  "total": 7,
+  "answer_leaked": true,
+  "evidence": {
+   "first_question": "你已经算出面积是30平方厘米，还想知道为什么除以2吗？",
+   "socratic_followup": "那如果把两个这样的三角形拼起来，会变成什么形状？面积又会怎么算？",
+   "grade_fit": "比如你把两个一样的三角形拼成一个平行四边形，面积是不是正好是底×高？",
+   "pacing": "你算得没错，10×6÷2=30平方厘米，这答案很扎实！你刚才说两个三角形拼成平行四边形，那这个平行四边形面积是60，对吧？",
+   "summary_mastery": "关键转折是你想到‘拼成平行四边形’，仍需注意：平行四边形面积确实是底×高，但三角形面积必须除以2，因为它是平行四边形的一半。",
+   "termination": "你通过拼图思路理解了三角形面积公式：两个三角形拼成平行四边形，面积是底×高=60，所以一个三角形是30平方厘米。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_dialogue_stability_20_stability_word_problem": {
+  "scores": {
+   "first_question": 1,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 11,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "你刚才说把三个数加在一起，那借出的38本是不是要从总数里去掉呢？",
+   "socratic_followup": "你算对了120加45等于165，现在要从165里去掉38，你打算怎么算呢？",
+   "grade_fit": "借出表示数量减少，不能也加上38。",
+   "pacing": "先算120加45等于165本。",
+   "summary_mastery": "这一题是你自己讲下来的:从「我把三个数直接加在一起。」开始,一步步说到「再算165减38等于127本，所以现在有127本。」,每一步都是你自己的思路,结论和题目的要求也对上了。",
+   "termination": "这道题你已经完整讲清楚了,可以再做一道,或者今天先到这里。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 1,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 7,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "小讲师:你已经知道鸡和兔一共有8只，脚数是26只，对吗？现在我们先假设全是鸡，看看脚数会是多少？",
+   "socratic_followup": "小讲师:你刚才说每换一只鸡为兔会多2只脚，那10只脚能换几只兔子呢？",
+   "grade_fit": "小讲师:我们从这里入手:假设8只全是鸡，算出脚的总数。你接着算下一步。",
+   "pacing": "小讲师:你刚才算出兔有5只、鸡有3只，现在我们来检查一下：5只兔有20只脚，3只鸡有6只脚，加起来是26只脚，对吗？",
+   "summary_mastery": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+   "termination": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+  },
+  "verdict": "review",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 12,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "你先看看方程左边是 3x+7，右边是 25，想一想，要让 x 单独出来，第一步该做什么？",
+   "socratic_followup": "那如果两边同时减7，等式会保持平衡吗？",
+   "grade_fit": "你通过‘两边同时减7’和‘两边同时除以3’两步成功解出x=6，并验证了答案正确，这说明你掌握了用等式性质解方程的方法。",
+   "pacing": "你刚才说两边都减7得到3x=18，这一步完全正确！那接下来，怎么把3x变成x呢？",
+   "summary_mastery": "仍需注意：每一步都要明确说明‘为什么这样做’，比如减7是为了消去常数项，除以3是为了消去系数，这样能更清晰地表达解题逻辑。",
+   "termination": "你已经完全理解了方程的解法，可以确认掌握了。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition": {
+  "scores": {
+   "first_question": 1,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 11,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "你试试看，把四分之三和八分之一都换成分母是8的分数，再加一加？",
+   "socratic_followup": "你算得没错，八分之七就是最终答案！这说明你明白为什么分母要先统一，对吧？",
+   "grade_fit": "比如三份四加一份八，就像分蛋糕，得先切成同样大小的块才能加起来，对吧？",
+   "pacing": "你把四分之三换成八分之六，这一步做得特别棒！现在再加八分之一，结果是多少呢？",
+   "summary_mastery": "你掌握了分数加法的核心方法：先通分再相加。关键转折是你正确将四分之三化为八分之六，这一步体现了对等价分数的理解。",
+   "termination": "你算得没错，八分之七就是最终答案！这说明你明白为什么分母要先统一，对吧？"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area": {
+  "scores": {
+   "first_question": 0,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 1,
+   "summary_mastery": 1,
+   "termination": 1
+  },
+  "total": 7,
+  "answer_leaked": true,
+  "evidence": {
+   "first_question": "你已经算出面积是30平方厘米，还想知道为什么除以2吗？",
+   "socratic_followup": "那如果把两个这样的三角形拼起来，会变成什么形状？面积又会怎么算？",
+   "grade_fit": "比如你把两个一样的三角形拼成一个平行四边形，面积是不是正好是底×高？",
+   "pacing": "你算得没错，10×6÷2=30平方厘米，这答案很扎实！你刚才说两个三角形拼成平行四边形，那这个平行四边形面积是60，对吧？",
+   "summary_mastery": "关键转折是你想到‘拼成平行四边形’，仍需注意：平行四边形面积确实是底×高，但三角形面积必须除以2，因为它是平行四边形的一半。",
+   "termination": "你通过拼图思路理解了三角形面积公式：两个三角形拼成平行四边形，面积是底×高=60，所以一个三角形是30平方厘米。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem": {
+  "scores": {
+   "first_question": 1,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 11,
+  "answer_leaked": false,
+  "evidence": {
+   "first_question": "你刚才说把三个数加在一起，那借出的38本是不是要从总数里去掉呢？",
+   "socratic_followup": "你算对了120加45等于165，现在要从165里去掉38，你打算怎么算呢？",
+   "grade_fit": "借出表示数量减少，不能也加上38。",
+   "pacing": "先算120加45等于165本。",
+   "summary_mastery": "这一题是你自己讲下来的:从「我把三个数直接加在一起。」开始,一步步说到「再算165减38等于127本，所以现在有127本。」,每一步都是你自己的思路,结论和题目的要求也对上了。",
+   "termination": "这道题你已经完整讲清楚了,可以再做一道,或者今天先到这里。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ }
+}

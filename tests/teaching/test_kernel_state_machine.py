@@ -259,15 +259,17 @@ def test_reply_masks_method_names_in_teacher_prompt(tmp_path):
     assert prompt["题目"]["参考答案"] == "鸡3只兔5只"      # 答案不脱敏(兜底/校验需要)
 
 
-def test_reply_replaces_method_feed_with_elicit_and_keeps_open(tmp_path):
-    """复讲轮代喂(输出侧兜底):学生给普通回答,tutor 回「你用的是假设法」→ 替换成固定
-    请讲引导,且 ready_to_confirm=False(不关对话,继续收集讲题内容)。
+def test_reply_repairs_method_feed_and_keeps_open(tmp_path):
+    """复讲轮代喂(输出侧兜底):学生给普通回答,tutor 回「你用的是假设法」→ **重生成**
+    保留本轮引导语义(不再整轮换复讲模板),且 ready_to_confirm=False(不关对话,
+    继续收集讲题内容)。
 
     学生消息必须是普通回答(非「都懂了」/卡住),否则会走理解/卡壳的确定性短路、不调模型,
     这条输出侧代喂分支就永远测不到(#109 P2-2)。"""
     fake = FakeOpenAI([
         completion(open_json("你先说说题目给了哪些条件?")),
         completion(tutor_json("你用的是假设法,对吧?", ready=True)),
+        completion(tutor_json("这个思路可以,那这一步你打算先算哪一个?", ready=False)),
     ]).start()
     gateway = kernel_gateway(tmp_path, fake.url)
     first = start({"text": "鸡兔同笼,共8只26脚", "answer": "鸡3只兔5只",
@@ -275,10 +277,9 @@ def test_reply_replaces_method_feed_with_elicit_and_keeps_open(tmp_path):
     turn = reply(first.session, "我先说说我的想法。", gateway=gateway)
     gateway.close()
     fake.stop()
-    assert turn.text == ("很好,你已经懂了。那请你从头讲讲你的思路——"
-                         "先说说你第一步算了什么、为什么这样算。")
+    assert turn.text == "这个思路可以,那这一步你打算先算哪一个?"  # 本轮引导语义保留
     assert turn.ready_to_confirm is False  # 不关对话,继续收集
-    assert turn.session.stuck is True       # 代喂 = 未解决的教学质量问题(卡点标记)
+    assert turn.session.stuck is False     # 重生成修好 = 非硬降级(不再连坐卡点)
     assert "假设法" not in turn.text
 
 
@@ -330,3 +331,123 @@ def test_reply_negative_huile_goes_stuck_not_understanding(tmp_path):
     assert turn.text == "我们从这里入手:两边减7。你接着算下一步。"  # 揭示阶梯,非请讲
     assert turn.ready_to_confirm is False
     assert "讲讲你的思路" not in turn.text
+
+
+# ---------- #107 方案 A:题库解析切片优先(确定性阶梯,零模型) ----------
+
+_ANALYSIS = ("先假设8只全是鸡,算出脚的总数8×2=16。再算实际脚数比假设多26-16=10只。"
+             "然后每把一只鸡换成兔,脚数多4-2=2只。最后多出的脚数能换10÷2=5只兔,鸡有8-5=3只。")
+_MODEL_STEPS = [{"step": "模型自拟第一步", "value": "111"}, {"step": "模型自拟第二步", "value": "222"}]
+
+
+def _start_with_question(tmp_path, question: dict, steps: list[dict]):
+    fake = FakeOpenAI([completion(open_json("我们先看看题目条件?", steps=steps))]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    turn = start(question, {"grade": "六年级", "answer_status": "incorrect"}, gateway=gateway)
+    gateway.close()
+    fake.stop()
+    return turn
+
+
+def test_analysis_ladder_takes_priority_over_model_steps(tmp_path):
+    """题库带解析 → 阶梯来自**既定解析**(纯函数切片),不用模型当场生成的分步解。"""
+    question = {"text": "鸡和兔一共8只,26只脚,各多少?", "answer": "鸡3只兔5只",
+                "analysis": _ANALYSIS, "knowledge_points": ["鸡兔同笼"]}
+    turn = _start_with_question(tmp_path, question, _MODEL_STEPS)
+    steps = turn.session.steps
+    assert len(steps) == 4 and all("模型自拟" not in s["step"] for s in steps)
+    assert [s["value"] for s in steps] == ["16", "10", "2", "3"]
+    assert steps[0]["step"].startswith("先假设8只全是鸡")
+    # 末级 value 即终答兜底(_known_answer 同源)→ 解析的结论数字
+    assert steps[-1]["value"] == "3"
+
+
+def test_model_steps_kept_when_analysis_missing_or_unsliceable(tmp_path):
+    """无解析 / 解析切不出 ≥2 步(纯叙述、无数字)→ 保持模型分步解不变(零回归)。"""
+    no_analysis = {"text": "鸡和兔一共8只,26只脚,各多少?", "answer": "", "analysis": "",
+                   "knowledge_points": []}
+    narrative = {"text": "看题目说说你的想法。", "answer": "",
+                 "analysis": "先读题。再想想要求什么。最后说说你的结论。", "knowledge_points": []}
+    for question in (no_analysis, narrative):
+        turn = _start_with_question(tmp_path, question, _MODEL_STEPS)
+        assert turn.session.steps == _MODEL_STEPS
+
+
+def test_analysis_ladder_is_revealed_on_repeat_fallback(tmp_path):
+    """卡住/复读兜底揭示的下一级 = 解析切片(证明阶梯真的接上了揭示路径)。"""
+    question = {"text": "鸡和兔一共8只,26只脚,各多少?", "answer": "鸡3只兔5只",
+                "analysis": _ANALYSIS, "knowledge_points": []}
+    repeated = "兔子有几只呢?"
+    fake = FakeOpenAI([
+        completion(open_json(repeated, steps=_MODEL_STEPS)),
+        completion(tutor_json(repeated)),      # 模型复读首问
+        completion(tutor_json(repeated)),      # 重生成仍复读 → 兜底揭示下一级
+    ]).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    first = start(question, {"grade": "六年级", "answer_status": "incorrect"}, gateway=gateway)
+    turn = reply(first.session, "嗯,我看看。", gateway=gateway)
+    gateway.close()
+    fake.stop()
+    assert "先假设8只全是鸡" in turn.text        # 揭开的是题库解析的第一级
+    assert turn.session.hint_level == 1
+
+
+# ---------- #107 / #146 M3:脚手架渐隐(掌握度信号 → 撤一级支持) ----------
+
+_FADE_STEPS = [{"step": "先算全部按鸡的脚数", "value": "16"},
+               {"step": "再算脚数差", "value": "10"}]
+
+
+def _stuck_session(tmp_path, extra_payloads: list | None = None):
+    """开一个带两级阶梯的会话(卡住/复读/命中等确定性路径不调模型)。"""
+    fakes = [completion(open_json("你现在算到哪一步了?", steps=_FADE_STEPS))]
+    fakes.extend(extra_payloads or [])
+    fake = FakeOpenAI(fakes).start()
+    gateway = kernel_gateway(tmp_path, fake.url)
+    turn = start({"text": "鸡兔同笼,共8只26脚", "answer": "鸡3只兔5只", "knowledge_points": []},
+                 {"grade": "六年级", "answer_status": "incorrect"}, gateway=gateway)
+    return fake, gateway, turn.session
+
+
+def test_scaffold_fades_after_student_performs_revealed_step(tmp_path):
+    """揭示一级 → 学生**自己做出来**(值出现在本轮消息)→ 再卡住先问不揭示;再卡住升回揭示。"""
+    fake, gateway, session = _stuck_session(tmp_path, [completion(tutor_json("对,继续往下想。"))])
+    revealed = reply(session, "我不会做。", gateway=gateway)
+    assert "先算全部按鸡的脚数" in revealed.text and session.hint_level == 1
+    assert session.scaffold_faded is False                      # 还没掌握度证据 → 支持不动
+    reply(session, "我算了一下,是不是 16 只脚?", gateway=gateway)
+    assert session.scaffold_faded is True                       # 学生自己做出来了 → 撤一级支持
+    faded = reply(session, "我不会了。", gateway=gateway)
+    assert faded.text.startswith("这一步你先自己想想")           # 先问不揭示
+    assert session.hint_level == 1                               # 不消耗阶梯
+    fade_events = [e for e in session.guard_events if e.get("branch") == "fade"]
+    assert fade_events and fade_events[0]["hint_level"] == 1   # #169 起事件另带 turn 字段
+    escalated = reply(session, "我不会做。", gateway=gateway)
+    assert "再算脚数差" in escalated.text and session.hint_level == 2   # 升回全支持
+    gateway.close()
+    fake.stop()
+
+
+def test_scaffold_keeps_full_support_without_performance_signal(tmp_path):
+    """学生没有做出刚揭示的那一步 → **不撤支持**:下次卡住继续揭示下一级,且无 fade 事件。"""
+    fake, gateway, session = _stuck_session(tmp_path)
+    reply(session, "我不会做。", gateway=gateway)
+    reply(session, "我不会了。", gateway=gateway)
+    assert session.scaffold_faded is False
+    assert session.hint_level == 2
+    assert not any(event.get("branch") == "fade" for event in session.guard_events)
+    gateway.close()
+    fake.stop()
+
+
+def test_scaffold_fade_is_one_shot_per_performance(tmp_path):
+    """渐隐只用一次:触发后标志复位(下一次卡住仍给揭示,除非学生又做出了一步)。"""
+    fake, gateway, session = _stuck_session(tmp_path, [completion(tutor_json("对,继续往下想。"))])
+    reply(session, "我不会做。", gateway=gateway)
+    reply(session, "我算了一下,是不是 16 只脚?", gateway=gateway)
+    reply(session, "我不会了。", gateway=gateway)        # 渐隐触发
+    assert session.scaffold_faded is False
+    again = reply(session, "我不会做。", gateway=gateway)
+    assert "再算脚数差" in again.text                            # 直接给下一级
+    gateway.close()
+    fake.stop()
