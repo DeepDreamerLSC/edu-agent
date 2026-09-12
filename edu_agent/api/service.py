@@ -82,8 +82,9 @@ class ConversationService:
 
         idempotency_key 必填(重试原样复用);external_question_id 走题源(未命中
         404 QUESTION_BANK_QUESTION_NOT_FOUND);question_text/question_image 为
-        自由材料二选一(同传 422),题图空壳由内核 vision 处理;合同字段之外
-        透传 learner(调用方字段优先)。幂等重试返回同一 conversation_id。"""
+        自由材料二选一(同传 422),题图空壳由内核 vision 处理;learner 只认
+        白名单键(grade/answer_correct/knowledge_points,其余 422,#202)。
+        幂等重试返回同一 conversation_id。"""
         idempotency_key = str(body.get("idempotency_key") or "")
         if not idempotency_key:
             raise ApiError(422, None, "idempotency_key 必填(重试原样复用)")
@@ -129,6 +130,16 @@ class ConversationService:
     # A 线 §8.5(M3 WS1):answer_correct/knowledge_points 从 open 请求体接收——
     # 三个 open 入口(统一 open / per-question open / conversations create)共用。
     _OPEN_LEARNER_FIELDS = frozenset({"answer_correct", "knowledge_points"})
+    # #202:learner 具名白名单——只认清单内的客户端键,其余 422(宁拒不放:
+    # 静默剥离会让客户端以为生效)。逐键依据:
+    # - grade:内核风格/接地/守门输入(session.py 文档示例即 {"grade": …}),非掌握结论;
+    # - answer_correct:§8.5 合同字段,严格 bool|null 校验后**映射** answer_status
+    #   (服务端权威,客户端提交的是事实声明,不是结论);
+    # - knowledge_points:§5 校验(≤20、项内只认 id/name)后作追问锚点。
+    # 服务端派生键(answer_status/answer_correct_provenance)不在名单——直接提交
+    # 即"结论换个名字",拒。
+    _LEARNER_ALLOWED = frozenset({"grade", *_OPEN_LEARNER_FIELDS})
+    _KP_ITEM_ALLOWED = frozenset({"id", "name"})  # §5 字段表:每项 {id?, name 必填}
 
     @classmethod
     def open_request_learner(cls, body: dict,
@@ -139,15 +150,22 @@ class ConversationService:
         true→correct、false/null/省略→incorrect(unanswered 默认按做错,等价老系统
         assumed_incorrect);客户端显式非空 bool 标 answer_correct_provenance=
         partner_open(题源出处在 _resolved 只补缺,不覆盖客户端值)。
-        knowledge_points 照 §5 校验(数组 ≤20,每项 name 必填)后进 learner
-        (A 线「从 open 请求体接收」;prompt 追问锚点仍以题源 question.knowledge_points
-        为准,自由材料路径由调用方另行放入题面)。其余非合同字段透传(调用方优先)。"""
+        knowledge_points 照 §5 校验(数组 ≤20,每项 name 必填、**项内只认
+        id/name**——`{"name":"x","verified":true}` 这种嵌套注入是 #202 实测绕过)
+        后进 learner(prompt 追问锚点仍以题源 question.knowledge_points 为准)。
+        其余键一律 422 拒绝(#202:黑名单挡不住改名,白名单才挡得住)。"""
+        unknown = sorted(set(body) - contract_fields - cls._LEARNER_ALLOWED)
+        if unknown:
+            allowed = ",".join(sorted(contract_fields | cls._LEARNER_ALLOWED))
+            raise ApiError(422, None,
+                           f"未知字段:{','.join(unknown)}(允许:{allowed})")
         answer_correct = body.get("answer_correct")
         if "answer_correct" in body and answer_correct is not None \
                 and not isinstance(answer_correct, bool):
             raise ApiError(422, None, "answer_correct 必须是严格 JSON boolean 或 null")
         knowledge_points = cls._validated_knowledge_points(body.get("knowledge_points"))
-        learner = {k: v for k, v in body.items() if k not in contract_fields}
+        learner = {k: v for k, v in body.items()
+                   if k in cls._LEARNER_ALLOWED and k not in contract_fields}
         # 映射值由合同字段推导,覆写同名透传(服务端权威);显式非 null(含 false)
         # 即标 partner_open——出处是「客户端显式提交」这一事实,与对错无关;
         # null/省略的 incorrect 是服务端假设(assumed_incorrect),无出处不标。
@@ -239,7 +257,8 @@ class ConversationService:
 
     @staticmethod
     def _validated_knowledge_points(raw) -> list:
-        """knowledge_points:数组 ≤20,每项 {id?, name 必填}(照 §5 字段表)。"""
+        """knowledge_points:数组 ≤20,每项 {id?, name 必填}(照 §5 字段表);
+        项内只认 id/name——其余键(如 verified)422(#202 嵌套注入实测样例)。"""
         if raw is None:
             return []
         if not isinstance(raw, list) or len(raw) > 20:
@@ -247,6 +266,10 @@ class ConversationService:
         for item in raw:
             if not isinstance(item, dict) or not str(item.get("name") or "").strip():
                 raise ApiError(422, None, "knowledge_points 每项必须含非空 name")
+            extra = sorted(set(item) - ConversationService._KP_ITEM_ALLOWED)
+            if extra:
+                raise ApiError(422, None,
+                               f"knowledge_points 项内未知字段:{','.join(extra)}(只认 id/name)")
         return raw
 
     def open(self, question_id: str, idempotency_key: str, learner: dict,
@@ -381,7 +404,29 @@ class ConversationService:
 
     # ---------- messages(多轮 + confirm) ----------
 
+    # #202:学生轮请求体白名单(messages / messages-stream 两路共用 send)——
+    # 未知键 422 拒绝,不是静默丢弃(客户端会以为生效)。逐键依据:
+    # - skill_id:合同校验(与 SKILL_ID 比对,老通用面兼容);
+    # - content / input.student_response:学生发言本体(二者取一);
+    # - message_idempotency_key:消息级重试缓存键;
+    # - input 四子键:interaction_action(confirm/对话)/ skill_session_id(归属
+    #   校验)/ expected_session_version(00 §5.2 约定 3 版本门)/ student_response。
+    _SEND_ALLOWED = frozenset({"skill_id", "content", "input", "message_idempotency_key"})
+    _SEND_INPUT_ALLOWED = frozenset({"interaction_action", "skill_session_id",
+                                     "expected_session_version", "student_response"})
+
     def send(self, conversation_id: str, body: dict) -> dict:
+        unknown = sorted(set(body) - self._SEND_ALLOWED)
+        if unknown:
+            raise ApiError(422, None,
+                           f"未知字段:{','.join(unknown)}"
+                           f"(允许:{','.join(sorted(self._SEND_ALLOWED))})")
+        if isinstance(body.get("input"), dict):
+            nested = sorted(set(body["input"]) - self._SEND_INPUT_ALLOWED)
+            if nested:
+                raise ApiError(422, None,
+                               f"input 内未知字段:{','.join(nested)}"
+                               f"(允许:{','.join(sorted(self._SEND_INPUT_ALLOWED))})")
         conversation = self._conversation_or_404(conversation_id)
         if conversation.state in ("completed", "failed"):  # P1-6:failed 终态同 completed 拒续
             raise ApiError(409, "SKILL_SESSION_CONFLICT", "会话已终态,重开需新幂等键")
