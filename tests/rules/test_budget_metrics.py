@@ -94,6 +94,18 @@ def test_scripts_total_lines_report_only(base_repo):
     assert "BUDGET-REPORT scripts-total-lines: 500(登记用,不设限)" in result.stdout
 
 
+def test_fixtures_total_lines_report_only(base_repo):
+    """tests/fixtures/ 只登记不设限:500 行夹具不影响绿灯,但行数可见。
+
+    理由:02 §6 分子不含 fixtures/,把 helper 搬进这里能降分子而测试一行不少
+    (PR #192 实测:分子 −942 里 387 行属这类口径搬移);登记行让这股引力**可见**。"""
+    (base_repo / "tests" / "fixtures").mkdir(parents=True)
+    write_code_lines(base_repo / "tests" / "fixtures" / "helper_x.py", 500)
+    result = run_py("budget.py", "--root", str(base_repo))
+    assert result.returncode == 0
+    assert "BUDGET-REPORT fixtures-total-lines: 500(登记用,不设限)" in result.stdout
+
+
 def test_suppressions_over_limit(base_repo):
     for index in range(budget.LIMIT_SUPPRESSIONS + 1):
         content = f"x{index} = {index}  # noqa: E501\n"

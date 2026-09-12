@@ -166,6 +166,16 @@ def scripts_total_lines(root: Path, py_files: list) -> int:
     return sum(code_lines(p) for p in py_files if is_under(p, root, "scripts"))
 
 
+def fixtures_total_lines(root: Path, py_files: list) -> int:
+    """tests/fixtures/ 下 *.py 总行数(非空非注释,同 §2 计法)。
+
+    02 §6 的测试比分子**不含** tests/fixtures/,所以"把 helper 从 tests/ 搬进 fixtures/"
+    能降分子而一行测试都不少(PR #192 实测:分子 −942 里 387 行是这类口径搬移)。
+    只登记不设限——2026-09-11 人裁:该比值永久只报告不阻塞,但搬运引力要**可见**。
+    """
+    return sum(code_lines(p) for p in py_files if is_under(p, root, "tests", "fixtures"))
+
+
 def test_lines(root: Path, py_files: list) -> int:
     """tests/ 行数,分子不含 tests/rules/ 与 tests/fixtures/(02 §6)。"""
     total = 0
@@ -226,6 +236,7 @@ def collect_metrics(root: Path) -> list[Metric]:
     configs = config_file_count(root)
     deploy_total, deploy_names = deploy_script_lines(root)
     scripts_total = scripts_total_lines(root, py_files)
+    fixtures_total = fixtures_total_lines(root, py_files)
     suppressions = sum(count_comment_suppressions(p) for p in py_files) + pyproject_suppressions(root)
     return [
         Metric("app-total-lines", f"{total_app} / {LIMIT_APP_TOTAL_LINES}", total_app <= LIMIT_APP_TOTAL_LINES),
@@ -250,6 +261,8 @@ def collect_metrics(root: Path) -> list[Metric]:
         test_ratio_metric(root, py_files, total_app),
         # 登记(非 02 §2 预算指标,永不阻塞):工具面行数可见性,#154 审查观察 1。
         Metric("scripts-total-lines", f"{scripts_total}(登记用,不设限)", True, blocking=False),
+        # 登记:tests/fixtures/ 行数可见性,对冲"把 helper 搬进不计入分子的一侧"的引力。
+        Metric("fixtures-total-lines", f"{fixtures_total}(登记用,不设限)", True, blocking=False),
     ]
 
 
