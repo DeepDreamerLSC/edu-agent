@@ -14,7 +14,7 @@ from fake_openai import Reply, completion
 
 from edu_agent.evals import EnvironmentFailure, KernelSubject
 
-from teachkit import kernel_env, open_json, tutor_json
+from teachkit import FakeGateway, kernel_env, open_json, tutor_json
 
 CASE = {
     "id": "stability_equation_subtract",
@@ -63,3 +63,36 @@ def test_run_case_content_failure_reraises(tmp_path):
         with pytest.raises(Exception) as excinfo:
             KernelSubject(gateway).run_case(CASE)
     assert not isinstance(excinfo.value, EnvironmentFailure)
+
+
+# ---------- #178 条件对照帧:feed_answer 测量断点(P 口径默认零漂移) ----------
+
+_QA = {"text": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+       "answer": "鸡3只，兔5只"}
+_OPEN_MIN = {"acceptable": True, "transcription": "", "steps": [],
+             "reply": "我们先看题目里给了什么。"}
+
+
+def _start_request_body(case: dict) -> str:
+    gateway = FakeGateway(tutor_payloads=[_OPEN_MIN])
+    KernelSubject(gateway).run_case(case)
+    return json.dumps(gateway.requests[0]["messages"], ensure_ascii=False)
+
+
+def test_p_caliber_kernel_never_sees_answer():
+    """#34 口径台账:默认(不喂)内核请求里不得出现参考答案——钉死默认零漂移。"""
+    assert "鸡3只" not in _start_request_body(
+        {"id": "x", "question": _QA, "grade": "六年级", "student_turns": []})
+
+
+def test_feed_answer_breakpoint_feeds_reference_answer():
+    """#178 断点边:仅显式 feed_answer=true 时参考答案进内核 start 入参。"""
+    assert "鸡3只" in _start_request_body(
+        {"id": "x", "question": _QA, "grade": "六年级", "student_turns": [],
+         "feed_answer": True})
+    # 裸字符串题无 answer 可喂:断点开启不炸,正常跑完(P 口径形态不受影响)
+    gateway = FakeGateway(tutor_payloads=[_OPEN_MIN])
+    result = KernelSubject(gateway).run_case({"id": "x", "question": "鸡和兔一共有8只。",
+                                              "grade": "", "student_turns": [],
+                                              "feed_answer": True})
+    assert result["final_state"] == "needs_review"

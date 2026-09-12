@@ -318,6 +318,224 @@
           }
         ]
       }
+    },
+    {
+      "id": "guess-one-step-then-dump",
+      "title": "只猜一步→模型整套解答连终答(公网实录最小复现,#178 短板 1)",
+      "status": "guarded",
+      "source": {
+        "issue": 178,
+        "lesson_name": "鸡兔同笼(假设法)",
+        "note": "公网实录 main@2dd7636:学生只说不会→揭示;再猜一步→整套解答连终答。本轮复刻触发面,断言当前守护拦截面"
+      },
+      "tags": [
+        "代喂",
+        "卡壳",
+        "公网实录复现",
+        "确定性"
+      ],
+      "question": {
+        "text": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+        "answer": "鸡3只，兔5只"
+      },
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "steps": [
+              {
+                "step": "先假设8只全是鸡，算出脚的总数",
+                "value": "16"
+              },
+              {
+                "step": "再算脚数差",
+                "value": "10"
+              }
+            ],
+            "reply": "我们先看题目里给了什么。"
+          }
+        },
+        {
+          "json": {
+            "reason": "先引导学生自己想到下一步",
+            "reply": "对!先假设全是鸡有16只脚，比26只少10只，每换一只多2只脚，所以兔有5只，鸡有3只。",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "先引导学生自己想到下一步",
+            "reply": "对,先假设全是鸡是个好开头!那脚数差该怎么算?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        }
+      ],
+      "student_turns": [
+        "我不会做。",
+        "是不是先假设全是鸡?"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "text_excludes_answer_values",
+            "note": "#178 代喂面:守护须拦下整套解答里的终答数字(3/5)"
+          },
+          {
+            "name": "state_is_not",
+            "state": "ready_to_confirm",
+            "note": "#178 只猜一步/说错不构成掌握证据,不得进确认"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cant-only-never-confirms",
+      "title": "只说不会→全程卡壳弧走揭示阶梯,不得泄终答不得确认(#178 短板 2 ②)",
+      "status": "guarded",
+      "source": {
+        "issue": 178,
+        "lesson_name": "鸡兔同笼(假设法)",
+        "note": "学生零内容轮(只说不会),失败面=过早确认与代喂;揭示阶梯兜底且掩码"
+      },
+      "tags": [
+        "卡壳",
+        "判停",
+        "确定性"
+      ],
+      "question": {
+        "text": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+        "answer": "鸡3只，兔5只"
+      },
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "steps": [
+              {
+                "step": "先假设8只全是鸡，算出脚的总数",
+                "value": "16"
+              },
+              {
+                "step": "再算脚数差",
+                "value": "10"
+              }
+            ],
+            "reply": "我们先看题目里给了什么。"
+          }
+        }
+      ],
+      "student_turns": [
+        "我不会做。",
+        "我不知道。"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "text_excludes_answer_values",
+            "note": "#178 代喂面:守护须拦下整套解答里的终答数字(3/5)"
+          },
+          {
+            "name": "state_is_not",
+            "state": "ready_to_confirm",
+            "note": "#178 只猜一步/说错不构成掌握证据,不得进确认"
+          }
+        ]
+      }
+    },
+    {
+      "id": "half-wrong-step-no-confirm",
+      "title": "半懂说错→学生错步,模型抢确认+带终答,双重守护拦下(#178 短板 2 ③)",
+      "status": "guarded",
+      "source": {
+        "issue": 178,
+        "lesson_name": "鸡兔同笼(假设法)",
+        "note": "学生把脚数差说错(8,实为10);模型确认错步并给终答+抢确认——泄漏守护与判停闸先后拦截;payload 5 槽按当前内核调用序实测对齐(start/回复/泄漏重生成/判停重写+回落揭示)"
+      },
+      "tags": [
+        "代喂",
+        "判停",
+        "复讲",
+        "确定性"
+      ],
+      "question": {
+        "text": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+        "answer": "鸡3只，兔5只"
+      },
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "steps": [
+              {
+                "step": "先假设8只全是鸡，算出脚的总数",
+                "value": "16"
+              },
+              {
+                "step": "再算脚数差",
+                "value": "10"
+              }
+            ],
+            "reply": "我们先看题目里给了什么。"
+          }
+        },
+        {
+          "json": {
+            "reason": "先引导学生自己想到下一步",
+            "reply": "好,先假设全是鸡,脚会少算,继续算差。",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "先引导学生自己想到下一步",
+            "reply": "没错!差是8,所以兔有5只，鸡有3只。",
+            "ready_to_confirm": true,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "先引导学生自己想到下一步",
+            "reply": "差还差一点:26-16=10,每换一只多几只脚?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "先引导学生自己想到下一步",
+            "reply": "回到脚数差:26比16多10,每换一只多几只脚?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        }
+      ],
+      "student_turns": [
+        "我先假设全是鸡，有16只脚。",
+        "实际比16只多8只脚，所以差是8。"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "text_excludes_answer_values",
+            "note": "#178 代喂面:守护须拦下整套解答里的终答数字(3/5)"
+          },
+          {
+            "name": "state_is_not",
+            "state": "ready_to_confirm",
+            "note": "#178 只猜一步/说错不构成掌握证据,不得进确认"
+          }
+        ]
+      }
     }
   ]
 }
