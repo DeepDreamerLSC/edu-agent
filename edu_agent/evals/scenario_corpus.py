@@ -1,19 +1,7 @@
 """确定性场景 corpus:薄加载 + 用例级 check 复算(带来源归属的失败清单)。
 
-为什么不是复用现成 loader:EvalRunner 不读数据集(`run()` 只收预加载 cases,
-runner.py 无 dataset 读取路径);唯一的既有 loader(image_teaching.load_scenarios)
-锁死图文 v1 schema——必填 `id/title/grade/bucket/misconception_seed`、
-`reference_answer.value/answer_type`、`visual_dependency`、`expected.outcome`、
-`source.question_id/provider/lesson_name`、`student_turns`、图路径/sha256 全套
-图文字段,会拒掉本 corpus——故此处是**薄 loader**(同 scripts/tuning_round.py
-的 json.loads + ["scenarios"] 读取口径),不复制它的校验规则。
-
-词表归属:datasets/ 目录里 v1/v3 老场景的 `expect.final_states` /
-`assistant_contains` / `ready_to_record` 目前无任何代码消费(惰性数据);
-**回归网只认本 schema 的 `expect.checks`**,消费端唯一,别往老词表上加新语义。
-
-失败清单每条带 source 归属(issue + question_id,question_id 写全 24 位可直接
-join 回题库 inventory):网的价值在「红要红得可追溯」。
+EvalRunner.run() 只收预加载 cases(不读数据集路径),image_teaching.load_scenarios
+锁死图文 v1 schema 会拒本 corpus——故用 scripts/tuning_round.py 同款薄读取口径。
 """
 
 from __future__ import annotations
@@ -30,20 +18,17 @@ _STATUSES = ("known_red", "guarded")
 # 题库 ObjectId 口径:question_id 写全 24 位十六进制才可 join 回 inventory
 # (8 位截断正是上轮修掉的溯源错位,形态校验拦住它复发)。
 _QID_RE = re.compile(r"[0-9a-f]{24}")
-
-
-def datasets_dir() -> Path:
-    """evals 数据集目录(老数据集零迁移证据与用例加载共用此定位)。"""
-    return Path(__file__).resolve().parent / "datasets"
+# evals 数据集目录(老数据集零迁移证据与 corpus 加载共用)。
+DATASETS_DIR = Path(__file__).resolve().parent / "datasets"
 
 
 def load_shortboard_corpus(path: str | Path | None = None) -> list[dict]:
     """读回归网 corpus 并做最小校验;任一错误抛 ValueError(不静默跳过)。
 
-    校验面:envelope(schema_version/scenarios)+ 形状必填 + check 名可解析且
-    不重名 + answer 可提取(关掉恒真通道)+ source 归属齐全。既有数据集字段
-    (ready_to_record 等)不受影响——本 loader 只看自己的键。"""
-    dataset = Path(path) if path is not None else datasets_dir() / SHORTBOARD_DATASET
+    校验面:envelope + 形状必填 + check 名可解析不重名 + answer 可提取(关恒真
+    通道)+ unauthorized 纯引用形态(拦挂错轮次)+ source 归属齐全。既有数据集
+    字段(ready_to_record 等)不受影响——本 loader 只看自己的键。"""
+    dataset = Path(path) if path is not None else DATASETS_DIR / SHORTBOARD_DATASET
     payload = json.loads(dataset.read_text(encoding="utf-8"))
     version = payload.get("schema_version")
     if version != SHORTBOARD_SCHEMA_VERSION:
@@ -52,17 +37,16 @@ def load_shortboard_corpus(path: str | Path | None = None) -> list[dict]:
     scenarios = payload.get("scenarios")
     if not isinstance(scenarios, list) or not scenarios:
         raise ValueError("scenarios 必须是非空列表")
-    errors = [error for scenario in scenarios for error in _scenario_errors(scenario)]
+    errors: list[str] = []
+    for scenario in scenarios:
+        if not isinstance(scenario, dict):
+            errors.append("(非对象):场景必须是 dict")
+            continue
+        errors.extend(_shape_errors(scenario))
+        errors.extend(_expect_errors(scenario))
     if errors:
         raise ValueError("corpus 校验失败:\n" + "\n".join(errors))
     return scenarios
-
-
-def _scenario_errors(scenario: object) -> list[str]:
-    """单条场景校验入口:形状(_shape_errors)+ 期望(_expect_errors)两半。"""
-    if not isinstance(scenario, dict):
-        return ["(非对象):场景必须是 dict"]
-    return _shape_errors(scenario) + _expect_errors(scenario)
 
 
 def _shape_errors(scenario: dict) -> list[str]:
@@ -115,6 +99,8 @@ def _expect_errors(scenario: dict) -> list[str]:
                 f"{scenario_id}:声明 text_excludes_answer_values 但 question.answer"
                 " 取不到 ASCII 数字(中文数字/文字答案)——check 会恒真空转,请改写"
                 " answer 为数字形态或换 check")
+    if "text_excludes_unauthorized_numbers" in names:
+        errors.extend(_unauthorized_check_errors(scenario_id, scenario))
     source = scenario.get("source")
     if not isinstance(source, dict) or not source.get("issue"):
         errors.append(f"{scenario_id}:source.issue 必填(红要红得可追溯)")
@@ -128,6 +114,33 @@ def _expect_errors(scenario: dict) -> list[str]:
         errors.append(f"{scenario_id}:known_red 必须带 source.question_id(24 位,"
                       "可直接 join 回题库 inventory)")
     return errors
+
+
+def _unauthorized_check_errors(scenario_id: str, scenario: dict) -> list[str]:
+    """挂 text_excludes_unauthorized_numbers 的用例必须是纯引用形态(第 4 条)。
+
+    机器口径:罐头剧本里 tutor 可见文本(reply/step)的数字必须 ⊆ 题面 ∪ 学生
+    剧本数字——否则本 check 会对合法导出数字(如 28/10)假阳性红。
+    # ponytail: 天花板 = 只拦剧本数据;内核生成文本(bottom-out 揭晓终答、首问
+    模板)是运行期现实,挂到那些轮次会运行期红,由红暴露,不在加载期拦。
+    """
+    allowed = _numbers((scenario.get("question") or {}).get("text"))
+    allowed |= _numbers(" ".join(scenario.get("student_turns") or []))
+    introduced: set[float] = set()
+    for entry in scenario.get("fake_model") or []:
+        payload = entry.get("json") if isinstance(entry, dict) else {}
+        if not isinstance(payload, dict):
+            continue
+        texts = [str(payload.get("reply") or "")]
+        texts += [str(step.get("step") or "")
+                  for step in payload.get("steps") or [] if isinstance(step, dict)]
+        introduced |= _numbers(" ".join(texts)) - allowed
+    if introduced:
+        return [f"{scenario_id}:声明 text_excludes_unauthorized_numbers,但罐头剧本"
+                f"(reply/step)引入题面 ∪ 学生允许集之外的数字 "
+                f"{','.join(f'{value:g}' for value in sorted(introduced))}——本 check "
+                "只适用于纯引用题面数字的轮次,挂到判断/计算轮会假阳性;请换 check 或改写剧本"]
+    return []
 
 
 def deterministic_scenarios(scenarios: list[dict]) -> list[dict]:

@@ -1,31 +1,13 @@
-r"""对话质量回归网 check 注册表(#185 短板固化;#178 讲题打磨的判据底座)。
+"""对话质量回归网 check 注册表(#185 短板固化;#178 的判据底座)。
 
-网不是第二套门:不拦内核输出,只把「已知短板」复算成红/绿。每条 check 是纯函数
-`(check, case, result) -> (ok, detail)`:
-- `check`:场景里声明的那条条目(`{"name": ..., **参数, "note": ...}`)——声明式参数
-  住在条目里,故签名在任务书 `(case, result)` 基础上前插 check 条目本身(纯函数性不变);
-- `case`:场景 dict(题面/终答/剧本——判定输入);
-- `result`:`Subject.run_case` 的对话记录(turns / final_state / ...)。
+网不是第二套门:只把现实复算成红/绿,不拦内核输出。每条 check 是纯函数
+`(check, case, result) -> (ok, detail)`,detail 指名到具体数字/状态;声明式参数
+住在 check 条目里。零模型、零内核 import:`_NUMBER_RE` 刻意不与内核共享口径
+(独立 oracle,实测抓到内核 `_reply_numbers` 剥掉的「第13次」序数形态)。
+**加一条新 check = 加一个函数并进 REGISTRY**,不改其它任何文件。
 
-`detail` 必须指名到具体数字/状态(失败可定位,不写「质量不佳」这类空话)。
-零模型、零内核 import:网与被测物解耦,数字抽取口径 = ASCII 数字段(整数/小数,
-分数按两个数字计),独立复算。**加一条新 check = 在此加一个函数并进 REGISTRY**,
-不改其它任何文件。
-
-## 判定力边界(已知且已钉死,见 test_ascii_digit_boundary_is_pinned)
-
-只认 ASCII 数字段 ⇒ 终答的**等价表达**不在此口径内:中文数字「五分之四」、分数
-形态「1/4」「12/5」、百分数「80%」、中文序数「第十三次」全部漏判。本 corpus 恰是
-小数×分数题集,这个边界是**具体的**:tutor 若用分数形态揭示小数终答,网会绿。
-补等价归一(分数/百分数/中文数字 → 小数)时改 `_numbers` 一处 + 同步钉边测试。
-
-`_NUMBER_RE` 是本仓库第 9 份同口径正则(numeric.py ×4、kernel.py ×3、
-arc_eval_metrics.py ×1)——**刻意重复、勿合并**:网要的就是与内核
-(`_reply_numbers`)独立的 oracle。实测依据(#185 取证):泄漏文本「…第13次必形成…」
-里内核 `_reply_numbers` 把「第\s*\d+」当序数剥掉、据不到 13,而网的 `_numbers`
-看得到——正因为不共享口径,网抓到了内核自己看不见的形态。合并会让网静默继承
-内核的盲区(若将来有人补全 numeric.py 的中文数字能力,这张网**不会**自动跟进,
-需手动同步——代价写在这里,不藏着)。
+# ponytail: 天花板 = ASCII 数字口径,分数/百分数/中文数字等价形态漏判(钉在
+# test_ascii_digit_boundary_is_pinned);升级点 = _numbers 一处 + 同步钉边表,勿与内核合并。
 """
 
 from __future__ import annotations

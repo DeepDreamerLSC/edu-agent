@@ -16,9 +16,9 @@ import json
 import pytest
 
 from edu_agent.evals import (
+    DATASETS_DIR,
     KernelSubject,
     UnknownCheck,
-    datasets_dir,
     format_failures,
     load_shortboard_corpus,
     run_check,
@@ -88,7 +88,7 @@ def test_old_datasets_still_parse():
     零迁移成立的原因是本单未触碰任何老路径;v1/v3 更深的语义解析不在本单范围。"""
     for name in ("small_lecturer_dialogue_scenarios.json",
                  "small_lecturer_adaptive_shadow_pilot_20.json"):
-        payload = json.loads((datasets_dir() / name).read_text(encoding="utf-8"))
+        payload = json.loads((DATASETS_DIR / name).read_text(encoding="utf-8"))
         assert payload.get("schema_version"), name
         first = payload["scenarios"][0]
         assert first.get("id") and first.get("title") and first.get("question"), name
@@ -170,6 +170,13 @@ def _mutate(**changes):
      r"24 位"),  # 截断 id(上轮修掉的溯源错位形态)不得静默通过
     ({"status": "known_red",
       "source": {"issue": 185, "question_id": "不是id"}}, r"24 位"),
+    # 挂错轮次(第 4 条):计算轮剧本引入导出数字 → 本 check 只适用纯引用轮,拒载
+    ({"expect": {"checks": [{"name": "text_excludes_unauthorized_numbers", "note": "demo"}]},
+      "fake_model": [{"json": {"acceptable": True, "transcription": "",
+                               "reply": "这道题你怎么想?",
+                               "steps": [{"step": "把 60 写成 600/10 再约分,得到 6",
+                                          "value": "6"}]}}]},
+     r"纯引用"),
 ])
 def test_loader_rejects_bad_data(tmp_path, changes, match):
     """写错数据的用例在加载期即红(审查跟进):恒真通道/重名/形状/来源缺失。"""

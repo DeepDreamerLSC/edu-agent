@@ -30,7 +30,7 @@ from .runner import (
     Subject,
 )
 from .scenario_corpus import (
-    datasets_dir,
+    DATASETS_DIR,
     deterministic_scenarios,
     format_failures,
     load_shortboard_corpus,
@@ -53,7 +53,7 @@ __all__ = [
     "Subject",
     "UnknownCheck",
     "any_judge_model",
-    "datasets_dir",
+    "DATASETS_DIR",
     "deterministic_scenarios",
     "format_failures",
     "judge_transcript",
