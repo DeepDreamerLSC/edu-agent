@@ -74,7 +74,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: 夜评失败报警(自动开 issue,nightly-red 标签查重)
+      - name: 夜评失败报警(自动开 issue,nightly-red 按短 sha 查重)
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
