@@ -12,24 +12,8 @@ import json
 
 from fake_openai import FakeOpenAI, completion, sse
 
-from edu_agent.gateway import (
-    Gateway,
-    ModelConfig,
-    ModelRegistry,
-    ModelRequest,
-    ProviderConfig,
-    RoleConfig,
-)
-
-FACT_FIELDS = (
-    "edu.call_id", "edu.ts", "edu.role", "edu.attempt", "edu.outcome",
-    "edu.session_id", "edu.fallback_from", "edu.fallback_to", "edu.redacted",
-    "edu.trace_id", "edu.queue_ms", "edu.error_detail",
-    "gen_ai.provider.name", "gen_ai.request.model", "gen_ai.response.model",
-    "gen_ai.usage.input_tokens", "gen_ai.usage.output_tokens",
-    "gen_ai.usage.cache_read.input_tokens", "gen_ai.response.finish_reasons",
-    "gen_ai.server.time_to_first_token", "edu.total_ms",
-)  # 01 §7 全字段,键与次序固定
+from edu_agent.gateway import ModelRequest
+from gwkit import FACT_FIELDS, gateway_for
 
 FIRST_QUESTION = "你好,我想请教一道鸡兔同笼题。"
 FOLLOW_UP = "那如果一共有 8 个头呢?"
@@ -41,14 +25,9 @@ def test_golden_path_gateway_full_chain(tmp_path):
         completion("好,先数头和脚。"),
         sse("我们", "逐个", "设未知数。"),
     ]).start()
-    providers = {"fake": ProviderConfig("fake", fake.url, None, True)}
-    models = {"m": ModelConfig("m", "fake", "fake-model")}
-    roles = {"tutor": RoleConfig(
-        name="tutor", primary="m", fallback=None, json_strict=True,
-        concurrency=2, first_token_timeout_s=2.0, total_timeout_s=5.0,
-        max_attempts=2, backoff_base_ms=1, backoff_cap_ms=8,
-    )}
-    gateway = Gateway(ModelRegistry(providers=providers, models=models, roles=roles), tmp_path)
+    # 与旧手工构造逐字段一致:tutor/json_strict/并发2/2s/5s/两次尝试/退避1-8ms
+    gateway = gateway_for(fake.url, tmp_path, concurrency=2, first_token_timeout_s=2.0,
+                          total_timeout_s=5.0, max_attempts=2)
     try:
         first = gateway.invoke(
             ModelRequest(role="tutor", messages=[{"role": "user", "content": FIRST_QUESTION}],

@@ -1,6 +1,7 @@
-"""故障注入合同(01 §6):九种失败类型各一个测试,假 OpenAI 兼容服务器按脚本注入。
+"""故障注入合同(01 §6):九种失败类型逐行覆盖,假 OpenAI 兼容服务器按脚本注入。
 
 断言四件事:落到正确的失败类型、重试次数正确、备选按策略触发、事实记录完整。
+共享件(SCHEMA/facts_line/facts_rows/假上游生命周期)在 tests/fixtures/gwkit.py。
 """
 
 from __future__ import annotations
@@ -12,10 +13,17 @@ import time
 import pytest
 from fake_openai import FakeOpenAI, Reply, completion, sse
 
-from edu_agent.gateway import FailureType, GatewayError, ModelRequest
+from edu_agent.gateway import (
+    CallContext,
+    FailureType,
+    GatewayError,
+    ModelConfig,
+    ModelRequest,
+    ModelResponse,
+    with_fallback_invoke,
+)
 
-from gwkit import gateway_for
-from test_invoke import SCHEMA, facts_line
+from gwkit import SCHEMA, facts_line, facts_rows, fake_gateway, gateway_for
 
 MSG = [{"role": "user", "content": "3+4=?"}]
 
@@ -24,75 +32,82 @@ def call(gateway):
     return gateway.invoke(ModelRequest(role="tutor", messages=MSG, session_id="fault-1"))
 
 
-def facts(tmp_path) -> list[dict]:
-    files = list(tmp_path.glob("model_calls-*.jsonl"))
-    lines = files[0].read_text(encoding="utf-8").strip().splitlines()
-    return [json.loads(line) for line in lines]
-
-
 # ---------- 九种失败类型(01 §4 表逐行对应) ----------
 
 
 def test_timeout_first_token_stream_retry_recovers(tmp_path):
     # 首 token 超时:可重试;第二次成功 → 成功记录 attempt=2
-    fake = FakeOpenAI([
+    with fake_gateway(tmp_path, [
         Reply(delay_s=1.2, sse_lines=["data: [DONE]"]),
         sse("答案"),
-    ]).start()
-    gateway = gateway_for(fake.url, tmp_path, first_token_timeout_s=0.3, max_attempts=2)
-    events = list(gateway.stream(ModelRequest(role="tutor", messages=MSG)))
-    gateway.close()
-    fake.stop()
-    assert [e.text for e in events if e.kind == "token"] == ["答案"]
-    assert len(fake.requests) == 2
-    payload = facts_line(tmp_path)
-    assert payload["edu.outcome"] == "ok" and payload["edu.attempt"] == 2
+    ], first_token_timeout_s=0.3, max_attempts=2) as (fake, gateway):
+        events = list(gateway.stream(ModelRequest(role="tutor", messages=MSG)))
+        assert [e.text for e in events if e.kind == "token"] == ["答案"]
+        assert len(fake.requests) == 2
+        payload = facts_line(tmp_path)
+        assert payload["edu.outcome"] == "ok" and payload["edu.attempt"] == 2
 
 
-def test_timeout_total_not_retried(tmp_path):
-    # 总时长超时:不可重试 → 只发一次请求
-    fake = FakeOpenAI([Reply(delay_s=1.2, json_body={}), completion("不该到达")]).start()
-    gateway = gateway_for(fake.url, tmp_path, total_timeout_s=0.3, max_attempts=3)
-    with pytest.raises(GatewayError) as excinfo:
-        call(gateway)
-    gateway.close()
-    fake.stop()
-    assert excinfo.value.failure is FailureType.TIMEOUT_TOTAL
-    assert len(fake.requests) == 1  # 否则重试(01 §4:否)
-    assert facts_line(tmp_path)["edu.outcome"] == "timeout_total"
-
-
-def test_rate_limited_reads_retry_after_and_exhausts(tmp_path):
-    fake = FakeOpenAI([
-        Reply(status=429, headers={"Retry-After": "0"}),
-        Reply(status=429, headers={"Retry-After": "0"}),
-    ]).start()
-    gateway = gateway_for(fake.url, tmp_path, max_attempts=2)
-    with pytest.raises(GatewayError) as excinfo:
-        call(gateway)
-    gateway.close()
-    fake.stop()
-    assert excinfo.value.failure is FailureType.RATE_LIMITED
-    assert len(fake.requests) == 2  # 重试读 Retry-After=0
-    payload = facts_line(tmp_path)
-    assert payload["edu.outcome"] == "rate_limited" and payload["edu.attempt"] == 2
-
-
-def test_upstream_5xx_retries_then_raises(tmp_path):
-    fake = FakeOpenAI([Reply(status=500), Reply(status=503)]).start()
-    gateway = gateway_for(fake.url, tmp_path, max_attempts=2)
-    with pytest.raises(GatewayError) as excinfo:
-        call(gateway)
-    gateway.close()
-    fake.stop()
-    assert excinfo.value.failure is FailureType.UPSTREAM_5XX
-    assert len(fake.requests) == 2
-    payload = facts_line(tmp_path)
-    assert payload["edu.outcome"] == "upstream_5xx"
-    assert "503" in payload["edu.error_detail"]  # 事后排查靠 error_detail(01 §7)
+@pytest.mark.parametrize("case", [
+    {   # 总时长超时:不可重试 → 只发一次请求
+        "id": "timeout_total_not_retried",
+        "replies": [Reply(delay_s=1.2, json_body={}), completion("不该到达")],
+        "kwargs": {"total_timeout_s": 0.3, "max_attempts": 3},
+        "expected": FailureType.TIMEOUT_TOTAL, "calls": 1, "outcome": "timeout_total",
+    },
+    {   # 限流:重试读 Retry-After,耗尽后失败
+        "id": "rate_limited_reads_retry_after_and_exhausts",
+        "replies": [Reply(status=429, headers={"Retry-After": "0"}),
+                    Reply(status=429, headers={"Retry-After": "0"})],
+        "kwargs": {"max_attempts": 2},
+        "expected": FailureType.RATE_LIMITED, "calls": 2,
+        "outcome": "rate_limited", "attempt": 2,
+    },
+    {   # 上游 5xx:重试后仍失败;台账带最后状态码供排查
+        "id": "upstream_5xx_retries_then_raises",
+        "replies": [Reply(status=500), Reply(status=503)],
+        "kwargs": {"max_attempts": 2},
+        "expected": FailureType.UPSTREAM_5XX, "calls": 2,
+        "outcome": "upstream_5xx", "detail": "503",
+    },
+    {   # 截断:不可重试
+        "id": "truncated_no_retry",
+        "replies": [completion("半截", finish_reason="length"), completion("不该到达")],
+        "kwargs": {"max_attempts": 3},
+        "expected": FailureType.TRUNCATED, "calls": 1,
+    },
+    {   # 内容过滤:不可重试
+        "id": "content_filtered_no_retry",
+        "replies": [completion("被过滤", finish_reason="content_filter")],
+        "kwargs": {"max_attempts": 3},
+        "expected": FailureType.CONTENT_FILTERED, "calls": 1,
+    },
+    {   # 连接中断:可重试,耗尽后失败
+        "id": "connection_retried_then_raises",
+        "replies": [Reply(partial_body="{"), Reply(partial_body="{")],
+        "kwargs": {"max_attempts": 2},
+        "expected": FailureType.CONNECTION, "calls": 2, "outcome": "connection",
+    },
+], ids=lambda case: case["id"])
+def test_retry_policy_by_failure_type(tmp_path, case):
+    """单失败类型的重试/台账口径(01 §4 表逐行):正确类型、正确请求次数、事实记录完整。"""
+    with fake_gateway(tmp_path, case["replies"], **case["kwargs"]) as (fake, gateway):
+        with pytest.raises(GatewayError) as excinfo:
+            call(gateway)
+        assert excinfo.value.failure is case["expected"]
+        assert len(fake.requests) == case["calls"]
+        if case.get("outcome") or case.get("detail"):
+            payload = facts_line(tmp_path)
+            if case.get("outcome"):
+                assert payload["edu.outcome"] == case["outcome"]
+            if case.get("attempt"):
+                assert payload["edu.attempt"] == case["attempt"]
+            if case.get("detail"):  # 事后排查靠 error_detail(01 §7)
+                assert case["detail"] in payload["edu.error_detail"]
 
 
 def test_upstream_4xx_no_retry_no_fallback(tmp_path):
+    # 4xx:不重试、不备选(01 §4:否/否)——备选指向同一假上游,再收到请求即证伪
     fake = FakeOpenAI([Reply(status=404), completion("不该到达")]).start()
     gateway = gateway_for(fake.url, tmp_path, max_attempts=3, fallback_url=fake.url)
     with pytest.raises(GatewayError) as excinfo:
@@ -104,68 +119,30 @@ def test_upstream_4xx_no_retry_no_fallback(tmp_path):
 
 
 def test_schema_violation_repairs_once_then_raises(tmp_path):
-    fake = FakeOpenAI([completion("我不会"), completion("还是不会")]).start()
-    gateway = gateway_for(fake.url, tmp_path, max_attempts=3)
-    with pytest.raises(GatewayError) as excinfo:
-        gateway.invoke(ModelRequest(
-            role="tutor", messages=MSG, response_schema=SCHEMA, session_id="fault-1",
-        ))
-    gateway.close()
-    fake.stop()
-    assert excinfo.value.failure is FailureType.SCHEMA_VIOLATION
-    assert len(fake.requests) == 2  # 修复重试恰一次,不受 max_attempts=3 影响
-    # 修复重试带上第一次的违规原文与修复提示(路线 1,issue #8)
-    retry_messages = fake.requests[1]["messages"]
-    assert retry_messages[-2]["role"] == "assistant" and retry_messages[-2]["content"] == "我不会"
-    assert "JSON Schema" in retry_messages[-1]["content"]
-    assert facts_line(tmp_path)["edu.outcome"] == "schema_violation"
+    with fake_gateway(tmp_path, [completion("我不会"), completion("还是不会")], max_attempts=3) as (fake, gateway):
+        with pytest.raises(GatewayError) as excinfo:
+            gateway.invoke(ModelRequest(
+                role="tutor", messages=MSG, response_schema=SCHEMA, session_id="fault-1",
+            ))
+        assert excinfo.value.failure is FailureType.SCHEMA_VIOLATION
+        assert len(fake.requests) == 2  # 修复重试恰一次,不受 max_attempts=3 影响
+        # 修复重试带上第一次的违规原文与修复提示(路线 1,issue #8)
+        retry_messages = fake.requests[1]["messages"]
+        assert retry_messages[-2]["role"] == "assistant" and retry_messages[-2]["content"] == "我不会"
+        assert "JSON Schema" in retry_messages[-1]["content"]
+        assert facts_line(tmp_path)["edu.outcome"] == "schema_violation"
 
 
 def test_schema_violation_repair_recovers(tmp_path):
-    fake = FakeOpenAI([completion("瞎说"), completion(json.dumps({"answer": "7"}, ensure_ascii=False))]).start()
-    gateway = gateway_for(fake.url, tmp_path)
-    response = gateway.invoke(ModelRequest(
-        role="tutor", messages=MSG, response_schema=SCHEMA, session_id="fault-1",
-    ))
-    gateway.close()
-    fake.stop()
-    assert json.loads(response.text) == {"answer": "7"}
-    payload = facts_line(tmp_path)
-    assert payload["edu.outcome"] == "ok" and payload["edu.attempt"] == 2
-
-
-def test_truncated_no_retry(tmp_path):
-    fake = FakeOpenAI([completion("半截", finish_reason="length"), completion("不该到达")]).start()
-    gateway = gateway_for(fake.url, tmp_path, max_attempts=3)
-    with pytest.raises(GatewayError) as excinfo:
-        call(gateway)
-    gateway.close()
-    fake.stop()
-    assert excinfo.value.failure is FailureType.TRUNCATED
-    assert len(fake.requests) == 1
-
-
-def test_content_filtered_no_retry(tmp_path):
-    fake = FakeOpenAI([completion("被过滤", finish_reason="content_filter")]).start()
-    gateway = gateway_for(fake.url, tmp_path, max_attempts=3)
-    with pytest.raises(GatewayError) as excinfo:
-        call(gateway)
-    gateway.close()
-    fake.stop()
-    assert excinfo.value.failure is FailureType.CONTENT_FILTERED
-    assert len(fake.requests) == 1
-
-
-def test_connection_retried_then_raises(tmp_path):
-    fake = FakeOpenAI([Reply(partial_body="{"), Reply(partial_body="{")]).start()
-    gateway = gateway_for(fake.url, tmp_path, max_attempts=2)
-    with pytest.raises(GatewayError) as excinfo:
-        call(gateway)
-    gateway.close()
-    fake.stop()
-    assert excinfo.value.failure is FailureType.CONNECTION
-    assert len(fake.requests) == 2
-    assert facts_line(tmp_path)["edu.outcome"] == "connection"
+    with fake_gateway(tmp_path, [
+        completion("瞎说"), completion(json.dumps({"answer": "7"}, ensure_ascii=False)),
+    ]) as (fake, gateway):
+        response = gateway.invoke(ModelRequest(
+            role="tutor", messages=MSG, response_schema=SCHEMA, session_id="fault-1",
+        ))
+        assert json.loads(response.text) == {"answer": "7"}
+        payload = facts_line(tmp_path)
+        assert payload["edu.outcome"] == "ok" and payload["edu.attempt"] == 2
 
 
 # ---------- 备选与限流策略(01 §4"触发备选"列 / 01 §3 ratelimit) ----------
@@ -236,52 +213,45 @@ def test_no_fallback_for_schema_violation(tmp_path):
 
 def test_ratelimit_records_queue_ms(tmp_path):
     # 并发 1:第二个调用排队,queue_ms 分离排队与上游延迟(01 §7)
-    fake = FakeOpenAI([Reply(delay_s=0.8, json_body=completion("一").json_body), completion("二")]).start()
-    gateway = gateway_for(fake.url, tmp_path, concurrency=1)
-    results: list = []
+    with fake_gateway(tmp_path, [
+        Reply(delay_s=0.8, json_body=completion("一").json_body), completion("二"),
+    ], concurrency=1) as (fake, gateway):
+        results: list = []
 
-    def invoke_once():
-        results.append(gateway.invoke(ModelRequest(role="tutor", messages=MSG)))
+        def invoke_once():
+            results.append(gateway.invoke(ModelRequest(role="tutor", messages=MSG)))
 
-    first = threading.Thread(target=invoke_once)
-    first.start()
-    time.sleep(0.2)  # 第一个调用已占住并发槽
-    second = threading.Thread(target=invoke_once)
-    second.start()
-    first.join(10)
-    second.join(10)
-    gateway.close()
-    fake.stop()
-    assert [r.text for r in results] == ["一", "二"]
-    queued = [p for p in facts(tmp_path) if p["edu.queue_ms"] > 0]
-    assert len(queued) == 1 and queued[0]["edu.queue_ms"] >= 100
+        first = threading.Thread(target=invoke_once)
+        first.start()
+        time.sleep(0.2)  # 第一个调用已占住并发槽
+        second = threading.Thread(target=invoke_once)
+        second.start()
+        first.join(10)
+        second.join(10)
+        assert [r.text for r in results] == ["一", "二"]
+        queued = [p for p in facts_rows(tmp_path) if p["edu.queue_ms"] > 0]
+        assert len(queued) == 1 and queued[0]["edu.queue_ms"] >= 100
 
 
 def test_stream_retries_before_first_event(tmp_path):
     # 流式在未吐出任何事件前可重试;重试后事件只出现一次
-    fake = FakeOpenAI([Reply(status=500), sse("你", "好")]).start()
-    gateway = gateway_for(fake.url, tmp_path, max_attempts=2)
-    events = list(gateway.stream(ModelRequest(role="tutor", messages=MSG)))
-    gateway.close()
-    fake.stop()
-    assert [e.text for e in events if e.kind == "token"] == ["你", "好"]
-    assert len(fake.requests) == 2
+    with fake_gateway(tmp_path, [Reply(status=500), sse("你", "好")], max_attempts=2) as (fake, gateway):
+        events = list(gateway.stream(ModelRequest(role="tutor", messages=MSG)))
+        assert [e.text for e in events if e.kind == "token"] == ["你", "好"]
+        assert len(fake.requests) == 2
 
 
 def test_stream_no_retry_after_first_event(tmp_path):
     # 已吐出 token 后中断:不可重试(会重复输出),直接失败
-    fake = FakeOpenAI([sse("你", done=False)]).start()
-    gateway = gateway_for(fake.url, tmp_path, max_attempts=3)
-    collected = []
-    with pytest.raises(GatewayError) as excinfo:
-        for event in gateway.stream(ModelRequest(role="tutor", messages=MSG)):
-            collected.append(event)
-    gateway.close()
-    fake.stop()
-    assert [e.text for e in collected] == ["你"]
-    assert excinfo.value.failure is FailureType.CONNECTION
-    assert len(fake.requests) == 1
-    assert facts_line(tmp_path)["edu.outcome"] == "connection"
+    with fake_gateway(tmp_path, [sse("你", done=False)], max_attempts=3) as (fake, gateway):
+        collected = []
+        with pytest.raises(GatewayError) as excinfo:
+            for event in gateway.stream(ModelRequest(role="tutor", messages=MSG)):
+                collected.append(event)
+        assert [e.text for e in collected] == ["你"]
+        assert excinfo.value.failure is FailureType.CONNECTION
+        assert len(fake.requests) == 1
+        assert facts_line(tmp_path)["edu.outcome"] == "connection"
 
 
 # ---------- 备选惰性构造(#113 P2:装配期急切构造堵死本地主选) ----------
@@ -293,9 +263,6 @@ def test_fallback_not_constructed_when_primary_succeeds(tmp_path):
     #113 P2 回归钉:此前 fallback.py 装配期急切 make_handler(fallback),
     缺 DEEPSEEK_API_KEY 的环境连本地主选调用都被堵死。
     """
-    from edu_agent.gateway import ModelConfig, with_fallback_invoke
-    from edu_agent.gateway import CallContext, ModelResponse
-
     primary = ModelConfig("m", "fake", "m")
     fallback = ModelConfig("b", "fake", "b")
 

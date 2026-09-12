@@ -24,41 +24,34 @@ def test_baseline_two_round_values_cover_all_cases():
         assert 0 <= r1 <= 12 and 0 <= r2 <= 12
 
 
-class TestToleranceVerdict:
-    """#34 2026-09-09 人批容差:分差 ≤1 单值判,≥2 区间判。"""
+@pytest.mark.parametrize("got,r1,r2,expected", [
+    # R1=R2=8(分差 0):单值判,达到 max=8 → 达标
+    (8, 8, 8, "达标"),
+    # 分差 0,本轮 7 < max 8 → 低于基线(一分不让)
+    (7, 8, 8, "低于基线"),
+    # 分差 1(3,4):仍单值判,本轮 ≥ 4 才达标
+    (4, 3, 4, "达标"),
+    (3, 3, 4, "低于基线"),
+    # word_problem 型(11,5,分差 6):区间判,本轮 6 ≥ min 5 → 不劣(噪声主导)
+    (6, 11, 5, "不劣(噪声主导)"),
+    # 噪声场景不判反超:13 分超 max 也只标"不劣"(双向防错)
+    (12, 11, 5, "不劣(噪声主导)"),
+    # 分差 6,本轮 4 < min 5 → 低于基线
+    (4, 11, 5, "低于基线"),
+], ids=["stable_reaches_max", "stable_below_max", "near_stable_reaches_max",
+        "near_stable_below_max", "noisy_in_range", "noisy_above_max_not_win", "noisy_below_range"])
+def test_tolerance_verdict_table(got, r1, r2, expected):
+    """#34 2026-09-09 人批容差:分差 ≤1 单值判,≥2 区间判(逐行=原六个用例)。"""
+    assert tuning_round.tolerance_verdict(got, r1, r2) == expected
 
-    def test_stable_case_reaches_max_passes(self):
-        # R1=R2=8(分差 0):单值判,达到 max=8 → 达标
-        assert tuning_round.tolerance_verdict(8, 8, 8) == "达标"
 
-    def test_stable_case_below_max_fails(self):
-        # 分差 0,本轮 7 < max 8 → 低于基线(一分不让)
-        assert tuning_round.tolerance_verdict(7, 8, 8) == "低于基线"
-
-    def test_near_stable_case_uses_max(self):
-        # 分差 1(3,4):仍单值判,本轮 ≥ 4 才达标
-        assert tuning_round.tolerance_verdict(4, 3, 4) == "达标"
-        assert tuning_round.tolerance_verdict(3, 3, 4) == "低于基线"
-
-    def test_noisy_case_in_range_is_not_inferior(self):
-        # word_problem 型(11,5,分差 6):区间判,本轮 6 ≥ min 5 → 不劣(噪声主导)
-        assert tuning_round.tolerance_verdict(6, 11, 5) == "不劣(噪声主导)"
-
-    def test_noisy_case_above_max_still_not_reported_as_win(self):
-        # 噪声场景不判反超:13 分超 max 也只标"不劣"(双向防错)
-        assert tuning_round.tolerance_verdict(12, 11, 5) == "不劣(噪声主导)"
-
-    def test_noisy_case_below_range_fails(self):
-        # 分差 6,本轮 4 < min 5 → 低于基线
-        assert tuning_round.tolerance_verdict(4, 11, 5) == "低于基线"
-
-    def test_real_baseline_rows(self):
-        """真实基线行抽测:equation_complete(8,8)单值判;stability word_problem(11,5)区间判。"""
-        b = tuning_round.BASELINE
-        assert tuning_round.tolerance_verdict(8, *b[
-            "small_lecturer_dialogue_scenarios_equation_complete_reasoning"]) == "达标"
-        assert tuning_round.tolerance_verdict(
-            6, *b["small_lecturer_dialogue_stability_20_stability_word_problem"]) == "不劣(噪声主导)"
+def test_real_baseline_rows():
+    """真实基线行抽测:equation_complete(8,8)单值判;stability word_problem(11,5)区间判。"""
+    b = tuning_round.BASELINE
+    assert tuning_round.tolerance_verdict(8, *b[
+        "small_lecturer_dialogue_scenarios_equation_complete_reasoning"]) == "达标"
+    assert tuning_round.tolerance_verdict(
+        6, *b["small_lecturer_dialogue_stability_20_stability_word_problem"]) == "不劣(噪声主导)"
 
 
 def test_probe_reports_unreachable_port():

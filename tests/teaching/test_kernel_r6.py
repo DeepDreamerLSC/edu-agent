@@ -2,13 +2,14 @@
 
 断言零模型:opening 分派用假 gateway 捕获消息;结构化通路断言零模型调用与
 模板护栏自洽(语气/格式);物理隔离 = 条件不满足零经过该分支。
+Gateway 构造与剧本构造器收拢在 tests/fixtures/teachkit.py。
 """
 
 from __future__ import annotations
 
 import json
 
-from fake_openai import FakeOpenAI, completion
+from fake_openai import completion
 
 from edu_agent.agents.small_lecturer import (
     OPENING_HINT_CORRECT,
@@ -20,24 +21,8 @@ from edu_agent.agents.small_lecturer import (
     reply,
     start,
 )
-from edu_agent.gateway import GatewayError
 
-from test_kernel_state_machine import (
-    QUESTION_TEXT,
-    kernel_gateway,
-    open_json,
-    tutor_json,
-)
-
-
-class CapturingFake(FakeOpenAI):
-    """记录 messages 的假上游(FakeOpenAI.requests 已存请求体,取 messages[0:])。"""
-
-    def system_and_user(self, index: int = 0) -> tuple[str, str]:
-        request = self.requests[index]
-        messages = request["messages"]
-        return messages[0]["content"], messages[1]["content"]
-
+from teachkit import kernel_env, open_json, tutor_json
 
 # 首问句:首问可见文本恒为固定模板(prompting.first_question_text),这里给模型句只为
 # 让假上游序列对齐统一 open 的一次调用(分档模板本身另有回归钉
@@ -48,25 +33,17 @@ _OPENING_TEXT = {
 }
 
 
-def r6_gateway(tmp_path):
-    fake = CapturingFake([completion(open_json("这道题要我们求什么?"))] * 8).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    return gateway, fake
-
-
 # ---------- B 端:首问策略分派 ----------
 
 def test_opening_hint_dispatch_by_answer_status(tmp_path):
     """correct/incorrect/unanswered → 对应常量拼在 user 消息开头;unknown → 无提示。"""
-    gateway, fake = r6_gateway(tmp_path)
-    hints = {}
-    for status in ("correct", "incorrect", "unanswered", None):
-        before = len(fake.requests)      # 首问违规回落会多耗调用 → 按真实下标取本次请求
-        start({"text": "3x+7=25"}, {"grade": "五年级", **({"answer_status": status} if status else {})},
-              gateway=gateway)
-        hints[status or "unknown"] = fake.system_and_user(before)[1]
-    gateway.close()
-    fake.stop()
+    with kernel_env(tmp_path, [completion(open_json("这道题要我们求什么?"))] * 8) as (fake, gateway):
+        hints = {}
+        for status in ("correct", "incorrect", "unanswered", None):
+            before = len(fake.requests)      # 首问违规回落会多耗调用 → 按真实下标取本次请求
+            start({"text": "3x+7=25"}, {"grade": "五年级", **({"answer_status": status} if status else {})},
+                  gateway=gateway)
+            hints[status or "unknown"] = fake.requests[before]["messages"][1]["content"]
     assert hints["correct"].startswith("这道题学生已做对。")
     assert hints["incorrect"].startswith("这道题学生未做对。")
     assert hints["unanswered"].startswith("这道题学生尚未作答。")
@@ -92,46 +69,40 @@ def test_opening_hint_constants_semantics():
 
 def test_structured_summary_on_correct_with_no_stuck(tmp_path):
     """answer_status=correct + 无卡点 → finish 走确定性模板 completed,零模型调用。"""
-    fake = FakeOpenAI([
+    with kernel_env(tmp_path, [
         completion(open_json(_OPENING_TEXT["correct"])),
         completion(tutor_json("你说说为什么两边都减去 7?")),
         completion(tutor_json("这一步的依据是什么?")),
         completion(json.dumps({"summary": "不该被生成"})),  # 结构化通路不得触达模型(毒饵)
-    ]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    first = start({"text": "解方程 3x+7=25。"}, {"grade": "五年级", "answer_status": "correct"},
-                  gateway=gateway)
-    reply(first.session, "我想两边都减去7。", gateway=gateway)
-    reply(first.session, "得到 x=6,代回检验成立。", gateway=gateway)
-    calls_before_finish = len(fake.requests)
-    summary = finish(first.session, gateway=gateway)
-    gateway.close()
-    fake.stop()
-    assert summary.status == "completed"  # 非 needs_review(人批②的核心)
-    assert "解方程 3x+7=25" in summary.text and "x=6" in summary.text  # ①②引题面与学生原话
-    assert "再做一道" in summary.text      # ③固定收尾(SKILL 规则 9 的两个动作)
-    assert len(fake.requests) == calls_before_finish  # 结构化通路零模型调用
-    assert first.session.state == "completed"
+    ]) as (fake, gateway):
+        first = start({"text": "解方程 3x+7=25。"}, {"grade": "五年级", "answer_status": "correct"},
+                      gateway=gateway)
+        reply(first.session, "我想两边都减去7。", gateway=gateway)
+        reply(first.session, "得到 x=6,代回检验成立。", gateway=gateway)
+        calls_before_finish = len(fake.requests)
+        summary = finish(first.session, gateway=gateway)
+        assert summary.status == "completed"  # 非 needs_review(人批②的核心)
+        assert "解方程 3x+7=25" in summary.text and "x=6" in summary.text  # ①②引题面与学生原话
+        assert "再做一道" in summary.text      # ③固定收尾(SKILL 规则 9 的两个动作)
+        assert len(fake.requests) == calls_before_finish  # 结构化通路零模型调用
+        assert first.session.state == "completed"
 
 
 def test_structured_summary_quotes_student_words_and_passes_guardrails(tmp_path):
     """模板引用学生原话,且整段过语气/格式护栏(任务书:模板必须过护栏)。"""
-    from edu_agent.agents.small_lecturer import apply_tone_guardrail, evaluate_student_visible_format
+    from edu_agent.agents.small_lecturer import apply_tone_guardrail
 
-    fake = FakeOpenAI([
+    with kernel_env(tmp_path, [
         completion(open_json(_OPENING_TEXT["correct"])),
         completion(tutor_json("你说说先算的是什么?")),          # 首轮:引导(不复读首问)
         completion(tutor_json("你把两步都说清楚了。", ready=True)),  # 末轮:确认收束
-    ]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    turn = start({"text": "图书馆原有120本书,又买来45本,借出38本,现在有多少本?"},
-                 {"grade": "三年级", "answer_status": "correct"}, gateway=gateway)
-    reply(turn.session, "先算120加45等于165本。", gateway=gateway)
-    reply(turn.session, "再算165减38等于127本,所以现在有127本。", gateway=gateway)
-    summary = finish(turn.session, gateway=gateway)
-    gateway.close()
-    fake.stop()
-    assert "「先算120加45等于165本。」" in summary.text or "165" in summary.text  # 引用学生原话
+    ]) as (fake, gateway):
+        turn = start({"text": "图书馆原有120本书,又买来45本,借出38本,现在有多少本?"},
+                     {"grade": "三年级", "answer_status": "correct"}, gateway=gateway)
+        reply(turn.session, "先算120加45等于165本。", gateway=gateway)
+        reply(turn.session, "再算165减38等于127本,所以现在有127本。", gateway=gateway)
+        summary = finish(turn.session, gateway=gateway)
+        assert "「先算120加45等于165本。」" in summary.text or "165" in summary.text  # 引用学生原话
     fmt = evaluate_student_visible_format(summary.text)
     assert fmt.ok is True  # 格式护栏(无 Markdown/LaTeX)
     tone = apply_tone_guardrail(
@@ -143,16 +114,13 @@ def test_structured_summary_quotes_student_words_and_passes_guardrails(tmp_path)
 def test_stuck_mark_blocks_structured_path(tmp_path):
     """物理隔离:对话中出现护栏替换(卡点标记)→ 即使 answer_status=correct 也不走模板。"""
     leak = tutor_json("答案是 x=6。")
-    fake = FakeOpenAI([
+    with kernel_env(tmp_path, [
         completion(open_json(_OPENING_TEXT["correct"])),
         completion(leak),                 # 泄露 → 护栏替换 → stuck 标记
-    ]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    first = start({"text": "解方程 3x+7=25。"}, {"grade": "五年级", "answer_status": "correct"},
-                  gateway=gateway)
-    reply(first.session, "我算出来了。", gateway=gateway)  # 学生未先给出 x=6 → tutor 报答案为泄露
-    assert first.session.stuck is True    # 卡点已标记(泄露未解决)
-    summary = finish(first.session, gateway=gateway)
-    gateway.close()
-    fake.stop()
-    assert summary.status == "needs_review"  # 有卡点不走模板(零经过该分支)
+    ]) as (fake, gateway):
+        first = start({"text": "解方程 3x+7=25。"}, {"grade": "五年级", "answer_status": "correct"},
+                      gateway=gateway)
+        reply(first.session, "我算出来了。", gateway=gateway)  # 学生未先给出 x=6 → tutor 报答案为泄露
+        assert first.session.stuck is True    # 卡点已标记(泄露未解决)
+        summary = finish(first.session, gateway=gateway)
+        assert summary.status == "needs_review"  # 有卡点不走模板(零经过该分支)

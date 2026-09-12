@@ -14,6 +14,7 @@ import jsonschema
 from edu_agent.agents.small_lecturer import LearnerSession
 from edu_agent.api import Conversation, ConversationService, SmallLecturerKernel, build_service
 from edu_agent.contracts import skill_interaction_schema
+from partner_api import VISION_OK, text_response
 
 
 class FakeGateway:
@@ -25,8 +26,7 @@ class FakeGateway:
 
     def invoke(self, request):
         if request.role == "vision":
-            text = json.dumps({"acceptable": True, "reason": "单题清晰",
-                               "transcription": ""})
+            text = json.dumps(VISION_OK)
         elif request.response_schema and "summary" in json.dumps(request.response_schema):
             text = json.dumps({"summary": "你完整讲清楚了这道题。"}, ensure_ascii=False)
         else:
@@ -34,9 +34,7 @@ class FakeGateway:
             text = json.dumps({"reply": f"第 {self.tutor_calls} 问?",
                                "ready_to_confirm": self.tutor_calls >= self.ready_at_call},
                               ensure_ascii=False)
-        response = type("R", (), {})()
-        response.text = text
-        return response
+        return text_response(text)
 
 
 def live_conversation(state: str, *, history: list | None = None,

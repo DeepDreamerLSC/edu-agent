@@ -3,6 +3,8 @@
 覆盖适配器雏形依赖的端点:auth/login、prepared-questions/{id}/open、
 skill-sessions/{id}/refresh、conversations/{cid}/messages(stream)。
 可注入:token 中途失效(401 一次)、流式 error 事件。
+
+谁在用:tests/evals 的 test_legacy_adapter(直接)与 evalkit.legacy_env(包装)。
 """
 
 from __future__ import annotations

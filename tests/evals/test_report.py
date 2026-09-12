@@ -13,11 +13,12 @@ BASE_CASES = {
 DIM_AVG = {"first_question": 1.8, "socratic_followup": 0.6, "grade_fit": 1.7,
            "pacing": 0.6, "summary_mastery": 0.4, "termination": 0.6}
 EXAMPLES = [{"title": "示例:分数乘整数", "messages": [("小讲师", "先数圆片"), ("学生", "12")]}]
+BASELINE_VERSION = [{"label": "baseline", "cases": BASE_CASES, "dim_averages": DIM_AVG}]
 
 
 def test_single_version_renders_baseline():
     html = render_html(
-        [{"label": "baseline", "cases": BASE_CASES, "dim_averages": DIM_AVG}],
+        BASELINE_VERSION,
         EXAMPLES, baseline_label="baseline",
     )
     assert html.startswith("<!doctype html>")
@@ -32,11 +33,11 @@ def test_single_version_renders_baseline():
     assert "先数圆片" in html
 
 
-def test_multi_version_marks_over_tolerance(tmp_path=None):
+def test_multi_version_marks_over_tolerance():
     tuned_cases = {"case-a": {"total": 10, "verdict": "pass"},
                    "case-b": {"total": 4, "verdict": "fail"}}
     html = render_html(
-        [{"label": "baseline", "cases": BASE_CASES, "dim_averages": DIM_AVG},
+        [*BASELINE_VERSION,
          {"label": "tuning-1", "cases": tuned_cases,
           "dim_averages": DIM_AVG, "note": "调优轮 1"}],
         EXAMPLES, baseline_label="baseline", tolerance=1,
@@ -51,7 +52,7 @@ def test_multi_version_marks_over_tolerance(tmp_path=None):
 
 def test_missing_case_renders_placeholder():
     html = render_html(
-        [{"label": "baseline", "cases": BASE_CASES, "dim_averages": DIM_AVG},
+        [*BASELINE_VERSION,
          {"label": "tuning-1", "cases": {"case-a": {"total": 9, "verdict": "pass"}},
           "dim_averages": DIM_AVG}],
         [], baseline_label="baseline",

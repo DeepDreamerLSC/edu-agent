@@ -3,6 +3,8 @@
 签名/密钥用 cryptography 库(人批结构决策,与 identity 验签对偶,审查 P2);
 PKCS#1 v1.5 此处为 RS256 签名方案(JWT 标准,非加密场景);RSA-1024 测试强度,
 现场生成,联调/测试专用非生产凭据。
+
+谁在用:tests/contracts 的 test_identity / test_identity_http(RSA/PKCE 断言)。
 """
 
 from __future__ import annotations
@@ -39,6 +41,20 @@ def sign_rs256(private_key, header: dict, payload: dict) -> str:
 
 def json_bytes(payload: dict) -> bytes:
     return json.dumps(payload, separators=(",", ":")).encode()
+
+
+def identity_config(api_key: str, hmac_key: str) -> dict:
+    """单合作方身份服务配置(测试同构面):身份服务/HTTP 两处测试共用,仅密钥值不同。"""
+    return {
+        "native_app_id": "partner_student_app",
+        "api_key": api_key,
+        "kid": "partner-key-2026-01",
+        "issuer": "https://partner.example",
+        "audience": "edu-agent",
+        "hmac_key": hmac_key,
+        "students": {"student-001": {"user_id": "usr_001", "display_name": "张同学",
+                                     "tenant_id": "school_001"}},
+    }
 
 
 def pkce_challenge(verifier: str) -> str:

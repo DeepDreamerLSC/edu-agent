@@ -8,12 +8,12 @@ _persist_step_output_async)按 00 §6「实现耦合的不迁」未随行,随 M2
 from __future__ import annotations
 
 import pytest
-from fake_openai import FakeOpenAI, completion
+from fake_openai import completion
 
 from edu_agent.agents.small_lecturer import apply_tone_guardrail
 from edu_agent.gateway import ModelRequest
 
-from teachkit import tutor_gateway
+from teachkit import tutor_env
 
 
 def test_humiliation_is_detected_without_rewriting_the_tutor_reply() -> None:
@@ -77,19 +77,6 @@ def test_primary_lower_short_question_is_left_to_the_tutor_model() -> None:
 
     assert result.applied is False
     assert result.reason_codes == ()
-    assert result.reply == "为什么用除法？"
-
-
-def test_tutor_model_wording_is_not_mechanically_expanded() -> None:
-    result = apply_tone_guardrail(
-        reply="为什么用除法？",
-        grade_band="primary_lower",
-        interaction_signal="neutral",
-        teaching_move="ask_justification",
-        ready_to_record=False,
-    )
-
-    assert result.applied is False
     assert result.reply == "为什么用除法？"
 
 
@@ -188,23 +175,18 @@ def test_ready_state_tone_risk_is_detected_without_state_repair() -> None:
 
 def test_tone_guard_gates_model_output_over_fake_upstream(tmp_path):
     """新接口形态(02 §6):假上游产出羞辱性回复,语气护栏在模型输出侧把关。"""
-    fake = FakeOpenAI([completion("这么简单的题你都不会？")]).start()
-    gateway = tutor_gateway(fake.url, tmp_path)
-    try:
+    with tutor_env(tmp_path, [completion("这么简单的题你都不会？")]) as (fake, gateway):
         response = gateway.invoke(ModelRequest(
             role="tutor",
             messages=[{"role": "user", "content": "3+4 等于几?"}],
             session_id="teach-tone-1",
         ))
-    finally:
-        gateway.close()
-        fake.stop()
-    result = apply_tone_guardrail(
-        reply=response.text,
-        grade_band="primary_upper",
-        interaction_signal="neutral",
-        teaching_move="connect_relation",
-        ready_to_record=False,
-    )
+        result = apply_tone_guardrail(
+            reply=response.text,
+            grade_band="primary_upper",
+            interaction_signal="neutral",
+            teaching_move="connect_relation",
+            ready_to_record=False,
+        )
     assert result.applied is True
     assert result.reason_codes == ("tone_humiliation_or_sarcasm",)

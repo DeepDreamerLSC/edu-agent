@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 
 import pytest
-from fake_openai import FakeOpenAI, Reply, completion
+from fake_openai import Reply, completion
 
 from edu_agent.evals import (
     DIMENSIONS,
@@ -21,26 +21,14 @@ from edu_agent.evals import (
     user_prompt,
     verdict_from_scores,
 )
-from edu_agent.gateway import (
-    Gateway,
-    GatewayError,
-    ModelConfig,
-    ModelRegistry,
-    ProviderConfig,
-    RoleConfig,
-)
+from edu_agent.gateway import GatewayError
+from gwkit import fake_gateway
 
 
-def gateway_for(base_url: str, facts_dir) -> Gateway:
-    """单 judge 角色(json_strict true,路线 1)指向假上游的最小 Gateway。"""
-    providers = {"fake": ProviderConfig("fake", base_url, None, False)}
-    models = {"m": ModelConfig("m", "fake", "fake-model")}
-    role = RoleConfig(
-        name="judge", primary="m", fallback=None, json_strict=True,
-        concurrency=2, first_token_timeout_s=2.0, total_timeout_s=5.0,
-        max_attempts=3, backoff_base_ms=1, backoff_cap_ms=8,
-    )
-    return Gateway(ModelRegistry(providers=providers, models=models, roles={"judge": role}), facts_dir)
+def judge_env(tmp_path, replies: list):
+    """单 judge 角色(json_strict true,路线 1)指向假上游的假环境。"""
+    return fake_gateway(tmp_path, replies, role_name="judge", provider_json_strict=False,
+                         concurrency=2, first_token_timeout_s=2.0, total_timeout_s=5.0)
 
 
 CASE = {
@@ -104,13 +92,8 @@ def test_user_prompt_carries_case_and_transcript():
 
 def test_judge_scores_and_local_verdict_recompute(tmp_path):
     """模型输出的 verdict 字段不作数:本地按 #32 阈值重算(模型给了 pass,分数只有 6)。"""
-    fake = FakeOpenAI([completion(model_output([1, 1, 1, 1, 1, 1], verdict="pass"))]).start()
-    gateway = gateway_for(fake.url, tmp_path)
-    try:
+    with judge_env(tmp_path, [completion(model_output([1, 1, 1, 1, 1, 1], verdict="pass"))]) as (fake, gateway):
         result = judge_transcript(gateway, CASE)
-    finally:
-        gateway.close()
-        fake.stop()
     assert result["scores"] == dict(zip(DIMENSIONS, [1, 1, 1, 1, 1, 1], strict=True))
     assert result["total"] == 6
     assert result["verdict"] == "fail"  # 本地重算覆盖模型的 pass
@@ -120,16 +103,11 @@ def test_judge_scores_and_local_verdict_recompute(tmp_path):
 
 def test_judge_route1_repairs_invalid_output(tmp_path):
     """路线 1:首次输出不合规 → gateway 带修复提示重试一次(#32/#8)。"""
-    fake = FakeOpenAI([
+    with judge_env(tmp_path, [
         completion("我不会评分"),
         completion(model_output([2, 2, 2, 2, 2, 2])),
-    ]).start()
-    gateway = gateway_for(fake.url, tmp_path)
-    try:
+    ]) as (fake, gateway):
         result = judge_transcript(gateway, CASE)
-    finally:
-        gateway.close()
-        fake.stop()
     assert result["verdict"] == "pass" and result["total"] == 12
     assert len(fake.requests) == 2
     assert "JSON Schema" in fake.requests[1]["messages"][-1]["content"]  # 修复提示带 schema
@@ -140,13 +118,8 @@ def test_judge_full_chain_parses_fenced_model_output(tmp_path):
     gateway 校验剥壳且 text 归一(校验与消费同源)→ judge 直接解析出六维,
     无 JSONDecodeError——DeepSeek 独立评分通道(恒带围栏)的阻塞解除实证。"""
     fenced = "```json\n" + model_output([1, 2, 2, 1, 2, 1], verdict="pass") + "\n```"
-    fake = FakeOpenAI([completion(fenced)]).start()
-    gateway = gateway_for(fake.url, tmp_path)
-    try:
+    with judge_env(tmp_path, [completion(fenced)]) as (fake, gateway):
         result = judge_transcript(gateway, CASE)
-    finally:
-        gateway.close()
-        fake.stop()
     assert result["scores"] == dict(zip(DIMENSIONS, [1, 2, 2, 1, 2, 1], strict=True))
     assert result["total"] == 9
     assert result["verdict"] == "review"  # 9 分 → 本地重算(PM:算术不托付模型)
@@ -155,19 +128,13 @@ def test_judge_full_chain_parses_fenced_model_output(tmp_path):
 
 def test_judge_subject_maps_env_vs_content_failures(tmp_path):
     """环境类(connection 等)→ EnvironmentFailure 可补跑;内容类(schema_violation)原样抛。"""
-    env_fake = FakeOpenAI([Reply(partial_body="{"), Reply(partial_body="{")]).start()
-    gateway = gateway_for(env_fake.url, tmp_path)
-    with pytest.raises(EnvironmentFailure):
-        JudgeSubject(gateway).run_case(CASE)
-    gateway.close()
-    env_fake.stop()
+    with judge_env(tmp_path, [Reply(partial_body="{"), Reply(partial_body="{")]) as (fake, gateway):
+        with pytest.raises(EnvironmentFailure):
+            JudgeSubject(gateway).run_case(CASE)
 
-    content_fake = FakeOpenAI([completion("不会"), completion("还是不会")]).start()
-    gateway = gateway_for(content_fake.url, tmp_path)
-    with pytest.raises(GatewayError):
-        JudgeSubject(gateway).run_case(CASE)
-    gateway.close()
-    content_fake.stop()
+    with judge_env(tmp_path, [completion("不会"), completion("还是不会")]) as (fake, gateway):
+        with pytest.raises(GatewayError):
+            JudgeSubject(gateway).run_case(CASE)
 
 
 # ---------- 稳定性档案(#32:双评 + 10% 独立抽样) ----------

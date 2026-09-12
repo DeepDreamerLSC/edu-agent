@@ -12,10 +12,8 @@ from __future__ import annotations
 import json
 import re
 
-import httpx
 import pytest
 
-from edu_agent.api import build_service, build_server
 from edu_agent.contracts import partner_endpoints, postman_dir
 
 from partner_api import ScriptedKernel, _serve, post

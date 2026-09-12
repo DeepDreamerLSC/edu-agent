@@ -8,66 +8,15 @@ idempotency_key 必填}——external_question_id 走题源,question_text/questi
 
 from __future__ import annotations
 
-import httpx
 import pytest
-from partner_api import StubTurn, _assert_local_base, post
-from auth_testing import TEST_TOKEN
-
-from edu_agent.api import build_server, build_service
-
-
-class RecordingKernel:
-    """确定性内核桩:记录收到的题面 dict,固定回复序列。"""
-
-    def __init__(self, replies: list[str]):
-        self.replies = list(replies)
-        self.questions: list[dict] = []
-        self.learners: list[dict] = []
-
-    def start(self, question: dict, learner: dict) -> StubTurn:
-        self.questions.append(question)
-        self.learners.append(learner)
-        reply = self.replies[min(len(self.questions) - 1, len(self.replies) - 1)]
-        return StubTurn(reply)
-
-    def reply(self, session: object, student_message: str) -> StubTurn:
-        return StubTurn("思路对。")
-
-    def finish(self, session: object) -> StubTurn:
-        return StubTurn("总结")
-
-
-class MapSource:
-    """确定性题源:命中返回 seed 同构面,未命中 KeyError(题库未命中信号)。"""
-
-    def resolve(self, question_id: str) -> dict:
-        if question_id != "equation_subtract":
-            raise KeyError(f"题源不含 question_id:{question_id}")
-        return {"text": "解方程 3x+7=25,并说明每一步为什么这样做。", "answer": "x=6",
-                "analysis": "等式两边先同时减去 7。", "image": None,
-                "knowledge_points": ["简易方程"], "grade": "五年级",
-                "answer_correct_provenance": "partner_question_bank"}
+from partner_api import MapSource, RecordingKernel, get, post, serving
 
 
 @pytest.fixture
 def env():
     kernel = RecordingKernel(["我们先看已知条件,题目要我们求什么?"])
-    service = build_service(kernel, source=MapSource())
-    server = build_server(service)
-    import threading
-
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    base = f"http://127.0.0.1:{server.server_address[1]}"
-    yield base, kernel
-    server.shutdown()
-    server.server_close()
-
-
-def get(base: str, path: str) -> httpx.Response:
-    """GET 形态;SSRF 边界守卫与 post() 同款(partner_api)。"""
-    _assert_local_base(base)
-    headers = {"Authorization": f"Bearer {TEST_TOKEN}"}
-    return httpx.get(f"{base}{path}", headers=headers, timeout=5.0, trust_env=False)
+    with serving(kernel, source=MapSource()) as base:
+        yield base, kernel
 
 
 def test_create_then_get_roundtrip(env):

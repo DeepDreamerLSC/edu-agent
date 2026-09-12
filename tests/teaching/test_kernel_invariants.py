@@ -13,7 +13,8 @@ import pytest
 
 from edu_agent.agents.small_lecturer import reply, start
 
-from test_drift_and_tone import FakeGateway, LEARNER
+from test_drift_and_tone import LEARNER
+from teachkit import FakeGateway
 
 # 终答题面:answer 数字(3/5)既不在题面(8/26)也不在 step 值(16/10)里,天然
 # 隔离「终答」来源标签,不与题面/步骤数字混淆。

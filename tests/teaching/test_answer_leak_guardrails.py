@@ -7,12 +7,12 @@ edu_agent.agents.small_lecturer.guardrails(00 §6 随测试迁入的实现)。
 from __future__ import annotations
 
 import pytest
-from fake_openai import FakeOpenAI, completion
+from fake_openai import completion
 
 from edu_agent.agents.small_lecturer import evaluate_student_visible_question
 from edu_agent.gateway import ModelRequest
 
-from teachkit import tutor_gateway
+from teachkit import tutor_env
 
 
 @pytest.mark.parametrize(
@@ -287,65 +287,43 @@ def test_missing_primary_question_is_not_a_content_safety_failure() -> None:
     assert evaluation.fallback_required is False
 
 
-def test_full_answer_phrase_is_blocked() -> None:
+@pytest.mark.parametrize("reply,kwargs,action", [
     # answer 完整短语出现在回复 → 拦截
-    reply = "答案就是:鸡 3 只,兔 5 只。"
-    evaluation = evaluate_student_visible_question(
-        reply, answer_reference="鸡 3 只,兔 5 只",
-        active_subquestion_text="鸡和兔一共 8 只,共有 26 只脚。",
-    )
-    assert evaluation.action == "FALLBACK"
-
-
-def test_digit_subset_of_answer_is_allowed() -> None:
+    ("答案就是:鸡 3 只,兔 5 只。",
+     {"answer_reference": "鸡 3 只,兔 5 只",
+      "active_subquestion_text": "鸡和兔一共 8 只,共有 26 只脚。"}, "FALLBACK"),
     # 回复含"36 只脚"(answer 里的 3 是其子集) → 放行:数字子集不是泄露
-    reply = "题目里一共 36 只脚,所以兔子很多。"
-    evaluation = evaluate_student_visible_question(
-        reply, answer_reference="鸡 3 只,兔 5 只",
-        active_subquestion_text="鸡和兔一共 8 只,共有 26 只脚。",
-    )
-    assert evaluation.action == "ALLOW"
-
-
-def test_analysis_key_sentence_is_blocked() -> None:
+    ("题目里一共 36 只脚,所以兔子很多。",
+     {"answer_reference": "鸡 3 只,兔 5 只",
+      "active_subquestion_text": "鸡和兔一共 8 只,共有 26 只脚。"}, "ALLOW"),
     # analysis 关键结论句被逐字复述(紧凑连续窗口)+有序 cue → 拦截
-    reply = "用等式两边先同时减去 7,得 3x=18,再同时除以 3,就得到答案了。"
-    evaluation = evaluate_student_visible_question(
-        reply,
-        answer_reference="",
-        analysis_reference="等式两边先同时减去 7,得 3x=18,再同时除以 3。",
-        active_subquestion_text="鸡和兔一共 8 只,共有 26 只脚。",
-    )
-    assert evaluation.action == "FALLBACK"
-
-
-def test_intermediate_step_is_allowed() -> None:
+    ("用等式两边先同时减去 7,得 3x=18,再同时除以 3,就得到答案了。",
+     {"answer_reference": "",
+      "analysis_reference": "等式两边先同时减去 7,得 3x=18,再同时除以 3。",
+      "active_subquestion_text": "鸡和兔一共 8 只,共有 26 只脚。"}, "FALLBACK"),
     # 中间计算步骤(非关键结论句连续窗口)→ 放行
-    reply = "先假设全是鸡:2×8=16 只脚,比 26 少 10。"
-    evaluation = evaluate_student_visible_question(
-        reply,
-        answer_reference="鸡 3 只,兔 5 只",
-        analysis_reference="等式两边先同时减去 7,得 3x=18,再同时除以 3。",
-        active_subquestion_text="鸡和兔一共 8 只,共有 26 只脚。",
-    )
-    assert evaluation.action == "ALLOW"
+    ("先假设全是鸡:2×8=16 只脚,比 26 少 10。",
+     {"answer_reference": "鸡 3 只,兔 5 只",
+      "analysis_reference": "等式两边先同时减去 7,得 3x=18,再同时除以 3。",
+      "active_subquestion_text": "鸡和兔一共 8 只,共有 26 只脚。"}, "ALLOW"),
+], ids=["full_answer_phrase_blocked", "digit_subset_allowed",
+        "analysis_key_sentence_blocked", "intermediate_step_allowed"])
+def test_reference_disclosure_gating(reply, kwargs, action):
+    """答案/解析对照四形态:整句答案拦、数字子集放、结论句拦、中间步骤放。"""
+    evaluation = evaluate_student_visible_question(reply, **kwargs)
+    assert evaluation.action == action
 
 
 def test_guardrail_gates_model_output_over_fake_upstream(tmp_path):
     """新接口形态(02 §6):假上游经 gateway tutor 角色产出回复,护栏在模型输出侧把关。"""
-    fake = FakeOpenAI([completion("答案就是24。你能说说怎么来的吗？")]).start()
-    gateway = tutor_gateway(fake.url, tmp_path)
-    try:
+    with tutor_env(tmp_path, [completion("答案就是24。你能说说怎么来的吗？")]) as (fake, gateway):
         response = gateway.invoke(ModelRequest(
             role="tutor",
             messages=[{"role": "user", "content": "求这批图书共有多少本。"}],
             session_id="teach-leak-1",
         ))
-    finally:
-        gateway.close()
-        fake.stop()
-    evaluation = evaluate_student_visible_question(
-        response.text, answer_reference="24", active_subquestion_text="求这批图书共有多少本。",
-    )
-    assert evaluation.action == "FALLBACK"
-    assert "grounded_answer_disclosure" in {item.finding for item in evaluation.findings}
+        evaluation = evaluate_student_visible_question(
+            response.text, answer_reference="24", active_subquestion_text="求这批图书共有多少本。",
+        )
+        assert evaluation.action == "FALLBACK"
+        assert "grounded_answer_disclosure" in {item.finding for item in evaluation.findings}
