@@ -137,6 +137,9 @@ CI 以关键词扫描 `edu_agent/` 中的 `lease`、`heartbeat`、`worker_pool`�
   之外的全部测试新增**——这个代价不该悄悄由一条布尔开关承担。
   另外：`tests/fixtures/` 与 `scripts/` 的总行数在预算报告里**登记可见但不设限**
   （`fixtures-total-lines` / `scripts-total-lines`），专门用来发现「把 helper 搬进不计入分子的一侧」这类搬运。
+  教学内核的机制数同样**登记可见但不设限**（`kernel-mechanisms`，#201：AST 数
+  `edu_agent/agents/small_lecturer/kernel.py` 里 `reply()` 的 `ast.If` 节点数，单一口径）——
+  机制分支每加一条都在预算报告里看见，对冲「机制膨胀只涨在被测行为里」的引力。
 
 ## 7. 结构性改动必须人批
 
