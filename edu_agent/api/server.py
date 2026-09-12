@@ -2,7 +2,7 @@
 
 路由与错误信封按 #48 合同快照:错误体 {"error": {code, message, request_id,
 details}}(老仓库 ErrorEnvelope 形态)。SSE 六型帧见 sse_frames。
-鉴权分面:对话端点查 Authorization 头存在性(401 兜底);身份两端点自带鉴权
+鉴权分面:对话端点**真验签**(HMAC 比签 + exp,失败 401;2026-09-12 更正:原写"查头存在性",与实现不符);身份两端点自带鉴权
 (native-codes=partner API Key,token=授权码+PKCE),在全局闸之前路由。
 """
 
@@ -35,7 +35,12 @@ _MESSAGES_STREAM = re.compile(r"^/api/conversations/(?P<conversation_id>[^/]+)/m
 _CREATE = re.compile(r"^/api/conversations$")
 _GET = re.compile(r"^/api/conversations/(?P<conversation_id>[^/]+)$")
 # 00 §5.2 必须保留约定 4:客户端不得提交 answer/analysis/mastery_status
-_FORBIDDEN_FIELDS = frozenset({"answer", "analysis", "mastery_status"})
+_FORBIDDEN_FIELDS = frozenset({"answer", "analysis", "verified", "mastery_status"})  # 00 §5.2 约定 4(四项全)
+# 2026-09-12:补 verified——原缺该项。**它不只是被忽略**:learner 构造层是排除式
+# 白名单("其余非合同字段透传"),verified 会随 learner 透传进模型 prompt
+# (prompting.py 把 learner json.dumps 进 system 段),等于把"客户端自称已核验"
+# 塞给模型 ⇒ 必须拒绝(见 #199 + PR #200 审查 R2)。
+# ⚠️ 已知局限(见 #202):本名单只认 4 个精确顶层键名,改名/嵌套可绕过。
 _LOGIN = re.compile(r"^/api/auth/login$")
 _NATIVE_CODES = re.compile(r"^/api/openapi/v1/auth/native-codes$")
 _NATIVE_TOKEN = re.compile(r"^/api/auth/native/token$")
@@ -153,7 +158,9 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
             return True
         match = _MESSAGES.match(self.path)
         if match and self.command == "POST":
-            self._json(self.service.send(match["conversation_id"], self._read_body()))
+            body = self._read_body()
+            self._reject_forbidden_fields(body)
+            self._json(self.service.send(match["conversation_id"], body))
             return True
         match = _MESSAGES_STREAM.match(self.path)
         if match and self.command == "POST":
@@ -191,8 +198,10 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
     def _stream(self, conversation_id: str) -> None:
         # 流式:请求类错误(409/422 等)在开流前以 JSON 错误返回;内核异常(503)
         # 走流内 error 帧(友好文案+错误码)——流已开,客户端按 error 事件收尾
+        body = self._read_body()
+        self._reject_forbidden_fields(body)  # 请求类错误在开流前以 JSON 错误返回
         try:
-            response = self.service.send(conversation_id, self._read_body())
+            response = self.service.send(conversation_id, body)
         except ApiError as error:
             if error.status_code >= 500:
                 payload = sse_error_frames(error)
@@ -365,9 +374,7 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
     def _open_unified(self) -> None:
         """POST /api/prepared-questions/open(§5 统一 Open);403 拦截照 00 §5.2 约定 4。"""
         body = self._read_body()
-        forbidden = sorted(_FORBIDDEN_FIELDS & set(body))
-        if forbidden:
-            raise ApiError(403, None, f"客户端不得提交字段:{','.join(forbidden)}")
+        self._reject_forbidden_fields(body)
         self._json(self.service.open_unified(body))
 
     def _open_prepared_question(self, question_id: str) -> None:
@@ -378,9 +385,7 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
         + provenance)传给 kernel.start()——替换原写死 learner={};约定 4 拦截与统一
         open / conversations 同款。"""
         body = self._read_body()
-        forbidden = sorted(_FORBIDDEN_FIELDS & set(body))
-        if forbidden:
-            raise ApiError(403, None, f"客户端不得提交字段:{','.join(forbidden)}")
+        self._reject_forbidden_fields(body)
         if not body.get("idempotency_key"):
             raise ApiError(422, None, "idempotency_key 必填(00 §5.2:请求只有 idempotency_key)")
         learner, _, _ = ConversationService.open_request_learner(
@@ -391,11 +396,20 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
         """POST /api/conversations:统一 Open 字段子集(external_question_id/
         question_text/question_image,service 内校验与组合规则);403 拦截照 00 §5.2 约定 4。"""
         body = self._read_body()
+        self._reject_forbidden_fields(body)
+        self._json(self.service.create(body), status=201)
+
+
+    def _reject_forbidden_fields(self, body: dict) -> None:
+        """00 §5.2 约定 4:客户端不得提交 answer/analysis/verified/mastery_status。
+
+        掌握结论只能服务端产生。2026-09-12(#199):原来只有三个 open 入口各写一份,
+        **两条学生轮路由(messages / messages-stream)漏了闸** ⇒ 客户端可经学生轮注入。
+        统一到本方法后:一处定义、五个入口调用,重复也一并消掉。
+        """
         forbidden = sorted(_FORBIDDEN_FIELDS & set(body))
         if forbidden:
-            # 00 §5.2 约定 4:掌握结论只能服务端产生,客户端不得提交
             raise ApiError(403, None, f"客户端不得提交字段:{','.join(forbidden)}")
-        self._json(self.service.create(body), status=201)
 
     def _content_length(self) -> int:
         """读 Content-Length 并 clamp 到 20MB 上限;非法(非整数/负) → 400。
