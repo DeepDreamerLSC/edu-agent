@@ -252,6 +252,9 @@ def _reveal_after_repeat(step_text: str) -> str:
     # #185 无分句边界可切:命中数字改写成「几」(句子形状不破,宁可问句不漏终答)
     ("兔有5只",
      "我们从这里入手:兔有几只。你接着算下一步。", ("5",)),
+    # 双句号回归(#198 独立审查实测 9/14):step 自带句号 → 模板只补一个,不叠「。。」
+    ("先看题里给的记法规则。",
+     "我们从这里入手:先看题里给的记法规则。你接着算下一步。", ()),
     # #185 复审 ①:掩码必须**全命中**改写(只掩首处会残留同句后文的第二处答案)
     ("兔有5只和3只",
      "我们从这里入手:兔有几只和几只。你接着算下一步。", ("5", "3")),
@@ -266,7 +269,7 @@ def _reveal_after_repeat(step_text: str) -> str:
         "clause_boundary_cut", "no_boundary_kept", "no_arithmetic_kept",
         "ordinal_form_withheld", "derived_value_withheld", "answer_masked",
         "multi_hit_masked", "bare_number_dropped", "disclosure_frame_dropped",
-        "frame_word_after", "frame_word_before"])
+        "frame_word_after", "frame_word_before", "trailing_period_not_doubled"])
 def test_reveal_actionization(step_text, expected_reveal, forbidden):
     """揭示句构造十二形态:该收回的收回、该保留的保留(前六 = #165 原用例,
     中三 = #185 序数/导出值/无边界掩码,后三 = #185 复审 全命中/裸数字/框架词)。"""
