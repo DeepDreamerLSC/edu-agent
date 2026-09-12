@@ -348,10 +348,16 @@ json 一次通过率 ≥98%。
 **核心（前置件全合后，串行）**
 - [ ] 合同终审：审查者拿 #48 Postman 全量打真内核（真题图、真断言 PKCE、真题库
       适配），全绿 = M3 出口前置——#57 的回放测试从 stub 内核切真内核即成。
-      **终审覆盖点**：SSE 帧序（契约 `start/status/interaction/delta/done/error` 6 型 vs
-      现 `server.py` 只发 4 型，缺 `status`/`error`）；`answer/analysis/mastery_status`
-      拦截（00 §5.2 约定 4，服务端拒绝客户端提交，现 `service.py` 未显式拒绝）；
-      `POST /api/auth/logout` 端点；401 校验（现只查 Authorization 头存在性，需解析 token）
+      **终审覆盖点（2026-09-12 PM 逐条核对 + 独立审查；结论见 #199、PR #200）**：SSE 帧序（六型齐——
+      `status/start/interaction/delta/done`，错误路径 `start(conversation_running=false)+error`）；
+      **对话面 5 个入口**（统一 open / per-question open / create conversation / messages /
+      messages-stream）对禁止字段 `answer/analysis/verified/mastery_status` 返回 **403**
+      （不是「所有端点一律 403」：refresh 不读 body、files 201/409、identity 401，各自语义不同）；
+      `POST /api/auth/logout` 返回 `{"ok": true}`；对话面 401 走**真验签**（HMAC 比签 + exp）。
+      2026-09-12 实测到**三个**缺口（原描述只写了「无测试钉住」）：① `verified` 漏在名单外，
+      **且会随 learner 透传进模型 prompt**（不只是被忽略）；② **两条学生轮路由完全没有闸**；
+      ③ 该四条约定**零测试钉住**。前两个已由 PR #200 修复、并补 22 条测试；
+      **名单只认精确顶层键名、改名/嵌套可绕过的结构性问题**另开跟进单。
 - [ ] 切换 runbook 成文：cloudflare proxy 上游改指新服务（DNS 不动，切换动作最小）；
       回滚 = proxy 改回；老系统挪内网地址后继续供题库操作面（16 路径，#34 已定案：
       合作方只用对话面 5 + 身份 2，无路径分路）；合作方通知文案
