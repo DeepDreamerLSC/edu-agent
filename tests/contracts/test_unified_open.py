@@ -8,27 +8,19 @@ from __future__ import annotations
 
 import httpx
 import pytest
-from partner_api import StubTurn, post
-from test_conversation_routes import MapSource, RecordingKernel
+from partner_api import MapSource, RecordingKernel, post, serving
 
-from edu_agent.api import build_server, build_service
+from edu_agent.api import build_service
 
 
 @pytest.fixture
 def env():
     kernel = RecordingKernel(["我们先看已知条件,题目要我们求什么?"])
-    server = build_server(build_service(kernel, source=MapSource()))
-    import threading
-
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    base = f"http://127.0.0.1:{server.server_address[1]}"
-    yield base, kernel
-    server.shutdown()
-    server.server_close()
+    with serving(kernel, source=MapSource()) as base:
+        yield base, kernel
 
 
-def unified(base: str, body: dict, token: str = "") -> httpx.Response:
-    _ = token  # post() 已带 Authorization(TEST_TOKEN)
+def unified(base: str, body: dict) -> httpx.Response:
     return post(base, "/api/prepared-questions/open", body)
 
 
@@ -70,22 +62,20 @@ def test_bank_miss_without_image_is_404(env):
     assert response.json()["error"]["code"] == "QUESTION_BANK_QUESTION_NOT_FOUND"
 
 
-def test_text_with_image_is_422_conflict(env):
+@pytest.mark.parametrize("body", [
+    {"question_text": "题干", "question_image": "file-1", "idempotency_key": "u-004"},
+    {"question_text": "题干", "external_question_id": "equation_subtract",
+     "idempotency_key": "u-005"},
+], ids=["test_text_with_image_is_422_conflict",
+        "test_text_with_external_question_id_is_422_conflict"])
+def test_question_text_conflicts_are_422(env, body):
+    """question_text 与其他题源字段互斥(老系统文档:自由材料/题库二选一)。"""
     base, _ = env
-    response = unified(base, {"question_text": "题干", "question_image": "file-1",
-                              "idempotency_key": "u-004"})
+    response = unified(base, body)
     assert response.status_code == 422
     error = response.json()["error"]
     assert error["code"] == "PREPARED_QUESTION_SOURCE_CONFLICT"
     assert "question_text" in error["details"]["conflicting_fields"]
-
-
-def test_text_with_external_question_id_is_422_conflict(env):
-    base, _ = env
-    response = unified(base, {"question_text": "题干", "external_question_id": "equation_subtract",
-                              "idempotency_key": "u-005"})
-    assert response.status_code == 422
-    assert response.json()["error"]["code"] == "PREPARED_QUESTION_SOURCE_CONFLICT"
 
 
 def test_answer_correct_three_states_echoed(env):
@@ -188,9 +178,8 @@ def test_unified_open_idempotent_retry_same_conversation(env):
 
 def test_unified_open_without_auth_is_401(env):
     base, _ = env
-    import httpx as _httpx
-    response = _httpx.post(f"{base}/api/prepared-questions/open", json={"idempotency_key": "u"},
-                           timeout=5.0, trust_env=False)
+    response = httpx.post(f"{base}/api/prepared-questions/open", json={"idempotency_key": "u"},
+                          timeout=5.0, trust_env=False)
     assert response.status_code == 401
 
 
@@ -205,24 +194,21 @@ def test_per_question_open_route_still_works(env):
 
 # ---------- PR-4:answer_correct → 内核 learner.answer_status 接线 ----------
 
-def test_answer_correct_true_wires_learner_correct(env):
-    """answer_correct=true → learner.answer_status="correct",provenance=partner_open。"""
+@pytest.mark.parametrize("answer_correct,question_text,idem_key,expected_status", [
+    (True, "自由题干八", "u-wire-true", "correct"),
+    (False, "自由题干九", "u-wire-false", "incorrect"),
+], ids=["test_answer_correct_true_wires_learner_correct",
+        "test_answer_correct_false_wires_learner_incorrect"])
+def test_answer_correct_wires_learner_status(env, answer_correct, question_text,
+                                             idem_key, expected_status):
+    """显式 answer_correct → learner.answer_status 映射,provenance=partner_open。"""
     base, kernel = env
-    response = unified(base, {"question_text": "自由题干八", "idempotency_key": "u-wire-true",
-                              "answer_correct": True})
+    response = unified(base, {"question_text": question_text, "idempotency_key": idem_key,
+                              "answer_correct": answer_correct})
     assert response.status_code == 200
-    assert kernel.learners[0]["answer_status"] == "correct"
+    assert kernel.learners[0]["answer_status"] == expected_status
     assert kernel.learners[0]["answer_correct_provenance"] == "partner_open"
     assert response.json()["answer_correct_provenance"] == "partner_open"
-
-
-def test_answer_correct_false_wires_learner_incorrect(env):
-    base, kernel = env
-    response = unified(base, {"question_text": "自由题干九", "idempotency_key": "u-wire-false",
-                              "answer_correct": False})
-    assert response.status_code == 200
-    assert kernel.learners[0]["answer_status"] == "incorrect"
-    assert kernel.learners[0]["answer_correct_provenance"] == "partner_open"
 
 
 @pytest.mark.parametrize("body_extra", [{"answer_correct": None}, {}])
@@ -311,12 +297,7 @@ def test_bank_hit_with_client_image_merges_into_question():
     kernel = RecordingKernel(["题图已合并。"])
     service = build_service(kernel, source=MapSource(),
                             image_resolver=lambda fid: f"data:image/png;base64,{fid}")
-    server = build_server(service)
-    import threading
-
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    base = f"http://127.0.0.1:{server.server_address[1]}"
-    try:
+    with serving(service=service) as base:
         response = post(base, "/api/prepared-questions/open", {
             "external_question_id": "equation_subtract", "idempotency_key": "u-img-merge",
             "question_image": "file_abc123"})
@@ -326,27 +307,16 @@ def test_bank_hit_with_client_image_merges_into_question():
         assert question["text"].startswith("解方程 3x+7=25")
         assert question["answer"] == "x=6"
         assert question["image"] == "data:image/png;base64,file_abc123"
-    finally:
-        server.shutdown()
-        server.server_close()
 
 
 def test_unresolvable_image_file_id_is_early_422():
     """解析器注入时 file_id 不存在 → 422 FILE_NOT_READY(坏引用不进模型层变 503)。"""
     kernel = RecordingKernel(["不该被调用"])
     service = build_service(kernel, source=MapSource(), image_resolver=lambda fid: None)
-    server = build_server(service)
-    import threading
-
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    base = f"http://127.0.0.1:{server.server_address[1]}"
-    try:
+    with serving(service=service) as base:
         response = post(base, "/api/prepared-questions/open", {
             "external_question_id": "equation_subtract", "idempotency_key": "u-img-bad",
             "question_image": "file_gone"})
         assert response.status_code == 422
         assert response.json()["error"]["code"] == "FILE_NOT_READY"
         assert kernel.questions == []  # 未产生内核调用
-    finally:
-        server.shutdown()
-        server.server_close()

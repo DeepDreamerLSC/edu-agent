@@ -10,26 +10,9 @@
 
 from __future__ import annotations
 
-import json
-
 from edu_agent.agents.small_lecturer import finish, reply, start
 
-
-class FakeGateway:
-    """按脚本出牌的假 gateway(与 test_drift_and_tone 同款对象注入)。"""
-
-    def __init__(self, tutor_payloads: list[dict]):
-        self.tutor_queue = list(tutor_payloads)
-        self.requests: list[dict] = []
-
-    def invoke(self, request):
-        self.requests.append({"role": request.role, "messages": request.messages})
-        payload = (self.tutor_queue.pop(0) if self.tutor_queue
-                   else {"reply": "先说说你的下一步准备算什么?", "ready_to_confirm": False,
-                         "cited_numbers": []})
-        response = type("R", (), {})()
-        response.text = json.dumps(payload, ensure_ascii=False)
-        return response
+from teachkit import FakeGateway
 
 
 QUESTION = {"text": "图书馆原有120本故事书,又买来45本,借出38本,现在有多少本?",

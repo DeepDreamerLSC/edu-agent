@@ -7,12 +7,12 @@ edu_agent.agents.small_lecturer.format_guard。
 from __future__ import annotations
 
 import pytest
-from fake_openai import FakeOpenAI, completion
+from fake_openai import completion
 
 from edu_agent.agents.small_lecturer import evaluate_student_visible_format
 from edu_agent.gateway import ModelRequest
 
-from teachkit import tutor_gateway
+from teachkit import tutor_env
 
 
 @pytest.mark.parametrize(
@@ -68,20 +68,17 @@ def test_downgrade_prompt_is_provided_for_unsafe_format():
 
 def test_format_guard_gates_model_output_over_fake_upstream(tmp_path):
     """新接口形态(02 §6):假上游产出带 Markdown/LaTeX 的回复,格式护栏在输出侧把关。"""
-    fake = FakeOpenAI([completion("## 解题步骤\n1. 先算 **3×4**\n2. 得 $x=\\frac{12}{1}$")]).start()
-    gateway = tutor_gateway(fake.url, tmp_path)
-    try:
+    with tutor_env(tmp_path, [
+        completion("## 解题步骤\n1. 先算 **3×4**\n2. 得 $x=\\frac{12}{1}$"),
+    ]) as (fake, gateway):
         response = gateway.invoke(ModelRequest(
             role="tutor",
             messages=[{"role": "user", "content": "计算 18÷3。"}],
             session_id="teach-format-1",
         ))
-    finally:
-        gateway.close()
-        fake.stop()
-    result = evaluate_student_visible_format(response.text)
-    # LaTeX 双修:\frac{12}{1} 归一化为 12/1(不再是 latex_command);Markdown 结构与 $...$ 边界仍需降级
-    assert result.ok is False
-    assert "markdown_structure" in result.findings
-    assert "dollar_formula_boundary" in result.findings
-    assert "latex_command" not in result.findings
+        result = evaluate_student_visible_format(response.text)
+        # LaTeX 双修:\frac{12}{1} 归一化为 12/1(不再是 latex_command);Markdown 结构与 $...$ 边界仍需降级
+        assert result.ok is False
+        assert "markdown_structure" in result.findings
+        assert "dollar_formula_boundary" in result.findings
+        assert "latex_command" not in result.findings

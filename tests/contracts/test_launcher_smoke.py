@@ -10,7 +10,6 @@ import threading
 from pathlib import Path
 
 import httpx
-import pytest
 
 _SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
 if str(_SCRIPTS) not in sys.path:

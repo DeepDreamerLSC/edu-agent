@@ -13,7 +13,7 @@ import time
 import pytest
 
 from edu_agent.api import ApiError, build_service
-from partner_api import ScriptedKernel, StubTurn, _serve, open_session, post
+from partner_api import ScriptedKernel, StubTurn, _serve, open_session, post, serving
 
 
 @pytest.fixture
@@ -174,12 +174,10 @@ def test_missing_authorization_is_401(api):
 
 def test_kernel_infrastructure_failure_maps_to_503():
     kernel = ScriptedKernel([], start_error=RuntimeError("模型服务不可用"))
-    base, server = _serve(kernel)
-    response = post(base, "/api/prepared-questions/q/open", {"idempotency_key": "k"})
-    server.shutdown()
-    server.server_close()
-    assert response.status_code == 503
-    assert response.json()["error"]["code"] is None
+    with serving(kernel) as base:
+        response = post(base, "/api/prepared-questions/q/open", {"idempotency_key": "k"})
+        assert response.status_code == 503
+        assert response.json()["error"]["code"] is None
 
 
 def test_unknown_path_and_session_are_404(api):

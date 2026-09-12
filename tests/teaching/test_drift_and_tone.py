@@ -1,6 +1,7 @@
 """M3 收官合同:数字漂移守卫 + 教学语气(prompt 引导非硬护栏)。
 
 gateway 对象注入(零网络零端口,确定性);断言即规格。
+FakeGateway 收拢在 tests/fixtures/teachkit.py(一处定义、多处引用)。
 """
 
 from __future__ import annotations
@@ -9,26 +10,7 @@ import json
 
 from edu_agent.agents.small_lecturer import reply, start
 
-
-class FakeGateway:
-    """对象注入假 gateway:vision/tutor 按脚本出牌,记录全部请求。"""
-
-    def __init__(self, tutor_payloads: list[dict],
-                 vision_payloads: list[dict] | None = None):
-        self.tutor_queue = list(tutor_payloads)
-        self.vision_queue = list(vision_payloads or [])
-        self.requests: list[dict] = []
-
-    def invoke(self, request):
-        self.requests.append({"role": request.role, "messages": request.messages})
-        payload = (self.vision_queue.pop(0) if request.role == "vision" and self.vision_queue
-                   else self.tutor_queue.pop(0) if self.tutor_queue
-                   else {"reply": "先回到当前小问。", "ready_to_confirm": False,
-                         "cited_numbers": []})
-        response = type("R", (), {})()
-        response.text = json.dumps(payload, ensure_ascii=False)
-        return response
-
+from teachkit import FakeGateway
 
 # 漂移/语气测试与泄露护栏正交:题面不含 answer/analysis(泄露对照误判数字
 # 回复的根因修复走独立 guardrails PR,见 #34)
@@ -43,7 +25,7 @@ def test_extracted_numbers_within_allowed_not_stuck():
     # 阶梯两级(#157 评审末值边界):无 answer 题面下末级 10 是已知答案兜底,
     # 16 为中间值——引用中间值合法,引用末级见 kernel_invariants 洗白测试
     gateway = FakeGateway(tutor_payloads=[
-        {"reply": "先看题面:8 只,26 只脚。", "ready_to_confirm": False,
+        {"reply": "先看题面说的 8 只、26 只脚,你打算先算什么?", "ready_to_confirm": False,
          "cited_numbers": [], "steps": [{"step": "鸡脚", "value": "16"},
                                         {"step": "兔脚", "value": "10"}]},
         {"reply": "这一步得到 16。", "ready_to_confirm": False, "cited_numbers": [16]},
@@ -56,10 +38,11 @@ def test_extracted_numbers_within_allowed_not_stuck():
     assert "cited_numbers" not in json.dumps(turn_request["messages"])
 
 
-def test_extracted_hallucinated_number_marks_stuck():
-    # 数字漂移:模型把口误数字 36 当题目条件复读(允许池只有 8/26/16)→ stuck
+def test_extracted_hallucinated_number_is_intercepted_not_stuck():
+    # #184:幻觉数字 36(允许池只有 8/26/16)→ 拦截并重生成;**修好不置卡点**
+    # (stuck 只在修复失败走兜底句时置,否则一次幻觉就把对话推向 needs_review)
     gateway = FakeGateway(tutor_payloads=[
-        {"reply": "先看题面:8 只,26 只脚。", "ready_to_confirm": False,
+        {"reply": "先看题面说的 8 只、26 只脚,你打算先算什么?", "ready_to_confirm": False,
          "cited_numbers": [], "steps": [{"step": "鸡脚", "value": "16"}]},
         {"reply": "题目里一共 36 只脚,所以兔子很多。", "ready_to_confirm": False,
          "cited_numbers": [36]},
@@ -67,14 +50,18 @@ def test_extracted_hallucinated_number_marks_stuck():
     question = dict(QUESTION)
     turn = start(question, dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
-    assert turn.session.stuck is True  # 下轮提醒(照 R6 卡点模式)
+    assert "36" not in turn.text            # 幻觉数字不达学生面
+    assert turn.session.stuck is not True   # 重生成修好 → 非卡点
+    intercepted = [e for e in turn.session.guard_events if e.get("guard") == "answer_leak"]
+    assert intercepted and intercepted[-1]["regenerated"] is True
+    assert intercepted[-1]["rule_ids"] == ["source_value_disclosure:hallucinated"]
 
 
 def test_student_echoed_number_is_allowed_not_stuck():
     # #34 裁决落地:学生自己说过的数字进入允许池(学生历史数字),纠偏复述不误标;
     # 旧行为(student 数字 ⊆ 题面 → 误标 stuck)已废弃
     gateway = FakeGateway(tutor_payloads=[
-        {"reply": "先看题面:8 只,26 只脚。", "ready_to_confirm": False, "cited_numbers": []},
+        {"reply": "先看题面说的 8 只、26 只脚,你打算先算什么?", "ready_to_confirm": False, "cited_numbers": []},
         {"reply": "你说 16 只脚,题面一共是 26 只脚。", "ready_to_confirm": False,
          "cited_numbers": [16]},
     ])
@@ -88,7 +75,7 @@ def test_question_without_numbers_skips_drift_guard():
     question = {"text": "说明三角形的内角和有什么特点。", "answer": "180 度",
                 "analysis": "", "knowledge_points": []}
     gateway = FakeGateway(tutor_payloads=[
-        {"reply": "三角形有三个角。", "ready_to_confirm": False, "cited_numbers": [3]},
+        {"reply": "三角形有几个角,你能说说吗?", "ready_to_confirm": False, "cited_numbers": [3]},
     ])
     turn = start(question, dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "三个角", gateway=gateway)
@@ -97,13 +84,16 @@ def test_question_without_numbers_skips_drift_guard():
 
 def test_tone_is_prompt_guided_not_hard_guardrail():
     # 语气是 prompt 引导:直白无鼓励的合法教学回复不被硬护栏拦截
-    # (start 单步断言;reply 链的额外变量与本合同无关)
+    # (首问恒为固定模板,不参与语气判定;语气面在本 reply 轮验证)
+    # 数字全在允许池(题面 8/26 + 学生本轮已说的 16)→ 数值门不干预,语气面照常放行
+    blunt = "16 只脚对应 8 只鸡,与题面 26 只脚矛盾。"
     gateway = FakeGateway(tutor_payloads=[
-        {"reply": "16 只脚对应 8 只鸡,与题面 26 只脚矛盾。", "ready_to_confirm": False,
-         "cited_numbers": [16, 26]},
+        {"reply": "先看题面说的 8 只、26 只脚,你打算先算什么?", "ready_to_confirm": False, "cited_numbers": []},
+        {"reply": blunt, "ready_to_confirm": False, "cited_numbers": [16, 26]},
     ])
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
-    assert turn.text == "16 只脚对应 8 只鸡,与题面 26 只脚矛盾。"
+    turn = reply(turn.session, "我算得 16 只脚", gateway=gateway)
+    assert turn.text == blunt  # 无鼓励措辞也照常达学生面(语气靠 prompt,非硬护栏)
 
 
 def test_tone_directive_in_system_prompt():

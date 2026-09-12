@@ -39,6 +39,7 @@ select = [
     "PLW0603",
     "RUF006",
     "B",
+    "F401",
 ]
 
 [tool.ruff.lint.mccabe]

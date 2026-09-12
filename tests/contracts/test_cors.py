@@ -9,26 +9,16 @@ from __future__ import annotations
 
 import httpx
 import pytest
-from partner_api import _assert_local_base
-
-from edu_agent.api import build_server, build_service
-
-
-class _StubKernel:
-    def start(self, question, learner): ...
+from partner_api import ScriptedKernel, _assert_local_base, serving
 
 
 @pytest.fixture
 def base(monkeypatch):
+    # CORS 白名单在 build_server 时读 env,须在 serving 之前注入
     monkeypatch.setenv("EDU_AGENT_CORS_ALLOWED_ORIGINS",
                        "https://school.k12m.cn,http://localhost:8888")
-    srv = build_server(build_service(_StubKernel()))
-    import threading
-
-    threading.Thread(target=srv.serve_forever, daemon=True).start()
-    yield f"http://127.0.0.1:{srv.server_address[1]}"
-    srv.shutdown()
-    srv.server_close()
+    with serving(ScriptedKernel([])) as url:
+        yield url
 
 
 def options(base: str, path: str, origin: str) -> httpx.Response:

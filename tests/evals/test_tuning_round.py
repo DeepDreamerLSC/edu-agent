@@ -24,41 +24,34 @@ def test_baseline_two_round_values_cover_all_cases():
         assert 0 <= r1 <= 12 and 0 <= r2 <= 12
 
 
-class TestToleranceVerdict:
-    """#34 2026-09-09 人批容差:分差 ≤1 单值判,≥2 区间判。"""
+@pytest.mark.parametrize("got,r1,r2,expected", [
+    # R1=R2=8(分差 0):单值判,达到 max=8 → 达标
+    (8, 8, 8, "达标"),
+    # 分差 0,本轮 7 < max 8 → 低于基线(一分不让)
+    (7, 8, 8, "低于基线"),
+    # 分差 1(3,4):仍单值判,本轮 ≥ 4 才达标
+    (4, 3, 4, "达标"),
+    (3, 3, 4, "低于基线"),
+    # word_problem 型(11,5,分差 6):区间判,本轮 6 ≥ min 5 → 不劣(噪声主导)
+    (6, 11, 5, "不劣(噪声主导)"),
+    # 噪声场景不判反超:13 分超 max 也只标"不劣"(双向防错)
+    (12, 11, 5, "不劣(噪声主导)"),
+    # 分差 6,本轮 4 < min 5 → 低于基线
+    (4, 11, 5, "低于基线"),
+], ids=["stable_reaches_max", "stable_below_max", "near_stable_reaches_max",
+        "near_stable_below_max", "noisy_in_range", "noisy_above_max_not_win", "noisy_below_range"])
+def test_tolerance_verdict_table(got, r1, r2, expected):
+    """#34 2026-09-09 人批容差:分差 ≤1 单值判,≥2 区间判(逐行=原六个用例)。"""
+    assert tuning_round.tolerance_verdict(got, r1, r2) == expected
 
-    def test_stable_case_reaches_max_passes(self):
-        # R1=R2=8(分差 0):单值判,达到 max=8 → 达标
-        assert tuning_round.tolerance_verdict(8, 8, 8) == "达标"
 
-    def test_stable_case_below_max_fails(self):
-        # 分差 0,本轮 7 < max 8 → 低于基线(一分不让)
-        assert tuning_round.tolerance_verdict(7, 8, 8) == "低于基线"
-
-    def test_near_stable_case_uses_max(self):
-        # 分差 1(3,4):仍单值判,本轮 ≥ 4 才达标
-        assert tuning_round.tolerance_verdict(4, 3, 4) == "达标"
-        assert tuning_round.tolerance_verdict(3, 3, 4) == "低于基线"
-
-    def test_noisy_case_in_range_is_not_inferior(self):
-        # word_problem 型(11,5,分差 6):区间判,本轮 6 ≥ min 5 → 不劣(噪声主导)
-        assert tuning_round.tolerance_verdict(6, 11, 5) == "不劣(噪声主导)"
-
-    def test_noisy_case_above_max_still_not_reported_as_win(self):
-        # 噪声场景不判反超:13 分超 max 也只标"不劣"(双向防错)
-        assert tuning_round.tolerance_verdict(12, 11, 5) == "不劣(噪声主导)"
-
-    def test_noisy_case_below_range_fails(self):
-        # 分差 6,本轮 4 < min 5 → 低于基线
-        assert tuning_round.tolerance_verdict(4, 11, 5) == "低于基线"
-
-    def test_real_baseline_rows(self):
-        """真实基线行抽测:equation_complete(8,8)单值判;stability word_problem(11,5)区间判。"""
-        b = tuning_round.BASELINE
-        assert tuning_round.tolerance_verdict(8, *b[
-            "small_lecturer_dialogue_scenarios_equation_complete_reasoning"]) == "达标"
-        assert tuning_round.tolerance_verdict(
-            6, *b["small_lecturer_dialogue_stability_20_stability_word_problem"]) == "不劣(噪声主导)"
+def test_real_baseline_rows():
+    """真实基线行抽测:equation_complete(8,8)单值判;stability word_problem(11,5)区间判。"""
+    b = tuning_round.BASELINE
+    assert tuning_round.tolerance_verdict(8, *b[
+        "small_lecturer_dialogue_scenarios_equation_complete_reasoning"]) == "达标"
+    assert tuning_round.tolerance_verdict(
+        6, *b["small_lecturer_dialogue_stability_20_stability_word_problem"]) == "不劣(噪声主导)"
 
 
 def test_probe_reports_unreachable_port():
@@ -272,3 +265,60 @@ class TestTurnLedger:
         assert ledger_at < main_at                       # 增量插在主表之前
         old = _legacy_inline_lines(_fake_scores())
         assert lines[-(len(old) - 2):] == old[2:]        # 主表 + 均值差行仍逐字节不变
+
+
+# ---------- 五维总分(0-10,去 first_question)试算行(2026-09-10 PM:撤回退休改零成本替代)----------
+
+def _fivedim_scores() -> dict:
+    """两个 ok case、六维分各不相同(首问维非 0,确保减不减首问结果不同 → 算错即红)。
+
+    total 为六维和(9 / 10),供 `comparison_report` 既有主表按老口径取用(与首问无关)。
+    """
+    dims_a = {"first_question": 2, "socratic_followup": 1, "grade_fit": 2,
+              "pacing": 1, "summary_mastery": 2, "termination": 1}
+    dims_b = {"first_question": 1, "socratic_followup": 2, "grade_fit": 2,
+              "pacing": 2, "summary_mastery": 1, "termination": 2}
+    return {_EQUATION: {"scores": dims_a, "total": sum(dims_a.values())},
+            _WORD_PROBLEM: {"scores": dims_b, "total": sum(dims_b.values())}}
+
+
+class TestFiveDimTotalLine:
+    """只多报一段读数:六维 judge 与门判定(12 分制)不变,该行不参与判定。"""
+
+    def test_line_exists_with_new_caliber_wording(self):
+        block = "\n".join(tuning_round.comparison_report(
+            _fivedim_scores(), _fake_rows(), _fake_cases()))
+        assert "五维总分(0-10,去 first_question;新口径试算,门仍按 12 分制与老基线比)" in block
+        assert "五维" in block and "10" in block
+
+    def test_average_equals_six_dim_sum_minus_first_question(self):
+        """数值 = 逐 case(六维和 − first_question)的均分(9−2=7、10−1=9 → 8.00);
+        含首问则 9.50 ≠ 8.00(首问被漏减时本断言必红)。"""
+        scores = _fivedim_scores()
+        expected = sum(sum(v["scores"].values()) - v["scores"]["first_question"]
+                       for v in scores.values()) / len(scores)
+        assert expected == 8.0                                     # (7+9)/2
+        assert "均分 8.00" in tuning_round.five_dim_total_line(scores)
+        assert "均分 9.50" not in tuning_round.five_dim_total_line(scores)
+
+    def test_per_case_values_listed_inline(self):
+        line = tuning_round.five_dim_total_line(_fivedim_scores())
+        assert f"{_EQUATION} 7" in line and f"{_WORD_PROBLEM} 9" in line
+        assert "\n" not in line                                   # 一行,不新增大表格
+        assert "均分 8.00" in line
+
+    def test_no_ok_scores_marked_not_fabricated(self):
+        line = tuning_round.five_dim_total_line({})
+        assert "五维总分" in line and "(无 ok 评分)" in line
+
+    def test_gate_verdict_unaffected_by_new_line(self):
+        """门判定仍是 12 分制「不劣」:新行在场,主表判定与无新行时逐字节相同。"""
+        scores = _fivedim_scores()
+        scores[_EQUATION]["total"] = 9        # 9 ≥ max(8,8) → 达标(与首问无关)
+        scores[_WORD_PROBLEM]["total"] = 6    # 6 ≥ min(11,5) → 不劣(噪声主导)
+        lines = tuning_round.comparison_report(scores, _fake_rows(), _fake_cases())
+        main_at = lines.index("| 场景 | R1 | R2 | 本轮 | 判定 |")
+        main = "\n".join(lines[main_at:])
+        assert f"| {_EQUATION} | 8 | 8 | 9 | 达标 |" in main
+        assert f"| {_WORD_PROBLEM} | 11 | 5 | 6 | 不劣(噪声主导) |" in main
+        assert lines.index(tuning_round.five_dim_total_line(scores)) < main_at  # 新行在主表前

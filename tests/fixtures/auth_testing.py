@@ -3,6 +3,9 @@
 密钥在模块导入即写入环境变量(IdentityService 在 build_server 时读 env),故所有
 经 build_server 起的服务器都用同一 test 密钥,签发的 token 可验签通过。
 TEST_TOKEN 无 exp(永不过期),供合同回放类测试稳定复现。
+
+谁在用:tests/contracts 的 test_auth_enforcement / test_files_api / test_identity_http /
+test_server_hardening / test_launcher_smoke。
 """
 
 from __future__ import annotations

@@ -6,17 +6,12 @@
 
 from __future__ import annotations
 
-import json
-import threading
-
-import httpx
 import jsonschema
 import pytest
 
-from edu_agent.api import build_service, build_server
 from edu_agent.contracts import skill_interaction_schema
 
-from partner_api import ScriptedKernel, _serve, open_session, post
+from partner_api import ScriptedKernel, _serve, open_session, parse_sse, post
 
 
 @pytest.fixture
@@ -65,15 +60,6 @@ def test_envelope_kind_follows_session_state(api):
     assert interaction["kind"] == "confirmation"  # ready_to_confirm 状态映射
 
 
-def _parse_sse(raw: bytes) -> list[tuple[str, dict]]:
-    frames = []
-    for block in raw.decode("utf-8").strip().split("\n\n"):
-        lines = block.split("\n")
-        event = lines[0].removeprefix("event: ")
-        frames.append((event, json.loads(lines[1].removeprefix("data: "))))
-    return frames
-
-
 def test_stream_emits_contract_frame_order(api):
     base, _ = api
     opened = open_session(base)
@@ -83,7 +69,7 @@ def test_stream_emits_contract_frame_order(api):
     })
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
-    frames = _parse_sse(response.content)
+    frames = parse_sse(response.content)
     assert [event for event, _ in frames] == ["status", "start", "interaction", "delta", "done"]
     interaction = dict(frames)["interaction"]
     jsonschema.validate(interaction, skill_interaction_schema())

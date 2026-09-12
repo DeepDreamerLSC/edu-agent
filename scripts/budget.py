@@ -25,7 +25,8 @@ LIMIT_TEST_RATIO = 1.0
 LIMIT_DEPLOY_SCRIPT_LINES = 100
 LIMIT_SUPPRESSIONS = 10
 
-# 02 §6:测试/应用行数比 M0–M1 只报告不阻塞,M2 起改为 True(属结构性改动,需人批)。
+# 02 §6:测试/应用行数比**永久只报告不阻塞**(2026-09-11 人裁:分子可被"搬 helper 进
+# tests/fixtures/"刷低,属可刷代理指标;给可刷指标设门会重演 #142。原"M2 起翻 True"计划已撤)。
 TEST_RATIO_BLOCKS = False
 STRICT_RATIO_ENV = "BUDGET_STRICT_TEST_RATIO"
 
@@ -165,6 +166,16 @@ def scripts_total_lines(root: Path, py_files: list) -> int:
     return sum(code_lines(p) for p in py_files if is_under(p, root, "scripts"))
 
 
+def fixtures_total_lines(root: Path, py_files: list) -> int:
+    """tests/fixtures/ 下 *.py 总行数(非空非注释,同 §2 计法)。
+
+    02 §6 的测试比分子**不含** tests/fixtures/,所以"把 helper 从 tests/ 搬进 fixtures/"
+    能降分子而一行测试都不少(PR #192 实测:分子 −942 里 387 行是这类口径搬移)。
+    只登记不设限——2026-09-11 人裁:该比值永久只报告不阻塞,但搬运引力要**可见**。
+    """
+    return sum(code_lines(p) for p in py_files if is_under(p, root, "tests", "fixtures"))
+
+
 def test_lines(root: Path, py_files: list) -> int:
     """tests/ 行数,分子不含 tests/rules/ 与 tests/fixtures/(02 §6)。"""
     total = 0
@@ -225,6 +236,7 @@ def collect_metrics(root: Path) -> list[Metric]:
     configs = config_file_count(root)
     deploy_total, deploy_names = deploy_script_lines(root)
     scripts_total = scripts_total_lines(root, py_files)
+    fixtures_total = fixtures_total_lines(root, py_files)
     suppressions = sum(count_comment_suppressions(p) for p in py_files) + pyproject_suppressions(root)
     return [
         Metric("app-total-lines", f"{total_app} / {LIMIT_APP_TOTAL_LINES}", total_app <= LIMIT_APP_TOTAL_LINES),
@@ -249,6 +261,8 @@ def collect_metrics(root: Path) -> list[Metric]:
         test_ratio_metric(root, py_files, total_app),
         # 登记(非 02 §2 预算指标,永不阻塞):工具面行数可见性,#154 审查观察 1。
         Metric("scripts-total-lines", f"{scripts_total}(登记用,不设限)", True, blocking=False),
+        # 登记:tests/fixtures/ 行数可见性,对冲"把 helper 搬进不计入分子的一侧"的引力。
+        Metric("fixtures-total-lines", f"{fixtures_total}(登记用,不设限)", True, blocking=False),
     ]
 
 
@@ -420,11 +434,11 @@ def check_ruff_consistency(root: Path) -> list[str]:
 
 
 def metric_line(metric: Metric) -> tuple[str, bool]:
-    """一行输出与是否计入失败。非阻塞指标永远只报告(02 §2:测试比分期)。"""
+    """一行输出与是否计入失败。非阻塞指标永远只报告(02 §6:测试比永久 report-only)。"""
     if metric.blocking:
         tag = "BUDGET-OK" if metric.ok else "BUDGET-FAIL"
         return f"{tag} {metric.metric_id}: {metric.detail}", not metric.ok
-    status = "" if metric.ok else "(超限;M0–M1 只报告,M2 起阻塞)"
+    status = "" if metric.ok else "(超限;永久只报告不阻塞——分子可搬运刷低,2026-09-11 人裁)"
     return f"BUDGET-REPORT {metric.metric_id}: {metric.detail} {status}".rstrip(), False
 
 

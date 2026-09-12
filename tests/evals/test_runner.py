@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 
 import pytest
+from evalkit import read_jsonl, results_of, write_jsonl
 
 from edu_agent.evals import (
     EnvironmentFailure,
@@ -57,14 +58,8 @@ class FakeSubject:
 
 @pytest.fixture
 def dataset(tmp_path: Path) -> Path:
-    path = tmp_path / "fake20.jsonl"
-    lines = [json.dumps({"id": f"c{i:02d}", "question": f"3+{i}=?"}) for i in range(TOTAL)]
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return path
-
-
-def load_cases(dataset: Path) -> list[dict]:
-    return [json.loads(line) for line in dataset.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return write_jsonl(tmp_path / "fake20.jsonl",
+                       [{"id": f"c{i:02d}", "question": f"3+{i}=?"} for i in range(TOTAL)])
 
 
 def make_runner(tmp_path: Path, subject, **config) -> EvalRunner:
@@ -72,14 +67,9 @@ def make_runner(tmp_path: Path, subject, **config) -> EvalRunner:
     return EvalRunner(subject, RunnerConfig(**{**defaults, **config}), tmp_path / "runs")
 
 
-def results_of(run_dir: Path) -> dict[str, dict]:
-    return {path.stem: json.loads(path.read_text(encoding="utf-8"))
-            for path in (run_dir / "results").glob("*.json")}
-
-
 def test_all_ok_writes_checkpoint_and_manifest(tmp_path, dataset):
     subject = FakeSubject()
-    run_dir = make_runner(tmp_path, subject).run(dataset, load_cases(dataset))
+    run_dir = make_runner(tmp_path, subject).run(dataset, read_jsonl(dataset))
     results = results_of(run_dir)
     assert len(results) == TOTAL and all(r["status"] == "ok" for r in results.values())
     manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
@@ -92,7 +82,7 @@ def test_all_ok_writes_checkpoint_and_manifest(tmp_path, dataset):
 
 def test_resume_only_reruns_missing_and_environment(tmp_path, dataset):
     # 首轮:c00-c14 成功,c15-c17 环境失败(重试耗尽),c18-c19 内容失败
-    cases = load_cases(dataset)
+    cases = read_jsonl(dataset)
     script = {**{f"c{i:02d}": ["env", "env", "env", "env"] for i in range(15, 18)},
               **{f"c{i:02d}": [ValueError("输出缺字段")] for i in range(18, 20)}}
     first = make_runner(tmp_path, FakeSubject(script), env_retry_attempts=2)
@@ -109,10 +99,8 @@ def test_resume_only_reruns_missing_and_environment(tmp_path, dataset):
 
 
 def test_environment_failure_retries_with_backoff(tmp_path, dataset):
-    cases = load_cases(dataset)
-    cases = [cases[0]]
-    dataset_one = tmp_path / "one.jsonl"
-    dataset_one.write_text(json.dumps(cases[0]) + "\n", encoding="utf-8")
+    cases = read_jsonl(dataset)
+    dataset_one = write_jsonl(tmp_path / "one.jsonl", [cases[0]])
     script = {"c00": ["env", "env", "ok"]}
     runner = make_runner(tmp_path, FakeSubject(script), env_retry_attempts=3,
                           backoff_base_s=0.05, backoff_cap_s=1.0)
@@ -128,9 +116,8 @@ def test_environment_failure_retries_with_backoff(tmp_path, dataset):
 
 
 def test_content_failure_not_retried(tmp_path, dataset):
-    cases = load_cases(dataset)[:1]
-    dataset_one = tmp_path / "one.jsonl"
-    dataset_one.write_text(json.dumps(cases[0]) + "\n", encoding="utf-8")
+    cases = read_jsonl(dataset)[:1]
+    dataset_one = write_jsonl(tmp_path / "one.jsonl", cases)
     script = {"c00": [ValueError("内容缺陷:缺总结")]}
     run_dir = make_runner(tmp_path, FakeSubject(script)).run(dataset_one, cases)
     result = results_of(run_dir)["c00"]
@@ -156,9 +143,9 @@ def test_concurrency_caps_parallelism(tmp_path, dataset):
     0.8s 上限;同机同 commit SSH 直跑全绿,证代码无罪、墙钟阈值对机器状态过敏)。
     区间重叠只看相对时序,对绝对时长漂移免疫。
     """
-    cases = load_cases(dataset)[:6]
+    cases = read_jsonl(dataset)[:6]
     dataset_six = tmp_path / "six.jsonl"
-    dataset_six.write_text("\n".join(json.dumps(c) for c in cases) + "\n", encoding="utf-8")
+    write_jsonl(dataset_six, cases)
     subject = FakeSubject(delay_s=0.15)
     make_runner(tmp_path, subject, concurrency=2).run(dataset_six, cases)
     assert len(subject.intervals) == 6
@@ -166,12 +153,11 @@ def test_concurrency_caps_parallelism(tmp_path, dataset):
 
 
 def test_resume_mismatch_refused(tmp_path, dataset):
-    cases = load_cases(dataset)
+    cases = read_jsonl(dataset)
     runner = make_runner(tmp_path, FakeSubject())
     run_dir = runner.run(dataset, cases)
     other = tmp_path / "other.jsonl"
-    other.write_text("\n".join(json.dumps({"id": f"x{i}", "q": i}) for i in range(3)) + "\n",
-                     encoding="utf-8")
+    write_jsonl(other, [{"id": f"x{i}", "q": i} for i in range(3)])
     with pytest.raises(ResumeMismatch, match="数据集版本"):
         runner.run(other, cases, run_dir=run_dir)
     different_config = make_runner(tmp_path, FakeSubject(), concurrency=4)
@@ -180,7 +166,7 @@ def test_resume_mismatch_refused(tmp_path, dataset):
 
 
 def test_morning_summary_counts_and_actions(tmp_path, dataset):
-    cases = load_cases(dataset)
+    cases = read_jsonl(dataset)
     script = {**{f"c{i:02d}": ["env", "env", "env", "env"] for i in (3, 7)},
               **{f"c{i:02d}": [ValueError("内容缺陷")] for i in (11, 13, 15)},
               "c17": [KeyboardInterrupt()]}

@@ -7,23 +7,12 @@ llama.cpp 本地服务(8302/8303)在 `usage.prompt_tokens_details.cached_tokens`
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 import pytest
-from fake_openai import FakeOpenAI, completion
+from fake_openai import completion
 
 from edu_agent.gateway import ModelRequest
 
-from gwkit import gateway_for
-
-
-def facts_line(facts_dir: Path) -> dict:
-    files = list(Path(facts_dir).glob("model_calls-*.jsonl"))
-    assert len(files) == 1, "单次调用应只有一个事实文件"
-    lines = files[0].read_text(encoding="utf-8").strip().splitlines()
-    assert len(lines) == 1
-    return json.loads(lines[0])
+from gwkit import facts_line, fake_gateway
 
 
 @pytest.mark.parametrize(
@@ -43,12 +32,7 @@ def facts_line(facts_dir: Path) -> dict:
     ],
 )
 def test_cache_read_naming_fallback(tmp_path, usage, expected):
-    server = FakeOpenAI([completion("答案", usage=usage)]).start()
-    try:
-        gateway = gateway_for(server.url, tmp_path)
+    with fake_gateway(tmp_path, [completion("答案", usage=usage)]) as (server, gateway):
         gateway.invoke(ModelRequest(role="tutor", messages=[{"role": "user", "content": "题"}],
                                     max_tokens=8))
-        gateway.close()
-    finally:
-        server.stop()
     assert facts_line(tmp_path)["gen_ai.usage.cache_read.input_tokens"] == expected

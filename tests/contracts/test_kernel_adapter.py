@@ -17,10 +17,12 @@ from edu_agent.api import (
     build_service,
 )
 from edu_agent.agents.small_lecturer import (
+    FIRST_QUESTION_COLLECT,
     OPENING_HINT_CORRECT,
     OPENING_HINT_INCORRECT,
 )
 from edu_agent.gateway import FailureType, GatewayError
+from partner_api import VISION_OK, MapSource, text_response
 
 
 class FakeGateway:
@@ -33,31 +35,24 @@ class FakeGateway:
     def invoke(self, request):
         self.requests.append(request)
         if request.role == "vision":
-            text = json.dumps({"acceptable": True, "reason": "单题清晰",
-                               "transcription": ""})
+            text = json.dumps(VISION_OK)
         else:
-            text = json.dumps({"reply": "你先说说题目给了哪些条件?",
+            # 首问轮(reply 轮带「对话记录」段)用不同句:首问恒为固定模板,reply 轮若与
+            # 首问同句会撞上输出面防复读背板(阶梯推进)——那是另一条路径的语义,本条合同
+            # 只钉「无护栏命中的模型文本达学生面 + 版本推进」。
+            first_turn = not any("对话记录" in str(m.get("content") or "")
+                                 for m in request.messages)
+            reply_text = "你打算先算哪一步?" if first_turn else "你刚才说的那一步很关键。"
+            text = json.dumps({"reply": reply_text,
                                "ready_to_confirm": self.ready_to_confirm},
                               ensure_ascii=False)
-        response = type("R", (), {})()
-        response.text = text
-        return response
-
-
-class FakeSource:
-    """确定性题源:seed bank 同构输出面。"""
-
-    def resolve(self, question_id):
-        return {"text": "解方程 3x+7=25,并说明每一步为什么这样做。", "answer": "x=6",
-                "analysis": "等式两边先同时减去 7。", "image": None,
-                "knowledge_points": ["简易方程"], "grade": "五年级",
-                "answer_correct_provenance": "partner_question_bank"}
+        return text_response(text)
 
 
 @pytest.fixture
 def service():
     service = build_service(SmallLecturerKernel(FakeGateway()))
-    service.source = FakeSource()
+    service.source = MapSource()
     return service
 
 
@@ -86,10 +81,12 @@ def test_real_kernel_dialogue_and_version_conflict(service):
             "input": {"skill_session_id": first["skill_session_id"],
                       "expected_session_version": version}}
     response = service.send(conversation_id, body)
-    # 复读兜底(#112):假 gateway 恒回同一句 → 复读打断走阶梯推进;本 fixture 无
-    # steps → bottom-out 披露终答(终答披露三路径之一,test_kernel_invariants 同款不变量),
-    # 不再以同款问句兜底自我复读。
-    assert "这一步我们直接看结果:x=6" in response["assistant_message"]["content"]
+    # 首问可见文本恒为固定模板(prompting.first_question_text);reply 轮的模型文本无护栏命中、
+    # 也不是复读 → 照常达学生面。复读/阶梯兜底由 tests/teaching 按公开路径覆盖。
+    assert first["first_question_ready"] is True
+    conversation = service._conversation_or_404(conversation_id)
+    assert conversation.extras["kernel_session"].first_question == FIRST_QUESTION_COLLECT
+    assert response["assistant_message"]["content"] == "你刚才说的那一步很关键。"
     # 内核 reply 推进版本;旧版本提交 → 409 合同码
     stale = dict(body, input={**body["input"], "expected_session_version": version})
     with pytest.raises(Exception) as excinfo:
@@ -98,14 +95,12 @@ def test_real_kernel_dialogue_and_version_conflict(service):
 
 
 def test_gateway_failure_maps_to_503():
-    from edu_agent.gateway import Gateway
-
     class ExplodingGateway:
         def invoke(self, request):
             raise GatewayError(FailureType.UPSTREAM_5XX, "上游 5xx")
 
     service = build_service(SmallLecturerKernel(ExplodingGateway()))
-    service.source = FakeSource()
+    service.source = MapSource()
     with pytest.raises(Exception) as excinfo:
         service.open("equation_subtract", "idem-real-3", learner={})
     assert getattr(excinfo.value, "status_code", None) == 503
@@ -135,9 +130,7 @@ class SequencedGateway:
 
     def invoke(self, request):
         self.requests.append(request)
-        response = type("R", (), {})()
-        response.text = json.dumps(self.replies.pop(0), ensure_ascii=False)
-        return response
+        return text_response(json.dumps(self.replies.pop(0), ensure_ascii=False))
 
 
 def test_open_message_finish_e2e_real_kernel_with_bank_image():

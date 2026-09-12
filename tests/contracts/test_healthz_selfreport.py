@@ -10,32 +10,16 @@
 
 from __future__ import annotations
 
-import threading
-
 import httpx
 import pytest
 
-from edu_agent.api import build_server, build_service
-
-
-class StubKernel:
-    name = "stub"
-    start = staticmethod(lambda question, learner: type("T", (), {"text": "第一问"})())
-    reply = staticmethod(
-        lambda session, message: type("Turn", (), {"text": "嗯,你接着说", "ready_to_confirm": False})()
-    )
-    finish = staticmethod(
-        lambda session: type("S", (), {"text": "小结", "status": "needs_review"})()
-    )
+from partner_api import ScriptedKernel, serving
 
 
 @pytest.fixture
 def healthz_url():
-    server = build_server(build_service(StubKernel()))
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    yield f"http://127.0.0.1:{server.server_address[1]}/healthz"
-    server.shutdown()
-    server.server_close()
+    with serving(ScriptedKernel(["嗯,你接着说"], start_text="第一问")) as base:
+        yield f"{base}/healthz"
 
 
 def _get(url: str) -> dict:

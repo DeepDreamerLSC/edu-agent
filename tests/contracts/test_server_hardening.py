@@ -10,22 +10,16 @@
 from __future__ import annotations
 
 import http.client
-import threading
 
 import httpx
+import pytest
 
-from edu_agent.api import IdentityService, build_server, build_service
-from partner_api import ScriptedKernel, post
+from edu_agent.api import IdentityService
+from partner_api import ScriptedKernel, post, serving
 from auth_testing import TEST_TOKEN
 
 _API_KEY = "test-api-key"
 _NATIVE_APP = "partner_student_app"
-
-
-def _serve(identity: IdentityService | None = None) -> tuple[str, object]:
-    server = build_server(build_service(ScriptedKernel(["先看条件。"])), identity)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    return f"http://127.0.0.1:{server.server_address[1]}", server
 
 
 def _raw_post(base: str, path: str, headers: dict[str, str]) -> tuple[int, bytes]:
@@ -47,32 +41,23 @@ def _raw_post(base: str, path: str, headers: dict[str, str]) -> tuple[int, bytes
 
 
 def test_query_string_healthz_still_200():
-    base, server = _serve()
-    try:
+    with serving(ScriptedKernel(["先看条件。"])) as base:
         response = httpx.get(f"{base}/healthz?foo=bar", timeout=5.0, trust_env=False)
         assert response.status_code == 200  # 修复前:healthz 锚定失配 → 401
-    finally:
-        server.shutdown()
-        server.server_close()
 
 
 def test_query_string_post_route_still_routes():
-    base, server = _serve()
-    try:
+    with serving(ScriptedKernel(["先看条件。"])) as base:
         response = post(base, "/api/conversations?foo=bar",
                         {"question_text": "小明有 12 本书,借出 5 本,还剩几本?",
                          "idempotency_key": "qs-001"})
         assert response.status_code == 201  # 修复前:`^/api/conversations$` 失配 → 404
         assert response.json()["first_question"]
-    finally:
-        server.shutdown()
-        server.server_close()
 
 
 def test_query_string_does_not_pollute_path_param():
     """带查询串的 GET 仍取到真 conversation_id(而非 "id?foo=bar" 查不到)。"""
-    base, server = _serve()
-    try:
+    with serving(ScriptedKernel(["先看条件。"])) as base:
         created = post(base, "/api/conversations",
                        {"question_text": "1+1 等于几?", "idempotency_key": "qs-002"})
         conversation_id = created.json()["conversation_id"]
@@ -81,38 +66,22 @@ def test_query_string_does_not_pollute_path_param():
                          timeout=5.0, trust_env=False)
         assert view.status_code == 200
         assert view.json()["conversation_id"] == conversation_id
-    finally:
-        server.shutdown()
-        server.server_close()
 
 
 # ---------- ② Content-Length 钳制与 400 ----------
 
-
-def test_non_integer_content_length_is_400():
-    base, server = _serve()
-    try:
+@pytest.mark.parametrize("content_length", [
+    "abc",  # 修复前:int() 抛错落 503
+    "-1",   # 修复前:read(-1) 读到 EOF
+], ids=["test_non_integer_content_length_is_400", "test_negative_content_length_is_400"])
+def test_malformed_content_length_is_400(content_length):
+    with serving(ScriptedKernel(["先看条件。"])) as base:
         status, _ = _raw_post(base, "/api/conversations", {
-            "Authorization": f"Bearer {TEST_TOKEN}", "Content-Length": "abc"})
-        assert status == 400  # 修复前:int() 抛错落 503
-    finally:
-        server.shutdown()
-        server.server_close()
-
-
-def test_negative_content_length_is_400():
-    base, server = _serve()
-    try:
-        status, _ = _raw_post(base, "/api/conversations", {
-            "Authorization": f"Bearer {TEST_TOKEN}", "Content-Length": "-1"})
-        assert status == 400  # 修复前:read(-1) 读到 EOF
-    finally:
-        server.shutdown()
-        server.server_close()
+            "Authorization": f"Bearer {TEST_TOKEN}", "Content-Length": content_length})
+        assert status == 400
 
 
 # ---------- ③ 请求头大小写不敏感 ----------
-
 
 def test_lowercase_auth_headers_are_read():
     """小写 authorization/idempotency-key 走通 API Key 与幂等键两道闸。
@@ -121,8 +90,8 @@ def test_lowercase_auth_headers_are_read():
     修复后两闸都过,停在 PKCE 校验(400 NATIVE_PKCE_INVALID)——证明两个头都按
     大小写不敏感读到。
     """
-    base, server = _serve(IdentityService({"native_app_id": _NATIVE_APP, "api_key": _API_KEY}))
-    try:
+    identity = IdentityService({"native_app_id": _NATIVE_APP, "api_key": _API_KEY})
+    with serving(ScriptedKernel(["先看条件。"]), identity=identity) as base:
         response = httpx.post(f"{base}/api/openapi/v1/auth/native-codes",
                               headers={"authorization": f"Bearer {_API_KEY}",
                                        "idempotency-key": "login-001"},
@@ -130,6 +99,3 @@ def test_lowercase_auth_headers_are_read():
                               timeout=5.0, trust_env=False)
         assert response.status_code == 400
         assert response.json()["error"]["code"] == "NATIVE_PKCE_INVALID"
-    finally:
-        server.shutdown()
-        server.server_close()

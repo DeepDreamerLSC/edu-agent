@@ -1,17 +1,17 @@
 """年级知识点树 → 开题年级依据(grade_grounding + 统一 open 注入)。
 
 数据随配置走(02 §6 只导入公开入口):grade_grounding 已从包公开导出;
-开题注入经 start() 全链路验证,零真实模型(假上游)。本文件是配置新增的打底：
+开题注入经 start() 全链路验证,零真实模型(假上游)。本文件是配置新增的打底:
 树读不到/年级未存 → 空串,不扰动现有教学弧线。
 """
 
 from __future__ import annotations
 
-from fake_openai import FakeOpenAI, completion
+from fake_openai import completion
 
 from edu_agent.agents.small_lecturer import grade_grounding, start
 
-from test_kernel_state_machine import kernel_gateway, open_json
+from teachkit import kernel_env, open_json
 
 GRADE6_KQ = {
     "text": "鸡和兔一共有8只,共有26只脚。鸡和兔各有多少只?说明思路。",
@@ -42,23 +42,17 @@ def test_grade_grounding_empty_when_unmatched():
 # ---------- 开题注入:命中才注入,不命中不动弧线 ----------
 
 def test_open_injects_grade_grounding_when_topic_matches(tmp_path):
-    fake = FakeOpenAI([completion(open_json("这道题我们先明确一下要求什么?"))]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    start(GRADE6_KQ, GRADE6_LEARNER, gateway=gateway)
-    gateway.close()
-    fake.stop()
-    user_message = fake.requests[0]["messages"][1]
-    assert user_message["role"] == "user"
-    assert "年级知识点依据" in user_message["content"]
-    assert "鸡兔同笼" in user_message["content"]
-    assert "鸡兔同笼问题" in user_message["content"]
+    with kernel_env(tmp_path, [completion(open_json("这道题我们先明确一下要求什么?"))]) as (fake, gateway):
+        start(GRADE6_KQ, GRADE6_LEARNER, gateway=gateway)
+        user_message = fake.requests[0]["messages"][1]
+        assert user_message["role"] == "user"
+        assert "年级知识点依据" in user_message["content"]
+        assert "鸡兔同笼" in user_message["content"]
+        assert "鸡兔同笼问题" in user_message["content"]
 
 
 def test_open_skips_grounding_when_grade_unmatched(tmp_path):
-    fake = FakeOpenAI([completion(open_json("这道题我们先明确一下要求什么?"))]).start()
-    gateway = kernel_gateway(tmp_path, fake.url)
-    start(GRADE6_KQ, GRADE5_LEARNER, gateway=gateway)
-    gateway.close()
-    fake.stop()
-    user_message = fake.requests[0]["messages"][1]
-    assert "年级知识点依据" not in user_message["content"]
+    with kernel_env(tmp_path, [completion(open_json("这道题我们先明确一下要求什么?"))]) as (fake, gateway):
+        start(GRADE6_KQ, GRADE5_LEARNER, gateway=gateway)
+        user_message = fake.requests[0]["messages"][1]
+        assert "年级知识点依据" not in user_message["content"]

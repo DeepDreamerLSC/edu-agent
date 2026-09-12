@@ -22,14 +22,16 @@ from __future__ import annotations
 import difflib
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 
 from .format_guard import _DOWNGRADE_PROMPT, evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
-from .prompting import (_user_prompt, diagnose_turn_hint, grade_grounding, opening_hint,
-                        summary_system_prompt, system_prompt)
+from .numeric import (_answer_focus_numbers, _answer_numbers, _drift_sources, _known_answer,
+                      _question_numbers, _reply_numbers, _spoken_numbers)
+from .prompting import (_user_prompt, diagnose_turn_hint, first_question_text, grade_grounding,
+                        opening_hint, summary_system_prompt, system_prompt)
 from .session import LearnerSession, SessionVersionConflict, Summary, TerminalStateError, Turn
 from .tone_guardrails import apply_tone_guardrail
 
@@ -159,30 +161,6 @@ def _student_signals_stuck(student_message: str) -> bool:
     return bool(re.search(r"我不太会|我猜不出|我猜不出来|我不知道|我想不出|我想不出来|我不会做|我不会了|不会吧(?![?!？])|太难了|没思路|越来越不懂", student_message))
 
 
-# 中文数字单字映射(仅学生口述侧:「八分之七」这类说法没有 ASCII 数字)。
-# 只映射单字、不解析复合(「十五」→ 10/5 而非 15)——宁漏勿误:漏 → 走模型路径(现状
-# 行为);误 → 在不该请复讲时请复讲。参考答案侧不映射(题库答案均为 ASCII 写法,
-# 「两直线平行」类文字答案无 ASCII 数字可对,保持不可判定 → 模型路径)。
-_CJK_NUMERALS = {"零": 0.0, "〇": 0.0, "一": 1.0, "二": 2.0, "两": 2.0, "三": 3.0,
-                 "四": 4.0, "五": 5.0, "六": 6.0, "七": 7.0, "八": 8.0, "九": 9.0,
-                 "十": 10.0, "百": 100.0, "千": 1000.0, "万": 10000.0}
-
-
-def _spoken_numbers(text: str) -> set[float]:
-    """学生口述数字全集:ASCII 数字 ∪ 出现的中文数字单字。"""
-    return _question_numbers(text) | {
-        value for char, value in _CJK_NUMERALS.items() if char in (text or "")}
-
-
-def _known_answer(session: "LearnerSession") -> str:
-    """已知终答文本:question.answer 优先,空则阶梯末级 value(与 _reveal_stuck_hint/
-    _drift_sources 同源,三处判定基线一致)。"""
-    answer = str(session.question.get("answer") or "").strip()
-    if not answer and session.steps:
-        answer = str(session.steps[-1].get("value") or "").strip()
-    return answer
-
-
 def _student_hits_known_answer(session: "LearnerSession", student_message: str) -> bool:
     """incorrect 弧线:学生陈述命中已知答案(#112 触发判据,可复算、零文本相似度)。
 
@@ -205,30 +183,6 @@ def _student_hits_known_answer(session: "LearnerSession", student_message: str) 
         return False
     return _hits_answer_numbers(session, student_message)
 
-
-def _answer_numbers(session: "LearnerSession") -> set[float]:
-    """已知答案里的 ASCII 数字集(#149 判据底座):空集 = 无法确定性判定 → fail-open。"""
-    return _question_numbers(_known_answer(session))
-
-
-def _answer_focus_numbers(session: "LearnerSession") -> set[float]:
-    """答案数字里**剔除题面已给数字**后的结论数字(#165 WS4 守卫粒度)。
-
-    实测(#152 / 夜评 run 34502985698):chicken_rabbit 的阶梯末级 value 是**算式**
-    「8 - 5 = 3」→ 答案数字 {3,5,8},其中 8 是题面给定的总数;学生末轮
-    「所以兔有10除以2等于5只,鸡有3只,检查…」**永远不会再复述题面数字** →
-    「学生是否已陈述终答」恒 False → 判停闸在学生已说出终答的末轮误触发,确认句被
-    换走 + 强制不确认 → needs_review(实测把 equation/chicken_rabbit 这类收束轮压分)。
-    剔掉题面数字后,判据只要求说出**答案里真正新增的结论数字**;
-    兜底:剔完为空(答案数字全在题面里)→ 退回原集,不放行任何判定(fail-closed)。
-
-    注意与 `_answer_numbers` 的分工(两处口径不同,各有依据):
-    - **漂移池**(`_drift_sources`)用全量 `_answer_numbers`——凡能泄露答案的数字都算;
-    - **「是否已陈述」判据**(本函数)用结论数字——不逼学生复述题面给定的数。
-    """
-    numbers = _answer_numbers(session)
-    given = _question_numbers(str(session.question.get("text") or ""))
-    return (numbers - given) or numbers
 
 # 脚手架渐隐档的提示(#107 / #146 M3「脚手架渐隐」):学生已经自己做出来过一步 →
 # 下一次卡住**先问不揭示**(撤一级支持)。只给问句、不给下一步、不给数值。
@@ -281,7 +235,6 @@ def _hits_answer_numbers(session: "LearnerSession", text: str) -> bool:
     单字)。不要求字面/顺序——「兔5只、鸡3只」同样命中「鸡3只,兔5只」;题面已给的数字
     不算答案(见 `_answer_focus_numbers`)。"""
     return _hits_numbers(_answer_focus_numbers(session), text)
-
 
 
 def _student_stated_answer(session: "LearnerSession", student_message: str) -> bool:
@@ -373,48 +326,6 @@ NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能�
 SAFE_FALLBACK_TEXT = "先回到当前小问,你能说出题目明确给出的一个条件吗?"
 
 
-def _question_numbers(text: str) -> set[float]:
-    """题面条件数字全集(整数/小数;分数按两个数字处理,与口算习惯一致)。"""
-    return {float(m) for m in re.findall(r"\d+(?:\.\d+)?", text or "")}
-
-
-def _reply_numbers(text: str) -> set[float]:
-    """抽取制数字(替代自报制):回复文本里除「第N」序数语境外的全部数字。
-
-    与 _question_numbers 同口径(整数/小数;分数按两个数字);先剔除「第N」序数
-    (第1/第2步…),避免把序数当数字引用误标漂移。"""
-    stripped = re.sub(r"第\s*\d+(?:\.\d+)?", "", text or "")
-    return _question_numbers(stripped)
-
-
-def _drift_sources(session: LearnerSession, student_message: str | None,
-                   ready_to_confirm: bool) -> tuple[set[float], set[float]]:
-    """数字来源标签池(M2 闭环 #113/#34 + #157 评审末值边界):允许集 =
-    题面 ∪ (steps 值 − 终答数字) ∪ 学生历史数字 ∪ [终答数字:仅 ready_to_confirm 态并入]。
-
-    终答数字按**值**从 steps 无条件允许集剥离(#157 评审:模型自报阶梯含末值=答案,
-    整段照抄演算会 violations=[] 洗白——"自报进白名单"与 cited_numbers 同病);
-    按值而非按位置(steps[:-1]):阶梯末级未必是答案(题库 16/10 阶梯答案 3/5),
-    按位置会把诚实的末级中间值误伤,按值只锁真正要保护的答案数字。
-
-    返回 (允许集, 终答数字池)。终答数字在非确认态单独成池、不入允许集,供违规
-    来源标签判定:违规数字若在终答池 → 标签 "answer"(对话态提前说终答),否则
-    "hallucinated"(无任何合法来源)。学生历史数字无条件放行(学生自己说过的不算喂)。"""
-    face = _question_numbers(str(session.question.get("text") or ""))
-    steps = set()
-    for step in session.steps:
-        steps |= _question_numbers(str(step.get("value") or ""))
-    student = set()
-    for message in session.history:
-        if message.get("role") == "user":
-            student |= _question_numbers(str(message.get("content") or ""))
-    if student_message:
-        student |= _question_numbers(str(student_message))
-    answer = _answer_numbers(session)  # #156 统一判据底座:answer 优先,阶梯末级兜底
-    allowed = face | (steps - answer) | student | (answer if ready_to_confirm else set())
-    return allowed, answer
-
-
 # 复读自批评(业界 self-refine:把 tutor 自己上一条当反面证据喂回;任务包2步3)
 _SELF_CRITIQUE = (
     "你上一轮已经这样问过,学生仍说不会/没答上来。别重复这个问点:"
@@ -467,7 +378,8 @@ def _contextual_fallback(session: "LearnerSession | None", guard: str,
         snippet = str(student_message).strip()[:24]
         return f"先回到你刚说的「{snippet}」——你能从题目里再确认一个已知条件吗?"
     # 纯图/无权威答案(十字绣/剪绳子/连线题):不逼学生答条件,软性回到看图
-    if guard == "answer_leak" and "unverified_source_value_disclosure" in rule_ids:
+    if guard == "answer_leak" and any(
+            rule.startswith("source_value_disclosure") for rule in rule_ids):
         return "先回到这道题,我们一起看看题目或图片里说了什么——你能先读出一个已知信息吗?"
     if guard == "format":
         return _DOWNGRADE_PROMPT
@@ -483,17 +395,29 @@ class _GuardContext:
     role: str = "tutor"
     messages: list[dict] | None = None
     schema: dict | None = None
-    # 泄露护栏的答案对照基线(#149):由 `_known_answer(session)` 填入(question.answer
-    # 优先、steps 末值兜底)。此前直接读 question["answer"],评测侧 question 只传
-    # {"text": ...} → 永远"无答案模式",护栏拿不到基准;统一基线后评测帧护栏也能生效。
+    # 答案对照基线(#149):由 `_known_answer(session)` 填入(answer 优先、steps 末值兜底)
+    # ——评测侧 question 只传 {"text": ...} 时护栏也有基准。
     answer_reference: str = ""
     images: list[str] | None = None
     student_message: str | None = None
     student_evidence: tuple[str, ...] = ()  # 学生历史 user 消息(泄露护栏对照:已说答案可复述)
+    cited_numbers: list[float] = field(default_factory=list)  # 模型自报集(影子对照,埋点用)
+    model_turn: bool = True  # 是否落模型路径埋点(首问 False:首问经固定模板覆盖,不额外留痕)
 
 
-def _guard_check(ctx: "_GuardContext", text: str) -> tuple[str | None, list[str], str | None]:
-    """三护栏(泄露/语气/格式)逐个过;返回 (guard_or_None, rule_ids, normalized_or_downgrade)。"""
+def _guard_check(ctx: "_GuardContext", text: str, session: "LearnerSession | None" = None,
+                 ready_to_confirm: bool = False) -> tuple[str | None, list[str], str | None, set[float]]:
+    """三护栏(泄露/语气/格式)逐个过 + 数值披露门(单一判据)。
+
+    「未经学生验证的源值披露」的**唯一判据** = 数字级归因(`_drift_sources` 的允许集/
+    终答池):`_reply_numbers(text) − 允许集` = 违规数字,按来源标签池再分 `answer`
+    (对话态提前说终答 = 泄漏)与 `hallucinated`(无合法来源 = 幻觉),命中即返回
+    `(answer_leak, rule_ids, None, 违规数字)` 走修复漏斗。句级近似判据(guardrails 的
+    unverified_source_value_disclosure)已删——两套判据并存正是 #184 根因(有参考答案时
+    句级分支恒不可达 → 检测到却原样达学生面);「禁止出现第二套判据」同 `_hits_answer_numbers`。
+
+    同一份归因既记账(`extracted`/`violation_sources`)又当门(模型回合 `gate`:
+    blocked=拦下重写 / observed=仅检测),不再只是记账(key: 一次判定,无第二套实现)。"""
     leak = evaluate_student_visible_question(
         text,
         # #149:答案基线统一走 _known_answer(answer 优先、steps 末值兜底);
@@ -503,17 +427,32 @@ def _guard_check(ctx: "_GuardContext", text: str) -> tuple[str | None, list[str]
         analysis_reference=str(ctx.question.get("analysis") or ""),
         student_evidence=list(ctx.student_evidence),
     )
-    if leak.fallback_required:
-        return ("answer_leak", [f.finding for f in leak.findings], None)
+    # 单一判据(仅模型回合):允许集口径见 `_drift_sources`;无会话时不判(fail-open)
+    allowed, answer_pool = (_drift_sources(session, ctx.student_message, ready_to_confirm)
+                            if session is not None else (set(), set()))
+    extracted = _reply_numbers(text)
+    violations = extracted - allowed
+    sources = [{"number": n, "source": "answer" if n in answer_pool else "hallucinated"}
+               for n in sorted(violations)]
+    if session is not None and ctx.model_turn:  # 首问不落模型路径埋点(原口径)
+        session.guard_events.append({
+            "branch": "model", "cited": ctx.cited_numbers,
+            "extracted": sorted(extracted), "violation_sources": sources,
+            "gate": "blocked" if violations else "observed"})
+    if leak.fallback_required or violations:
+        rules = [f.finding for f in leak.findings]
+        rules += [f"source_value_disclosure:{source}"
+                  for source in dict.fromkeys(item["source"] for item in sources)]
+        return ("answer_leak", rules, None, violations)
     tone = apply_tone_guardrail(
         reply=text, grade_band=_tone_band(ctx.grade), interaction_signal="neutral",
         teaching_move="connect_relation", ready_to_record=False)
     if tone.applied:
-        return ("tone", list(tone.reason_codes), None)
+        return ("tone", list(tone.reason_codes), None, set())
     fmt = evaluate_student_visible_format(text)
     if not fmt.ok:
-        return ("format", list(fmt.findings), fmt.downgrade_prompt)
-    return (None, [], fmt.reply)  # ok → 归一化文本(LaTeX 已转 a/b)
+        return ("format", list(fmt.findings), fmt.downgrade_prompt, set())
+    return (None, [], fmt.reply, set())  # ok → 归一化文本(LaTeX 已转 a/b)
 
 
 def _record_event(session: "LearnerSession | None", guard: str, rule_ids: list[str],
@@ -531,8 +470,8 @@ def _record_event(session: "LearnerSession | None", guard: str, rule_ids: list[s
 
 
 def _regenerate(ctx: "_GuardContext", session: "LearnerSession | None", reply_text: str,
-                critique: str) -> str | None:
-    """带一句 critique 重调 tutor 一次;重调后过护栏(clean)才返回文本,否则 None。"""
+                critique: str, ready_to_confirm: bool = False) -> str | None:
+    """带一句 critique 重调 tutor 一次;重调后过同一判据(clean)才返回文本,否则 None。"""
     if ctx.gateway is None or ctx.messages is None:
         return None
     repair_messages = [*ctx.messages, {"role": "user", "content": critique}]
@@ -546,36 +485,45 @@ def _regenerate(ctx: "_GuardContext", session: "LearnerSession | None", reply_te
     new_text = str(repaired.get("reply") or "").strip()
     if not new_text:
         return None
-    g2, _r2, d2 = _guard_check(ctx, new_text)
+    g2, _r2, d2, _v2 = _guard_check(ctx, new_text, session, ready_to_confirm)
     return d2 if g2 is None else None
 
 
 def _guard_output(reply_text: str, session: "LearnerSession | None" = None,
-                  ctx: "_GuardContext | None" = None) -> str:
-    """三护栏响应策略(任务包2步2;检测规则不动,只改策略与调用方式):
+                  ctx: "_GuardContext | None" = None,
+                  ready_to_confirm: bool = False) -> str:
+    """三护栏响应策略(检测规则不动,只改策略与调用方式):
     - 修复重生成优先:命中 → 带规则 id+命中片段重调 tutor 一次,再命中才降级;
-    - 兜底句情境化:万能句扩为情境变体(接学生原话);
-    - 无答案模式放宽:answer 空时 unverified_source_value_disclosure 走 stuck+重生成;
-    - LaTeX 双修:格式护栏归一化 \frac{a}{b} → a/b。
-    命中埋点 {guard, rule_ids, original, regenerated} 落 session.guard_events。"""
+    - 兜底句情境化(接学生原话);LaTeX 双修由格式护栏归一化 \\frac{a}{b} → a/b;
+    - 数值披露门(#184):`_guard_check` 的单一判据命中(泄漏 answer / 幻觉 hallucinated)
+      即走本漏斗同一三档(#168 引入),不再只是记账。
+    **stuck 语义(#184)**:仅「修复失败 → 兜底句」时置卡点(修好不置,否则一次部分泄漏
+    就把对话推向 needs_review);已判过的兜底句不再重生成一次(见下)。"""
     if ctx is None:
         return reply_text
-    guard, rule_ids, normalized = _guard_check(ctx, reply_text)
+    guard, rule_ids, normalized, violations = _guard_check(ctx, reply_text, session,
+                                                           ready_to_confirm)
     if guard is None:
         return normalized
-    soft_no_answer = (
-        guard == "answer_leak"
-        and "unverified_source_value_disclosure" in rule_ids
-        and not ctx.answer_reference.strip()  # #149:与护栏答案基线同源(此前读 question["answer"])
-    )
+    prev_text = (str(session.history[-1].get("content") or "")
+                 if session is not None and session.history
+                 and session.history[-1].get("role") == "assistant" else "")
+    if prev_text and reply_text.strip() == prev_text.strip() and violations:
+        # 本轮待发文本 == 上一轮学生可见文本(确定性揭示兜底 / 同句兜底重来一次):它已判过
+        # 且本轮已无新信息可重写——直接落兜底句,由输出面防复读背板推进阶梯(#107/#112),
+        # 不再多烧一次重生成(#184:重复兜底句会把判据一次命中拖成两次)。
+        return _contextual_fallback(session, guard, rule_ids, ctx.student_message)
     critique = (f"你上一条回复被教学护栏拦截(规则:{','.join(rule_ids)};命中内容:"
                 f"「{reply_text[:48]}」)。请重写这条回复,直接回应用户当前的问题;"
                 f"不要重复被拦截的内容,不要提前给出答案或方法名。")
-    regenerated = _regenerate(ctx, session, reply_text, critique)
+    if violations:
+        numbers = "、".join(f"{n:g}" for n in sorted(violations))
+        critique = (f"你上一条回复被教学护栏拦截(规则:{','.join(rule_ids)};未经学生验证"
+                    f"就说出的数值:{numbers})。请重写这条回复:不要说这些数值,也不要给出"
+                    f"答案数字或题面之外的中间结果——用学生已经说过的信息继续引导他往下算。")
+    regenerated = _regenerate(ctx, session, reply_text, critique, ready_to_confirm)
     if regenerated is not None:
         _record_event(session, guard, rule_ids, reply_text, regenerated=True)
-        if session is not None and soft_no_answer:
-            session.stuck = True  # 无答案放宽:stuck 标记 + 重生成(软信号)
         return regenerated
     fallback = _contextual_fallback(session, guard, rule_ids, ctx.student_message)
     _record_event(session, guard, rule_ids, reply_text, regenerated=False)
@@ -628,10 +576,8 @@ def _open_user_message(learner: dict, question: dict) -> dict:
 
 
 def _store_steps(session: LearnerSession, steps: list[dict]) -> list[dict]:
-    """solver 职责(独立函数):校验分步解并存进 session.steps(阶梯底稿 + 数字校验基准)。
-
-    只做确定性校验(步骤非空、每步有 step/value),不调模型;不校验通过则弃。
-    """
+    """solver 职责:确定性校验分步解(步骤非空、每步有 step/value,不调模型)并存进
+    session.steps(阶梯底稿 + 数字校验基准);不通过则弃。"""
     validated = [
         {"step": str(s.get("step") or "").strip(), "value": str(s.get("value") or "").strip()}
         for s in (steps or [])
@@ -755,18 +701,26 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
         # 纯图题:转写回填题面(新 dict,不改调用方入参)
         session.question = {**session.question, "text": str(payload["transcription"])}
     _store_steps(session, payload.get("steps") or [])  # solver 职责:阶梯底稿 + 校验基准
-    # #107 方案 A:题库解析存在时,**既定分步**优先于模型当场生成的分步解
-    # (确定性切片、零模型调用;题源适配器填 analysis → 生产面生效,评测用例不带
-    #  analysis → 评测面零触达)。切不出 ≥2 步时保持模型分步解不变。
+    # #107 方案 A:题库解析存在时**既定分步**优先于模型当场生成的分步解(确定性切片、
+    # 零模型调用;切不出 ≥2 步时保持模型分步解不变)。
     ladder = _analysis_steps(str(session.question.get("analysis") or ""))
     if ladder:
         session.steps = ladder
     ctx = _GuardContext(question=session.question, grade=learner.get("grade", ""),
                         gateway=gateway, role="tutor", messages=open_messages,
-                        schema=OPEN_SCHEMA, answer_reference=_known_answer(session))
+                        schema=OPEN_SCHEMA, answer_reference=_known_answer(session),
+                        model_turn=False)  # 首问经固定模板覆盖:不落模型路径埋点
     safe_text = _guard_output(str(payload.get("reply") or ""), session, ctx)
     if not safe_text.strip():
         safe_text = _OPENING_FALLBACK  # 图文题 acceptable=false 且 reply 留空 → 确定性兜底首问
+    else:
+        # 首问固定模板(见 prompting.first_question_text):模型生成的可见文本一律不用——
+        # 实测首问会把答案数字报出来;模型调用照旧,仍产出 steps/transcription。
+        # transcription 供模板复述题面(读出内容 → 图像招呼语 + 半句复述);
+        # question 供文字档采集句按题型分流(选择题/非选择题)。
+        safe_text = first_question_text(learner.get("answer_status"),
+                                        str(payload.get("transcription") or ""),
+                                        session.question)
     session.state = "first_question_ready"
     session.first_question = safe_text
     _stamp_turn(session, 0)  # 首问轮 = transcript 第 0 轮(其 guard 事件如首问泄露)
@@ -802,7 +756,7 @@ def _gate_premature_confirm(session: LearnerSession, ctx: "_GuardContext", outpu
 
 
 def _repair_feeds_method(ctx: "_GuardContext", session: LearnerSession, text: str,
-                         hits: list[str]) -> tuple[str, str]:
+                         hits: list[str], ready_to_confirm: bool = False) -> tuple[str, str]:
     """代喂命中的处置(#165 WS4「守卫替换粒度」):重生成 → 脱敏 → 模板兜底。
 
     返回 `(学生可见文本, 处置路径)`;路径取值 `regenerated` / `masked` / `template`,
@@ -810,7 +764,7 @@ def _repair_feeds_method(ctx: "_GuardContext", session: LearnerSession, text: st
     语义一并丢掉(并强制不确认)→ 学生已说出终答的末轮被推成 needs_review。
     不变量的最后一道:任何路径下学生可见文本都不含未说出的方法词。
     """
-    regenerated = _regenerate(ctx, session, text, _FEEDS_METHOD_CRITIQUE)
+    regenerated = _regenerate(ctx, session, text, _FEEDS_METHOD_CRITIQUE, ready_to_confirm)
     if regenerated is not None and not _feeds_method_hits(regenerated, ctx.student_evidence):
         return regenerated, "regenerated"
     masked = _mask_hit_tokens(text, hits)
@@ -870,14 +824,20 @@ def reply(session: LearnerSession, student_message: str, *,
                         gateway=gateway, role="tutor", messages=_reply_messages,
                         schema=TUTOR_TURN_SCHEMA, student_message=student_message,
                         answer_reference=_known_answer(session),
+                        cited_numbers=sorted({float(n) for n in (output.get("cited_numbers") or [])}),
                         student_evidence=(tuple(
                             str(message["content"]) for message in session.history
                             if message.get("role") == "user"
                         ) + (student_message,)))
+    # 泄露/语气/格式三护栏 + 数值披露门(#184):检测 → 重生成 → 兜底同一漏斗(事件在
+    # 漏斗内落,含 rule_ids/regenerated);只判模型输出,确定性揭示/兜底句不在判据范围。
+    safe_text = _guard_output(output["reply"], session, ctx,
+                              bool(output["ready_to_confirm"]))
     # 复读自批评(self-refine):与上一轮 tutor 输出高度相似 → 打回重生成一次,仍复读才降级。
     prev = session.history[-1]["content"] if session.history else session.first_question
-    if prev and _is_repeat(prev, output["reply"]):
-        refined = _regenerate(ctx, session, output["reply"], _SELF_CRITIQUE)
+    if prev and _is_repeat(prev, safe_text):
+        refined = _regenerate(ctx, session, safe_text, _SELF_CRITIQUE,
+                              bool(output["ready_to_confirm"]))
         if refined is None or _is_repeat(prev, refined):
             # 复读仍未破 → 阶梯推进替代同款问句兜底(#112 复读循环:旧兜底「先回到你
             # 刚说的…」以同句反复,自身成为复读源头;实测 chicken_rabbit/triangle_area
@@ -885,15 +845,15 @@ def reply(session: LearnerSession, student_message: str, *,
             # bottom-out(终答仅该路径披露,不变量保持)。
             refined = _reveal_stuck_hint(session)
             session.stuck = True  # 复读打断 = 卡点标记(R6 同款)
-        output["reply"] = refined
-    safe_text = _guard_output(output["reply"], session, ctx)
+        safe_text = refined
     method_hits = _feeds_method_hits(safe_text, ctx.student_evidence)
     if method_hits:
         # 复讲轮代喂(仅「学生尚未说出」的方法词,#157 裁定 1)。**替换粒度**(#152
         # follow-up / #165 WS4):命中 ≠ 整轮作废——先带指令重生成(保留本轮引导/确认
         # 语义),失败再确定性脱敏(只隐去命中词),模板仅末位兜底。埋点补齐(#112):
         # 记被换下的原文 + 命中词 + 处置路径 mode(护栏重生成 vs 解析脱敏对照口径)。
-        repaired, mode = _repair_feeds_method(ctx, session, safe_text, method_hits)
+        repaired, mode = _repair_feeds_method(ctx, session, safe_text, method_hits,
+                                               bool(output["ready_to_confirm"]))
         _record_event(session, "feeds_method", method_hits, safe_text,
                       regenerated=(mode != "template"), mode=mode)
         safe_text = repaired
@@ -911,29 +871,11 @@ def reply(session: LearnerSession, student_message: str, *,
         output["reply"] = safe_text
         output["ready_to_confirm"] = False
         session.stuck = True
-    # 判停闸(#149):模型建议的 ready_to_confirm 需过确定性校验,见 _gate_premature_confirm
+    # 判停闸(#149)在漏斗/代喂/防复读**之后**:模型建议的 ready_to_confirm 由确定性校验
+    # 决定(学生未陈述答案 → 闸下并重写,按非确认态取数值允许池,#157 末值边界)。
+    # 泄漏拦截在本轮**更早**完成(见上 `_guard_output`):闸改写的文本若再引入未验证数值,
+    # 由下一轮漏斗与埋点接住(#184 只把观测升级为门,不新增第二套判据)。
     safe_text = _gate_premature_confirm(session, ctx, output, safe_text, student_message)
-    # 数字漂移守卫(抽取制 + 来源标签池,M2 闭环 #113/#34):抽取模型 reply 文本
-    # 里的数字(排除"第N"序数),允许集 = 题面 ∪ (steps 值 − 终答数字) ∪ 学生历史
-    # 数字 ∪ [终答:仅 ready_to_confirm 态](#157 评审末值边界);cited_numbers
-    # 自报集保留(影子对照)。
-    # 判停闸在前:被闸下的轮次按非确认态取池,提前说出的终答数字即标 "answer" 违规。
-    cited = sorted({float(n) for n in (output.get("cited_numbers") or [])})
-    extracted = _reply_numbers(str(output.get("reply") or ""))
-    allowed, answer_pool = _drift_sources(
-        session, student_message, bool(output.get("ready_to_confirm")))
-    drift_violations = sorted(extracted - allowed)
-    session.guard_events.append({
-        "branch": "model",
-        "cited": cited,
-        "extracted": sorted(extracted),
-        "violation_sources": [
-            {"number": n, "source": ("answer" if n in answer_pool else "hallucinated")}
-            for n in drift_violations
-        ],
-    })
-    if drift_violations:
-        session.stuck = True
     state = "ready_to_confirm" if output["ready_to_confirm"] else "dialogue"
     return _commit_turn(session, student_message, safe_text, state,
                         ready_to_confirm=bool(output["ready_to_confirm"]))

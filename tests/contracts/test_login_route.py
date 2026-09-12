@@ -5,22 +5,21 @@
 
 from __future__ import annotations
 
+import secrets
+
 import httpx
 import pytest
-import secrets
-from partner_api import ScriptedKernel, _serve, post
-
-from edu_agent.api import demo_login
+from partner_api import ScriptedKernel, post, serving
 
 
 @pytest.fixture
 def base(monkeypatch):
+    # HMAC 密钥在 build_server 时读 env,须在 serving 之前注入
     monkeypatch.setenv("DEMO_ACCOUNT", "student1")
     monkeypatch.setenv("DEMO_PASSWORD", "night-pass-4f1a")
     monkeypatch.setenv("IDENTITY_TOKEN_HMAC_KEY", "test-" + secrets.token_hex(8))
-    url, server = _serve(ScriptedKernel(["先看条件。"]))
-    yield url
-    server.shutdown()
+    with serving(ScriptedKernel(["先看条件。"])) as url:
+        yield url
 
 
 def test_login_success_returns_hmac_token(base):

@@ -7,12 +7,12 @@ edu_agent.agents.small_lecturer.guardrails(00 §6 随测试迁入的实现)。
 from __future__ import annotations
 
 import pytest
-from fake_openai import FakeOpenAI, completion
+from fake_openai import completion
 
 from edu_agent.agents.small_lecturer import evaluate_student_visible_question
 from edu_agent.gateway import ModelRequest
 
-from teachkit import tutor_gateway
+from teachkit import tutor_env
 
 
 @pytest.mark.parametrize(
@@ -68,31 +68,34 @@ def test_only_grounded_answer_disclosures_require_fallback(
     assert evaluation.fallback_required is True
 
 
-def test_unverified_answer_shaped_text_fails_closed() -> None:
+def test_non_numeric_answer_shaped_text_outside_this_module() -> None:
+    """#184 语义变更:句级「未验证答案断言」判据已删,本模块只判接地事实。
+
+    无参考答案 + 无数字的候选值(字母/文字答案)不属本模块判据范围:该判据的唯一
+    实现是内核数字级归因(`_drift_sources` + `answer_pool`,见
+    tests/teaching/test_leak_gate_numeric.py)——「禁止出现第二套判据」。
+    """
     evaluation = evaluate_student_visible_question(
         "答案是B。你为什么这样选择？",
         answer_reference="",
         active_subquestion_text="当前小问",
     )
 
-    assert evaluation.action == "FALLBACK"
+    assert evaluation.action == "ALLOW"
     assert evaluation.text == "答案是B。你为什么这样选择？"
-    assert "unverified_answer_assertion" in {
-        item.finding for item in evaluation.findings
-    }
+    assert evaluation.findings == ()
 
 
-def test_computed_answer_is_blocked_without_authoritative_answer_reference() -> None:
+def test_numeric_answer_shaped_text_outside_this_module() -> None:
+    """同样口径:带数字的候选值也交给内核数字归因(有基线时句级分支恒不可达)。"""
     evaluation = evaluate_student_visible_question(
         "答案是12。你能说说为什么吗？",
         answer_reference="",
         active_subquestion_text="计算3×4。",
     )
 
-    assert evaluation.action == "FALLBACK"
-    assert "unverified_answer_assertion" in {
-        item.finding for item in evaluation.findings
-    }
+    assert evaluation.action == "ALLOW"
+    assert evaluation.findings == ()
 
 
 @pytest.mark.parametrize(
@@ -106,17 +109,17 @@ def test_computed_answer_is_blocked_without_authoritative_answer_reference() -> 
         "你觉得答案是什么？我猜应该是东南方向，对吗？",
     ],
 )
-def test_unverified_text_answer_confirmation_fails_closed(reply: str) -> None:
+def test_unverified_text_answer_confirmation_outside_this_module(reply: str) -> None:
+    """#184:这组「无参考答案 + 候选值确认」不再由句级判据拦——数值形态的候选值走
+    内核数字归因(题面之外的数字即违规),非数值形态不在任何判据的确定性范围内。"""
     evaluation = evaluate_student_visible_question(
         reply,
         answer_reference="",
         active_subquestion_text="请判断当前小问。",
     )
 
-    assert evaluation.action == "FALLBACK"
-    assert "unverified_answer_assertion" in {
-        item.finding for item in evaluation.findings
-    }
+    assert evaluation.action == "ALLOW"
+    assert evaluation.findings == ()
 
 
 @pytest.mark.parametrize(
@@ -152,23 +155,6 @@ def test_tutor_may_confirm_answer_candidate_already_said_by_student() -> None:
     assert evaluation.action == "ALLOW"
 
 
-def test_unverified_correction_cannot_supply_a_new_value_from_the_question() -> None:
-    evaluation = evaluate_student_visible_question(
-        "题目中C岛是北偏东75°，不是30°。请再看一遍，C岛的角度是多少？",
-        answer_reference="",
-        active_subquestion_text=(
-            "以灯塔为观测点，C岛在灯塔北偏东75°方向；"
-            "D岛在灯塔南偏西40°方向。"
-        ),
-        student_evidence=["30度"],
-    )
-
-    assert evaluation.action == "FALLBACK"
-    assert "unverified_source_value_disclosure" in {
-        item.finding for item in evaluation.findings
-    }
-
-
 def test_unverified_tutor_may_repeat_a_value_the_student_already_stated() -> None:
     evaluation = evaluate_student_visible_question(
         "你说C岛是北偏东75°。接下来D岛在哪个方向？",
@@ -183,7 +169,11 @@ def test_unverified_tutor_may_repeat_a_value_the_student_already_stated() -> Non
     assert evaluation.action == "ALLOW"
 
 
-def test_unverified_tutor_cannot_supply_a_new_compound_direction() -> None:
+def test_new_compound_direction_is_not_a_sentence_level_case() -> None:
+    """#184:纯方向词(无数字)的「新值」不在句级判据内——本模块只判接地事实。
+
+    数字形态的同款越界由内核数字归因拦(题面/学生未给过的数字即违规),见
+    tests/teaching/test_leak_gate_numeric.py 的门用例。"""
     evaluation = evaluate_student_visible_question(
         "C岛方向确认了。D岛在灯塔南偏西多少度？",
         answer_reference="",
@@ -194,10 +184,7 @@ def test_unverified_tutor_cannot_supply_a_new_compound_direction() -> None:
         student_evidence=["C岛是北偏东75度"],
     )
 
-    assert evaluation.action == "FALLBACK"
-    assert "unverified_source_value_disclosure" in {
-        item.finding for item in evaluation.findings
-    }
+    assert evaluation.action == "ALLOW"
 
 
 def test_unverified_tutor_may_point_to_a_known_condition_without_correcting() -> None:
@@ -300,65 +287,43 @@ def test_missing_primary_question_is_not_a_content_safety_failure() -> None:
     assert evaluation.fallback_required is False
 
 
-def test_full_answer_phrase_is_blocked() -> None:
+@pytest.mark.parametrize("reply,kwargs,action", [
     # answer 完整短语出现在回复 → 拦截
-    reply = "答案就是:鸡 3 只,兔 5 只。"
-    evaluation = evaluate_student_visible_question(
-        reply, answer_reference="鸡 3 只,兔 5 只",
-        active_subquestion_text="鸡和兔一共 8 只,共有 26 只脚。",
-    )
-    assert evaluation.action == "FALLBACK"
-
-
-def test_digit_subset_of_answer_is_allowed() -> None:
+    ("答案就是:鸡 3 只,兔 5 只。",
+     {"answer_reference": "鸡 3 只,兔 5 只",
+      "active_subquestion_text": "鸡和兔一共 8 只,共有 26 只脚。"}, "FALLBACK"),
     # 回复含"36 只脚"(answer 里的 3 是其子集) → 放行:数字子集不是泄露
-    reply = "题目里一共 36 只脚,所以兔子很多。"
-    evaluation = evaluate_student_visible_question(
-        reply, answer_reference="鸡 3 只,兔 5 只",
-        active_subquestion_text="鸡和兔一共 8 只,共有 26 只脚。",
-    )
-    assert evaluation.action == "ALLOW"
-
-
-def test_analysis_key_sentence_is_blocked() -> None:
+    ("题目里一共 36 只脚,所以兔子很多。",
+     {"answer_reference": "鸡 3 只,兔 5 只",
+      "active_subquestion_text": "鸡和兔一共 8 只,共有 26 只脚。"}, "ALLOW"),
     # analysis 关键结论句被逐字复述(紧凑连续窗口)+有序 cue → 拦截
-    reply = "用等式两边先同时减去 7,得 3x=18,再同时除以 3,就得到答案了。"
-    evaluation = evaluate_student_visible_question(
-        reply,
-        answer_reference="",
-        analysis_reference="等式两边先同时减去 7,得 3x=18,再同时除以 3。",
-        active_subquestion_text="鸡和兔一共 8 只,共有 26 只脚。",
-    )
-    assert evaluation.action == "FALLBACK"
-
-
-def test_intermediate_step_is_allowed() -> None:
+    ("用等式两边先同时减去 7,得 3x=18,再同时除以 3,就得到答案了。",
+     {"answer_reference": "",
+      "analysis_reference": "等式两边先同时减去 7,得 3x=18,再同时除以 3。",
+      "active_subquestion_text": "鸡和兔一共 8 只,共有 26 只脚。"}, "FALLBACK"),
     # 中间计算步骤(非关键结论句连续窗口)→ 放行
-    reply = "先假设全是鸡:2×8=16 只脚,比 26 少 10。"
-    evaluation = evaluate_student_visible_question(
-        reply,
-        answer_reference="鸡 3 只,兔 5 只",
-        analysis_reference="等式两边先同时减去 7,得 3x=18,再同时除以 3。",
-        active_subquestion_text="鸡和兔一共 8 只,共有 26 只脚。",
-    )
-    assert evaluation.action == "ALLOW"
+    ("先假设全是鸡:2×8=16 只脚,比 26 少 10。",
+     {"answer_reference": "鸡 3 只,兔 5 只",
+      "analysis_reference": "等式两边先同时减去 7,得 3x=18,再同时除以 3。",
+      "active_subquestion_text": "鸡和兔一共 8 只,共有 26 只脚。"}, "ALLOW"),
+], ids=["full_answer_phrase_blocked", "digit_subset_allowed",
+        "analysis_key_sentence_blocked", "intermediate_step_allowed"])
+def test_reference_disclosure_gating(reply, kwargs, action):
+    """答案/解析对照四形态:整句答案拦、数字子集放、结论句拦、中间步骤放。"""
+    evaluation = evaluate_student_visible_question(reply, **kwargs)
+    assert evaluation.action == action
 
 
 def test_guardrail_gates_model_output_over_fake_upstream(tmp_path):
     """新接口形态(02 §6):假上游经 gateway tutor 角色产出回复,护栏在模型输出侧把关。"""
-    fake = FakeOpenAI([completion("答案就是24。你能说说怎么来的吗？")]).start()
-    gateway = tutor_gateway(fake.url, tmp_path)
-    try:
+    with tutor_env(tmp_path, [completion("答案就是24。你能说说怎么来的吗？")]) as (fake, gateway):
         response = gateway.invoke(ModelRequest(
             role="tutor",
             messages=[{"role": "user", "content": "求这批图书共有多少本。"}],
             session_id="teach-leak-1",
         ))
-    finally:
-        gateway.close()
-        fake.stop()
-    evaluation = evaluate_student_visible_question(
-        response.text, answer_reference="24", active_subquestion_text="求这批图书共有多少本。",
-    )
-    assert evaluation.action == "FALLBACK"
-    assert "grounded_answer_disclosure" in {item.finding for item in evaluation.findings}
+        evaluation = evaluate_student_visible_question(
+            response.text, answer_reference="24", active_subquestion_text="求这批图书共有多少本。",
+        )
+        assert evaluation.action == "FALLBACK"
+        assert "grounded_answer_disclosure" in {item.finding for item in evaluation.findings}

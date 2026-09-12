@@ -3,6 +3,9 @@
 用法:FakeOpenAI([Reply(...), ...]) 按顺序逐请求消费脚本;requests 记录收到的
 请求体(解析后的 JSON),供断言重试次数、模型名与消息内容。SSE 流不以 [DONE]
 结尾即模拟流式中途断开。
+
+谁在用:tests/teaching、tests/gateway、tests/e2e 与 tests/evals 的绝大多数
+假上游用例(直接或经 teachkit/gwkit 的 *_env 上下文)。
 """
 
 from __future__ import annotations
