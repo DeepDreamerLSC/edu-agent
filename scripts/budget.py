@@ -25,7 +25,8 @@ LIMIT_TEST_RATIO = 1.0
 LIMIT_DEPLOY_SCRIPT_LINES = 100
 LIMIT_SUPPRESSIONS = 10
 
-# 02 §6:测试/应用行数比 M0–M1 只报告不阻塞,M2 起改为 True(属结构性改动,需人批)。
+# 02 §6:测试/应用行数比**永久只报告不阻塞**(2026-09-11 人裁:分子可被"搬 helper 进
+# tests/fixtures/"刷低,属可刷代理指标;给可刷指标设门会重演 #142。原"M2 起翻 True"计划已撤)。
 TEST_RATIO_BLOCKS = False
 STRICT_RATIO_ENV = "BUDGET_STRICT_TEST_RATIO"
 
@@ -420,11 +421,11 @@ def check_ruff_consistency(root: Path) -> list[str]:
 
 
 def metric_line(metric: Metric) -> tuple[str, bool]:
-    """一行输出与是否计入失败。非阻塞指标永远只报告(02 §2:测试比分期)。"""
+    """一行输出与是否计入失败。非阻塞指标永远只报告(02 §6:测试比永久 report-only)。"""
     if metric.blocking:
         tag = "BUDGET-OK" if metric.ok else "BUDGET-FAIL"
         return f"{tag} {metric.metric_id}: {metric.detail}", not metric.ok
-    status = "" if metric.ok else "(超限;M0–M1 只报告,M2 起阻塞)"
+    status = "" if metric.ok else "(超限;永久只报告不阻塞——分子可搬运刷低,2026-09-11 人裁)"
     return f"BUDGET-REPORT {metric.metric_id}: {metric.detail} {status}".rstrip(), False
 
 
