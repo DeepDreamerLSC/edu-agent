@@ -135,6 +135,8 @@ CI 以关键词扫描 `edu_agent/` 中的 `lease`、`heartbeat`、`worker_pool`�
   `tests/fixtures/`"这类搬运刷低，是**可刷的代理指标** ⇒ 不设门（#142 同类：门必须建在可复现、不可刷的量上）。
   **翻 True 的代价也一并记明**：当前缺口（约 1380 分子行）靠去重已近极限，真设成阻塞门等于**冻结除应用增长
   之外的全部测试新增**——这个代价不该悄悄由一条布尔开关承担。
+  另外：`tests/fixtures/` 与 `scripts/` 的总行数在预算报告里**登记可见但不设限**
+  （`fixtures-total-lines` / `scripts-total-lines`），专门用来发现「把 helper 搬进不计入分子的一侧」这类搬运。
 
 ## 7. 结构性改动必须人批
 
