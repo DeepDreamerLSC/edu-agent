@@ -23,7 +23,7 @@ fail() { echo "[backup-db] $*" >&2; exit 3; }
 [ -f "$OSS_ENV_FILE" ] || fail "凭据文件不存在:$OSS_ENV_FILE"
 set -a; . "$OSS_ENV_FILE"; set +a
 for key in OSS_BUCKET OSS_ENDPOINT OSS_BACKUP_PREFIX OSS_ACCESS_KEY_ID OSS_ACCESS_KEY_SECRET; do
-  eval "value=\${$key:-}"
+  value="${!key:-}"  # 间接展开(等同旧 eval 写法):eval 是无谓的求值层;:- 必须保留,set -u 下缺键走空串兜底
   [ -n "$value" ] || fail "oss.env 缺键:$key"
 done
 case "$OSS_ENDPOINT" in

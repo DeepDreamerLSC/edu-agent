@@ -7,6 +7,7 @@
 """
 
 import argparse
+import ast
 import os
 import re
 import sys
@@ -176,6 +177,23 @@ def fixtures_total_lines(root: Path, py_files: list) -> int:
     return sum(code_lines(p) for p in py_files if is_under(p, root, "tests", "fixtures"))
 
 
+def kernel_mechanisms_if_count(root: Path) -> int:
+    """edu_agent/agents/small_lecturer/kernel.py 里 reply() 的 If 节点数(AST 单一口径)。
+
+    #201 登记:内核 reply 的机制分支(理解闸/卡住闸/命中闸/判停闸/护栏…)数量可见性——
+    每加一条机制分支都要在预算报告里看见,对冲"分支组合爆炸只涨在被测行为里"的引力。
+    只登记不设限(2026-09-12 人批,#201);单一口径只数 ast.If(语句),不含 IfExp 三元式。
+    """
+    path = root / "edu_agent" / "agents" / "small_lecturer" / "kernel.py"
+    if not path.is_file():
+        return 0
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "reply":
+            return sum(1 for sub in ast.walk(node) if isinstance(sub, ast.If))
+    return 0
+
+
 def test_lines(root: Path, py_files: list) -> int:
     """tests/ 行数,分子不含 tests/rules/ 与 tests/fixtures/(02 §6)。"""
     total = 0
@@ -237,6 +255,7 @@ def collect_metrics(root: Path) -> list[Metric]:
     deploy_total, deploy_names = deploy_script_lines(root)
     scripts_total = scripts_total_lines(root, py_files)
     fixtures_total = fixtures_total_lines(root, py_files)
+    kernel_if = kernel_mechanisms_if_count(root)
     suppressions = sum(count_comment_suppressions(p) for p in py_files) + pyproject_suppressions(root)
     return [
         Metric("app-total-lines", f"{total_app} / {LIMIT_APP_TOTAL_LINES}", total_app <= LIMIT_APP_TOTAL_LINES),
@@ -263,6 +282,8 @@ def collect_metrics(root: Path) -> list[Metric]:
         Metric("scripts-total-lines", f"{scripts_total}(登记用,不设限)", True, blocking=False),
         # 登记:tests/fixtures/ 行数可见性,对冲"把 helper 搬进不计入分子的一侧"的引力。
         Metric("fixtures-total-lines", f"{fixtures_total}(登记用,不设限)", True, blocking=False),
+        # 登记(#201):kernel reply() 机制分支数(AST 数 If 节点,单一口径)——只登记不设限。
+        Metric("kernel-mechanisms", f"{kernel_if}(登记用,不设限)", True, blocking=False),
     ]
 
 
