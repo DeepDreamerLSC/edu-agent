@@ -1,4 +1,4 @@
-"""issue #11 main 推送报警纯逻辑测试:失败步骤提取、标题、开 issue 与按标签查重。"""
+"""issue #11 main 推送报警纯逻辑测试:失败步骤提取、标题、开 issue 与按 sha 查重。"""
 
 import scripts.main_red as main_red
 
@@ -68,13 +68,36 @@ def test_alert_opens_labelled_issue_on_failure():
     assert api.labels_created and api.labels_created[0][0] == "main-red"
 
 
-def test_alert_skips_when_open_main_red_issue_exists():
+def test_alert_skips_when_open_issue_has_same_sha():
+    """同 commit 重跑:open 单标题含本 commit 短 sha → 跳过不重复开(防刷屏,保留)。"""
+    api = StubApi(
+        jobs=[checks_job([{"name": "ruff", "conclusion": "failure"}])],
+        open_issues=[{"number": 3, "title": f"main 红:{SHA[:12]} 失败步骤:ruff"}],
+    )
+    main_red.alert(api, *RUN_ARGS)
+    assert api.created == []
+
+
+def test_alert_opens_new_issue_when_open_issue_has_different_sha():
+    """不同 commit 的新红:旧单标题含别的 sha → 照常开新单(#189:旧按标签查重会吞掉)。"""
+    api = StubApi(
+        jobs=[checks_job([{"name": "ruff", "conclusion": "failure"}])],
+        open_issues=[{"number": 3, "title": "main 红:5fc998e012ab 失败步骤:checks/pytest"}],
+    )
+    main_red.alert(api, *RUN_ARGS)
+    assert len(api.created) == 1
+    title, _ = api.created[0]
+    assert SHA[:12] in title  # 新单带本 commit 的 sha
+
+
+def test_alert_tolerates_open_issue_without_title():
+    """open 单无 title(异常数据)→ 不匹配任何 sha,照常开单(不误跳过)。"""
     api = StubApi(
         jobs=[checks_job([{"name": "ruff", "conclusion": "failure"}])],
         open_issues=[{"number": 3}],
     )
     main_red.alert(api, *RUN_ARGS)
-    assert api.created == []
+    assert len(api.created) == 1
 
 
 def test_alert_skips_when_no_failed_step():

@@ -40,7 +40,11 @@ _FORBIDDEN_FIELDS = frozenset({"answer", "analysis", "verified", "mastery_status
 # 白名单("其余非合同字段透传"),verified 会随 learner 透传进模型 prompt
 # (prompting.py 把 learner json.dumps 进 system 段),等于把"客户端自称已核验"
 # 塞给模型 ⇒ 必须拒绝(见 #199 + PR #200 审查 R2)。
-# ⚠️ 已知局限(见 #202):本名单只认 4 个精确顶层键名,改名/嵌套可绕过。
+# #202(2026-09-12 已修):本名单只认 4 个精确顶层键名,改名/嵌套曾可绕过;
+# 第二道闸已补——service 层**具名白名单**(open 三入口 learner 只认
+# grade/answer_correct/knowledge_points,学生轮只认 content/input 等四键,
+# input 子键同款枚举),未知键一律 422。本 403 名单保留为合同语义层:
+# 四键是 00 §5.2 点名「不得提交」(403),与 422 的「不认识」分层。
 _LOGIN = re.compile(r"^/api/auth/login$")
 _NATIVE_CODES = re.compile(r"^/api/openapi/v1/auth/native-codes$")
 _NATIVE_TOKEN = re.compile(r"^/api/auth/native/token$")
