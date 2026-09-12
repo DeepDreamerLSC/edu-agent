@@ -80,6 +80,12 @@ def test_repo_doc_matches_repo_constants():
     assert budget.check_ruff_consistency(root) == []
 
 
+def test_kernel_mechanisms_metric_not_silently_zero():
+    """真树上 kernel-mechanisms 必须非零(#209 审查钉):reply() 改名/拆文件会让
+    指标静默显示 0——正是本仓库反复出现的空转失效形态;改名时本钉变红。"""
+    assert budget.kernel_mechanisms_if_count(REPO_ROOT) > 0
+
+
 def test_fixture_pyproject_matches_repo_rules():
     """夹具 pyproject 必须与仓库真实 ruff 配置一致,防止夹具漂移造成假绿。"""
     repo = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
