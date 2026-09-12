@@ -151,13 +151,12 @@ def _student_signals_understanding(student_message: str) -> bool:
 
 
 def _student_signals_stuck(student_message: str) -> bool:
-    """学生表示「不会/猜不出」——这是「揭示下一级阶梯」的触发点(治 tutor 复读探针)。
+    """学生表示「不会/猜不出」——支持动作选择(`_support_move`)的触发点(治复读探针)。
 
-    「不会吧」后接疑问/感叹标点(?!/?/!)是反诘惊讶(「不会吧?!这也能算对?」),不判卡住;
-    单纯「不会吧」仍判卡住;「越来越不懂」补上「不懂了」类卡壳(不被「懂了」误吞)。
-    #157 评审补第一人称卡壳缺口(实测漏检):「还不知道」(「还」隔断了「我不知道」)、
-    裸「我不会」「不明白」「不会算」「还不会」——这类轮次误走模型路径 = 泄露+方差双来源;
-    「我不会(?!吧)」保留「我不会吧?!」的反诘语义;「明白了」归理解侧,先于本判据。"""
+    现行窄集(306de47 按 11/11 实测回退扩表,勿按旧文档推断):我不太会/我猜不出(来)/
+    我不知道/我想不出(来)/我不会做/我不会了/太难了/没思路/越来越不懂;「不会吧」后接
+    ?/! 是反诘不判,单纯「不会吧」仍判;「明白了」归理解侧先判。漏检形态(非第一人称
+    锚定/被副词隔断,如「还是不会」)归检测器覆盖轮(#198 D 卡 1:先过 11/11 基线)。"""
     return bool(re.search(r"我不太会|我猜不出|我猜不出来|我不知道|我想不出|我想不出来|我不会做|我不会了|不会吧(?![?!？])|太难了|没思路|越来越不懂", student_message))
 
 
@@ -184,38 +183,30 @@ def _student_hits_known_answer(session: "LearnerSession", student_message: str) 
     return _hits_answer_numbers(session, student_message)
 
 
-# 脚手架渐隐档的提示(#107 / #146 M3「脚手架渐隐」):学生已经自己做出来过一步 →
-# 下一次卡住**先问不揭示**(撤一级支持)。只给问句、不给下一步、不给数值。
-_FADED_ASK_TEMPLATE = "这一步你先自己想想:你觉得接下来该先算什么?想到多少说多少。"
-
-
-def _student_performed_revealed_step(session: "LearnerSession", student_message: str) -> bool:
-    """学生是否把**刚揭示的那一步**自己做出来了(#107 脚手架渐隐的掌握度信号)。
-
-    判据 = 该步 `value` 的数字全部出现在学生本轮消息里(与 `_hits_answer_numbers`
-    同源口径:数字集包含、顺序不敏感、学生侧含中文数字单字)。`hint_level=0`
-    (还没揭示过)恒 False——**没有掌握度证据就不撤支持**(fail-closed)。
-    """
-    if session.hint_level <= 0 or session.hint_level > len(session.steps):
-        return False
-    value_numbers = _question_numbers(str(session.steps[session.hint_level - 1].get("value") or ""))
-    return bool(value_numbers) and value_numbers <= _spoken_numbers(student_message)
+# 支持动作(#198 第一步,MathDial teacher moves 分类学——采用,不发明):guiding_focus =
+# Focus · Guiding Student Focus,只问不揭示;#174 渐隐档折叠至此——触发源由
+# scaffold_faded 状态位改为就地判定「上一学生轮把刚揭示的那一步自己做出来了」
+# (判据:该步 value 数字全出现在消息里,数字集包含、顺序不敏感、含中文数字单字,
+# hint_level=0 恒不触发,fail-closed;粘滞跨轮语义随状态位删除,只认最近一条)。
+# telling = Telling 揭示族:下一级阶梯,耗尽即既有 bottom-out(设计内,不动)。
+# 轮 1「拆小」/轮 2「换数字」的 streak 触发源在检测器覆盖轮之后接入本选择函数
+# (#198 后续顺序:净减回血 → 检测器覆盖 → 轮 1)。
+def _support_move(session: "LearnerSession") -> str:
+    """卡住支持动作的**确定性选择函数**(#198;零模型、可复算、可进回归网)。"""
+    prev_student = session.history[-2]["content"] if len(session.history) >= 2 else ""
+    numbers = (_question_numbers(str(session.steps[session.hint_level - 1].get("value") or ""))
+               if 0 < session.hint_level <= len(session.steps) else set())
+    return "guiding_focus" if numbers and numbers <= _spoken_numbers(prev_student) else "telling"
 
 
 def _stuck_hint(session: "LearnerSession") -> str:
-    """卡住时的提示:渐隐档(学生刚自己做出来过)→ 只问不揭示;否则揭示下一级阶梯。"""
-    return _faded_stuck_hint(session) if session.scaffold_faded else _reveal_stuck_hint(session)
-
-
-def _faded_stuck_hint(session: "LearnerSession") -> str:
-    """渐隐档的卡住提示:只问不揭示(**一次性**——再卡住走 `_reveal_stuck_hint` 升回全支持)。
-
-    埋点 `{branch: fade, hint_level}`:与 reveal 分开记,度量侧能数出「渐隐触发了几次」
-    以及它是否把 bottom-out 推后(阶梯消耗速度)。
-    """
-    session.scaffold_faded = False
-    session.guard_events.append({"branch": "fade", "hint_level": session.hint_level})
-    return _FADED_ASK_TEMPLATE
+    """卡住支持动作执行(#198:枚举 + 确定性选择,取代渐隐/揭示双分支)。guiding_focus →
+    拆小问句(只问不揭示、不含数字、不消耗阶梯;埋点 {branch: support, move},#169 起
+    随轮提交补 turn);telling → `_reveal_stuck_hint`(下一级/耗尽 bottom-out,口径同 #185)。"""
+    if _support_move(session) == "guiding_focus":
+        session.guard_events.append({"branch": "support", "move": "guiding_focus"})
+        return "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。"
+    return _reveal_stuck_hint(session)
 
 
 def _hits_numbers(numbers: set[float], text: str) -> bool:
@@ -835,19 +826,14 @@ def reply(session: LearnerSession, student_message: str, *,
     if expected_session_version is not None and expected_session_version != session.session_version:
         raise SessionVersionConflict(  # 不推进:旧版本不静默覆盖新一轮诊断(00 §5.2 约定 3)
             f"expected_session_version={expected_session_version} != 当前 {session.session_version}")
-    # 脚手架渐隐(#107 / #146 M3):学生把**刚揭示的那一步**自己做出来了 → 撤一级支持
-    # (下一次卡住先问不揭示)。掌握度信号零模型、可复算(该步 value 的数字出现在本轮消息);
-    # 置位即保持,直到渐隐真的触发(`_faded_stuck_hint` 复位)。无 if:不给 reply 增判定分支。
-    session.scaffold_faded = (_student_performed_revealed_step(session, student_message)
-                              or session.scaffold_faded)
     if _student_signals_understanding(student_message):
         # 学生说「懂了」→ 直接请学生讲思路(确定性,不调模型),不 confirm、不报答案。
         # 这是教学弧线的固定策略(00 §8.5/人定):学生表示懂,就该由学生自己讲,而非 tutor 复述。
         return _ask_restatement(session, student_message)
     if _student_signals_stuck(student_message):
-        # 学生说「不会/猜不出」→ 揭示下一级阶梯(内容确定性,措辞交模型,代喂/无步骤兜底)。
-        # 脚手架渐隐(#107 / #146 M3):若上一步是学生**自己做出来的**(scaffold_faded),
-        # 先问不揭示(撤一级支持);再卡住则升回揭示。
+        # 学生说「不会/猜不出」→ 支持动作(#198 第一步):`_stuck_hint` 按 move 枚举 +
+        # 确定性选择分发——上一学生轮做出刚揭示的那步(掌握度)→ 只问不揭示(拆小
+        # 问句,#174 渐隐档折叠至此);否则揭示下一级阶梯,耗尽 bottom-out(设计内不动)。
         gateway = gateway or default_gateway()
         hint = _stuck_hint(session)  # 埋点:两条路径各自记(#112 评审)
         session.stuck = True
