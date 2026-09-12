@@ -259,10 +259,14 @@ def _reveal_after_repeat(step_text: str) -> str:
     ("等于 3", NEEDS_REVIEW_TEXT, ()),
     # #185 复审 ②:揭示框架词(就是/得到/结果是/等于)前后不改写 → 同样整步弃用
     ("3 就是答案", NEEDS_REVIEW_TEXT, ()),
+    # #185 复审三轮:单字框架词(为/是)的触发面钉两条——follower「为所求」与 before「还是」
+    ("3 为所求", NEEDS_REVIEW_TEXT, ()),
+    ("还是 3 只", NEEDS_REVIEW_TEXT, ()),
 ], ids=["result_withheld", "pure_expression_kept", "ordinal_head_kept",
         "clause_boundary_cut", "no_boundary_kept", "no_arithmetic_kept",
         "ordinal_form_withheld", "derived_value_withheld", "answer_masked",
-        "multi_hit_masked", "bare_number_dropped", "disclosure_frame_dropped"])
+        "multi_hit_masked", "bare_number_dropped", "disclosure_frame_dropped",
+        "frame_word_after", "frame_word_before"])
 def test_reveal_actionization(step_text, expected_reveal, forbidden):
     """揭示句构造十二形态:该收回的收回、该保留的保留(前六 = #165 原用例,
     中三 = #185 序数/导出值/无边界掩码,后三 = #185 复审 全命中/裸数字/框架词)。"""
@@ -288,6 +292,24 @@ def test_reveal_keeps_question_numbers_when_answer_falls_back_to_steps_value():
     turn = reply(first.session, "嗯,我看看。", gateway=gateway)
     assert turn.text == "我们从这里入手:假设8只全是鸡，算出脚的总数。你接着算下一步。"
     assert "几" not in turn.text
+
+
+def test_dropped_reveal_step_is_flagged_in_guard_events():
+    """#185 复审三轮 P2:整步弃用的揭示轮在埋点里可辨识(dropped=True)——
+    「阶梯消耗/是否过早烧 bottom-out」指标不把弃用轮计成正常推进;词表收放
+    按这份影子数据来(先量再收)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload(FIRST_QUESTION_COLLECT, steps=[
+            {"step": "等于 3", "value": "3"}, {"step": "再算脚数差", "value": "10"}]),
+        _tutor_payload(FIRST_QUESTION_COLLECT),
+        _tutor_payload(FIRST_QUESTION_COLLECT),   # 重生成仍复读 → 揭示
+    ])
+    first = start(dict(CHICKEN_QUESTION), {"grade": "六年级"}, gateway=gateway)
+    turn = reply(first.session, "嗯,我看看。", gateway=gateway)
+    assert turn.text == NEEDS_REVIEW_TEXT                      # 整步弃用 → 通用兜底
+    assert turn.session.guard_events[-1]["branch"] == "reveal"
+    assert turn.session.guard_events[-1]["dropped"] is True    # 弃用轮可辨识
+    assert turn.session.guard_events[-1]["hint_level"] == 1    # 阶梯仍记消耗
 
 
 # ---------- 输出面防复读终极不变量(任何兜底不得与上一轮学生可见文本同句) ----------

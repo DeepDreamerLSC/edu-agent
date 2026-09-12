@@ -371,6 +371,7 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     step_text = _soften_step_text(str(step.get("step") or ""),
                                   frozenset(_answer_focus_numbers(session)))
     if step_text is None:  # 裸数字形状读不成句:整步弃用 → 通用兜底(#185 复审 ②)
+        session.guard_events[-1]["dropped"] = True  # 复审三轮 P2:弃用轮可辨识,先量再收词表
         return NEEDS_REVIEW_TEXT
     return f"{lead}:{step_text}。你接着算下一步。"
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
