@@ -41,9 +41,26 @@ class FileRecord:
 
 
 class FileService:
-    def __init__(self, storage_dir: Path | str | None = None) -> None:
+    def __init__(self, storage_dir: Path | str | None = None,
+                 records_store=None) -> None:
+        """records_store:文件元数据持久化(M3 DB 存储,SqliteStore 的 files 三操作)。
+
+        注入即落库(登记/内容就绪两个变更点写回,启动预载回内存——此前 records
+        只在内存,进程重启后全部 file_id 404);未注入时行为与从前完全一致。"""
         self.storage = Path(storage_dir or os.environ.get("FILES_STORAGE_DIR", "data/files"))
         self.records: dict[str, FileRecord] = {}
+        self._records_store = records_store
+        if records_store is not None:
+            for data in records_store.all_files():
+                record = FileRecord(**data)
+                self.records[str(record.file_id)] = record
+
+    def _persist_record(self, record: FileRecord) -> None:
+        """元数据写回(仅变更点调用;records_store 未注入即空操作)。"""
+        if self._records_store is not None:
+            self._records_store.put_file(
+                str(record.file_id),
+                {key: getattr(record, key) for key in FileRecord.__slots__})
 
     # ---------- 1) upload-request ----------
 
@@ -68,11 +85,13 @@ class FileService:
                 not isinstance(checksum, str) or not _SHA256_RE.fullmatch(checksum)):
             raise ApiError(422, None, "checksum_sha256 须为 64 位 hex")
         file_id = f"file_{uuid.uuid4().hex[:16]}"
-        self.records[file_id] = FileRecord(
+        record = FileRecord(
             file_id=file_id, filename=filename, content_type=content_type,
             size_bytes=size_bytes, purpose=purpose,
             checksum_sha256=checksum if isinstance(checksum, str) else None,
             status="requested")
+        self.records[file_id] = record
+        self._persist_record(record)
         return {
             "file_id": file_id,
             "upload_method": "PUT",
@@ -94,8 +113,9 @@ class FileService:
             if actual != record.checksum_sha256:
                 raise ApiError(409, "FILE_CHECKSUM_MISMATCH", "内容哈希与申请不一致")
         ext = self._validate_image(payload, record.content_type)
-        record.path = self._persist(file_id, payload, ext)
+        record.path = str(self._persist(file_id, payload, ext))
         record.status = "uploaded"
+        self._persist_record(record)
         return {"file_id": file_id, "status": "uploaded"}
 
     def _validate_image(self, payload: bytes, declared_type: str) -> str:
