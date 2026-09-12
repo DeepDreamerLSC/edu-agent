@@ -240,3 +240,37 @@ def test_kernel_sends_session_id_to_gateway_for_facts_attribution(tmp_path):
     assert gateway.session_ids, "内核未调用 gateway"
     assert set(gateway.session_ids) == {turn.session.session_id}  # 同一会话内归因键一致
     assert turn.session.session_id.startswith("kernel_")
+
+
+def test_guard_events_exported_with_kernel_session(tmp_path):
+    """#178 导出补齐:落盘时从内核本体抽 guard_events 副本进 extras(键名/形状
+    不变,消费侧 #210 掩码度量直接用);本体推进后 update 副本刷新;无本体的
+    会话不带该键(键缺省 = 本版本前会话,历史不回补的断点判据)。"""
+    store = FileConversationStore(tmp_path)
+    session = LearnerSession(question={"text": "q", "answer": "a"}, learner={})
+    session.guard_events = [{"branch": "reveal", "hint_level": 1, "turn": 1},
+                            {"branch": "support", "move": "guiding_focus", "turn": 2}]
+    conversation = Conversation("c-ge", "q-1", "a-1", "sk-1",
+                                extras={"kernel_session": session})
+    store.create(conversation, "idem-ge")
+    data = json.loads((tmp_path / "c-ge.json").read_text(encoding="utf-8"))
+    assert data["extras"]["guard_events"] == [
+        {"branch": "reveal", "hint_level": 1, "turn": 1},
+        {"branch": "support", "move": "guiding_focus", "turn": 2}]  # 不变形
+    assert "kernel_session" not in data["extras"]  # 本体仍不入会话文件
+
+    session.guard_events.append({"guard": "answer_leak", "rule_ids": ["r1"], "turn": 3})
+    store.update(conversation)
+    data = json.loads((tmp_path / "c-ge.json").read_text(encoding="utf-8"))
+    assert len(data["extras"]["guard_events"]) == 3  # 副本随本体刷新
+
+    plain = Conversation("c-plain", "q-1", "a-2", "sk-2")
+    store.create(plain, "idem-plain")
+    data = json.loads((tmp_path / "c-plain.json").read_text(encoding="utf-8"))
+    assert "guard_events" not in data["extras"]  # 无本体 → 无键(版本前判据)
+
+    # 重启后:新实例扫盘恢复,副本经 conversation_restore 原样搬运可见,路由不受扰
+    restarted = FileConversationStore(tmp_path)
+    restored = restarted.get("c-ge")
+    assert restored.extras["guard_events"][0]["branch"] == "reveal"
+    assert restored.extras.get("kernel_session_id") == session.session_id

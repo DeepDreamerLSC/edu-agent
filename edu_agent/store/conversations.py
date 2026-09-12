@@ -41,6 +41,10 @@ def conversation_payload(conversation: Conversation, idempotency_key: str) -> di
     session = extras.pop("kernel_session", None)  # 本体由 SessionStore 存
     if session is not None:
         extras["kernel_session_id"] = getattr(session, "session_id", "")
+        # guard_events 护栏埋点副本(#178 导出补齐):键名/形状不变,分析侧直接
+        # 消费(fade→support 分布、揭示档位消耗);随每次 update 从本体刷新,
+        # 副本不是第二真相源。键缺省 = 本版本前落盘的会话(历史不回补)。
+        extras["guard_events"] = list(getattr(session, "guard_events", None) or [])
     data["extras"] = extras
     if idempotency_key:
         data["idempotency_key"] = idempotency_key
