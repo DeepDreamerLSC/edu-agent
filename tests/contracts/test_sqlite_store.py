@@ -8,14 +8,12 @@ healthz SELECT 1 探针与失败计数、故障注入(损坏拒启/写失败 fai
 
 from __future__ import annotations
 
-import json
 import os
 import sqlite3
 import subprocess
 import sys
 import threading
 from dataclasses import dataclass
-from pathlib import Path
 
 import httpx
 import pytest
