@@ -1,7 +1,9 @@
-"""LearnerSession 文件持久化(M3 PR6,00 §5.2 上下文保留;02:文件就是 v1 的 store)。
+"""LearnerSession 持久化——文件实现(生产装配已切 SqliteStore,PR #196)。
 
-一会话一文件:data/sessions/{session_id}.json;不用数据库不用 SQLite。
-additive-only:LearnerSession 新增字段靠 dataclass 默认值从旧文件补齐,
+FileSessionStore 降级为**迁移源 + 复盘存档 + 合同对照**(serve_partner_api
+不再注入它):migrate_json_to_sqlite.py 从 data/sessions/{session_id}.json
+读入,原件保留到人工确认清理。语义保持不变以保回退:
+additive-only——LearnerSession 新增字段靠 dataclass 默认值从旧文件补齐,
 不删字段、不写迁移(历史文件若带已删字段会 TypeError——本语义下不删字段)。
 启动扫描 = load_all()(坏文件隔离跳过,不炸全部);api 层在每次内核回合后
 save()(tmp+os.replace 原子落盘,#31 runner 同款——进程被杀不留半截 JSON)。
@@ -34,7 +36,7 @@ class FileSessionStore:
         path = self.root / f"{session_id}.json"
         if not path.exists():
             return None
-        return self._restore(json.loads(path.read_text(encoding="utf-8")))
+        return restore_session(json.loads(path.read_text(encoding="utf-8")))
 
     def load_all(self) -> list[LearnerSession]:
         """启动扫描:目录内全部会话恢复为可用 session(文件名序,稳定)。
@@ -46,13 +48,17 @@ class FileSessionStore:
         sessions = []
         for path in sorted(self.root.glob("*.json")):
             try:
-                sessions.append(self._restore(json.loads(path.read_text(encoding="utf-8"))))
+                sessions.append(restore_session(json.loads(path.read_text(encoding="utf-8"))))
             except (json.JSONDecodeError, OSError, TypeError):
                 print(f"[store] 跳过损坏的会话文件:{path}")
         return sessions
 
-    @staticmethod
-    def _restore(data: dict) -> LearnerSession:
-        if data.get("summary") is not None:
-            data["summary"] = Summary(**data["summary"])
-        return LearnerSession(**data)
+
+def restore_session(data: dict) -> LearnerSession:
+    """JSON dict → LearnerSession(文件/SQLite 两实现共用;Summary 子结构重建)。
+
+    纯函数:拷贝入参再改——迁移对账会对同一份源 dict 调两次,原地改会 TypeError。"""
+    data = dict(data)
+    if data.get("summary") is not None:
+        data["summary"] = Summary(**data["summary"])
+    return LearnerSession(**data)

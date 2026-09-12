@@ -91,6 +91,7 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
     service: ConversationService  # 经 server 属性注入
     identity: IdentityService     # 同上(build_server 注入)
     files: FileService            # 同上(/api/files/** 三步上传)
+    db: object | None = None      # 同上(SqliteStore;healthz 的 SELECT 1 探针,未注入不加键)
 
     def _identity_post(self) -> tuple[int, dict] | None:
         """身份与登录端点自带鉴权(API Key / 授权码+PKCE / 演示账密);非身份路径返回 None。"""
@@ -318,7 +319,11 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
     def do_GET(self) -> None:
         self.path = self.path.partition("?")[0]  # 剥 query string(审查 P2)
         if _HEALTHZ.match(self.path):
-            self._json(snapshot())
+            data = snapshot()
+            if self.db is not None:  # M3 DB 存储:live 探针(自述的其余键仍进程冻结)
+                data["store"] = {"ok": bool(self.db.probe()),
+                                 "probe_failures": int(self.db.probe_failures)}
+            self._json(data)
             return
         if self._serve_docs() or self._serve_static():
             return
@@ -451,8 +456,9 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
 
 def build_server(service: ConversationService, identity: IdentityService | None = None,
                  files: FileService | None = None,
-                 host: str = "127.0.0.1", port: int = 0) -> ThreadingHTTPServer:
+                 host: str = "127.0.0.1", port: int = 0,
+                 db=None) -> ThreadingHTTPServer:
     handler = type("BoundPartnerApiHandler", (PartnerApiHandler,),
                    {"service": service, "identity": identity or IdentityService(),
-                    "files": files or FileService()})
+                    "files": files or FileService(), "db": db})
     return ThreadingHTTPServer((host, port), handler)

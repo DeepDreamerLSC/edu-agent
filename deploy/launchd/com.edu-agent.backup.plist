@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!-- SQLite 每日备份(M3 DB 存储)。照 partner-api plist 惯例:绝对路径 ProgramArguments、
+     日志同目录 ~/Library/Logs/edu-agent/、EDU_ENV 环境变量。
+     每日 03:30 触发;手动触发:launchctl kickstart -k gui/$UID/com.edu-agent.backup。
+     凭据不进本文件:backup-db.sh 自己读 ~/.config/edu-agent/oss.env(0600)。 -->
+<dict>
+  <key>Label</key>
+  <string>com.edu-agent.backup</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/linsuchang/Desktop/work/github/edu-agent-deploy/scripts/backup-db.sh</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/linsuchang/Desktop/work/github/edu-agent-deploy</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>EDU_ENV</key>
+    <string>test</string>
+    <key>EDU_DB_PATH</key>
+    <string>data/edu-agent.db</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>3</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/Users/linsuchang/Library/Logs/edu-agent/backup.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/linsuchang/Library/Logs/edu-agent/backup.log</string>
+</dict>
+</plist>

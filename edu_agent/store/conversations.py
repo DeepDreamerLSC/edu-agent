@@ -29,6 +29,33 @@ from typing import Protocol
 from .sessions import Conversation
 
 
+def conversation_payload(conversation: Conversation, idempotency_key: str) -> dict:
+    """Conversation → JSON dict(文件/SQLite 两实现共用的单一形状,M3 DB 存储)。
+
+    不能对 Conversation 用 dataclasses.asdict:它会**递归**把 extras 里的
+    LearnerSession 本体也转成 dict(AsdictVisitor),于是抽取 session_id 落空、
+    重启后拿不到本体。逐字段取,extras 原样搬运再抽走本体。"""
+    data = {f.name: getattr(conversation, f.name)
+            for f in fields(conversation) if f.name != "extras"}
+    extras = dict(conversation.extras or {})
+    session = extras.pop("kernel_session", None)  # 本体由 SessionStore 存
+    if session is not None:
+        extras["kernel_session_id"] = getattr(session, "session_id", "")
+    data["extras"] = extras
+    if idempotency_key:
+        data["idempotency_key"] = idempotency_key
+    return data
+
+
+def conversation_restore(data: dict) -> tuple[Conversation, str]:
+    """JSON dict → (Conversation, idempotency_key);坏数据抛异常由调用方隔离。"""
+    conversation = Conversation(**{k: data[k] for k in (
+        "conversation_id", "question_id", "attempt_id", "skill_session_id",
+        "session_version", "state", "first_question", "summary") if k in data})
+    conversation.extras = data.get("extras") or {}
+    return conversation, str(data.get("idempotency_key") or "")
+
+
 class ConversationStore(Protocol):
     """会话表最小面(Memory/File 两实现共用;service 只依赖这五个操作)。"""
 
@@ -62,14 +89,11 @@ class FileConversationStore:
         for path in sorted(self.root.glob("*.json")):
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
-                conversation = Conversation(**{k: data[k] for k in (
-                    "conversation_id", "question_id", "attempt_id", "skill_session_id",
-                    "session_version", "state", "first_question", "summary") if k in data})
-                conversation.extras = data.get("extras") or {}
+                conversation, idempotency_key = conversation_restore(data)
             except (json.JSONDecodeError, OSError, TypeError, KeyError) as error:
                 print(f"[store] 跳过损坏的会话文件:{path}({type(error).__name__})")
                 continue
-            self._index(conversation, str(data.get("idempotency_key") or ""))
+            self._index(conversation, idempotency_key)
 
     def _index(self, conversation: Conversation, idempotency_key: str) -> None:
         self._by_conversation[conversation.conversation_id] = conversation
@@ -93,20 +117,8 @@ class FileConversationStore:
         os.replace(tmp, path)
 
     def _payload(self, conversation: Conversation) -> dict:
-        # 不能对 Conversation 用 dataclasses.asdict:它会**递归**把 extras 里的
-        # LearnerSession 本体也转成 dict(AsdictVisitor),于是抽取 session_id 落空、
-        # 重启后拿不到本体。逐字段取,extras 原样搬运再抽走本体。
-        data = {f.name: getattr(conversation, f.name)
-                for f in fields(conversation) if f.name != "extras"}
-        extras = dict(conversation.extras or {})
-        session = extras.pop("kernel_session", None)  # 本体由 FileSessionStore 存
-        if session is not None:
-            extras["kernel_session_id"] = getattr(session, "session_id", "")
-        data["extras"] = extras
-        key = self._idempotency_of.get(conversation.conversation_id)
-        if key:
-            data["idempotency_key"] = key
-        return data
+        return conversation_payload(conversation,
+                                    self._idempotency_of.get(conversation.conversation_id, ""))
 
     # ---------- 会话表最小面(与 MemoryConversationStore 同语义) ----------
 
