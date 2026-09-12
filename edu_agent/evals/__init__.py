@@ -1,5 +1,6 @@
 """评测线入口(00 §4/§8.2):runner 骨架、晨间摘要、judge 评分器与老系统适配器雏形。"""
 
+from .checks import REGISTRY, UnknownCheck, run_check
 from .image_teaching import (
     load_scenarios,
     question_image_data_url,
@@ -28,30 +29,47 @@ from .runner import (
     RunnerConfig,
     Subject,
 )
+from .scenario_corpus import (
+    DATASETS_DIR,
+    deterministic_scenarios,
+    format_failures,
+    load_shortboard_corpus,
+    run_scenario_checks,
+    to_kernel_case,
+)
 from .summary import load_results, morning_summary, write_summary
 
 __all__ = [
     "DIMENSIONS",
     "EnvironmentFailure",
     "EvalRunner",
-    "render_html",
     "JudgeSubject",
     "KernelSubject",
     "LegacyAdapter",
+    "REGISTRY",
     "ResumeMismatch",
     "RunnerConfig",
     "SCHEMA",
     "Subject",
+    "UnknownCheck",
     "any_judge_model",
+    "DATASETS_DIR",
+    "deterministic_scenarios",
+    "format_failures",
     "judge_transcript",
     "load_results",
     "load_scenarios",
+    "load_shortboard_corpus",
     "morning_summary",
     "question_image_data_url",
+    "render_html",
+    "run_check",
+    "run_scenario_checks",
     "sample_independent",
     "stability_markdown",
     "stability_report",
     "to_cases",
+    "to_kernel_case",
     "user_prompt",
     "validate_scenario",
     "verdict_from_scores",

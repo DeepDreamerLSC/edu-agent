@@ -1,0 +1,260 @@
+{
+  "schema_version": "small_lecturer_regression_shortboard/v1",
+  "scenarios": [
+    {
+      "id": "ladder-step-leaks-final-answer-13",
+      "title": "阶梯揭示把终答直接给学生(序数形态)",
+      "status": "known_red",
+      "source": {
+        "issue": 185,
+        "question_id": "6a6320ca184f723b3592d18c",
+        "lesson_name": "6-4鸽巢问题(2)",
+        "tree": "A/B 两树同文",
+        "date": "2026-09-11"
+      },
+      "tags": [
+        "阶梯",
+        "代喂",
+        "卡壳",
+        "确定性"
+      ],
+      "question": {
+        "text": "小明玩掷骰子游戏，要保证掷出的骰子点数一定有三次相同，他至少要掷几次？",
+        "answer": "13次"
+      },
+      "answer_status": "incorrect",
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "reply": "这道题你怎么想?先说说看。",
+            "steps": [
+              {
+                "step": "6种点数每种最多",
+                "value": "6"
+              },
+              {
+                "step": "先出现2次，第13次必形成“三次相同”",
+                "value": "13"
+              }
+            ]
+          }
+        },
+        {
+          "json": {
+            "reason": "先引导学生回到题目要求",
+            "reply": "我们先回到题目:要保证什么,你先说说看。",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        }
+      ],
+      "student_turns": [
+        "我不会做。",
+        "还是不会,能提示一下吗?",
+        "我不知道。"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "text_excludes_answer_values",
+            "note": "阶梯揭示不得带出终答(实测:第13次序数形态漏出)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ladder-step-leaks-sub-answer-0.8",
+      "title": "阶梯揭示把子答案 0.8 直接给学生",
+      "status": "known_red",
+      "source": {
+        "issue": 185,
+        "question_id": "6a61bb0ef0e25247f1ee36c7",
+        "lesson_name": "2-4分数乘小数",
+        "tree": "A/B 两树同文",
+        "date": "2026-09-11"
+      },
+      "tags": [
+        "阶梯",
+        "代喂",
+        "卡壳",
+        "确定性"
+      ],
+      "question": {
+        "text": "选择合适的方法计算：2.8×2/7，0.6×4/5，2/9×10.8，2.3×5/46，并回答“当小数乘带分数时，你是怎么学的？”",
+        "answer": "0.8，0.48，2.4，0.25；方法是先化分数或先除后乘并尽量约分。"
+      },
+      "answer_status": "incorrect",
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "reply": "这道题你怎么想?先说说看。",
+            "steps": [
+              {
+                "step": "先看第一个式子 2.8×2/7，把 2.8 写成分数 28/10，再约分",
+                "value": "4/5"
+              },
+              {
+                "step": "把 4/5 转化为小数，得到 0.8",
+                "value": "0.8"
+              }
+            ]
+          }
+        },
+        {
+          "json": {
+            "reason": "先引导学生逐式计算",
+            "reply": "我们一步一步来,先看第一个式子,你想怎么算?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        }
+      ],
+      "student_turns": [
+        "我不会做。",
+        "还是不会,能提示一下吗?",
+        "我不知道。"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "text_excludes_answer_values",
+            "note": "终答集合含 0.8,揭示句把它算给了学生"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ladder-step-question-numbers-pass",
+      "title": "阶梯揭示只含题面数字(合法交付,防误伤反例)",
+      "status": "guarded",
+      "source": {
+        "issue": 185,
+        "question_id": "6a696046b0ffee286ba76108",
+        "lesson_name": "2-7解决问题",
+        "tree": "A/B 两树同文",
+        "date": "2026-09-11"
+      },
+      "tags": [
+        "阶梯",
+        "防误伤",
+        "确定性"
+      ],
+      "question": {
+        "text": "某品牌的一款女包原价是1200元。注册普通会员可按原价的49/50购买；再花100元办理“金卡”成为超级会员，可按普通会员价格的6/7购买。办理“金卡”并购买这款女包，一共需要多少元？",
+        "answer": "1108元"
+      },
+      "answer_status": "incorrect",
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "reply": "这道题你怎么想?先说说看。",
+            "steps": [
+              {
+                "step": "再按6/7求超级会员价，",
+                "value": "1008"
+              }
+            ]
+          }
+        }
+      ],
+      "student_turns": [
+        "我不会做。"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "text_excludes_unauthorized_numbers",
+            "note": "题面数字(6/7)合法放行——修泄漏不许修成误伤"
+          },
+          {
+            "name": "finish_status",
+            "status": "needs_review",
+            "note": "真实覆盖 finish_status(4 用例实测 final_state 均为 needs_review)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "no-premature-confirm-before-student-answer",
+      "title": "学生未说终答时模型提前确认被判停闸拦下",
+      "status": "guarded",
+      "source": {
+        "issue": 149,
+        "evidence": "构造用例(夹具口径同 tests/teaching/test_kernel_ready_gate.py),非实测会话,无题库 question_id",
+        "tree": "main",
+        "date": "2026-09-11"
+      },
+      "tags": [
+        "判停闸",
+        "确定性"
+      ],
+      "question": {
+        "text": "图书馆原有120本故事书,又买来45本,借出38本,现在有多少本?",
+        "answer": "127本"
+      },
+      "answer_status": "incorrect",
+      "grade": "三年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "reply": "这道题你怎么想?先说说看。",
+            "steps": [
+              {
+                "step": "先算又买来之后一共有多少本",
+                "value": "165"
+              },
+              {
+                "step": "再减去借出的",
+                "value": "127"
+              }
+            ]
+          }
+        },
+        {
+          "json": {
+            "reason": "收尾",
+            "reply": "好,你已经完全明白了,这道题我们就到这里。",
+            "ready_to_confirm": true,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "继续引导",
+            "reply": "你说得对,借出要减掉。那先算又买来之后一共有多少本?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        }
+      ],
+      "student_turns": [
+        "借出表示数量减少,不能也加上38。"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "state_is_not",
+            "state": "ready_to_confirm",
+            "note": "学生未陈述终答,判停闸须拦下模型的提前确认(#149)"
+          },
+          {
+            "name": "finish_status",
+            "status": "needs_review",
+            "note": "真实覆盖 finish_status(判停闸拦截后落 needs_review)"
+          }
+        ]
+      }
+    }
+  ]
+}
