@@ -34,7 +34,7 @@ class FileSessionStore:
         path = self.root / f"{session_id}.json"
         if not path.exists():
             return None
-        return self._restore(json.loads(path.read_text(encoding="utf-8")))
+        return restore_session(json.loads(path.read_text(encoding="utf-8")))
 
     def load_all(self) -> list[LearnerSession]:
         """启动扫描:目录内全部会话恢复为可用 session(文件名序,稳定)。
@@ -46,13 +46,17 @@ class FileSessionStore:
         sessions = []
         for path in sorted(self.root.glob("*.json")):
             try:
-                sessions.append(self._restore(json.loads(path.read_text(encoding="utf-8"))))
+                sessions.append(restore_session(json.loads(path.read_text(encoding="utf-8"))))
             except (json.JSONDecodeError, OSError, TypeError):
                 print(f"[store] 跳过损坏的会话文件:{path}")
         return sessions
 
-    @staticmethod
-    def _restore(data: dict) -> LearnerSession:
-        if data.get("summary") is not None:
-            data["summary"] = Summary(**data["summary"])
-        return LearnerSession(**data)
+
+def restore_session(data: dict) -> LearnerSession:
+    """JSON dict → LearnerSession(文件/SQLite 两实现共用;Summary 子结构重建)。
+
+    纯函数:拷贝入参再改——迁移对账会对同一份源 dict 调两次,原地改会 TypeError。"""
+    data = dict(data)
+    if data.get("summary") is not None:
+        data["summary"] = Summary(**data["summary"])
+    return LearnerSession(**data)

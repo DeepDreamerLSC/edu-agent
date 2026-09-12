@@ -19,7 +19,6 @@ from pathlib import Path
 from edu_agent.agents.small_lecturer import finish, reply, start
 from edu_agent.api import build_server, build_service
 from edu_agent.api.identity import IdentityService
-from edu_agent.store import MemoryConversationStore
 
 
 class PartnerKernel:
@@ -35,22 +34,23 @@ def build() -> ThreadingHTTPServer:
     """装配(env→config 转换在此发生:IdentityService 必须无参构造,#72 P1 回归钉)。
 
     题源默认 bank(合作方真实题库快照,EDU_QUESTION_SOURCE 可切 seed/snapshot);
-    FileService 注入题图解析(file_id → data URL,内核 vision 多模态输入);
-    FileSessionStore 注入上下文落盘(每回合后全量历史写 data/sessions/,演示复盘用);
-    FileConversationStore 注入会话表落盘(M3 WS2:data/conversations/,进程重启后
-    open→message→finish 仍可续——会话本体按 kernel_session_id 从 sessions/ 取回)。"""
+    FileService 注入题图解析(file_id → data URL,内核 vision 多模态输入)与
+    文件元数据落库;SqliteStore 注入会话表/会话本体/文件元数据三个位(M3 DB
+    存储:EDU_DB_PATH,默认 data/edu-agent.db,gitignored;进程重启后
+    open→message→finish 仍可续——会话本体按 kernel_session_id 从同库取回)。"""
     from edu_agent.api import question_source
     from edu_agent.api.files import FileService
-    from edu_agent.store import FileConversationStore, FileSessionStore
+    from edu_agent.store import SqliteStore
 
     port = int(os.environ.get("EDU_PARTNER_API_PORT", "8300"))
-    files = FileService()
+    db = SqliteStore(os.environ.get("EDU_DB_PATH", "data/edu-agent.db"))
+    files = FileService(records_store=db)
     service = build_service(PartnerKernel(), source=question_source(
         os.environ.get("EDU_QUESTION_SOURCE", "bank")),
-        store=FileConversationStore(),
+        store=db,
         image_resolver=files.data_url,
-        sessions=FileSessionStore())
-    return build_server(service, IdentityService(), files=files,
+        sessions=db)
+    return build_server(service, IdentityService(), files=files, db=db,
                         host="127.0.0.1", port=port)
 
 
