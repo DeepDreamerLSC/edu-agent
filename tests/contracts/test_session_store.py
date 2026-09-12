@@ -1,7 +1,9 @@
-"""FileSessionStore 合同(M3 PR6:文件就是 v1 的 store,additive-only)。
+"""FileSessionStore 合同(M3 PR6:文件就是 v1 的 store)。
 
 roundtrip 相等、重启恢复(写文件→新实例→读文件→session 可用)、旧文件缺新字段
-按 dataclass 默认值补齐(不迁移不删字段);service 注入后内核回合自动落盘。
+按 dataclass 默认值补齐;已删字段的旧键由 restore_session 过滤丢弃(#198 第一步起
+支持删字段——单条 load 是 _rehydrate 活路径,无隔离网);service 注入后内核回合
+自动落盘。
 """
 
 from __future__ import annotations
@@ -99,19 +101,36 @@ def test_save_is_atomic_no_tmp_left_behind(tmp_path):
     assert store.load(session.session_id) == session
 
 
-def test_unknown_field_is_skipped_not_fatal(tmp_path):
-    """P1-4 回归:文件带未知字段(字段改名/回滚遗留)→ LearnerSession(**data) 抛
-    TypeError,应同半截 JSON 一样隔离跳过,不炸整个启动扫描(与 docstring 承诺一致)。"""
+def test_unknown_field_is_dropped_not_fatal(tmp_path):
+    """文件带未知字段(字段改名/回滚遗留)→ restore_session 按 dataclasses.fields()
+    过滤丢弃(#198 第一步:支持删字段——原「TypeError → load_all 隔离跳过」合同
+    反色,单条 load 是 _rehydrate 活路径,必须能恢复)。坏文件隔离仍归半截 JSON 用例。"""
     good = sample_session()
-    bad = sample_session()
+    odd = sample_session()
     FileSessionStore(tmp_path).save(good)
-    FileSessionStore(tmp_path).save(bad)
-    path = tmp_path / f"{bad.session_id}.json"
+    FileSessionStore(tmp_path).save(odd)
+    path = tmp_path / f"{odd.session_id}.json"
     data = json.loads(path.read_text(encoding="utf-8"))
     data["renamed_field"] = "x"  # 回滚改名遗留的未知字段
     path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
-    sessions = FileSessionStore(tmp_path).load_all()
-    assert [s.session_id for s in sessions] == [good.session_id]
+    restored = FileSessionStore(tmp_path).load(odd.session_id)  # 单条 load,无隔离网
+    assert restored is not None and restored.session_id == odd.session_id
+    assert not hasattr(restored, "renamed_field")
+
+
+def test_restore_survives_deleted_field_scaffold_faded(tmp_path):
+    """#198 第一步删字段回归:部署前存盘会话都带 "scaffold_faded"(当时 asdict 全量
+    落盘,含置位态)→ 重启后 `_rehydrate` 单条 load 必须照常恢复,不得 TypeError→503。"""
+    session = sample_session()
+    FileSessionStore(tmp_path).save(session)
+    path = tmp_path / f"{session.session_id}.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["scaffold_faded"] = True    # 注入部署前的旧存盘形状(含置位态)
+    path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    restored = FileSessionStore(tmp_path).load(session.session_id)
+    assert restored is not None and restored.state == "ready_to_confirm"
+    assert restored.history == session.history and restored.summary == session.summary
+    assert not hasattr(restored, "scaffold_faded")
 
 
 def test_additive_only_old_file_loads_with_defaults(tmp_path):

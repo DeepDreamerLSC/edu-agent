@@ -297,7 +297,7 @@ def test_analysis_ladder_is_revealed_on_repeat_fallback(tmp_path):
         assert turn.session.hint_level == 1
 
 
-# ---------- #107 / #146 M3:脚手架渐隐(掌握度信号 → 撤一级支持) ----------
+# ---------- #198 第一步:支持动作(枚举 + 确定性选择;#174 渐隐档折叠至此) ----------
 
 _FADE_STEPS = [{"step": "先算全部按鸡的脚数", "value": "16"},
                {"step": "再算脚数差", "value": "10"}]
@@ -314,39 +314,39 @@ def _stuck_session(tmp_path, extra_payloads: list | None = None):
         yield fake, gateway, turn.session
 
 
-def test_scaffold_fades_after_student_performs_revealed_step(tmp_path):
-    """揭示一级 → 学生**自己做出来**(值出现在本轮消息)→ 再卡住先问不揭示;再卡住升回揭示。"""
+def test_support_ask_after_student_performs_revealed_step(tmp_path):
+    """揭示一级 → 学生**自己做出来**(值出现在上一学生轮)→ 再卡住先问不揭示(guiding_focus);
+    再卡住升回揭示(telling)。#174 渐隐档折叠进 `_support_move` 后的同款行为。"""
     with _stuck_session(tmp_path, [completion(tutor_json("对,继续往下想。"))]) as (fake, gateway, session):
         revealed = reply(session, "我不会做。", gateway=gateway)
         assert "先算全部按鸡的脚数" in revealed.text and session.hint_level == 1
-        assert session.scaffold_faded is False                      # 还没掌握度证据 → 支持不动
         reply(session, "我算了一下,是不是 16 只脚?", gateway=gateway)
-        assert session.scaffold_faded is True                       # 学生自己做出来了 → 撤一级支持
         faded = reply(session, "我不会了。", gateway=gateway)
-        assert faded.text.startswith("这一步你先自己想想")           # 先问不揭示
+        assert faded.text.startswith("我们把这一步拆小")           # 只问不揭示
         assert session.hint_level == 1                               # 不消耗阶梯
-        fade_events = [e for e in session.guard_events if e.get("branch") == "fade"]
-        assert fade_events and fade_events[0]["hint_level"] == 1   # #169 起事件另带 turn 字段
+        ask_events = [e for e in session.guard_events if e.get("branch") == "support"]
+        assert ask_events and ask_events[0]["move"] == "guiding_focus"  # #169 起事件另带 turn 字段
         escalated = reply(session, "我不会做。", gateway=gateway)
         assert "再算脚数差" in escalated.text and session.hint_level == 2   # 升回全支持
 
 
-def test_scaffold_keeps_full_support_without_performance_signal(tmp_path):
-    """学生没有做出刚揭示的那一步 → **不撤支持**:下次卡住继续揭示下一级,且无 fade 事件。"""
+def test_support_keeps_full_support_without_performance_signal(tmp_path):
+    """学生没有做出刚揭示的那一步 → **不撤支持**:下次卡住继续揭示下一级,且无 support 事件。"""
     with _stuck_session(tmp_path) as (fake, gateway, session):
         reply(session, "我不会做。", gateway=gateway)
         reply(session, "我不会了。", gateway=gateway)
-        assert session.scaffold_faded is False
         assert session.hint_level == 2
-        assert not any(event.get("branch") == "fade" for event in session.guard_events)
+        assert not any(event.get("branch") == "support" for event in session.guard_events)
 
 
-def test_scaffold_fade_is_one_shot_per_performance(tmp_path):
-    """渐隐只用一次:触发后标志复位(下一次卡住仍给揭示,除非学生又做出了一步)。"""
-    with _stuck_session(tmp_path, [completion(tutor_json("对,继续往下想。"))]) as (fake, gateway, session):
-        reply(session, "我不会做。", gateway=gateway)
-        reply(session, "我算了一下,是不是 16 只脚?", gateway=gateway)
-        reply(session, "我不会了。", gateway=gateway)        # 渐隐触发
-        assert session.scaffold_faded is False
-        again = reply(session, "我不会做。", gateway=gateway)
-        assert "再算脚数差" in again.text                            # 直接给下一级
+def test_support_ask_requires_fresh_performance_signal(tmp_path):
+    """掌握度只认**紧邻上一学生轮**(#198 折叠:无状态推导,粘滞语义随状态位删除):
+    做出那步与卡住之间隔着普通轮 → 不再撤支持,直接揭示。"""
+    with _stuck_session(tmp_path, [completion(tutor_json("嗯,你在想什么?")),
+                                   completion(tutor_json("我们继续。"))]) as (fake, gateway, session):
+        reply(session, "我不会做。", gateway=gateway)            # 揭示第 1 级
+        reply(session, "我算了一下,是不是 16 只脚?", gateway=gateway)  # 做出该步
+        turn = reply(session, "我再想想别的。", gateway=gateway)  # 普通轮:掌握度证据过时
+        stuck = reply(session, "我不会了。", gateway=gateway)
+        assert "再算脚数差" in stuck.text and session.hint_level == 2  # 直接揭示下一级,未发拆小问句
+        assert not any(event.get("branch") == "support" for event in session.guard_events)

@@ -2,9 +2,10 @@
 
 FileSessionStore 降级为**迁移源 + 复盘存档 + 合同对照**(serve_partner_api
 不再注入它):migrate_json_to_sqlite.py 从 data/sessions/{session_id}.json
-读入,原件保留到人工确认清理。语义保持不变以保回退:
-additive-only——LearnerSession 新增字段靠 dataclass 默认值从旧文件补齐,
-不删字段、不写迁移(历史文件若带已删字段会 TypeError——本语义下不删字段)。
+读入,原件保留到人工确认清理。语义:新增字段靠 dataclass 默认值从旧文件补齐;
+删字段自 #198 第一步起支持——已删字段的旧键由 `restore_session` 按
+dataclasses.fields() 过滤(单条 load 无隔离网,不过滤则部署前存盘会话在
+重启后首回合 TypeError→503,故兼容与删字段同批闭环)。
 启动扫描 = load_all()(坏文件隔离跳过,不炸全部);api 层在每次内核回合后
 save()(tmp+os.replace 原子落盘,#31 runner 同款——进程被杀不留半截 JSON)。
 """
@@ -13,7 +14,7 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import asdict
+from dataclasses import asdict, fields
 from pathlib import Path
 
 from edu_agent.agents.small_lecturer.session import LearnerSession, Summary
@@ -57,8 +58,12 @@ class FileSessionStore:
 def restore_session(data: dict) -> LearnerSession:
     """JSON dict → LearnerSession(文件/SQLite 两实现共用;Summary 子结构重建)。
 
-    纯函数:拷贝入参再改——迁移对账会对同一份源 dict 调两次,原地改会 TypeError。"""
+    纯函数:拷贝入参再改——迁移对账会对同一份源 dict 调两次,原地改会 TypeError。
+    未知键(已删字段的旧存盘,如 #198 第一步删的 scaffold_faded;回滚/改名遗留)
+    按 dataclasses.fields() 过滤后丢弃——单条 `load()` 是 `_rehydrate` 的活路径
+    (每个内核回合取本体,重启后即走),没有 load_all 的隔离网,不过滤即 503。"""
     data = dict(data)
     if data.get("summary") is not None:
         data["summary"] = Summary(**data["summary"])
-    return LearnerSession(**data)
+    known = {field.name for field in fields(LearnerSession)}
+    return LearnerSession(**{key: value for key, value in data.items() if key in known})
