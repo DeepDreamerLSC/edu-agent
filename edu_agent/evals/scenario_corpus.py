@@ -19,6 +19,7 @@ join 回题库 inventory):网的价值在「红要红得可追溯」。
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from .checks import REGISTRY, _numbers, run_check
@@ -26,6 +27,9 @@ from .checks import REGISTRY, _numbers, run_check
 SHORTBOARD_DATASET = "small_lecturer_regression_shortboard_v1.json"
 SHORTBOARD_SCHEMA_VERSION = "small_lecturer_regression_shortboard/v1"
 _STATUSES = ("known_red", "guarded")
+# 题库 ObjectId 口径:question_id 写全 24 位十六进制才可 join 回 inventory
+# (8 位截断正是上轮修掉的溯源错位,形态校验拦住它复发)。
+_QID_RE = re.compile(r"[0-9a-f]{24}")
 
 
 def datasets_dir() -> Path:
@@ -114,8 +118,14 @@ def _expect_errors(scenario: dict) -> list[str]:
     source = scenario.get("source")
     if not isinstance(source, dict) or not source.get("issue"):
         errors.append(f"{scenario_id}:source.issue 必填(红要红得可追溯)")
-    elif scenario.get("status") == "known_red" and not source.get("question_id"):
-        errors.append(f"{scenario_id}:known_red 必须带 source.question_id(写全 24 位,"
+        return errors
+    question_id = source.get("question_id")
+    if question_id is not None and not _QID_RE.fullmatch(str(question_id)):
+        errors.append(f"{scenario_id}:source.question_id 必须是 24 位小写十六进制"
+                      "(题库 ObjectId 口径,写全才可 join 回 inventory;截断/乱码"
+                      f"会让溯源静默失效),实际 {question_id!r}")
+    if scenario.get("status") == "known_red" and not question_id:
+        errors.append(f"{scenario_id}:known_red 必须带 source.question_id(24 位,"
                       "可直接 join 回题库 inventory)")
     return errors
 
@@ -155,10 +165,14 @@ def run_scenario_checks(scenario: dict, result: dict) -> list[dict]:
 
 
 def format_failures(failures: list[dict]) -> str:
-    """失败清单 → 可读行(issue + question_id;详情自带具体数字/状态)。"""
+    """失败清单 → 可读行(issue + question_id + lesson_name + 详情)。
+
+    question_id 是可 join 的那半张牌(机器),lesson_name 是人读的那半张(CI 里
+    24 位 id 不可读);详情自带具体数字/状态。"""
     return "\n".join(
         f"[{item.get('scenario')}]"
         f" source.issue={(item.get('source') or {}).get('issue', '-')}"
         f" source.question_id={(item.get('source') or {}).get('question_id', '-')}"
+        f" source.lesson_name={(item.get('source') or {}).get('lesson_name', '-')}"
         f" check={item.get('check')}: {item.get('detail')}"
         for item in failures)

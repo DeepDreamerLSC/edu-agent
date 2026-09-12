@@ -112,15 +112,17 @@ def test_finish_status_and_state_is_not_detail():
 
 
 def test_format_failures_carries_source_attribution():
-    """失败行格式:scenario + source.issue + source.question_id + 详情(可追溯)。"""
+    """失败行格式:scenario + issue + question_id + lesson_name + 详情(可追溯)。"""
     line = format_failures([{
         "scenario": "ladder-step-leaks-final-answer-13",
-        "source": {"issue": 185, "question_id": "6a6320ca184f723b3592d18c"},
+        "source": {"issue": 185, "question_id": "6a6320ca184f723b3592d18c",
+                   "lesson_name": "6-4鸽巢问题(2)"},
         "check": "text_excludes_answer_values",
         "detail": "终答值 13 出现在 turns[3]",
     }])
     assert "source.issue=185" in line
     assert "source.question_id=6a6320ca184f723b3592d18c" in line
+    assert "source.lesson_name=6-4鸽巢问题(2)" in line
     assert "13" in line
 
 
@@ -164,6 +166,10 @@ def _mutate(**changes):
     ({"student_turns": [{"text": "我不会做。"}]}, r"student_turns\[0\]"),
     ({"status": "known_red", "source": {"issue": 185}}, r"question_id"),
     ({"source": {}}, r"source\.issue"),
+    ({"source": {"issue": 185, "question_id": "6a6320ca"}},
+     r"24 位"),  # 截断 id(上轮修掉的溯源错位形态)不得静默通过
+    ({"status": "known_red",
+      "source": {"issue": 185, "question_id": "不是id"}}, r"24 位"),
 ])
 def test_loader_rejects_bad_data(tmp_path, changes, match):
     """写错数据的用例在加载期即红(审查跟进):恒真通道/重名/形状/来源缺失。"""
