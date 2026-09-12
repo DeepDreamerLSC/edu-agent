@@ -19,7 +19,6 @@ from pathlib import Path
 from edu_agent.agents.small_lecturer import finish, reply, start
 from edu_agent.api import build_server, build_service
 from edu_agent.api.identity import IdentityService
-from edu_agent.store import MemoryConversationStore
 
 
 class PartnerKernel:
