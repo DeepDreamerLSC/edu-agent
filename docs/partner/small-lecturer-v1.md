@@ -133,8 +133,8 @@ Content-Type: application/json
 
 | 位置 | 字段 | 类型 | 必填 | 默认值 | 示例值 | 说明 |
 | --- | --- | --- | --- | --- | --- | --- |
-| Body | `title` | string | 否 | - | `五年级数学第 12 题` | 会话标题，最长 200；省略时由服务端生成。 |
-| Body | `context_snapshot` | object | 否 | `{}` | `{"entry":"question_list"}` | 第一方页面上下文；不能用来覆盖登录学生、租户或可信年级。 |
+| Body | `title` | string | 否 | - | `五年级数学第 12 题` | 会话标题，最长 200。v1 兼容接收但不落库（统一 Open 不设标题字段）。 |
+| Body | `context_snapshot` | object | 否 | `{}` | `{"entry":"question_list"}` | 第一方页面上下文。v1 兼容接收但不落库；不能用来覆盖登录学生、租户或可信年级。 |
 
 ### 激活小讲师并提交题目
 
@@ -150,14 +150,18 @@ Content-Type: application/json
 | Body | `skill_id` | string | 是 | `general_chat` | `small_lecturer_coaching` | 小讲师必须显式填写该值，不能依赖默认值。 |
 | Body | `agent_id` | string | 否 | `demo_chat` | `demo_chat` | 宿主兼容字段；小讲师路由以 `skill_id` 和 Skill Session 为准。 |
 | Body | `client_turn_id` | string | 否 | - | `turn-math-001-01` | 客户端本轮稳定 ID，长度 1～128。 |
-| Body | `idempotency_key` | string | 否 | - | `math-001-attempt-01` | 本轮幂等键，长度 1～128；断线重放时复用。 |
+| Body | `idempotency_key` | string | 否 | - | `math-001-attempt-01` | 本轮幂等键，长度 1～128；断线重放时复用。v1 与 `message_idempotency_key` 同义，两者同发以 `message_idempotency_key` 为准。 |
 | Body | `input` | object | 否 | `{}` | `{"interaction_action":"activate"}` | Skill Session 操作及结构化输入。 |
-| Body | `metadata` | object | 否 | `{}` | `{"entry":"question_list"}` | 页面扩展元数据，不能声明可信身份或答案。 |
+| Body | `metadata` | object | 否 | `{}` | `{"entry":"question_list"}` | 页面扩展元数据，不能声明可信身份或答案。v1 兼容接收但不消费。 |
 | Body | `input.interaction_action` | enum | 条件必填 | - | `activate` | 首次激活或执行结构化操作时填写；完整值见“操作枚举”。 |
-| Body | `input.values.question_source.provider` | string | 条件必填 | - | `school_question_bank` | 使用题库题目时必填。 |
-| Body | `input.values.question_source.question_id` | string | 条件必填 | - | `math-001` | 使用题库题目时必填。 |
-| Body | `input.values.question_source.question_version` | string | 条件必填 | - | `2026-v3` | 使用题库题目时必填，本次会话内固定。 |
-| Body | `input.question_text` | string | 条件必填 | - | `解方程 3x+7=25` | 直接输入完整题目时使用；与题库来源或题图按场景选择。 |
+| Body | `input.values.question_source.provider` | string | 条件必填 | - | `school_question_bank` | 使用题库题目时必填。**v1 不支持**（题目经统一 Open 提交，见下）——v1 请求携带 `input.values.*` 返回 422。 |
+| Body | `input.values.question_source.question_id` | string | 条件必填 | - | `math-001` | 使用题库题目时必填。**v1 不支持**（题目经统一 Open 提交）——v1 请求携带返回 422。 |
+| Body | `input.values.question_source.question_version` | string | 条件必填 | - | `2026-v3` | 使用题库题目时必填，本次会话内固定。**v1 不支持**（题目经统一 Open 提交）——v1 请求携带返回 422。 |
+| Body | `input.question_text` | string | 条件必填 | - | `解方程 3x+7=25` | 直接输入完整题目时使用。**v1 不支持**（完整题目走统一 Open 的 `question_text`）——v1 请求携带返回 422。 |
+
+> **v1 字段白名单（#202/#207）**：请求体只接收本表与 §5 字段表列明的键，未知键一律
+> 422（`未知字段:…`，不是静默忽略）。上表 `input.values.*` / `input.question_text`
+> 属激活/补充材料流程，与操作枚举「v1 不支持」一致：发送即 422。
 
 ### 操作枚举
 
@@ -193,6 +197,9 @@ v1 支持的操作(v1 不支持的操作调用返回 400 UNSUPPORTED_ACTION):
 }
 ```
 
+> **v1 提示**：上例为完整合同形状，保留作未来版本参考；v1 激活由统一 Open 覆盖
+> （操作枚举同款结论），按此形状发送会得到 422 未知字段。
+
 三个题目标识缺一不可。题目版本在本次学习开始后固定，题库更新不会改变进行中的记录。
 
 准备期间响应为：
@@ -207,35 +214,30 @@ interaction.progress.phase = preparing_question
 
 ### 直接输入完整题目
 
-直接输入可以原子创建技能会话并提交题目：
+完整题目在 v1 走统一 Open 的 `question_text`（body 级字段，`POST /api/prepared-questions/open` 或 `POST /api/conversations`），原子创建会话并出首问：
 
 ```json
 {
-  "skill_id": "small_lecturer_coaching",
-  "content": "解方程 3x+7=25",
-  "input": {
-    "question_text": "解方程 3x+7=25"
-  }
+  "idempotency_key": "math-001-attempt-01",
+  "question_text": "解方程 3x+7=25"
 }
 ```
+
+> 旧消息面形状（`input.question_text`）属激活流程，v1 不支持——发送返回 422 未知字段。
 
 ### 上传题图
 
-先通过统一文件接口上传题图，再提交 `file_id`：
+先通过统一文件接口上传题图，再在统一 Open 提交 `file_id`（body 级 `question_image`）：
 
 ```json
 {
-  "skill_id": "small_lecturer_coaching",
-  "content": "已上传题目照片",
-  "input": {
-    "skill_session_id": "skillsess_xxx",
-    "interaction_action": "submit_inputs",
-    "values": {
-      "question_image": "file_xxx"
-    }
-  }
+  "idempotency_key": "math-001-attempt-01",
+  "question_image": "file_xxx"
 }
 ```
+
+> 旧消息面形状（`interaction_action=submit_inputs` + `input.values.question_image`）
+> 属补充材料流程，v1 不支持——发送返回 422 未知字段。
 
 服务端会校验文件归属和图片文件完整性；OCR 只作为辅助信息，不能单独否定一张可用题图：
 

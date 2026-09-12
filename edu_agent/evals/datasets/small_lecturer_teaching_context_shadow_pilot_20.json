@@ -1,16 +1,14 @@
 {
-  "schema_version": "small_lecturer_dialogue_scenarios/v1",
+  "schema_version": "small_lecturer_shadow_pilot_corpus/v1",
   "scenarios": [
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_subtract",
       "title": "方程同减同除",
       "subject": "math",
-      "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_subtract",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "解方程 3x+7=25，并说明每一步为什么这样做。",
+        "answer": "x=6"
       },
       "student_turns": [
         "我还没有想清楚，能先给我一个方向吗？",
@@ -24,7 +22,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -35,18 +39,22 @@
         "coverage_bucket": "multi_step",
         "analysis_quality": "detailed",
         "grade": "五年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_equation_subtract"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_sign",
       "title": "方程符号误解",
       "subject": "math",
-      "question": "解方程 2x+5=17，并说明理由。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_sign",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "解方程 2x+5=17，并说明理由。",
+        "answer": "x=6"
       },
       "student_turns": [
         "我想把5移过去以后还是加5。",
@@ -60,7 +68,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -71,18 +85,22 @@
         "coverage_bucket": "misconception",
         "analysis_quality": "detailed",
         "grade": "五年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_equation_sign"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_parentheses",
       "title": "含括号方程",
       "subject": "math",
-      "question": "解方程 4(x+2)=24，并说明过程。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_parentheses",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "解方程 4(x+2)=24，并说明过程。",
+        "answer": "x=4"
       },
       "student_turns": [
         "我不知道先算括号还是先除。",
@@ -96,7 +114,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -107,18 +131,22 @@
         "coverage_bucket": "multi_step",
         "analysis_quality": "detailed",
         "grade": "六年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_equation_parentheses"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_fraction_addition",
       "title": "异分母分数加法",
       "subject": "math",
-      "question": "计算四分之三加八分之一，并说明为什么要这样算。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_fraction_addition",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "计算四分之三加八分之一，并说明为什么要这样算。",
+        "answer": "7/8"
       },
       "student_turns": [
         "我能不能直接把分子和分母分别相加？",
@@ -132,7 +160,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -143,18 +177,22 @@
         "coverage_bucket": "calculation",
         "analysis_quality": "terse",
         "grade": "五年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_fraction_addition"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_decimal_multiply",
       "title": "小数乘法",
       "subject": "math",
-      "question": "计算 2.4×0.5，并解释小数点的位置。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_decimal_multiply",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "计算 2.4×0.5，并解释小数点的位置。",
+        "answer": "1.2"
       },
       "student_turns": [
         "我先按24乘5算，但不知道小数点放哪里。",
@@ -168,7 +206,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -179,18 +223,22 @@
         "coverage_bucket": "calculation",
         "analysis_quality": "detailed",
         "grade": "五年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_decimal_multiply"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_rectangle_perimeter",
       "title": "长方形周长",
       "subject": "math",
-      "question": "一个长方形长8厘米、宽5厘米，它的周长是多少？请解释。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_rectangle_perimeter",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "一个长方形长8厘米、宽5厘米，它的周长是多少？请解释。",
+        "answer": "26厘米"
       },
       "student_turns": [
         "我把8乘5算成40厘米。",
@@ -204,7 +252,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -215,18 +269,22 @@
         "coverage_bucket": "geometry",
         "analysis_quality": "detailed",
         "grade": "三年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_rectangle_perimeter"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_triangle_area",
       "title": "三角形面积",
       "subject": "math",
-      "question": "一个三角形底是10厘米，高是6厘米，面积是多少？为什么要除以2？",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_triangle_area",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "一个三角形底是10厘米，高是6厘米，面积是多少？为什么要除以2？",
+        "answer": "30平方厘米"
       },
       "student_turns": [
         "我先算10乘6等于60。",
@@ -240,7 +298,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -251,18 +315,22 @@
         "coverage_bucket": "geometry",
         "analysis_quality": "detailed",
         "grade": "五年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_triangle_area"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_chicken_rabbit",
       "title": "鸡兔同笼假设法",
       "subject": "math",
-      "question": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_chicken_rabbit",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
+        "answer": "鸡3只，兔5只"
       },
       "student_turns": [
         "我还不知道怎么同时算两种动物。",
@@ -276,7 +344,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -287,18 +361,22 @@
         "coverage_bucket": "application",
         "analysis_quality": "terse",
         "grade": "六年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_chicken_rabbit"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_average",
       "title": "平均数",
       "subject": "math",
-      "question": "小明三次数学测验分别是82分、88分和94分，平均分是多少？",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_average",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "小明三次数学测验分别是82分、88分和94分，平均分是多少？",
+        "answer": "88分"
       },
       "student_turns": [
         "我能不能把最高分和最低分加起来除以2？",
@@ -312,7 +390,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -323,18 +407,22 @@
         "coverage_bucket": "application",
         "analysis_quality": "detailed",
         "grade": "四年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_average"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_discount",
       "title": "百分数折扣",
       "subject": "math",
-      "question": "一件原价200元的商品打八折，现价是多少？",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_discount",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "一件原价200元的商品打八折，现价是多少？",
+        "answer": "160元"
       },
       "student_turns": [
         "八折是不是便宜8元？",
@@ -348,7 +436,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -359,18 +453,22 @@
         "coverage_bucket": "application",
         "analysis_quality": "detailed",
         "grade": "六年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_discount"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_ratio",
       "title": "按比例分配",
       "subject": "math",
-      "question": "把35本书按2比3分给甲、乙两组，两组各分多少本？",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_ratio",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "把35本书按2比3分给甲、乙两组，两组各分多少本？",
+        "answer": "甲14本，乙21本"
       },
       "student_turns": [
         "我先用35分别除以2和3，但结果加起来不等于35。",
@@ -384,7 +482,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -395,18 +499,22 @@
         "coverage_bucket": "application",
         "analysis_quality": "detailed",
         "grade": "六年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_ratio"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_speed",
       "title": "路程速度时间",
       "subject": "math",
-      "question": "一辆车3小时行驶180千米，平均每小时行驶多少千米？",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_speed",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "一辆车3小时行驶180千米，平均每小时行驶多少千米？",
+        "answer": "60千米/小时"
       },
       "student_turns": [
         "我不确定该用乘法还是除法。",
@@ -420,7 +528,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -431,18 +545,22 @@
         "coverage_bucket": "application",
         "analysis_quality": "terse",
         "grade": "五年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_speed"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_age",
       "title": "年龄倍数",
       "subject": "math",
-      "question": "妈妈今年36岁，是小华年龄的3倍。小华今年多少岁？",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_age",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "妈妈今年36岁，是小华年龄的3倍。小华今年多少岁？",
+        "answer": "12岁"
       },
       "student_turns": [
         "我看到3倍，想用36乘3。",
@@ -456,7 +574,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -467,18 +591,22 @@
         "coverage_bucket": "application",
         "analysis_quality": "detailed",
         "grade": "四年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_age"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_unit_conversion",
       "title": "长度单位换算",
       "subject": "math",
-      "question": "3.5米等于多少厘米？说明换算关系。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_unit_conversion",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "3.5米等于多少厘米？说明换算关系。",
+        "answer": "350厘米"
       },
       "student_turns": [
         "我记不清米和厘米之间差多少。",
@@ -492,7 +620,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -503,18 +637,22 @@
         "coverage_bucket": "calculation",
         "analysis_quality": "detailed",
         "grade": "四年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_unit_conversion"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_division_remainder",
       "title": "有余数的分组",
       "subject": "math",
-      "question": "有53名同学，每6人一组，最多可以分成多少个完整小组，还剩几人？",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_division_remainder",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "有53名同学，每6人一组，最多可以分成多少个完整小组，还剩几人？",
+        "answer": "8组，余5人"
       },
       "student_turns": [
         "我用53除以6，但不知道余数怎么解释。",
@@ -528,7 +666,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -539,18 +683,22 @@
         "coverage_bucket": "application",
         "analysis_quality": "detailed",
         "grade": "三年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_division_remainder"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_sequence",
       "title": "数列规律",
       "subject": "math",
-      "question": "找规律：2、5、8、11，下一项是多少？请说明。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_sequence",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "找规律：2、5、8、11，下一项是多少？请说明。",
+        "answer": "14"
       },
       "student_turns": [
         "我只看出这些数越来越大。",
@@ -564,7 +712,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -575,18 +729,22 @@
         "coverage_bucket": "reasoning",
         "analysis_quality": "terse",
         "grade": "四年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_sequence"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_probability",
       "title": "简单可能性",
       "subject": "math",
-      "question": "袋子里有3个红球和2个蓝球，任意摸出1个球，摸到哪种颜色的可能性更大？为什么？",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_probability",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "袋子里有3个红球和2个蓝球，任意摸出1个球，摸到哪种颜色的可能性更大？为什么？",
+        "answer": "红球可能性更大"
       },
       "student_turns": [
         "我觉得两种颜色都有可能，所以一样大。",
@@ -600,7 +758,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -611,18 +775,22 @@
         "coverage_bucket": "reasoning",
         "analysis_quality": "detailed",
         "grade": "五年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_probability"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_angles",
       "title": "平角中的角",
       "subject": "math",
-      "question": "一个平角被分成两个角，其中一个角是65度，另一个角是多少度？",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_angles",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "一个平角被分成两个角，其中一个角是65度，另一个角是多少度？",
+        "answer": "115度"
       },
       "student_turns": [
         "我不知道平角一共有多少度。",
@@ -636,7 +804,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -647,18 +821,22 @@
         "coverage_bucket": "geometry",
         "analysis_quality": "detailed",
         "grade": "四年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_angles"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_order_operations",
       "title": "混合运算顺序",
       "subject": "math",
-      "question": "计算 18-3×4，并说明运算顺序。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_order_operations",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "计算 18-3×4，并说明运算顺序。",
+        "answer": "6"
       },
       "student_turns": [
         "我从左往右先算18减3等于15，再乘4等于60。",
@@ -672,7 +850,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -683,18 +867,22 @@
         "coverage_bucket": "calculation",
         "analysis_quality": "detailed",
         "grade": "三年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_order_operations"
       }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v1",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_word_problem",
       "title": "两步应用题",
       "subject": "math",
-      "question": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_word_problem",
-        "question_version": "pilot-2026-07-v2"
+      "question": {
+        "text": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
+        "answer": "127本"
       },
       "student_turns": [
         "我把三个数直接加在一起。",
@@ -708,7 +896,13 @@
           "completed"
         ],
         "assistant_contains": [],
-        "failure_category": "expectation"
+        "failure_category": "expectation",
+        "checks": [
+          {
+            "name": "finish_status",
+            "status": "completed"
+          }
+        ]
       },
       "tags": [],
       "metadata": {
@@ -719,6 +913,12 @@
         "coverage_bucket": "multi_step",
         "analysis_quality": "terse",
         "grade": "三年级"
+      },
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v2",
+        "bank_question_id": "stability_word_problem"
       }
     }
   ]
