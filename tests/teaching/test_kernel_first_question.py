@@ -2,7 +2,8 @@
 
 改动口径:首问**可见文本**由内核 `start()` 覆盖为 `prompting.first_question_text`
 的确定性模板(head + tail 组装,五条文案定稿):
-- head 两选一:转录读出内容 → 图像招呼语 + 半句复述;纯文字题/读不出内容 → 纯文字招呼语;
+- head 两选一:转录读出内容 → 图像招呼语 + 半句复述 + 识题确认句(#180 ③);
+  纯文字题/读不出内容 → 纯文字招呼语(不插确认);
 - tail:正确档一套(文字/图像共用);采集档——图像题恒用**统一那句**,文字题按**题型**
   分选择题/非选择题(`_is_multiple_choice`,纯规则零模型调用)。
 不再采信模型生成的 reply 文本;模型调用照旧(steps/transcription 仍被采信)。既有两条
@@ -30,7 +31,6 @@ from edu_agent.agents.small_lecturer import (
     first_question_text,
     start,
 )
-
 from teachkit import kernel_gateway, open_json
 
 # 实测缺陷同款题:当时的首问写成「…记作(5,12),(3,10)表示10排3号,对吗?」——
@@ -163,14 +163,16 @@ def test_correct_arc_ignores_question_type(tmp_path):
     ("unanswered", TAIL_COLLECT_IMAGE), ("correct", TAIL_CORRECT),
 ])
 def test_image_question_head_restates_half_sentence_and_keeps_tier_tail(tmp_path, status, tail):
-    """带图题 + 转录读出内容 → 首问 = HEAD_IMAGE_PREFIX + 半句复述 + 「。」 + 对应档 tail。"""
+    """带图题 + 转录读出内容 → 首问 = HEAD_IMAGE_PREFIX + 半句复述 + 识题确认句 + 对应档 tail
+    (#180 ③:复述来自转录、可能读错题 → 「对吗?」式确认让学生第 0 轮就能纠正)。"""
     learner = {**LEARNER, **({"answer_status": status} if status else {})}
     turn, fake = _opening(tmp_path, learner, question=IMAGE_WORD_QUESTION,
                           reply_text=CLEAN_REPLY, transcription=WORD_TRANSCRIPTION)
     fake.stop()
-    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF}。{tail}"
+    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF},我读得对吗?{tail}"
     assert turn.text.startswith(HEAD_IMAGE_PREFIX)     # 图像招呼语打头
     assert WORD_BRIEF in turn.text                     # 含半句复述(贴住学生发的那道题)
+    assert "我读得对吗?" in turn.text            # 含识题确认句(带图可读 → 必插)
     assert turn.text.endswith(tail)                    # 以对应档 tail 结尾
     assert turn.session.first_question == turn.text    # 记录面与可见面同源
 
@@ -180,7 +182,7 @@ def test_image_collect_sentence_is_uniform_even_with_options(tmp_path):
     turn, fake = _opening(tmp_path, LEARNER, question=CHOICE_IMAGE_QUESTION,
                           reply_text=CLEAN_REPLY, transcription=CHOICE_TRANSCRIPTION)
     fake.stop()
-    assert turn.text == f"{HEAD_IMAGE_PREFIX}{CHOICE_BRIEF}。{TAIL_COLLECT_IMAGE}"
+    assert turn.text == f"{HEAD_IMAGE_PREFIX}{CHOICE_BRIEF},我读得对吗?{TAIL_COLLECT_IMAGE}"
     assert "选了什么" not in turn.text and "算出的答案" not in turn.text
 
 
@@ -206,7 +208,7 @@ def test_image_question_prefers_question_text_over_transcription(tmp_path):
     turn, fake = _opening(tmp_path, LEARNER, question=IMAGE_WORD_QUESTION,
                           reply_text=CLEAN_REPLY, transcription="这是一段无关的转录废话。")
     fake.stop()
-    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF}。{TAIL_COLLECT_IMAGE}"
+    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF},我读得对吗?{TAIL_COLLECT_IMAGE}"
     assert "废话" not in turn.text
 
 
@@ -215,7 +217,7 @@ def test_image_only_question_also_restates_transcription(tmp_path):
     turn, fake = _opening(tmp_path, LEARNER, question=IMAGE_ONLY_QUESTION,
                           reply_text=CLEAN_REPLY, transcription=WORD_TRANSCRIPTION)
     fake.stop()
-    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF}。{TAIL_COLLECT_IMAGE}"
+    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF},我读得对吗?{TAIL_COLLECT_IMAGE}"
     assert turn.session.question["text"] == WORD_TRANSCRIPTION  # 转写仍回填题面
 
 
@@ -235,6 +237,7 @@ def test_no_readable_brief_falls_back_to_text_head(tmp_path, question, transcrip
     assert turn.text == HEAD_TEXT + TAIL_COLLECT_OPEN
     assert turn.text == FIRST_QUESTION_COLLECT
     assert HEAD_IMAGE_PREFIX not in turn.text and ":" not in turn.text
+    assert "我读得对吗?" not in turn.text      # 识题确认只属图像档(#180 ③:文字档不插)
 
 
 def test_long_brief_is_capped_at_16_chars_with_ellipsis(tmp_path):
@@ -243,7 +246,7 @@ def test_long_brief_is_capped_at_16_chars_with_ellipsis(tmp_path):
     turn, fake = _opening(tmp_path, LEARNER, question=IMAGE_ONLY_QUESTION,
                           reply_text=CLEAN_REPLY, transcription=long_text)
     fake.stop()
-    brief = turn.text[len(HEAD_IMAGE_PREFIX):-len("。" + TAIL_COLLECT_IMAGE)]
+    brief = turn.text[len(HEAD_IMAGE_PREFIX):-len(",我读得对吗?" + TAIL_COLLECT_IMAGE)]
     assert brief.endswith("…")
     assert brief[:-1] == long_text[:16]              # 截断位置确定
     assert len(brief[:-1]) <= 16                     # 上限 16 字(省略号另计)
@@ -257,22 +260,22 @@ def test_brief_rules_boundaries():
     keep16 = keep15 + "六"                            # 16 字
     keep17 = keep16 + "七"                            # 17 字
     assert first_question_text(None, transcription=keep15, question=pure_image) == (
-        f"{HEAD_IMAGE_PREFIX}{keep15}。{TAIL_COLLECT_IMAGE}")
+        f"{HEAD_IMAGE_PREFIX}{keep15},我读得对吗?{TAIL_COLLECT_IMAGE}")
     assert first_question_text(None, transcription=keep16, question=pure_image) == (
-        f"{HEAD_IMAGE_PREFIX}{keep16}。{TAIL_COLLECT_IMAGE}")     # 16 字不加省略号
+        f"{HEAD_IMAGE_PREFIX}{keep16},我读得对吗?{TAIL_COLLECT_IMAGE}")     # 16 字不加省略号
     assert first_question_text(None, transcription=keep17, question=pure_image) == (
-        f"{HEAD_IMAGE_PREFIX}{keep16}…。{TAIL_COLLECT_IMAGE}")    # 17 字截到 16 + 「…」
+        f"{HEAD_IMAGE_PREFIX}{keep16}…,我读得对吗?{TAIL_COLLECT_IMAGE}")    # 17 字截到 16 + 「…」
     # 首个逗号优先:逗号(,)比句末标点(。)更早 → 取逗号(全角逗号同款)
     for text in ("先算乘法,再算加法。结果是几", "先算乘法，再算加法。", "先算乘法,再算加法,"):
         assert first_question_text(None, transcription=text, question=pure_image) == (
-            f"{HEAD_IMAGE_PREFIX}先算乘法。{TAIL_COLLECT_IMAGE}")
+            f"{HEAD_IMAGE_PREFIX}先算乘法,我读得对吗?{TAIL_COLLECT_IMAGE}")
     # 句末标点更早 → 取句末标点
     assert first_question_text(None, transcription="先算乘法。再算加法,然后呢",
                                question=pure_image) == (
-        f"{HEAD_IMAGE_PREFIX}先算乘法。{TAIL_COLLECT_IMAGE}")
+        f"{HEAD_IMAGE_PREFIX}先算乘法,我读得对吗?{TAIL_COLLECT_IMAGE}")
     # 首尾空白先 strip
     assert first_question_text(None, transcription="  先算乘法。", question=pure_image) == (
-        f"{HEAD_IMAGE_PREFIX}先算乘法。{TAIL_COLLECT_IMAGE}")
+        f"{HEAD_IMAGE_PREFIX}先算乘法,我读得对吗?{TAIL_COLLECT_IMAGE}")
     # 不足 4 字 → 不复述,退回纯文字档(非选择题句)
     for too_short in ("好。", "先算。", "先算乘。"):
         assert first_question_text(None, transcription=too_short,
@@ -292,11 +295,11 @@ def test_image_gate_and_brief_source_priority():
     # ② 带图 + 题面非空 → 取题面(无关转录不参与)
     assert first_question_text(None, transcription="你一定要加油哦。", question={
         "text": "小明有8本书,借出3本后又买了5本,现在有多少本?", "image": "file:x"}) == (
-        f"{HEAD_IMAGE_PREFIX}小明有8本书。{TAIL_COLLECT_IMAGE}")
+        f"{HEAD_IMAGE_PREFIX}小明有8本书,我读得对吗?{TAIL_COLLECT_IMAGE}")
     # ③ 带图 + 题面为空 → 才用转录
     assert first_question_text(None, transcription="小明有8本书,借出3本。",
                                question={"image": "file:x"}) == (
-        f"{HEAD_IMAGE_PREFIX}小明有8本书。{TAIL_COLLECT_IMAGE}")
+        f"{HEAD_IMAGE_PREFIX}小明有8本书,我读得对吗?{TAIL_COLLECT_IMAGE}")
 
 
 # ---------- 答案泄露:分档回归钉 ----------
@@ -328,7 +331,7 @@ def test_image_opening_carries_no_answer_only_digits(tmp_path):
     turn, fake = _opening(tmp_path, LEARNER, question=IMAGE_WORD_QUESTION,
                           reply_text=CLEAN_REPLY, transcription=WORD_TRANSCRIPTION)
     fake.stop()
-    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF}。{TAIL_COLLECT_IMAGE}"
+    assert turn.text == f"{HEAD_IMAGE_PREFIX}{WORD_BRIEF},我读得对吗?{TAIL_COLLECT_IMAGE}"
     assert _DIGIT.search(turn.text) is not None             # 首问确实带数字(非空断言)
     assert not (word_only & set(_DIGIT.findall(turn.text)))
 

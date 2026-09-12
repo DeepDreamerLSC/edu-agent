@@ -116,12 +116,6 @@ _DIAGNOSE_TURN_HINT = (
 # 第③步(**找卡点**)提示:实测定为**不用**——把不评判窗口从「只第②轮」扩到②+③ 后,
 # F 口径「采集不评判」反而 8/20 → 4/20(判词显示判定后移、且两例被复讲引导接走)。
 # 按数据回退到只覆盖第②轮;此处只留结论,不留常量(避免死代码)。
-_DIAGNOSE_TURN_HINT = (
-    "【弧线第②步 · 这一轮只做一件事】学生刚说出他的作答。请**只追问他是怎么想出来的**"
-    "(例如「你是怎么想到这一步的?」),听他把思路讲完:"
-    "这一轮**不要判定对错**(不出现「对/很准/真棒/不能这样算」这类评价)、"
-    "**不要纠正**、**不要给反例或下一步**。"
-)
 
 _OPENING_HINTS = {
     "correct": OPENING_HINT_CORRECT,
@@ -134,12 +128,16 @@ _OPENING_HINTS = {
 # 12排5号记作(,);(3,10)表示()排()号」的首问写成「…记作(5,12),(3,10)表示10排3号,对吗?」,
 # 两个空的答案都给了)。故首问**可见文本**由内核 start() 覆盖为确定性模板:不含答案数字、
 # 不含方法名,答案只能从学生嘴里出来;模型调用照旧(仍产出 steps/transcription)。
-# head 两选一:**真·带图**(question.image 非空)且读出半句 → 图像招呼语 + 半句复述;
-# 其余(纯文字题 / 图像题没读出内容) → 纯文字招呼语(不出现「…这道题:。」残句)。
+# head 两选一:**真·带图**(question.image 非空)且读出半句 → 图像招呼语 + 半句复述
+# + 识题确认句(IMAGE_BRIEF_CONFIRM,#180 ③);其余(纯文字题 / 图像题没读出内容)
+# → 纯文字招呼语(不出现「…这道题:。」残句,也不插确认)。
 # tail 三选一:正确档一套(文字/图像共用);采集档——图像题恒用统一那句(不按题型分),
 # 文字题按题型分选择题/非选择题(见 `_is_multiple_choice`)。
 HEAD_TEXT = "你好同学,"
-HEAD_IMAGE_PREFIX = "你好同学,我看到你发的题啦,我们一起看看:"   # 后面接半句复述 + "。"
+HEAD_IMAGE_PREFIX = "你好同学,我看到你发的题啦,我们一起看看:"   # 后面接半句复述 + 识题确认句
+# 图像档识题确认(#180 ③ 试点):复述来自模型转录,可能读错题(#180 实锤一例把剩余 3/8
+# 读成 5/8)→ 复述后紧跟「对吗?」式确认,让学生在第 0 轮就能纠正,而不是教错整场。
+IMAGE_BRIEF_CONFIRM = "我读得对吗?"
 TAIL_CORRECT = "这道题你做对啦,真棒!还有哪里不太明白吗?"
 TAIL_COLLECT_CHOICE = "请问这道题你选了什么呀?讲讲你的思路吧!"
 TAIL_COLLECT_OPEN = "请问你算出的答案是多少呀?讲讲你的思路吧!"
@@ -226,7 +224,8 @@ def first_question_text(answer_status: str | None, transcription: str | None = N
     brief = _brief_transcription(_brief_source(source, transcription)) if _has_image(source) else ""
     if brief:
         tail = TAIL_CORRECT if answer_status == "correct" else TAIL_COLLECT_IMAGE
-        return f"{HEAD_IMAGE_PREFIX}{brief}。{tail}"
+        # 半句复述后先识题确认(#180 ③):读错题学生第 0 轮即可纠正;brief 空已走文字档,不插。
+        return f"{HEAD_IMAGE_PREFIX}{brief},{IMAGE_BRIEF_CONFIRM}{tail}"
     tail = TAIL_CORRECT if answer_status == "correct" else _text_collect_tail(source)
     return HEAD_TEXT + tail
 
