@@ -55,6 +55,9 @@ select = [
     "RUF006",  # create_task 不持有句柄
     # bugbear 全集
     "B",
+    # 死导入,禁止(2026-09-11 人批:PR #190 审查发现 4 个搬移残留的死导入,而当时的
+    # select 不含 F401 ⇒ CI 判 All checks passed;加这一条后由 ruff --fix 自动清)
+    "F401",
 ]
 
 [tool.ruff.lint.mccabe]
