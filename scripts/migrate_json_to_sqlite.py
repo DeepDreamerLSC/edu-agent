@@ -7,8 +7,9 @@
 - **原件保留**:只读 JSON,绝不删除/改名;人确认后再人工清理。
 - **对账**:打印 迁移/跳过/失败 条数,并逐条核对(源 JSON 在库中有行,且恢复
   对象逐字段相等),库内总行数与源条数对照。
-- 跳过 = 单文件损坏(JSON 解析失败/形状不符,与文件版扫描同语义,不炸全部);
-  失败 = SQLite 写入错误(fail-closed,立即中止非零退出——产品数据不许半迁)。
+- 跳过 = 单文件损坏(JSON 解析失败/形状不符,与文件版扫描同语义,不炸全部)
+  或存量数据撞唯一键(重复幂等键/skill_session——UNIQUE 已下沉 DDL);其余
+  SQLite 写入错误 = 失败(fail-closed,立即中止非零退出——产品数据不许半迁)。
 - data/files/ 是二进制图片本体,无元数据 JSON 可迁(元数据由服务运行时写
   files 表),对账时按 0 条说明。
 
@@ -29,7 +30,11 @@ from edu_agent.store.learner_sessions import restore_session
 
 
 def _load_json_files(directory: Path) -> list[tuple[Path, dict]]:
-    """目录内 *.json 逐个解析;损坏的打印并计为跳过(隔离,不中止)。"""
+    """目录内 *.json 逐个解析;损坏的打印并计为跳过(隔离,不中止)。
+
+    为何不复用 FileSessionStore.load_all()(留痕,防后人当漏项重提):对账要
+    "逐文件"的跳过计数与源路径,load_all 只回对象列表;为一次性脚本(跑完
+    user_version=1 封门)改它的签名不值——见 PR #196 审查的否决记录。"""
     loaded, skipped = [], 0
     if not directory.is_dir():
         return loaded, skipped
@@ -68,7 +73,14 @@ def migrate(data_dir: Path, db_path: Path) -> int:
                   f"(已有 {existing.conversation_id})")
             duplicates += 1
             continue
-        store.create(conversation, idempotency_key)
+        try:
+            store.create(conversation, idempotency_key)
+        except sqlite3.IntegrityError:
+            # UNIQUE 已下沉 DDL(idempotency/skill_session):存量源数据撞唯一键
+            # (如重复 skill_session)计为跳过,不炸半迁——数据冲突不是基础设施故障。
+            print(f"[迁移] 跳过唯一键冲突:{conversation.conversation_id}")
+            duplicates += 1
+            continue
         migrated += 1
 
     for _, data in sessions:

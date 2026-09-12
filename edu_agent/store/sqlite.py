@@ -3,16 +3,21 @@
 `SqliteStore` 一个类实现两个既有接口(不另立抽象层,02 §2 store 包内 additive):
 - `ConversationStore` 协议(conversations.py):会话表(对话)最小面;
 - `FileSessionStore` 三操作(learner_sessions.py):LearnerSession(会话)本体存取。
-外加 files 表三操作(文件元数据):`FileService(records_store=...)` 注入后,上传
+外加 files 表两操作(文件元数据):`FileService(records_store=...)` 注入后,上传
 元数据重启可续——此前 records 只在内存,进程重启后全部 file_id 404。
 
 表结构 = 两张 JSON blob 表 + 3 个索引(字段照现有 JSON 结构,不加"以后可能用到"的列):
 - ``records``:会话(``kind='session'``,id=session_id)与对话(``kind='conversation'``,
-  id=conversation_id)共表;三个索引列即会话表的三个查找面(idempotency_key /
+  id=conversation_id)共表;索引列即会话表的查找面(idempotency_key /
   skill_session_id / kernel_session_id),payload 是既有 JSON 形状的 blob。
 - ``files``:file_id 主键 + payload(FileRecord 字段的 JSON)。
 
 取舍(写在代码里,便于审查):
+- **幂等合同下沉 DDL(决策 6)**:idempotency_key / skill_session_id 上
+  **部分唯一索引**(空键不入索引)。服务层幂等(open 预查 + RLock)之外的第二
+  道闸——并发/跨进程下重复键在库层面不存在,后到者撞索引回查返回既有。
+  kernel_session_id **不设 UNIQUE**:服务层对它无唯一性保证(open/message 两处
+  都校验幂等键与 skill_session 的归属,这个没有),不冒进。
 - **单连接 + 单事务**(02 §5 禁自建连接池/worker 池):一个 sqlite3 连接 +
   ``threading.Lock`` 串行化(服务是 ThreadingHTTPServer,多线程);跨进程并发
   交给 WAL + ``busy_timeout=5000``(备份/迁移是第二进程,只读或短写)。
@@ -22,6 +27,10 @@
   起不来、launchd 可见,不做降级只读(降级会掩盖库已坏的事实)。
 - **PRAGMA user_version 归一次性迁移脚本**(migrate_json_to_sqlite.py)管,本类
   不碰:schema 用 ``CREATE TABLE IF NOT EXISTS``;两处都写 user_version 会互相踩。
+
+PG 触发备选(决策 6,文档化,不是本单交付):出现**多实例**(一库多写者)、
+**网络直连**(合作方/分析端要跨网读)、**重分析**(要窗口函数/并行查询)三选一
+时再迁 PostgreSQL——当前单机单实例,SQLite + WAL 是最小答案。
 """
 
 from __future__ import annotations
@@ -46,15 +55,23 @@ CREATE TABLE IF NOT EXISTS records (
   kernel_session_id TEXT,
   payload TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_records_idempotency ON records(idempotency_key);
-CREATE INDEX IF NOT EXISTS idx_records_skill_session ON records(skill_session_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_records_idempotency
+  ON records(idempotency_key)
+  WHERE kind='conversation' AND idempotency_key IS NOT NULL AND idempotency_key != '';
+CREATE UNIQUE INDEX IF NOT EXISTS uq_records_skill_session
+  ON records(skill_session_id)
+  WHERE kind='conversation' AND skill_session_id IS NOT NULL AND skill_session_id != '';
 CREATE INDEX IF NOT EXISTS idx_records_kernel_session ON records(kernel_session_id);
 CREATE TABLE IF NOT EXISTS files (
   file_id TEXT PRIMARY KEY,
   payload TEXT NOT NULL
 );
+DROP INDEX IF EXISTS idx_records_idempotency;
+DROP INDEX IF EXISTS idx_records_skill_session;
 """
-# 查找 SQL 全部字面量(列名不经拼接,S608);三个索引各对应一个查找面。
+# 查找 SQL 全部字面量(列名不经拼接,S608);索引各对应一个查找面。两个唯一索引
+# 用新名 uq_*:同名 IF NOT EXISTS 在存量库(旧普通索引)上会静默跳过,改名才真正
+# 建成;DROP 旧名清掉写放大。空键(NULL/'')被部分索引排除——脏历史行不至拒启。
 _FIND_CONVERSATION = {
     "conversation_id": "SELECT payload FROM records WHERE kind='conversation' AND id=?",
     "idempotency_key": ("SELECT payload FROM records WHERE kind='conversation' "
@@ -62,16 +79,24 @@ _FIND_CONVERSATION = {
     "skill_session_id": "SELECT payload FROM records WHERE kind='conversation' AND skill_session_id=?",
     "kernel_session_id": "SELECT payload FROM records WHERE kind='conversation' AND kernel_session_id=?",
 }
-_UPSERT_CONVERSATION = (
-    "INSERT OR REPLACE INTO records"
+_INSERT_CONVERSATION = (
+    "INSERT INTO records"
     "(id, kind, idempotency_key, skill_session_id, kernel_session_id, payload)"
     " VALUES(?, 'conversation', ?, ?, ?, ?)")
+# update 用 ON CONFLICT(id) 而非 INSERT OR REPLACE:REPLACE 会**删除**任何唯一
+# 约束的冲突行(包括新 UNIQUE 索引),把"幂等返回既有"变成"谁后写谁赢"。
+_UPSERT_CONVERSATION = (
+    "INSERT INTO records"
+    "(id, kind, idempotency_key, skill_session_id, kernel_session_id, payload)"
+    " VALUES(?, 'conversation', ?, ?, ?, ?)"
+    " ON CONFLICT(id) DO UPDATE SET idempotency_key=excluded.idempotency_key,"
+    " skill_session_id=excluded.skill_session_id,"
+    " kernel_session_id=excluded.kernel_session_id, payload=excluded.payload")
 _UPSERT_SESSION = (
     "INSERT OR REPLACE INTO records(id, kind, payload) VALUES(?, 'session', ?)")
 _FIND_SESSION = "SELECT payload FROM records WHERE kind='session' AND id=?"
 _ALL_SESSIONS = "SELECT payload FROM records WHERE kind='session' ORDER BY id"
 _UPSERT_FILE = "INSERT OR REPLACE INTO files(file_id, payload) VALUES(?, ?)"
-_FIND_FILE = "SELECT payload FROM files WHERE file_id=?"
 _ALL_FILES = "SELECT payload FROM files ORDER BY file_id"
 _STORED_KEY = "SELECT idempotency_key FROM records WHERE kind='conversation' AND id=?"
 
@@ -94,6 +119,9 @@ class SqliteStore:
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("PRAGMA busy_timeout=5000")
         self._conn.execute("PRAGMA foreign_keys=ON")
+        # WAL 官方推荐组合:NORMAL = 应用崩溃不丢、断电最多丢最后数个已提交事务
+        # (决策 6 指定;默认 FULL 每次提交都 fsync,慢一档,对本数据不值得)。
+        self._conn.execute("PRAGMA synchronous=NORMAL")
         self._conn.executescript(_SCHEMA)
         self.probe_failures = 0
         self._conn.execute("SELECT 1").fetchone()  # 损坏拒启:坏库构造即抛
@@ -123,7 +151,17 @@ class SqliteStore:
                         if idempotency_key else None)
             if existing is not None:
                 return existing  # 同键幂等:返回既有会话
-            self._write_conversation(conversation, idempotency_key)
+            try:
+                self._write_conversation(conversation, idempotency_key,
+                                         _INSERT_CONVERSATION)
+            except sqlite3.IntegrityError:
+                # UNIQUE 兜底(幂等合同已下沉 DDL):预查与写入之间被并发插进
+                # 同键行时,后到者撞索引 → 回查返回既有;非键冲突照旧 fail-closed。
+                existing = (self._conversation("idempotency_key", idempotency_key)
+                            if idempotency_key else None)
+                if existing is not None:
+                    return existing
+                raise
             return conversation
 
     def get(self, conversation_id: str):
@@ -134,7 +172,8 @@ class SqliteStore:
             row = self._conn.execute(_STORED_KEY,
                                      (conversation.conversation_id,)).fetchone()
             # 幂等键以库内已有值为准(update 不带键;单真相源在行上)
-            self._write_conversation(conversation, row[0] if row else "")
+            self._write_conversation(conversation, row[0] if row else "",
+                                     _UPSERT_CONVERSATION)
 
     def find_by_idempotency(self, idempotency_key: str):
         return self._conversation("idempotency_key", idempotency_key)
@@ -156,10 +195,10 @@ class SqliteStore:
         conversation, _ = conversation_restore(json.loads(row[0]))
         return conversation
 
-    def _write_conversation(self, conversation, idempotency_key: str) -> None:
+    def _write_conversation(self, conversation, idempotency_key: str, sql: str) -> None:
         payload = conversation_payload(conversation, idempotency_key)
         kernel_session_id = str((payload["extras"] or {}).get("kernel_session_id") or "")
-        self._conn.execute(_UPSERT_CONVERSATION, (
+        self._conn.execute(sql, (
             conversation.conversation_id, idempotency_key or None,
             conversation.skill_session_id, kernel_session_id or None,
             json.dumps(payload, ensure_ascii=False)))
@@ -194,11 +233,6 @@ class SqliteStore:
         with self._lock:
             self._conn.execute(_UPSERT_FILE,
                                (file_id, json.dumps(payload, ensure_ascii=False)))
-
-    def get_file(self, file_id: str) -> dict | None:
-        with self._lock:
-            row = self._conn.execute(_FIND_FILE, (file_id,)).fetchone()
-        return json.loads(row[0]) if row else None
 
     def all_files(self) -> list[dict]:
         with self._lock:

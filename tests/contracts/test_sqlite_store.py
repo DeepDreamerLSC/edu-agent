@@ -13,7 +13,6 @@ import sqlite3
 import subprocess
 import sys
 import threading
-from dataclasses import dataclass
 
 import httpx
 import pytest
@@ -21,18 +20,14 @@ import pytest
 from edu_agent.agents.small_lecturer import LearnerSession, Summary
 from edu_agent.api import FileService, build_server, build_service
 from edu_agent.store import Conversation, SqliteStore
+from partner_api import StubTurn
 
 
-@dataclass
-class StubTurn:
-    text: str
-    session: object = None
-    ready_to_confirm: bool = False
-    status: str = "completed"
+class SessionAdvancingKernel:
+    """推进真 LearnerSession 并记录 reply/finish 收到的类型(#166 用例)。
 
-
-class RecordingKernel:
-    """记录 reply/finish 收到的 session 类型,推进真 LearnerSession(#166 用例同款)。"""
+    与 fixtures 的 RecordingKernel(记调用序列)和 test_conversation_store 的
+    同名桩都不同名了——那是审查里点名的三处同名混淆。"""
 
     def __init__(self) -> None:
         self.session = None
@@ -142,11 +137,11 @@ def test_indexes_survive_restart(tmp_path):
 def test_restart_continuity_open_message_finish(tmp_path):
     """#166 的会话恢复用例换到 SQLite:重启后 open→message→finish 仍可续,
     内核仍收到 LearnerSession 本体(不是三键投影)。"""
-    first = RecordingKernel()
+    first = SessionAdvancingKernel()
     opened = _open_and_turn(_service(tmp_path / "edu-agent.db", first)[0], idem="idem-chain")
     conversation_id = opened["conversation"]["conversation_id"]
 
-    kernel = RecordingKernel()  # 新进程
+    kernel = SessionAdvancingKernel()  # 新进程
     service, _db = _service(tmp_path / "edu-agent.db", kernel)
     assert service.status(conversation_id)["state"] == "dialogue"
     assert service.status(conversation_id)["turn_count"] == 2
@@ -175,14 +170,15 @@ def test_file_service_records_survive_restart(tmp_path):
                            records_store=SqliteStore(tmp_path / "edu-agent.db"))
     record = reopened.records[file_id]  # 启动预载:此前 records 只在内存,重启即全 404
     assert record.filename == "a.jpg" and record.status == "requested"
-    assert db.get_file(file_id)["purpose"] == "micro_lesson_question_image"
+    stored = {f["file_id"]: f for f in db.all_files()}
+    assert stored[file_id]["purpose"] == "micro_lesson_question_image"
 
 
 # ---------- healthz 探针 ----------
 
 def test_healthz_probe_and_failure_count(tmp_path):
     db = SqliteStore(tmp_path / "edu-agent.db")
-    server = build_server(build_service(RecordingKernel()), db=db)
+    server = build_server(build_service(SessionAdvancingKernel()), db=db)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     base = f"http://127.0.0.1:{server.server_address[1]}"
@@ -198,7 +194,7 @@ def test_healthz_probe_and_failure_count(tmp_path):
 
 
 def test_healthz_without_db_keeps_old_shape(tmp_path):
-    server = build_server(build_service(RecordingKernel()))
+    server = build_server(build_service(SessionAdvancingKernel()))
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
@@ -301,17 +297,55 @@ def test_runtime_store_leaves_user_version_alone(tmp_path):
 
 # ---------- 布局核对 ----------
 
-def test_two_tables_and_three_indexes(tmp_path):
+def test_two_tables_and_unique_indexes(tmp_path):
     path = tmp_path / "edu-agent.db"
     SqliteStore(path).close()
     with sqlite3.connect(path) as conn:
         tables = {row[0] for row in conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table'")}
-        indexes = {row[0] for row in conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%'")}
+        # PRAGMA index_list:名字 → unique 标志(1=唯一);幂等键/skill_session
+        # 下沉 DDL(决策 6),kernel_session 保持普通(服务层无唯一性保证)。
+        flags = {row[1]: row[2] for row in conn.execute("PRAGMA index_list('records')")}
     assert {"records", "files"} <= tables  # 两张 JSON blob 表
-    assert indexes == {"idx_records_idempotency", "idx_records_skill_session",
-                       "idx_records_kernel_session"}  # 3 个索引
+    assert flags["uq_records_idempotency"] == 1
+    assert flags["uq_records_skill_session"] == 1
+    assert flags["idx_records_kernel_session"] == 0
+    assert len(flags) == 4  # 3 个索引 + 主键自动索引,旧普通索引已 DROP
+
+
+def test_unique_index_enforces_idempotency_at_ddl(tmp_path):
+    """幂等合同由 DDL 保证:绕过 store 直插同键行被拒;跨实例同键 create 返回既有。"""
+    path = tmp_path / "edu-agent.db"
+    first = SqliteStore(path)
+    first.create(Conversation(conversation_id="conv_1", question_id="q",
+                              attempt_id="a", skill_session_id="skill_1"), "idem-race")
+    with sqlite3.connect(path) as conn:  # 直插第二个同键行:UNIQUE 拒绝
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute(
+                "INSERT INTO records(id, kind, idempotency_key, skill_session_id, payload)"
+                " VALUES('conv_2', 'conversation', 'idem-race', 'skill_2', '{}')")
+    second = SqliteStore(path)  # 跨实例(模拟另一进程)同键 create
+    winner = second.create(Conversation(conversation_id="conv_3", question_id="q",
+                                         attempt_id="b",
+                                         skill_session_id="skill_3"), "idem-race")
+    assert winner.conversation_id == "conv_1"  # 返回既有,不是谁后写谁赢
+    with sqlite3.connect(path) as conn:
+        rows = conn.execute(
+            "SELECT COUNT(*) FROM records WHERE kind='conversation'"
+            " AND idempotency_key='idem-race'").fetchone()[0]
+    assert rows == 1
+
+
+def test_pk_collision_integrity_error_still_fail_closed(tmp_path):
+    """IntegrityError 兜底只兜幂等键:主键冲突(非键原因)照旧 fail-closed 上抛。"""
+    path = tmp_path / "edu-agent.db"
+    db = SqliteStore(path)
+    db.create(Conversation(conversation_id="conv_1", question_id="q",
+                           attempt_id="a", skill_session_id="skill_1"), "idem-a")
+    with pytest.raises(sqlite3.IntegrityError):
+        db.create(Conversation(conversation_id="conv_1", question_id="q",
+                               attempt_id="b", skill_session_id="skill_2"), "idem-b")
+
 
 
 def test_wal_and_busy_timeout_and_foreign_keys(tmp_path):
