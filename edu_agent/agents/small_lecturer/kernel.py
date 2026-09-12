@@ -30,8 +30,8 @@ from .format_guard import _DOWNGRADE_PROMPT, evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
 from .numeric import (_ASCII_NUMBER, _answer_focus_numbers, _answer_numbers, _drift_sources,
                       _known_answer, _question_numbers, _reply_numbers, _spoken_numbers)
-from .prompting import (_user_prompt, diagnose_turn_hint, first_question_text, grade_grounding,
-                        opening_hint, summary_system_prompt, system_prompt)
+from .prompting import (ASK_FINAL_ANSWER, _user_prompt, diagnose_turn_hint, first_question_text,
+                        grade_grounding, opening_hint, summary_system_prompt, system_prompt)
 from .session import LearnerSession, SessionVersionConflict, Summary, TerminalStateError, Turn
 from .tone_guardrails import apply_tone_guardrail
 
@@ -164,6 +164,16 @@ def _student_signals_stuck(student_message: str) -> bool:
     「明白了」归理解侧先判;八形态清单与 11/11 零翻转对照见 tests/teaching/
     test_kernel_invariants.py 参数表(#198 B 线)。"""
     return bool(re.search(r"我不太会|我猜不出|(?<![还但])不知道|想不出|我不会(?!吧)|有点不会|怎么.{0,3}不会|看不懂|还是不会|不会吧(?![?!？])|太难了|没思路|越来越不懂", student_message))
+
+
+def _student_signals_completion(student_message: str) -> bool:
+    """学生宣称完成(「我算出来了」)——完成表达盲区(#178 判停分析)的采集端触发点。
+
+    实录集(生产导出 8 段逐字):算出来了/算好了/得出(最终)答案/得出结果/做完了/
+    解出来了。负例天然安全:「算不出来了/没算出来」不含子串「算出来了」(否定词插中间)。
+    完成 ≠ 理解:不触发复讲(复讲在确认后),只追问答案数字——盲区实测 8/8 模型路径
+    没有一次干净追问,判停闸无料可判。带答案数字的完成表达走答案命中分支(先判)。"""
+    return bool(re.search(r"算出来了|算好了|得出(最终)?(答案|结果)|做完了|解出来了", student_message))
 
 
 def _student_hits_known_answer(session: "LearnerSession", student_message: str) -> bool:
@@ -727,6 +737,14 @@ def _ask_restatement(session: LearnerSession, student_message: str) -> Turn:
     return _commit_turn(session, student_message, _ELICIT_TEMPLATE, "dialogue")
 
 
+def _ask_final_answer(session: LearnerSession, student_message: str) -> Turn:
+    """完成表达的确定性采集追问(#178 判停分析→PR-2):零模型调用,不 confirm、不判对错、
+    不预设掌握——把判停闸要的结论数字从学生嘴里采上来(闸无料可判 = 全库 0/32 ready 的
+    采集端成因)。埋点 {branch: answer_collect},一次会话至多一次(对齐 elicit 先例)。"""
+    session.guard_events.append({"branch": "answer_collect"})
+    return _commit_turn(session, student_message, ASK_FINAL_ANSWER, "dialogue")
+
+
 def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> Turn:
     """生成首问(03 §4 Preparing → FirstQuestionReady / Failed)。
 
@@ -853,6 +871,18 @@ def reply(session: LearnerSession, student_message: str, *,
         # 交给模型会直接置 ready_to_confirm 从模型侧确认,复讲步落空——issue 实测
         # 复讲未达成 3/4 的根因)。人定弧线「答对后学生复讲,讲完讲师才点名方法」。
         return _ask_restatement(session, student_message)
+    if (session.learner.get("answer_status") == "incorrect"
+            and session.state != "ready_to_confirm"
+            and _student_signals_completion(student_message)
+            and not _student_stated_answer(session, student_message)
+            and not any(event.get("branch") == "answer_collect" for event in session.guard_events)):
+        # 完成表达但没带答案数字(#178 判停分析:8/8 实测模型路径没有一次干净追问,
+        # 闸无料可判)→ 确定性追问答案,把判停闸要的证据采上来。仅 incorrect 弧线
+        # (对齐答案命中分支先例;实录 8/8 均 incorrect;correct 档完成表达保持模型
+        # 路径——泄漏护栏面在那,r6 结构化总结钉);完成≠理解,不触发复讲;确认态
+        # 不问(与答案命中分支同款护栏,追问会把 ready 态降级回 dialogue);学生已
+        # 陈述过答案(本轮或历史)不问;一次会话至多问一次(埋点防重复)。
+        return _ask_final_answer(session, student_message)
     gateway = gateway or default_gateway()
     # 弧线诊断阶段(#165 WS4 第 5 条):incorrect 弧线「首问后的前两次回应」= ②追问思路 + ③找卡点
     # (首问不入 history → 每次 reply 提交两条 → reply_index = len(history)//2)。只影响这两轮。
