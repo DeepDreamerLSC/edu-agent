@@ -39,6 +39,19 @@ from .scenario_corpus import (
 )
 from .summary import load_results, morning_summary, write_summary
 
+# corpus_round(#216)惰性导出(PEP 562):`python -m edu_agent.evals.corpus_round`
+# 与包级急切导入会双导入告警,run 入口保持 -m 形态,符号在首次访问时再加载。
+_CORPUS_ROUND_LAZY = ("build_cases", "check_rows", "diff_checks",
+                      "real_model_scenarios", "render_report")
+
+
+def __getattr__(name: str):
+    if name in _CORPUS_ROUND_LAZY:
+        from . import corpus_round
+        return getattr(corpus_round, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 __all__ = [
     "DIMENSIONS",
     "EnvironmentFailure",
@@ -48,6 +61,9 @@ __all__ = [
     "LegacyAdapter",
     "REGISTRY",
     "ResumeMismatch",
+    "build_cases",
+    "check_rows",
+    "diff_checks",
     "RunnerConfig",
     "SCHEMA",
     "Subject",
@@ -62,6 +78,8 @@ __all__ = [
     "load_shortboard_corpus",
     "morning_summary",
     "question_image_data_url",
+    "real_model_scenarios",
+    "render_report",
     "render_html",
     "run_check",
     "run_scenario_checks",
