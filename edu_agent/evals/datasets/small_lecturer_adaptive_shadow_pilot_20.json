@@ -1,16 +1,14 @@
 {
-  "schema_version": "small_lecturer_dialogue_scenarios/v3",
+  "schema_version": "small_lecturer_shadow_pilot_corpus/v1",
   "scenarios": [
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_subtract__no_working_knowledge",
       "title": "方程同减同除·no_working_knowledge",
       "subject": "math",
-      "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_subtract",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "解方程 3x+7=25，并说明每一步为什么这样做。",
+        "answer": "x=6"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -58,18 +56,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_equation_subtract"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_subtract__misconception_active",
       "title": "方程同减同除·misconception_active",
       "subject": "math",
-      "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_subtract",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "解方程 3x+7=25，并说明每一步为什么这样做。",
+        "answer": "x=6"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -120,18 +122,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_equation_subtract"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_subtract__partial_understanding",
       "title": "方程同减同除·partial_understanding",
       "subject": "math",
-      "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_subtract",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "解方程 3x+7=25，并说明每一步为什么这样做。",
+        "answer": "x=6"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -181,18 +187,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_equation_subtract"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_subtract__answer_seeking",
       "title": "方程同减同除·answer_seeking",
       "subject": "math",
-      "question": "解方程 3x+7=25，并说明每一步为什么这样做。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_subtract",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "解方程 3x+7=25，并说明每一步为什么这样做。",
+        "answer": "x=6"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -240,18 +250,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_equation_subtract"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_sign__no_working_knowledge",
       "title": "方程符号误解·no_working_knowledge",
       "subject": "math",
-      "question": "解方程 2x+5=17，并说明理由。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_sign",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "解方程 2x+5=17，并说明理由。",
+        "answer": "x=6"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -299,18 +313,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_equation_sign"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_sign__misconception_active",
       "title": "方程符号误解·misconception_active",
       "subject": "math",
-      "question": "解方程 2x+5=17，并说明理由。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_sign",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "解方程 2x+5=17，并说明理由。",
+        "answer": "x=6"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -361,18 +379,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_equation_sign"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_sign__partial_understanding",
       "title": "方程符号误解·partial_understanding",
       "subject": "math",
-      "question": "解方程 2x+5=17，并说明理由。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_sign",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "解方程 2x+5=17，并说明理由。",
+        "answer": "x=6"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -422,18 +444,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_equation_sign"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_sign__answer_seeking",
       "title": "方程符号误解·answer_seeking",
       "subject": "math",
-      "question": "解方程 2x+5=17，并说明理由。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_sign",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "解方程 2x+5=17，并说明理由。",
+        "answer": "x=6"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -481,18 +507,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_equation_sign"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_parentheses__no_working_knowledge",
       "title": "含括号方程·no_working_knowledge",
       "subject": "math",
-      "question": "解方程 4(x+2)=24，并说明过程。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_parentheses",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "解方程 4(x+2)=24，并说明过程。",
+        "answer": "x=4"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -540,18 +570,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_equation_parentheses"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_parentheses__misconception_active",
       "title": "含括号方程·misconception_active",
       "subject": "math",
-      "question": "解方程 4(x+2)=24，并说明过程。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_parentheses",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "解方程 4(x+2)=24，并说明过程。",
+        "answer": "x=4"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -602,18 +636,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_equation_parentheses"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_parentheses__partial_understanding",
       "title": "含括号方程·partial_understanding",
       "subject": "math",
-      "question": "解方程 4(x+2)=24，并说明过程。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_parentheses",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "解方程 4(x+2)=24，并说明过程。",
+        "answer": "x=4"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -663,18 +701,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_equation_parentheses"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_equation_parentheses__answer_seeking",
       "title": "含括号方程·answer_seeking",
       "subject": "math",
-      "question": "解方程 4(x+2)=24，并说明过程。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_equation_parentheses",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "解方程 4(x+2)=24，并说明过程。",
+        "answer": "x=4"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -722,18 +764,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_equation_parentheses"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_fraction_addition__no_working_knowledge",
       "title": "异分母分数加法·no_working_knowledge",
       "subject": "math",
-      "question": "计算四分之三加八分之一，并说明为什么要这样算。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_fraction_addition",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "计算四分之三加八分之一，并说明为什么要这样算。",
+        "answer": "7/8"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -781,18 +827,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_fraction_addition"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_fraction_addition__misconception_active",
       "title": "异分母分数加法·misconception_active",
       "subject": "math",
-      "question": "计算四分之三加八分之一，并说明为什么要这样算。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_fraction_addition",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "计算四分之三加八分之一，并说明为什么要这样算。",
+        "answer": "7/8"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -843,18 +893,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_fraction_addition"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_fraction_addition__partial_understanding",
       "title": "异分母分数加法·partial_understanding",
       "subject": "math",
-      "question": "计算四分之三加八分之一，并说明为什么要这样算。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_fraction_addition",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "计算四分之三加八分之一，并说明为什么要这样算。",
+        "answer": "7/8"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -904,18 +958,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_fraction_addition"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_fraction_addition__answer_seeking",
       "title": "异分母分数加法·answer_seeking",
       "subject": "math",
-      "question": "计算四分之三加八分之一，并说明为什么要这样算。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_fraction_addition",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "计算四分之三加八分之一，并说明为什么要这样算。",
+        "answer": "7/8"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -963,18 +1021,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_fraction_addition"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_decimal_multiply__no_working_knowledge",
       "title": "小数乘法·no_working_knowledge",
       "subject": "math",
-      "question": "计算 2.4×0.5，并解释小数点的位置。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_decimal_multiply",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "计算 2.4×0.5，并解释小数点的位置。",
+        "answer": "1.2"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -1022,18 +1084,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_decimal_multiply"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_decimal_multiply__misconception_active",
       "title": "小数乘法·misconception_active",
       "subject": "math",
-      "question": "计算 2.4×0.5，并解释小数点的位置。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_decimal_multiply",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "计算 2.4×0.5，并解释小数点的位置。",
+        "answer": "1.2"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -1084,18 +1150,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_decimal_multiply"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_decimal_multiply__partial_understanding",
       "title": "小数乘法·partial_understanding",
       "subject": "math",
-      "question": "计算 2.4×0.5，并解释小数点的位置。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_decimal_multiply",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "计算 2.4×0.5，并解释小数点的位置。",
+        "answer": "1.2"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -1145,18 +1215,22 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_decimal_multiply"
+      }
     },
     {
-      "schema_version": "small_lecturer_dialogue_scenario/v3",
+      "schema_version": "small_lecturer_shadow_pilot_corpus_scenario/v1",
       "id": "stability_decimal_multiply__answer_seeking",
       "title": "小数乘法·answer_seeking",
       "subject": "math",
-      "question": "计算 2.4×0.5，并解释小数点的位置。",
-      "question_source": {
-        "provider": "shadow_pilot_bank",
-        "question_id": "stability_decimal_multiply",
-        "question_version": "pilot-2026-07-v1"
+      "question": {
+        "text": "计算 2.4×0.5，并解释小数点的位置。",
+        "answer": "1.2"
       },
       "student_profile": {
         "schema_version": "student_simulator_profile/v1",
@@ -1204,7 +1278,13 @@
       },
       "evidence_pool": "synthetic_discovery",
       "evidence_eligible": false,
-      "promotion_evidence": false
+      "promotion_evidence": false,
+      "source": {
+        "issue": 197,
+        "provider": "shadow_pilot_bank",
+        "question_version": "pilot-2026-07-v1",
+        "bank_question_id": "stability_decimal_multiply"
+      }
     }
   ]
 }
