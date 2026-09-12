@@ -47,7 +47,7 @@ def _corpus_params() -> list:
             source = scenario.get("source") or {}
             marks.append(pytest.mark.xfail(
                 reason=(f"known_red source.issue={source.get('issue')}"
-                        f" source.session={source.get('session')}:短板未修(#185)。"
+                        f" source.question_id={source.get('question_id')}:短板未修(#185)。"
                         "修复后本用例转绿 → XPASS(strict)变红 → 把 status 翻成 guarded"),
                 strict=True))
         params.append(pytest.param(scenario, id=scenario["id"], marks=marks))
@@ -61,13 +61,37 @@ def test_shortboard_scenario(scenario):
     assert not failures, format_failures(failures)
 
 
+@pytest.mark.parametrize("answer,tutor_text,catches", [
+    ("0.8", "结果是五分之四", False),    # 中文数字
+    ("0.25", "结果是 1/4", False),      # 分数形态:数字段 1/4 ≠ 0.25
+    ("2.4", "等于 12/5", False),        # 分数形态
+    ("0.8", "写成 80%", False),         # 百分数
+    ("13次", "第十三次必形成", False),   # 中文序数
+    ("0.8", "结果是 0.80", True),       # 等值小数 → 命中
+    ("13次", "把 13.5 记下来", False),   # 相近数 → 不误命中(精度正确)
+])
+def test_ascii_digit_boundary_is_pinned(answer, tutor_text, catches):
+    """钉住判定力边界(审查实测):终答的等价表达不在此口径内,网目前看不见。
+
+    这是**已知**盲区(不是未知盲区):中文数字/分数形态/百分数/中文序数全漏,
+    本 corpus 恰是小数×分数题集。做等价归一时先更新本表与 checks.py docstring,
+    再放开 text_excludes_unauthorized_numbers 的适用面。"""
+    ok, _ = run_check({"name": "text_excludes_answer_values"},
+                      {"question": {"answer": answer}},
+                      {"turns": [{"tutor": tutor_text}]})
+    assert ok != catches, (answer, tutor_text)
+
+
 def test_old_datasets_still_parse():
-    """老数据集零迁移:两个既有数据集的 envelope 仍可正常加载解析。"""
+    """老数据集零迁移:envelope + 每文件首条场景关键字段(id/title/question)。
+
+    零迁移成立的原因是本单未触碰任何老路径;v1/v3 更深的语义解析不在本单范围。"""
     for name in ("small_lecturer_dialogue_scenarios.json",
                  "small_lecturer_adaptive_shadow_pilot_20.json"):
         payload = json.loads((datasets_dir() / name).read_text(encoding="utf-8"))
         assert payload.get("schema_version"), name
-        assert isinstance(payload.get("scenarios"), list) and payload["scenarios"], name
+        first = payload["scenarios"][0]
+        assert first.get("id") and first.get("title") and first.get("question"), name
 
 
 def test_unknown_check_name_is_visible_error():
@@ -88,13 +112,62 @@ def test_finish_status_and_state_is_not_detail():
 
 
 def test_format_failures_carries_source_attribution():
-    """失败行格式:scenario + source.issue + source.session + 详情(红要红得可追溯)。"""
+    """失败行格式:scenario + source.issue + source.question_id + 详情(可追溯)。"""
     line = format_failures([{
         "scenario": "ladder-step-leaks-final-answer-13",
-        "source": {"issue": 185, "session": "6a6320ca"},
+        "source": {"issue": 185, "question_id": "6a6320ca184f723b3592d18c"},
         "check": "text_excludes_answer_values",
         "detail": "终答值 13 出现在 turns[3]",
     }])
     assert "source.issue=185" in line
-    assert "source.session=6a6320ca" in line
+    assert "source.question_id=6a6320ca184f723b3592d18c" in line
     assert "13" in line
+
+
+# ---- loader 拒绝合同:写错数据在加载期红,不用等到运行期 KeyError/TypeError ----
+
+_TEMPLATE = {
+    "schema_version": "small_lecturer_regression_shortboard/v1",
+    "scenarios": [{
+        "id": "loader-contract-demo",
+        "status": "guarded",
+        "source": {"issue": 185, "question_id": "6a6320ca184f723b3592d18c"},
+        "tags": ["loader 合同"],
+        "question": {
+            "text": "一辆汽车每小时行60千米,行了3小时,一共行了多少千米?",
+            "answer": "180千米",
+        },
+        "answer_status": "incorrect",
+        "fake_model": [{"json": {"acceptable": True, "transcription": "",
+                                 "reply": "你怎么想?",
+                                 "steps": [{"step": "先看速度", "value": "60"}]}}],
+        "student_turns": ["我不会做。"],
+        "expect": {"checks": [{"name": "text_excludes_answer_values", "note": "demo"}]},
+    }],
+}
+
+
+def _mutate(**changes):
+    """深拷贝模板并按「顶层键 → 替换值」打补丁。"""
+    corpus = json.loads(json.dumps(_TEMPLATE))
+    corpus["scenarios"][0].update(changes)
+    return corpus
+
+
+@pytest.mark.parametrize("changes,match", [
+    ({"question": {"text": "同上", "answer": "一百八十千米"}},
+     r"取不到 ASCII 数字"),  # 静默失效通道:answer 写中文数字 → check 恒真
+    ({"expect": {"checks": [{"name": "finish_status", "status": "completed"},
+                            {"name": "finish_status", "status": "completed"}]}},
+     r"重名"),
+    ({"fake_model": [{}]}, r"fake_model\[0\]"),        # 缺 json 键 → 原本运行期 KeyError
+    ({"student_turns": [{"text": "我不会做。"}]}, r"student_turns\[0\]"),
+    ({"status": "known_red", "source": {"issue": 185}}, r"question_id"),
+    ({"source": {}}, r"source\.issue"),
+])
+def test_loader_rejects_bad_data(tmp_path, changes, match):
+    """写错数据的用例在加载期即红(审查跟进):恒真通道/重名/形状/来源缺失。"""
+    path = tmp_path / "corpus.json"
+    path.write_text(json.dumps(_mutate(**changes), ensure_ascii=False), encoding="utf-8")
+    with pytest.raises(ValueError, match=match):
+        load_shortboard_corpus(path)

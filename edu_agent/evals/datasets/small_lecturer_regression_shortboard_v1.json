@@ -7,7 +7,8 @@
       "status": "known_red",
       "source": {
         "issue": 185,
-        "session": "6a6320ca",
+        "question_id": "6a6320ca184f723b3592d18c",
+        "lesson_name": "6-4鸽巢问题(2)",
         "tree": "A/B 两树同文",
         "date": "2026-09-11"
       },
@@ -70,7 +71,8 @@
       "status": "known_red",
       "source": {
         "issue": 185,
-        "session": "6a61bb0e",
+        "question_id": "6a61bb0ef0e25247f1ee36c7",
+        "lesson_name": "2-4分数乘小数",
         "tree": "A/B 两树同文",
         "date": "2026-09-11"
       },
@@ -133,7 +135,8 @@
       "status": "guarded",
       "source": {
         "issue": 185,
-        "session": "6a696046",
+        "question_id": "6a696046b0ffee286ba76108",
+        "lesson_name": "2-7解决问题",
         "tree": "A/B 两树同文",
         "date": "2026-09-11"
       },
@@ -171,6 +174,11 @@
           {
             "name": "text_excludes_unauthorized_numbers",
             "note": "题面数字(6/7)合法放行——修泄漏不许修成误伤"
+          },
+          {
+            "name": "finish_status",
+            "status": "needs_review",
+            "note": "真实覆盖 finish_status(4 用例实测 final_state 均为 needs_review)"
           }
         ]
       }
@@ -181,7 +189,7 @@
       "status": "guarded",
       "source": {
         "issue": 149,
-        "session": "test_kernel_ready_gate 夹具同款",
+        "evidence": "构造用例(夹具口径同 tests/teaching/test_kernel_ready_gate.py),非实测会话,无题库 question_id",
         "tree": "main",
         "date": "2026-09-11"
       },
@@ -239,6 +247,11 @@
             "name": "state_is_not",
             "state": "ready_to_confirm",
             "note": "学生未陈述终答,判停闸须拦下模型的提前确认(#149)"
+          },
+          {
+            "name": "finish_status",
+            "status": "needs_review",
+            "note": "真实覆盖 finish_status(判停闸拦截后落 needs_review)"
           }
         ]
       }

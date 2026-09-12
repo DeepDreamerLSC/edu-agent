@@ -1,4 +1,4 @@
-"""对话质量回归网 check 注册表(#185 短板固化;#178 讲题打磨的判据底座)。
+r"""对话质量回归网 check 注册表(#185 短板固化;#178 讲题打磨的判据底座)。
 
 网不是第二套门:不拦内核输出,只把「已知短板」复算成红/绿。每条 check 是纯函数
 `(check, case, result) -> (ok, detail)`:
@@ -11,6 +11,21 @@
 零模型、零内核 import:网与被测物解耦,数字抽取口径 = ASCII 数字段(整数/小数,
 分数按两个数字计),独立复算。**加一条新 check = 在此加一个函数并进 REGISTRY**,
 不改其它任何文件。
+
+## 判定力边界(已知且已钉死,见 test_ascii_digit_boundary_is_pinned)
+
+只认 ASCII 数字段 ⇒ 终答的**等价表达**不在此口径内:中文数字「五分之四」、分数
+形态「1/4」「12/5」、百分数「80%」、中文序数「第十三次」全部漏判。本 corpus 恰是
+小数×分数题集,这个边界是**具体的**:tutor 若用分数形态揭示小数终答,网会绿。
+补等价归一(分数/百分数/中文数字 → 小数)时改 `_numbers` 一处 + 同步钉边测试。
+
+`_NUMBER_RE` 是本仓库第 9 份同口径正则(numeric.py ×4、kernel.py ×3、
+arc_eval_metrics.py ×1)——**刻意重复、勿合并**:网要的就是与内核
+(`_reply_numbers`)独立的 oracle。实测依据(#185 取证):泄漏文本「…第13次必形成…」
+里内核 `_reply_numbers` 把「第\s*\d+」当序数剥掉、据不到 13,而网的 `_numbers`
+看得到——正因为不共享口径,网抓到了内核自己看不见的形态。合并会让网静默继承
+内核的盲区(若将来有人补全 numeric.py 的中文数字能力,这张网**不会**自动跟进,
+需手动同步——代价写在这里,不藏着)。
 """
 
 from __future__ import annotations
@@ -49,7 +64,10 @@ def text_excludes_answer_values(check: dict, case: dict, result: dict) -> tuple[
 
     合法披露路径(bottom-out / finish / 学生已陈述后的确认轮)由**用例设计**规避
     ——本 check 不内嵌内核策略(网不是第二套门);fail-open:终答取不到数字
-    (文字/字母类答案)时不判,沿用判据底座的空集语义。"""
+    (文字/字母类答案)时不判,沿用判据底座的空集语义。**静默恒真通道已在
+    loader 层关闭**:声明本 check 的用例,`question.answer` 取不到 ASCII 数字
+    会被 scenario_corpus 拒绝(中文数字终答 → 改写 answer 或换 check,见
+    test_loader_rejects_bad_data)。"""
     answer_values = _numbers(_question_field(case, "answer"))
     if not answer_values:
         return True, ""
@@ -67,7 +85,13 @@ def text_excludes_unauthorized_numbers(check: dict, case: dict, result: dict) ->
     """tutor 文本不得含允许集(题面数字 ∪ 学生实际已说数字)之外的数字。
 
     防误伤反例的判据(修泄漏不许修成「连题面数字都不敢提」);学生数字取
-    result 里实际发出的轮次(reality,非剧本声明——判停后余轮未发的数字不算)。"""
+    result 里实际发出的轮次(reality,非剧本声明——判停后余轮未发的数字不算)。
+
+    **可用前提(挂这条 check 前必读)**:本轮 tutor 不引入任何新数字——**含
+    合法导出数字**。「把 2.8 写成分数 28/10」里的 28/10 是合法推导,但按本口径
+    判无授权(假阳性);题面用中文数字时 ASCII 允许集为空,连题面数字都会被判
+    泄漏。v1 里只有「纯引用题面数字」的解读轮(如用例③)适合挂;判断/计算轮
+    别挂,等价形态归一进来后再放开。"""
     allowed = _numbers(_question_field(case, "text"))
     for turn in result.get("turns") or []:
         allowed |= _numbers(turn.get("student"))
