@@ -6,9 +6,9 @@
 - main.yml alarm job(--all-jobs,#35):needs checks+benchmark 任一失败触发,
   收集本 run 全部 job 的失败步骤,步骤名带 job 前缀。
 
-用 GITHUB_TOKEN 开带 main-red 标签的 issue:标题含 commit sha 与失败步骤,
-已有未关闭的同标签 issue 不重复开(按标签查重)。--dry-run 用模拟输入打印
-将开的内容、不访问网络。只依赖标准库。
+用 GITHUB_TOKEN 开带 main-red 标签的 issue:标题含 commit sha 与失败步骤;
+同 commit(标题含短 sha)已有未关闭的同标签单则跳过,不同 commit 各开各单(#189)。
+--dry-run 用模拟输入打印将开的内容、不访问网络。只依赖标准库。
 """
 
 from __future__ import annotations
@@ -65,7 +65,8 @@ def issue_body(sha: str, step_names: list[str], run_url: str, note: str = "") ->
 
 def alert(api, sha: str, run_id: str, job_name: str | None, run_url: str,
           style: AlertStyle = MAIN_RED_STYLE) -> None:
-    """失败 → 开报警 issue;已有未关闭的同标签 issue 则跳过。
+    """失败 → 开报警 issue;同 commit(标题含短 sha)已有未关闭的同标签单则跳过,
+    不同 commit 各开各单(#189:按标签查重会把不同的红静默吞掉)。
 
     job_name 指定时只看该 job 的失败步骤(ci.yml 挂在 checks job 内的用法);
     None = 报警 job 模式(main.yml --all-jobs,#35):收集全部 job 的失败步骤,
@@ -87,8 +88,10 @@ def alert(api, sha: str, run_id: str, job_name: str | None, run_url: str,
         print(f"{label}: 没有失败步骤(运行被取消或读不到),不开 issue")
         return
     existing = api.get(f"issues?state=open&labels={label}&per_page=100")
-    if isinstance(existing, list) and existing:
-        print(f"{label}: 已有未关闭的报警 issue #{existing[0]['number']},不重复开")
+    if isinstance(existing, list) and any(
+            sha[:12] in str(issue.get("title") or "") for issue in existing):
+        # 标题存的是短形式(issue_title 的 sha[:12]),匹配必须同口径;拿全 sha 匹配会永远失配
+        print(f"{label}: 同一 commit 的报警 issue 已存在,不重复开")
         return
     api.create_label(label, LABEL_COLOR, LABEL_DESCRIPTION)
     title = issue_title(sha, names, style.title_prefix)
