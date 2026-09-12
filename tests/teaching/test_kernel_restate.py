@@ -21,6 +21,8 @@ from teachkit import FakeGateway
 
 ELICIT = ("很好,你已经懂了。那请你从头讲讲你的思路——"
           "先说说你第一步算了什么、为什么这样算。")
+# 裸数字形状整步弃用后的通用兜底句(= kernel.NEEDS_REVIEW_TEXT,规格断言故硬编码)
+NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 鸡兔同笼:答案数字(3/5)不在题面(8/26)也不在步骤值(16/10)里,天然隔离
 CHICKEN_QUESTION = {"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?说明思路。",
                     "answer": "鸡3只兔5只", "analysis": "", "knowledge_points": ["鸡兔同笼"]}
@@ -250,16 +252,42 @@ def _reveal_after_repeat(step_text: str) -> str:
     # #185 无分句边界可切:命中数字改写成「几」(句子形状不破,宁可问句不漏终答)
     ("兔有5只",
      "我们从这里入手:兔有几只。你接着算下一步。", ("5",)),
+    # #185 复审 ①:掩码必须**全命中**改写(只掩首处会残留同句后文的第二处答案)
+    ("兔有5只和3只",
+     "我们从这里入手:兔有几只和几只。你接着算下一步。", ("5", "3")),
+    # #185 复审 ②:裸数字形状读不成句 → 整步弃用走通用兜底,不出「等于 几」
+    ("等于 3", NEEDS_REVIEW_TEXT, ()),
+    # #185 复审 ②:揭示框架词(就是/得到/结果是/等于)前后不改写 → 同样整步弃用
+    ("3 就是答案", NEEDS_REVIEW_TEXT, ()),
 ], ids=["result_withheld", "pure_expression_kept", "ordinal_head_kept",
         "clause_boundary_cut", "no_boundary_kept", "no_arithmetic_kept",
-        "ordinal_form_withheld", "derived_value_withheld", "answer_masked"])
+        "ordinal_form_withheld", "derived_value_withheld", "answer_masked",
+        "multi_hit_masked", "bare_number_dropped", "disclosure_frame_dropped"])
 def test_reveal_actionization(step_text, expected_reveal, forbidden):
-    """揭示句构造九形态:该收回的收回、该保留的保留(前六 = #165 原用例,
-    后三 = #185 序数/导出值/无边界掩码)。"""
+    """揭示句构造十二形态:该收回的收回、该保留的保留(前六 = #165 原用例,
+    中三 = #185 序数/导出值/无边界掩码,后三 = #185 复审 全命中/裸数字/框架词)。"""
     text = _reveal_after_repeat(step_text)
     assert text == expected_reveal
     for token in forbidden:
         assert token not in text
+
+
+def test_reveal_keeps_question_numbers_when_answer_falls_back_to_steps_value():
+    """#185 复审 ③:生产形态(question.answer 缺失 → steps 末值 "8 - 5 = 3" 兜底,
+    答案全集 {8,5,3} 混入题面给定的 8)不得把题面数字改掉——判据集用结论数字
+    (答案 − 题面,`_answer_focus_numbers`),题面数字照常放行。"""
+    question = {"text": CHICKEN_QUESTION["text"], "answer": "",
+                "analysis": "", "knowledge_points": ["鸡兔同笼"]}
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload(FIRST_QUESTION_COLLECT, steps=[
+            {"step": "假设8只全是鸡，算出脚的总数", "value": "8 - 5 = 3"}]),
+        _tutor_payload(FIRST_QUESTION_COLLECT),
+        _tutor_payload(FIRST_QUESTION_COLLECT),   # 重生成仍复读 → 揭示
+    ])
+    first = start(dict(question), {"grade": "六年级"}, gateway=gateway)
+    turn = reply(first.session, "嗯,我看看。", gateway=gateway)
+    assert turn.text == "我们从这里入手:假设8只全是鸡，算出脚的总数。你接着算下一步。"
+    assert "几" not in turn.text
 
 
 # ---------- 输出面防复读终极不变量(任何兜底不得与上一轮学生可见文本同句) ----------
