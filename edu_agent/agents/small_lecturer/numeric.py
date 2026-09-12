@@ -66,9 +66,13 @@ def _answer_focus_numbers(session: "LearnerSession") -> set[float]:
     return (numbers - given) or numbers
 
 
+# 裸 ASCII 数字段(整数/小数;分数算两个)——numeric/kernel 共用(#185 复审 shrink)。
+_ASCII_NUMBER = re.compile(r"\d+(?:\.\d+)?")
+
+
 def _question_numbers(text: str) -> set[float]:
     """题面条件数字全集(整数/小数;分数按两个数字处理,与口算习惯一致)。"""
-    return {float(m) for m in re.findall(r"\d+(?:\.\d+)?", text or "")}
+    return {float(m) for m in _ASCII_NUMBER.findall(text or "")}
 
 
 # 单步算式识别(学生验算/讲师复述用):「5乘4」「8×2」「10 ÷ 2」「26-16」——两操作数一个算子。
