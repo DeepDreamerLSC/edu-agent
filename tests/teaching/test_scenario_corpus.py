@@ -184,3 +184,41 @@ def test_loader_rejects_bad_data(tmp_path, changes, match):
     path.write_text(json.dumps(_mutate(**changes), ensure_ascii=False), encoding="utf-8")
     with pytest.raises(ValueError, match=match):
         load_shortboard_corpus(path)
+
+
+# ---- #197 第二批:真模型口径(shadow pilot 两数据集迁入 corpus)----
+
+
+def test_pilot_datasets_load_through_corpus_loader():
+    """迁入合同:两个 shadow pilot 经 corpus loader 加载——question 带 bank 对回
+    的 answer、source.issue 可追溯(adaptive 无剧本/无 checks,按真模型口径放行)。"""
+    for name in ("small_lecturer_teaching_context_shadow_pilot_20.json",
+                 "small_lecturer_adaptive_shadow_pilot_20.json"):
+        scenarios = load_shortboard_corpus(DATASETS_DIR / name)
+        assert len(scenarios) == 20, name
+        for scenario in scenarios:
+            assert scenario["question"]["text"] and scenario["question"]["answer"], \
+                (name, scenario["id"])
+            assert scenario["source"]["issue"], (name, scenario["id"])
+
+
+def test_real_model_scenarios_stay_out_of_deterministic_replay():
+    """口径分流:无 fake_model 的真模型场景不进确定性回放(pytest 只跑罐头剧本,
+    真模型判定由运行面消费)。"""
+    from edu_agent.evals import deterministic_scenarios
+
+    pilots = load_shortboard_corpus(
+        DATASETS_DIR / "small_lecturer_teaching_context_shadow_pilot_20.json")
+    assert deterministic_scenarios(pilots) == []
+
+
+def test_real_model_caliber_rejects_missing_answer(tmp_path):
+    """真模型口径的必填:去掉 question.answer → 加载期红(不是运行期 KeyError)。"""
+    payload = json.loads(
+        (DATASETS_DIR / "small_lecturer_teaching_context_shadow_pilot_20.json")
+        .read_text(encoding="utf-8"))
+    payload["scenarios"][0]["question"].pop("answer")
+    path = tmp_path / "pilot.json"
+    path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    with pytest.raises(ValueError, match=r"question\.answer 必填"):
+        load_shortboard_corpus(path)
