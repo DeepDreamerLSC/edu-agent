@@ -355,8 +355,10 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     `{branch: reveal, hint_level}`,hint_level 为消耗后的级数——记的是**阶梯消耗**
     (阶梯有限,影子数据要能看「推进次数」与「是否过早烧到 bottom-out」);该轮最终
     学生可见文本若又被下游护栏替换,以 transcript 为准。bottom-out 与普通推进同记
-    reveal(事件形状不变);bottom-out 率按确定性文本匹配统计(「这一步我们直接看结果:」
-    / NEEDS_REVIEW_TEXT),与复讲引导按 _ELICIT_TEMPLATE 文本统计同口径。"""
+    reveal;裸数字形状整步弃用的轮加记 `dropped`。NEEDS_REVIEW_TEXT 有**两个来源**:
+    无终答 bottom-out(无 answer 可披露时,无前缀亦无 dropped,两项统计均不可见——
+    罕见,要数需先加事件)与弃用轮(dropped 可筛);bottom-out 率按「这一步我们
+    直接看结果:」前缀统计、勿按文本匹配(会把弃用轮算进);复讲引导同 _ELICIT_TEMPLATE。"""
     step = _next_step(session)
     session.guard_events.append({"branch": "reveal", "hint_level": session.hint_level})
     if step is None:
