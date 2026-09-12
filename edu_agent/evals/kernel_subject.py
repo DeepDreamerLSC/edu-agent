@@ -27,16 +27,22 @@ class KernelSubject:
     name = "kernel-small-lecturer"
 
     @staticmethod
-    def _question_payload(raw: object) -> dict:
+    def _question_payload(raw: object, feed_answer: bool = False) -> dict:
         """题面 → 内核 start() 入参:纯文本(旧)或 v1 图文(question.text + image)。
 
         v1 的 image(path+sha256)读文件、对账后转 data URL,内核 L380 直接消费。
+        P 口径(#34 台账):answer/analysis/knowledge_points 默认不喂——内核与
+        生产不同,看不到参考答案。`feed_answer=True` 是**显式测量断点**(#178
+        条件对照帧用,按 #146 条件变更登记):仅喂 answer,让代喂/泄漏的数值
+        口径可判;默认路径零漂移(断言钉在 tests/evals/test_kernel_subject.py)。
         """
         if isinstance(raw, str):
             return {"text": raw}
         if not isinstance(raw, dict):
             raise ValueError(f"question 必须是字符串或 dict,实际 {type(raw).__name__}")
         payload = {"text": raw.get("text", "")}
+        if feed_answer and raw.get("answer"):
+            payload["answer"] = str(raw["answer"])
         image = raw.get("image")
         if image is not None:
             payload["image"] = question_image_data_url(image)
@@ -44,7 +50,8 @@ class KernelSubject:
 
     def run_case(self, case: dict) -> dict:
         started = time.monotonic()
-        question = self._question_payload(case["question"])
+        question = self._question_payload(case["question"],
+                                          feed_answer=bool(case.get("feed_answer")))
         learner = {"grade": case.get("grade", "")}
         if case.get("answer_status"):  # R6 首问策略分派信号(评测数据侧)
             learner["answer_status"] = case["answer_status"]
