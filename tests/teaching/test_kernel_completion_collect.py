@@ -12,6 +12,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from edu_agent.agents.small_lecturer import reply, start
 
 from teachkit import FakeGateway
@@ -40,12 +42,17 @@ def _incorrect_session(gateway: FakeGateway) -> object:
     return first.session
 
 
-def test_completion_without_digits_triggers_deterministic_ask():
+@pytest.mark.parametrize("phrase", [
+    "我算出来了,确认一下。",   # 实录原句(httpab×4)
+    "这次算好了。",             # 实录原句(dlg2)
+    "我算完了，你看对吗?",     # 实录原句(审查补扫,P2:原正则漏此形态)
+])
+def test_completion_without_digits_triggers_deterministic_ask(phrase):
     """完成表达 + 未陈述答案 → 确定性追问(零模型),不 confirm、不判对错、不触发复讲。"""
     gateway = FakeGateway(tutor_payloads=[_open_payload("你现在觉得鸡和兔各有多少只?")])
     session = _incorrect_session(gateway)
     calls = len(gateway.requests)
-    turn = reply(session, "我算出来了,确认一下。", gateway=gateway)   # 实录原句(httpab×4)
+    turn = reply(session, phrase, gateway=gateway)
     assert turn.text == ASK
     assert turn.state == "dialogue" and turn.ready_to_confirm is False
     assert len(gateway.requests) == calls                   # 确定性分支零模型调用
@@ -99,14 +106,15 @@ def test_ask_fires_once_per_session():
     assert turn.session.guard_events[-1]["branch"] == "model"
 
 
-def test_negated_completion_does_not_fire():
-    """「算不出来了」(否定词插中间)不触发追问——归卡壳侧,检测器互不越界。"""
+@pytest.mark.parametrize("phrase", ["我算不出来了。", "我没算完。", "我算不完了。"])
+def test_negated_completion_does_not_fire(phrase):
+    """否定形态(否定词插中间)不触发追问——归卡壳侧,检测器互不越界。"""
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你现在觉得鸡和兔各有多少只?"),
         _tutor_payload("没关系,我们一步步来。"),
     ])
     session = _incorrect_session(gateway)
-    turn = reply(session, "我算不出来了。", gateway=gateway)
+    turn = reply(session, phrase, gateway=gateway)
     assert turn.text != ASK and turn.session.guard_events[-1]["branch"] == "model"
 
 
