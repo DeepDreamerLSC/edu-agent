@@ -365,7 +365,7 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
         answer = str(session.question.get("answer") or "").strip()
         if not answer and session.steps:
             answer = str(session.steps[-1].get("value") or "").strip()
-        return (f"这一步我们直接看结果:{answer}。你先记住它,我们回头再讲一遍为什么。"
+        return (f"这一步我们直接看结果:{answer.rstrip('。.')}。你先记住它,我们回头再讲一遍为什么。"
                 if answer else NEEDS_REVIEW_TEXT)
     lead = _STEP_LEADS[(session.hint_level - 1) % len(_STEP_LEADS)]
     step_text = _soften_step_text(str(step.get("step") or ""),
@@ -373,7 +373,9 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     if step_text is None:  # 裸数字形状读不成句:整步弃用 → 通用兜底(#185 复审 ②)
         session.guard_events[-1]["dropped"] = True  # 复审三轮 P2:弃用轮可辨识,先量再收词表
         return NEEDS_REVIEW_TEXT
-    return f"{lead}:{step_text}。你接着算下一步。"
+    # 句末标点由模板统一补:step/answer 自带「。」先剥掉,不叠「。。」
+    # (#198 独立审查实测:生产揭示轮 9/14 双句号,学生可见面)。
+    return f"{lead}:{step_text.rstrip('。.')}。你接着算下一步。"
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
