@@ -453,6 +453,13 @@ class ConversationService:
         if not isinstance(payload, dict):  # 审查 R2 P3:原会 503 泄漏异常类名
             raise ApiError(422, None, "input 须为 object")
         _reject_unknown(payload, self._SEND_INPUT_ALLOWED, "input 内")
+        # 审查 P3-A(#207 复审):幂等键是**被消费**的键(缓存键),文档承诺「长度
+        # 1~128」——open 路径一直有此闸,学生轮补齐;null=省略合法,空串不是。
+        for key in ("message_idempotency_key", "idempotency_key"):
+            value = body.get(key)
+            if value is not None and (not isinstance(value, str)
+                                      or not 1 <= len(value) <= 128):
+                raise ApiError(422, None, f"{key} 须为字符串且长度 1~128(省略请去键)")
         conversation = self._conversation_or_404(conversation_id)
         if conversation.state in ("completed", "failed"):  # P1-6:failed 终态同 completed 拒续
             raise ApiError(409, "SKILL_SESSION_CONFLICT", "会话已终态,重开需新幂等键")

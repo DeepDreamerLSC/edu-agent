@@ -303,6 +303,29 @@ def test_non_object_input_returns_422_not_503():
         assert message == "input 须为 object"  # 无 AttributeError 类名
 
 
+@pytest.mark.parametrize("bad", [42, "", "x" * 129, ["a"]])
+@pytest.mark.parametrize("key", ["message_idempotency_key", "idempotency_key"])
+def test_student_turn_idempotency_key_value_gated(key, bad):
+    """#207 复审 P3-A:两个幂等键(实键+文档别名)是**被消费**的键(缓存键),
+    文档承诺「长度 1~128」——open 路径一直有此闸,学生轮补齐;null=省略合法。"""
+    with served(ScriptedKernel(["你列了哪些已知量?"])) as base:
+        conversation_id = open_session(base)["conversation"]["conversation_id"]
+        response = post(base, f"/api/conversations/{conversation_id}/messages",
+                        {"content": "先看条件。", key: bad}, status=422)
+        assert f"{key} 须为字符串且长度 1~128" in response.json()["error"]["message"]
+
+
+def test_student_turn_idempotency_key_boundary_128_ok():
+    """P3-A 边界:恰 128 字符的幂等键合法(开个会话,重发同键命中缓存)。"""
+    with served(ScriptedKernel(["你列了哪些已知量?"])) as base:
+        conversation_id = open_session(base)["conversation"]["conversation_id"]
+        body = {"content": "先看条件。", "message_idempotency_key": "k" * 128}
+        assert post(base, f"/api/conversations/{conversation_id}/messages",
+                    body).status_code == 200
+        assert post(base, f"/api/conversations/{conversation_id}/messages",
+                    body).status_code == 200  # 命中缓存,不再调内核
+
+
 # ---------- 7. #207 审查①:文档字段表 vs 白名单,两边钉死 ----------
 
 @pytest.mark.parametrize("extra", [
@@ -326,6 +349,27 @@ def test_documented_compat_keys_accepted_on_create():
             "idempotency_key": "k-doc", "external_question_id": "q-101",
             "title": "五年级数学第 12 题", "context_snapshot": {"entry": "question_list"}})
         assert response.status_code == 201  # create 入口语义是 201 Created
+
+
+class RecordingKernel(ScriptedKernel):
+    """#207 P3-B 性质钉:记下 start 实收的 learner——「兼容键收白名单≠生效」的执行面。"""
+
+    def start(self, question: dict, learner: dict) -> object:
+        self.learner = learner
+        return super().start(question, learner)
+
+
+def test_compat_keys_never_reach_learner():
+    """#207 P3-B(裁定执行面):文档兼容键(title/context_snapshot)收白名单只为
+    照文档发不吃 422,**绝不进 learner**——内核实收键集 ⊆ 白名单+服务端派生键。"""
+    kernel = RecordingKernel(["先看条件。"])
+    with served(kernel) as base:
+        response = post(base, "/api/conversations", {
+            "idempotency_key": "k-pin", "external_question_id": "q-101", "grade": "五年级",
+            "title": "五年级数学第 12 题", "context_snapshot": {"entry": "question_list"}})
+        assert response.status_code == 201
+        assert set(kernel.learner) <= {"grade", "answer_correct", "knowledge_points",
+                                       "answer_status", "answer_correct_provenance"}
 
 
 def test_documented_idempotency_key_alias_dedupes():
