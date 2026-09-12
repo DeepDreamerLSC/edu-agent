@@ -241,10 +241,21 @@ def _reveal_after_repeat(step_text: str) -> str:
     # 无算式结果的规划句原样揭示(条件数字如「8只鸡」不算结果,不动)
     ("假设8只全是鸡，算出脚的总数",
      "我们从这里入手:假设8只全是鸡，算出脚的总数。你接着算下一步。", ()),
+    # #185 序数形态:step 自带终答数字(本题答案数字 3/5 之一)→ 按分句边界收回
+    ("先算脚数差，第3只开始换成兔",
+     "我们从这里入手:先算脚数差。你接着算下一步。", ("3",)),
+    # #185 导出值形态:「得到 5」把答案算给学生 → 收回该分句
+    ("用脚数差除以 2，得到 5",
+     "我们从这里入手:用脚数差除以 2。你接着算下一步。", ("5",)),
+    # #185 无分句边界可切:命中数字改写成「几」(句子形状不破,宁可问句不漏终答)
+    ("兔有5只",
+     "我们从这里入手:兔有几只。你接着算下一步。", ("5",)),
 ], ids=["result_withheld", "pure_expression_kept", "ordinal_head_kept",
-        "clause_boundary_cut", "no_boundary_kept", "no_arithmetic_kept"])
+        "clause_boundary_cut", "no_boundary_kept", "no_arithmetic_kept",
+        "ordinal_form_withheld", "derived_value_withheld", "answer_masked"])
 def test_reveal_actionization(step_text, expected_reveal, forbidden):
-    """揭示句构造六形态:该收回的收回、该保留的保留(断言逐行=原六个用例)。"""
+    """揭示句构造九形态:该收回的收回、该保留的保留(前六 = #165 原用例,
+    后三 = #185 序数/导出值/无边界掩码)。"""
     text = _reveal_after_repeat(step_text)
     assert text == expected_reveal
     for token in forbidden:

@@ -4,7 +4,7 @@
     {
       "id": "ladder-step-leaks-final-answer-13",
       "title": "阶梯揭示把终答直接给学生(序数形态)",
-      "status": "known_red",
+      "status": "guarded",
       "source": {
         "issue": 185,
         "question_id": "6a6320ca184f723b3592d18c",
@@ -60,7 +60,7 @@
         "checks": [
           {
             "name": "text_excludes_answer_values",
-            "note": "阶梯揭示不得带出终答(实测:第13次序数形态漏出)"
+            "note": "#185 修复后守护:阶梯揭示不得带出终答(序数形态「第13次」曾漏出;strict 翻转 = 修复 PR 本身)"
           }
         ]
       }
@@ -68,7 +68,7 @@
     {
       "id": "ladder-step-leaks-sub-answer-0.8",
       "title": "阶梯揭示把子答案 0.8 直接给学生",
-      "status": "known_red",
+      "status": "guarded",
       "source": {
         "issue": 185,
         "question_id": "6a61bb0ef0e25247f1ee36c7",
@@ -124,7 +124,7 @@
         "checks": [
           {
             "name": "text_excludes_answer_values",
-            "note": "终答集合含 0.8,揭示句把它算给了学生"
+            "note": "#185 修复后守护:阶梯揭示不得带出终答(导出值形态「得到 0.8」曾漏出)"
           }
         ]
       }

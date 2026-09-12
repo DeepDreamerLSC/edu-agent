@@ -269,36 +269,63 @@ _STEP_LEADS = ("我们从这里入手", "下一步是这样", "再往下看", "�
 _STEP_ARITHMETIC_RE = re.compile(
     r"\d+(?:\.\d+)?(?:\s*[×x*÷/+＋－-]\s*\d+(?:\.\d+)?)+\s*=\s*\d+(?:\.\d+)?")
 
+# step 文本里的裸数字段(#185):序数/导出值形态的定位用——与回归网
+# text_excludes_answer_values 同口径(答案 ASCII 数字全集),**刻意不复用**
+# `_reply_numbers`(它把「第13次」当序数剥掉,看不见这条泄漏,#185 取证)。
+_PLAIN_NUMBER_RE = re.compile(r"\d+(?:\.\d+)?")
 
-def _soften_step_text(step_text: str) -> str:
+
+def _answer_leak_span(text: str, answer_numbers: frozenset[float]) -> tuple[int, int] | None:
+    """step 文本里最早的答案数字段(序数「第13次」/导出值「得到 0.8」)。空集不拦。"""
+    for match in _PLAIN_NUMBER_RE.finditer(text):
+        if float(match.group()) in answer_numbers:
+            return match.span()
+    return None
+
+
+def _cut_before(text: str, start: int) -> str | None:
+    """start 前最后一个分句边界截断;切不出合格动作段(无边界/过短/仅序号)→ None。"""
+    head = max((text.rfind(sep, 0, start) for sep in "，,、:：;；"), default=-1)
+    if head < 0:
+        return None
+    softened = text[:head].strip()
+    if len(softened) < 4 or re.fullmatch(r"第?\s*[0-9一二三四五六七八九十]+\s*步?", softened):
+        return None
+    return softened
+
+
+def _soften_step_text(step_text: str, answer_numbers: frozenset[float] = frozenset()) -> str:
     """阶梯揭示的**动作化**改写:把该步算好的结果收回去,只留动作与依据。
 
     #165 WS4 第 2 条:卡壳路由从**揭示路径**修(#164 已回退词表检测,不再收紧检测)。
     老行为把模型规划句原样交给学生,而规划句常写成「先算底乘高:10 × 6 = 60」——
     等于把这一步的结果算给学生,学生只剩抄写(judge 侧读作过度直给、无推进)。
 
-    截断点 = 算式结果**之前**的最后一个**分句边界**(，,、:：;；)——整段丢掉带结果的
+    截断点 = 结果**之前**的最后一个**分句边界**(，,、:：;；)——整段丢掉带结果的
     分句。实测(L 口径帧):按「截到算式起始」会切出残句(「8只鸡有。」「比假设多。」,
     #148 §6.1 机械截断同款破损),故改为按分句边界切。**找不到边界就原样保留**
     (宁可直给,不出残句);切出的动作段过短或只是序号(「第二步」)时同样保留原文。
-    """
+
+    #185 补洞(算式规则覆盖不到的两形态):step 文本自带终答的**序数形态**
+    (「第13次必形成…」)与**导出值形态**(「转化为小数,得到 0.8」)——判据 =
+    答案数字全集命中(口径见 `_answer_leak_span`,与回归网一致),命中时优先走
+    同一条分句边界收回;切不出合格动作段就把命中数字改写成「几」(句子形状不破,
+    宁可问句也不把终答交给学生——bottom-out 才是设计内的披露点,不变量锁着)。"""
     text = str(step_text or "").strip()
     match = _STEP_ARITHMETIC_RE.search(text)
-    if match is None:
+    if match is not None:
+        return _cut_before(text, match.start()) or text
+    span = _answer_leak_span(text, answer_numbers)
+    if span is None:
         return text
-    head = max((text.rfind(sep, 0, match.start()) for sep in "，,、:：;；"), default=-1)
-    if head < 0:
-        return text  # 无分句边界:不做机械截断(避免残句)
-    softened = text[:head].strip()
-    if len(softened) < 4 or re.fullmatch(r"第?\s*[0-9一二三四五六七八九十]+\s*步?", softened):
-        return text  # 动作段过短或只是序号 → 退回原文,不做空揭示
-    return softened
+    return _cut_before(text, span[0]) or (text[:span[0]] + "几" + text[span[1]:])
 
 
 def _reveal_stuck_hint(session: "LearnerSession") -> str:
     """学生卡住/复读兜底 → 揭示下一级阶梯(确定性,零模型调用,不重复)。
 
-    内容 = session.steps 下一级(**动作化**后:`_soften_step_text` 收回算式结果);
+    内容 = session.steps 下一级(**动作化**后:`_soften_step_text` 收回算式结果与
+    自带终答的序数/导出值形态,#185);
     开场用 _STEP_LEADS 轮换,避免固定前缀生硬。
     模型措辞版实测会重复(3/7)且过度揭示,故仍用确定性。
 
@@ -319,7 +346,9 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
         return (f"这一步我们直接看结果:{answer}。你先记住它,我们回头再讲一遍为什么。"
                 if answer else NEEDS_REVIEW_TEXT)
     lead = _STEP_LEADS[(session.hint_level - 1) % len(_STEP_LEADS)]
-    return f"{lead}:{_soften_step_text(str(step.get('step') or ''))}。你接着算下一步。"
+    step_text = _soften_step_text(str(step.get("step") or ""),
+                                  frozenset(_answer_numbers(session)))
+    return f"{lead}:{step_text}。你接着算下一步。"
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
