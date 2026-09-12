@@ -5,13 +5,13 @@ KernelSubject + EvalRunner(case 级 checkpoint/续跑/失败台账)+ judge 单�
 边界(#216,不扩界):
 - 确定性口径(fake_model 罐头)**不在此跑**——它们在 pytest 参数化里永久回放,重复接线零增益;
 - 真模型场景**不进 CI 回归**(无罐头,pytest 零真模型)——本面只产 run 工件与报告,人工/夜评触发;
-- 工件入库按仓库惯例落在 edu_agent/evals/artifacts/(评审 840 即此形态)。
+- 工件入库按仓库惯例落在 edu_agent/evals/artifacts/(评审 840 即此形态):判定表与 judge
+  分**按轮**落在各自 collect run 目录(与 transcript 同处,该轮自足可复算),根下同名文件
+  为最新一轮便捷副本。
 
 入口(模块入口,不动 scripts/ 结构路径):
-    uv run python -m edu_agent.evals.corpus_round \
-        --corpus edu_agent/evals/datasets/small_lecturer_teaching_context_shadow_pilot_20.json \
-        --corpus edu_agent/evals/datasets/small_lecturer_adaptive_shadow_pilot_20.json \
-        --out <运行根目录> [--diff-from <上轮 collect run 目录>]
+    uv run python -m edu_agent.evals.corpus_round --out <运行根目录> \
+        [--corpus <数据集 JSON>]... [--diff-from <上轮 collect run 目录>]
 """
 
 from __future__ import annotations
@@ -152,9 +152,13 @@ def diff_checks(current: dict[str, dict], previous: dict[str, dict]) -> dict[str
 
 
 def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict],
-                  diff_verdicts: dict[str, str] | None, diff_from: str | None,
-                  skipped: list[str] | None = None) -> str:
-    """报告即工件:逐场景 判定/终态/judge 一行;有基线时加跨轮列与新增红计数。"""
+                  diff: dict | None = None, skipped: list[str] | None = None) -> str:
+    """报告即工件:逐场景 判定/终态/judge 一行;有基线时加跨轮列与新增红计数。
+
+    跨轮对照收在一个 `diff` 上下文里:`{"from": 上轮 run 目录, "verdicts": {...},
+    "prev_scores": {...}}`;有上轮 judge 分(按轮留存在上轮 run 目录)时 judge 列给
+    「上轮→本轮」——轮间噪声对比由此可复算(审查 P3,2026-09-12)。
+    """
     lines = [
         "# corpus checks × 真模型轮次报告(#216)",
         "",
@@ -163,9 +167,9 @@ def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict
     ]
     if skipped:
         lines.append(f"- 跳过无剧本场景:{len(skipped)} 条(模拟器消费面未接线,#211 边界)")
-    if diff_from:
-        new_red = sum(1 for v in diff_verdicts.values() if v == "新增红")
-        lines += [f"- 对照基线:{diff_from}", f"- **新增红:{new_red}**(绿→红 = 回归信号)"]
+    if diff:
+        new_red = sum(1 for v in diff["verdicts"].values() if v == "新增红")
+        lines += [f"- 对照基线:{diff['from']}", f"- **新增红:{new_red}**(绿→红 = 回归信号)"]
     else:
         lines += ["- 对照基线:无(首轮即基线;下轮用 --diff-from 指向本轮 collect 下最新 run 目录)"]
     lines += ["", "| case_id | status | final_state | checks | 判定(跨轮) | judge |", "|---|---|---|---|---|---|"]
@@ -181,10 +185,14 @@ def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict
         else:
             check_cell = "全绿"
         score = scores.get(case_id, {})
-        judge_cell = (f"total={score.get('total')} {score.get('verdict')}"
-                      f" 追问={score.get('scores', {}).get('socratic_followup')}"
-                      if "error" not in score else f"评分失败:{score['error'][:40]}")
-        diff_cell = diff_verdicts.get(case_id, "-") if diff_verdicts else "-"
+        if "error" in score:
+            judge_cell = f"评分失败:{score['error'][:40]}"
+        else:
+            prev_total = ((diff or {}).get("prev_scores") or {}).get(case_id, {}).get("total")
+            prefix = f"{prev_total}→" if prev_total is not None else ""
+            judge_cell = (f"total={prefix}{score.get('total')} {score.get('verdict')}"
+                          f" 追问={score.get('scores', {}).get('socratic_followup')}")
+        diff_cell = diff["verdicts"].get(case_id, "-") if diff else "-"
         lines.append(f"| {case_id} | ok | {row['final_state']} | {check_cell} | {diff_cell} | {judge_cell} |")
     return "\n".join(lines) + "\n"
 
@@ -192,7 +200,7 @@ def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--corpus", action="append", default=[],
-                        help="corpus 数据集 JSON(可多次;缺省 = shadow pilot 两数据集)")
+                        help="corpus 数据集 JSON(可多次;缺省 = teaching_context pilot 20)")
     parser.add_argument("--out", required=True, help="运行根目录(cases/collect/report 落这里)")
     parser.add_argument("--diff-from", dest="diff_from", default=None,
                         help="上轮 collect 下某 run 目录(跨轮对照)")
@@ -232,17 +240,29 @@ def main(argv: list[str] | None = None) -> int:
     print(f"评分:{sum(1 for r in results if r['status'] == 'ok')} 行(judge 单遍 primary)")
     scores = judge_rows(gateway, scenarios, results)
 
-    diff_verdicts = None
+    def dump(path: Path, rows: dict[str, dict]) -> None:
+        path.write_text("\n".join(json.dumps({"case_id": k, **v}, ensure_ascii=False)
+                                  for k, v in sorted(rows.items())) + "\n", encoding="utf-8")
+
+    # 判定与 judge 分按轮留存在各自 run 目录(与 transcript 同处 = 该轮自足可复算);
+    # out_dir 根下同名文件是最新一轮的便捷副本。—— 审查 P3(2026-09-12)
+    dump(run_dir / "checks.jsonl", checks)
+    dump(run_dir / "judge-scores.jsonl", scores)
+    dump(out_dir / "checks.jsonl", checks)
+    dump(out_dir / "judge-scores.jsonl", scores)
+
+    diff_verdicts, prev_scores = None, None
     if args.diff_from:
-        previous = check_rows(scenarios, load_results(Path(args.diff_from)))
+        prev_dir = Path(args.diff_from)
+        previous = check_rows(scenarios, load_results(prev_dir))
         diff_verdicts = diff_checks(checks, previous)
-    report = render_report(out_dir, checks, scores, diff_verdicts, args.diff_from, skipped)
-    (out_dir / "checks.jsonl").write_text(
-        "\n".join(json.dumps({"case_id": k, **v}, ensure_ascii=False) for k, v in sorted(checks.items())) + "\n",
-        encoding="utf-8")
-    (out_dir / "judge-scores.jsonl").write_text(
-        "\n".join(json.dumps({"case_id": k, **v}, ensure_ascii=False) for k, v in sorted(scores.items())) + "\n",
-        encoding="utf-8")
+        prev_file = prev_dir / "judge-scores.jsonl"
+        prev_scores = ({row["case_id"]: row for row in (json.loads(line) for line in
+                       prev_file.read_text(encoding="utf-8").splitlines() if line.strip())}
+                       if prev_file.is_file() else None)
+    diff = ({"from": args.diff_from, "verdicts": diff_verdicts, "prev_scores": prev_scores}
+            if args.diff_from else None)
+    report = render_report(out_dir, checks, scores, diff, skipped)
     (out_dir / "report.md").write_text(report, encoding="utf-8")
     print(report)
     return 0

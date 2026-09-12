@@ -100,6 +100,16 @@ def test_render_report_marks_undeclared_and_counts_new_red():
     }
     scores = {"x_s1": {"total": 10, "verdict": "pass", "scores": {"socratic_followup": 2}}}
     report = render_report(Path("/tmp/out"), checks, scores,
-                                        {"x_s1": "绿", "x_s2": "新增红"}, "prev/run")
+                           {"from": "prev/run", "verdicts": {"x_s1": "绿", "x_s2": "新增红"}})
     assert "新增红:1" in report and "无声明" in report and "全绿" in report
     assert "追问=2" in report
+
+
+def test_render_report_shows_previous_judge_total():
+    """审查 P3:有上轮 judge 分(按轮留存)时 judge 列给「上轮→本轮」,噪声对比可复算。"""
+    checks = {"x_s1": {"status": "ok", "declared": True, "failures": [], "final_state": "completed"}}
+    scores = {"x_s1": {"total": 8, "verdict": "review", "scores": {"socratic_followup": 1}}}
+    report = render_report(Path("/tmp/out"), checks, scores,
+                           {"from": "prev/run", "verdicts": {"x_s1": "绿"},
+                            "prev_scores": {"x_s1": {"total": 12}}})
+    assert "total=12→8" in report
