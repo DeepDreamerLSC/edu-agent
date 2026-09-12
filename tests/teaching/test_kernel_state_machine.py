@@ -208,8 +208,8 @@ def test_reply_student_says_understood_triggers_elicit_without_model(tmp_path):
         first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
         calls_before = len(fake.requests)  # start 那次
         turn = reply(first.session, "都懂了。", gateway=gateway)
-        assert turn.text == ("很好,你已经懂了。那请你从头讲讲你的思路——"
-                             "先说说你第一步算了什么、为什么这样算。")
+        assert turn.text == ("我们从头把思路串一遍——"
+                             "先说说你第一步算了什么、为什么这样算。")  # #179 问题 3:不说掌握只说动作
         assert turn.ready_to_confirm is False  # 不关对话
         assert len(fake.requests) == calls_before  # 「都懂了」这轮零模型调用
 

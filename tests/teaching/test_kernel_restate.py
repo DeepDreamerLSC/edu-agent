@@ -19,8 +19,8 @@ from edu_agent.agents.small_lecturer import FIRST_QUESTION_COLLECT, reply, start
 
 from teachkit import FakeGateway
 
-ELICIT = ("很好,你已经懂了。那请你从头讲讲你的思路——"
-          "先说说你第一步算了什么、为什么这样算。")
+ELICIT = ("我们从头把思路串一遍——"
+          "先说说你第一步算了什么、为什么这样算。")  # #179 问题 3:去掌握预设,保留复讲动作
 # 裸数字形状整步弃用后的通用兜底句(= kernel.NEEDS_REVIEW_TEXT,规格断言故硬编码)
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 鸡兔同笼:答案数字(3/5)不在题面(8/26)也不在步骤值(16/10)里,天然隔离
