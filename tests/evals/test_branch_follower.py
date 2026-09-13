@@ -146,3 +146,30 @@ def test_v2_loader_rejects_unrunnable_branch_scripts(tmp_path):
         load_shortboard_corpus(_write_v2(tmp_path, [payload([{**good, "when": _when()}, fallback])]))
     with pytest.raises(ValueError, match="student_response"):
         load_shortboard_corpus(_write_v2(tmp_path, [payload([{**good, "student_response": ""}, fallback])]))
+
+
+def test_gold_follow_up_keywords_widened_for_real_tutor_questions():
+    """回归测试(#178 c5653783697):follow_up 主分支关键词集加宽后,
+    真实导师问句(「25 加 7 是多少?」)不再落兜底句。
+
+    首轮 13 条非边界 needs_review 中 11 条末轮落兜底,机制 = 导师苏格拉底问句
+    不含剧本关键词集 → 学生落兜底句不带终答 → 判停闸不过。加宽 follow_up 主分支
+    的 assistant_contains_any,补「多少/哪一步/变成/等于」类问数词。"""
+    scenarios = load_shortboard_corpus(GOLD_DATASET)
+    WIDENED_WORDS = {"多少", "哪一步", "变成", "等于"}
+    REAL_TUTOR_QUESTION = "25 加 7 是多少?"
+
+    for scenario in scenarios:
+        follow_up = next((st for st in scenario["steps"] if st["id"] == "follow_up"), None)
+        if not follow_up:
+            continue
+        # 主分支(id="correct")的关键词集须含至少一个加宽词
+        primary = next((b for b in follow_up["branches"] if b["id"] == "correct"), None)
+        assert primary is not None, f"{scenario['id']}: follow_up 缺 correct 分支"
+        any_keys = set(primary["when"].get("assistant_contains_any", []))
+        assert any_keys & WIDENED_WORDS, (
+            f"{scenario['id']}: follow_up correct 分支关键词未加宽 {WIDENED_WORDS}")
+        # 真实导师问句须命中非兜底分支
+        selected = select_branch(follow_up["branches"], REAL_TUTOR_QUESTION)
+        assert not selected["when"].get("fallback"), (
+            f"{scenario['id']}: 真实问句「{REAL_TUTOR_QUESTION}」落兜底(应命中加宽关键词)")

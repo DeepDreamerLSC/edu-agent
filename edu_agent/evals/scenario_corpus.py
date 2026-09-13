@@ -197,7 +197,8 @@ def _gold_dialogue_errors(scenario: dict) -> list[str]:
     if not isinstance(steps, list) or not steps:
         return errors + [f"{scenario_id}:steps 必须是非空列表(分支剧本)"]
     gold = scenario.get("gold")
-    if not isinstance(gold, dict) or not str(gold.get("status") or "").strip():
+    # gold=null 起手(b2 起创建即冻结,#238 裁定):候选期允许 None,转正后改 dict 带 status
+    if gold is not None and (not isinstance(gold, dict) or not str(gold.get("status") or "").strip()):
         errors.append(f"{scenario_id}:gold.status 必填(候选/转正走 review.csv 人工流)")
     for i, step in enumerate(steps):
         branches = step.get("branches") if isinstance(step, dict) else None
