@@ -41,6 +41,12 @@ gateway 是 HTTP 客户端，应用重启不碰模型进程。模型服务起来
 - `GET /healthz` 返回：git sha、models.yaml 哈希、各上游 `/v1/models` 是否可达、进程启动时间。
 - smoke = 拿 3 条固定评测用例打真实部署的端点，断言成功且教学合同关键断言通过。
 - 合计一分钟内。各域的就绪门禁不进部署脚本，它们是 CI 里的测试。
+- **隧道 Cloudflare 1010 避坑**：test 环境隧道 `edu-test.chiraliumai.cn → 127.0.0.1:8300`（Mac 本地服务）。
+  现象：Cloudflare bot 保护默认配置按 UA 指纹拦非浏览器客户端——python-urllib / 未显式设 UA 的 curl
+  等默认库 UA 打隧道域名一律返回 **HTTP 1010**；显式浏览器 UA 或直连 `127.0.0.1:8300` 不拦截。
+  规避：smoke / `m3_smoke.py` / 集成测试一律走本机 forward（127.0.0.1:8300），**不直接打隧道域名**。
+  验证：`curl -H 'User-Agent: python-urllib/3.11' https://edu-test.chiraliumai.cn/healthz` 应返回 1010；
+  不带该 UA 或直连 forward 应返回 200。
 
 ## 3. 集成：合并即验证
 
