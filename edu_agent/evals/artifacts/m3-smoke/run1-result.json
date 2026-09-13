@@ -1,0 +1,76 @@
+{
+ "base_url": "http://127.0.0.1:8312",
+ "question_id": "equation_subtract",
+ "phases": [
+  {
+   "phase": "login",
+   "ok": true,
+   "ms": 4
+  },
+  {
+   "phase": "open",
+   "ok": true,
+   "conversation_id": "conv_c359887a4040",
+   "session_version": 1,
+   "ms": 1705
+  },
+  {
+   "phase": "open-idempotent-retry",
+   "ok": true
+  },
+  {
+   "phase": "open-409-question-pinned",
+   "ok": true
+  },
+  {
+   "phase": "refresh",
+   "ok": true,
+   "ms": 1
+  },
+  {
+   "phase": "messages-turn-1",
+   "ok": true,
+   "ms": 1071
+  },
+  {
+   "phase": "messages-idempotent-retry",
+   "ok": true
+  },
+  {
+   "phase": "messages-409-stale-version",
+   "ok": true
+  },
+  {
+   "phase": "messages-422-unknown-key",
+   "ok": true
+  },
+  {
+   "phase": "messages-403-forbidden-field",
+   "ok": true
+  },
+  {
+   "phase": "sse-happy-frames",
+   "ok": true,
+   "ms": 1444
+  },
+  {
+   "phase": "confirm",
+   "ok": true,
+   "ms": 834
+  },
+  {
+   "phase": "sse-error-frame",
+   "ok": true
+  }
+ ],
+ "idempotency_key": "m3-smoke-e890d2e8-138c-493c-bf89-087f9ba09c43",
+ "first_question": "你好同学,请问你算出的答案是多少呀?讲讲你的思路吧!",
+ "turn_1_assistant": "你刚才说先两边减7，是因为觉得这样能把7去掉，对吧？那你是怎么想到要减7的呢？",
+ "turn_2_assistant": "很好,你已经懂了。那请你从头讲讲你的思路——先说说你第一步算了什么、为什么这样算。",
+ "sse_delta_text": "你刚才说两边能同时减7，是因为等式两边都有7，减掉它能让方程变简单，对吧？那减完7后，下一步你打算怎么处理3x=18？",
+ "summary": {
+  "status": "completed",
+  "text": "你用等式的性质，先两边减7把常数项去掉，再两边除以3求出x=6，最后代入验证正确。关键转折是理解‘两边同时减7’是为了简化方程；仍需注意：每一步操作都要确保等式两边保持平衡，不能只改一边。"
+ },
+ "ok": true
+}
