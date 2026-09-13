@@ -124,4 +124,8 @@ def test_tone_directive_forbids_naming_and_empty_praise():
     assert "不给学习者起名" in system_message
     assert "题目角色" in system_message
     assert "不空夸" in system_message
+    # KI-7 口头禅/空表扬(#179 问题 4 余项):表扬须具体、禁固定口头禅——#152 judge
+    # 引句「这一步很准!」为实证基线,作为反例写进指令(方向约束,非话术)
+    assert "表扬须指向学生刚说的具体内容" in system_message
+    assert "固定口头禅" in system_message
     assert "没关系" not in system_message  # 不写死具体话术
