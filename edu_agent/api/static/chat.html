@@ -71,6 +71,15 @@ const BASE = location.origin;
 let TOKEN = '', CONV_ID = '', VERSION = 0, SKILL_SID = '', CURRENT_Q = '', BANK = [], MODE = null;
 // MODE = {type:'bank', q} | {type:'photo', fid, name}(重新开始所需的最小重开材料)
 
+// 渲染层 HTML 转义(#113 P2/#221):题库文本/错误消息/总结字段进 innerHTML 前的唯一出口。
+// 数据链不动,只改渲染;<script>/<img onerror> 等载荷经此落 DOM 只能是文本。
+function escapeHtml(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+const BADGE_HAS_IMG = ' <span class="has-img">🖼 题图</span>'; // 静态标记(模板自有内容,非数据),全大写常量约定
+
 // ── 登录(演示账密) ──
 async function login() {
   const r = await fetch(`${BASE}/api/auth/login`, {
@@ -90,7 +99,7 @@ async function loadQuestions() {
     BANK = await r.json();
     renderList();
   } catch (e) {
-    document.getElementById('qlist').innerHTML = `<div style="padding:20px;color:#c00;font-size:13px;">加载失败:${e.message}</div>`;
+    document.getElementById('qlist').innerHTML = `<div style="padding:20px;color:#c00;font-size:13px;">加载失败:${escapeHtml(e.message)}</div>`;
   }
 }
 
@@ -108,7 +117,7 @@ function renderList() {
       }
       const div = document.createElement('div');
       div.className = 'q-item';
-      div.innerHTML = `<div>${q.text || q.id}</div><div class="qid">${q.id}${q.image ? ' <span class="has-img">🖼 题图</span>' : ''}</div>`;
+      div.innerHTML = `<div>${escapeHtml(q.text || q.id)}</div><div class="qid">${escapeHtml(q.id)}${q.image ? BADGE_HAS_IMG : ''}</div>`;
       div.onclick = () => selectQuestion(q, div);
       list.appendChild(div);
     });
@@ -262,9 +271,9 @@ function addSummary(ls) {
   const div = document.createElement('div');
   div.className = 'summary-box';
   div.innerHTML = `<b>📋 学习总结</b><br>
-    掌握状态: ${ls.mastery_status || '—'}<br>
-    学到了: ${ls.student_summary?.learned || '—'}<br>
-    关键思路: ${(ls.student_summary?.key_ideas || []).join(';') || '—'}`;
+    掌握状态: ${escapeHtml(ls.mastery_status || '—')}<br>
+    学到了: ${escapeHtml(ls.student_summary?.learned || '—')}<br>
+    关键思路: ${escapeHtml((ls.student_summary?.key_ideas || []).join(';') || '—')}`;
   area.appendChild(div);
   area.scrollTop = area.scrollHeight;
 }
