@@ -255,6 +255,7 @@ def phase_sse_and_confirm(args: argparse.Namespace, ctx: dict, results: list, ev
     check(entry, isinstance(body.get("ready_to_confirm"), bool)
           and body.get("status") in ("completed", "needs_review"),
           f"confirm 响应键形状不符: {body}")
+    evidence["confirm_status"] = body.get("status")  # 审查 P3:走了哪条分支,产物里可见
     if body.get("status") == "completed":
         summary = body.get("summary") or {}
         check(entry, summary.get("status") == "completed" and summary.get("text", "").strip(),
@@ -334,6 +335,8 @@ def main() -> int:
     phase_sse_and_confirm(args, ctx, results, evidence)
     if args.error_base_url:
         phase_error_frame(args, ctx, results)
+    else:  # 审查 P3:跳过不静默(#224 同待遇)——部署实例无坏网关实例,产物记账
+        results.append({"phase": "sse-error-frame", "ok": True, "skipped": True})
 
     ok = all(r["ok"] for r in results)
     evidence["ok"] = ok
@@ -343,7 +346,7 @@ def main() -> int:
     print(("\nM3 冒烟通过:" if ok else "\nM3 冒烟失败:") +
           f"{len(results)} 阶段,证据{'已落盘 ' + args.out if args.out else '未落盘(--out)'}")
     for r in results:
-        print(f"  {'PASS' if r['ok'] else 'FAIL'}  {r['phase']}"
+        print(f"  {'SKIP' if r.get('skipped') else 'PASS' if r['ok'] else 'FAIL'}  {r['phase']}"
               + (f"  ({r['ms']}ms)" if r.get("ms") else "")
               + (f"  [fail: {r['fail']}]" if not r["ok"] else ""))
     return 0 if ok else 1
