@@ -1,0 +1,68 @@
+# corpus checks × 真模型轮次报告(#216)
+
+- 生成:2026-09-13T14:07:22.197931+00:00
+- 工件:edu_agent/evals/artifacts/math-gold-v1
+- 对照基线:无(首轮即基线;下轮用 --diff-from 指向本轮 collect 下最新 run 目录)
+
+| case_id | status | final_state | checks | 判定(跨轮) | judge |
+|---|---|---|---|---|---|
+| small_lecturer_math_gold_candidates_average_score_alternative_method | ok | completed | 无声明 | - | total=4 fail 追问=1 |
+| small_lecturer_math_gold_candidates_average_score_complete_reasoning | ok | completed | 无声明 | - | total=9 review 追问=2 |
+| small_lecturer_math_gold_candidates_average_score_misconception_repair | ok | completed | 无声明 | - | total=9 review 追问=2 |
+| small_lecturer_math_gold_candidates_average_score_support_boundary | ok | needs_review | 无声明 | - | total=3 fail 追问=0 |
+| small_lecturer_math_gold_candidates_chicken_rabbit_alternative_method | ok | completed | 无声明 | - | total=3 fail 追问=0 |
+| small_lecturer_math_gold_candidates_chicken_rabbit_complete_reasoning | ok | completed | 无声明 | - | total=12 pass 追问=2 |
+| small_lecturer_math_gold_candidates_chicken_rabbit_misconception_repair | ok | completed | 无声明 | - | total=10 pass 追问=2 |
+| small_lecturer_math_gold_candidates_chicken_rabbit_support_boundary | ok | needs_review | 无声明 | - | total=4 fail 追问=1 |
+| small_lecturer_math_gold_candidates_decimal_multiplication_alternative_method | ok | completed | 无声明 | - | total=4 fail 追问=0 |
+| small_lecturer_math_gold_candidates_decimal_multiplication_complete_reasoning | ok | completed | 无声明 | - | total=12 pass 追问=2 |
+| small_lecturer_math_gold_candidates_decimal_multiplication_misconception_repair | ok | completed | 无声明 | - | total=12 pass 追问=2 |
+| small_lecturer_math_gold_candidates_decimal_multiplication_support_boundary | ok | needs_review | 无声明 | - | total=5 fail 追问=1 |
+| small_lecturer_math_gold_candidates_distance_speed_alternative_method | ok | completed | 无声明 | - | total=6 fail 追问=1 |
+| small_lecturer_math_gold_candidates_distance_speed_complete_reasoning | ok | needs_review | 无声明 | - | total=2 fail 追问=0 |
+| small_lecturer_math_gold_candidates_distance_speed_misconception_repair | ok | needs_review | 无声明 | - | total=2 fail 追问=0 |
+| small_lecturer_math_gold_candidates_distance_speed_support_boundary | ok | needs_review | 无声明 | - | total=2 fail 追问=0 |
+| small_lecturer_math_gold_candidates_division_remainder_alternative_method | ok | completed | 无声明 | - | total=5 fail 追问=1 |
+| small_lecturer_math_gold_candidates_division_remainder_complete_reasoning | ok | needs_review | 无声明 | - | total=4 fail 追问=1 |
+| small_lecturer_math_gold_candidates_division_remainder_misconception_repair | ok | needs_review | 无声明 | - | total=6 fail 追问=1 |
+| small_lecturer_math_gold_candidates_division_remainder_support_boundary | ok | needs_review | 无声明 | - | total=4 fail 追问=1 |
+| small_lecturer_math_gold_candidates_equation_addition_alternative_method | ok | completed | 无声明 | - | total=6 fail 追问=1 |
+| small_lecturer_math_gold_candidates_equation_addition_complete_reasoning | ok | completed | 无声明 | - | total=6 fail 追问=1 |
+| small_lecturer_math_gold_candidates_equation_addition_misconception_repair | ok | needs_review | 无声明 | - | total=4 fail 追问=1 |
+| small_lecturer_math_gold_candidates_equation_addition_support_boundary | ok | needs_review | 无声明 | - | total=5 fail 追问=1 |
+| small_lecturer_math_gold_candidates_equation_multiplication_alternative_method | ok | completed | 无声明 | - | total=6 fail 追问=1 |
+| small_lecturer_math_gold_candidates_equation_multiplication_complete_reasoning | ok | completed | 无声明 | - | total=8 review 追问=1 |
+| small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair | ok | completed | 无声明 | - | total=8 review 追问=1 |
+| small_lecturer_math_gold_candidates_equation_multiplication_support_boundary | ok | needs_review | 无声明 | - | total=7 review 追问=2 |
+| small_lecturer_math_gold_candidates_fraction_addition_alternative_method | ok | needs_review | 无声明 | - | total=6 fail 追问=1 |
+| small_lecturer_math_gold_candidates_fraction_addition_complete_reasoning | ok | completed | 无声明 | - | total=8 review 追问=1 |
+| small_lecturer_math_gold_candidates_fraction_addition_misconception_repair | ok | completed | 无声明 | - | total=9 review 追问=2 |
+| small_lecturer_math_gold_candidates_fraction_addition_support_boundary | content | - | - | - | - |
+| small_lecturer_math_gold_candidates_number_pattern_alternative_method | ok | completed | 无声明 | - | total=3 fail 追问=0 |
+| small_lecturer_math_gold_candidates_number_pattern_complete_reasoning | ok | completed | 无声明 | - | total=5 fail 追问=1 |
+| small_lecturer_math_gold_candidates_number_pattern_misconception_repair | ok | completed | 无声明 | - | total=11 pass 追问=2 |
+| small_lecturer_math_gold_candidates_number_pattern_support_boundary | ok | needs_review | 无声明 | - | total=5 fail 追问=1 |
+| small_lecturer_math_gold_candidates_parentheses_equation_alternative_method | ok | needs_review | 无声明 | - | total=2 fail 追问=0 |
+| small_lecturer_math_gold_candidates_parentheses_equation_complete_reasoning | ok | completed | 无声明 | - | total=8 review 追问=1 |
+| small_lecturer_math_gold_candidates_parentheses_equation_misconception_repair | ok | completed | 无声明 | - | total=7 review 追问=1 |
+| small_lecturer_math_gold_candidates_parentheses_equation_support_boundary | ok | needs_review | 无声明 | - | total=7 review 追问=2 |
+| small_lecturer_math_gold_candidates_percentage_discount_alternative_method | ok | completed | 无声明 | - | total=5 fail 追问=1 |
+| small_lecturer_math_gold_candidates_percentage_discount_complete_reasoning | ok | needs_review | 无声明 | - | total=5 fail 追问=1 |
+| small_lecturer_math_gold_candidates_percentage_discount_misconception_repair | ok | completed | 无声明 | - | total=9 review 追问=2 |
+| small_lecturer_math_gold_candidates_percentage_discount_support_boundary | ok | needs_review | 无声明 | - | total=4 fail 追问=1 |
+| small_lecturer_math_gold_candidates_ratio_share_alternative_method | ok | completed | 无声明 | - | total=9 review 追问=2 |
+| small_lecturer_math_gold_candidates_ratio_share_complete_reasoning | ok | needs_review | 无声明 | - | total=4 fail 追问=1 |
+| small_lecturer_math_gold_candidates_ratio_share_misconception_repair | ok | completed | 无声明 | - | total=12 pass 追问=2 |
+| small_lecturer_math_gold_candidates_ratio_share_support_boundary | ok | needs_review | 无声明 | - | total=4 fail 追问=1 |
+| small_lecturer_math_gold_candidates_rectangle_perimeter_alternative_method | ok | needs_review | 无声明 | - | total=3 fail 追问=0 |
+| small_lecturer_math_gold_candidates_rectangle_perimeter_complete_reasoning | ok | completed | 无声明 | - | total=8 review 追问=1 |
+| small_lecturer_math_gold_candidates_rectangle_perimeter_misconception_repair | ok | completed | 无声明 | - | total=9 review 追问=2 |
+| small_lecturer_math_gold_candidates_rectangle_perimeter_support_boundary | ok | needs_review | 无声明 | - | total=5 fail 追问=1 |
+| small_lecturer_math_gold_candidates_simple_probability_alternative_method | ok | completed | 无声明 | - | total=1 fail 追问=0 |
+| small_lecturer_math_gold_candidates_simple_probability_complete_reasoning | ok | needs_review | 无声明 | - | total=2 fail 追问=0 |
+| small_lecturer_math_gold_candidates_simple_probability_misconception_repair | ok | needs_review | 无声明 | - | total=1 fail 追问=0 |
+| small_lecturer_math_gold_candidates_simple_probability_support_boundary | ok | needs_review | 无声明 | - | total=4 fail 追问=1 |
+| small_lecturer_math_gold_candidates_triangle_area_alternative_method | ok | completed | 无声明 | - | total=12 pass 追问=2 |
+| small_lecturer_math_gold_candidates_triangle_area_complete_reasoning | ok | completed | 无声明 | - | total=11 pass 追问=2 |
+| small_lecturer_math_gold_candidates_triangle_area_misconception_repair | ok | needs_review | 无声明 | - | total=5 fail 追问=1 |
+| small_lecturer_math_gold_candidates_triangle_area_support_boundary | ok | needs_review | 无声明 | - | total=4 fail 追问=1 |
