@@ -2,14 +2,12 @@
   "schema_version": "small_lecturer_gold_review_manifest/v1",
   "dataset_schema_version": "small_lecturer_dialogue_scenarios/v2",
   "scenario_count": 60,
-  "teacher_confirmed_count": 0,
-  "candidate_count": 60,
+  "teacher_confirmed_count": 60,
+  "candidate_count": 0,
   "candidate_catalog_hash": "089e200c7a2283bd7dddb7ddb1942b1b1e4b71faedd7da0f38c845af94c8b064",
   "negative_or_boundary_candidate_count": 30,
-  "promotion_ready": false,
-  "reason_codes": [
-    "teacher_gold_confirmed_count_below_minimum",
-    "negative_or_boundary_ratio_below_minimum"
-  ],
-  "required_reviewer_action": "A teacher must review each candidate before changing gold.status."
+  "promotion_ready": true,
+  "reason_codes": [],
+  "required_reviewer_action": "gold-math-b1 批次已确认(60/60 teacher_confirmed,回执 issue-178#c5653410144);后续批次照 review.csv 人工流。",
+  "candidate_catalog_hash_status": "暂缓重算(#178 裁定②:转正后由生成器口径刷新,仓内不复算)"
 }
