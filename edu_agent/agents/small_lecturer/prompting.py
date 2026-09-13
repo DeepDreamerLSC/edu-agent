@@ -15,7 +15,6 @@ socratic/pacing/summary/termination——苏格拉底追问、单步推进、收
 from __future__ import annotations
 
 import json
-import re
 from functools import lru_cache
 from pathlib import Path
 
@@ -125,78 +124,27 @@ _OPENING_HINTS = {
     "unanswered": OPENING_HINT_UNANSWERED,
 }
 
-# 首问固定模板(head/tail 组装,五条文案逐字定稿)。上面的 OPENING_HINT_* 只是拼进 user
+# 首问固定模板(#235 定稿,3 句,全部确定性,逐字对照)。上面的 OPENING_HINT_* 只是拼进 user
 # 消息的**策略提示**,模型可以违抗——实测首问直接把答案报出来(题「8排6号记作(6,8),那么
 # 12排5号记作(,);(3,10)表示()排()号」的首问写成「…记作(5,12),(3,10)表示10排3号,对吗?」,
 # 两个空的答案都给了)。故首问**可见文本**由内核 start() 覆盖为确定性模板:不含答案数字、
 # 不含方法名,答案只能从学生嘴里出来;模型调用照旧(仍产出 steps/transcription)。
-# head 两选一:**真·带图**(question.image 非空)且读出半句 → 图像招呼语 + 半句复述
-# + 识题确认句(IMAGE_BRIEF_CONFIRM,#180 ③);其余(纯文字题 / 图像题没读出内容)
-# → 纯文字招呼语(不出现「…这道题:。」残句,也不插确认)。
-# tail 三选一:正确档一套(文字/图像共用);采集档——图像题恒用统一那句(不按题型分),
-# 文字题按题型分选择题/非选择题(见 `_is_multiple_choice`)。
+# #235:首问内容一致性不随题源/题型/图像变形——半句复述机器整体撤除(题库扫描 47% 题面
+# 会采出「电影院里」类无信息量短语,紧跟「我读得对吗?」确认废话);图像招呼语**保留**为
+# 固定前缀(零提取零分支,向合作方亮视觉能力);纯图题识题确认撤除,误读由对话轮自然纠正
+# (image_teaching 评测集监控复发)。选择题统一用「答案是什么」句(带图选择题实测已用通用句)。
 HEAD_TEXT = "你好同学,"
-HEAD_IMAGE_PREFIX = "你好同学,我看到你发的题啦,我们一起看看:"   # 后面接半句复述 + 识题确认句
-# 图像档识题确认(#180 ③ 试点):复述来自模型转录,可能读错题(#180 实锤一例把剩余 3/8
-# 读成 5/8)→ 复述后紧跟「对吗?」式确认,让学生在第 0 轮就能纠正,而不是教错整场。
-IMAGE_BRIEF_CONFIRM = "我读得对吗?"
+HEAD_IMAGE = "你好同学,我看到你发的题啦,"   # 固定前缀:不再接复述/确认(#235)
 TAIL_CORRECT = "这道题你做对啦,真棒!还有哪里不太明白吗?"
-TAIL_COLLECT_CHOICE = "请问这道题你选了什么呀?讲讲你的思路吧!"
-TAIL_COLLECT_OPEN = "请问你算出的答案是多少呀?讲讲你的思路吧!"
-TAIL_COLLECT_IMAGE = "这道题你的答案是什么呀?讲讲你的思路吧!"
+TAIL_COLLECT = "这道题你的答案是什么呀?讲讲你的思路吧!"
 # 完成表达追问(#178 判停分析→PR-2):学生说「算出来了」但没带答案数字 → 确定性追问,
 # 把判停闸要的结论数字采上来(中性措辞:只采集、不判对错、不预设掌握)。
 ASK_FINAL_ANSWER = "你算出的是多少?把答案说出来,我们对一对。"
 
-# 定稿可见文本的文字题两档(常量形式,供测试与调用方逐字对照):
-FIRST_QUESTION_COLLECT = HEAD_TEXT + TAIL_COLLECT_OPEN              # 文字·采集·非选择题
-FIRST_QUESTION_COLLECT_CHOICE = HEAD_TEXT + TAIL_COLLECT_CHOICE    # 文字·采集·选择题
-FIRST_QUESTION_CORRECT = HEAD_TEXT + TAIL_CORRECT                   # 文字/图像·正确档(文字 head)
-
-# 复述(transcription → brief)的确定性口径:取「半句」——首个逗号或句末标点之前,
-# strip 后 4–16 字(超 16 字截到 16 字加「…」)。
-_BRIEF_MIN_CHARS = 4
-_BRIEF_MAX_CHARS = 16
-_BRIEF_ELLIPSIS = "…"
-_BRIEF_CUTS = ("。", "!", "?", ".", "！", "？", ",", "，")
-
-# 选择题标记(纯规则,零模型调用):字母 + 选项标点,含全角 ＡＢＣＤ 与全角标点(、．)）。
-_OPTION_MARK_RE = re.compile(r"[A-DＡ-Ｄ]\s*[.、．)）]")
-
-
-def _is_multiple_choice(question: dict | None) -> bool:
-    """选择题判定(首问文案分流用;纯规则,零模型调用,无第三方依赖)。
-
-    **主信号 = 题面文本**(评测口径下 question 只有 {text, image}、没有 answer,用题面才能
-    在两条路径上都生效):题面出现 ≥2 个选项标记(形如 A. / B、 / C． / D))即判选择题;
-    题面信号不足时用 `answer`(形如「A. (2,7)」)作**次要**信号(它带选项标记即判选择题)。
-    只有单个标记、或标记全无 → 非选择题。"""
-    source = question or {}
-    if len(_OPTION_MARK_RE.findall(str(source.get("text") or ""))) >= 2:
-        return True
-    return bool(_OPTION_MARK_RE.search(str(source.get("answer") or "")))
-
-
-def _brief_transcription(transcription: str | None) -> str:
-    """转录 → 首问里的半句复述短语(确定性,零依赖,纯字符串、零模型调用):
-    取首个逗号或句末标点**之前**(谁更早取谁)→ strip → 上限 16 字(超出截到 16 字加「…」);
-    不足 4 字视为没读出内容,返回空串(head 退回 HEAD_TEXT,不出「…这道题:。」残句)。"""
-    text = str(transcription or "").strip()
-    cut = min((text.index(ch) for ch in _BRIEF_CUTS if ch in text), default=len(text))
-    brief = text[:cut].strip()
-    if len(brief) < _BRIEF_MIN_CHARS:
-        return ""
-    if len(brief) > _BRIEF_MAX_CHARS:
-        return brief[:_BRIEF_MAX_CHARS] + _BRIEF_ELLIPSIS
-    return brief
-
-
-def _text_collect_tail(question: dict | None) -> str:
-    """纯文字档采集句:真·文字题按题型分流;图像题读不出内容而退回文字档 → 非选择题句
-    (题型分流只服务文字题,图像档另有统一那句)。"""
-    if (question or {}).get("image") is not None:
-        return TAIL_COLLECT_OPEN
-    return TAIL_COLLECT_CHOICE if _is_multiple_choice(question) else TAIL_COLLECT_OPEN
+# 3 句定稿文案(常量形式,供测试与调用方逐字对照):
+FIRST_QUESTION_CORRECT = HEAD_TEXT + TAIL_CORRECT            # correct 档(文字/图像共用)
+FIRST_QUESTION_COLLECT = HEAD_TEXT + TAIL_COLLECT            # 采集·无图
+FIRST_QUESTION_COLLECT_IMAGE = HEAD_IMAGE + TAIL_COLLECT     # 采集·带图
 
 
 def _has_image(question: dict | None) -> bool:
@@ -208,31 +156,16 @@ def _has_image(question: dict | None) -> bool:
     return (question or {}).get("image") is not None
 
 
-def _brief_source(question: dict | None, transcription: str | None) -> str:
-    """半句来源:**题面文本优先**(权威),仅当题面为空(真·纯图题)才退回转录。
-
-    与 `_has_image` 同一教训:转录可能是一句与题目无关的废话,只有当题面本身没有内容
-    (纯图题)时才不得不采信它。"""
-    text = str((question or {}).get("text") or "").strip()
-    return text or str(transcription or "")
-
-
 def first_question_text(answer_status: str | None, transcription: str | None = None,
                         question: dict | None = None) -> str:
-    """首问固定模板(head + tail 组装):显式做对 → 正确档(文字/图像共用同一句);其余
-    (incorrect/unanswered/缺省/unknown)→ 采集档。口径依据 docs/plan/00-rewrite-plan.md:
-    「false/null/省略→incorrect(unanswered 默认按做错,等价老系统 assumed_incorrect)」。
-    head **只在真·带图且读出半句**时用图像招呼语(见 `_has_image` / `_brief_source`);
-    采集档 tail 按题型/图像分流(见 `_is_multiple_choice` 与 `_text_collect_tail`)。
+    """首问固定模板(#235 定稿,3 句):显式做对 → 正确档(文字/图像共用同一句);其余
+    (incorrect/unanswered/缺省/unknown)→ 采集档,按 `question["image"]` 分 head。
+    transcription 参数保留(kernel 照旧传入,签名不动),首问不再使用——转录回填
+    question.text 仍在 kernel(纯图题题面来源,另一用途)。
     为什么固定:同一段策略此前作为 prompt 提示被模型违抗过——实测首问直接报出答案数字。"""
-    source = question or {}
-    brief = _brief_transcription(_brief_source(source, transcription)) if _has_image(source) else ""
-    if brief:
-        tail = TAIL_CORRECT if answer_status == "correct" else TAIL_COLLECT_IMAGE
-        # 半句复述后先识题确认(#180 ③):读错题学生第 0 轮即可纠正;brief 空已走文字档,不插。
-        return f"{HEAD_IMAGE_PREFIX}{brief},{IMAGE_BRIEF_CONFIRM}{tail}"
-    tail = TAIL_CORRECT if answer_status == "correct" else _text_collect_tail(source)
-    return HEAD_TEXT + tail
+    if answer_status == "correct":
+        return FIRST_QUESTION_CORRECT
+    return FIRST_QUESTION_COLLECT_IMAGE if _has_image(question) else FIRST_QUESTION_COLLECT
 
 
 def opening_hint(answer_status: str | None) -> str:
