@@ -43,7 +43,7 @@ from .summary import load_results, morning_summary, write_summary
 # corpus_round(#216)惰性导出(PEP 562):`python -m edu_agent.evals.corpus_round`
 # 与包级急切导入会双导入告警,run 入口保持 -m 形态,符号在首次访问时再加载。
 _CORPUS_ROUND_LAZY = ("build_cases", "check_rows", "diff_checks",
-                      "real_model_scenarios", "render_report")
+                      "real_model_scenarios", "render_report", "soften_counts")
 
 
 def __getattr__(name: str):
@@ -81,6 +81,7 @@ __all__ = [
     "question_image_data_url",
     "real_model_scenarios",
     "render_report",
+    "soften_counts",
     "render_html",
     "run_check",
     "run_scenario_checks",

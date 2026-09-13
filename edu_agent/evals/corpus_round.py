@@ -135,6 +135,18 @@ def check_rows(scenarios: dict[str, dict], results: list[dict]) -> dict[str, dic
     return rows
 
 
+def soften_counts(results: list[dict]) -> dict[str, int]:
+    """软化路径命中计数(#241 行 4):transcript.guard_events 里 reveal 轮的 soften tag——
+    cut = 同分句边界收回;mask = 兜底改写「几」;无 tag(无泄漏保留原文/弃用轮 dropped)= 未命中。"""
+    counts = {"cut": 0, "mask": 0}
+    for row in results:
+        for event in (row.get("transcript") or {}).get("guard_events") or []:
+            tag = event.get("soften")
+            if tag in counts:
+                counts[tag] += 1
+    return counts
+
+
 def diff_checks(current: dict[str, dict], previous: dict[str, dict]) -> dict[str, str]:
     """跨轮 check 对照:绿→红 = 新增红(回归信号),红→绿 = 翻绿(修复或噪声,看 judge)。"""
     verdicts: dict[str, str] = {}
@@ -154,7 +166,8 @@ def diff_checks(current: dict[str, dict], previous: dict[str, dict]) -> dict[str
 
 
 def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict],
-                  diff: dict | None = None, skipped: list[str] | None = None) -> str:
+                  diff: dict | None = None, skipped: list[str] | None = None,
+                  soften: dict[str, int] | None = None) -> str:
     """报告即工件:逐场景 判定/终态/judge 一行;有基线时加跨轮列与新增红计数。
 
     跨轮对照收在一个 `diff` 上下文里:`{"from": 上轮 run 目录, "verdicts": {...},
@@ -167,6 +180,9 @@ def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict
         f"- 生成:{datetime.now(timezone.utc).isoformat()}",
         f"- 工件:{out_dir}",
     ]
+    if soften is not None:
+        lines.append(f"- 软化路径命中(#241 行 4):cut={soften['cut']}(同分句边界收回) / "
+                     f"mask={soften['mask']}(兜底改写「几」)")
     if skipped:
         lines.append(f"- 跳过无剧本场景:{len(skipped)} 条(模拟器消费面未接线,#211 边界)")
     if diff:
@@ -264,7 +280,7 @@ def main(argv: list[str] | None = None) -> int:
                        if prev_file.is_file() else None)
     diff = ({"from": args.diff_from, "verdicts": diff_verdicts, "prev_scores": prev_scores}
             if args.diff_from else None)
-    report = render_report(out_dir, checks, scores, diff, skipped)
+    report = render_report(out_dir, checks, scores, diff, skipped, soften_counts(results))
     (out_dir / "report.md").write_text(report, encoding="utf-8")
     print(report)
     return 0

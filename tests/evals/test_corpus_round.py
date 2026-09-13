@@ -16,6 +16,7 @@ from edu_agent.evals import (
     diff_checks,
     real_model_scenarios,
     render_report,
+    soften_counts,
 )
 
 
@@ -91,6 +92,21 @@ def test_diff_checks_classifies_new_red_and_flip():
     }
     verdicts = diff_checks(current, previous)
     assert verdicts == {"a": "新增红", "b": "翻绿", "c": "绿"}
+
+
+def test_soften_counts_aggregate_and_report_line():
+    """#241 行 4:报数层按 guard_events 的 soften tag 聚合 cut/mask,报告出一行计数;
+    无 tag(无泄漏保留原文/弃用轮 dropped)不计入两路径。"""
+    results = [
+        {"transcript": {"guard_events": [{"branch": "reveal", "soften": "cut"},
+                                         {"branch": "reveal", "soften": "mask"},
+                                         {"branch": "model"}]}},
+        {"transcript": {"guard_events": [{"branch": "reveal", "soften": "cut"},
+                                         {"branch": "reveal", "dropped": True}]}},
+    ]
+    assert soften_counts(results) == {"cut": 2, "mask": 1}
+    report = render_report(Path("/tmp/out"), {}, {}, None, None, soften_counts(results))
+    assert "cut=2(同分句边界收回) / mask=1(兜底改写「几」)" in report
 
 
 def test_render_report_marks_undeclared_and_counts_new_red():
