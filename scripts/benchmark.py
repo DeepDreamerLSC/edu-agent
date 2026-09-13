@@ -8,6 +8,10 @@
 非零退出;tutor.ttft_p50 逐题双峰不设门(#142)——**保留在报告与基线里,只记不阻断**。
 基线更新走 PR(--write-baseline 生成候选)。DEEPSEEK_API_KEY 走环境变量,
 绝不进日志与报告。
+
+批跑让路(#241 行1,设计稿 v2+v2.1):/tmp/edu-agent-batch/<name>.<pid> 有活标志 →
+门中性 SKIPPED(::warning + 报告 + step summary 双留痕);**写基线分支(--write-baseline
+或基线缺失自动重种)撞活标志一律拒**——被争用窗口污染的基线比门红更糟。
 """
 
 from __future__ import annotations
@@ -29,6 +33,7 @@ REPO = Path(__file__).resolve().parents[1]
 BASELINE_PATH = REPO / "baselines" / "efficiency.json"
 REPORT_PATH = REPO / "var" / "benchmark-report.md"
 FACTS_DIR = Path(os.environ.get("EDU_FACTS_DIR") or REPO / "facts")
+BATCH_DIR = Path("/tmp/edu-agent-batch")  # #241 行1:批跑申报标志(空 touch 文件 <name>.<pid>)
 DEGRADE = 0.10  # 01 §5:p50 劣化阈值
 # 门指标按角色定(#142 定案):tutor.ttft_p50_ms 逐题双峰(快簇 13-17ms = llama-server
 # 前缀缓存命中 / 慢簇 54-126ms = 未命中,中位 ≈58ms,中间 20-50ms 空谷),p50 判的是
@@ -185,10 +190,76 @@ def git_sha() -> str:
         return "unknown"
 
 
+def live() -> list[str]:
+    """活批跑标志清单(#241 行1):<name>.<pid> 空文件,PID 查活不查名;死标志(崩溃
+    遗留)顺手清。无续期无仲裁——批跑单向申报,门单方退避,非租约非心跳(02 §5)。"""
+    if not BATCH_DIR.is_dir():
+        return []
+    alive: list[str] = []
+    for flag in BATCH_DIR.iterdir():
+        pid = flag.name.rpartition(".")[2]
+        if not pid.isdigit() or int(pid) == 0:
+            continue  # 非 <name>.<pid> 形态不碰
+        try:
+            os.kill(int(pid), 0)
+        except ProcessLookupError:
+            flag.unlink(missing_ok=True)  # 死标志顺手清
+            continue
+        except PermissionError:
+            pass  # 别人的活进程:占机同样成立
+        alive.append(flag.name)
+    return alive
+
+
+def contention_evidence() -> str:
+    """门红时的争用证据块(#239 处置①「红先查并发源」的自动化):负载/模型服务
+    CPU/批跑标志,分诊读块判回归——无申报 + 服务 CPU 低 → 按真回归走 30 分钟纪律。"""
+    lines = [f"- load 1/5/15min: {' '.join(f'{v:.2f}' for v in os.getloadavg())}"]
+    try:
+        ps = subprocess.run(["ps", "-axo", "pid,pcpu,comm"], capture_output=True, text=True,
+                            timeout=10).stdout.splitlines()
+        lines += [f"- 模型服务:{ln.strip()}" for ln in ps
+                  if ("mlx" in ln or "llama" in ln) and "grep" not in ln]
+    except (OSError, subprocess.SubprocessError):
+        lines.append("- 模型服务:ps 不可用")
+    lines.append(f"- 批跑标志:{live() or '无(本窗口无申报——红大概率非争用)'}")
+    return "\n## 争用证据块(#241 行1)\n" + "\n".join(lines) + "\n"
+
+
+def gate_or_skip(args: argparse.Namespace) -> int | None:
+    """#241 行1 批跑窗口让路:活标志非空 → 门中性 SKIPPED(exit 0);**写基线分支
+    (--write-baseline 或基线缺失自动重种,P2-1)一律拒**——争用窗口重种的基线比门红更糟。
+    无活标志返回 None,正常开跑。"""
+    flags = live()
+    if not flags:
+        return None
+    names = ", ".join(flags)
+    if args.write_baseline or not BASELINE_PATH.exists():
+        print(f"基线重种拒绝:批跑窗口活标志 {names};收工后重试(#241 行1)", file=sys.stderr)
+        return 1
+    print(f"::warning:: benchmark skipped: batch window({names});"
+          "收工后 gh run rerun --job 补跑(#241 行1)", flush=True)
+    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    REPORT_PATH.write_text(
+        "# gateway 效率基准报告(01 §5)\n\n"
+        f"- 时间:{datetime.now(timezone.utc).isoformat(timespec='seconds')}\n"
+        f"- **SKIPPED**:批跑窗口({names});收工后 `gh run rerun <run> --job <benchmark-job>` 补跑(#241 行1)\n",
+        encoding="utf-8")
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")  # 第二留痕(P3-3):run 页永久可查
+    if summary:
+        Path(summary).open("a", encoding="utf-8").write(
+            f"- benchmark SKIPPED:批跑窗口({names})(#241 行1)\n")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--write-baseline", action="store_true", help="把本次结果写成新基线(走 PR 提交)")
     args = parser.parse_args()
+
+    skipped = gate_or_skip(args)
+    if skipped is not None:
+        return skipped
 
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     print(f"效率基准 {run_id}:20 条固定回放 × {ROLES}(01 §5;不是评测数据集)")
@@ -225,6 +296,9 @@ def main() -> int:
     if failures:
         for failure in failures:
             print(f"基准劣化:{failure}", file=sys.stderr)
+        evidence = contention_evidence()
+        REPORT_PATH.write_text(REPORT_PATH.read_text(encoding="utf-8") + evidence, encoding="utf-8")
+        print(evidence)  # 同步进步骤日志 → main_red 报警 issue 直取证据
         return 1
     print("基准通过:相对基线无 >10% 劣化(01 §5)")
     return 0

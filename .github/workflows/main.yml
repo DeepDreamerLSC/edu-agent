@@ -8,6 +8,7 @@ name: main
 on:
   push:
     branches: [main]
+  workflow_dispatch: {} # 手动复跑/验证(#241 行1):#239 式复跑不再借 merge 触发
 
 permissions:
   contents: read
