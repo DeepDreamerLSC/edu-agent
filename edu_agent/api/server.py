@@ -13,6 +13,7 @@ import os
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from .files import MAX_BYTES, FileService
 from .healthz import snapshot  # 顶层导入:自述在**进程 import 时**冻结,见 healthz 模块
@@ -94,6 +95,19 @@ def _encode_sse(frames: list[tuple[str, dict]]) -> bytes:
         f"event: {event}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n".encode("utf-8")
         for event, payload in frames
     )
+
+
+def _normalize_cors_origin(raw: str) -> str:
+    """老系统 _normalize_cors_origin 同款归一化(#103):scheme/netloc 小写,
+    去 path/hash/尾斜杠(重建 scheme://netloc 即丢弃全部后缀)。双侧(白名单条目 +
+    请求 Origin)先归一化再比对——hash 路由/大小写/尾斜杠形态不再静默 400。
+    无 scheme/netloc 的裸串原样返回(精确比对兜底;`*` 由此维持有意丢弃)。
+    """
+    value = raw.strip()
+    parsed = urlsplit(value)
+    if not parsed.scheme or not parsed.netloc:
+        return value
+    return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
 
 
 class PartnerApiHandler(BaseHTTPRequestHandler):
@@ -226,11 +240,18 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
     # ---------- CORS(老系统语义移植:白名单 echo,不放行凭据) ----------
     # 老系统 FastAPI CORSMiddleware:EDU_AGENT_CORS_ALLOWED_ORIGINS 逗号分隔白名单,
     # allow_credentials=False、方法/头全放行。env 名沿用老系统,部署零改动。
+    # #103:白名单条目与请求 Origin 双侧先归一化再比对(老系统 _normalize_cors_origin
+    # 同款)——hash 路由/大小写/尾斜杠形态此前精确匹配失配 → 静默 400、CORS 全挂。
     def _cors_origin(self) -> str:
-        """请求 Origin 命中白名单 → 原样返回(echo);否则空串(不发 CORS 头)。"""
-        origin = self.headers.get("Origin") or ""
-        allowed = {o.strip() for o in
-                   os.environ.get("EDU_AGENT_CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()}
+        """请求 Origin 命中白名单 → 返回归一化 origin(echo);否则空串(不发 CORS 头)。"""
+        origin = _normalize_cors_origin(self.headers.get("Origin") or "")
+        if not origin:
+            return ""
+        allowed = {
+            normalized
+            for entry in os.environ.get("EDU_AGENT_CORS_ALLOWED_ORIGINS", "").split(",")
+            if (normalized := _normalize_cors_origin(entry))
+        }
         return origin if origin in allowed else ""
 
     def end_headers(self) -> None:
