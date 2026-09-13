@@ -1,0 +1,20 @@
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_age", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_angles", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_average", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_decimal_multiply", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_discount", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_division_remainder", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_parentheses", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_sign", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_order_operations", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_probability", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_ratio", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_rectangle_perimeter", "status": "ok", "declared": true, "final_state": "needs_review", "failures": [{"scenario": "stability_rectangle_perimeter", "source": {"issue": 197, "provider": "shadow_pilot_bank", "question_version": "pilot-2026-07-v2", "bank_question_id": "stability_rectangle_perimeter"}, "check": "finish_status", "detail": "final_state 期望 completed,实际 needs_review"}]}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_sequence", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_speed", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_unit_conversion", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
