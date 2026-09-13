@@ -59,3 +59,72 @@ def test_same_site_request_without_origin_gets_no_cors_header(base):
     response = get(base, "/healthz")
     assert response.status_code == 200
     assert "Access-Control-Allow-Origin" not in response.headers
+
+
+# ---------- #103 归一化(老系统 _normalize_cors_origin 同款,双侧先归一再比对) ----------
+
+
+def _serve_with_origins(monkeypatch, origins: str):
+    """自定义白名单起服务:CORS env 在请求期读取(_cors_origin 内),无需重 build。"""
+    monkeypatch.setenv("EDU_AGENT_CORS_ALLOWED_ORIGINS", origins)
+    with serving(ScriptedKernel([])) as url:
+        yield url
+
+
+def test_preflight_hash_route_whitelist_entry_is_normalized(monkeypatch):
+    """#103 红灯复现:白名单配 hash 路由(老系统 partner 用值)→ 归一化成裸 origin
+    命中;旧精确匹配下这里是 400 静默失效(CORS 全挂、服务端零线索)。"""
+    for url in _serve_with_origins(monkeypatch, "https://school.k12m.cn/test/#/"):
+        response = options(url, "/api/conversations", "https://school.k12m.cn")
+    assert response.status_code == 204
+    assert response.headers["Access-Control-Allow-Origin"] == "https://school.k12m.cn"
+
+
+def test_preflight_case_and_trailing_slash_whitelist_is_normalized(monkeypatch):
+    """白名单大小写/尾斜杠不规范(老系统会静默归一化掉的形态)→ 同样命中。"""
+    for url in _serve_with_origins(monkeypatch, "HTTPS://School.K12M.CN/,http://localhost:8888/"):
+        for origin in ("https://school.k12m.cn", "http://localhost:8888"):
+            response = options(url, "/api/conversations", origin)
+            assert response.status_code == 204, origin
+            assert response.headers["Access-Control-Allow-Origin"] == origin, origin
+
+
+def test_origin_side_is_normalized_too(monkeypatch):
+    """双侧归一化:Origin 侧带 path/hash(非浏览器形态)也按裸 origin 比对。"""
+    for url in _serve_with_origins(monkeypatch, "https://school.k12m.cn"):
+        response = options(url, "/api/conversations", "https://school.k12m.cn/x#/y")
+    assert response.status_code == 204
+    assert response.headers["Access-Control-Allow-Origin"] == "https://school.k12m.cn"
+
+
+def test_wildcard_stays_rejected_after_normalization(monkeypatch):
+    """`*` 维持有意丢弃(#103 P3):通配条目不因归一化意外复活。"""
+    for url in _serve_with_origins(monkeypatch, "*"):
+        response = options(url, "/api/conversations", "https://school.k12m.cn")
+    assert response.status_code == 400
+    assert "Access-Control-Allow-Origin" not in response.headers
+
+
+def test_disallowed_origin_still_rejected_after_normalization(monkeypatch):
+    """归一化只放宽书写形态,不放宽白名单判定:不同 host 仍 400。"""
+    for url in _serve_with_origins(monkeypatch, "https://school.k12m.cn/test/#/"):
+        response = options(url, "/api/conversations", "https://evil.example")
+    assert response.status_code == 400
+    assert "Access-Control-Allow-Origin" not in response.headers
+
+
+def test_default_port_whitelist_matches_bare_origin(monkeypatch):
+    """#228 审查 P3(#103 同类):显式默认端口白名单(:443)vs 浏览器裸 Origin——
+    浏览器 Origin 永不发默认端口,不剥端口时仍静默 400。"""
+    for url in _serve_with_origins(monkeypatch, "https://school.k12m.cn:443"):
+        response = options(url, "/api/conversations", "https://school.k12m.cn")
+    assert response.status_code == 204
+    assert response.headers["Access-Control-Allow-Origin"] == "https://school.k12m.cn"
+
+
+def test_non_default_port_stays_distinct(monkeypatch):
+    """剥端口只剥默认值:非默认端口(:8888)是不同 origin,裸形态不得放行。"""
+    for url in _serve_with_origins(monkeypatch, "http://localhost:8888"):
+        response = options(url, "/api/conversations", "http://localhost")
+    assert response.status_code == 400
+    assert "Access-Control-Allow-Origin" not in response.headers
