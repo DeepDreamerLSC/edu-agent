@@ -136,15 +136,27 @@ def check_rows(scenarios: dict[str, dict], results: list[dict]) -> dict[str, dic
 
 
 def soften_counts(results: list[dict]) -> dict[str, int]:
-    """软化路径命中计数(#241 行 4):transcript.guard_events 里 reveal 轮的 soften tag——
-    cut = 同分句边界收回;mask = 兜底改写「几」;无 tag(无泄漏保留原文/弃用轮 dropped)= 未命中。"""
-    counts = {"cut": 0, "mask": 0}
+    """软化两造计数(#241 行 4「掩码成功 vs 整步弃用」):transcript.guard_events 的 reveal 轮——
+    cut = 同分句边界收回;mask = 兜底改写「几」;dropped = 整步弃用(轮级 dropped=True,
+    此前全仓只写不读)。无 tag 且未弃用(无泄漏保留原文/未走揭示)不计。"""
+    counts = {"cut": 0, "mask": 0, "dropped": 0}
     for row in results:
         for event in (row.get("transcript") or {}).get("guard_events") or []:
-            tag = event.get("soften")
-            if tag in counts:
-                counts[tag] += 1
+            if event.get("soften") in ("cut", "mask"):
+                counts[event["soften"]] += 1
+            elif event.get("dropped"):
+                counts["dropped"] += 1
     return counts
+
+
+def soften_line(counts: dict[str, int]) -> str:
+    """软化计数 → 报告脚注行(拼在 render_report 产物之后,#244 审 P1:不加参防
+    与 #242 provenance 撞 PLR0913 max-args=6);三值全零 → 空串(不占行)。"""
+    if not any(counts.get(k) for k in ("cut", "mask", "dropped")):
+        return ""
+    return (f"\n- 软化路径命中(#241 行 4):cut={counts.get('cut', 0)}(同分句边界收回) / "
+            f"mask={counts.get('mask', 0)}(兜底改写「几」) / "
+            f"dropped={counts.get('dropped', 0)}(整步弃用)")
 
 
 def diff_checks(current: dict[str, dict], previous: dict[str, dict]) -> dict[str, str]:
@@ -166,13 +178,13 @@ def diff_checks(current: dict[str, dict], previous: dict[str, dict]) -> dict[str
 
 
 def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict],
-                  diff: dict | None = None, skipped: list[str] | None = None,
-                  soften: dict[str, int] | None = None) -> str:
+                  diff: dict | None = None, skipped: list[str] | None = None) -> str:
     """报告即工件:逐场景 判定/终态/judge 一行;有基线时加跨轮列与新增红计数。
 
     跨轮对照收在一个 `diff` 上下文里:`{"from": 上轮 run 目录, "verdicts": {...},
     "prev_scores": {...}}`;有上轮 judge 分(按轮留存在上轮 run 目录)时 judge 列给
     「上轮→本轮」——轮间噪声对比由此可复算(审查 P3,2026-09-12)。
+    软化命中行由调用方以 `+ soften_line(soften_counts(results))` 追加(#241 行 4)。
     """
     lines = [
         "# corpus checks × 真模型轮次报告(#216)",
@@ -180,9 +192,6 @@ def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict
         f"- 生成:{datetime.now(timezone.utc).isoformat()}",
         f"- 工件:{out_dir}",
     ]
-    if soften is not None:
-        lines.append(f"- 软化路径命中(#241 行 4):cut={soften['cut']}(同分句边界收回) / "
-                     f"mask={soften['mask']}(兜底改写「几」)")
     if skipped:
         lines.append(f"- 跳过无剧本场景:{len(skipped)} 条(模拟器消费面未接线,#211 边界)")
     if diff:
@@ -280,7 +289,8 @@ def main(argv: list[str] | None = None) -> int:
                        if prev_file.is_file() else None)
     diff = ({"from": args.diff_from, "verdicts": diff_verdicts, "prev_scores": prev_scores}
             if args.diff_from else None)
-    report = render_report(out_dir, checks, scores, diff, skipped, soften_counts(results))
+    report = render_report(out_dir, checks, scores, diff, skipped) + soften_line(
+        soften_counts(results))
     (out_dir / "report.md").write_text(report, encoding="utf-8")
     print(report)
     return 0
