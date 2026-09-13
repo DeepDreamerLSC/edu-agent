@@ -35,6 +35,7 @@ from .scenario_corpus import (
     format_failures,
     load_shortboard_corpus,
     run_scenario_checks,
+    select_branch,
     to_kernel_case,
 )
 from .summary import load_results, morning_summary, write_summary
@@ -83,6 +84,7 @@ __all__ = [
     "render_html",
     "run_check",
     "run_scenario_checks",
+    "select_branch",
     "sample_independent",
     "stability_markdown",
     "stability_report",
