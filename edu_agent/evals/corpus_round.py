@@ -72,10 +72,12 @@ def real_model_scenarios(corpus_paths: list[Path]) -> dict[str, dict]:
 
 
 def build_cases(scenarios: dict[str, dict]) -> tuple[list[dict], list[str]]:
-    """场景 → runner cases;无剧本场景(模拟器消费面,#211 边界)显式跳过并返回名单。"""
+    """场景 → runner cases;无剧本场景(模拟器消费面,#211 边界)显式跳过并返回名单。
+
+    v2 分支剧本(steps)不算「无剧本」——学生消息由跟随器逐轮选(#178 方案 A)。"""
     cases, skipped = [], []
     for case_id, scenario in scenarios.items():
-        if not scenario.get("student_turns"):
+        if not scenario.get("student_turns") and not scenario.get("steps"):
             skipped.append(case_id)
             continue
         case = to_kernel_case(scenario)
