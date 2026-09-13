@@ -206,7 +206,7 @@ def phase_refresh_and_messages(args: argparse.Namespace, ctx: dict, results: lis
 
 
 def phase_sse_and_confirm(args: argparse.Namespace, ctx: dict, results: list, evidence: dict) -> None:
-    """SSE happy 五型帧序 → confirm → 终态 409(阶段 11-12)。"""
+    """SSE happy 五型帧序 → confirm(复述钉到 completed;两分支各自续断言)。"""
 
     def phase(name: str) -> dict:
         entry = {"phase": name, "ok": True}
@@ -224,7 +224,8 @@ def phase_sse_and_confirm(args: argparse.Namespace, ctx: dict, results: list, ev
     entry = phase("sse-happy-frames")
     t0 = time.monotonic()
     status, headers, body = _request(args.base_url, f"/api/conversations/{cid}/messages/stream", token, {
-        "content": "为什么两边能同时减7?",
+        "content": "我完整讲一遍:第一步两边同时减7,得3x=18;第二步两边除以3,"
+                   "得x=6;代回3×6+7=25 验证成立。",
         "input": {"skill_session_id": ssid, "expected_session_version": ctx["version"]}})
     events = _sse_events(body.get("_raw") or "")
     names = [name for name, _ in events]
@@ -259,10 +260,15 @@ def phase_sse_and_confirm(args: argparse.Namespace, ctx: dict, results: list, ev
         check(entry, summary.get("status") == "completed" and summary.get("text", "").strip(),
               f"completed 应带真实 summary 文本: {summary}")
         evidence["summary"] = summary
-    status, _, body = _request(args.base_url, f"/api/conversations/{cid}/messages", token, {
-        "content": "终态后再发", "input": {"skill_session_id": ssid,
-                                           "expected_session_version": ctx["version"]}})
-    check(entry, status == 409, f"终态后 messages 应 409,实际 {status}: {body}")
+        status, _, body = _request(args.base_url, f"/api/conversations/{cid}/messages", token, {
+            "content": "终态后再发", "input": {"skill_session_id": ssid,
+                                               "expected_session_version": ctx["version"]}})
+        check(entry, status == 409, f"completed 终态后 messages 应 409,实际 {status}: {body}")
+    else:  # needs_review:会话未终态,后续消息合法继续(#221 部署实例实证)
+        status, _, body = _request(args.base_url, f"/api/conversations/{cid}/messages", token, {
+            "content": "还没到确认的时候,我继续问", "input": {"skill_session_id": ssid,
+                                                            "expected_session_version": ctx["version"]}})
+        check(entry, status == 200, f"needs_review 会话未终态,messages 应 200,实际 {status}: {body}")
     entry["ms"] = round((time.monotonic() - t0) * 1000)
 
 
