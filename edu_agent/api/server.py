@@ -97,17 +97,27 @@ def _encode_sse(frames: list[tuple[str, dict]]) -> bytes:
     )
 
 
+_DEFAULT_PORTS = {"https": "443", "http": "80"}
+
+
 def _normalize_cors_origin(raw: str) -> str:
     """老系统 _normalize_cors_origin 同款归一化(#103):scheme/netloc 小写,
     去 path/hash/尾斜杠(重建 scheme://netloc 即丢弃全部后缀)。双侧(白名单条目 +
     请求 Origin)先归一化再比对——hash 路由/大小写/尾斜杠形态不再静默 400。
-    无 scheme/netloc 的裸串原样返回(精确比对兜底;`*` 由此维持有意丢弃)。
+    显式默认端口一并剥掉(#228 审查 P3,同 #103 静默失效类):浏览器 Origin 永不
+    发默认端口,白名单写全 :443/:80 时裸 Origin 永不失配不了;非默认端口
+    (:8888/:8443)是不同 origin,保留。无 scheme/netloc 的裸串原样返回
+    (精确比对兜底;`*` 由此维持有意丢弃)。
     """
     value = raw.strip()
     parsed = urlsplit(value)
     if not parsed.scheme or not parsed.netloc:
         return value
-    return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
+    scheme, netloc = parsed.scheme.lower(), parsed.netloc.lower()
+    default = f":{_DEFAULT_PORTS[scheme]}" if scheme in _DEFAULT_PORTS else ""
+    if default and netloc.endswith(default):
+        netloc = netloc[: -len(default)]
+    return f"{scheme}://{netloc}"
 
 
 class PartnerApiHandler(BaseHTTPRequestHandler):

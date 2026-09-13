@@ -111,3 +111,20 @@ def test_disallowed_origin_still_rejected_after_normalization(monkeypatch):
         response = options(url, "/api/conversations", "https://evil.example")
     assert response.status_code == 400
     assert "Access-Control-Allow-Origin" not in response.headers
+
+
+def test_default_port_whitelist_matches_bare_origin(monkeypatch):
+    """#228 审查 P3(#103 同类):显式默认端口白名单(:443)vs 浏览器裸 Origin——
+    浏览器 Origin 永不发默认端口,不剥端口时仍静默 400。"""
+    for url in _serve_with_origins(monkeypatch, "https://school.k12m.cn:443"):
+        response = options(url, "/api/conversations", "https://school.k12m.cn")
+    assert response.status_code == 204
+    assert response.headers["Access-Control-Allow-Origin"] == "https://school.k12m.cn"
+
+
+def test_non_default_port_stays_distinct(monkeypatch):
+    """剥端口只剥默认值:非默认端口(:8888)是不同 origin,裸形态不得放行。"""
+    for url in _serve_with_origins(monkeypatch, "http://localhost:8888"):
+        response = options(url, "/api/conversations", "http://localhost")
+    assert response.status_code == 400
+    assert "Access-Control-Allow-Origin" not in response.headers
