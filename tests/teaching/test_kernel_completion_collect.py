@@ -7,7 +7,7 @@
     判停闸校验 _student_stated_answer 已真 → ready_to_confirm 可达(本修的目的地);
   · 分工:完成≠理解,不触发复讲(elicit 埋点不出现);带数字的完成表达走答案命中;
   · 频次:一次会话至多追问一次(对齐 _ask_restatement 先例),再来走模型路径;
-  · 负例:「算不出来了」(否定词插中间)不触发;correct 档同样追问(采集与作答档正交)。
+  · 负例:「算不出来了」(否定词插中间)不触发;correct 档不追问、保持模型路径(r6 钉)。
 """
 
 from __future__ import annotations
