@@ -18,7 +18,12 @@ SHORTBOARD_SCHEMA_VERSION = "small_lecturer_regression_shortboard/v1"
 # #197 第二批(真模型口径):shadow pilot 两数据集迁入 corpus 形态——question 字典
 # 带 bank 对回的 answer + source.issue + 可选 expect.checks;无 fake_model 罐头。
 PILOT_CORPUS_SCHEMA_VERSION = "small_lecturer_shadow_pilot_corpus/v1"
-CORPUS_SCHEMA_VERSIONS = (SHORTBOARD_SCHEMA_VERSION, PILOT_CORPUS_SCHEMA_VERSION)
+# #178 gold 候选(dialogue_scenarios/v2):分支剧本——学生消息由跟随器按导师
+# 上一句选分支(select_branch),不是线性 student_turns;校验规则见
+# _gold_dialogue_errors(只拦「跟随器跑不动」的写法)。
+GOLD_DIALOGUE_SCHEMA_VERSION = "small_lecturer_dialogue_scenarios/v2"
+CORPUS_SCHEMA_VERSIONS = (SHORTBOARD_SCHEMA_VERSION, PILOT_CORPUS_SCHEMA_VERSION,
+                          GOLD_DIALOGUE_SCHEMA_VERSION)
 _STATUSES = ("known_red", "guarded")
 # 题库 ObjectId 口径:question_id 写全 24 位十六进制才可 join 回 inventory
 # (8 位截断正是上轮修掉的溯源错位,形态校验拦住它复发)。
@@ -46,6 +51,9 @@ def load_shortboard_corpus(path: str | Path | None = None) -> list[dict]:
     for scenario in scenarios:
         if not isinstance(scenario, dict):
             errors.append("(非对象):场景必须是 dict")
+            continue
+        if version == GOLD_DIALOGUE_SCHEMA_VERSION:
+            errors.extend(_gold_dialogue_errors(scenario))
             continue
         errors.extend(_shape_errors(scenario))
         errors.extend(_expect_errors(scenario))
@@ -172,16 +180,90 @@ def deterministic_scenarios(scenarios: list[dict]) -> list[dict]:
     return [scenario for scenario in scenarios if scenario.get("fake_model")]
 
 
+def _gold_dialogue_errors(scenario: dict) -> list[str]:
+    """gold 候选(v2 分支剧本)加载校验:只拦「跟随器跑不动」的写法。
+
+    question 是裸字符串(答案在剧本/期望里,不另设 question.answer 锚);
+    expect 只声明 ready_to_record(checks 未声明 → corpus_round 记「无声明」);
+    转正/驳回状态(gold.status)走 review.csv 人工流(#178 审核包),不在
+    加载期约束词表。"""
+    scenario_id = str(scenario.get("id") or "(缺 id)")
+    errors: list[str] = []
+    if not scenario.get("id"):
+        errors.append(f"{scenario_id}:id 必填")
+    if not isinstance(scenario.get("question"), str) or not scenario["question"].strip():
+        errors.append(f"{scenario_id}:question 必须是非空字符串(v2 口径)")
+    steps = scenario.get("steps")
+    if not isinstance(steps, list) or not steps:
+        return errors + [f"{scenario_id}:steps 必须是非空列表(分支剧本)"]
+    gold = scenario.get("gold")
+    if not isinstance(gold, dict) or not str(gold.get("status") or "").strip():
+        errors.append(f"{scenario_id}:gold.status 必填(候选/转正走 review.csv 人工流)")
+    for i, step in enumerate(steps):
+        branches = step.get("branches") if isinstance(step, dict) else None
+        if not isinstance(branches, list) or not branches:
+            errors.append(f"{scenario_id}:steps[{i}].branches 必须是非空列表")
+            continue
+        fallbacks = 0
+        for branch in branches:
+            when = branch.get("when") or {}
+            if when.get("fallback"):
+                fallbacks += 1
+            elif not (when.get("assistant_contains_any") or when.get("assistant_contains_all")):
+                errors.append(f"{scenario_id}:steps[{i}] 分支 {branch.get('id')!r} 非兜底"
+                              "但无 contains 触发条件(跟随器永远选不到 = 不可达)")
+            if not str(branch.get("student_response") or "").strip():
+                errors.append(f"{scenario_id}:steps[{i}] 分支 {branch.get('id')!r}"
+                              " student_response 必填")
+        if fallbacks != 1:
+            errors.append(f"{scenario_id}:steps[{i}] 必须恰一个 fallback 分支,实际 {fallbacks}")
+    return errors
+
+
+def select_branch(branches: list[dict], tutor_text: str) -> dict:
+    """分支跟随器(dialogue_scenarios/v2):按导师上一句选学生分支。
+
+    规则:非兜底分支按声明顺序取**首个命中**——`assistant_contains_any` 任一
+    子串在导师句中,或 `assistant_contains_all` 全部子串在;全不命中走该步
+    唯一的 fallback。纯文本路由,确定性可复算(同句重选同支)。
+    # ponytail: interaction_states 非空时视为不命中(内核交互态路由未接线;
+    # 本批 60 条全空;真要用时在此接状态源,数据面不动)。"""
+    fallback = None
+    for branch in branches:
+        when = branch.get("when") or {}
+        if when.get("fallback"):
+            fallback = branch
+            continue
+        if when.get("interaction_states"):
+            continue
+        keys_any = when.get("assistant_contains_any") or []
+        keys_all = when.get("assistant_contains_all") or []
+        if keys_any and any(key in tutor_text for key in keys_any):
+            return branch
+        if keys_all and all(key in tutor_text for key in keys_all):
+            return branch
+    if fallback is None:
+        raise ValueError("分支剧本缺 fallback 分支(每步必须恰一个兜底)")
+    return fallback
+
+
 def to_kernel_case(scenario: dict) -> dict:
     """场景 → KernelSubject.run_case 入参(gateway 由调用方注入,分层要求:
-    edu_agent.evals 不 import tests/,FakeGateway 的构造在测试侧)。"""
-    return {
+    edu_agent.evals 不 import tests/,FakeGateway 的构造在测试侧)。
+
+    v2 分支剧本传 steps(学生消息由跟随器逐轮选);其余口径传线性
+    student_turns。"""
+    case = {
         "id": scenario["id"],
         "question": scenario["question"],
         "grade": scenario.get("grade", ""),
         "answer_status": scenario.get("answer_status", ""),
-        "student_turns": scenario["student_turns"],
     }
+    if scenario.get("steps"):
+        case["steps"] = scenario["steps"]
+    else:
+        case["student_turns"] = scenario["student_turns"]
+    return case
 
 
 def run_scenario_checks(scenario: dict, result: dict) -> list[dict]:

@@ -16,6 +16,7 @@ from edu_agent.gateway import Gateway, GatewayError
 from .image_teaching import question_image_data_url
 from .judge import ENV_FAILURES
 from .runner import EnvironmentFailure
+from .scenario_corpus import select_branch
 
 
 class KernelSubject:
@@ -61,12 +62,25 @@ class KernelSubject:
             session = first.session
             turns.append({"student": "", "tutor": first.text,
                           "state": first.state, "elapsed_ms": 0})
-            for student_message in case.get("student_turns", []):
+            # 学生消息两种取法共用一个循环体:线性剧本(student_turns 固定序列)
+            # 或 v2 分支剧本(steps——每轮按导师上一句选分支,#178 跟随器)。
+            tutor_text = first.text
+            pending_steps = list(case.get("steps") or [])
+            linear_turns = iter(case.get("student_turns", []))
+            while True:
+                if pending_steps:
+                    step = pending_steps.pop(0)
+                    student_message = select_branch(step["branches"], tutor_text)["student_response"]
+                else:
+                    student_message = next(linear_turns, None)
+                    if student_message is None:
+                        break
                 t0 = time.monotonic()
                 turn = reply(session, student_message, gateway=self.gateway)
                 turns.append({"student": student_message, "tutor": turn.text,
                               "state": turn.state,
                               "elapsed_ms": int((time.monotonic() - t0) * 1000)})
+                tutor_text = turn.text
                 if turn.state == "ready_to_confirm":
                     break  # 掌握证据充分,余下剧本轮次不再发(判停语义)
             summary = finish(session, gateway=self.gateway)
