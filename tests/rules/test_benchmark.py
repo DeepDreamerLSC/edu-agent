@@ -1,7 +1,15 @@
 """#142 定案回归钉:门指标按角色定——tutor.ttft 双峰不设门(只记不阻断,与 p95 同例),
-judge.ttft 维持 10% 门;去掉阻断 ≠ 去掉指标(render/基线照记)。"""
+judge.ttft 维持 10% 门;去掉阻断 ≠ 去掉指标(render/基线照记)。
+#241 行1 门控钉:标志位让路语义(活标志 SKIPPED / 写基线两条通路拒绝 / 死 PID 放行 /
+ 目录残留不炸)——import 级注入,零模型调用(审查 P2-2)。"""
 
-from scripts.benchmark import GATED_CHECKS, ROLES, compare, render
+import argparse
+import os
+import subprocess
+import sys
+
+from scripts import benchmark
+from scripts.benchmark import GATED_CHECKS, ROLES, compare, gate_or_skip, live, render
 
 BASELINE = {
     "roles": {
@@ -61,3 +69,80 @@ def test_tutor_ttft_still_recorded_in_report():
     report = render(current)
     assert "| tutor | 0 | 59 / 126" in report  # TTFT p50/p95 列照记
     assert "TTFT p50/p95 (ms)" in report
+
+
+# ---------- #241 行1:标志位让路门控(审查 P2-2 六探针落盘,import 级、零模型调用) ----------
+
+
+def _dead_pid() -> int:
+    """确定已退出的 pid(spawn + wait;测试窗口内 pid 复用概率视为零)。"""
+    proc = subprocess.Popen([sys.executable, "-c", "pass"])
+    proc.wait()
+    return proc.pid
+
+
+def _gate(monkeypatch, tmp_path, flags=(), write_baseline=False, baseline_exists=True):
+    """门控三路径(BATCH_DIR/BASELINE_PATH/REPORT_PATH)指向 tmp 并注册标志。"""
+    batch = tmp_path / "batch"
+    batch.mkdir()
+    for name in flags:
+        (batch / name).touch()
+    monkeypatch.setattr(benchmark, "BATCH_DIR", batch)
+    monkeypatch.setattr(benchmark, "REPORT_PATH", tmp_path / "report.md")
+    baseline = tmp_path / "efficiency.json"
+    if baseline_exists:
+        baseline.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(benchmark, "BASELINE_PATH", baseline)
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary.md"))
+    return argparse.Namespace(write_baseline=write_baseline)
+
+
+def test_dead_pid_flag_cleaned_and_gate_open(tmp_path, monkeypatch):
+    """死 pid 标志(崩溃遗留)→ 顺手清 + 门放行——否则一次崩溃 = 门永久 SKIPPED
+    的绿色静默瘫痪(设计稿 §4-3 语义)。"""
+    args = _gate(monkeypatch, tmp_path)
+    flag = tmp_path / "batch" / f"crash-leftover.{_dead_pid()}"
+    flag.touch()
+    assert live() == []
+    assert not flag.exists()
+    assert gate_or_skip(args) is None
+
+
+def test_live_flag_skips_gate_with_dual_trace(tmp_path, monkeypatch):
+    """活标志 → exit 0 + 报告 SKIPPED + step summary 双留痕(P3-3:绿而无实跑必须可审计)。"""
+    args = _gate(monkeypatch, tmp_path, flags=[f"corpus-round.{os.getpid()}"])
+    assert gate_or_skip(args) == 0
+    assert "SKIPPED" in (tmp_path / "report.md").read_text(encoding="utf-8")
+    assert "benchmark SKIPPED" in (tmp_path / "summary.md").read_text(encoding="utf-8")
+
+
+def test_write_baseline_refused_with_live_flag(tmp_path, monkeypatch):
+    """--write-baseline 撞活标志 → exit 1,基线内容零改动(争用窗口重种 = 污染基线)。"""
+    args = _gate(monkeypatch, tmp_path, flags=[f"x.{os.getpid()}"], write_baseline=True)
+    assert gate_or_skip(args) == 1
+    assert (tmp_path / "efficiency.json").read_text(encoding="utf-8") == "{}"
+
+
+def test_missing_baseline_auto_reseed_refused_with_live_flag(tmp_path, monkeypatch):
+    """基线缺失自动重种分支(审查 P2-1 语义:守卫不能只挂 --write-baseline)同样拒绝。"""
+    args = _gate(monkeypatch, tmp_path, flags=[f"x.{os.getpid()}"], baseline_exists=False)
+    assert gate_or_skip(args) == 1
+    assert not (tmp_path / "efficiency.json").exists()
+
+
+def test_no_flag_normal_run(tmp_path, monkeypatch):
+    """无标志(目录空与目录不存在两态)→ None 正常开跑。"""
+    args = _gate(monkeypatch, tmp_path)
+    assert gate_or_skip(args) is None
+    monkeypatch.setattr(benchmark, "BATCH_DIR", tmp_path / "nonexistent")
+    assert live() == []
+    assert gate_or_skip(args) is None
+
+
+def test_directory_residue_does_not_crash(tmp_path, monkeypatch):
+    """目录形态残留(审查 P2-1:unlink 不吞目录 → IsADirectoryError 在真红路径会
+    打断证据块写入)→ 不炸、不算活、门放行。"""
+    args = _gate(monkeypatch, tmp_path)
+    (tmp_path / "batch" / f"residue.{_dead_pid()}").mkdir()
+    assert live() == []
+    assert gate_or_skip(args) is None

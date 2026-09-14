@@ -136,6 +136,30 @@ def check_rows(scenarios: dict[str, dict], results: list[dict]) -> dict[str, dic
     return rows
 
 
+def soften_counts(results: list[dict]) -> dict[str, int]:
+    """软化两造计数(#241 行 4「掩码成功 vs 整步弃用」):transcript.guard_events 的 reveal 轮——
+    cut = 同分句边界收回;mask = 兜底改写「几」;dropped = 整步弃用(轮级 dropped=True,
+    此前全仓只写不读)。无 tag 且未弃用(无泄漏保留原文/未走揭示)不计。"""
+    counts = {"cut": 0, "mask": 0, "dropped": 0}
+    for row in results:
+        for event in (row.get("transcript") or {}).get("guard_events") or []:
+            if event.get("soften") in ("cut", "mask"):
+                counts[event["soften"]] += 1
+            elif event.get("dropped"):
+                counts["dropped"] += 1
+    return counts
+
+
+def soften_line(counts: dict[str, int]) -> str:
+    """软化计数 → 报告脚注行(拼在 render_report 产物之后,#244 审 P1:不加参防
+    与 #242 provenance 撞 PLR0913 max-args=6);三值全零 → 空串(不占行)。"""
+    if not any(counts.get(k) for k in ("cut", "mask", "dropped")):
+        return ""
+    return (f"\n- 软化路径命中(#241 行 4):cut={counts.get('cut', 0)}(同分句边界收回) / "
+            f"mask={counts.get('mask', 0)}(兜底改写「几」) / "
+            f"dropped={counts.get('dropped', 0)}(整步弃用)")
+
+
 def diff_checks(current: dict[str, dict], previous: dict[str, dict]) -> dict[str, str]:
     """跨轮 check 对照:绿→红 = 新增红(回归信号),红→绿 = 翻绿(修复或噪声,看 judge)。"""
     verdicts: dict[str, str] = {}
@@ -197,6 +221,7 @@ def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict
     跨轮对照收在一个 `diff` 上下文里:`{"from": 上轮 run 目录, "verdicts": {...},
     "prev_scores": {...}}`;有上轮 judge 分(按轮留存在上轮 run 目录)时 judge 列给
     「上轮→本轮」——轮间噪声对比由此可复算(审查 P3,2026-09-12)。
+    软化命中行由调用方以 `+ soften_line(soften_counts(results))` 追加(#241 行 4)。
 
     `provenance`:判分器指纹上下文(#238 §5),键 `current`(本轮)/`prev`(基线);
     基线无溯源时 `prev` 为 None(首轮基线 math-gold-v1 即此形态,#238 §5 记欠账)。
@@ -308,7 +333,8 @@ def main(argv: list[str] | None = None) -> int:
     judger_hash, prev_hash = _provenance_context(args.diff_from)
     (run_dir / "judger.sha256").write_text(judger_hash + "\n", encoding="utf-8")
     provenance = {"current": judger_hash, "prev": prev_hash}
-    report = render_report(out_dir, checks, scores, diff, skipped, provenance=provenance)
+    report = render_report(out_dir, checks, scores, diff, skipped, provenance=provenance) + soften_line(
+        soften_counts(results))
     (out_dir / "report.md").write_text(report, encoding="utf-8")
     print(report)
     return 0
