@@ -1,0 +1,488 @@
+{
+  "schema_version": "small_lecturer_dialogue_scenarios/v2",
+  "scenarios": [
+    {
+      "id": "circle_area_complete_reasoning",
+      "title": "圆的面积",
+      "subject": "math",
+      "question": "一个圆的半径是 4 厘米,这个圆的面积是多少平方厘米?(π 取 3.14)",
+      "seed": 0,
+      "max_turns": 2,
+      "trajectory_tags": [
+        "positive",
+        "complete_reasoning",
+        "circle_area"
+      ],
+      "steps": [
+        {
+          "id": "first_response",
+          "branches": [
+            {
+              "id": "correct",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": [
+                  "先",
+                  "怎么",
+                  "思路",
+                  "下一步"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "先算半径的平方 4×4=16,再乘 3.14,16×3.14=50.24 平方厘米。",
+              "trajectory_tags": []
+            },
+            {
+              "id": "correct_reason",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": [
+                  "为什么",
+                  "依据",
+                  "理由",
+                  "验证",
+                  "说明",
+                  "检查"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "我会把求出的结果代回原题验证一下。",
+              "trajectory_tags": []
+            },
+            {
+              "id": "correct_clarify",
+              "response_kind": "request_hint",
+              "when": {
+                "assistant_contains_any": [],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": true
+              },
+              "student_response": "我不太明白你问的是哪一步,可以说得更具体一点吗?",
+              "trajectory_tags": []
+            }
+          ]
+        },
+        {
+          "id": "follow_up",
+          "branches": [
+            {
+              "id": "correct",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": [
+                  "先",
+                  "怎么",
+                  "思路",
+                  "下一步",
+                  "多少",
+                  "哪一步",
+                  "变成",
+                  "等于"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "25 减 7 等于 18,x 等于 18。",
+              "trajectory_tags": []
+            },
+            {
+              "id": "correct_reason",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": [
+                  "为什么",
+                  "依据",
+                  "理由",
+                  "验证",
+                  "说明",
+                  "检查"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "我会把求出的结果代回原题验证一下。",
+              "trajectory_tags": []
+            },
+            {
+              "id": "correct_clarify",
+              "response_kind": "request_hint",
+              "when": {
+                "assistant_contains_any": [],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": true
+              },
+              "student_response": "我不太明白你问的是哪一步,可以说得更具体一点吗?",
+              "trajectory_tags": []
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "ready_to_record": true
+      },
+      "gold": null,
+      "metadata": {
+        "question_template_id": "circle_area",
+        "candidate_track": "complete_reasoning",
+        "teacher_review_required": true
+      },
+      "schema_version": "small_lecturer_dialogue_scenarios/v2"
+    },
+    {
+      "id": "fraction_multiplication_misconception_repair",
+      "title": "分数乘法",
+      "subject": "math",
+      "question": "三分之二乘以六等于多少?",
+      "seed": 0,
+      "max_turns": 2,
+      "trajectory_tags": [
+        "positive",
+        "misconception_repair",
+        "fraction_multiplication"
+      ],
+      "steps": [
+        {
+          "id": "first_response",
+          "branches": [
+            {
+              "id": "misconception",
+              "response_kind": "misconception",
+              "when": {
+                "assistant_contains_any": [
+                  "先",
+                  "怎么",
+                  "思路",
+                  "下一步"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "分子分母都乘 6,三分之十二。",
+              "trajectory_tags": []
+            },
+            {
+              "id": "misconception_clarify",
+              "response_kind": "request_hint",
+              "when": {
+                "assistant_contains_any": [],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": true
+              },
+              "student_response": "我不太明白你问的是哪一步,可以说得更具体一点吗?",
+              "trajectory_tags": []
+            }
+          ]
+        },
+        {
+          "id": "follow_up",
+          "branches": [
+            {
+              "id": "correct",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": [
+                  "先",
+                  "怎么",
+                  "思路",
+                  "下一步",
+                  "多少",
+                  "哪一步",
+                  "变成",
+                  "等于"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "分数乘法是分子乘整数、分母不变,三分之二乘六 = 三分之十二,再约分 = 4。",
+              "trajectory_tags": []
+            },
+            {
+              "id": "correct_reason",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": [
+                  "为什么",
+                  "依据",
+                  "理由",
+                  "验证",
+                  "说明",
+                  "检查"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "我会把求出的结果代回原题验证一下。",
+              "trajectory_tags": []
+            },
+            {
+              "id": "correct_clarify",
+              "response_kind": "request_hint",
+              "when": {
+                "assistant_contains_any": [],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": true
+              },
+              "student_response": "我不太明白你问的是哪一步,可以说得更具体一点吗?",
+              "trajectory_tags": []
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "ready_to_record": true
+      },
+      "gold": null,
+      "metadata": {
+        "question_template_id": "fraction_multiplication",
+        "candidate_track": "misconception_repair",
+        "teacher_review_required": true
+      },
+      "schema_version": "small_lecturer_dialogue_scenarios/v2"
+    },
+    {
+      "id": "rope_unit_app_support_boundary",
+      "title": "绳子剪裁(单位换算)",
+      "subject": "math",
+      "question": "一根绳子长 2.5 米,剪下 80 厘米,还剩多少厘米?",
+      "seed": 0,
+      "max_turns": 2,
+      "trajectory_tags": [
+        "negative_or_boundary",
+        "support_boundary",
+        "rope_unit_app"
+      ],
+      "steps": [
+        {
+          "id": "first_response",
+          "branches": [
+            {
+              "id": "request_hint",
+              "response_kind": "request_hint",
+              "when": {
+                "assistant_contains_any": [
+                  "先",
+                  "怎么",
+                  "思路",
+                  "下一步"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "我卡住了,能先告诉我单位怎么换吗?",
+              "trajectory_tags": []
+            },
+            {
+              "id": "request_hint_clarify",
+              "response_kind": "request_hint",
+              "when": {
+                "assistant_contains_any": [],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": true
+              },
+              "student_response": "我不太明白你问的是哪一步,可以说得更具体一点吗?",
+              "trajectory_tags": []
+            }
+          ]
+        },
+        {
+          "id": "follow_up",
+          "branches": [
+            {
+              "id": "correct",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": [
+                  "先",
+                  "怎么",
+                  "思路",
+                  "下一步",
+                  "多少",
+                  "哪一步",
+                  "变成",
+                  "等于"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "受提示后,2.5 米=250 厘米,250−80=170 厘米。",
+              "trajectory_tags": []
+            },
+            {
+              "id": "correct_reason",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": [
+                  "为什么",
+                  "依据",
+                  "理由",
+                  "验证",
+                  "说明",
+                  "检查"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "我会把求出的结果代回原题验证一下。",
+              "trajectory_tags": []
+            },
+            {
+              "id": "correct_clarify",
+              "response_kind": "request_hint",
+              "when": {
+                "assistant_contains_any": [],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": true
+              },
+              "student_response": "我不太明白你问的是哪一步,可以说得更具体一点吗?",
+              "trajectory_tags": []
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "ready_to_record": false
+      },
+      "gold": null,
+      "metadata": {
+        "question_template_id": "rope_unit_app",
+        "candidate_track": "support_boundary",
+        "teacher_review_required": true
+      },
+      "schema_version": "small_lecturer_dialogue_scenarios/v2"
+    },
+    {
+      "id": "unit_rate_alternative_method",
+      "title": "归一问题(单价)",
+      "subject": "math",
+      "question": "4 本书 48 元,同样的 7 本书多少元?",
+      "seed": 0,
+      "max_turns": 2,
+      "trajectory_tags": [
+        "positive",
+        "alternative_method",
+        "unit_rate"
+      ],
+      "steps": [
+        {
+          "id": "first_response",
+          "branches": [
+            {
+              "id": "alternative_method",
+              "response_kind": "alternative_method",
+              "when": {
+                "assistant_contains_any": [
+                  "先",
+                  "怎么",
+                  "思路",
+                  "下一步"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "7=4+3,单价 12,先算 3 本=36,48+36=84 元。",
+              "trajectory_tags": []
+            },
+            {
+              "id": "alternative_method_clarify",
+              "response_kind": "request_hint",
+              "when": {
+                "assistant_contains_any": [],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": true
+              },
+              "student_response": "我不太明白你问的是哪一步,可以说得更具体一点吗?",
+              "trajectory_tags": []
+            }
+          ]
+        },
+        {
+          "id": "follow_up",
+          "branches": [
+            {
+              "id": "correct",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": [
+                  "先",
+                  "怎么",
+                  "思路",
+                  "下一步",
+                  "多少",
+                  "哪一步",
+                  "变成",
+                  "等于"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "25 减 7 等于 18,x 等于 18。",
+              "trajectory_tags": []
+            },
+            {
+              "id": "correct_reason",
+              "response_kind": "correct",
+              "when": {
+                "assistant_contains_any": [
+                  "为什么",
+                  "依据",
+                  "理由",
+                  "验证",
+                  "说明",
+                  "检查"
+                ],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": false
+              },
+              "student_response": "我会把求出的结果代回原题验证一下。",
+              "trajectory_tags": []
+            },
+            {
+              "id": "correct_clarify",
+              "response_kind": "request_hint",
+              "when": {
+                "assistant_contains_any": [],
+                "assistant_contains_all": [],
+                "interaction_states": [],
+                "fallback": true
+              },
+              "student_response": "我不太明白你问的是哪一步,可以说得更具体一点吗?",
+              "trajectory_tags": []
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "ready_to_record": true
+      },
+      "gold": null,
+      "metadata": {
+        "question_template_id": "unit_rate",
+        "candidate_track": "alternative_method",
+        "teacher_review_required": true
+      },
+      "schema_version": "small_lecturer_dialogue_scenarios/v2"
+    }
+  ]
+}
