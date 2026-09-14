@@ -247,3 +247,69 @@ def test_run_identity_is_machine_readable():
     assert re.fullmatch(r"[0-9a-f]{64}", identity["prompts_sha256"])
     assert re.fullmatch(r"[0-9a-f]{64}", identity["models_sha256"])
     assert identity["git_sha"] is None or re.fullmatch(r"[0-9a-f]{7,40}", identity["git_sha"])
+
+
+def _fact(role: str, session: str, *, fallback_to=None) -> dict:
+    return {"edu.role": role, "edu.session_id": session, "edu.fallback_to": fallback_to}
+
+
+def test_facts_dump_load_calibers(tmp_path):
+    """#238 件 B:facts 落 run 目录(dump/load 对偶)+ 调用级/会话级口径。"""
+    from edu_agent.evals import dump_facts, facts_calibers, load_facts
+
+    facts_dir = tmp_path / "gateway-facts"
+    facts_dir.mkdir()
+    (facts_dir / "model_calls-2026-09-14.jsonl").write_text(
+        "\n".join(json.dumps(r, ensure_ascii=False) for r in [
+            _fact("tutor", "kernel_a"), _fact("tutor", "kernel_a", fallback_to="mlx_27b"),
+            _fact("judge", "judge-c1"), _fact("tutor", "kernel_b"),
+        ]) + "\n", encoding="utf-8")
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    rows = dump_facts(facts_dir, run_dir)
+    assert len(rows) == 4 and (run_dir / "facts.jsonl").is_file()
+    assert load_facts(run_dir) == rows
+    assert load_facts(tmp_path / "no-such-run") == []
+
+    calibers = facts_calibers(rows)
+    assert calibers["roles"]["tutor"] == {"calls": 3, "fallbacks": 1, "rate": 1 / 3}
+    assert calibers["roles"]["judge"] == {"calls": 1, "fallbacks": 0, "rate": 0.0}
+    assert calibers["sessions"] == {"kernel_a": True, "judge-c1": False, "kernel_b": False}
+
+
+def test_caliber_section_splits_primary_only_vs_with_fallback(tmp_path):
+    """#238 件 B:primary-only 剔除任一调用走 fallback 的 case;四指标 + 口径注记随段。"""
+    from edu_agent.evals import caliber_section
+
+    def result(cid, session, students, *, final="completed", guard=None):
+        turns = [{"student": "", "tutor": "首问"}] + [{"student": s, "tutor": "回"} for s in students]
+        return {"case_id": cid, "status": "ok",
+                "transcript": {"final_state": final, "turns": turns,
+                               "guard_events": guard or [], "session_id": session}}
+
+    # c1:tutor 会话走过 fallback → 只进 with-fallback;学生报了终答(1108)非 false-confirm
+    c1 = result("d_c1", "kernel_a", ["我先算了一步", "一共 1108 元"])
+    # c2:干净会话但学生从未报出期望数字 3 → false-confirm 代理命中
+    c2 = result("d_c2", "kernel_b", ["我想想", "应该没错吧"])
+    c3 = result("d_c3", "kernel_c", ["卡住了"], final="needs_review",
+                guard=[{"branch": "reveal", "hint_level": 1}])
+    sessions = {"kernel_a": True, "kernel_b": False, "kernel_c": False,
+                "judge-d_c1": False, "judge-d_c2": False, "judge-d_c3": False}
+    checks = {"d_c1": {"final_state": "completed"}, "d_c2": {"final_state": "completed"},
+              "d_c3": {"final_state": "needs_review"}}
+    scores = {"d_c1": {"total": 12}, "d_c2": {"total": 6}, "d_c3": {"total": 3}}
+    scenarios = {
+        "d_c1": {"question": {"text": "q", "answer": "1108 元"}},
+        "d_c2": {"question": {"text": "q", "answer": "鸡 3 只"}},
+        "d_c3": {"question": {"text": "q", "answer": "定性答案"}},  # 无 ASCII 数字:不进分母
+    }
+    section = caliber_section({"roles": {"tutor": {"calls": 3, "fallbacks": 1, "rate": 1 / 3}},
+                               "sessions": sessions},
+                              [c1, c2, c3], checks, scores, scenarios)
+    assert "口径注记" in section
+    # primary-only = c2+c3(c1 的 tutor 会话 fallback 出局):n=2,completed=1(c2,2 学生轮),
+    # false-confirm = c2 未报期望数字 3 → 1/1;stuck/needs-review = c3 → 各 50%;judge 均值 (6+3)/2
+    assert "| primary-only | 2 | 1 | 2.0 | 1/1 (100.0%) | 50.0% | 50.0% | 4.5 |" in section
+    # with-fallback = 全量:n=3,completed=2(ttc=(2+2)/2),false-confirm 1/2,stuck/needs 1/3,均值 7.0
+    assert "| with-fallback | 3 | 2 | 2.0 | 1/2 (50.0%) | 33.3% | 33.3% | 7.0 |" in section
+    assert "| tutor | 3 | 1 | 33.3% |" in section                # 调用级 role 表

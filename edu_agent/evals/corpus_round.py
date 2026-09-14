@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import socket
 import subprocess
 import sys
@@ -188,6 +189,153 @@ def soften_line(counts: dict[str, int]) -> str:
             f"dropped={counts.get('dropped', 0)}(整步弃用)")
 
 
+def dump_facts(facts_dir: Path | str, run_dir: Path | str) -> list[dict]:
+    """model_call facts 落 run 目录(#238 件 B):FactWriter 按 UTC 天切文件、且原
+    tempdir 随进程丢——本函数把整轮(tutor + judge)合并成 run_dir/facts.jsonl,
+    该轮自足可复算(offline rescore 的地基)。返回行列表供报告层直接消费。"""
+    rows: list[dict] = []
+    for path in sorted(Path(facts_dir).glob("model_calls-*.jsonl")):
+        rows += [json.loads(line) for line in
+                 path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    (Path(run_dir) / "facts.jsonl").write_text(
+        "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    return rows
+
+
+def load_facts(run_dir: Path | str) -> list[dict]:
+    """dump_facts 的对偶:读 run 目录 facts.jsonl(offline rescore / 报告复算消费)。"""
+    path = Path(run_dir) / "facts.jsonl"
+    if not path.is_file():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def facts_calibers(facts_rows: list[dict]) -> dict:
+    """三口径数据底座(#238 件 B):调用级按 role 计数 + 会话级 fallback 标记。
+
+    - roles:role → {calls, fallbacks(edu.fallback_to 非 None), rate};
+    - sessions:session_id → 该会话是否走过 fallback(任一调用 fallback 即 True)
+      ——case 级口径由调用方查表:tutor 会话 = transcript.session_id,
+      judge 会话 = "judge-{case_id}"(judge.py 的 session 命名)。"""
+    roles: dict[str, dict] = {}
+    sessions: dict[str, bool] = {}
+    for row in facts_rows:
+        stats = roles.setdefault(row.get("edu.role") or "?", {"calls": 0, "fallbacks": 0})
+        stats["calls"] += 1
+        fell = row.get("edu.fallback_to") is not None
+        if fell:
+            stats["fallbacks"] += 1
+        sid = row.get("edu.session_id") or ""
+        if sid:
+            sessions[sid] = sessions.get(sid, False) or fell
+    for stats in roles.values():
+        stats["rate"] = stats["fallbacks"] / stats["calls"] if stats["calls"] else 0.0
+    return {"roles": roles, "sessions": sessions}
+
+
+def _ascii_numbers(text: str) -> set[float]:
+    """false-confirm 代理的数字提取(件 B 口径注记的一部分):ASCII 数字集合。
+
+    仅报告层代理判据,非内核护栏判据(kernel 侧 _answer_focus_numbers 的允许集
+    口径与用途都不同;报告只描述不拦截,#184 的「第二套判据」禁令不适用)。"""
+    return {float(m) for m in re.findall(r"\d+(?:\.\d+)?", text or "")}
+
+
+def _case_fell_back(row: dict, sessions: dict[str, bool]) -> bool:
+    transcript = row.get("transcript") or {}
+    return bool(sessions.get(transcript.get("session_id") or "")
+                or sessions.get(f"judge-{row['case_id']}"))
+
+
+def _pct(x: float | None) -> str:
+    return f"{x:.1%}" if x is not None else "-"
+
+
+def _four_metrics(subset: list[dict], checks: dict[str, dict], scores: dict[str, dict],
+                  scenarios: dict[str, dict]) -> dict:
+    """四指标(评审 P1-7)在给定 case 子集上算;口径注记见 caliber_section。"""
+    completed = [r for r in subset
+                 if (checks.get(r["case_id"]) or {}).get("final_state") == "completed"]
+    student_turn_counts = [sum(1 for t in r["transcript"].get("turns") or [] if t.get("student"))
+                           for r in completed]
+    false_n = denom = 0
+    for row in completed:
+        question = scenarios[row["case_id"]]["question"]
+        expected = _ascii_numbers(question.get("answer", "") if isinstance(question, dict) else "")
+        if not expected:
+            continue  # 定性/无数字答案:不进 false-confirm 分母(口径注记)
+        denom += 1
+        said: set[float] = set()
+        for turn in row["transcript"].get("turns") or []:
+            said |= _ascii_numbers(turn.get("student") or "")
+        if not expected <= said:
+            false_n += 1
+    stuck = sum(1 for r in subset
+                if any(e.get("branch") == "reveal"
+                       for e in (r["transcript"].get("guard_events") or [])))
+    needs_review = sum(1 for r in subset
+                       if (checks.get(r["case_id"]) or {}).get("final_state") == "needs_review")
+    totals = [scores[r["case_id"]]["total"] for r in subset
+              if r["case_id"] in scores and "total" in scores[r["case_id"]]]
+    return {
+        "n": len(subset),
+        "completed": len(completed),
+        "turns_to_confirm": (round(sum(student_turn_counts) / len(student_turn_counts), 1)
+                             if student_turn_counts else None),
+        "false_confirm_n": false_n,
+        "false_confirm_denom": denom,
+        "false_confirm_rate": round(false_n / denom, 3) if denom else None,
+        "stuck_rate": round(stuck / len(subset), 3) if subset else None,
+        "needs_review_rate": round(needs_review / len(subset), 3) if subset else None,
+        "judge_mean": round(sum(totals) / len(totals), 1) if totals else None,
+    }
+
+
+def caliber_section(calibers: dict, results: list[dict], checks: dict[str, dict],
+                    scores: dict[str, dict], scenarios: dict[str, dict]) -> str:
+    """三口径 × 四指标报告段(#238 件 B,GEPA 前置):calibers = facts_calibers(facts 行)。
+
+    口径钉死在段内(报告不说清就没法判「优化对象是 system score 还是
+    primary-only」):primary-only = ok case 中 tutor/judge 会话全无 fallback 的
+    干净集;with-fallback = 全部 ok case(system 实产);fallback-rate 按调用级
+    分 role 列。四指标 = mean turns-to-confirm / false-confirm(代理)/ stuck /
+    needs-review,口径见注记。"""
+    sessions = calibers["sessions"]
+    ok = [r for r in results if r["status"] == "ok"]
+    rows = [("primary-only", [r for r in ok if not _case_fell_back(r, sessions)]),
+            ("with-fallback", ok)]
+    lines = [
+        "",
+        "## 三口径 × 四指标(#238 件 B,GEPA 前置)",
+        "",
+        "口径注记:",
+        "- primary-only = ok case 中 tutor 会话与 judge 会话均未走 fallback 的子集",
+        "  (tutor 备选 mlx_27b / judge 备选 deepseek;case 级 = 任一调用 fallback 即出局,",
+        "  GEPA 归因要的干净集——优化对象是 system score 还是 primary-only 由此可判)",
+        "- with-fallback = 全部 ok case(system 实产口径);fallback-rate = 调用级按 role 分列",
+        "- turns-to-confirm = completed 帧学生轮数均值(一轮 = 一学生消息 + 一导师回应,首问不计)",
+        "- false-confirm(代理)= completed ∧ 期望答案含 ASCII 数字 ∧ 期望数字集未全现于",
+        "  学生消息;定性答案不进分母,中文数字不在判据内(已知盲区)",
+        "- stuck = guard_events 出现 reveal 分支(窄词表「不会」族)占比;",
+        "  needs-review = final_state=needs_review 占比;judge 均值 = total/12 口径内均值",
+        "",
+        "| 口径 | n | completed | turns-to-confirm | false-confirm | stuck | needs-review | judge 均值 |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for name, subset in rows:
+        m = _four_metrics(subset, checks, scores, scenarios)
+        lines.append(
+            f"| {name} | {m['n']} | {m['completed']} "
+            f"| {m['turns_to_confirm'] if m['turns_to_confirm'] is not None else '-'} "
+            f"| {m['false_confirm_n']}/{m['false_confirm_denom']} ({_pct(m['false_confirm_rate'])}) "
+            f"| {_pct(m['stuck_rate'])} | {_pct(m['needs_review_rate'])} "
+            f"| {m['judge_mean'] if m['judge_mean'] is not None else '-'} |")
+    lines += ["", "调用级 fallback:", "", "| role | calls | fallbacks | rate |", "|---|---|---|---|"]
+    for role, stats in sorted(calibers["roles"].items()):
+        lines.append(f"| {role} | {stats['calls']} | {stats['fallbacks']} | {stats['rate']:.1%} |")
+    return "\n".join(lines) + "\n"
+
+
 def diff_checks(current: dict[str, dict], previous: dict[str, dict]) -> dict[str, str]:
     """跨轮 check 对照:绿→红 = 新增红(回归信号),红→绿 = 翻绿(修复或噪声,看 judge)。"""
     verdicts: dict[str, str] = {}
@@ -353,6 +501,11 @@ def main(argv: list[str] | None = None) -> int:
     dump(out_dir / "checks.jsonl", checks)
     dump(out_dir / "judge-scores.jsonl", scores)
 
+    # #238 件 B:model_call facts(tutor + judge 全轮)落 run 目录——原 tempdir 随进程丢,
+    # 落盘后该轮自足(offline rescore 的地基),报告层据此拆三口径。
+    facts_rows = dump_facts(facts_dir, run_dir)
+    print(f"facts:{len(facts_rows)} 行 model_call 落 {run_dir / 'facts.jsonl'}")
+
     diff_verdicts, prev_scores = _compute_diff(args.diff_from, scenarios, checks)
     diff = ({"from": args.diff_from, "verdicts": diff_verdicts, "prev_scores": prev_scores}
             if args.diff_from else None)
@@ -362,7 +515,8 @@ def main(argv: list[str] | None = None) -> int:
     (run_dir / "judger.sha256").write_text(judger_hash + "\n", encoding="utf-8")
     provenance = {"current": judger_hash, "prev": prev_hash}
     report = render_report(out_dir, checks, scores, diff, skipped, provenance=provenance) + soften_line(
-        soften_counts(results))
+        soften_counts(results)) + caliber_section(
+        facts_calibers(facts_rows), results, checks, scores, scenarios)
     (out_dir / "report.md").write_text(report, encoding="utf-8")
     print(report)
     return 0
