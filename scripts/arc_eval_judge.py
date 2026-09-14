@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-from edu_agent.gateway import Gateway, ModelRequest, load_registry  # noqa: E402
+from edu_agent.gateway import Gateway, ModelRequest, load_registry
 
 # response_schema 原文(pre-registration §5,一字不改)
 SCHEMA = {

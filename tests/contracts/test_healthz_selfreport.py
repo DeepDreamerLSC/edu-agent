@@ -23,6 +23,10 @@ def healthz_url():
 
 
 def _get(url: str) -> dict:
+    # Mimosa SSRF 约束:仅 http/https + 环回白名单(测试目标=本地 ephemeral server)
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    assert parsed.scheme in ("http", "https") and parsed.hostname in ("127.0.0.1", "localhost")
     response = httpx.get(url, timeout=5.0, trust_env=False)
     assert response.status_code == 200
     return response.json()
