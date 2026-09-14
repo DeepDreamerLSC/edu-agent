@@ -313,3 +313,43 @@ def test_caliber_section_splits_primary_only_vs_with_fallback(tmp_path):
     # with-fallback = 全量:n=3,completed=2(ttc=(2+2)/2),false-confirm 1/2,stuck/needs 1/3,均值 7.0
     assert "| with-fallback | 3 | 2 | 2.0 | 1/2 (50.0%) | 33.3% | 33.3% | 7.0 |" in section
     assert "| tutor | 3 | 1 | 33.3% |" in section                # 调用级 role 表
+
+
+def test_render_from_rebuilds_report_offline(tmp_path, capsys):
+    """#257 审 P3-2:--render-from 零模型重渲染——只用工件文件重建 report(含三口径段)。"""
+    from edu_agent.evals import render_from
+
+    out = tmp_path / "trial"
+    run = out / "collect" / "cases-20260914T000000Z-ab12"
+    (run / "results").mkdir(parents=True)
+    (run / "judger.sha256").write_text("a" * 64 + "\n", encoding="utf-8")
+    scenario = {"id": "d_x", "question": {"text": "q", "answer": "3 只"},
+                "student_turns": ["我不会"], "grade": "三年级"}
+    (out / "cases.jsonl").write_text(
+        json.dumps({"id": "d_x", "question": scenario["question"], "grade": "三年级",
+                    "student_turns": ["我不会"]}, ensure_ascii=False) + "\n", encoding="utf-8")
+    (run / "results" / "d_x.json").write_text(json.dumps({
+        "case_id": "d_x", "status": "ok", "attempts": 1, "duration_ms": 1,
+        "transcript": {"final_state": "completed",
+                       "turns": [{"student": "", "tutor": "首问"},
+                                 {"student": "是 3 只", "tutor": "对"}],
+                       "guard_events": [], "session_id": "kernel_x"}}, ensure_ascii=False),
+        encoding="utf-8")
+    (run / "checks.jsonl").write_text(json.dumps({"case_id": "d_x", "status": "ok",
+                                                  "declared": False, "failures": None,
+                                                  "final_state": "completed"}, ensure_ascii=False) + "\n",
+                                      encoding="utf-8")
+    (run / "judge-scores.jsonl").write_text(json.dumps({"case_id": "d_x", "total": 9,
+                                                        "verdict": "pass"}, ensure_ascii=False) + "\n",
+                                            encoding="utf-8")
+    (run / "facts.jsonl").write_text(json.dumps({
+        "edu.role": "tutor", "edu.session_id": "kernel_x", "edu.fallback_to": None},
+        ensure_ascii=False) + "\n", encoding="utf-8")
+
+    assert render_from(out) == 0
+    report = (out / "report.md").read_text(encoding="utf-8")
+    assert "judger_sha256:" + "a" * 64 in report
+    assert "| d_x | ok | completed |" in report          # 判定表
+    assert "| with-fallback | 1 | 1 | 1.0 |" in report   # 三口径段离线重建
+    assert "| tutor | 1 | 0 | 0.0% |" in report          # 调用级表
+    assert "跳过无剧本场景" not in report                  # 装载面信息不在 run 目录,仅活跑有

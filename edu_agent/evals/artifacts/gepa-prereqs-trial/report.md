@@ -1,7 +1,7 @@
 # corpus checks × 真模型轮次报告(#216)
 
-- 生成:2026-09-14T08:47:04.197553+00:00
-- 工件:/tmp/gepa-trial
+- 生成:2026-09-14T09:21:46.686407+00:00
+- 工件:edu_agent/evals/artifacts/gepa-prereqs-trial
 - judger_sha256:440395a900bfdd09828c75ff8ffe211c8b80b0c9a5a6512eb90a2e882e6ed446
 - 对照基线:无(首轮即基线;下轮用 --diff-from 指向本轮 collect 下最新 run 目录)
 

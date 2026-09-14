@@ -45,8 +45,8 @@ from .summary import load_results, morning_summary, write_summary
 # 与包级急切导入会双导入告警,run 入口保持 -m 形态,符号在首次访问时再加载。
 _CORPUS_ROUND_LAZY = ("DEFAULT_CORPUS", "build_cases", "caliber_section", "check_rows",
                       "diff_checks", "dump_facts", "facts_calibers", "load_facts",
-                      "real_model_scenarios", "render_report", "run_identity",
-                      "soften_counts", "soften_line")
+                      "real_model_scenarios", "render_from", "render_report",
+                      "run_identity", "soften_counts", "soften_line")
 
 
 def __getattr__(name: str):
@@ -88,6 +88,7 @@ __all__ = [
     "facts_calibers",
     "load_facts",
     "real_model_scenarios",
+    "render_from",
     "render_report",
     "run_identity",
     "soften_counts",

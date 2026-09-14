@@ -12,6 +12,8 @@ KernelSubject + EvalRunner(case 级 checkpoint/续跑/失败台账)+ judge 单�
 入口(模块入口,不动 scripts/ 结构路径):
     uv run python -m edu_agent.evals.corpus_round --out <运行根目录> \
         [--corpus <数据集 JSON>]... [--diff-from <上轮 collect run 目录>]
+    uv run python -m edu_agent.evals.corpus_round --render-from <运行根目录> \
+        [--diff-from <上轮 collect run 目录>]   # 不跑批,零模型重渲染 report(#257 审 P3-2)
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
 import socket
 import subprocess
 import sys
@@ -447,27 +450,56 @@ def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict
     return "\n".join(lines) + "\n"
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--corpus", action="append", default=[],
-                        help="corpus 数据集 JSON(可多次;缺省 = teaching_context pilot 20)")
-    parser.add_argument("--out", required=True, help="运行根目录(cases/collect/report 落这里)")
-    parser.add_argument("--diff-from", dest="diff_from", default=None,
-                        help="上轮 collect 下某 run 目录(跨轮对照)")
-    parser.add_argument("--concurrency", type=int, default=2)
-    args = parser.parse_args(argv)
+def _read_rows(path: Path) -> dict[str, dict]:
+    """读 checks/judge-scores 类 {case_id: 行} JSONL(离线重渲染/跨轮对照消费)。"""
+    if not path.is_file():
+        return {}
+    rows: dict[str, dict] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            row = json.loads(line)
+            rows[row["case_id"]] = row
+    return rows
 
-    corpus_paths = [Path(p) for p in (args.corpus or DEFAULT_CORPUS)]
-    registry = load_registry(REPO / "configs" / "models.yaml")
-    probes = {name: _probe(provider.base_url) for name, provider in registry.providers.items()}
-    bad = {k: v for k, v in probes.items() if v != "ok"}
-    if bad:
-        print(f"端点预检失败:{bad}", file=sys.stderr)
-        return 1
-    facts_dir = Path(tempfile.mkdtemp(prefix="corpus-round-facts-"))
-    gateway = Gateway(registry, facts_dir=facts_dir)
 
-    scenarios = real_model_scenarios(corpus_paths)
+def render_from(out_dir: Path, diff_from: str | None = None) -> int:
+    """--render-from(#257 审 P3-2):不跑批、零模型调用,从既有运行根目录重渲染 report.md。
+
+    读 out_dir 根 cases.jsonl(期望答案面)+ 最新 collect run 的落盘件(results /
+    checks / judge-scores / facts / judger.sha256)。跨轮对照用 --diff-from 指向上轮
+    collect run 目录,其判定/judge 行**直接读落盘、不重算**(「该轮自足」原则,
+    与活跑的 _compute_diff 重算路径不同源但同义)。跳过计数是语料装载面信息、
+    不落 run 目录,重渲染报告里该行缺席(仅活跑有)。"""
+    run_dir = sorted((out_dir / "collect").glob("*-*Z-*"))[-1]
+    results = load_results(run_dir)
+    checks = _read_rows(run_dir / "checks.jsonl")
+    scores = _read_rows(run_dir / "judge-scores.jsonl")
+    cases = [json.loads(line) for line
+             in (out_dir / "cases.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    scenarios = {c["id"]: c for c in cases}
+    diff = None
+    if diff_from:
+        prev_dir = Path(diff_from)
+        diff = {"from": diff_from, "verdicts": diff_checks(checks, _read_rows(prev_dir / "checks.jsonl")),
+                "prev_scores": _read_rows(prev_dir / "judge-scores.jsonl") or None}
+    judger_file = run_dir / "judger.sha256"
+    prev_hash = None
+    if diff_from and (Path(diff_from) / "judger.sha256").is_file():
+        prev_hash = (Path(diff_from) / "judger.sha256").read_text(encoding="utf-8").strip()
+    provenance = {"current": judger_file.read_text(encoding="utf-8").strip()
+                  if judger_file.is_file() else "", "prev": prev_hash}
+    report = render_report(out_dir, checks, scores, diff, provenance=provenance) + soften_line(
+        soften_counts(results)) + caliber_section(
+        facts_calibers(load_facts(run_dir)), results, checks, scores, scenarios)
+    (out_dir / "report.md").write_text(report, encoding="utf-8")
+    print(report)
+    return 0
+
+
+def _live_round(args, gateway: Gateway, facts_dir: Path) -> int:
+    """活跑路径(#257 审 P3 后从 main 拆出:语句预算 PLR0915 + 平铺);facts
+    tempdir 的清理在 main 的 finally(任何退出路径不留残骸)。"""
+    scenarios = real_model_scenarios([Path(p) for p in (args.corpus or DEFAULT_CORPUS)])
     cases, skipped = build_cases(scenarios)
     if skipped:
         print(f"跳过无剧本场景 {len(skipped)} 条(模拟器消费面未接线,#211 边界):{','.join(skipped)}")
@@ -520,6 +552,39 @@ def main(argv: list[str] | None = None) -> int:
     (out_dir / "report.md").write_text(report, encoding="utf-8")
     print(report)
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--corpus", action="append", default=[],
+                        help="corpus 数据集 JSON(可多次;缺省 = teaching_context pilot 20)")
+    parser.add_argument("--out", help="运行根目录(cases/collect/report 落这里;跑批模式必填)")
+    parser.add_argument("--diff-from", dest="diff_from", default=None,
+                        help="上轮 collect 下某 run 目录(跨轮对照)")
+    parser.add_argument("--render-from", dest="render_from_arg", metavar="OUT_DIR",
+                        help="不跑批:从既有运行根目录(cases.jsonl/collect/…)零模型重渲染"
+                             " report.md;可配 --diff-from(#257 审 P3-2,tuning_round 同款先例)")
+    parser.add_argument("--concurrency", type=int, default=2)
+    args = parser.parse_args(argv)
+
+    if args.render_from_arg:
+        return render_from(Path(args.render_from_arg), args.diff_from)
+    if not args.out:
+        parser.error("跑批模式需要 --out;纯重渲染用 --render-from <运行根目录>")
+
+    registry = load_registry(REPO / "configs" / "models.yaml")
+    probes = {name: _probe(provider.base_url) for name, provider in registry.providers.items()}
+    bad = {k: v for k, v in probes.items() if v != "ok"}
+    if bad:
+        print(f"端点预检失败:{bad}", file=sys.stderr)
+        return 1
+    facts_dir = Path(tempfile.mkdtemp(prefix="corpus-round-facts-"))
+    gateway = Gateway(registry, facts_dir=facts_dir)
+    try:
+        return _live_round(args, gateway, facts_dir)
+    finally:
+        # #257 审 P3-1:facts 已落 run 目录,tempdir 保留理由消失;任何退出路径不留残骸。
+        shutil.rmtree(facts_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":
