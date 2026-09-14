@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import csv
+import re
 import json
 from pathlib import Path
 
@@ -236,3 +237,119 @@ def test_sidecar_fingerprints_recompute_from_pre_promotion_state():
                 (csv_name, scenario["id"], "审后内容漂移或侧车指纹错")
             checked += 1
     assert checked == 37
+
+
+def test_run_identity_is_machine_readable():
+    """#238 件 A:身份三件套——prompt/models 为 64 位十六进制;git 缺失时 None 不伪造。"""
+    from edu_agent.evals import run_identity
+
+    identity = run_identity()
+    assert re.fullmatch(r"[0-9a-f]{64}", identity["prompts_sha256"])
+    assert re.fullmatch(r"[0-9a-f]{64}", identity["models_sha256"])
+    assert identity["git_sha"] is None or re.fullmatch(r"[0-9a-f]{7,40}", identity["git_sha"])
+
+
+def _fact(role: str, session: str, *, fallback_to=None) -> dict:
+    return {"edu.role": role, "edu.session_id": session, "edu.fallback_to": fallback_to}
+
+
+def test_facts_dump_load_calibers(tmp_path):
+    """#238 件 B:facts 落 run 目录(dump/load 对偶)+ 调用级/会话级口径。"""
+    from edu_agent.evals import dump_facts, facts_calibers, load_facts
+
+    facts_dir = tmp_path / "gateway-facts"
+    facts_dir.mkdir()
+    (facts_dir / "model_calls-2026-09-14.jsonl").write_text(
+        "\n".join(json.dumps(r, ensure_ascii=False) for r in [
+            _fact("tutor", "kernel_a"), _fact("tutor", "kernel_a", fallback_to="mlx_27b"),
+            _fact("judge", "judge-c1"), _fact("tutor", "kernel_b"),
+        ]) + "\n", encoding="utf-8")
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    rows = dump_facts(facts_dir, run_dir)
+    assert len(rows) == 4 and (run_dir / "facts.jsonl").is_file()
+    assert load_facts(run_dir) == rows
+    assert load_facts(tmp_path / "no-such-run") == []
+
+    calibers = facts_calibers(rows)
+    assert calibers["roles"]["tutor"] == {"calls": 3, "fallbacks": 1, "rate": 1 / 3}
+    assert calibers["roles"]["judge"] == {"calls": 1, "fallbacks": 0, "rate": 0.0}
+    assert calibers["sessions"] == {"kernel_a": True, "judge-c1": False, "kernel_b": False}
+
+
+def test_caliber_section_splits_primary_only_vs_with_fallback(tmp_path):
+    """#238 件 B:primary-only 剔除任一调用走 fallback 的 case;四指标 + 口径注记随段。"""
+    from edu_agent.evals import caliber_section
+
+    def result(cid, session, students, *, final="completed", guard=None):
+        turns = [{"student": "", "tutor": "首问"}] + [{"student": s, "tutor": "回"} for s in students]
+        return {"case_id": cid, "status": "ok",
+                "transcript": {"final_state": final, "turns": turns,
+                               "guard_events": guard or [], "session_id": session}}
+
+    # c1:tutor 会话走过 fallback → 只进 with-fallback;学生报了终答(1108)非 false-confirm
+    c1 = result("d_c1", "kernel_a", ["我先算了一步", "一共 1108 元"])
+    # c2:干净会话但学生从未报出期望数字 3 → false-confirm 代理命中
+    c2 = result("d_c2", "kernel_b", ["我想想", "应该没错吧"])
+    c3 = result("d_c3", "kernel_c", ["卡住了"], final="needs_review",
+                guard=[{"branch": "reveal", "hint_level": 1}])
+    sessions = {"kernel_a": True, "kernel_b": False, "kernel_c": False,
+                "judge-d_c1": False, "judge-d_c2": False, "judge-d_c3": False}
+    checks = {"d_c1": {"final_state": "completed"}, "d_c2": {"final_state": "completed"},
+              "d_c3": {"final_state": "needs_review"}}
+    scores = {"d_c1": {"total": 12}, "d_c2": {"total": 6}, "d_c3": {"total": 3}}
+    scenarios = {
+        "d_c1": {"question": {"text": "q", "answer": "1108 元"}},
+        "d_c2": {"question": {"text": "q", "answer": "鸡 3 只"}},
+        "d_c3": {"question": {"text": "q", "answer": "定性答案"}},  # 无 ASCII 数字:不进分母
+    }
+    section = caliber_section({"roles": {"tutor": {"calls": 3, "fallbacks": 1, "rate": 1 / 3}},
+                               "sessions": sessions},
+                              [c1, c2, c3], checks, scores, scenarios)
+    assert "口径注记" in section
+    # primary-only = c2+c3(c1 的 tutor 会话 fallback 出局):n=2,completed=1(c2,2 学生轮),
+    # false-confirm = c2 未报期望数字 3 → 1/1;stuck/needs-review = c3 → 各 50%;judge 均值 (6+3)/2
+    assert "| primary-only | 2 | 1 | 2.0 | 1/1 (100.0%) | 50.0% | 50.0% | 4.5 |" in section
+    # with-fallback = 全量:n=3,completed=2(ttc=(2+2)/2),false-confirm 1/2,stuck/needs 1/3,均值 7.0
+    assert "| with-fallback | 3 | 2 | 2.0 | 1/2 (50.0%) | 33.3% | 33.3% | 7.0 |" in section
+    assert "| tutor | 3 | 1 | 33.3% |" in section                # 调用级 role 表
+
+
+def test_render_from_rebuilds_report_offline(tmp_path, capsys):
+    """#257 审 P3-2:--render-from 零模型重渲染——只用工件文件重建 report(含三口径段)。"""
+    from edu_agent.evals import render_from
+
+    out = tmp_path / "trial"
+    run = out / "collect" / "cases-20260914T000000Z-ab12"
+    (run / "results").mkdir(parents=True)
+    (run / "judger.sha256").write_text("a" * 64 + "\n", encoding="utf-8")
+    scenario = {"id": "d_x", "question": {"text": "q", "answer": "3 只"},
+                "student_turns": ["我不会"], "grade": "三年级"}
+    (out / "cases.jsonl").write_text(
+        json.dumps({"id": "d_x", "question": scenario["question"], "grade": "三年级",
+                    "student_turns": ["我不会"]}, ensure_ascii=False) + "\n", encoding="utf-8")
+    (run / "results" / "d_x.json").write_text(json.dumps({
+        "case_id": "d_x", "status": "ok", "attempts": 1, "duration_ms": 1,
+        "transcript": {"final_state": "completed",
+                       "turns": [{"student": "", "tutor": "首问"},
+                                 {"student": "是 3 只", "tutor": "对"}],
+                       "guard_events": [], "session_id": "kernel_x"}}, ensure_ascii=False),
+        encoding="utf-8")
+    (run / "checks.jsonl").write_text(json.dumps({"case_id": "d_x", "status": "ok",
+                                                  "declared": False, "failures": None,
+                                                  "final_state": "completed"}, ensure_ascii=False) + "\n",
+                                      encoding="utf-8")
+    (run / "judge-scores.jsonl").write_text(json.dumps({"case_id": "d_x", "total": 9,
+                                                        "verdict": "pass"}, ensure_ascii=False) + "\n",
+                                            encoding="utf-8")
+    (run / "facts.jsonl").write_text(json.dumps({
+        "edu.role": "tutor", "edu.session_id": "kernel_x", "edu.fallback_to": None},
+        ensure_ascii=False) + "\n", encoding="utf-8")
+
+    assert render_from(out) == 0
+    report = (out / "report.md").read_text(encoding="utf-8")
+    assert "judger_sha256:" + "a" * 64 in report
+    assert "| d_x | ok | completed |" in report          # 判定表
+    assert "| with-fallback | 1 | 1 | 1.0 |" in report   # 三口径段离线重建
+    assert "| tutor | 1 | 0 | 0.0% |" in report          # 调用级表
+    assert "跳过无剧本场景" not in report                  # 装载面信息不在 run 目录,仅活跑有
