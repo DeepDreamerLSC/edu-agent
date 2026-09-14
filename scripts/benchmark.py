@@ -192,11 +192,14 @@ def git_sha() -> str:
 
 def live() -> list[str]:
     """活批跑标志清单(#241 行1):<name>.<pid> 空文件,PID 查活不查名;死标志(崩溃
-    遗留)顺手清。无续期无仲裁——批跑单向申报,门单方退避,非租约非心跳(02 §5)。"""
+    遗留)顺手清。无续期无仲裁无进程管理(02 §5:一次性 kill(pid, 0) 纯查询,无
+    spawn/supervise/reap;§5 出口本就指向 OS 设施)——批跑单向申报,门单方退避。"""
     if not BATCH_DIR.is_dir():
         return []
     alive: list[str] = []
     for flag in BATCH_DIR.iterdir():
+        if not flag.is_file():
+            continue  # 目录/非常规残留不碰(审查 P2-1:unlink 不吞目录,IsADirectoryError 会顶掉证据块)
         pid = flag.name.rpartition(".")[2]
         if not pid.isdigit() or int(pid) == 0:
             continue  # 非 <name>.<pid> 形态不碰
@@ -247,8 +250,8 @@ def gate_or_skip(args: argparse.Namespace) -> int | None:
         encoding="utf-8")
     summary = os.environ.get("GITHUB_STEP_SUMMARY")  # 第二留痕(P3-3):run 页永久可查
     if summary:
-        Path(summary).open("a", encoding="utf-8").write(
-            f"- benchmark SKIPPED:批跑窗口({names})(#241 行1)\n")
+        with Path(summary).open("a", encoding="utf-8") as fh:  # 显式关句柄(审查 P3)
+            fh.write(f"- benchmark SKIPPED:批跑窗口({names})(#241 行1)\n")
     return 0
 
 
