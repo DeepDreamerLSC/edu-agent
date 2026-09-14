@@ -89,6 +89,10 @@ def test_understanding_routes_to_elicit(phrase, is_elicit):
     # 「不知道」是进展后局部卡点,进表曾把评测打红——前置 lookbehind 只放行被隔断形态)
     ("我还不知道怎么同时算两种动物。", False),
     ("我用53除以6，但不知道余数怎么解释。", False),
+    # #178 实锤补丁(终版裁定 c5661449950):「不知道」后随量问对象(多少/几)= 实质作答
+    ("每一格不知道多少米。", False),   # 真实对话原句(#178 c5661388301):误判卡壳实锤
+    ("平均每段不知道几米。", False),    # 「几」侧同口径
+    ("我完全不知道怎么做。", True),     # 全局性「不知道」仍判卡住(无量问对象)
 ])
 def test_stuck_routes_to_reveal(phrase, is_stuck):
     gateway = FakeGateway(tutor_payloads=[_open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS)])
