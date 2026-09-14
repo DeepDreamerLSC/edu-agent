@@ -45,9 +45,10 @@ from .summary import load_results, morning_summary, write_summary
 # corpus_round(#216)惰性导出(PEP 562):`python -m edu_agent.evals.corpus_round`
 # 与包级急切导入会双导入告警,run 入口保持 -m 形态,符号在首次访问时再加载。
 _CORPUS_ROUND_LAZY = ("DEFAULT_CORPUS", "build_cases", "caliber_section", "check_rows",
-                      "diff_checks", "dump_facts", "facts_calibers", "load_facts",
-                      "real_model_scenarios", "render_from", "render_report",
-                      "run_identity", "soften_counts", "soften_line")
+                      "diff_checks", "dump_facts", "facts_calibers", "judge_rows",
+                      "judger_sha256", "load_facts", "real_model_scenarios", "render_from",
+                      "render_report", "run_identity", "soften_counts", "soften_line",
+                      "transcript_messages")
 
 
 def __getattr__(name: str):
@@ -88,6 +89,8 @@ __all__ = [
     "caliber_section",
     "dump_facts",
     "facts_calibers",
+    "judge_rows",
+    "judger_sha256",
     "load_facts",
     "real_model_scenarios",
     "render_from",
@@ -95,6 +98,7 @@ __all__ = [
     "run_identity",
     "soften_counts",
     "soften_line",
+    "transcript_messages",
     "render_html",
     "run_check",
     "run_scenario_checks",

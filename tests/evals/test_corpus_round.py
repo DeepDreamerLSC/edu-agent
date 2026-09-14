@@ -353,3 +353,33 @@ def test_render_from_rebuilds_report_offline(tmp_path, capsys):
     assert "| with-fallback | 1 | 1 | 1.0 |" in report   # 三口径段离线重建
     assert "| tutor | 1 | 0 | 0.0% |" in report          # 调用级表
     assert "跳过无剧本场景" not in report                  # 装载面信息不在 run 目录,仅活跑有
+
+
+def test_transcript_messages_same_source_for_live_and_rescore():
+    """#254 件1:活跑与 offline rescore 的 transcript→messages 取数必须同源。"""
+    from edu_agent.evals import transcript_messages
+
+    transcript = {
+        "turns": [{"student": "", "tutor": "先想想一盒几支?"},        # 开口轮无学生话
+                  {"student": "16 支。", "tutor": "好,再加一盒呢?"},
+                  {"student": "24 支!", "tutor": "对。"}],
+        "summary": "你掌握了两步乘法,注意进位。",
+    }
+    assert transcript_messages(transcript) == [
+        {"role": "assistant", "content": "先想想一盒几支?"},
+        {"role": "user", "content": "16 支。"},
+        {"role": "assistant", "content": "好,再加一盒呢?"},
+        {"role": "user", "content": "24 支!"},
+        {"role": "assistant", "content": "对。"},
+        {"role": "assistant", "content": "你掌握了两步乘法,注意进位。"},  # summary 记导师侧
+    ]
+    assert transcript_messages({"turns": []}) == []  # 无 summary 时空转不炸
+
+
+def test_judger_sha256_public_fingerprint():
+    """judger_sha256 公开(#254 件1 消费面):64 位十六进制,两次调用稳定。"""
+    from edu_agent.evals import judger_sha256
+
+    value = judger_sha256()
+    assert len(value) == 64 and int(value, 16) >= 0
+    assert judger_sha256() == value
