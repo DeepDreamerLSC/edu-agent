@@ -16,6 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 MODELS_YAML = REPO_ROOT / "configs" / "models.yaml"
 VISION_PLIST = REPO_ROOT / "deploy" / "launchd" / "com.edu-agent.m0.vision-8303.plist"
 KERNEL = REPO_ROOT / "edu_agent" / "agents" / "small_lecturer" / "kernel.py"
+PROMPTING = REPO_ROOT / "edu_agent" / "agents" / "small_lecturer" / "prompting.py"
 SERVER = REPO_ROOT / "edu_agent" / "api" / "server.py"
 SERVICE = REPO_ROOT / "edu_agent" / "api" / "service.py"
 UNIFIED_OPEN_TEST = REPO_ROOT / "tests" / "contracts" / "test_unified_open.py"
@@ -37,9 +38,9 @@ def test_models_yaml_has_vision_role_and_vl_tutor_primary():
 
 
 def test_kernel_vision_schema_has_transcription():
-    source = KERNEL.read_text(encoding="utf-8")
+    source = PROMPTING.read_text(encoding="utf-8")
     schema_block = re.search(r"OPEN_SCHEMA = \{(.*?)\n\}", source, re.DOTALL)
-    assert schema_block, "kernel 缺 OPEN_SCHEMA(#70 回退哨兵)"
+    assert schema_block, "prompting.py 缺 OPEN_SCHEMA(#70 回退哨兵)"
     assert '"transcription"' in schema_block.group(1), (
         "OPEN_SCHEMA 缺 transcription 字段(#70 回退哨兵)"
     )

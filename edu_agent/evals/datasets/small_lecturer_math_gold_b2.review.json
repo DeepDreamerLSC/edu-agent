@@ -1,0 +1,15 @@
+{
+  "schema_version": "gold_review/v1",
+  "review_batch_ref": "gold-math-b2",
+  "scenario_count": 12,
+  "teacher_confirmed_count": 0,
+  "teacher_rejected_count": 0,
+  "candidate_count": 0,
+  "candidate_catalog_hash": "",
+  "candidate_catalog_hash_status": "暂缓重算(#178 裁定②:转正后由生成器口径刷新,仓内不复算)",
+  "promotion_ready": false,
+  "reason_codes": [
+    "teacher_gold_confirmed_count_below_minimum"
+  ],
+  "required_reviewer_action": "人审 workflow 列待填;hash 由生成器口径产出(仓内无法复算)"
+}
