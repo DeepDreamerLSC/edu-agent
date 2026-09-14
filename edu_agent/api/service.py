@@ -488,6 +488,14 @@ class ConversationService:
             cache_key = hashlib.sha256(
                 f"{conversation.conversation_id}|{idem}".encode("utf-8")).hexdigest()
             cached = self._turn_cache.get(cache_key)
+            if cached is None:
+                # #255 硬验证件1:重启后内存缓存冷启动——用随会话落盘的幂等存根
+                # 兜底(只存最后一轮:断线重放的对象永远是刚提交的那轮;更早轮次
+                # 或陌生键的重放仍由版本门把关)。
+                stub = conversation.extras.get("turn_idem")
+                if (isinstance(stub, dict) and stub.get("key") == cache_key
+                        and isinstance(stub.get("response"), dict)):
+                    cached = self._turn_cache[cache_key] = stub["response"]
             if cached is not None:
                 return cached
         expected = payload.get("expected_session_version")
@@ -516,9 +524,12 @@ class ConversationService:
             conversation.session_version += 1
             conversation.state = "ready_to_confirm" if ready else "dialogue"
             conversation.first_question = conversation.first_question or reply_text
+            response = self._message_response(conversation, reply_text)  # 锁内快照(并发下不串轮)
+            if cache_key:
+                # 幂等存根随会话提交原子落盘:#255 件1「服务重启 → 同键重放仍幂等」
+                conversation.extras["turn_idem"] = {"key": cache_key, "response": response}
             self.store.update(conversation)
             self._persist_session(conversation)
-        response = self._message_response(conversation, reply_text)
         if cache_key:
             self._turn_cache[cache_key] = response
         return response
