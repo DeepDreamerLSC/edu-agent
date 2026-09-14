@@ -5,7 +5,7 @@
   "teacher_confirmed_count": 4,
   "teacher_rejected_count": 0,
   "candidate_count": 0,
-  "candidate_catalog_hash": "",
+  "candidate_catalog_hash": null,
   "candidate_catalog_hash_status": "暂缓重算(#178 裁定②:转正后由生成器口径刷新,仓内不复算)",
   "promotion_ready": true,
   "reason_codes": [],
