@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import pathlib
 import sys
 import time
 import urllib.error
@@ -30,9 +31,33 @@ class SmokeFailure(AssertionError):
     """冒烟断言失败(带阶段名,输出里直接可定位)。"""
 
 
+_SAFE_HOSTS = frozenset({"127.0.0.1", "localhost", "::1", "edu-test.chiraliumai.cn"})
+
+
+def _assert_safe_url(url: str) -> None:
+    """Mimosa 安全约束:仅 http/https,目标主机白名单(本脚本目标=本机服务)。"""
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"仅允许 http/https:{parsed.scheme}")
+    hostname = parsed.hostname or ""
+    if hostname not in _SAFE_HOSTS:
+        raise ValueError(f"目标主机不在白名单:{hostname}")
+
+
+def _assert_safe_output(out_path: str) -> None:
+    """Mimosa 安全约束:输出路径禁止穿越,须落在项目目录内。"""
+    import pathlib
+    target = pathlib.Path(out_path).resolve()
+    repo_root = pathlib.Path(__file__).resolve().parents[1]
+    if repo_root not in target.parents:
+        raise ValueError(f"输出路径越界:{out_path}")
+
+
 def _request(base_url: str, path: str, token: str, body: dict | None = None) -> tuple[int, dict, dict]:
     """POST/GET 一发;返回 (status, headers, parsed_body)。SSE 端点同函数(文本帧在 body['_raw'])。"""
     url = base_url.rstrip("/") + path
+    _assert_safe_url(url)
     data = json.dumps(body, ensure_ascii=False).encode("utf-8") if body is not None else None
     req = urllib.request.Request(url, data=data, method="POST" if data is not None else "GET")
     req.add_header("Content-Type", "application/json")
@@ -341,7 +366,8 @@ def main() -> int:
     ok = all(r["ok"] for r in results)
     evidence["ok"] = ok
     if args.out:
-        with open(args.out, "w", encoding="utf-8") as fh:
+        _assert_safe_output(args.out)
+        with pathlib.Path(args.out).resolve().open("w", encoding="utf-8") as fh:
             json.dump(evidence, fh, ensure_ascii=False, indent=1)
     print(("\nM3 冒烟通过:" if ok else "\nM3 冒烟失败:") +
           f"{len(results)} 阶段,证据{'已落盘 ' + args.out if args.out else '未落盘(--out)'}")

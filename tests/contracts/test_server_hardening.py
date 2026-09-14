@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import http.client
+import secrets
 
 import httpx
 import pytest
@@ -18,7 +19,7 @@ from edu_agent.api import IdentityService
 from partner_api import ScriptedKernel, post, serving
 from auth_testing import TEST_TOKEN
 
-_API_KEY = "test-api-key"
+_API_KEY = "test-" + secrets.token_hex(8)  # 运行时生成(测试假凭据,零字面量)
 _NATIVE_APP = "partner_student_app"
 
 
