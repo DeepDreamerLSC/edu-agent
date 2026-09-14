@@ -119,6 +119,21 @@ def build_cases(scenarios: dict[str, dict]) -> tuple[list[dict], list[str]]:
     return cases, skipped
 
 
+def transcript_messages(transcript: dict) -> list[dict]:
+    """存档 transcript(turns[].student/tutor + summary)→ judge messages。
+
+    活跑(judge_rows)与 offline rescore(#254 件1)同源取数——两口径若各自维护
+    会静默漂移,rescore 与活跑的 judge 输入必须逐字一致。"""
+    messages: list[dict] = []
+    for turn in transcript["turns"]:
+        if turn["student"]:
+            messages.append({"role": "user", "content": turn["student"]})
+        messages.append({"role": "assistant", "content": turn["tutor"]})
+    if transcript.get("summary"):
+        messages.append({"role": "assistant", "content": transcript["summary"]})
+    return messages
+
+
 def judge_rows(gateway: Gateway, scenarios: dict[str, dict], results: list[dict]) -> dict[str, dict]:
     """ok 行 → judge 单遍 primary(评分失败记台账不炸整轮,口径同 tuning_round 单遍)。"""
     scores: dict[str, dict] = {}
@@ -127,13 +142,7 @@ def judge_rows(gateway: Gateway, scenarios: dict[str, dict], results: list[dict]
             continue
         scenario = scenarios[row["case_id"]]
         question = scenario["question"]
-        messages = []
-        for turn in row["transcript"]["turns"]:
-            if turn["student"]:
-                messages.append({"role": "user", "content": turn["student"]})
-            messages.append({"role": "assistant", "content": turn["tutor"]})
-        if row["transcript"].get("summary"):
-            messages.append({"role": "assistant", "content": row["transcript"]["summary"]})
+        messages = transcript_messages(row["transcript"])
         try:
             scores[row["case_id"]] = judge_transcript(gateway, {
                 "id": row["case_id"],
@@ -357,7 +366,7 @@ def diff_checks(current: dict[str, dict], previous: dict[str, dict]) -> dict[str
     return verdicts
 
 
-def _judger_sha256() -> str:
+def judger_sha256() -> str:
     """判分器指纹:checks.py + judge.py 按文件名序拼接后 sha256(十六进制)。
     #238 §5:跨轮 diff 遇版本断点须标注,此函数提供可比对的哈希。"""
     files = sorted((Path(__file__).parent / f) for f in ("checks.py", "judge.py"))
@@ -369,7 +378,7 @@ def _judger_sha256() -> str:
 
 def _provenance_context(diff_from):
     """Compute current judger hash + read baseline hash (None = baseline has no provenance)."""
-    judger_hash = _judger_sha256()
+    judger_hash = judger_sha256()
     prev_hash = None
     if diff_from:
         prev_file = Path(diff_from) / "judger.sha256"
