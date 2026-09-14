@@ -16,6 +16,8 @@ from edu_agent.evals import (
     diff_checks,
     real_model_scenarios,
     render_report,
+    soften_counts,
+    soften_line,
 )
 
 
@@ -91,6 +93,24 @@ def test_diff_checks_classifies_new_red_and_flip():
     }
     verdicts = diff_checks(current, previous)
     assert verdicts == {"a": "新增红", "b": "翻绿", "c": "绿"}
+
+
+def test_soften_counts_aggregate_and_report_line():
+    """#241 行 4「掩码成功 vs 整步弃用」:报数层按 guard_events 聚合 cut/mask/dropped
+    (dropped 此前只写不读);报告行由 soften_line 拼在 render_report 之后
+    (#244 审 P1:render_report 不加参,防与 #242 provenance 撞 PLR0913);全零不占行。"""
+    results = [
+        {"transcript": {"guard_events": [{"branch": "reveal", "soften": "cut"},
+                                         {"branch": "reveal", "soften": "mask"},
+                                         {"branch": "model"}]}},
+        {"transcript": {"guard_events": [{"branch": "reveal", "soften": "cut"},
+                                         {"branch": "reveal", "dropped": True}]}},
+        {"transcript": {"guard_events": [{"branch": "model"}]}},
+    ]
+    assert soften_counts(results) == {"cut": 2, "mask": 1, "dropped": 1}
+    assert soften_line({"cut": 0, "mask": 0, "dropped": 0}) == ""
+    report = render_report(Path("/tmp/out"), {}, {}) + soften_line(soften_counts(results))
+    assert ("cut=2(同分句边界收回) / mask=1(兜底改写「几」) / dropped=1(整步弃用)") in report
 
 
 def test_render_report_marks_undeclared_and_counts_new_red():

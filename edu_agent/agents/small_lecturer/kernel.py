@@ -285,8 +285,11 @@ def _cut_before(text: str, start: int) -> str | None:
     return softened
 
 
-def _soften_step_text(step_text: str, answer_numbers: frozenset[float]) -> str | None:
+def _soften_step_text(step_text: str, answer_numbers: frozenset[float]) -> tuple[str | None, str]:
     """阶梯揭示的**动作化**改写:把该步算好的结果收回去,只留动作与依据。
+    返回 (改写文本, 路径 tag):cut = 同分句边界收回;mask = 兜底改写「几」;
+    none = 未改写(无泄漏/无边界保留原文;mask 读不成句返回 (None, "none") →
+    调用方整步弃用)。文本产出不变,tag 仅供网级报数(#241 行 4)。
 
     #165 WS4 第 2 条:卡壳路由从**揭示路径**修(#164 已回退词表检测,不再收紧检测)。
     老行为把模型规划句原样交给学生,而规划句常写成「先算底乘高:10 × 6 = 60」——
@@ -307,11 +310,16 @@ def _soften_step_text(step_text: str, answer_numbers: frozenset[float]) -> str |
     text = str(step_text or "").strip()
     match = _STEP_ARITHMETIC_RE.search(text)
     if match is not None:
-        return _cut_before(text, match.start()) or text
+        cut = _cut_before(text, match.start())
+        return (cut or text, "cut" if cut else "none")
     span = _answer_leak_span(text, answer_numbers)
     if span is None:
-        return text
-    return _cut_before(text, span[0]) or _mask_answer_numbers(text, answer_numbers)
+        return text, "none"
+    cut = _cut_before(text, span[0])
+    if cut is not None:
+        return cut, "cut"
+    masked = _mask_answer_numbers(text, answer_numbers)
+    return masked, "mask" if masked else "none"
 
 
 def _reveal_stuck_hint(session: "LearnerSession") -> str:
@@ -327,7 +335,8 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     `{branch: reveal, hint_level}`,hint_level 为消耗后的级数——记的是**阶梯消耗**
     (阶梯有限,影子数据要能看「推进次数」与「是否过早烧到 bottom-out」);该轮最终
     学生可见文本若又被下游护栏替换,以 transcript 为准。bottom-out 与普通推进同记
-    reveal;裸数字形状整步弃用的轮加记 `dropped`。NEEDS_REVIEW_TEXT 有**两个来源**:
+    reveal;裸数字形状整步弃用的轮加记 `dropped`;改写路径记 `soften`
+    (cut = 同分句边界收回 / mask = 兜底改写「几」,网级报数用,#241 行 4)。NEEDS_REVIEW_TEXT 有**两个来源**:
     无终答 bottom-out(无 answer 可披露时,无前缀亦无 dropped,两项统计均不可见——
     罕见,要数需先加事件)与弃用轮(dropped 可筛);bottom-out 率按「这一步我们
     直接看结果:」前缀统计、勿按文本匹配(会把弃用轮算进);复讲引导同 _ELICIT_TEMPLATE。"""
@@ -342,11 +351,13 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
         return (f"这一步我们直接看结果:{answer.rstrip('。.')}。你先记住它,我们回头再讲一遍为什么。"
                 if answer else NEEDS_REVIEW_TEXT)
     lead = _STEP_LEADS[(session.hint_level - 1) % len(_STEP_LEADS)]
-    step_text = _soften_step_text(str(step.get("step") or ""),
-                                  frozenset(_answer_focus_numbers(session)))
+    step_text, soften_path = _soften_step_text(str(step.get("step") or ""),
+                                               frozenset(_answer_focus_numbers(session)))
     if step_text is None:  # 裸数字形状读不成句:整步弃用 → 通用兜底(#185 复审 ②)
         session.guard_events[-1]["dropped"] = True  # 复审三轮 P2:弃用轮可辨识,先量再收词表
         return NEEDS_REVIEW_TEXT
+    if soften_path != "none":  # 只在真命中两路径时写:无泄漏保留/弃用轮不加键(整 dict 断言不变)
+        session.guard_events[-1]["soften"] = soften_path  # #241 行 4:cut(分句收回)/mask(改写「几」)
     # 句末标点由模板统一补:step/answer 自带「。」先剥掉,不叠「。。」
     # (#198 独立审查实测:生产揭示轮 9/14 双句号,学生可见面)。
     return f"{lead}:{step_text.rstrip('。.')}。你接着算下一步。"
