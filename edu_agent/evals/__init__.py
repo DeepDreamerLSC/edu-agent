@@ -9,6 +9,7 @@ from .image_teaching import (
 )
 from .kernel_subject import KernelSubject
 from .judge import (
+    DIMENSION_GUIDE,
     DIMENSIONS,
     SCHEMA,
     JudgeSubject,
@@ -57,6 +58,7 @@ def __getattr__(name: str):
 
 
 __all__ = [
+    "DIMENSION_GUIDE",
     "DIMENSIONS",
     "EnvironmentFailure",
     "EvalRunner",
