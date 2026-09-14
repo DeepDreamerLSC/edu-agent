@@ -25,8 +25,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 
-from edu_agent.evals import EvalRunner, KernelSubject, RunnerConfig, load_results  # noqa: E402
-from edu_agent.gateway import Gateway, load_registry  # noqa: E402
+from edu_agent.evals import EvalRunner, KernelSubject, RunnerConfig, load_results
+from edu_agent.gateway import Gateway, load_registry
 
 
 def _load_tuning_round():
