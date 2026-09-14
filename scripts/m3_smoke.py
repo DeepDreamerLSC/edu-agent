@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """M3 合同冒烟(#221 裁定 6):合作方真路径黑盒走查——真内核 + 真模型。
 
+目标主机仅环回白名单(127.0.0.1/localhost/::1)——公网域名或局域网 IP 一律拒绝。
+
 覆盖:login → open(idempotency_key)→ refresh → messages(expected_session_version
 一律**响应回读**,不硬编码)→ confirm;open 幂等重试(同 key → 同结果)、
 409(版本过期/换题固定)/422(未知键)/403(禁交键)错误信封形状、
@@ -31,7 +33,7 @@ class SmokeFailure(AssertionError):
     """冒烟断言失败(带阶段名,输出里直接可定位)。"""
 
 
-_SAFE_HOSTS = frozenset({"127.0.0.1", "localhost", "::1", "edu-test.chiraliumai.cn"})
+_SAFE_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
 
 
 def _assert_safe_url(url: str) -> None:
@@ -47,7 +49,6 @@ def _assert_safe_url(url: str) -> None:
 
 def _assert_safe_output(out_path: str) -> None:
     """Mimosa 安全约束:输出路径禁止穿越,须落在项目目录内。"""
-    import pathlib
     target = pathlib.Path(out_path).resolve()
     repo_root = pathlib.Path(__file__).resolve().parents[1]
     if repo_root not in target.parents:
