@@ -166,6 +166,36 @@ def test_guarded_reply_context_matches_student_visible_text(tmp_path):
         assert assistant_turns == ["你刚才回到了条件本身,很好。", json.loads(follow_clean)["reply"]]
 
 
+def test_guard_critique_templates_pinned(tmp_path):
+    """#243 审查 P3:护栏重写模板外置后钉渲染——命中无违规数字走 HIT 模板、
+    违规数字走 NUMBERS 模板,字面钉死 gateway 实收的 critique 全文;
+    模板句或插值再动任何字,这里即红(声称不设防,断言才设防)。"""
+    rude = tutor_json("这么简单的题你都不会?")
+    regen = tutor_json("我们先回到题目,你读到了哪些条件?")
+    with kernel_env(tmp_path, [completion(open_json("第一问?")), completion(rude),
+                               completion(regen)]) as (fake, gateway):
+        first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
+        reply(first.session, "这题好难。", gateway=gateway)      # 语气护栏命中(无违规数字)
+        critique = next(m["content"] for m in fake.requests[-1]["messages"]
+                        if m["content"].startswith("你上一条回复被教学护栏拦截"))
+        assert critique == (
+            "你上一条回复被教学护栏拦截(规则:tone_humiliation_or_sarcasm;命中内容:"
+            "「这么简单的题你都不会?」)。请重写这条回复,直接回应用户当前的问题;"
+            "不要重复被拦截的内容,不要提前给出答案或方法名。")
+    leak = tutor_json("答案是鸡3只、兔5只,就是这样。")           # 5 无合法来源 → 幻觉违规
+    regen2 = tutor_json("你刚才回到了条件本身,很好。")
+    with kernel_env(tmp_path, [completion(open_json("第一问?")), completion(leak),
+                               completion(regen2)]) as (fake, gateway):
+        first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
+        reply(first.session, "我再看看。", gateway=gateway)      # 数值披露门命中(违规数字)
+        critique = next(m["content"] for m in fake.requests[-1]["messages"]
+                        if m["content"].startswith("你上一条回复被教学护栏拦截"))
+        assert critique == (
+            "你上一条回复被教学护栏拦截(规则:source_value_disclosure:hallucinated;"
+            "未经学生验证就说出的数值:5)。请重写这条回复:不要说这些数值,也不要给出"
+            "答案数字或题面之外的中间结果——用学生已经说过的信息继续引导他往下算。")
+
+
 def test_repeat_self_refine_replaces_repeated_question(tmp_path):
     """复读自批评(self-refine):学生卡住时 tutor 复读同一问句 → 打回重生成一次换一句推进。"""
     open_q = open_json("兔子有几只呢?")          # start 首问(open schema)

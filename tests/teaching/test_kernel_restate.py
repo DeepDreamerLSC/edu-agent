@@ -297,6 +297,27 @@ def test_reveal_keeps_question_numbers_when_answer_falls_back_to_steps_value():
     assert "几" not in turn.text
 
 
+def test_reveal_soften_path_tagged_in_guard_events():
+    """#241 行 4:软化两条路径在埋点可分——cut(同分句边界收回)/ mask(兜底改写「几」);
+    文本产出不变,只加元数据,报数层(corpus_round.soften_counts)据此聚合计数。"""
+    repeated = FIRST_QUESTION_COLLECT
+    reveal1 = "我们从这里入手:先算脚数差。你接着算下一步。"
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload(repeated, steps=[{"step": "先算脚数差，第3只开始换成兔", "value": "x"},
+                                       {"step": "兔有5只", "value": "x"}]),
+        _tutor_payload(repeated), _tutor_payload(repeated),   # 第 1 轮复读 → 揭示 1(分句收回)
+        _tutor_payload(reveal1), _tutor_payload(reveal1),     # 第 2 轮复读揭示句 → 揭示 2(改写「几」)
+    ])
+    first = start(dict(CHICKEN_QUESTION), {"grade": "六年级"}, gateway=gateway)
+    turn1 = reply(first.session, "嗯,我看看。", gateway=gateway)
+    events1 = list(turn1.session.guard_events)   # 同一 session 可变对象:turn2 前快照
+    turn2 = reply(turn1.session, "嗯,我再看看。", gateway=gateway)
+    assert turn1.text == reveal1
+    assert events1[-1]["soften"] == "cut"
+    assert turn2.text == "下一步是这样:兔有几只。你接着算下一步。"
+    assert turn2.session.guard_events[-1]["soften"] == "mask"
+
+
 def test_dropped_reveal_step_is_flagged_in_guard_events():
     """#185 复审三轮 P2:整步弃用的揭示轮在埋点里可辨识(dropped=True)——
     「阶梯消耗/是否过早烧 bottom-out」指标不把弃用轮计成正常推进;词表收放

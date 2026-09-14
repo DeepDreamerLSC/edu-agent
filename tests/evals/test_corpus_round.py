@@ -16,6 +16,8 @@ from edu_agent.evals import (
     diff_checks,
     real_model_scenarios,
     render_report,
+    soften_counts,
+    soften_line,
 )
 
 
@@ -93,6 +95,24 @@ def test_diff_checks_classifies_new_red_and_flip():
     assert verdicts == {"a": "新增红", "b": "翻绿", "c": "绿"}
 
 
+def test_soften_counts_aggregate_and_report_line():
+    """#241 行 4「掩码成功 vs 整步弃用」:报数层按 guard_events 聚合 cut/mask/dropped
+    (dropped 此前只写不读);报告行由 soften_line 拼在 render_report 之后
+    (#244 审 P1:render_report 不加参,防与 #242 provenance 撞 PLR0913);全零不占行。"""
+    results = [
+        {"transcript": {"guard_events": [{"branch": "reveal", "soften": "cut"},
+                                         {"branch": "reveal", "soften": "mask"},
+                                         {"branch": "model"}]}},
+        {"transcript": {"guard_events": [{"branch": "reveal", "soften": "cut"},
+                                         {"branch": "reveal", "dropped": True}]}},
+        {"transcript": {"guard_events": [{"branch": "model"}]}},
+    ]
+    assert soften_counts(results) == {"cut": 2, "mask": 1, "dropped": 1}
+    assert soften_line({"cut": 0, "mask": 0, "dropped": 0}) == ""
+    report = render_report(Path("/tmp/out"), {}, {}) + soften_line(soften_counts(results))
+    assert ("cut=2(同分句边界收回) / mask=1(兜底改写「几」) / dropped=1(整步弃用)") in report
+
+
 def test_render_report_marks_undeclared_and_counts_new_red():
     checks = {
         "x_s1": {"status": "ok", "declared": True, "failures": [], "final_state": "completed"},
@@ -113,3 +133,31 @@ def test_render_report_shows_previous_judge_total():
                            {"from": "prev/run", "verdicts": {"x_s1": "绿"},
                             "prev_scores": {"x_s1": {"total": 12}}})
     assert "total=12→8" in report
+
+
+def test_render_report_provenance_notes():
+    """#238 §5 判分器溯源注记:头带指纹;基线无溯源/版本断点各注一句,同指纹静默。"""
+    checks = {"x_s1": {"status": "ok", "declared": True, "failures": [], "final_state": "completed"}}
+    scores = {"x_s1": {"total": 8, "verdict": "review", "scores": {"socratic_followup": 1}}}
+    diff = {"from": "prev/run", "verdicts": {"x_s1": "绿"}, "prev_scores": {}}
+
+    # 无 diff:头带 judger_sha256,不出现任何基线注记
+    report = render_report(Path("/tmp/out"), checks, scores,
+                           provenance={"current": "abc123", "prev": None})
+    assert "judger_sha256:abc123" in report
+    assert "基线无溯源" not in report and "判分器已变更" not in report
+
+    # diff + 基线无指纹(首轮 math-gold-v1 形态)→ 注欠账
+    report = render_report(Path("/tmp/out"), checks, scores, diff,
+                           provenance={"current": "abc123", "prev": None})
+    assert "基线无溯源" in report and "判分器已变更" not in report
+
+    # diff + 指纹不同 → 注版本断点
+    report = render_report(Path("/tmp/out"), checks, scores, diff,
+                           provenance={"current": "abc123", "prev": "fff000"})
+    assert "判分器已变更" in report and "基线无溯源" not in report
+
+    # diff + 同指纹 → 可比,两注记都静默
+    report = render_report(Path("/tmp/out"), checks, scores, diff,
+                           provenance={"current": "abc123", "prev": "abc123"})
+    assert "基线无溯源" not in report and "判分器已变更" not in report
