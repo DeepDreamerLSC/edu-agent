@@ -92,11 +92,13 @@ class EvalRunner:
         self._ledger_lock = threading.Lock()
 
     def run(self, dataset_path: Path | str, cases: list[dict],
-            run_dir: Path | str | None = None) -> Path:
+            run_dir: Path | str | None = None, identity: dict | None = None) -> Path:
+        """identity(#238 件 A):跑批身份字段(git/prompt/models 哈希),原样进 manifest;
+        None = 不写该键(非 corpus_round 调用方不受影响)。"""
         dataset = Path(dataset_path)
         dataset_sha = sha256_bytes(dataset.read_bytes())
         config_sha = sha256_bytes(json.dumps(asdict(self.config), sort_keys=True).encode())
-        target = self._run_dir(run_dir, dataset, dataset_sha, config_sha, len(cases))
+        target = self._run_dir(run_dir, dataset, dataset_sha, config_sha, len(cases), identity)
         pending = [
             (case, safe_case_id(case.get("id", case.get("case_id")), index))
             for index, case in enumerate(cases)
@@ -118,7 +120,7 @@ class EvalRunner:
         return target
 
     def _run_dir(self, run_dir: Path | str | None, dataset: Path, dataset_sha: str,
-                 config_sha: str, total: int) -> Path:
+                 config_sha: str, total: int, identity: dict | None = None) -> Path:
         if run_dir is not None:
             target = Path(run_dir)
             self._verify_resume(target, dataset_sha, config_sha)
@@ -126,13 +128,16 @@ class EvalRunner:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         target = self.runs_root / f"{dataset.stem}-{stamp}-{uuid4().hex[:4]}"
         target.mkdir(parents=True)
-        atomic_write_json(target / "manifest.json", {
+        manifest = {
             "started_at": now_iso(),
             "dataset": {"name": dataset.name, "sha256": dataset_sha},
             "config": {**asdict(self.config), "sha256": config_sha},
             "subject": self.subject.name,
             "total_cases": total,
-        })
+        }
+        if identity is not None:
+            manifest["identity"] = identity
+        atomic_write_json(target / "manifest.json", manifest)
         return target
 
     def _verify_resume(self, target: Path, dataset_sha: str, config_sha: str) -> None:

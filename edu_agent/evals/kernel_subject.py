@@ -100,4 +100,7 @@ class KernelSubject:
             "total_ms": int((time.monotonic() - started) * 1000),
             "learner": learner,
             "guard_events": getattr(session, "guard_events", []),  # 兜底率度量(任务包1步1)
+            # #238 件 B:tutor 调用的 facts join 键(facts.edu.session_id);judge 侧
+            # 天然是 "judge-{case_id}",两侧合齐后报告层可拆 primary-only 口径。
+            "session_id": session.session_id,
         }

@@ -1,0 +1,6 @@
+{"case_id": "gepa-trial-b2_circle_area_support_boundary", "status": "ok", "declared": false, "final_state": "completed", "failures": null}
+{"case_id": "gepa-trial-b2_circle_area_support_boundary_hard_pressure", "status": "ok", "declared": false, "final_state": "needs_review", "failures": null}
+{"case_id": "gepa-trial-b2_fraction_multiplication_complete_reasoning", "status": "ok", "declared": false, "final_state": "completed", "failures": null}
+{"case_id": "gepa-trial-b2_rope_unit_app_misconception_repair", "status": "ok", "declared": false, "final_state": "completed", "failures": null}
+{"case_id": "gepa-trial-pilot_stability_fraction_addition", "status": "ok", "declared": true, "final_state": "completed", "failures": []}
+{"case_id": "gepa-trial-pilot_stability_rectangle_perimeter", "status": "ok", "declared": true, "final_state": "needs_review", "failures": [{"scenario": "stability_rectangle_perimeter", "source": {"issue": 197, "provider": "shadow_pilot_bank", "question_version": "pilot-2026-07-v2", "bank_question_id": "stability_rectangle_perimeter"}, "check": "finish_status", "detail": "final_state 期望 completed,实际 needs_review"}]}

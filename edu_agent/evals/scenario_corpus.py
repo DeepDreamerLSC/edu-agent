@@ -7,6 +7,7 @@ EvalRunner.run() 只收预加载 cases(不读数据集路径),image_teaching.loa
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -30,6 +31,17 @@ _STATUSES = ("known_red", "guarded")
 _QID_RE = re.compile(r"[0-9a-f]{24}")
 # evals 数据集目录(老数据集零迁移证据与 corpus 加载共用)。
 DATASETS_DIR = Path(__file__).resolve().parent / "datasets"
+
+
+def scenario_fingerprint(scenario: dict) -> str:
+    """场景内容指纹(review 侧车 scenario_fingerprint 列,b2 起统一口径):
+    sha256(canonical JSON——sort_keys、紧凑分隔符、非 ASCII 保真)。
+
+    指纹取**审前快照**:转正后复算须先剥掉转正新增件(b2 gold→null;
+    路 A 删 gold 键 + promotion_evidence_eligible→false)。b1 侧车是
+    SHA-1/另一套列的历史口径,不追溯到本函数。"""
+    return hashlib.sha256(json.dumps(scenario, sort_keys=True, ensure_ascii=False,
+                                     separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
 def load_shortboard_corpus(path: str | Path | None = None) -> list[dict]:
@@ -197,7 +209,8 @@ def _gold_dialogue_errors(scenario: dict) -> list[str]:
     if not isinstance(steps, list) or not steps:
         return errors + [f"{scenario_id}:steps 必须是非空列表(分支剧本)"]
     gold = scenario.get("gold")
-    if not isinstance(gold, dict) or not str(gold.get("status") or "").strip():
+    # gold=null 起手(b2 起创建即冻结,#238 裁定):候选期允许 None,转正后改 dict 带 status
+    if gold is not None and (not isinstance(gold, dict) or not str(gold.get("status") or "").strip()):
         errors.append(f"{scenario_id}:gold.status 必填(候选/转正走 review.csv 人工流)")
     for i, step in enumerate(steps):
         branches = step.get("branches") if isinstance(step, dict) else None

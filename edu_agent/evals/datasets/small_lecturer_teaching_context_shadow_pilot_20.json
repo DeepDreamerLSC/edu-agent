@@ -30,12 +30,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "multi_step",
         "analysis_quality": "detailed",
         "grade": "五年级"
@@ -76,12 +83,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "misconception",
         "analysis_quality": "detailed",
         "grade": "五年级"
@@ -122,12 +136,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "multi_step",
         "analysis_quality": "detailed",
         "grade": "六年级"
@@ -168,12 +189,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "calculation",
         "analysis_quality": "terse",
         "grade": "五年级"
@@ -214,12 +242,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "calculation",
         "analysis_quality": "detailed",
         "grade": "五年级"
@@ -260,12 +295,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "geometry",
         "analysis_quality": "detailed",
         "grade": "三年级"
@@ -306,12 +348,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "geometry",
         "analysis_quality": "detailed",
         "grade": "五年级"
@@ -352,12 +401,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "application",
         "analysis_quality": "terse",
         "grade": "六年级"
@@ -398,12 +454,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "application",
         "analysis_quality": "detailed",
         "grade": "四年级"
@@ -444,12 +507,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "application",
         "analysis_quality": "detailed",
         "grade": "六年级"
@@ -490,12 +560,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "application",
         "analysis_quality": "detailed",
         "grade": "六年级"
@@ -536,12 +613,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "application",
         "analysis_quality": "terse",
         "grade": "五年级"
@@ -582,12 +666,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "application",
         "analysis_quality": "detailed",
         "grade": "四年级"
@@ -628,12 +719,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "calculation",
         "analysis_quality": "detailed",
         "grade": "四年级"
@@ -674,12 +772,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "application",
         "analysis_quality": "detailed",
         "grade": "三年级"
@@ -720,12 +825,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 3,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "reasoning",
         "analysis_quality": "terse",
         "grade": "四年级"
@@ -766,12 +878,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "reasoning",
         "analysis_quality": "detailed",
         "grade": "五年级"
@@ -812,12 +931,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "geometry",
         "analysis_quality": "detailed",
         "grade": "四年级"
@@ -858,12 +984,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "calculation",
         "analysis_quality": "detailed",
         "grade": "三年级"
@@ -904,12 +1037,19 @@
           }
         ]
       },
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "patha-pilot-20",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "tags": [],
       "metadata": {
         "minimum_student_turns": 4,
         "stability_gate": true,
         "teaching_context_shadow_pilot": true,
-        "promotion_evidence_eligible": false,
+        "promotion_evidence_eligible": true,
         "coverage_bucket": "multi_step",
         "analysis_quality": "terse",
         "grade": "三年级"
