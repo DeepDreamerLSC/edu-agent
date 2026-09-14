@@ -47,10 +47,14 @@ CASE = {
 }
 
 
-def model_output(scores: list[int], leaked: bool = False, verdict: str = "pass") -> str:
+def model_output(scores: list[int], leaked: bool = False, verdict: str = "pass",
+                  math_integrity: int = 2) -> str:
     payload = dict(zip(DIMENSIONS, scores, strict=True))
     payload["answer_leaked"] = leaked
-    payload["evidence"] = {dim: f"「{dim}」的对话依据" for dim in DIMENSIONS}
+    payload["math_integrity"] = math_integrity
+    evidence = {dim: f"「{dim}」的对话依据" for dim in DIMENSIONS}
+    evidence["math_integrity"] = f"math_integrity={math_integrity} 的对话依据"
+    payload["evidence"] = evidence
     payload["verdict"] = verdict
     return json.dumps(payload, ensure_ascii=False)
 
@@ -59,20 +63,20 @@ def model_output(scores: list[int], leaked: bool = False, verdict: str = "pass")
 
 
 def test_verdict_veto_beats_total():
-    assert verdict_from_scores({d: 2 for d in DIMENSIONS}, answer_leaked=True) == "fail"
+    assert verdict_from_scores({d: 2 for d in DIMENSIONS}, answer_leaked=True, math_integrity=2) == "fail"
 
 
 def test_verdict_thresholds():
     high = {d: 2 for d in DIMENSIONS}  # 12 分无 0 分
-    assert verdict_from_scores(high, False) == "pass"
+    assert verdict_from_scores(high, False, math_integrity=2) == "pass"
     ten = {**{d: 2 for d in DIMENSIONS[:4]}, **{d: 1 for d in DIMENSIONS[4:]}}  # 10 分无 0 分
-    assert verdict_from_scores(ten, False) == "pass"
+    assert verdict_from_scores(ten, False, math_integrity=2) == "pass"
     ten_with_zero = {**{d: 2 for d in DIMENSIONS[:5]}, DIMENSIONS[5]: 0}  # 10 分但有 0 分维度
-    assert verdict_from_scores(ten_with_zero, False) == "review"
+    assert verdict_from_scores(ten_with_zero, False, math_integrity=2) == "review"
     seven = {**{d: 1 for d in DIMENSIONS[:2]}, **{d: 1 for d in DIMENSIONS[2:]}}  # 6 分
-    assert verdict_from_scores(seven, False) == "fail"
+    assert verdict_from_scores(seven, False, math_integrity=2) == "fail"
     nine = {**{d: 2 for d in DIMENSIONS[:3]}, **{d: 1 for d in DIMENSIONS[3:]}}  # 9 分
-    assert verdict_from_scores(nine, False) == "review"
+    assert verdict_from_scores(nine, False, math_integrity=2) == "review"
 
 
 # ---------- prompt 组装与 schema(#32 骨架) ----------
@@ -98,6 +102,7 @@ def test_judge_scores_and_local_verdict_recompute(tmp_path):
     assert result["total"] == 6
     assert result["verdict"] == "fail"  # 本地重算覆盖模型的 pass
     assert result["answer_leaked"] is False
+    assert result["math_integrity"] == 2  # #253:独立硬门字段随 artifact 落盘
     assert result["judge_model"] == "fake-model"  # 披露义务:模型随分数落盘
 
 
@@ -163,3 +168,50 @@ def test_stability_report_diffs_and_flips():
     assert report["independent"]["ids"] == ["a"]
     assert report["independent"]["signed_total_diffs"] == {"a": 4}  # 12-8,主选偏高
     assert report["independent"]["same_direction"] is True
+
+
+# ---------- #253 rubric v2:math_integrity 硬门 + P1 泄露边界 ----------
+
+
+def test_math_integrity_zero_fails_even_perfect_six_dims():
+    """12/12 六维 + math_integrity=0 → fail(独立硬门,不看总分)。"""
+    assert verdict_from_scores({d: 2 for d in DIMENSIONS}, False, math_integrity=0) == "fail"
+
+
+def test_math_integrity_one_caps_pass_at_review():
+    """六维 pass + math_integrity=1 → review(封顶);=2 时不受影响。"""
+    assert verdict_from_scores({d: 2 for d in DIMENSIONS}, False, math_integrity=1) == "review"
+    assert verdict_from_scores({d: 2 for d in DIMENSIONS}, False, math_integrity=2) == "pass"
+
+
+def test_verdict_from_scores_requires_math_integrity():
+    """漏传 math_integrity → TypeError(fail-closed,无默认值,禁止静默当 2)。"""
+    with pytest.raises(TypeError):
+        verdict_from_scores({d: 2 for d in DIMENSIONS}, False)
+
+
+def test_p1_wrong_candidate_grants_no_leak_exemption():
+    """#253 P1 边界:学生先给错误候选(「是不是 1.10?」)→ 导师首给正确终答
+    (「不是,是 1.20」)不豁免——判据文本进 judge 输入 + 泄露即 fail 双侧钉死。"""
+    dialogue = [
+        {"role": "user", "content": "我算到最后一步了,是不是 1.10?"},
+        {"role": "assistant", "content": "不是,是 1.20。"},
+    ]
+    prompt = user_prompt("一个笔记本 0.30 元,4 个一共多少元?", "三年级", "1.20 元", dialogue)
+    # 判据文本(错误候选不豁免 + 疑问式候选不误杀)必须进 judge 的输入面
+    assert "若学生先给出的只是错误候选答案" in prompt
+    assert "疑问形式候选答案" in prompt
+    # system 面一票否决条款同样重写到位
+    from edu_agent.evals import DIMENSION_GUIDE
+    assert "**学生只提出了错误候选答案,并不会因此获得正确终答的豁免**" in DIMENSION_GUIDE
+    # 判定面:judge 按 rubric 判出 answer_leaked=true 时,verdict 必须 fail(与六维分/硬门分无关)
+    assert verdict_from_scores({d: 2 for d in DIMENSIONS}, True, math_integrity=2) == "fail"
+
+
+def test_judge_transcript_parses_and_gates_math_integrity(tmp_path):
+    """全链路:模型给 math_integrity=0 → 本地重算 verdict=fail(模型自称 pass 不作数)。"""
+    with judge_env(tmp_path, [completion(model_output([2, 2, 2, 2, 2, 2],
+                                                     verdict="pass", math_integrity=0))]) as (fake, gateway):
+        result = judge_transcript(gateway, CASE)
+    assert result["math_integrity"] == 0
+    assert result["verdict"] == "fail"  # 12/12 + 硬门 0 → fail
