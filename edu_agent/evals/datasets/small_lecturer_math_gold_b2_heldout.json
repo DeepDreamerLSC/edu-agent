@@ -128,7 +128,13 @@
       "expect": {
         "ready_to_record": true
       },
-      "gold": null,
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "gold-math-b2-heldout",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "metadata": {
         "question_template_id": "circle_area",
         "candidate_track": "complete_reasoning",
@@ -244,7 +250,13 @@
       "expect": {
         "ready_to_record": true
       },
-      "gold": null,
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "gold-math-b2-heldout",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "metadata": {
         "question_template_id": "fraction_multiplication",
         "candidate_track": "misconception_repair",
@@ -360,7 +372,13 @@
       "expect": {
         "ready_to_record": false
       },
-      "gold": null,
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "gold-math-b2-heldout",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "metadata": {
         "question_template_id": "rope_unit_app",
         "candidate_track": "support_boundary",
@@ -476,7 +494,13 @@
       "expect": {
         "ready_to_record": true
       },
-      "gold": null,
+      "gold": {
+        "schema_version": "small_lecturer_teacher_gold/v1",
+        "status": "teacher_confirmed",
+        "review_batch_ref": "gold-math-b2-heldout",
+        "approval_receipt_id": "issue-178#c5657431632",
+        "expectation_version": "small_lecturer_teacher_gold/v1"
+      },
       "metadata": {
         "question_template_id": "unit_rate",
         "candidate_track": "alternative_method",

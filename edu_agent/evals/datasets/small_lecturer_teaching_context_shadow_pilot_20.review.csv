@@ -1,0 +1,21 @@
+scenario_id,reviewer_ref,reviewed_at,teacher_confirmed,teacher_rejected,reason_codes,scenario_fingerprint
+stability_equation_subtract,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,a01f86f1a5daf754adfceb7339eec576ac1b1c3e8e84ff812d404f3455a9e4fe
+stability_equation_sign,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,2cdccdc66ed9d2aa576a288dcfcb4e610b103b125f95781d15d44d1d17122643
+stability_equation_parentheses,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,732690aebf97a4f34113cc9db8041e07fb741e89b371357bc7448dd660dbba89
+stability_fraction_addition,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,34674cc1ab5f5f642a03059061b6fc35e830acc4d3565958738f6452323ac9f9
+stability_decimal_multiply,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,5c6aa661a2790c2f2f02a42460706ee2ff15c5c0b35b67ed1f8b9232bc2a9c24
+stability_rectangle_perimeter,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,c42fd76409ad8c71d7857260d9cf5d595574a66349cf3090a5312e0cc29a11cf
+stability_triangle_area,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,7a388a591ea575ca91a30d1db83e4f6ce3a7221ff85af9e55014b36dc339d742
+stability_chicken_rabbit,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,96d48a3062df4e68928f43ec3c43c3f993e7de8bb398c67b9c1fae7f8f5634a8
+stability_average,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,4955007d6aafcb86dcf953fe7bca2dfd6ccf5e4eb7c6972576a8d032670d49b7
+stability_discount,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,6a38cae5e51b7efd80034d75e5d52bf66dccdf82ba467d7532205a1d0a2f0c98
+stability_ratio,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,5d7c487876ecea5e7b948ec277190c139b00b968e8c9f479f6d83ac895bf2d0e
+stability_speed,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,8e080448b50f700ad9f491d146a73cb8afc643ebcc084bbda7835cd3470fdc29
+stability_age,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,e2f510e59fdd539b6c4b0ea8ee6746223b67627af1c9298a97a2911fa61723c1
+stability_unit_conversion,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,118c0fa68baf562594f70bd7e5fb3915a47422478079db23a21b888f5632dd01
+stability_division_remainder,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,988ad32a1781d342bbf96e765e3f421b1c5124ba8e4f5ac9fb667d1c0ff0c76a
+stability_sequence,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,eef32d8a3ab15f169067ef9e70b0186e9ec7ff6123e18539125f86513d47a6f1
+stability_probability,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,d390d26a0ce0e3ffc28c90bb5262165c7274d6dd3a512f1fbf49366918b82e7d
+stability_angles,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,1b434929fe184ea2ccb9d8cffb8c9ff862f3e4e0223505cf177ed4144f4fa7e5
+stability_order_operations,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,031369ee3d1572845623879fd5064027737b54ec3472a9d910ac7777f6974cc9
+stability_word_problem,用户 人审(#178·路A·c5657431632),2026-09-14T00:35:08Z,true,,,7872f7713bc52bbf530b34648d2a3a0b82cf908bdc7560acc756e51986a58eee

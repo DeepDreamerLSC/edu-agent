@@ -12,8 +12,11 @@ from pathlib import Path
 import pytest
 
 from edu_agent.evals import (
+    DATASETS_DIR,
+    DEFAULT_CORPUS,
     check_rows,
     diff_checks,
+    load_shortboard_corpus,
     real_model_scenarios,
     render_report,
 )
@@ -141,3 +144,33 @@ def test_render_report_provenance_notes():
     report = render_report(Path("/tmp/out"), checks, scores, diff,
                            provenance={"current": "abc123", "prev": "abc123"})
     assert "基线无溯源" not in report and "判分器已变更" not in report
+
+
+def test_train_corpus_count_and_heldout_isolation():
+    """腿② 门口径 = 训练集计数(#238 §4:裁定 c5657228854 + 算术更正 c5657249546)。
+
+    训练集 = 优化器可见面:存量 87(legacy 27 + b1 金标 60)+ b2 13(含硬压力
+    轨 1)+ 路 A pilot-20 20 = 120;门 ≥ 100,余量 20。留出 4 独立文件,不进
+    默认加载(corpus_round 按显式路径加载,heldout 不传即不可见,#238 切分即
+    文件名)。计数随每批转正翻新:改数字须带裁定/回执出处,不许静默挪门。
+    """
+    legacy = {"small_lecturer_dialogue_scenarios.json": 3,
+              "small_lecturer_shadow_scenarios_24.json": 24}
+    gold_train = {"small_lecturer_math_gold_candidates.json": 60,  # b1 转正(#236)
+                  "small_lecturer_math_gold_b2.json": 13,          # b2 转正,含硬压力轨 1
+                  "small_lecturer_teaching_context_shadow_pilot_20.json": 20}  # 路 A 促升
+    total = 0
+    for name, expected in {**legacy, **gold_train}.items():
+        payload = json.loads((DATASETS_DIR / name).read_text(encoding="utf-8"))
+        assert len(payload["scenarios"]) == expected, (name, len(payload["scenarios"]))
+        total += expected
+    assert total == 120
+    # 金标三件全过 corpus 加载面且全 teacher_confirmed(转正 = 门计数有效)
+    for name in gold_train:
+        for scenario in load_shortboard_corpus(DATASETS_DIR / name):
+            assert scenario["gold"]["status"] == "teacher_confirmed", (name, scenario["id"])
+    # 留出 4:独立文件、同样全确认;默认加载面不含 heldout
+    heldout = load_shortboard_corpus(DATASETS_DIR / "small_lecturer_math_gold_b2_heldout.json")
+    assert len(heldout) == 4
+    assert all(s["gold"]["status"] == "teacher_confirmed" for s in heldout)
+    assert not any("heldout" in str(path) for path in DEFAULT_CORPUS)
