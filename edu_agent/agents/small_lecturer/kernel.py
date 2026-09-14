@@ -30,53 +30,17 @@ from .format_guard import _DOWNGRADE_PROMPT, evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
 from .numeric import (_ASCII_NUMBER, _answer_focus_numbers, _answer_numbers, _drift_sources,
                       _known_answer, _question_numbers, _reply_numbers, _spoken_numbers)
-from .prompting import (ASK_FINAL_ANSWER, _user_prompt, diagnose_turn_hint, first_question_text,
-                        grade_grounding, opening_hint, summary_system_prompt, system_prompt)
+from .prompting import (ASK_FINAL_ANSWER, OPEN_SCHEMA, TUTOR_SUMMARY_SCHEMA,
+                        TUTOR_TURN_SCHEMA, _FEEDS_METHOD_CRITIQUE,
+                        _GUARD_REJECTION_HIT_TEMPLATE, _GUARD_REJECTION_NUMBERS_TEMPLATE,
+                        _PREMATURE_CONFIRM_CRITIQUE, _SELF_CRITIQUE, _user_prompt,
+                        diagnose_turn_hint, first_question_text, grade_grounding, opening_hint,
+                        summary_system_prompt, system_prompt)
 from .session import LearnerSession, SessionVersionConflict, Summary, TerminalStateError, Turn
 from .tone_guardrails import apply_tone_guardrail
 
 # grammar 真强制(llama-server)下模型只可能产出符合 schema 的 JSON;
 # #54 后 gateway.text 即已验证内容,直接 json.loads。
-TUTOR_TURN_SCHEMA = {
-    "type": "object",
-    "properties": {
-        # 答案泄露防御(#146 M1,05 §5):回复前先承诺"本轮如何引导而不给答案"——
-        # schema 经 json.dumps 进 prompt,字段声明顺序即生成顺序,排在 reply 之后等于没加。
-        # 规划装置,不是验证装置:内容不进任何判定/守卫/报告/judge 输入,内核不读它
-        # (cited_numbers 同为自报字段已实测虚报,reason 不重蹈自报歧途)。
-        "reason": {"type": "string"},
-        "reply": {"type": "string"},
-        "ready_to_confirm": {"type": "boolean"},
-        # 数字漂移守卫:模型自报本轮回复中引用的题目条件数字(服务端对题面校验)
-        "cited_numbers": {"type": "array", "items": {"type": "number"}},
-    },
-    "required": ["reason", "reply", "ready_to_confirm", "cited_numbers"],
-    "additionalProperties": False,
-}
-TUTOR_SUMMARY_SCHEMA = {
-    "type": "object",
-    "properties": {"summary": {"type": "string"}},
-    "required": ["summary"],
-    "additionalProperties": False,
-}
-# 统一 open schema(任务包2步4):一次调用产出 转写 + 分步解 + 首问。
-# 因 tutor 即 VL 模型,vision 判定(acceptable/transcription)与首问(reply)
-# 合入同一次调用;steps 是阶梯底稿 + 数字校验基准。
-OPEN_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "acceptable": {"type": "boolean"},
-        "transcription": {"type": "string"},
-        "steps": {"type": "array", "items": {
-            "type": "object",
-            "properties": {"step": {"type": "string"}, "value": {"type": "string"}},
-            "required": ["step", "value"], "additionalProperties": False}},
-        "reply": {"type": "string"},
-    },
-    "required": ["acceptable", "transcription", "steps", "reply"],
-    "additionalProperties": False,
-}
-
 FAIL_CLOSED_TEXT = "这张题图我没法安全地开始讲解(可能包含多道题或不清晰)。请换一张只包含一道题的清晰照片,或者直接把题目打出来。"
 # 统一 open 里 reply 留空(图文题 acceptable=false 且模型照"可留空"留空)时的确定性兜底首问
 _OPENING_FALLBACK = "我们先看看这道题,你能说说题目给了哪些条件吗?"
@@ -403,32 +367,6 @@ NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能�
 SAFE_FALLBACK_TEXT = "先回到当前小问,你能说出题目明确给出的一个条件吗?"
 
 
-# 复读自批评(业界 self-refine:把 tutor 自己上一条当反面证据喂回;任务包2步3)
-_SELF_CRITIQUE = (
-    "你上一轮已经这样问过,学生仍说不会/没答上来。别重复这个问点:"
-    "要么把这一步拆小,并直接给出这一步的具体数值结果(照题面给,如「这一步先算…得到…」),"
-    "让他接着算下一步;要么换一个更小的问点。"
-)
-
-# 判停闸重写指令(#149,走既有 _regenerate = judge→refiner 的 refiner 路径):
-# 这是**给模型的指令**,不是学生可见模板(不新增模板);不删词、不做解析脱敏。
-_PREMATURE_CONFIRM_CRITIQUE = (
-    "学生还没有自己说出这道题的答案。此轮不能确认收尾:不要置 ready_to_confirm、"
-    "不要说结论性数值(终答与等价改写都不行),也不要替学生把答案讲完。"
-    "改成按教学弧线继续推进:顺着学生刚说的这一步,问一个更小的问题,让他自己往下算。"
-)
-
-# 代喂命中重写指令(#152 follow-up / #165 WS4「守卫替换粒度」):一次方法词命中
-# **不再整轮换成复讲模板**——那会连本轮的引导/确认语义一起丢掉,并强制不确认,
-# 把「学生已说出答案、本该收束」的末轮推向 needs_review(实测 12 分场景压到 3 分)。
-# 这是**给模型的指令**(沿用既有 _regenerate 路径,不新增学生可见模板)。
-_FEEDS_METHOD_CRITIQUE = (
-    "这一轮不要说出方法名/术语(如「等式性质」「通分」「假设法」这类词的名称),"
-    "也不要说出答案数字。保留这一轮原有的作用(该引导就继续引导、该确认就确认),"
-    "只是不要替学生把方法的名字点出来——用学生已经说过的话来推进,重写这一轮回复。"
-)
-
-
 def _is_repeat(prev: str, new: str) -> bool:
     """语义复读检测:新回复与上一轮 tutor 输出高度相似(阈值 0.85,stdlib difflib)。
 
@@ -590,14 +528,12 @@ def _guard_output(reply_text: str, session: "LearnerSession | None" = None,
         # 且本轮已无新信息可重写——直接落兜底句,由输出面防复读背板推进阶梯(#107/#112),
         # 不再多烧一次重生成(#184:重复兜底句会把判据一次命中拖成两次)。
         return _contextual_fallback(session, guard, rule_ids, ctx.student_message)
-    critique = (f"你上一条回复被教学护栏拦截(规则:{','.join(rule_ids)};命中内容:"
-                f"「{reply_text[:48]}」)。请重写这条回复,直接回应用户当前的问题;"
-                f"不要重复被拦截的内容,不要提前给出答案或方法名。")
+    critique = _GUARD_REJECTION_HIT_TEMPLATE.format(
+        rule_ids_joined=','.join(rule_ids), reply_excerpt=reply_text[:48])
     if violations:
         numbers = "、".join(f"{n:g}" for n in sorted(violations))
-        critique = (f"你上一条回复被教学护栏拦截(规则:{','.join(rule_ids)};未经学生验证"
-                    f"就说出的数值:{numbers})。请重写这条回复:不要说这些数值,也不要给出"
-                    f"答案数字或题面之外的中间结果——用学生已经说过的信息继续引导他往下算。")
+        critique = _GUARD_REJECTION_NUMBERS_TEMPLATE.format(
+            rule_ids_joined=','.join(rule_ids), numbers=numbers)
     regenerated = _regenerate(ctx, session, reply_text, critique, ready_to_confirm)
     if regenerated is not None:
         _record_event(session, guard, rule_ids, reply_text, regenerated=True)

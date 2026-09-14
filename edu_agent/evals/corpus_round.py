@@ -17,6 +17,7 @@ KernelSubject + EvalRunner(case 级 checkpoint/续跑/失败台账)+ judge 单�
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import socket
 import sys
@@ -177,26 +178,72 @@ def diff_checks(current: dict[str, dict], previous: dict[str, dict]) -> dict[str
     return verdicts
 
 
+def _judger_sha256() -> str:
+    """判分器指纹:checks.py + judge.py 按文件名序拼接后 sha256(十六进制)。
+    #238 §5:跨轮 diff 遇版本断点须标注,此函数提供可比对的哈希。"""
+    files = sorted((Path(__file__).parent / f) for f in ("checks.py", "judge.py"))
+    h = hashlib.sha256()
+    for f in files:
+        h.update(f.read_bytes())
+    return h.hexdigest()
+
+
+def _provenance_context(diff_from):
+    """Compute current judger hash + read baseline hash (None = baseline has no provenance)."""
+    judger_hash = _judger_sha256()
+    prev_hash = None
+    if diff_from:
+        prev_file = Path(diff_from) / "judger.sha256"
+        if prev_file.is_file():
+            prev_hash = prev_file.read_text(encoding="utf-8").strip()
+    return judger_hash, prev_hash
+
+
+def _compute_diff(diff_from: str | None, scenarios: dict, checks: dict):
+    """Compute cross-round diff context (verdicts + prev scores) if diff_from given."""
+    if not diff_from:
+        return None, None
+    prev_dir = Path(diff_from)
+    previous = check_rows(scenarios, load_results(prev_dir))
+    verdicts = diff_checks(checks, previous)
+    prev_file = prev_dir / "judge-scores.jsonl"
+    scores = ({row["case_id"]: row for row in (json.loads(line) for line in
+              prev_file.read_text(encoding="utf-8").splitlines() if line.strip())}
+              if prev_file.is_file() else None)
+    return verdicts, scores
+
+
 def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict],
-                  diff: dict | None = None, skipped: list[str] | None = None) -> str:
+                  diff: dict | None = None, skipped: list[str] | None = None,
+                  provenance: dict | None = None) -> str:
     """报告即工件:逐场景 判定/终态/judge 一行;有基线时加跨轮列与新增红计数。
 
     跨轮对照收在一个 `diff` 上下文里:`{"from": 上轮 run 目录, "verdicts": {...},
     "prev_scores": {...}}`;有上轮 judge 分(按轮留存在上轮 run 目录)时 judge 列给
     「上轮→本轮」——轮间噪声对比由此可复算(审查 P3,2026-09-12)。
     软化命中行由调用方以 `+ soften_line(soften_counts(results))` 追加(#241 行 4)。
+
+    `provenance`:判分器指纹上下文(#238 §5),键 `current`(本轮)/`prev`(基线);
+    基线无溯源时 `prev` 为 None(首轮基线 math-gold-v1 即此形态,#238 §5 记欠账)。
     """
     lines = [
         "# corpus checks × 真模型轮次报告(#216)",
         "",
         f"- 生成:{datetime.now(timezone.utc).isoformat()}",
         f"- 工件:{out_dir}",
+        f"- judger_sha256:{(provenance or {}).get('current', '')}",
     ]
     if skipped:
         lines.append(f"- 跳过无剧本场景:{len(skipped)} 条(模拟器消费面未接线,#211 边界)")
     if diff:
         new_red = sum(1 for v in diff["verdicts"].values() if v == "新增红")
         lines += [f"- 对照基线:{diff['from']}", f"- **新增红:{new_red}**(绿→红 = 回归信号)"]
+        prev_hash = (provenance or {}).get("prev")
+        curr_hash = (provenance or {}).get("current", "")
+        if prev_hash is None:
+            lines.append("- 基线无溯源(判分器指纹自本轮起,#238 §5 首轮基线欠账)")
+        elif prev_hash != curr_hash:
+            lines.append(f"- 判分器已变更(基线 {prev_hash[:12]}→{curr_hash[:12]},#238 §5 跨轮版本断点)")
     else:
         lines += ["- 对照基线:无(首轮即基线;下轮用 --diff-from 指向本轮 collect 下最新 run 目录)"]
     lines += ["", "| case_id | status | final_state | checks | 判定(跨轮) | judge |", "|---|---|---|---|---|---|"]
@@ -278,18 +325,15 @@ def main(argv: list[str] | None = None) -> int:
     dump(out_dir / "checks.jsonl", checks)
     dump(out_dir / "judge-scores.jsonl", scores)
 
-    diff_verdicts, prev_scores = None, None
-    if args.diff_from:
-        prev_dir = Path(args.diff_from)
-        previous = check_rows(scenarios, load_results(prev_dir))
-        diff_verdicts = diff_checks(checks, previous)
-        prev_file = prev_dir / "judge-scores.jsonl"
-        prev_scores = ({row["case_id"]: row for row in (json.loads(line) for line in
-                       prev_file.read_text(encoding="utf-8").splitlines() if line.strip())}
-                       if prev_file.is_file() else None)
+    diff_verdicts, prev_scores = _compute_diff(args.diff_from, scenarios, checks)
     diff = ({"from": args.diff_from, "verdicts": diff_verdicts, "prev_scores": prev_scores}
             if args.diff_from else None)
-    report = render_report(out_dir, checks, scores, diff, skipped) + soften_line(
+
+    # #238 §5 判分器溯源:每轮 run 目录落指纹,report 头带行;跨轮先比哈希
+    judger_hash, prev_hash = _provenance_context(args.diff_from)
+    (run_dir / "judger.sha256").write_text(judger_hash + "\n", encoding="utf-8")
+    provenance = {"current": judger_hash, "prev": prev_hash}
+    report = render_report(out_dir, checks, scores, diff, skipped, provenance=provenance) + soften_line(
         soften_counts(results))
     (out_dir / "report.md").write_text(report, encoding="utf-8")
     print(report)
