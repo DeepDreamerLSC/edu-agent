@@ -20,6 +20,7 @@ import argparse
 import hashlib
 import json
 import socket
+import subprocess
 import sys
 import tempfile
 from datetime import datetime, timezone
@@ -50,6 +51,33 @@ def _probe(url: str, timeout: float = 2.0) -> str:
             return "ok"
     except OSError as exc:
         return f"不可达:{exc.__class__.__name__}"
+
+
+def _file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _git_sha() -> str | None:
+    """跑批 commit(#238 件 A):git 不可用/非仓库时 None(不伪造,README 手写不算溯源)。"""
+    try:
+        out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, capture_output=True,
+                             text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return out.stdout.strip() if out.returncode == 0 else None
+
+
+def run_identity() -> dict:
+    """跑批身份三件套(#238 件 A,GEPA 前置):git HEAD / prompt 组件 / models 配置。
+
+    GEPA 优化对象是 prompting.py——每次迭代的可归因性从这三个哈希起步;
+    机器可读进 manifest(此前只有 README 手写,不算溯源)。老轮次不回填。"""
+    return {
+        "git_sha": _git_sha(),
+        "prompts_sha256": _file_sha256(
+            REPO / "edu_agent" / "agents" / "small_lecturer" / "prompting.py"),
+        "models_sha256": _file_sha256(REPO / "configs" / "models.yaml"),
+    }
 
 
 def real_model_scenarios(corpus_paths: list[Path]) -> dict[str, dict]:
@@ -306,7 +334,7 @@ def main(argv: list[str] | None = None) -> int:
     collect_root = out_dir / "collect"
     print(f"批跑:{len(cases)} 场景(真模型口径;确定性口径不在本面)→ {collect_root}")
     EvalRunner(KernelSubject(gateway), RunnerConfig(concurrency=args.concurrency),
-               collect_root).run(cases_file, cases)
+               collect_root).run(cases_file, cases, identity=run_identity())
     run_dir = sorted(collect_root.glob("*-*Z-*"))[-1]
     results = load_results(run_dir)
 

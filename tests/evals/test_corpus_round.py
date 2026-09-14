@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import csv
+import re
 import json
 from pathlib import Path
 
@@ -236,3 +237,13 @@ def test_sidecar_fingerprints_recompute_from_pre_promotion_state():
                 (csv_name, scenario["id"], "审后内容漂移或侧车指纹错")
             checked += 1
     assert checked == 37
+
+
+def test_run_identity_is_machine_readable():
+    """#238 件 A:身份三件套——prompt/models 为 64 位十六进制;git 缺失时 None 不伪造。"""
+    from edu_agent.evals import run_identity
+
+    identity = run_identity()
+    assert re.fullmatch(r"[0-9a-f]{64}", identity["prompts_sha256"])
+    assert re.fullmatch(r"[0-9a-f]{64}", identity["models_sha256"])
+    assert identity["git_sha"] is None or re.fullmatch(r"[0-9a-f]{7,40}", identity["git_sha"])

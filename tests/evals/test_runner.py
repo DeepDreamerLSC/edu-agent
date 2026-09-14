@@ -187,3 +187,16 @@ def test_morning_summary_counts_and_actions(tmp_path, dataset):
     # 全绿路径
     ok_dir = make_runner(tmp_path, FakeSubject()).run(dataset, cases)
     assert "全部 20 条完成:进入 judge 评分与报告" in morning_summary(ok_dir)
+
+
+def test_run_with_identity_writes_manifest_block(tmp_path, dataset):
+    """#238 件 A:identity 原样进 manifest;不传 = 键缺席(其他调用方不受影响)。"""
+    run_dir = make_runner(tmp_path, FakeSubject()).run(
+        dataset, read_jsonl(dataset),
+        identity={"git_sha": "abc123", "prompts_sha256": "p" * 64, "models_sha256": "m" * 64})
+    manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["identity"] == {"git_sha": "abc123", "prompts_sha256": "p" * 64,
+                                    "models_sha256": "m" * 64}
+    run_dir2 = make_runner(tmp_path, FakeSubject()).run(dataset, read_jsonl(dataset))
+    manifest2 = json.loads((run_dir2 / "manifest.json").read_text(encoding="utf-8"))
+    assert "identity" not in manifest2
