@@ -34,6 +34,9 @@ from .summary import load_results
 from edu_agent.gateway import Gateway, GatewayError, load_registry
 
 REPO = Path(__file__).resolve().parents[2]
+# 默认 corpus = teaching_context pilot(20,有学生剧本)。
+# adaptive pilot 无剧本(模拟器消费面,#211 明确「另行接入」)——kernel 批跑面跑不了,
+# 传 --corpus 进来也会被 build_cases 显式跳过并计数,不静默。
 DEFAULT_CORPUS = (
     "edu_agent/evals/datasets/small_lecturer_teaching_context_shadow_pilot_20.json",
 )
@@ -50,12 +53,16 @@ def _probe(url: str, timeout: float = 2.0) -> str:
 
 
 def real_model_scenarios(corpus_paths: list[Path]) -> dict[str, dict]:
+    """读 corpus 文件,取真模型口径子集(无 fake_model);case id 加数据集前缀防跨文件撞名。
+
+    loader(load_shortboard_corpus)已做形状/答案可提取校验——写错在这里红,不静默跳过。
+    """
     scenarios: dict[str, dict] = {}
     for path in corpus_paths:
         stem = Path(path).stem
         for scenario in load_shortboard_corpus(path):
             if scenario.get("fake_model"):
-                continue
+                continue  # 确定性口径:pytest 已永久回放(#216 边界)
             case_id = f"{stem}_{scenario['id']}"
             if case_id in scenarios:
                 raise ValueError(f"case_id 撞名:{case_id}(数据集前缀后仍重复,改 id)")
@@ -66,6 +73,9 @@ def real_model_scenarios(corpus_paths: list[Path]) -> dict[str, dict]:
 
 
 def build_cases(scenarios: dict[str, dict]) -> tuple[list[dict], list[str]]:
+    """场景 → runner cases;无剧本场景(模拟器消费面,#211 边界)显式跳过并返回名单。
+
+    v2 分支剧本(steps)不算「无剧本」——学生消息由跟随器逐轮选(#178 方案 A)。"""
     cases, skipped = [], []
     for case_id, scenario in scenarios.items():
         if not scenario.get("student_turns") and not scenario.get("steps"):
@@ -78,6 +88,7 @@ def build_cases(scenarios: dict[str, dict]) -> tuple[list[dict], list[str]]:
 
 
 def judge_rows(gateway: Gateway, scenarios: dict[str, dict], results: list[dict]) -> dict[str, dict]:
+    """ok 行 → judge 单遍 primary(评分失败记台账不炸整轮,口径同 tuning_round 单遍)。"""
     scores: dict[str, dict] = {}
     for row in results:
         if row["status"] != "ok":
@@ -100,11 +111,14 @@ def judge_rows(gateway: Gateway, scenarios: dict[str, dict], results: list[dict]
                 "messages": messages,
             })
         except (GatewayError, json.JSONDecodeError, KeyError) as exc:
+            # 评分失败记台账不炸整轮(judge 路径可抛的全集:网关/剥壳解析/缺键);
+            # 其余异常照常炸出(评分器自身的 bug 不许被台账吞掉)
             scores[row["case_id"]] = {"error": f"{type(exc).__name__}: {exc}"[:200]}
     return scores
 
 
 def check_rows(scenarios: dict[str, dict], results: list[dict]) -> dict[str, dict]:
+    """每场景的 checks 判定行:声明了 expect.checks 才跑;未声明记 declared=False(不冒充全绿)。"""
     rows: dict[str, dict] = {}
     for row in results:
         scenario = scenarios[row["case_id"]]
@@ -123,6 +137,7 @@ def check_rows(scenarios: dict[str, dict], results: list[dict]) -> dict[str, dic
 
 
 def diff_checks(current: dict[str, dict], previous: dict[str, dict]) -> dict[str, str]:
+    """跨轮 check 对照:绿→红 = 新增红(回归信号),红→绿 = 翻绿(修复或噪声,看 judge)。"""
     verdicts: dict[str, str] = {}
     for case_id, row in current.items():
         prev = previous.get(case_id)
@@ -149,8 +164,6 @@ def _judger_sha256() -> str:
     return h.hexdigest()
 
 
-
-
 def _provenance_context(diff_from):
     """Compute current judger hash + read baseline hash (None = baseline has no provenance)."""
     judger_hash = _judger_sha256()
@@ -160,8 +173,6 @@ def _provenance_context(diff_from):
         if prev_file.is_file():
             prev_hash = prev_file.read_text(encoding="utf-8").strip()
     return judger_hash, prev_hash
-
-
 
 
 def _compute_diff(diff_from: str | None, scenarios: dict, checks: dict):
@@ -187,9 +198,8 @@ def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict
     "prev_scores": {...}}`;有上轮 judge 分(按轮留存在上轮 run 目录)时 judge 列给
     「上轮→本轮」——轮间噪声对比由此可复算(审查 P3,2026-09-12)。
 
-    `judger_hash`:判分器(checks.py+judge.py)sha256,#238 §5 新规:每轮 report 头部
-    带判分器指纹,跨轮 diff 遇版本断点须标注。`prev_judger_hash` 为基线的判分器指纹
-    (None 表示基线无溯源——首轮基线 math-gold-v1 即此形态,#238 §5 记欠账)。
+    `provenance`:判分器指纹上下文(#238 §5),键 `current`(本轮)/`prev`(基线);
+    基线无溯源时 `prev` 为 None(首轮基线 math-gold-v1 即此形态,#238 §5 记欠账)。
     """
     lines = [
         "# corpus checks × 真模型轮次报告(#216)",
@@ -283,6 +293,8 @@ def main(argv: list[str] | None = None) -> int:
         path.write_text("\n".join(json.dumps({"case_id": k, **v}, ensure_ascii=False)
                                   for k, v in sorted(rows.items())) + "\n", encoding="utf-8")
 
+    # 判定与 judge 分按轮留存在各自 run 目录(与 transcript 同处 = 该轮自足可复算);
+    # out_dir 根下同名文件是最新一轮的便捷副本。—— 审查 P3(2026-09-12)
     dump(run_dir / "checks.jsonl", checks)
     dump(run_dir / "judge-scores.jsonl", scores)
     dump(out_dir / "checks.jsonl", checks)
