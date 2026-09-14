@@ -6,16 +6,21 @@
 
 from __future__ import annotations
 
+import csv
 import json
 from pathlib import Path
 
 import pytest
 
 from edu_agent.evals import (
+    DATASETS_DIR,
+    DEFAULT_CORPUS,
     check_rows,
     diff_checks,
+    load_shortboard_corpus,
     real_model_scenarios,
     render_report,
+    scenario_fingerprint,
     soften_counts,
     soften_line,
 )
@@ -161,3 +166,73 @@ def test_render_report_provenance_notes():
     report = render_report(Path("/tmp/out"), checks, scores, diff,
                            provenance={"current": "abc123", "prev": "abc123"})
     assert "基线无溯源" not in report and "判分器已变更" not in report
+
+
+def test_train_corpus_count_and_heldout_isolation():
+    """腿② 门锚(#238 §4:裁定 c5657228854 + 算术更正 c5657249546)。
+
+    两个口径分开钉死,「哪个算门」归裁定,不在测试里裁决(#248 审 P3):
+    - **raw = 120**:裁定口径训练集计数(87 = 27 legacy + b1 金标 60,
+      + b2 13 含硬压力轨 1 + 路 A 20);
+    - **loadable = 93**:过 corpus 加载面的金标三件——legacy v1/v3 实测
+      过不了 load_shortboard_corpus 且全仓无生产消费者,严格口径下
+      优化器可见面 = 93。
+    留出 4 独立文件不进默认加载(corpus_round 显式路径加载,不传即不可见,
+    #238 切分即文件名)。计数随每批转正翻新:改数字须带裁定/回执出处。
+    """
+    raw = {"small_lecturer_dialogue_scenarios.json": 3,        # legacy v1
+           "small_lecturer_shadow_scenarios_24.json": 24,      # legacy v3
+           "small_lecturer_math_gold_candidates.json": 60,     # b1 转正(#236)
+           "small_lecturer_math_gold_b2.json": 13,             # b2 转正,含硬压力轨 1
+           "small_lecturer_teaching_context_shadow_pilot_20.json": 20}  # 路 A 促升
+    assert sum(len(json.loads((DATASETS_DIR / name).read_text(encoding="utf-8"))["scenarios"])
+               for name in raw) == 120
+    gold_train = ("small_lecturer_math_gold_candidates.json",      # b1(#236)
+                  "small_lecturer_math_gold_b2.json",             # b2,含硬压力轨 1
+                  "small_lecturer_teaching_context_shadow_pilot_20.json")  # 路 A
+    loadable = 0
+    for name in gold_train:  # 金标三件全过 corpus 加载面且全 teacher_confirmed
+        for scenario in load_shortboard_corpus(DATASETS_DIR / name):
+            assert scenario["gold"]["status"] == "teacher_confirmed", (name, scenario["id"])
+            loadable += 1
+    assert loadable == 93
+    # 留出 4:独立文件、同样全确认;默认加载面不含 heldout
+    heldout = load_shortboard_corpus(DATASETS_DIR / "small_lecturer_math_gold_b2_heldout.json")
+    assert len(heldout) == 4
+    assert all(s["gold"]["status"] == "teacher_confirmed" for s in heldout)
+    assert not any("heldout" in str(path) for path in DEFAULT_CORPUS)
+
+
+def test_sidecar_fingerprints_recompute_from_pre_promotion_state():
+    """review 侧车指纹可复算(#248 审 P3:口径落盘,不再靠变体矩阵反推)。
+
+    指纹 = **审前快照**的 scenario_fingerprint;转正后从现态剥掉转正新增件
+    即回审前态:b2 剥法 gold→null(审前键在值空)、路 A 剥法删 gold 键 +
+    promotion_evidence_eligible→false。剧本内容任何漂移(台词/触发词改动)
+    → 指纹失配红;纯转正件(金标块/促升翻转)不破指纹——这正是侧车要
+    钉住的不变量。b1 侧车是 SHA-1 历史口径,不在本断言面。"""
+    batches = [
+        ("small_lecturer_math_gold_b2.json", "small_lecturer_math_gold_b2.review.csv", "b2"),
+        ("small_lecturer_math_gold_b2_heldout.json", "small_lecturer_math_gold_b2_heldout.review.csv", "b2"),
+        ("small_lecturer_teaching_context_shadow_pilot_20.json",
+         "small_lecturer_teaching_context_shadow_pilot_20.review.csv", "patha"),
+    ]
+    checked = 0
+    for json_name, csv_name, family in batches:
+        scenarios = json.loads((DATASETS_DIR / json_name).read_text(encoding="utf-8"))["scenarios"]
+        rows = {r["scenario_id"]: r
+                for r in csv.DictReader((DATASETS_DIR / csv_name).open(encoding="utf-8"))}
+        assert len(rows) == len(scenarios), csv_name
+        for scenario in scenarios:
+            pre = dict(scenario)
+            if family == "b2":
+                pre["gold"] = None
+            else:
+                del pre["gold"]
+                meta = dict(pre["metadata"])
+                meta["promotion_evidence_eligible"] = False
+                pre["metadata"] = meta
+            assert rows[scenario["id"]]["scenario_fingerprint"] == scenario_fingerprint(pre), \
+                (csv_name, scenario["id"], "审后内容漂移或侧车指纹错")
+            checked += 1
+    assert checked == 37

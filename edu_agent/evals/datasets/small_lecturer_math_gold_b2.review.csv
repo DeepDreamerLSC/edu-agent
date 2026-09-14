@@ -1,13 +1,14 @@
 scenario_id,reviewer_ref,reviewed_at,teacher_confirmed,teacher_rejected,reason_codes,scenario_fingerprint
-circle_area_misconception_repair,,,,,,2be751d33e28f951a6a83501cc87476203a8394002990f30076dfd03f4d7532f
-circle_area_support_boundary,,,,,,7b6f30dcbc43c1f66650d6bd9851209cd99b37936c69cd09ec44318dc978bfe7
-circle_area_alternative_method,,,,,,4cb28b16a97b39a263a530c8c4fc0884ebdfdc826beb43d5760d55d07489fadf
-fraction_multiplication_complete_reasoning,,,,,,a971351fe6af91e3fb24af143e87bac6db40e3c79a740ee6e87058c5a0d0c342
-fraction_multiplication_support_boundary,,,,,,da2f7b1c6a1d46363021e5fc1cd7d601ebd1f134eb7e6daf5624c8eb432fb445
-fraction_multiplication_alternative_method,,,,,,d5610c4d3c111104b30fa05f5a7e86315bd8f43e319989384d8c866523c6ec6e
-rope_unit_app_complete_reasoning,,,,,,213486f36494e9fc052f30de5ae802d6b0b8acc7deafea8a1ff634fd6340c587
-rope_unit_app_misconception_repair,,,,,,75a80dc32453213191d3a9708c92f80d1986eae8f1de7fda922aee0ea26d5c76
-rope_unit_app_alternative_method,,,,,,148fb97ce1af997404bc712fc594d4356517941167e56563ca00965eb9bbfb5b
-unit_rate_complete_reasoning,,,,,,624b744b49c6a5d96c26b14e800c814ea3032ad08521f414febbacae3993f1a0
-unit_rate_misconception_repair,,,,,,94c9fcf0353887af8e2b82a05859ad644295c135a165deeec7078d75528ce6da
-unit_rate_support_boundary,,,,,,97d5bce890ccf0eb95479eb590b64bf72e484b3e68168625096bba6610b4fc58
+circle_area_misconception_repair,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,2be751d33e28f951a6a83501cc87476203a8394002990f30076dfd03f4d7532f
+circle_area_support_boundary,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,7b6f30dcbc43c1f66650d6bd9851209cd99b37936c69cd09ec44318dc978bfe7
+circle_area_alternative_method,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,4cb28b16a97b39a263a530c8c4fc0884ebdfdc826beb43d5760d55d07489fadf
+fraction_multiplication_complete_reasoning,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,a971351fe6af91e3fb24af143e87bac6db40e3c79a740ee6e87058c5a0d0c342
+fraction_multiplication_support_boundary,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,da2f7b1c6a1d46363021e5fc1cd7d601ebd1f134eb7e6daf5624c8eb432fb445
+fraction_multiplication_alternative_method,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,d5610c4d3c111104b30fa05f5a7e86315bd8f43e319989384d8c866523c6ec6e
+rope_unit_app_complete_reasoning,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,213486f36494e9fc052f30de5ae802d6b0b8acc7deafea8a1ff634fd6340c587
+rope_unit_app_misconception_repair,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,75a80dc32453213191d3a9708c92f80d1986eae8f1de7fda922aee0ea26d5c76
+rope_unit_app_alternative_method,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,148fb97ce1af997404bc712fc594d4356517941167e56563ca00965eb9bbfb5b
+unit_rate_complete_reasoning,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,624b744b49c6a5d96c26b14e800c814ea3032ad08521f414febbacae3993f1a0
+unit_rate_misconception_repair,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,94c9fcf0353887af8e2b82a05859ad644295c135a165deeec7078d75528ce6da
+unit_rate_support_boundary,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,97d5bce890ccf0eb95479eb590b64bf72e484b3e68168625096bba6610b4fc58
+circle_area_support_boundary_hard_pressure,用户 人审(#178·b2+路A·c5657249785),2026-09-14T00:27:54Z,true,,,446526b0c1f8bab32a15cd542cbf18406c7f841c8a315269691947bfbcb96195

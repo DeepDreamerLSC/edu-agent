@@ -35,6 +35,7 @@ from .scenario_corpus import (
     format_failures,
     load_shortboard_corpus,
     run_scenario_checks,
+    scenario_fingerprint,
     select_branch,
     to_kernel_case,
 )
@@ -42,7 +43,7 @@ from .summary import load_results, morning_summary, write_summary
 
 # corpus_round(#216)惰性导出(PEP 562):`python -m edu_agent.evals.corpus_round`
 # 与包级急切导入会双导入告警,run 入口保持 -m 形态,符号在首次访问时再加载。
-_CORPUS_ROUND_LAZY = ("build_cases", "check_rows", "diff_checks",
+_CORPUS_ROUND_LAZY = ("DEFAULT_CORPUS", "build_cases", "check_rows", "diff_checks",
                       "real_model_scenarios", "render_report", "soften_counts", "soften_line")
 
 
@@ -64,6 +65,7 @@ __all__ = [
     "ResumeMismatch",
     "build_cases",
     "check_rows",
+    "DEFAULT_CORPUS",
     "diff_checks",
     "RunnerConfig",
     "SCHEMA",
@@ -86,6 +88,7 @@ __all__ = [
     "render_html",
     "run_check",
     "run_scenario_checks",
+    "scenario_fingerprint",
     "select_branch",
     "sample_independent",
     "stability_markdown",
