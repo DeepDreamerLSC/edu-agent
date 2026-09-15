@@ -1,0 +1,15 @@
+{
+ "manifest": "corpus-round-v2/cases.jsonl(93 案,#238/#257 manifest 全集)",
+ "target": 93,
+ "executable": 92,
+ "reused_verbatim": 49,
+ "constructed": 43,
+ "unjudgeable": [
+  {
+   "id": "small_lecturer_math_gold_candidates_fraction_addition_support_boundary",
+   "reason": "corpus-round-v2 源跑 content 失败(failures.jsonl 2026-09-14T03:23:27,tutor GatewayError schema_violation),无 transcript 可判;corpus-round-v1 未跑此案"
+  }
+ ],
+ "roundtrip_proof": "49 交集案以 _archive_cases(scripts/rescore_judge.py)重建,与存档逐字段 0 不一致(同构性机器证明)",
+ "order": "manifest 原序(失败案位次跳过)"
+}

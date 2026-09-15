@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>【里程碑名】· 整体进展图</title>
+<style>
+  :root{
+    --done:#16a34a; --done-bg:#f0fdf4; --done-bd:#bbf7d0;
+    --run:#2563eb;  --run-bg:#eff6ff;  --run-bd:#bfdbfe;
+    --key:#d97706;  --key-bg:#fffbeb;  --key-bd:#fde68a;
+    --blk:#dc2626;  --blk-bg:#fef2f2;  --blk-bd:#fecaca;
+    --todo:#9ca3af; --todo-bg:#f9fafb; --todo-bd:#e5e7eb;
+    --ink:#111827; --sub:#6b7280; --line:#e5e7eb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:#f3f4f6;color:var(--ink);padding:28px 16px 60px;line-height:1.55}
+  .wrap{max-width:1180px;margin:0 auto}
+  header{background:#111827;color:#fff;border-radius:14px;padding:22px 26px;margin-bottom:18px}
+  header h1{font-size:21px;letter-spacing:.5px}
+  header .sub{color:#9ca3af;font-size:13px;margin-top:6px}
+  header .pos{margin-top:10px;display:inline-block;background:#f59e0b;color:#111827;font-weight:700;font-size:13px;padding:4px 12px;border-radius:999px}
+  h2{font-size:16px;margin:26px 0 10px;display:flex;align-items:center;gap:8px}
+  h2 .tag{font-size:11px;font-weight:600;color:#fff;padding:2px 8px;border-radius:999px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+  /* ══ 总览线框图 ══ */
+  .wf{border:1.5px dashed #94a3b8;border-radius:14px;background:#fbfcfe;padding:18px}
+  .wf-lane-title{font-size:11.5px;font-weight:700;color:var(--sub);letter-spacing:2px;margin:4px 2px 8px}
+  .wf-spine{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch}
+  .wf-parallel{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:6px}
+  .stage{flex:1;min-width:170px;border:1.5px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;display:flex;flex-direction:column;position:relative}
+  .stage h3{font-size:13px;display:flex;justify-content:space-between;align-items:baseline;gap:6px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .stage h3 .pct{font-size:11px;color:var(--sub);font-weight:600;white-space:nowrap}
+  .stage .bar{height:5px;border-radius:999px;background:#f3f4f6;overflow:hidden;margin-top:7px}
+  .stage .bar i{display:block;height:100%;border-radius:999px}
+  .stage .cnt{font-size:10.5px;color:var(--sub);margin-top:3px}
+  .items{margin-top:8px;display:flex;flex-direction:column;gap:4.5px}
+  .it{font-size:11.5px;display:flex;gap:6px;align-items:flex-start;line-height:1.4}
+  .it .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+  .d-done{background:var(--done)} .d-run{background:var(--run)}
+  .d-key{background:var(--key)} .d-blk{background:var(--blk)} .d-todo{background:var(--todo)}
+  .it small{color:var(--sub);font-size:10.5px}
+  .stage.exit{background:#111827;border-color:#111827;min-width:200px}
+  .stage.exit h3{color:#fff;border-color:#374151}
+  .stage.exit h3 .pct{color:#9ca3af}
+  .exit .it{color:#e5e7eb;font-size:11.5px}
+  .exit .it b{color:#fff}
+  .exit .xbar{height:5px;border-radius:999px;background:#374151;overflow:hidden;margin:3px 0 7px}
+  .exit .xbar i{display:block;height:100%}
+  .now{position:relative;outline:2.5px dashed #f59e0b;outline-offset:2px}
+  .now::after{content:"▸ 现在";position:absolute;top:-11px;right:-6px;background:#f59e0b;color:#111827;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:999px;z-index:2}
+  /* ══ 流程链与详表 ══ */
+  .flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px}
+  .step{border-radius:9px;padding:8px 10px;font-size:12.5px;min-width:118px;max-width:190px;flex:1;border:1.5px solid;display:flex;flex-direction:column;gap:3px}
+  .step b{font-size:12.5px}
+  .step small{color:var(--sub);font-size:11px;line-height:1.35}
+  .step .ico{font-size:14px}
+  .s-done{background:var(--done-bg);border-color:var(--done-bd)} .s-done b{color:var(--done)}
+  .s-run{background:var(--run-bg);border-color:var(--run-bd)}   .s-run b{color:var(--run)}
+  .s-key{background:var(--key-bg);border-color:var(--key-bd)}   .s-key b{color:var(--key)}
+  .s-blk{background:var(--blk-bg);border-color:var(--blk-bd)}   .s-blk b{color:var(--blk)}
+  .s-todo{background:var(--todo-bg);border-color:var(--todo-bd)}
+  .arr{align-self:center;color:#9ca3af;font-size:15px;font-weight:700}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{background:#f9fafb;text-align:left;padding:7px 10px;border-bottom:2px solid var(--line);font-size:12px;color:var(--sub)}
+  td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  .g{color:var(--done);font-weight:700}.r{color:var(--blk);font-weight:700}.y{color:var(--key);font-weight:700}.b{color:var(--run);font-weight:700}
+  .side{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+  .mini .step{min-width:100px;flex:1}
+  .keys ol{margin-left:20px;font-size:13px}
+  .keys li{margin:6px 0}
+  .kbd{display:inline-block;background:#111827;color:#fbbf24;font-weight:700;font-size:11px;padding:1px 8px;border-radius:5px;margin-right:6px}
+  .note{font-size:12px;color:var(--sub);margin-top:8px}
+  footer{margin-top:26px;font-size:11.5px;color:var(--sub);text-align:center}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin:8px 0 2px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ① header:标题 / 出口判据+数据截至 / 当前位置 pill -->
+<header>
+  <h1>【里程碑名】· 整体进展</h1>
+  <div class="sub">【出口判据一句话】（#issue）｜数据截至 YYYY-MM-DD</div>
+  <div class="pos">当前位置:【一句话,焦点+下一步】</div>
+</header>
+
+<!-- ② legend:五色状态语义,全图唯一 -->
+<div class="legend">
+  <span><i style="background:var(--done)"></i>✓ 完成</span>
+  <span><i style="background:var(--run)"></i>⏳ 在途（已派单/在跑）</span>
+  <span><i style="background:var(--key)"></i>🔑 等你的键</span>
+  <span><i style="background:var(--blk)"></i>⏸ 阻塞</span>
+  <span><i style="background:var(--todo)"></i>○ 未开始</span>
+</div>
+
+<!-- ③ 总览全景线框:主干道(阶段卡→出口黑块) + 并行泳道 -->
+<h2><span class="tag" style="background:#111827">总览</span>【里程碑】全景线框 · 阶段与完成度</h2>
+<div class="wf">
+  <div class="wf-lane-title">主 干 道（【关键路径名】）</div>
+  <div class="wf-spine">
+    <div class="stage"><!-- 阶段卡 = 标题+% + bar + 计数行 + items(状态点+事项+溯源号) -->
+      <h3>【阶段N · 名称】<span class="pct">【NN%】</span></h3>
+      <div class="bar"><i style="width:NN%;background:var(--done)"></i></div>
+      <div class="cnt">【x✓ + y⏳ + z🔑（一句话状态）】</div>
+      <div class="items">
+        <div class="it"><span class="dot d-done"></span><span>【事项】<small>#issue/PR</small></span></div>
+        <div class="it"><span class="dot d-key"></span><span>【事项】<small>【附注】</small></span></div>
+      </div>
+    </div>
+    <span class="arr">→</span>
+    <div class="stage now"><!-- 「▸现在」全图只钉一处 -->
+      <h3>【当前阶段】<span class="pct">【NN%】</span></h3>
+      <div class="bar"><i style="width:NN%;background:var(--done)"></i></div>
+      <div class="cnt">【计数行】</div>
+      <div class="items"><div class="it"><span class="dot d-run"></span><span>【焦点事项】<small>【状态】</small></span></div></div>
+    </div>
+    <span class="arr">→</span>
+    <div class="stage exit"><!-- 出口黑块 = 判据 mini 进度条 -->
+      <h3>出口 · 【判据数】判据 <span class="pct">【0/N 达成】</span></h3>
+      <div class="items" style="margin-top:10px">
+        <div class="it"><span class="dot d-run"></span><span><b>【判据k】</b> NN%<div class="xbar"><i style="width:NN%;background:#f59e0b"></i></div></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="wf-lane-title" style="margin-top:16px">并 行 泳 道（不阻塞主干 · 按自身节奏推进）</div>
+  <div class="wf-parallel">
+    <div class="stage"><h3>【泳道A】<span class="pct">【NN%】</span></h3><div class="bar"><i style="width:NN%;background:var(--done)"></i></div><div class="cnt">【计数行】</div><div class="items"><div class="it"><span class="dot d-todo"></span><span>【事项】</span></div></div></div>
+    <div class="stage"><h3>【泳道B】<span class="pct">【NN%】</span></h3><div class="bar"><i style="width:NN%;background:var(--done)"></i></div><div class="cnt">【计数行】</div><div class="items"><div class="it"><span class="dot d-key"></span><span>【事项】</span></div></div></div>
+  </div>
+</div>
+
+<!-- ④ 详表区:关键路径 flow / 对比表 / 旁线卡(按需取舍,顺序固定) -->
+<h2><span class="tag" style="background:var(--done)">【判据k】</span>【名称】· 关键路径</h2>
+<div class="card">
+  <div class="flow">
+    <div class="step s-done"><span class="ico">✓</span><b>【步骤】</b><small>【附注+#号】</small></div>
+    <span class="arr">→</span>
+    <div class="step s-key"><span class="ico">🔑</span><b>【步骤】</b><small>【附注】</small></div>
+  </div>
+  <div class="note">【口径注记:如新旧基线不混算】</div>
+</div>
+
+<!-- ⑤ 钥匙清单:人手里的键,按序 -->
+<h2><span class="tag" style="background:#f59e0b">钥匙</span>你手里的键（按序）</h2>
+<div class="card keys">
+  <ol>
+    <li><span class="kbd">①</span><b>【键名】</b>:【条件/成本/下一步】</li>
+  </ol>
+  <div class="note">【预算/纪律注记】</div>
+</div>
+
+<!-- ⑥ footer:溯源 -->
+<footer>【里程碑 · issue 号 ｜ 各线 PR 号 ｜ 数据截至 · PM id】</footer>
+</div>
+</body>
+</html>
