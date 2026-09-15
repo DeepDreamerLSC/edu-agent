@@ -11,10 +11,9 @@ from __future__ import annotations
 import time
 
 from edu_agent.agents.small_lecturer import TerminalStateError, finish, reply, start
-from edu_agent.gateway import Gateway, GatewayError
+from edu_agent.gateway import ENV_FAILURES, Gateway, GatewayError
 
 from .image_teaching import question_image_data_url
-from .judge import ENV_FAILURES
 from .runner import EnvironmentFailure
 from .scenario_corpus import select_branch
 
