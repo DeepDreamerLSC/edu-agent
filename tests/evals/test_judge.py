@@ -54,6 +54,7 @@ def model_output(scores: list[int], leaked: bool = False, verdict: str = "pass",
     payload["math_integrity"] = math_integrity
     evidence = {dim: f"「{dim}」的对话依据" for dim in DIMENSIONS}
     evidence["math_integrity"] = f"math_integrity={math_integrity} 的对话依据"
+    evidence["answer_leaked"] = f"泄露={leaked} 的判定依据原句"  # #253 v3:evidence 增键
     payload["evidence"] = evidence
     payload["verdict"] = verdict
     return json.dumps(payload, ensure_ascii=False)
