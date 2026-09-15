@@ -63,8 +63,7 @@ def dataset(tmp_path: Path) -> Path:
 
 
 def make_runner(tmp_path: Path, subject, **config) -> EvalRunner:
-    defaults = {"backoff_base_s": 0.01, "backoff_cap_s": 0.05}
-    return EvalRunner(subject, RunnerConfig(**{**defaults, **config}), tmp_path / "runs")
+    return EvalRunner(subject, RunnerConfig(**config), tmp_path / "runs")
 
 
 def test_all_ok_writes_checkpoint_and_manifest(tmp_path, dataset):
@@ -81,16 +80,16 @@ def test_all_ok_writes_checkpoint_and_manifest(tmp_path, dataset):
 
 
 def test_resume_only_reruns_missing_and_environment(tmp_path, dataset):
-    # 首轮:c00-c14 成功,c15-c17 环境失败(重试耗尽),c18-c19 内容失败
+    # 首轮:c00-c14 成功,c15-c17 环境失败(Gateway 穷尽类,不整案重跑),c18-c19 内容失败
     cases = read_jsonl(dataset)
-    script = {**{f"c{i:02d}": ["env", "env", "env", "env"] for i in range(15, 18)},
+    script = {**{f"c{i:02d}": ["env"] for i in range(15, 18)},
               **{f"c{i:02d}": [ValueError("输出缺字段")] for i in range(18, 20)}}
-    first = make_runner(tmp_path, FakeSubject(script), env_retry_attempts=2)
+    first = make_runner(tmp_path, FakeSubject(script))
     run_dir = first.run(dataset, cases)
     assert {r["status"] for r in results_of(run_dir).values()} == {"ok", "environment", "content"}
     # 续跑:环境失败与缺失重跑,内容失败与成功不碰
     resumed = FakeSubject()
-    make_runner(tmp_path, resumed, env_retry_attempts=2).run(dataset, cases, run_dir=run_dir)
+    make_runner(tmp_path, resumed).run(dataset, cases, run_dir=run_dir)
     assert sorted(resumed.calls) == ["c15", "c16", "c17"]  # 只补缺与环境失败
     final = results_of(run_dir)
     assert final["c15"]["status"] == "ok" and final["c17"]["status"] == "ok"  # 补跑成功
@@ -98,21 +97,21 @@ def test_resume_only_reruns_missing_and_environment(tmp_path, dataset):
     assert final["c00"]["attempts"] == 1 and len(resumed.calls) == 3
 
 
-def test_environment_failure_retries_with_backoff(tmp_path, dataset):
-    cases = read_jsonl(dataset)
-    dataset_one = write_jsonl(tmp_path / "one.jsonl", [cases[0]])
-    script = {"c00": ["env", "env", "ok"]}
-    runner = make_runner(tmp_path, FakeSubject(script), env_retry_attempts=3,
-                          backoff_base_s=0.05, backoff_cap_s=1.0)
-    started = time.monotonic()
-    run_dir = runner.run(dataset_one, cases)
-    elapsed = time.monotonic() - started
+def test_environment_failure_runs_once_no_case_retry(tmp_path, dataset):
+    """新语义(#254 P1):EnvironmentFailure → 整案仅执行一次,不进程内重跑。
+
+    Gateway 已在其内部穷尽 retry+fallback,Runner 整案重跑只会叠加可靠性语义;
+    脚本里留一个后续 "ok" 证明不会重入;恢复手段 = 续跑补跑(resume 测试覆盖)。
+    """
+    cases = read_jsonl(dataset)[:1]
+    dataset_one = write_jsonl(tmp_path / "one.jsonl", cases)
+    subject = FakeSubject({"c00": ["env", "ok"]})
+    run_dir = make_runner(tmp_path, subject).run(dataset_one, cases)
     result = results_of(run_dir)["c00"]
-    assert result["status"] == "ok" and result["attempts"] == 3
-    assert elapsed >= 0.15  # 指数退避 0.05 + 0.10 真睡了
-    # 台账记了两次环境失败事件(重试过程可见),最终结果 ok
+    assert subject.calls == ["c00"]  # 仅执行一次:脚本第二张牌 "ok" 未被消费
+    assert result["status"] == "environment" and result["attempts"] == 1
     ledger = [json.loads(line) for line in (run_dir / "failures.jsonl").read_text().splitlines()]
-    assert [e["kind"] for e in ledger] == ["environment", "environment"]
+    assert [e["kind"] for e in ledger] == ["environment"]
 
 
 def test_content_failure_not_retried(tmp_path, dataset):
@@ -167,12 +166,12 @@ def test_resume_mismatch_refused(tmp_path, dataset):
 
 def test_morning_summary_counts_and_actions(tmp_path, dataset):
     cases = read_jsonl(dataset)
-    script = {**{f"c{i:02d}": ["env", "env", "env", "env"] for i in (3, 7)},
+    script = {**{f"c{i:02d}": ["env"] for i in (3, 7)},
               **{f"c{i:02d}": [ValueError("内容缺陷")] for i in (11, 13, 15)},
               "c17": [KeyboardInterrupt()]}
     # 单并发 + c17 中断:c17-c19 三条未跑,即过夜中断后的目录状态
     with pytest.raises(KeyboardInterrupt):
-        make_runner(tmp_path, FakeSubject(script), env_retry_attempts=2, concurrency=1).run(dataset, cases)
+        make_runner(tmp_path, FakeSubject(script), concurrency=1).run(dataset, cases)
     run_dir = next((tmp_path / "runs").iterdir())
     summary = morning_summary(run_dir)
     assert "ok 12/20(60%)" in summary

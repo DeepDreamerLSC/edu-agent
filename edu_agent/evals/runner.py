@@ -1,7 +1,8 @@
 """评测 runner 骨架(00 §8.2):被测对象抽象 + case 级 checkpoint + 失败分类台账。
 
 过夜安全六需求:①每 case 一份结果文件即 checkpoint,续跑只补缺(环境失败可补跑,
-内容失败不补);②环境/内容失败分开入台账;③并发上限;④环境失败指数退避;
+内容失败不补);②环境/内容失败分开入台账;③并发上限;④环境失败不进程内重跑
+(模型调用可靠性只归 Gateway,整案重跑=叠加;#254 P1);
 ⑤每轮一目录 + manifest(数据集版本/配置哈希/被测对象标识);⑥晨间摘要见 summary.py。
 M1 实现(老系统适配器)与 M2 实现(内核三函数)只实现 Subject 协议,本模块不感知
 gateway、老系统与真实模型——桩在协议上,不在代码里。
@@ -27,8 +28,9 @@ _UNSAFE_ID = re.compile(r"[^A-Za-z0-9._-]")
 
 
 class EnvironmentFailure(Exception):
-    """环境失败(网络/凭据/服务不可用):指数退避重试,可补跑。
+    """环境失败(网络/凭据/服务不可用):不进程内重跑整案,落 environment 状态由续跑补跑。
 
+    模型调用可靠性只归 Gateway(其内部已穷尽 retry+fallback);Runner 再整案重跑 = 可靠性叠加。
     其他异常一律按内容失败入台账,不重试——重跑改变不了内容缺陷。
     """
 
@@ -40,9 +42,6 @@ class ResumeMismatch(Exception):
 @dataclass(frozen=True)
 class RunnerConfig:
     concurrency: int = 2
-    env_retry_attempts: int = 3
-    backoff_base_s: float = 0.5
-    backoff_cap_s: float = 60.0
 
 
 class Subject(Protocol):
@@ -164,24 +163,18 @@ class EvalRunner:
 
     def _run_one(self, target: Path, case: dict, case_id: str) -> dict:
         started = time.monotonic()
-        attempts = 0
-        while True:
-            attempts += 1
-            try:
-                transcript = self.subject.run_case(case)
-            except EnvironmentFailure as exc:
-                self._ledger(target, case_id, "environment", attempts, str(exc))
-                if attempts <= self.config.env_retry_attempts:
-                    delay = min(self.config.backoff_base_s * 2 ** (attempts - 1),
-                                self.config.backoff_cap_s)
-                    time.sleep(delay)
-                    continue
-                return self._result(case_id, "environment", attempts, started, error=str(exc))
-            except Exception as exc:  # noqa: BLE001 未知异常按内容失败入台账,不中断过夜批次(豁免预算 1/10)
-                detail = f"{type(exc).__name__}: {exc}\n{traceback.format_exc()[-300:]}"
-                self._ledger(target, case_id, "content", attempts, detail)
-                return self._result(case_id, "content", attempts, started, error=detail)
-            return self._result(case_id, "ok", attempts, started, transcript=transcript)
+        try:
+            transcript = self.subject.run_case(case)
+        except EnvironmentFailure as exc:
+            # 不重跑整案:Gateway/适配器层已尽各自重试,整案重跑只会叠加可靠性语义;
+            # 落 environment 状态,由续跑(_needs_run)补跑。
+            self._ledger(target, case_id, "environment", 1, str(exc))
+            return self._result(case_id, "environment", 1, started, error=str(exc))
+        except Exception as exc:  # noqa: BLE001 未知异常按内容失败入台账,不中断过夜批次(豁免预算 1/10)
+            detail = f"{type(exc).__name__}: {exc}\n{traceback.format_exc()[-300:]}"
+            self._ledger(target, case_id, "content", 1, detail)
+            return self._result(case_id, "content", 1, started, error=detail)
+        return self._result(case_id, "ok", 1, started, transcript=transcript)
 
     def _result(self, case_id: str, status: str, attempts: int, started: float,
                 *, error: str | None = None, transcript: dict | None = None) -> dict:
