@@ -185,12 +185,11 @@ def test_missing_pool_env_is_environment_failure(monkeypatch):
 
 
 def test_runner_integration_checkpoint_and_classification(pool_file, tmp_path):
-    """适配器 × EvalRunner(#31):ok 入 checkpoint、环境失败重试后仍败入台账,续跑只补后者。"""
+    """适配器 × EvalRunner(#31):ok 入 checkpoint(环境失败落账不重跑、续跑补跑的语义见 test_runner)。"""
     with legacy_env(["第一问", "很好,完成"]) as (fake, adapter):
         ok_cases = [{"id": f"ok-{i}", "question_id": "q", "student_turns": ["1", "2"]}
                     for i in range(2)]
-        config = RunnerConfig(concurrency=2, env_retry_attempts=1,
-                              backoff_base_s=0.01, backoff_cap_s=0.02)
+        config = RunnerConfig(concurrency=2)
         runner = EvalRunner(adapter, config, tmp_path / "runs")
         dataset = write_jsonl(tmp_path / "cases.jsonl", ok_cases)
         run_dir = runner.run(dataset, ok_cases)
