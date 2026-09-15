@@ -22,7 +22,8 @@
 
 - **40 = 20 案 × 2 跑**(r1/r2),deepseek-flash(judge_independent 角色);
 - r1 C24(equation_addition_support_boundary)**schema_violation**(模型瞬时内容失败,非 env);r2 同案成功。
-- 全部 attempt=1(路线 1 零修复),零截断。
+- **39/40 attempt=1**;1 案(C24 r1)route-1 修复至 **attempt=2** 仍
+  `schema_violation` ⇒ r1 无分,r2 匹配;零截断。
 
 ### 零翻转对照(c5675065011 时代口径)
 
@@ -51,6 +52,10 @@
 
 **关键字段零翻转**(verdict/mi/leak/门命题);C24 r1 schema_violation 为模型瞬时内容失败(非迁移诱导),r2 完全匹配旧读数。
 
+- **口径**:「零翻转」仅指门字段(verdict / math_integrity /
+  answer_leaked / 门命题);六维原始分存在少量单档抖动(独立复核 6/40),
+  与 #253 A/A 抖动同量级、**非迁移诱导**。
+
 ## 三、等价门 ③ 新指纹注册
 
 - **新指纹**:`9551d149dbd81b1f2edb7e7e224083eb9ffd9e102eeed864cc45d6ad72d1cc3b`(sha256 checks.py + judge.py + rubrics/small_lecturer_v3_2.yaml);
@@ -63,7 +68,9 @@
 
 ## 五、调用计数与纪律
 
-- live **40 = 20 案 × 2 跑**(deepseek-flash,attempt 全 1,零修复);r1 C24 schema_violation 为内容失败(非 env,不重试);
+- live **40 = 20 案 × 2 跑**(deepseek-flash,39/40 attempt=1,1 案 route-1
+  修复至 attempt=2);r1 C24 schema_violation 为内容失败(非 env 重试,
+  route-1 修复重试 1 次后仍违规);
 - 等价门 ① 零 API;门 ③ 指纹计算零 API;
 - 无 registry/plugin manager/动态加载/继承(rubric 加载 = 固定路径 yaml.safe_load,模块级);
 - 不加依赖(yaml 解析已在树内);
