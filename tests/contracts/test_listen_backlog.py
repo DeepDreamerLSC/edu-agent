@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from edu_agent.api.server import PartnerApiServer, build_server
+from edu_agent.api import PartnerApiServer, build_server  # 公开入口(02 §6)
 
 
 def test_server_listen_backlog_fits_classroom_burst():

@@ -13,7 +13,7 @@ from .identity import IdentityService
 from .kernel_adapter import SmallLecturerKernel
 from .question_source import SeedQuestionSource, SnapshotQuestionSource, question_source
 from .service import ApiError, ConversationService, Kernel
-from .server import build_server
+from .server import PartnerApiServer, build_server
 from edu_agent.store import (Conversation, ConversationStore, FileConversationStore,
                              FileSessionStore, MemoryConversationStore)
 
@@ -22,7 +22,7 @@ __all__ = [
     "FileService", "FileSessionStore",
     "SnapshotQuestionSource", "IdentityError", "IdentityService", "Kernel", "demo_login",
     "MemoryConversationStore", "SeedQuestionSource", "SmallLecturerKernel",
-    "build_server", "build_service", "question_source",
+    "PartnerApiServer", "build_server", "build_service", "question_source",
 ]
 
 
