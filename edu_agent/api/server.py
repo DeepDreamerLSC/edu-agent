@@ -503,6 +503,14 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
         pass  # 访问日志静默(healthz 同款)
 
 
+class PartnerApiServer(ThreadingHTTPServer):
+    """listen backlog:#263(= #255 件3 实证)——stdlib 默认 request_queue_size=5,
+    教室 burst 40 近同时连接实测 17-24/40 被 ECONNRESET 拒(内核层,未达应用);
+    128 容纳整班并发 + 客户端重试。"""
+
+    request_queue_size = 128
+
+
 def build_server(service: ConversationService, identity: IdentityService | None = None,
                  files: FileService | None = None,
                  host: str = "127.0.0.1", port: int = 0,
@@ -510,4 +518,4 @@ def build_server(service: ConversationService, identity: IdentityService | None 
     handler = type("BoundPartnerApiHandler", (PartnerApiHandler,),
                    {"service": service, "identity": identity or IdentityService(),
                     "files": files or FileService(), "db": db})
-    return ThreadingHTTPServer((host, port), handler)
+    return PartnerApiServer((host, port), handler)
