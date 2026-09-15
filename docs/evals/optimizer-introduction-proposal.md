@@ -13,8 +13,8 @@
 |---|---|---|---|
 | 1 | `#198` 机制落地 | **满足**(issue CLOSED) | `gh issue view 198 --json state` → CLOSED |
 | 2 | 提示表面 ≥3 | **满足,远超** | `grep -cE '^[A-Z_][A-Z0-9_]*\s*[:=]' edu_agent/agents/small_lecturer/prompting.py` → **29**(= 提示面 25 + 资产路径 4,#273 逐处登记);另 `edu_agent/agents/small_lecturer/prompts/SKILL.md`、`configs/small_lecturer_style_profiles.yaml` 两处外置提示资产(核对于 2026-09-16,main `c11b7d7`) |
-| 3 | corpus ≥100 | **满足** | train 120(dialogue_scenarios 3 + shadow_24 24 + gold 60 + math_gold_b2 13 = 100,+ 路 A teaching_context_shadow_pilot_20 = 20)/ heldout 4(`edu_agent/evals/datasets/` 逐文件计数,#273 同口径可复算) |
-| 4 | 真模型评测预算人批 | **满足** | ① 预算批(2026-09-16 用户裁定,PM 直发):tier-2,388 案,1,624 调用(保守 2,004)——数字以 #253 执行序楼登记为准,复算公式见 §4 |
+| 3 | corpus ≥100 | **满足** | train 120(dialogue_scenarios 3 + shadow_24 24 + gold 60 + math_gold_b2 13 = 100,+ 路 A teaching_context_shadow_pilot_20 = 20)/ heldout 4(`edu_agent/evals/datasets/` 逐文件计数,#273 同口径可复算);tier-2 的搜索切片 S=16 ⊂ train |
+| 4 | 真模型评测预算人批 | **满足** | ① 预算批(2026-09-16 用户裁定;口径勘误 #253 c5680957065——原 PM 直发「388 案」系输入错误):**tier-2 = K=4 候选 × S=16 案切片 × I=6 轮 = 384 案次**,× 4.23 = **1,624** 调用(保守 5.22 → 2,004);heldout 终审 4 案 ≈17 调用另计——复算见 §4 |
 
 季度复查条款(#215)由此解除,进入「先做 1 天 spike 出对比报告,再走结构审批」的既定路径——spike 的机器面部分已由 #273 完成(#273 = ①②③ 腿的机器核验件),本件即「结构审批」环节。
 
@@ -64,7 +64,7 @@ edu_agent/agents/**(kernel/prompting)─┘ 不反向:agents 不得 import evals
 ## 4. 预算接口(1,624 / 保守 2,004 计入哪本账、经哪个入口计量)
 
 - **账本落点**:#253 执行序楼(本波 ①–⑦ 件在该楼流转记账:① 预算批、⑦ 门进度均挂此)。本件回执按纪律段格式落 #253;1,624(保守 2,004)为 ① 批定值,后续实际消耗按实跑报数增补,不预设上限调整。
-- **复算公式**(#273 勘误后口径,审查已逐位复现):`tutor 调用 = Σturns − 首问轮数 + summary 案数;judge 调用 = 可判案数;每案 = (tutor+judge)/案数`。锚点:92 案工件 `corpus-round-v2/collect/cases-20260914T032228Z-bda5` → 每案 4.23(保守 5.22);388 案 × ~4.2 ≈ 1,624,与批定值同量级可对账。
+- **复算公式**(#273 勘误后口径,审查已逐位复现):`tutor 调用 = Σturns − 首问轮数 + summary 案数;judge 调用 = 可判案数;每案次 = (tutor+judge)/案数`。锚点:92 案工件 `corpus-round-v2/collect/cases-20260914T032228Z-bda5` → 每案次 4.23(保守 5.22)。**① 批定值对账(#273 算术表口径 = `K × S × 每案次调用 × I`;「案次」= 案×轮的评估次数,勿读成「案数」)**:`4 × 16 × 6 = 384 案次 × 4.23 = 1,624`;保守 `384 × 5.22 = 2,004`——**与批定值逐位吻合**。对照行:全 train 单候选 120 × 4.23 ≈ 508;K=6/S=24/I=8 = 1,152 案次 × 4.23 = 4,873;heldout 终审 4 案 × 4.23 ≈ 17 调用,**不含在 1,624 内**。
 - **计量入口 = 现成两件,零新造**:
   1. **Gateway facts 落盘**(`api-facts.jsonl`,#271 判卷 token 锚点同源:2,751 in / 510 out tokens 均每调用)——优化器编辑器与评估调用全走现有 `Gateway`,每次调用自动落 facts,调用数/token 就地可数;
   2. **#257 身份三件套**(git HEAD / `prompts_sha256` / `models_sha256`)+ run manifest(#273 已实证工件)——每轮迭代的可归因性直接复用。
