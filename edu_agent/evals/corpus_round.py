@@ -367,9 +367,10 @@ def diff_checks(current: dict[str, dict], previous: dict[str, dict]) -> dict[str
 
 
 def judger_sha256() -> str:
-    """判分器指纹:checks.py + judge.py 按文件名序拼接后 sha256(十六进制)。
-    #238 §5:跨轮 diff 遇版本断点须标注,此函数提供可比对的哈希。"""
-    files = sorted((Path(__file__).parent / f) for f in ("checks.py", "judge.py"))
+    """判分器指纹:checks.py + judge.py + rubrics 资产 按文件名序拼接后 sha256(十六进制)。
+    #238 §5:跨轮 diff 遇版本断点须标注;#254 P2 起含 rubrics 资产(后继纪元判据)。"""
+    files = sorted((Path(__file__).parent / f)
+                   for f in ("checks.py", "judge.py", "rubrics/small_lecturer_v3_2.yaml"))
     h = hashlib.sha256()
     for f in files:
         h.update(f.read_bytes())

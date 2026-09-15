@@ -1,0 +1,29 @@
+[PASS] SYSTEM_PROMPT: 逐字节相等
+[PASS] DIMENSION_GUIDE: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_candidates_equation_mul]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_candidates_equation_add]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_b2_unit_rate_complete_r]: 逐字节相等
+[PASS] user_prompt[small_lecturer_teaching_context_shadow_pilot_20_]: 逐字节相等
+[PASS] user_prompt[challenge_coordinate_swap_20260914]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_candidates_ratio_share_]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_b2_fraction_multiplicat]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_candidates_equation_add]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_candidates_distance_spe]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_candidates_parentheses_]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_candidates_division_rem]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_candidates_simple_proba]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_b2_rope_unit_app_altern]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_b2_circle_area_misconce]: 逐字节相等
+[PASS] user_prompt[small_lecturer_teaching_context_shadow_pilot_20_]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_candidates_simple_proba]: 逐字节相等
+[PASS] user_prompt[small_lecturer_math_gold_candidates_fraction_add]: 逐字节相等
+[PASS] user_prompt[small_lecturer_teaching_context_shadow_pilot_20_]: 逐字节相等
+[PASS] user_prompt[small_lecturer_teaching_context_shadow_pilot_20_]: 逐字节相等
+[PASS] user_prompt[constructed_52_decimal_multiply_leak_boundary]: 逐字节相等
+[PASS] user_prompt[边缘:空transcript]: 逐字节相等
+[PASS] user_prompt[边缘:缺grade空ref]: 逐字节相等
+[PASS] ENV_FAILURES 迁移(gateway.errors)== 旧 judge.ENV_FAILURES
+
+=== 等价门 ① 终判:PASS(逐字节相等,含边缘) ===
+
+--- stderr ---

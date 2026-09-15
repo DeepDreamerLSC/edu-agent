@@ -38,6 +38,17 @@ FALLBACK_AFTER_FAILURES = {
 }
 
 
+# 环境类失败(可补跑)与内容类失败(不补跑)的分界,映射自 01 §4 重试资格。
+# #254 P2 迁自 evals/judge.py(归属裁定:gateway errors;消费方 = judge.py/kernel_subject.py)。
+ENV_FAILURES = frozenset({
+    FailureType.CONNECTION,
+    FailureType.TIMEOUT_FIRST_TOKEN,
+    FailureType.TIMEOUT_TOTAL,
+    FailureType.RATE_LIMITED,
+    FailureType.UPSTREAM_5XX,
+})
+
+
 class GatewayError(Exception):
     """带失败类型的调用失败(01 §2.4)。output 保留违规原文,供 schema 修复重试。"""
 

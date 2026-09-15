@@ -14,7 +14,7 @@ from pathlib import Path
 
 import httpx
 
-from .errors import FailureType, GatewayError
+from .errors import ENV_FAILURES, FailureType, GatewayError
 from .middleware.fallback import with_fallback_invoke, with_fallback_stream
 from .middleware.ratelimit import with_ratelimit_invoke, with_ratelimit_stream
 from .middleware.record import FactWriter, with_record_invoke, with_record_stream
@@ -39,6 +39,7 @@ from .request import (
 )
 
 __all__ = [
+    "ENV_FAILURES",
     "FailureType",
     "FactWriter",
     "Gateway",
