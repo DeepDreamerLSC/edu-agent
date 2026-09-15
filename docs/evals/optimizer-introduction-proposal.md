@@ -57,7 +57,7 @@ GEPA 的「进化 + 多目标记账」没有现成 stdlib 对应——但**也�
 edu_agent/agents/**(kernel/prompting)─┘ 不反向:agents 不得 import evals
 ```
 
-- import-linter 四条合同(02 §2.2,CI 强制)天然覆盖:`agents` 不得 import `evals`——**优化器产出的只是 prompt 文本 diff(工件)**,合并走「人审 PR → 人合 → 重部署」,agent 运行时路径上没有也不允许出现优化器符号;
+- 方向设计意图与 02 §2.2 一致(优化器属评测侧,agents 不该碰);**但现行 import-linter 合同未显式覆盖 `agents → evals`**(02 §2.2 合同 ② 与 `.importlinter` 的 agents-isolation 均只禁 api/store)——如需 CI 强制,须另起合同(四类结构改动,需人批,不在本件范围)。**优化器产出的只是 prompt 文本 diff(工件)**,合并走「人审 PR → 人合 → 重部署」,agent 运行时路径上没有也不应出现优化器符号;
 - 手搓落点:`edu_agent/evals/` 旁(或 `scripts/`,落地单定),与 `corpus_round.py` 同层;**不碰** `edu_agent/agents/**`(#256 治理约束:搜索空间只有 prompt 面);
 - 若引依赖(预案):依赖包只被 `evals` 侧 import;`gateway`/`agents`/`contracts` 零 import。
 
@@ -109,7 +109,7 @@ edu_agent/agents/**(kernel/prompting)─┘ 不反向:agents 不得 import evals
 | 2 | 手搓 GEPA 核心循环 ~400-500 行可行,复用现有 runner/judge 零胶水 | #256 组件分解表 + #273 §二(judge_transcript 普通函数 / checks 零模型 / EvalRunner 断点续跑);外评可抽查 `edu_agent/evals/` 现有代码规模对照行数估 |
 | 3 | 引 DSPy 需 ~300-600 行适配代码且抽象错配(多轮 kernel 会话反包进 dspy.Module) | #256 决策依据;外评可按 DSPy 文档的 Module/Evaluate 契约对照本仓 kernel 多轮会话形状独立复估 |
 | 4 | 优化器与判据指纹/冻结切片/93 案基线结构性无冲突 | §5 表:各冻结面的文件路径与耦合点(字面比对/前缀统计)逐条给出行号级锚点,#273 同 |
-| 5 | 依赖候选(若走依赖路线)的版本/许可/传递依赖足迹/离线端点/遥测关闭 | 外评当场 `uv pip install --dry-run` + PyPI 元数据核验(本件零安装,刻意不预写版本号) |
+| 5 | 依赖候选(若走依赖路线)的版本/许可/传递依赖足迹/离线端点/遥测关闭 | 外评当场 `uv pip install --dry-run` + PyPI 元数据核验;§2.3 版本号取自公开来源(GitHub Release/PyPI,2026-09-16 核对),以落地单当场核验为准 |
 | 6 | 预算 1,624(保守 2,004)的复算公式与计量入口现成 | §4:92 案锚点工件路径 + 计数公式 + api-facts/#257 三件套,外评可用既有工件逐位复算 |
 | 7 | 搜索空间面内/面外切分(25 处 vs 明示 5 处面外)定义清楚且裁定权在人 | #273 腿① 逐处登记表(含每处理由);外评可挑战任何一处的归属判定 |
 | 8 | 回滚半径最小(移除不动 kernel/判据/工件) | §6 两路线移除清单 + 候选件纯数据性质 |
