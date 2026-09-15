@@ -78,3 +78,8 @@ uv run python scripts/rescore_judge.py \
 ```
 
 温度 0 但生成非确定端点偶有抖动;重跑个别案分数可能微动(稳定性口径属 #32 双评面,本跑未做)。52 案 judge 输入全文在 `judge-cases.jsonl`,逐案输出在 `judge-scores.jsonl` 与 `collect/judge-cases-20260914T151541Z-dfec/results/`(runner 台账),旧 judge 对照在 `comparison.jsonl`(编造51 无旧分,旧管线为盲判哈希 id 不同源)。
+
+## 复现口径注记(#261 审查 P3 两条,2026-09-15 补)
+
+- **诊断面数据源**:audit_verdict 期望(32 案)+ 50 案一致性分母来自仓外 `/root/calibration-private/expectation表.csv`(判卷依据,PM 侧私有件)——**诊断面以当轮该私有表为准**;门案 20 条期望值已逐字冻结在本 README 上表(复算不依赖仓外文件)。如需该表快照入库作工件副本,须 PM 明示后另做。
+- **驱动自证**:本工件驱动脚本 = PR 内 `scripts/rescore_judge.py`,sha256 = `e4c20070eb3a0357498bec1b185addfbb35f28341ed55a2b469ed7b1325f0e73`(全量跑所用版本)。`manifest.identity.git_sha=3a650e5` 是跑批时仓库 HEAD(分支基点),不含本 PR 驱动脚本;判分面以 `judger_sha256` 为准。
