@@ -117,7 +117,7 @@ def _student_signals_understanding(student_message: str) -> bool:
 
 
 def _student_signals_stuck(student_message: str) -> bool:
-    """学生表示「不会/猜不出」——支持动作选择(`_support_move`)的触发点(治复读探针)。
+    r"""学生表示「不会/猜不出」——支持动作选择(`_support_move`)的触发点(治复读探针)。
 
     现行口径(#198 检测器覆盖轮,按 D 卡 1 八形态扩表;每步都过 11/11 基线):
     我不太会/我猜不出(来)/想不出/我不会(裸,「我不会吧」反诘仍不判)/不会吧(后接
