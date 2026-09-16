@@ -28,6 +28,7 @@ from .gate_slice import (
     load_runnable_cases,
     load_slice_rows,
     run_candidate_slice,
+    run_deterministic_checks,
 )
 from .gepa import (
     DEFAULT_SUPPORT_HINT,
@@ -127,6 +128,7 @@ __all__ = [
     "load_runnable_cases",
     "load_slice_rows",
     "run_candidate_slice",
+    "run_deterministic_checks",
     "evaluate_batch",
     "evaluate_batch_paired",
     "facts_calibers",
