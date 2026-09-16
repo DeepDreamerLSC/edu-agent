@@ -1,4 +1,4 @@
-# GEPA 手搓 Spike(#256,2026-09-16)——6 组件落地 + smoke test 完成,目标函数敏感,judge 零方差
+# GEPA 手搓 Spike(#256,2026-09-16)——6 组件落地 + smoke test + 配对实验,judge 零方差,Δ≈0
 
 **点火依据**:PM 233d0fca 直发 2026-09-16,#275 已合 main@243553b(P1 前置满足)。
 
@@ -6,7 +6,7 @@
 
 按 #256 issue 规格手搓 GEPA 核心循环 spike,零依赖,复用现有 runner/judge 管线。
 
-### 6 组件(504 行组件 / 754 行含测试,落现有管线旁,不动 kernel)
+### 6 组件(648 行组件 / 757 行含测试,落现有管线旁,不动 kernel)
 
 1. **Prompt seam**(`ElicitSubject`):`run_case` 接受 elicit 模板变体注入(monkeypatch `kernel._ELICIT_TEMPLATE`,用完即恢复,不动仓库模板);
 2. **Mini-batch 采样**(`sample_batch`):每轮从 train 抽 k 个,同种子确定性,换种子刷新;
@@ -24,18 +24,18 @@
 ## 代码结构
 
 ```
-edu_agent/evals/gepa.py          # 6 组件主实现(437 行)
-edu_agent/evals/gepa_driver.py   # CLI 驱动脚本(67 行)
-tests/evals/test_gepa.py         # 单元测试(15 测试,零 API)
+edu_agent/evals/gepa.py          # 6 组件主实现 + 配对实验(648 行)
+edu_agent/evals/gepa_driver.py   # CLI 驱动脚本(92 行,含 --paired 模式)
+tests/evals/test_gepa.py         # 单元测试(17 测试,零 API)
 ```
 
 ### 公开入口(已加入 `edu_agent/evals/__init__.__all__`)
 
-- `gepa_loop`, `GepaConfig`, `Budget`
+- `gepa_loop`, `paired_loop`, `GepaConfig`, `Budget`
 - `ElicitSubject`, `Candidate`, `Population`, `ScoreVector`
-- `evaluate_batch`, `edit_template`, `sample_batch`
+- `evaluate_batch`, `evaluate_batch_paired`, `edit_template`, `sample_batch`
 
-共 10 个 GEPA 专用符号。
+共 12 个 GEPA 专用符号。
 
 ### 依赖
 
@@ -82,6 +82,7 @@ tests/evals/test_gepa.py         # 单元测试(15 测试,零 API)
 
 - **Prompt diff 就位**:每轮 dump `unified_diff(parent, variant)` 到 `round-{i}.json`;
 - **Lint 防废模板**:长度 30-100 字 + 必须含「思路/第一步/从头」,否则保留当前;
+- **Noop 标记**:round-*.json 含 `"noop": true/false` 字段,标记变体是否与父代逐字相同(未来运行含此字段,首轮 smoke 无此字段因代码后续补)
 - **Smoke test 实测**:
   - Round 0 diff:`-我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。` → `+我们从头把思路理一遍——你先说说第一步是怎么想的、为什么这么算,再一步步往下讲。`
   - **可读性**:✓ 中文自然,无咒语化/word salad,语义清晰(同义改写+扩展「再一步步往下讲」)
@@ -124,14 +125,14 @@ uv run python -m edu_agent.evals.gepa_driver \
 
 ```bash
 uv run pytest tests/evals/test_gepa.py -v
-# 15 passed
+# 17 passed
 ```
 
 ### 全量检查
 
 ```bash
 make check
-# 937 passed, 1 skipped, 1 warning
+# 939 passed, 1 skipped, 1 warning
 ```
 
 ## Bug 诊断(smoke 首轮全零分)
@@ -145,6 +146,34 @@ make check
 **探针**:1 案 dump transcript + judge 原始输出(Mac SSH,4 calls),确认 judge 报「对话记录为空」→ 定位到 messages 格式错误。
 
 **修复后重跑**:parent mean_score=11.0(非零),证明 bug 修复有效。
+
+## 配对实验(2026-09-16,消除批次方差)
+
+**目的**:smoke test 发现批次方差 2.0 分(同模板跨批),无法分辨模板效应。配对实验固定全 8 案,逐案对比 parent vs variant,批次方差在配对内抵消。
+
+**设计**:
+- 全 8 案 × 2 轮,预算硬顶 104 calls
+- 父代模板跑一遍 → 逐案分 P1..P8
+- 每轮变体(编辑器产出)→ 同批跑 → 逐案分 Vi/Wi
+- **配对差 Δi = 变体i − 父代i**(每案一对)
+
+**实测结果**(Mac worktree,2026-09-16):
+- Budget: 50 calls / 372s 墙钟 / 未触顶(预算 104)
+- **Mean Δ = -0.06**(16 配对案例,15 个 Δ=0,1 个 Δ=-1)
+- Verdict: **mixed**(非稳定非零,非红灯)
+
+**三项验证**:
+1. **编辑器反馈**:parent_failures 传给 edit_template,report 含 editor_feedback_sample ✓
+2. **硬失败筛选**:hard_fail_validation = "pass (no leaked variant)" ✓
+3. **模板命中**:template_hit_validation hit_count=3/3(抽样 case 首问长度>10)✓
+
+**判读**:
+- Δ ≈ 0 → 模板变体对评分无显著影响(judge 对 elicit 措辞不敏感,或搜索空间窄)
+- 非 GO(需 Δ 稳定非零且多数案例同向)
+- 非红灯(Δ 非全零,有 1 案变化)
+- **建议**:judge 对 elicit 模板措辞变化不敏感,后续优化需探索更大搜索空间(结构变化而非措辞微调)
+
+**工件**:`paired-experiment/`(round-00.json, round-01.json, paired-report.json)
 
 ## 判读预注册(跑前冻结,跑后不改)
 
@@ -162,6 +191,12 @@ make check
 
 **初判倾向**:**条件 GO**(管线通、judge 确定性高、预算可控、diff 可读)。但 ② 敏感性在 batch=4/n=1 下不可分辨(噪声底 2.0 分 >> judge 方差 0),需更大 batch 或配对评估才能判定模板是否可改进。最终 go/no-go 由 PM+用户裁定。
 
+**配对实验补充判读**(2026-09-16):
+- 配对实验消除批次方差后,Mean Δ = -0.06(16 配对案例,15 个 Δ=0,1 个 Δ=-1)
+- Verdict: **mixed**(非稳定非零,非红灯)
+- **结论**:judge 对 elicit 模板措辞变化不敏感(Δ≈0),搜索空间需扩大(结构变化而非措辞微调)
+- **建议**:后续优化探索更大搜索空间(如 elicit 结构、引导策略),而非纯措辞改写
+
 ## 调用计数
 
 - **代码实现波**:0 模型调用(全 mock);
@@ -169,7 +204,8 @@ make check
 - **D 重跑 smoke**(bug 修复后):26 calls(同配置);
 - **诊断探针**:4 calls(1 案 × judge × 2);
 - **方差探针**:8 calls(judge-only, 4 案 × 2 runs);
-- **本任务总消耗**:**64 calls**(tier-2 扣账,与台账对齐);
+- **配对实验**:50 calls(全 8 案 × 2 轮 + 编辑器 2 calls);
+- **本任务总消耗**:**114 calls**(tier-2 扣账,64+50);
 - **Tier-2 预算**:K=4×S=16×I=6=384 案次 / ≈206-478 calls(双口径,见 §五问③)。
 
 ## 治理
@@ -182,7 +218,8 @@ make check
 ## 工件
 
 - `README.md`(本文件);
-- `smoke-test/`(待执行产出:round-*.json + summary.json)。
+- `smoke-test/`(round-*.json + summary.json + variance-probe.json);
+- `paired-experiment/`(round-*.json + paired-report.json,配对实验产出)。
 
 ## 已知局限
 
@@ -203,9 +240,9 @@ make check
 
 ## 代码改动摘要
 
-- `edu_agent/evals/gepa.py`:新增(6 组件主实现,437 行);bugfix:evaluate_batch 使用 `transcript_messages` 转换 turns→messages(原直接传 transcript["turns"] 导致 judge 见空 transcript,全零分);no-op 检查(edit_template 返回与父代相同 → 跳过评估省预算);P1 修复:① 编辑器收低分维度+证据(原只收 GatewayError);② 硬失败(answer_leaked/verdict=fail)进 ScoreVector 第四维,不能成为最优;P2-1 修复:编辑失败帧滚动更新(last_failures)
-- `edu_agent/evals/gepa_driver.py`:新增(CLI 驱动,67 行)
-- `tests/evals/test_gepa.py`:新增(单元测试 15 个,含契约测试:turns↔messages 形状断言、硬失败选择行为、硬失败 dominates 阻断、低分证据进 failures 列表)
-- `edu_agent/evals/__init__.py`:GEPA 符号加入 `__all__`(10 个)
+- `edu_agent/evals/gepa.py`:新增(6 组件主实现 + 配对实验,648 行);bugfix:evaluate_batch 使用 `transcript_messages` 转换 turns→messages(原直接传 transcript["turns"] 导致 judge 见空 transcript,全零分);no-op 检查(edit_template 返回与父代相同 → 跳过评估省预算);P1 修复:① 编辑器收低分维度+证据(原只收 GatewayError);② 硬失败(answer_leaked/verdict=fail)进 ScoreVector 第四维,不能成为最优;P2-1 修复:编辑失败帧滚动更新(last_failures);配对实验:evaluate_batch_paired + paired_loop(逐案配对 Δ + 三项验证)
+- `edu_agent/evals/gepa_driver.py`:新增(CLI 驱动,92 行,含 --paired 模式)
+- `tests/evals/test_gepa.py`:新增(单元测试 17 个,含契约测试:turns↔messages 形状断言、硬失败选择行为、硬失败 dominates 阻断、低分证据进 failures 列表、evaluate_batch_paired、paired_loop)
+- `edu_agent/evals/__init__.py`:GEPA 符号加入 `__all__`(12 个,含 paired_loop + evaluate_batch_paired)
 
 **PR 只开不合**(合并键在人)。
