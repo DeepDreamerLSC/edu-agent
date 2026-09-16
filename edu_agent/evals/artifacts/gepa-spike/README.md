@@ -6,7 +6,7 @@
 
 按 #256 issue 规格手搓 GEPA 核心循环 spike,零依赖,复用现有 runner/judge 管线。
 
-### 6 组件(435 行组件 / 625 行含测试,落现有管线旁,不动 kernel)
+### 6 组件(504 行组件 / 754 行含测试,落现有管线旁,不动 kernel)
 
 1. **Prompt seam**(`ElicitSubject`):`run_case` 接受 elicit 模板变体注入(monkeypatch `kernel._ELICIT_TEMPLATE`,用完即恢复,不动仓库模板);
 2. **Mini-batch 采样**(`sample_batch`):每轮从 train 抽 k 个,同种子确定性,换种子刷新;
@@ -24,9 +24,9 @@
 ## 代码结构
 
 ```
-edu_agent/evals/gepa.py          # 6 组件主实现(368 行)
+edu_agent/evals/gepa.py          # 6 组件主实现(437 行)
 edu_agent/evals/gepa_driver.py   # CLI 驱动脚本(67 行)
-tests/evals/test_gepa.py         # 单元测试(11 测试,零 API)
+tests/evals/test_gepa.py         # 单元测试(15 测试,零 API)
 ```
 
 ### 公开入口(已加入 `edu_agent/evals/__init__.__all__`)
@@ -124,14 +124,14 @@ uv run python -m edu_agent.evals.gepa_driver \
 
 ```bash
 uv run pytest tests/evals/test_gepa.py -v
-# 12 passed
+# 15 passed
 ```
 
 ### 全量检查
 
 ```bash
 make check
-# 934 passed, 1 skipped, 1 warning
+# 937 passed, 1 skipped, 1 warning
 ```
 
 ## Bug 诊断(smoke 首轮全零分)
@@ -188,7 +188,7 @@ make check
 
 ### P2 级(spike 范围内未修,生产化再议)
 
-- **P2-1 反思编辑器失败帧恒为初始批**:`gepa_loop` 第 316 行 `edit_template` 始终传入 `initial_failures`,不回流 `variant_failures`。后果:编辑器无法针对变体的具体失败模式调整,只能看到初始模板的失败。spike 范围内可接受(验证管线通断),生产化需改为传入当前轮的 variant_failures。
+- **P2-1 反思编辑器失败帧已修**(原恒为初始批,现传 `last_failures` 滚动更新;每轮结束后用 `variant_failures` 覆盖,no-op 时保留上轮)
 - **P2-2 选择策略简化**:`accepted` 只判断变体是否 dominates 父代,但不约束后续父代选择(被支配的变体仍可能当父代)。规格的「每 R 轮全量刷新」未实现。spike 范围内可接受(验证 Pareto 基本逻辑),生产化需加全量刷新或 tournament selection。
 - **P2-3 `gepa_loop` 零测试**:seam 测试(`test_elicit_subject_calls_kernel`)只验证委托关系,不验证 monkeypatch 对 transcript 的实际影响。spike 范围内可接受(验证代码可跑),生产化需加集成测试(小数据集端到端)。
 
@@ -203,9 +203,9 @@ make check
 
 ## 代码改动摘要
 
-- `edu_agent/evals/gepa.py`:新增(6 组件主实现,368 行);bugfix:evaluate_batch 使用 `transcript_messages` 转换 turns→messages(原直接传 transcript["turns"] 导致 judge 见空 transcript,全零分);no-op 检查(edit_template 返回与父代相同 → 跳过评估省预算)
+- `edu_agent/evals/gepa.py`:新增(6 组件主实现,437 行);bugfix:evaluate_batch 使用 `transcript_messages` 转换 turns→messages(原直接传 transcript["turns"] 导致 judge 见空 transcript,全零分);no-op 检查(edit_template 返回与父代相同 → 跳过评估省预算);P1 修复:① 编辑器收低分维度+证据(原只收 GatewayError);② 硬失败(answer_leaked/verdict=fail)进 ScoreVector 第四维,不能成为最优;P2-1 修复:编辑失败帧滚动更新(last_failures)
 - `edu_agent/evals/gepa_driver.py`:新增(CLI 驱动,67 行)
-- `tests/evals/test_gepa.py`:新增(单元测试 12 个,含契约测试 turns↔messages 形状断言)
+- `tests/evals/test_gepa.py`:新增(单元测试 15 个,含契约测试:turns↔messages 形状断言、硬失败选择行为、硬失败 dominates 阻断、低分证据进 failures 列表)
 - `edu_agent/evals/__init__.py`:GEPA 符号加入 `__all__`(10 个)
 
 **PR 只开不合**(合并键在人)。
