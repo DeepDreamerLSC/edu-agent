@@ -1,4 +1,4 @@
-# GEPA 手搓 Spike(#256,2026-09-16)——6 组件落地 + smoke test + 配对实验,judge 零方差,Δ≈0
+# GEPA 手搓 Spike(#256,2026-09-16)——6 组件落地 + smoke test + 配对实验,Δ≈0 归因未定,红灯(冻结协议)
 
 **点火依据**:PM 233d0fca 直发 2026-09-16,#275 已合 main@243553b(P1 前置满足)。
 
@@ -6,7 +6,7 @@
 
 按 #256 issue 规格手搓 GEPA 核心循环 spike,零依赖,复用现有 runner/judge 管线。
 
-### 6 组件(648 行组件 / 757 行含测试,落现有管线旁,不动 kernel)
+### 6 组件(731 行组件 / 95 行驱动 / 478 行测试,落现有管线旁,不动 kernel)
 
 1. **Prompt seam**(`ElicitSubject`):`run_case` 接受 elicit 模板变体注入(monkeypatch `kernel._ELICIT_TEMPLATE`,用完即恢复,不动仓库模板);
 2. **Mini-batch 采样**(`sample_batch`):每轮从 train 抽 k 个,同种子确定性,换种子刷新;
@@ -24,9 +24,9 @@
 ## 代码结构
 
 ```
-edu_agent/evals/gepa.py          # 6 组件主实现 + 配对实验(648 行)
-edu_agent/evals/gepa_driver.py   # CLI 驱动脚本(92 行,含 --paired 模式)
-tests/evals/test_gepa.py         # 单元测试(17 测试,零 API)
+edu_agent/evals/gepa.py          # 6 组件主实现 + 配对实验(731 行)
+edu_agent/evals/gepa_driver.py   # CLI 驱动脚本(95 行,含 --paired 模式)
+tests/evals/test_gepa.py         # 单元测试(18 测试,零 API)
 ```
 
 ### 公开入口(已加入 `edu_agent/evals/__init__.__all__`)
@@ -125,14 +125,14 @@ uv run python -m edu_agent.evals.gepa_driver \
 
 ```bash
 uv run pytest tests/evals/test_gepa.py -v
-# 17 passed
+# 18 passed
 ```
 
 ### 全量检查
 
 ```bash
 make check
-# 939 passed, 1 skipped, 1 warning
+# 940 passed, 1 skipped, 1 warning(本地基座 e2ae9c2d;PR 头 CI 口径以 CI job 为准)
 ```
 
 ## Bug 诊断(smoke 首轮全零分)
@@ -158,22 +158,32 @@ make check
 - **配对差 Δi = 变体i − 父代i**(每案一对)
 
 **实测结果**(Mac worktree,2026-09-16):
-- Budget: 50 calls / 372s 墙钟 / 未触顶(预算 104)
+- Budget: 50 calls(simplified 口径,见下)/ 372s 墙钟
 - **Mean Δ = -0.06**(16 配对案例,15 个 Δ=0,1 个 Δ=-1)
-- Verdict: **mixed**(非稳定非零,非红灯)
+- Verdict: **红灯**(冻结协议:Δ≈0 → 停,报 PM 红灯)
 
-**三项验证**:
+**三项验证**(首轮,代码修复前):
 1. **编辑器反馈**:parent_failures 传给 edit_template,report 含 editor_feedback_sample ✓
 2. **硬失败筛选**:hard_fail_validation = "pass (no leaked variant)" ✓
-3. **模板命中**:template_hit_validation hit_count=3/3(抽样 case 首问长度>10)✓
+3. **模板命中**:hit_count=0/8(工件实录,代码读取 transcript["first_question"] 但 transcript 无此键 → 结构性失效;修复后读取 turns[0].tutor,**待重跑验证**)
 
-**判读**:
-- Δ ≈ 0 → 模板变体对评分无显著影响(judge 对 elicit 措辞不敏感,或搜索空间窄)
-- 非 GO(需 Δ 稳定非零且多数案例同向)
-- 非红灯(Δ 非全零,有 1 案变化)
-- **建议**:judge 对 elicit 模板措辞变化不敏感,后续优化需探索更大搜索空间(结构变化而非措辞微调)
+**代码修复**(2026-09-16,审查 review-303):
+- P1-1: 模板命中验证修复(读取 turns[0].tutor,逐案对比 parent vs variant 首问,含空转检测)
+- P1-2: 判读逻辑修复(冻结协议:Δ≈0 → 红灯,非 mixed)
+- P1-3: 调用计数接 facts ledger(真实 tutor 多轮调用 + judge + editor,非简化 +=2)
+- P2-1: 编辑器反馈用完整失败帧(含 evidence 原句,非仅 total/hard_fail)
+- P2-2: 归因改为「未定」(空转未排除,judge 不敏感 vs 空转 vs 搜索空间窄三可)
+- 辅助函数提取(_build_paired_cases / _compute_paired_verdict)
+- 契约测试用真实转录形状(无 first_question 键,首问在 turns[0].tutor)
+- _validate_hard_fail 对齐 dominates 原则(无 acceptable 分支)
+- budget.rounds 计数修复
 
-**工件**:`paired-experiment/`(round-00.json, round-01.json, paired-report.json)
+**判读**(冻结协议):
+- Δ ≈ 0 → **红灯**(停,报 PM,进入设计对话)
+- **归因未定**:judge 对 elicit 措辞不敏感 vs 空转(模板未改变 tutor 行为)vs 搜索空间窄(三可皆容,首轮未验证模板命中)
+- **建议**:需重跑实验(新代码 + facts 实测 calls)验证模板是否真改变行为;若仍 Δ≈0 → PM+用户裁定下一步(更大搜索空间 / 换优化目标 / 停)
+
+**工件**:`paired-experiment/`(round-00.json, round-01.json, paired-report.json,首轮数据)
 
 ## 判读预注册(跑前冻结,跑后不改)
 
@@ -191,11 +201,11 @@ make check
 
 **初判倾向**:**条件 GO**(管线通、judge 确定性高、预算可控、diff 可读)。但 ② 敏感性在 batch=4/n=1 下不可分辨(噪声底 2.0 分 >> judge 方差 0),需更大 batch 或配对评估才能判定模板是否可改进。最终 go/no-go 由 PM+用户裁定。
 
-**配对实验补充判读**(2026-09-16):
+**配对实验补充判读**(2026-09-16,冻结协议):
 - 配对实验消除批次方差后,Mean Δ = -0.06(16 配对案例,15 个 Δ=0,1 个 Δ=-1)
-- Verdict: **mixed**(非稳定非零,非红灯)
-- **结论**:judge 对 elicit 模板措辞变化不敏感(Δ≈0),搜索空间需扩大(结构变化而非措辞微调)
-- **建议**:后续优化探索更大搜索空间(如 elicit 结构、引导策略),而非纯措辞改写
+- Verdict: **红灯**(冻结协议:Δ≈0 → 停,报 PM,进入设计对话)
+- **归因未定**:judge 不敏感 vs 空转(模板未改变 tutor 行为,首轮顺验③失效)vs 搜索空间窄 — 三可皆容,需重跑验证模板命中后定论
+- **下一步**:待 PM+用户裁定(是否重跑实验 / 更大搜索空间 / 停)
 
 ## 调用计数
 
@@ -240,9 +250,9 @@ make check
 
 ## 代码改动摘要
 
-- `edu_agent/evals/gepa.py`:新增(6 组件主实现 + 配对实验,648 行);bugfix:evaluate_batch 使用 `transcript_messages` 转换 turns→messages(原直接传 transcript["turns"] 导致 judge 见空 transcript,全零分);no-op 检查(edit_template 返回与父代相同 → 跳过评估省预算);P1 修复:① 编辑器收低分维度+证据(原只收 GatewayError);② 硬失败(answer_leaked/verdict=fail)进 ScoreVector 第四维,不能成为最优;P2-1 修复:编辑失败帧滚动更新(last_failures);配对实验:evaluate_batch_paired + paired_loop(逐案配对 Δ + 三项验证)
-- `edu_agent/evals/gepa_driver.py`:新增(CLI 驱动,92 行,含 --paired 模式)
-- `tests/evals/test_gepa.py`:新增(单元测试 17 个,含契约测试:turns↔messages 形状断言、硬失败选择行为、硬失败 dominates 阻断、低分证据进 failures 列表、evaluate_batch_paired、paired_loop)
+- `edu_agent/evals/gepa.py`:新增(6 组件主实现 + 配对实验,731 行);bugfix:evaluate_batch 使用 `transcript_messages` 转换 turns→messages(原直接传 transcript["turns"] 导致 judge 见空 transcript,全零分);no-op 检查(edit_template 返回与父代相同 → 跳过评估省预算);P1 修复:① 编辑器收低分维度+证据(原只收 GatewayError);② 硬失败(answer_leaked/verdict=fail)进 ScoreVector 第四维,不能成为最优;P2-1 修复:编辑失败帧滚动更新(last_failures);配对实验:evaluate_batch_paired + paired_loop(逐案配对 Δ + 三项验证);**review-303 修复**:模板命中验证读取 turns[0].tutor(非不存在的 first_question 键);facts ledger 实测调用计数;verdict 冻结协议(Δ≈0→红灯);归因未定;空转检测;辅助函数提取
+- `edu_agent/evals/gepa_driver.py`:新增(CLI 驱动,95 行,含 --paired 模式)
+- `tests/evals/test_gepa.py`:新增(单元测试 18 个,含契约测试:turns↔messages 形状断言、硬失败选择行为、硬失败 dominates 阻断、低分证据进 failures 列表、evaluate_batch_paired、paired_loop、verdict 红灯;**契约测试用真实转录形状**:无 first_question 键,首问在 turns[0].tutor)
 - `edu_agent/evals/__init__.py`:GEPA 符号加入 `__all__`(12 个,含 paired_loop + evaluate_batch_paired)
 
 **PR 只开不合**(合并键在人)。

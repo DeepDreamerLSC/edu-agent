@@ -319,17 +319,21 @@ def test_evaluate_batch_collects_low_score_evidence():
 
 # === 配对实验(2026-09-16, #256 配对实验)===
 
-def test_evaluate_batch_paired_returns_per_case_scores():
-    """配对模式:逐案返回 scores + first_question 快照 + stats。"""
+def test_evaluate_batch_paired_returns_per_case_scores(tmp_path):
+    """配对模式:逐案返回 scores + first_question(从 turns[0].tutor 取)+ stats。
+    
+    契约:transcript 真实形状无 first_question 键;首问来自 turns[0].tutor。
+    """
     from edu_agent.evals import evaluate_batch_paired
     
     gateway = MagicMock()
+    gateway.writer.root = tmp_path  # 空 facts 目录
     subject_mock = MagicMock()
+    # 真实形状:无 first_question 键;首问在 turns[0].tutor
     subject_mock.run_case.return_value = {
-        "turns": [{"student": "", "tutor": "我们从头把思路串一遍", "state": "x", "elapsed_ms": 0}],
+        "turns": [{"student": "", "tutor": "我们从头把思路串一遍——先说说你第一步", "state": "first_question_ready", "elapsed_ms": 0}],
         "summary": "",
         "session_id": "t",
-        "first_question": "我们从头把思路串一遍——先说说你第一步算了什么",
     }
     cases = [
         {"id": "c1", "question": "1+1?", "grade": "三年级", "reference_answer": "2"},
@@ -351,30 +355,36 @@ def test_evaluate_batch_paired_returns_per_case_scores():
     
     with patch("edu_agent.evals.gepa.ElicitSubject", return_value=subject_mock), \
          patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge):
-        per_case, hits, stats = evaluate_batch_paired(cases, "template", gateway)
+        per_case, fqs, stats = evaluate_batch_paired(cases, "template", gateway)
     
     assert len(per_case) == 2
     assert per_case[0]["case_id"] == "c1"
     assert per_case[0]["total"] == 11
     assert per_case[1]["total"] == 12
     assert per_case[0]["hard_fail"] is False
-    assert len(hits) == 2
-    assert "first_question" in hits[0]
-    assert stats["calls"] == 4  # 2 tutor + 2 judge
+    # first_questions 来自 turns[0].tutor(非 transcript.first_question)
+    assert len(fqs) == 2
+    assert fqs[0]["first_question"] == "我们从头把思路串一遍——先说说你第一步"
+    # stats.calls 来自 facts 计数(tmp_path 无文件 → 0)
+    assert stats["calls"] == 0  # facts 目录空,实测 0 行
 
 
 def test_paired_loop_produces_paired_report(tmp_path):
-    """配对循环:产出 round-*.json + paired-report.json(含 Δ 和验证项)。"""
+    """配对循环:产出 round-*.json + paired-report.json(含 Δ 和验证项)。
+    
+    契约:transcript 真实形状无 first_question 键;首问来自 turns[0].tutor。
+    """
     from edu_agent.evals import paired_loop, GepaConfig
     import json
     
     gateway = MagicMock()
+    gateway.writer.root = tmp_path
     subject_mock = MagicMock()
+    # 真实形状:无 first_question 键
     subject_mock.run_case.return_value = {
-        "turns": [{"student": "", "tutor": "好", "state": "x", "elapsed_ms": 0}],
+        "turns": [{"student": "", "tutor": "好", "state": "first_question_ready", "elapsed_ms": 0}],
         "summary": "",
         "session_id": "t",
-        "first_question": "我们从头把思路串一遍——先说说你第一步算了什么",
     }
     cases = [
         {"id": "c1", "question": "1+1?", "grade": "三年级", "reference_answer": "2"},
@@ -415,6 +425,10 @@ def test_paired_loop_produces_paired_report(tmp_path):
     assert "hard_fail_validation" in report
     assert "template_hit_validation" in report
     assert "editor_feedback_sample" in report
+    # 首问对比字段存在(防空转)
+    assert "parent_first_question" in report["paired_cases"][0]
+    assert "variant_first_question" in report["paired_cases"][0]
+    assert "idle" in report["paired_cases"][0]
     
     # 验证 paired-report.json 产出
     paired_report_path = tmp_path / "paired-report.json"
@@ -422,4 +436,43 @@ def test_paired_loop_produces_paired_report(tmp_path):
     paired_summary = json.loads(paired_report_path.read_text())
     assert "mean_delta" in paired_summary
     assert paired_summary["mean_delta"] == 1.0
-    assert paired_summary["verdict"] in ("GO", "红灯", "mixed")
+    # 冻结协议:Δ>0 且多数同向 → GO
+    assert paired_summary["verdict"] == "GO"
+    # facts 实测字段存在
+    assert "real_calls" in paired_summary
+    assert "tokens_in" in paired_summary
+    assert "tokens_out" in paired_summary
+
+
+def test_paired_loop_verdict_red_light_when_delta_zero(tmp_path):
+    """冻结协议:Δ≈0 → 红灯(不是 mixed)。"""
+    from edu_agent.evals import paired_loop, GepaConfig
+    import json
+    
+    gateway = MagicMock()
+    gateway.writer.root = tmp_path
+    subject_mock = MagicMock()
+    subject_mock.run_case.return_value = {
+        "turns": [{"student": "", "tutor": "好", "state": "x", "elapsed_ms": 0}],
+        "summary": "", "session_id": "t",
+    }
+    cases = [{"id": "c1", "question": "1+1?", "grade": "三年级", "reference_answer": "2"}]
+    
+    def fake_judge(gw, judge_case, role="judge_independent"):
+        return {"total": 10, "verdict": "pass", "math_integrity": 2, "answer_leaked": False,
+                "scores": {"first_question": 2, "socratic_followup": 2, "grade_fit": 2,
+                           "pacing": 2, "summary_mastery": 2, "termination": 2}, "evidence": {}}
+    
+    def fake_edit(current, failures, gw):
+        return "我们从头理一遍思路——你先说第一步怎么想的"
+    
+    config = GepaConfig(rounds=1, batch_size=1, max_calls=100)
+    
+    with patch("edu_agent.evals.gepa.ElicitSubject", return_value=subject_mock), \
+         patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge), \
+         patch("edu_agent.evals.gepa.edit_template", side_effect=fake_edit):
+        paired_loop(cases, "initial", config, gateway, tmp_path)
+    
+    paired_summary = json.loads((tmp_path / "paired-report.json").read_text())
+    # 全 Δ=0 → 红灯(冻结协议,不是 mixed)
+    assert paired_summary["verdict"] == "红灯"
