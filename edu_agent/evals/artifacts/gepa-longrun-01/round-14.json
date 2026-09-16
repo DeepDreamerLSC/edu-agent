@@ -1,0 +1,84 @@
+{
+  "round": 14,
+  "parent_id": 0,
+  "variant_id": 1,
+  "parent_template": "我们先从头理一理：你脑子里冒出的第一步是什么？为什么先想到它？说说看，我们再接着往下聊。",
+  "variant_template": "别急，我们从头开始：你看到这道题，脑子里第一个冒出来的思路是什么？为什么先想到这一步？说说你的想法，我们再一起往下聊。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": false,
+  "parent_scores": {
+    "mean_score": 8.6875,
+    "needs_review_rate": 0.375,
+    "numerical_violation_rate": 0.0625,
+    "hard_failure_rate": 0.25
+  },
+  "variant_scores": {
+    "mean_score": 9.25,
+    "needs_review_rate": 0.5,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0625
+  },
+  "accepted": false,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-我们先从头理一理：你脑子里冒出的第一步是什么？为什么先想到它？说说看，我们再接着往下聊。",
+    "+别急，我们从头开始：你看到这道题，脑子里第一个冒出来的思路是什么？为什么先想到这一步？说说你的想法，我们再一起往下聊。"
+  ],
+  "stats": {
+    "calls": 109,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 540753
+  },
+  "failures": [
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_probability",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_rope_unit_app_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_ratio_share_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "total=8/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_percentage_discount_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中未出现任何实质性的方法总结或掌握判断，小讲师仅以‘学习证据还不够’为由中断，未复述学生已掌握的概念（八折=80%）作为总结，也未给出掌握状态判断。; termination=0 — 对话在小讲师提出‘你能说说目前想到的第一步吗？’后直接结束，学生尚未给出最终答案或表示理解，属于学生未掌握即终止。; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_fraction_addition_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_simple_probability_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'学习证据还不够'为由中断，未复述学生已掌握的正确推理（红球多则概率大），也未给出掌握判断。; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_distance_speed_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:我们从这里入手:已知汽车每小时行60千米，这是它的速度。你接着算下一步。小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; summary_mastery=0 — 对话中无实质总结，小讲师仅重复提问'你能说说目前想到的第一步吗'，未对学生已给出的'路程等于速度乘时间'进行方法总结或掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_simple_probability_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结环节，小讲师未复述学生关键学习证据或给出掌握判断，直接结束。; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_parentheses_equation_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'这一题的学习证据还不够'为由中断，未复述学生已掌握的第一步，也未给出掌握判断。; termination=0 — 学生已正确完成第一步（x+3=9），小讲师未引导完成第二步即终止对话，属于学生未掌握就终止。; total=7/12"
+    }
+  ]
+}

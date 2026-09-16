@@ -1,22 +1,22 @@
 {
   "budget": {
-    "calls": 569,
-    "rounds": 14,
-    "wall_s": 1553.9456404169905,
+    "calls": 1107,
+    "rounds": 24,
+    "wall_s": 3182.254863084003,
     "exhausted": false
   },
-  "population_size": 7,
+  "population_size": 11,
   "accepted_variants": 0,
   "best_candidate": {
-    "template": "我们先从头理一理：你脑子里冒出的第一步是什么？为什么先想到它？说说看，我们再接着往下聊。",
-    "parent_id": 3,
-    "round_idx": 12,
-    "candidate_id": 5
+    "template": "别急，我们从头开始：你看到这道题，脑子里第一个冒出来的思路是什么？为什么先想到这一步？说说你的想法，我们再一起往下聊。",
+    "parent_id": 0,
+    "round_idx": 14,
+    "candidate_id": 1
   },
   "best_scores": {
-    "mean_score": 8.6875,
-    "needs_review_rate": 0.375,
-    "numerical_violation_rate": 0.0625,
-    "hard_failure_rate": 0.25
+    "mean_score": 9.25,
+    "needs_review_rate": 0.5,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0625
   }
 }
