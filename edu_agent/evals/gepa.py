@@ -20,6 +20,7 @@ from pathlib import Path
 from edu_agent.agents.small_lecturer import kernel
 from edu_agent.gateway import Gateway, GatewayError, ModelRequest
 
+from .corpus_round import transcript_messages
 from .judge import judge_transcript
 from .kernel_subject import KernelSubject
 from .runner import EnvironmentFailure
@@ -126,11 +127,13 @@ def evaluate_batch(
     judged = 0
     
     for case, transcript in transcripts:
+        messages = transcript_messages(transcript)
+        question = case.get("question", "")
         judge_case = {
-            "question": case.get("question", ""),
+            "question": question["text"] if isinstance(question, dict) else question,
             "grade": case.get("grade", ""),
             "reference_answer": case.get("reference_answer", ""),
-            "messages": transcript["turns"],
+            "messages": messages,
         }
         try:
             judge_output = judge_transcript(gateway, judge_case, role=judge_role)
