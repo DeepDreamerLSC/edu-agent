@@ -4,6 +4,8 @@
 <!-- SQLite 每日备份(M3 DB 存储)。照 partner-api plist 惯例:绝对路径 ProgramArguments、
      日志同目录 ~/Library/Logs/edu-agent/、EDU_ENV 环境变量。
      每日 03:30 触发;手动触发:launchctl kickstart -k gui/$UID/com.edu-agent.backup。
+     14 天滚动 = 治理④(试点数据治理):本地由 backup-db.sh RETENTION(默认 14)清理;
+     远端 OSS 前缀由 bucket 生命周期规则清理(桶管理员配置,选型理由见 deploy/launchd/README.md)。
      凭据不进本文件:backup-db.sh 自己读 ~/.config/edu-agent/oss.env(0600)。 -->
 <dict>
   <key>Label</key>

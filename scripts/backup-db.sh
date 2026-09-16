@@ -4,7 +4,7 @@
 # - VACUUM INTO 出一致性快照(禁止直接 cp 带 WAL 的 .db——会拷出半截状态);
 # - integrity_check + 关键表行数 live↔snap 对账,不过不发布;
 # - .sha256 侧车;.tmp 写好后原子改名(发布即完整);
-# - 本地滚动:find -mtime +N 连同 .sha256 一起删(远程不删,交给 bucket 生命周期);
+# - 本地滚动:find -mtime +N 连同 .sha256 一起删(N 默认 14,治理④;远程清理机制见下);
 # - ossutil 强制 HTTPS endpoint(备份包含用户对话内容,不能明文过网);
 #   凭据单源 ~/.config/edu-agent/oss.env,运行时写进 mktemp 出来的 0600 配置,
 #   trap 退出即删——密钥不进命令行参数(ps 可见)、不进日志。
@@ -13,7 +13,7 @@ set -euo pipefail
 OSS_ENV_FILE="${OSS_ENV_FILE:-$HOME/.config/edu-agent/oss.env}"
 DB="${EDU_DB_PATH:-data/edu-agent.db}"
 DIR="${OSS_BACKUP_DIR:-$HOME/edu-agent-backups}"
-RETENTION="${OSS_BACKUP_RETENTION_DAYS:-7}"
+RETENTION="${OSS_BACKUP_RETENTION_DAYS:-14}"  # 治理④:14 天滚动(试点数据治理裁定)
 ENV_TAG="${EDU_ENV:-test}"
 OSSUTIL_BIN="${OSSUTIL_BIN:-$HOME/.local/bin/ossutil}"
 SQLITE3_BIN="${SQLITE3_BIN:-sqlite3}"
@@ -62,7 +62,9 @@ echo "$HASH  $NAME" > "$TMP.sha256"
 mv "$TMP" "$DIR/$NAME"
 mv "$TMP.sha256" "$DIR/$NAME.sha256"
 
-# 4) 本地滚动(连同侧车;远程保留交给 bucket 生命周期 7+30 天,本脚本不删远程)
+# 4) 本地滚动(连同侧车;远程保留 = OSS 生命周期规则 14 天,治理④:备份钥匙只写,
+#    实测 ls/stat/rm/lifecycle 均 403,客户端清理不可行,规则由桶管理员控制台一次性
+#    配置——见 deploy/launchd/README.md;本脚本不删远程)
 find "$DIR" -type f \( -name 'edu-agent-*.db' -o -name 'edu-agent-*.db.sha256' \) \
   -mtime "+$RETENTION" -delete
 
