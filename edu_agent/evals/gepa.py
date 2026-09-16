@@ -20,6 +20,7 @@ from pathlib import Path
 from edu_agent.agents.small_lecturer import kernel
 from edu_agent.gateway import Gateway, GatewayError, ModelRequest
 
+from .corpus_round import transcript_messages
 from .judge import judge_transcript
 from .kernel_subject import KernelSubject
 from .runner import EnvironmentFailure
@@ -67,27 +68,79 @@ def sample_batch(cases: list[dict], k: int, seed: int) -> list[dict]:
 
 @dataclass(frozen=True)
 class ScoreVector:
-    """三指标:judge 总分均值(/12) / needs_review 率 / 数值违规率(mi<2)。
+    """四指标:judge 总分均值(/12) / needs_review 率 / 数值违规率(mi<2) / 硬失败率。
+    
+    硬失败 = answer_leaked=True 或 verdict='fail'(judge 判定一票否决)。
+    硬失败候选不能成为最优(外审确定性探针坐实:12 分 + 泄答案不可胜过 11 分合格)。
     
     Pareto 简化:新批次不劣于父代且一维更好才留;不做 ε-domination 或 crowding distance。
     """
     mean_score: float
     needs_review_rate: float
     numerical_violation_rate: float
+    hard_failure_rate: float = 0.0
     
     def dominates(self, other: ScoreVector) -> bool:
-        """新批次不劣于父代(全维 ≥/≤)且至少一维严格更好。"""
+        """新批次不劣于父代(全维 ≥/≤)且至少一维严格更好。
+        
+        硬失败率维度:自身更高 = 更差,自身更低 = 更好。
+        """
         not_worse = (
             self.mean_score >= other.mean_score
             and self.needs_review_rate <= other.needs_review_rate
             and self.numerical_violation_rate <= other.numerical_violation_rate
+            and self.hard_failure_rate <= other.hard_failure_rate
         )
         strictly_better = (
             self.mean_score > other.mean_score
             or self.needs_review_rate < other.needs_review_rate
             or self.numerical_violation_rate < other.numerical_violation_rate
+            or self.hard_failure_rate < other.hard_failure_rate
         )
         return not_worse and strictly_better
+
+
+def _score_one_case(
+    gateway: Gateway, case: dict, transcript: dict, judge_role: str,
+) -> tuple[int, str, int, bool, list[dict]]:
+    """单案判卷 + 失败帧收集(供 evaluate_batch 调用)。
+    
+    返回:(total, verdict, math_integrity, is_hard_failure, low_score_failure_frames)。
+    GatewayError 直接抛出,由调用方捕获。
+    """
+    messages = transcript_messages(transcript)
+    question = case.get("question", "")
+    judge_case = {
+        "question": question["text"] if isinstance(question, dict) else question,
+        "grade": case.get("grade", ""),
+        "reference_answer": case.get("reference_answer", ""),
+        "messages": messages,
+    }
+    judge_output = judge_transcript(gateway, judge_case, role=judge_role)
+    total = judge_output["total"]
+    verdict = judge_output.get("verdict", "")
+    leaked = judge_output.get("answer_leaked", False)
+    mi = judge_output.get("math_integrity", 2)
+    evidence = judge_output.get("evidence", {})
+    dim_scores = judge_output.get("scores", {})
+    
+    is_hard_fail = leaked or verdict == "fail"
+    
+    low_frames: list[dict] = []
+    low_dims = [dim for dim, s in dim_scores.items() if s == 0]
+    if total < 10 or low_dims:
+        parts: list[str] = []
+        for dim in low_dims[:2]:  # 最多 2 个维度,防 prompt 过长
+            parts.append(f"{dim}={dim_scores.get(dim, '?')} — {evidence.get(dim, '')[:80]}")
+        if total < 10:
+            parts.append(f"total={total}/12")
+        low_frames.append({
+            "case_id": case.get("id", ""),
+            "kind": "judge_low_score",
+            "detail": "; ".join(parts) if parts else f"total={total}",
+        })
+    
+    return total, verdict, mi, is_hard_fail, low_frames
 
 
 def evaluate_batch(
@@ -119,42 +172,42 @@ def evaluate_batch(
             failures.append({"case_id": case.get("id", ""), "kind": "content", "detail": str(exc)})
             stats["content_failures"] += 1
     
-    # 判卷
     scores = []
     needs_review = 0
     violations = 0
+    hard_failures = 0
     judged = 0
     
     for case, transcript in transcripts:
-        judge_case = {
-            "question": case.get("question", ""),
-            "grade": case.get("grade", ""),
-            "reference_answer": case.get("reference_answer", ""),
-            "messages": transcript["turns"],
-        }
         try:
-            judge_output = judge_transcript(gateway, judge_case, role=judge_role)
-            scores.append(judge_output["total"])  # 六维总分(/12)
-            if judge_output["verdict"] == "review":
-                needs_review += 1
-            if judge_output["math_integrity"] < 2:
-                violations += 1
-            judged += 1
+            total, verdict, mi, is_hard_fail, low_frames = _score_one_case(
+                gateway, case, transcript, judge_role)
         except GatewayError as exc:
             failures.append({"case_id": case.get("id", ""), "kind": "judge_error", "detail": str(exc)})
+            continue
+        scores.append(total)
+        judged += 1
+        if verdict == "review":
+            needs_review += 1
+        if mi < 2:
+            violations += 1
+        if is_hard_fail:
+            hard_failures += 1
+        if low_frames:
+            failures.extend(low_frames)
     
     stats["wall_ms"] = int((time.monotonic() - started) * 1000)
-    stats["calls"] = len(cases) + judged  # tutor + judge (simplified; real accounting via facts ledger)
+    stats["calls"] = len(cases) + judged
     
     if not scores:
-        return ScoreVector(0.0, 1.0, 1.0), failures, stats
+        return ScoreVector(0.0, 1.0, 1.0, 1.0), failures, stats
     
     mean_score = sum(scores) / len(scores)
-    
     return ScoreVector(
         mean_score=mean_score,
         needs_review_rate=needs_review / judged if judged else 1.0,
         numerical_violation_rate=violations / judged if judged else 1.0,
+        hard_failure_rate=hard_failures / judged if judged else 1.0,
     ), failures, stats
 
 
@@ -234,8 +287,13 @@ class Population:
         return candidate.candidate_id
     
     def select_parent(self, scores: dict[int, ScoreVector]) -> Candidate:
-        """选最高 mean_score 的候选(simplified;生产化用 tournament 或 NSGA-II)。"""
-        return max(self.candidates, key=lambda c: scores[c.candidate_id].mean_score)
+        """选最高 mean_score 的候选;硬失败候选不能成为最优(有非硬失败候选时)。
+        
+        外审确定性探针坐实:12 分 + 泄答案不可胜过 11 分合格。
+        """
+        clean = [c for c in self.candidates if scores[c.candidate_id].hard_failure_rate == 0]
+        pool = clean if clean else self.candidates
+        return max(pool, key=lambda c: scores[c.candidate_id].mean_score)
 
 
 # === 6. 循环驱动 ===
@@ -293,7 +351,7 @@ def gepa_loop(
     initial_id = population.add(initial)
     
     # 评估初始
-    initial_scores, initial_failures, initial_stats = evaluate_batch(
+    initial_scores, last_failures, initial_stats = evaluate_batch(
         train_cases[:config.batch_size], initial_template, gateway, config.judge_role)
     scores[initial_id] = initial_scores
     budget.add(initial_stats["calls"])
@@ -309,9 +367,13 @@ def gepa_loop(
         parent = population.select_parent(scores)
         parent_scores = scores[parent.candidate_id]
         
-        # 编辑模板
-        variant_template = edit_template(parent.template, initial_failures, gateway)
+        # 编辑模板:传入上一轮的失败(首轮传 initial 的,后续传上一变体的)
+        # 修 P2-1:原始终传 initial_failures,编辑器看不到变体自身的失败模式
+        variant_template = edit_template(parent.template, last_failures, gateway)
         budget.add(1)
+        
+        # No-op 检查:编辑器返回与父代逐字相同 → 跳过评估,省预算
+        is_noop = (variant_template == parent.template)
         
         # 评估变体
         variant = Candidate(
@@ -320,13 +382,22 @@ def gepa_loop(
             round_idx=round_idx,
         )
         variant_id = population.add(variant)
-        variant_scores, variant_failures, variant_stats = evaluate_batch(
-            batch, variant_template, gateway, config.judge_role)
-        scores[variant_id] = variant_scores
-        budget.add(variant_stats["calls"])
+        if is_noop:
+            variant_scores = parent_scores
+            variant_failures = []
+            variant_stats = {"calls": 0, "tokens_in": 0, "tokens_out": 0,
+                             "env_failures": 0, "content_failures": 0, "wall_ms": 0}
+            scores[variant_id] = variant_scores
+            # no-op 时 last_failures 保留上一轮,下轮编辑器继续用
+        else:
+            variant_scores, variant_failures, variant_stats = evaluate_batch(
+                batch, variant_template, gateway, config.judge_role)
+            scores[variant_id] = variant_scores
+            budget.add(variant_stats["calls"])
+            last_failures = variant_failures
         
         # 选择:simplified Pareto
-        accepted = variant_scores.dominates(parent_scores)
+        accepted = False if is_noop else variant_scores.dominates(parent_scores)
         
         # dump round report
         report = {
@@ -335,6 +406,7 @@ def gepa_loop(
             "variant_id": variant_id,
             "parent_template": parent.template,
             "variant_template": variant_template,
+            "noop": is_noop,
             "parent_scores": parent_scores.__dict__,
             "variant_scores": variant_scores.__dict__,
             "accepted": accepted,

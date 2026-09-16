@@ -1,0 +1,28 @@
+{
+  "round": 1,
+  "parent_id": 0,
+  "variant_id": 2,
+  "parent_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "variant_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "parent_scores": {
+    "mean_score": 11.0,
+    "needs_review_rate": 0.25,
+    "numerical_violation_rate": 0.0
+  },
+  "variant_scores": {
+    "mean_score": 9.0,
+    "needs_review_rate": 0.75,
+    "numerical_violation_rate": 0.0
+  },
+  "accepted": false,
+  "diff": [],
+  "stats": {
+    "calls": 8,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 59635
+  },
+  "failures": []
+}
