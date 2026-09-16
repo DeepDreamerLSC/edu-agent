@@ -5,7 +5,8 @@
 ## 文件
 
 - `slice-cases.jsonl`:11 案输入逐字冻结(transcript+question+reference;源 = judge-v2-rescore-52 存档 + judge-v3.2-rescore-93 存档,均为判卷前已落档输入)
-- `slice-baseline.jsonl`:逐案判据/期望(真值)/基线(现行判据 af93e564 双跑读数,含两跑值/total/verdict/来源)
+- `slice-baseline.jsonl`:逐案判据/期望(真值)/基线(**双纪元**:`baseline` = `af93e564…` 历史纪元双跑读数**留档**;`baseline_9551d149` = 携带至现行纪元的基线,值逐案相同)
+- `judger.sha256`:现行判据指纹锚 `9551d149dbd81b1f2edb7e7e224083eb9ffd9e102eeed864cc45d6ad72d1cc3b`(= `judger_sha256()` 实算口径:checks.py + judge.py + rubrics/small_lecturer_v3_2.yaml 按文件名序拼接 sha256)
 
 ## 切片构成与基线(速览;逐案明细见 slice-baseline.jsonl)
 
@@ -23,14 +24,23 @@
 | 慈善转述 | C21 | 泄露边界(抖动位) | leak | false | false/false | #271 |
 | 慈善转述 | C35 | 正向位 | leak | true | true/true | #268 |
 
-**双列语义**:健康位(基线=期望)= 退化检测器;已知限位(C40/C11)= 基线即盲区现状,candidate 不得劣于现状(改善为加分非必要)。判定协议(双跑均达、mi/leak 不一致保守端计 fail)沿 52 案门冻结口径(c5674758872)。
+**双列语义**:健康位(基线=期望)= 退化检测器;已知限位(C40/C11)= 基线即**机器盲区现状**,机器只记录分数变化、**不据此 fail**,「有无新增退化」由教师盲式 baseline-vs-candidate pairwise 定性判定(改善为加分非必要;见 `docs/evals/promotion-comparison-protocol.md`)。判定协议(健康位两跑均达、mi/leak 不一致保守端计 fail)沿 52 案门冻结口径(c5674758872)。
+
+## 基线纪元(判据指纹穿越 #280,2026-09-16 重冻结)
+
+- **历史纪元** `af93e564…`(v3.2 定稿):`baseline` 字段 = #268/#271 双跑读数,**留档不改**;
+- **现行纪元** `9551d149…`(#280 P2 rubric 资产抽离后 `judger_sha256()` 实算值,锚于本目录 `judger.sha256`):`baseline_9551d149` 字段 = 上字段读数**逐案携带**,**不重跑切片**(零模型调用)。
+
+**携带依据**(#280 等价验证):门① `SYSTEM_PROMPT` + `DIMENSION_GUIDE` 逐字节相等(24/24 项,含 2 边缘)⇒ 判据行为对所有案件未变,门字段数值可携带;门② 门字段零翻转。**覆盖拆分**(勿读作「11 案都过双门」):切片 11 案全部由门① 兜底;其中 8 案(#268 门 20 双跑批)另经门② 复核,余 3 案(C40/C11/C21,#271 92 案批)不在门② 20 案集内,仅门① 覆盖——携带仍成立。**方法学**:此时重读基线会把「纪元效应」与将来 candidate 效应混在一处;携带则基线继续充当前纪元冻结参照,**首个 candidate 运行给出新纪元实测读数**,两者可比。重冻结形态 = 新基线字段 + 旧基线留档(门规 L41 口径;人批 = 合并键)。
+
+**锚失效触发器**:`judger.sha256` = 本目录冻结时点的指纹快照;main 上 `checks.py` / `judge.py` / `rubrics/small_lecturer_v3_2.yaml` 任一再动(实算指纹偏离 `9551d149…`)即须按门规 L41 重新冻结,锚不得续用。
 
 ## 使用(candidate 过门)
 
 ```bash
 # 切片 id 清单 = slice-baseline.jsonl 的 case_id 列;
 # 评测命令沿既有工具(零新脚本):scripts/rescore_judge.py --only <清单>
-# ×2 独立调用 → 机械比对(健康位两跑达期望/已知限位不劣于基线)→ 教师抽审
+# ×2 独立调用 → 机械比对(健康位两跑达期望;已知限位只记录不 fail)→ 教师盲式 pairwise 定性抽审
 # (C40/C11 必审 + 健康位随机≥3,侧车留痕)→ 双绿 = promotion 许可。
 ```
 
@@ -38,6 +48,7 @@
 
 ## 基线取数口径(复算)
 
-- #268 源 = `judge-v3.2-rescore-52/judge-scores-run{1,2}.jsonl`(门 20 双跑,已合)
-- #271 源 = `judge-v3.2-rescore-93/judge-scores-r{1,2}.jsonl`(92 案双跑,已合 main@`df72e95`)
+- 历史纪元读数源(#268)= `judge-v3.2-rescore-52/judge-scores-run{1,2}.jsonl`(门 20 双跑,已合)
+- 历史纪元读数源(#271)= `judge-v3.2-rescore-93/judge-scores-r{1,2}.jsonl`(92 案双跑,已合 main@`df72e95`)
+- 携带口径:`baseline_9551d149` 值 = `baseline` 逐案携带(读数来源同上两行;携带依据见「基线纪元」节)
 - 判据字段映射:mi=math_integrity;sm=scores.summary_mastery;leak=answer_leaked
