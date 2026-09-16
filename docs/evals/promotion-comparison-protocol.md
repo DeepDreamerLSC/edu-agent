@@ -16,7 +16,7 @@ Phase B **绝不接受**教师 0|1|2 分数与机器 baseline 做数值比较（
 
 只接受三类输入：
 
-- **candidate 机器结果**：`rescore_judge.py` 判卷产出的 `mi` / `leak` / `sm` 字段值
+- **candidate 机器结果**：`rescore_judge.py` 判卷产出的字段。字段名映射（切片行标签 `criterion` ≠ judge 产出字段）：`mi`→`math_integrity`、`sm`/`sm_ge`→`student_mastery`、`leak`→`answer_leaked`；`mi` 覆盖数学真实性与慈善转述（C11）两个家族的机器读数。
 - **frozen machine baseline**：`slice-baseline.jsonl` 9551d149 纪元双跑读数
 - **machine expectation**：`slice-baseline.jsonl` 的 `expected` 字段（按 `case_id` + `criterion` 行对齐；勘误：原稿误写「`slice-cases.jsonl` 的 `expectation` 字段」——该文件顶层键为 `id` / `question` / `grade` / `reference_answer` / `messages`，无此字段）
 
@@ -48,6 +48,8 @@ if baseline.score != expectation.score:
         # 仅记录 delta，供 Lane H 参考；不产生 worse 判定
 ```
 
+**兜底（防假绿）**：已知限位只有 2 行（C40/C11），Lane M 永不 fail。若 candidate 机器分较 baseline 下降 ≥2 档（delta ≤ −2，如 2→0），方向既可解释为「改善（识别盲区）」也可解释为「判据崩盘」——此时**门报告标红**，要求 Lane H 给出明确的 same/better 理由（引 transcript 证据），否则视为待复核、不得放行。
+
 ### 两跑不一致
 
 → 保守端（取两跑中较低分）。
@@ -65,6 +67,8 @@ final_score = min(run_1.score, run_2.score)
 ## Lane H — Teacher regression comparison（Phase B2）
 
 教师**盲式**读 baseline 与 candidate 两个 transcript（A/B 随机标号，教师不知哪个是候选），对每个家族给出 **pairwise 定性**：
+
+> **candidate transcript 取哪一跑**：candidate 在 Lane M 有两跑（run_1/run_2）。Lane H 判读的 candidate transcript 取**两跑中机器分较低（更保守）的一跑**；两跑机器分相同时取 run_1。baseline transcript = `slice-cases.jsonl` 里对应该 case 的冻结 transcript。
 
 ```
 candidate worse / same / better
