@@ -22,6 +22,7 @@ from .judge import (
     verdict_from_scores,
 )
 from .gepa import (
+    LoopState,
     Budget,
     Candidate,
     ElicitSubject,
@@ -32,6 +33,7 @@ from .gepa import (
     evaluate_batch,
     evaluate_batch_paired,
     gepa_loop,
+    write_checkpoint,
     paired_loop,
     sample_batch,
 )
@@ -107,6 +109,8 @@ __all__ = [
     "facts_calibers",
     "format_failures",
     "gepa_loop",
+    "LoopState",
+    "write_checkpoint",
     "paired_loop",
     "judge_rows",
     "judge_transcript",

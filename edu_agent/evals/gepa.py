@@ -149,12 +149,14 @@ def evaluate_batch(
     gateway: Gateway,
     judge_role: str = "judge",
 ) -> tuple[ScoreVector, list[dict], dict]:
-    """跑批 + 判卷一步到位(无 checkpoint/resume,spike 简化)。
-    
+    """跑批 + 判卷一步到位(calls = facts 实测,长跑口径:估算低估 ~3x 会超预算)。
+
     返回:(score_vector, failure_frames, stats)。
     stats = {calls, tokens_in, tokens_out, wall_ms, env_failures, content_failures}。
     """
     started = time.monotonic()
+    facts_dir = gateway.writer.root
+    facts_before = _count_facts_lines(facts_dir)
     subject = ElicitSubject(template, gateway)
     
     transcripts = []
@@ -197,7 +199,9 @@ def evaluate_batch(
             failures.extend(low_frames)
     
     stats["wall_ms"] = int((time.monotonic() - started) * 1000)
-    stats["calls"] = len(cases) + judged
+    # facts 实测(01 §7,长跑口径):一案 = start+reply×N+finish + judge ≈ 4.23 调用,
+    # 估算 len+judged 低估 ~3x,硬限预算必须用真实计数(paired_loop 同款)。
+    stats["calls"] = _count_facts_lines(facts_dir) - facts_before
     
     if not scores:
         return ScoreVector(0.0, 1.0, 1.0, 1.0), failures, stats
@@ -446,34 +450,104 @@ class Budget:
         }
 
 
+write_checkpoint = None  # 前向占位(定义后底部绑定公开名)
+
+
+def _write_checkpoint(output_dir: Path, state: "LoopState",
+                      next_round: int = 0, last_failures: list[dict] | None = None) -> None:
+    """每代落盘断点(长跑跨夜:最优解+预算+代次+失败帧,进程挂掉可恢复)。"""
+    population, scores = state.population, state.scores
+    budget = state.bind(0)
+    best = population.select_parent(scores)  # 返回 Candidate 对象本身
+    payload = {
+        "next_round": next_round,
+        "budget": budget.summary(),
+        "best": {"candidate_id": best.candidate_id, "template": best.template,
+                 "scores": scores[best.candidate_id].__dict__},
+        "last_failures": (last_failures or [])[:5],
+    }
+    tmp = output_dir / "checkpoint.json.tmp"
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
+    tmp.replace(output_dir / "checkpoint.json")
+
+
+
+
+@dataclass
+class LoopState:
+    """gepa_loop 的语境束(断点恢复原语 + 循环常量,helper 只传一参)。"""
+
+    train_cases: list = field(default_factory=list)
+    initial_template: str = ""
+    population: Population = field(default_factory=Population)
+    scores: dict = field(default_factory=dict)
+    budget: "Budget | None" = None
+
+    def bind(self, max_calls: int) -> "Budget":
+        if self.budget is None:
+            self.budget = Budget(max_calls=max_calls)
+        return self.budget
+
+
+def _restore_or_seed(
+    config: "GepaConfig",
+    gateway: Gateway,
+    output_dir: Path,
+    resume: bool,
+    state: LoopState,
+) -> tuple[int, list[dict]]:
+    """恢复或播种种群起点;返回(起始代次, 初始失败帧)。
+
+    恢复:最优候选入种群、预算与代次延续、失败帧带回、不重评初始(省预算;
+    种子 = round_idx 确定性,恢复后同代同批)。全新:评估初始模板并写 checkpoint。
+    """
+    population, scores = state.population, state.scores
+    budget = state.bind(config.max_calls)
+    checkpoint_path = output_dir / "checkpoint.json"
+    if resume and checkpoint_path.exists():
+        saved = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+        restored = Candidate(template=saved["best"]["template"])
+        restored_id = population.add(restored)
+        scores[restored_id] = ScoreVector(**saved["best"]["scores"])
+        budget.calls = saved["budget"]["calls"]
+        budget.rounds = saved["budget"]["rounds"]
+        print(f"[resume] 从 checkpoint 恢复:round={saved['next_round']}, "
+              f"budget={budget.calls}/{budget.max_calls}, "
+              f"best_mean={scores[restored_id].mean_score:.2f}")
+        return saved["next_round"], saved.get("last_failures", [])
+    initial_id = population.add(Candidate(template=state.initial_template))
+    initial_scores, failures, initial_stats = evaluate_batch(
+        state.train_cases[:config.batch_size], state.initial_template,
+        gateway, config.judge_role)
+    scores[initial_id] = initial_scores
+    budget.add(initial_stats["calls"])
+    _write_checkpoint(output_dir, state)
+    return 0, failures
+
+
 def gepa_loop(
     train_cases: list[dict],
     initial_template: str,
     config: GepaConfig,
     gateway: Gateway,
     output_dir: Path,
+    resume: bool = True,
 ) -> tuple[Population, dict[int, ScoreVector], list[dict]]:
-    """GEPA 主循环:轮数 / 预算计数 / 停止;每轮 dump prompt diff + 分数。
-    
+    """GEPA 主循环:轮数 / 预算计数 / 停止;每轮 dump prompt diff + 分数 + checkpoint。
+
+    resume=True 且 output_dir 存在 checkpoint.json 时恢复:最优候选作为种群起点、
+    预算余量与代次延续(种子 = round_idx,确定性,恢复后同代同批)。
     返回:(population, scores, round_reports)。
     """
     output_dir.mkdir(parents=True, exist_ok=True)
-    population = Population()
-    scores: dict[int, ScoreVector] = {}
+    state = LoopState(train_cases=train_cases, initial_template=initial_template)
+    population, scores = state.population, state.scores
+    budget = state.bind(config.max_calls)
     round_reports: list[dict] = []
-    budget = Budget(max_calls=config.max_calls)
-    
-    # 初始候选
-    initial = Candidate(template=initial_template)
-    initial_id = population.add(initial)
-    
-    # 评估初始
-    initial_scores, last_failures, initial_stats = evaluate_batch(
-        train_cases[:config.batch_size], initial_template, gateway, config.judge_role)
-    scores[initial_id] = initial_scores
-    budget.add(initial_stats["calls"])
-    
-    for round_idx in range(config.rounds):
+    start_round, last_failures = _restore_or_seed(
+        config, gateway, output_dir, resume, state)
+
+    for round_idx in range(start_round, config.rounds):
         if budget.exhausted():
             break
         
@@ -539,7 +613,8 @@ def gepa_loop(
         round_reports.append(report)
         (output_dir / f"round-{round_idx:02d}.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    
+        _write_checkpoint(output_dir, state, round_idx + 1, last_failures)
+
     # 最终报告
     summary = {
         "budget": budget.summary(),
@@ -770,3 +845,5 @@ def paired_loop(
     
     return paired_reports
 
+
+write_checkpoint = _write_checkpoint  # 公开名(tests 只导公开入口,02 §6)

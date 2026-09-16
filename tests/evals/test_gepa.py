@@ -1,5 +1,6 @@
 """#256 GEPA spike 单元测试:6 组件逐一验证,零 API。"""
 
+import json
 from unittest.mock import MagicMock, patch
 
 from edu_agent.evals import (
@@ -655,3 +656,92 @@ def test_structural_probe_dumps_artifacts_before_over_budget_exit(tmp_path):
         run_probe.STRUCTURAL_VARIANT = original_variant
         run_probe.HARD_CAP_CALLS = original_cap
         sys.path.remove(str(probe_path))
+
+
+# === 7. 长跑断点与实测计数(#256 阶段0) ===
+
+
+def test_write_checkpoint_and_restore_semantics(tmp_path):
+    """checkpoint 落盘最优解+预算+代次;resume 语义字段齐(跨夜可恢复)。"""
+    from edu_agent.evals import LoopState, write_checkpoint
+
+    state = LoopState()
+    state.population = Population()
+    a = Candidate(template="模板A:说说思路和第一步")
+    b = Candidate(template="模板B:从头讲讲你的思路,先说第一步")
+    state.scores[state.population.add(a)] = ScoreVector(8.0, 0.2, 0.1, 0.0)
+    state.scores[state.population.add(b)] = ScoreVector(9.0, 0.1, 0.1, 0.0)
+    state.bind(1624)
+    state.budget.add(300)
+    state.budget.rounds = 2
+    write_checkpoint(tmp_path, state, 3,
+                      [{"case_id": "x", "kind": "k", "detail": "d"}])
+
+    saved = json.loads((tmp_path / "checkpoint.json").read_text(encoding="utf-8"))
+    assert saved["next_round"] == 3
+    assert saved["budget"]["calls"] == 300 and saved["budget"]["rounds"] == 2
+    assert saved["best"]["template"].startswith("模板B")  # select_parent 选最高分
+    assert saved["best"]["scores"]["mean_score"] == 9.0
+    assert saved["last_failures"][0]["case_id"] == "x"
+
+
+def test_gepa_loop_resume_skips_initial_evaluation(tmp_path):
+    """resume=True 且 checkpoint 在:初始评估不再跑(省预算),代次从 next_round 起。"""
+    from edu_agent.evals import GepaConfig
+    from edu_agent.evals import gepa_loop
+
+    checkpoint = {
+        "next_round": 5,
+        "budget": {"calls": 100, "rounds": 5, "wall_s": 1.0, "exhausted": False},
+        "best": {"candidate_id": 0,
+                 "template": "恢复模板:说说你的思路,先说第一步",
+                 "scores": {"mean_score": 9.0, "needs_review_rate": 0.1,
+                            "numerical_violation_rate": 0.1, "hard_failure_rate": 0.0}},
+        "last_failures": [],
+    }
+    (tmp_path / "checkpoint.json").write_text(json.dumps(checkpoint), encoding="utf-8")
+
+    with patch("edu_agent.evals.gepa.evaluate_batch") as mock_eval, \
+         patch("edu_agent.evals.gepa.edit_template", return_value="变体:讲讲思路的第一步"):
+        mock_eval.return_value = (ScoreVector(9.0, 0.1, 0.1, 0.0), [],
+                                  {"calls": 5, "tokens_in": 0, "tokens_out": 0,
+                                   "env_failures": 0, "content_failures": 0, "wall_ms": 1})
+        gepa_loop(train_cases=[{"id": "c1", "question": "q", "student_turns": ["a"]}],
+                  initial_template="原始模板",
+                  config=GepaConfig(rounds=6, max_calls=1624),
+                  gateway=MagicMock(),
+                  output_dir=tmp_path,
+                  resume=True)
+        # resume 后不再评估初始模板:唯一一次 evaluate_batch 是第 5 代变体批
+        assert mock_eval.call_count == 1
+    saved = json.loads((tmp_path / "checkpoint.json").read_text(encoding="utf-8"))
+    assert saved["budget"]["calls"] == 106  # 100(恢复)+ 1(编辑器)+ 5(变体批)
+    assert saved["next_round"] == 6
+
+
+def test_evaluate_batch_counts_calls_from_facts(tmp_path):
+    """calls = facts 实测差值(长跑口径):估算 len+judged 低估 ~3x 会超预算。"""
+    facts = tmp_path / "model_calls-2026-09-16.jsonl"
+    facts.write_text("\n".join(json.dumps({"i": i}) for i in range(10)) + "\n",
+                     encoding="utf-8")
+    gateway = MagicMock()
+    gateway.writer.root = tmp_path
+
+    def fake_run_case(case):
+        with facts.open("a", encoding="utf-8") as handle:  # 模拟 tutor 真实调用落账
+            handle.write(json.dumps({"i": 99}) + "\n")
+        return {"turns": [{"student": "", "tutor": "好", "state": "dialogue"}]}
+
+    def fake_judge(gateway, judge_case, role="judge"):
+        with facts.open("a", encoding="utf-8") as handle:  # judge 侧真实落账 ×2
+            handle.write(json.dumps({"i": 100}) + "\n")
+            handle.write(json.dumps({"i": 101}) + "\n")
+        return {"total": 10, "verdict": "pass", "answer_leaked": False,
+                "math_integrity": 2, "evidence": {}, "scores": {}}
+
+    with patch("edu_agent.evals.gepa.ElicitSubject") as mock_subject, \
+         patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge):
+        mock_subject.return_value.run_case.side_effect = fake_run_case
+        _, _, stats = evaluate_batch([{"id": "c1", "question": "q", "student_turns": ["a"]}],
+                                     "模板", gateway)
+        assert stats["calls"] == 3  # tutor 1 + judge 2 的 facts 差值,不是估算的 2
