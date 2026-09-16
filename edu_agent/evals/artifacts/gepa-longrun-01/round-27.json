@@ -1,0 +1,32 @@
+{
+  "round": 27,
+  "parent_id": 1,
+  "variant_id": 4,
+  "parent_template": "别急，请复讲解题过程：先说出你的核心思路，再明确写出第一步的具体算式或操作。请给出可验证的结论，以便我们确认掌握情况。",
+  "variant_template": "别急，请复讲解题过程：先说出你的核心思路，再明确写出第一步的具体算式或操作。请给出可验证的结论，以便我们确认掌握情况。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": true,
+  "parent_scores": {
+    "mean_score": 10.0,
+    "needs_review_rate": 0.25,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.125
+  },
+  "variant_scores": {
+    "mean_score": 10.0,
+    "needs_review_rate": 0.25,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.125
+  },
+  "accepted": false,
+  "diff": [],
+  "stats": {
+    "calls": 0,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 0
+  },
+  "failures": []
+}

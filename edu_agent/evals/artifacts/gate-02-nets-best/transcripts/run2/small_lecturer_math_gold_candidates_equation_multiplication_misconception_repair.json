@@ -1,0 +1,99 @@
+{
+ "question_id": "small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair",
+ "final_state": "needs_review",
+ "turns": [
+  {
+   "student": "",
+   "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "state": "first_question_ready",
+   "elapsed_ms": 0
+  },
+  {
+   "student": "先把25除以3，再减去7。",
+   "tutor": "你提到‘25除以3’，但方程是3x+7=25，x是未知数，不能直接除以3，得先去掉+7，你试试看怎么操作才能让等式两边都变简单？",
+   "state": "dialogue",
+   "elapsed_ms": 2235
+  },
+  {
+   "student": "要先消去加上的7，再处理乘在x前面的3。25减7等于18，18除以3等于6，x等于6。",
+   "tutor": "你刚才说要先消去加上的7，再处理乘在x前面的3，这思路很对！那去掉+7之后，等式右边变成了多少？",
+   "state": "dialogue",
+   "elapsed_ms": 4051
+  }
+ ],
+ "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+ "total_ms": 8774,
+ "learner": {
+  "grade": ""
+ },
+ "guard_events": [
+  {
+   "branch": "model",
+   "cited": [
+    3.0,
+    7.0,
+    25.0
+   ],
+   "extracted": [
+    3.0,
+    7.0,
+    25.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 1
+  },
+  {
+   "branch": "model",
+   "cited": [
+    3.0,
+    6.0,
+    7.0,
+    18.0,
+    25.0
+   ],
+   "extracted": [
+    3.0,
+    6.0,
+    7.0,
+    18.0,
+    25.0
+   ],
+   "violation_sources": [
+    {
+     "number": 6.0,
+     "source": "answer"
+    }
+   ],
+   "gate": "blocked",
+   "turn": 2
+  },
+  {
+   "branch": "model",
+   "cited": [
+    3.0,
+    6.0,
+    7.0,
+    18.0,
+    25.0
+   ],
+   "extracted": [
+    3.0,
+    7.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 2
+  },
+  {
+   "guard": "answer_leak",
+   "rule_ids": [
+    "source_value_disclosure:answer"
+   ],
+   "original": "你刚才说25减7等于18，再除以3得6，这一步是对的！那为什么先减7呢？是因为等式两边同时减去7，才能把+7去掉，让x单独出来，对吗？",
+   "regenerated": true,
+   "turn": 2
+  }
+ ],
+ "session_id": "kernel_10c90c99a8"
+}

@@ -4,7 +4,7 @@
   · 判据 = `_reply_numbers(文本) − _drift_sources(...)[0]`,来源标签池 `answer_pool` 再分
     「泄漏(answer,对话态提前说终答)」与「幻觉(hallucinated,无任何合法来源)」;
   · 两者都拦(重生成 → 兜底),`stuck` **只在修复失败落兜底句时**置;
-  · 允许集四来源(题面 / steps 值 / 学生已说 / ready_to_confirm 态终答)及其单步算式
+  · 允许集三来源(题面 / steps 值 / 学生已说)及其单步算式;确认轮不引述终答(VERDICT#6)
     结果 —— 原样放行,不替换、不置 stuck(过拦防线);
   · 句级近似判据(guardrails 的 unverified_source_value_disclosure)已删,不存第二套实现。
 """
@@ -183,20 +183,24 @@ def test_student_arithmetic_results_pass_unchanged():
     assert len(gateway.requests) == 2
 
 
-def test_final_answer_in_confirm_state_passes_unchanged():
-    """③-确认态终答:学生已陈述答案 → 模型判停确认(5/3 在允许集)→ 原样放行。"""
+def test_final_answer_in_confirm_state_requires_paraphrase():
+    """③-确认态终答(VERDICT#6 翻转):确认轮引述终答(5/3)→ 拦截重生成为转述式
+    确认——不引述终答数字,让学生自己复述结论;ready 语义保持。"""
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
         _tutor("对,就是 5 只兔和 3 只鸡。你讲得很清楚。", ready=True),
+        _tutor("你的验算和结论都齐了,讲得很清楚。最后请你自己完整说一遍结论。", ready=True),
     ])
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "兔有10除以2等于5只,鸡有3只,验算26只脚。", gateway=gateway)
 
-    assert turn.text == "对,就是 5 只兔和 3 只鸡。你讲得很清楚。"
+    assert turn.text == "你的验算和结论都齐了,讲得很清楚。最后请你自己完整说一遍结论。"
     assert turn.state == "ready_to_confirm" and turn.ready_to_confirm is True
     assert turn.session.stuck is not True
-    assert _repairs(turn.session.guard_events) == []
-    assert len(gateway.requests) == 2
+    assert "3" not in turn.text and "5" not in turn.text
+    repair = _repairs(turn.session.guard_events)[-1]
+    assert repair["regenerated"] is True  # 引述版被既有漏斗重生成为转述式
+    assert _gate(turn.session.guard_events)[0]["gate"] == "blocked"
 
 
 # --------------------------------------------------------------------------- #
@@ -222,20 +226,35 @@ def test_gate_and_repair_rule_ids_come_from_one_computation():
     assert "36" not in turn.text
 
 
-def test_method_repair_keeps_confirm_state_pool():
-    """③-确认态 + 代喂修复:模型点名方法词时走代喂重生成,该次判定仍按确认态取池
-    (学生已说终答 → 5/3 合法),不再误判成 answer 违规 → 确认语义不被连坐丢掉。"""
+def test_method_repair_in_confirm_state_paraphrases():
+    """③-确认态 + 代喂修复(VERDICT#6 更新):方法词代喂重生成与终答引述拦截并存,
+    重生成为转述式确认(无方法名、无终答数字)——两修复都不被连坐。"""
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
         _tutor("你讲得很好,用的就是假设法,5 只兔和 3 只鸡都对。", ready=True),
-        _tutor("对,就是 5 只兔和 3 只鸡,你讲得很清楚。", ready=True),
+        _tutor("你的思路很完整,验算也对。最后请你自己完整说一遍结论。", ready=True),
     ])
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "兔有10除以2等于5只,鸡有3只,验算26只脚。", gateway=gateway)
 
-    assert turn.text == "对,就是 5 只兔和 3 只鸡,你讲得很清楚。"
+    assert turn.text == "你的思路很完整,验算也对。最后请你自己完整说一遍结论。"
     assert turn.state == "ready_to_confirm" and turn.ready_to_confirm is True
     assert turn.session.stuck is not True
-    assert _repairs(turn.session.guard_events) == []      # 数值门未误伤确认轮
-    repair = [e for e in turn.session.guard_events if e.get("guard") == "feeds_method"][-1]
-    assert repair["mode"] == "regenerated"                # 重生成修好,不落脱敏
+    assert "假设法" not in turn.text  # 方法名不再出现(重生成版本)
+    repair = _repairs(turn.session.guard_events)[-1]
+    assert repair["regenerated"] is True  # 终答引述(5/3)拦截,重生成为转述式
+
+
+def test_leak_fallback_does_not_restate_answer_value():
+    """VERDICT#6:泄露兜底回引不引述终答——学生原话含终答数字(5/3)时,
+    兜底句改转述锚点,终答不再从确定性路径回到学生面。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
+        _tutor("对,答案就是鸡 3 只、兔 5 只。"),
+        _tutor("答案是鸡 3 只、兔 5 只,没错。"),  # 重生成仍引述 → 修不好落兜底
+    ])
+    turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
+    turn = reply(turn.session, "兔有10除以2等于5只,鸡有3只,验算26只脚。", gateway=gateway)
+
+    assert turn.text == "先回到你刚才的结论和验算——你能从题目里再确认一个已知条件吗?"
+    assert turn.session.stuck is True  # 修复失败落兜底的既有语义不变

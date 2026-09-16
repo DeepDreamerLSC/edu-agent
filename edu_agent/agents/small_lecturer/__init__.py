@@ -6,7 +6,18 @@ from .guardrails import (
     StudentVisibleGuardrailFinding,
     evaluate_student_visible_question,
 )
-from .kernel import SAFE_FALLBACK_TEXT, TUTOR_TURN_SCHEMA, finish, reply, start
+# 信号匹配器随包公开:judge 与 B 线测试/匹配器统一口径(02 §6 测试禁私有导入),
+# 名下划线是历史成形,judge.py/analyze.py 早已按此消费。
+from .kernel import (
+    SAFE_FALLBACK_TEXT,
+    TUTOR_TURN_SCHEMA,
+    _student_signals_completion,
+    _student_signals_stuck,
+    _student_signals_understanding,
+    finish,
+    reply,
+    start,
+)
 from .prompting import (
     FIRST_QUESTION_COLLECT,
     FIRST_QUESTION_COLLECT_IMAGE,
@@ -56,6 +67,9 @@ __all__ = [
     "ToneGuardrailResult",
     "TUTOR_TURN_SCHEMA",
     "Turn",
+    "_student_signals_completion",
+    "_student_signals_stuck",
+    "_student_signals_understanding",
     "apply_tone_guardrail",
     "evaluate_student_visible_format",
     "evaluate_student_visible_question",

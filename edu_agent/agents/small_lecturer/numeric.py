@@ -123,17 +123,20 @@ def _usable_numbers(text: str, answer: set[float]) -> set[float]:
     return numbers | (_arithmetic_results(text) - numbers - answer)
 
 
-def _drift_sources(session: LearnerSession, student_message: str | None,
-                   ready_to_confirm: bool) -> tuple[set[float], set[float]]:
-    """数字来源标签池(M2 闭环 #113/#34 + #157 评审末值边界):允许集 =
-    题面 ∪ (steps 值 − 终答数字) ∪ 学生历史数字 ∪ [终答数字:仅 ready_to_confirm 态并入]。
+def _drift_sources(session: LearnerSession,
+                   student_message: str | None) -> tuple[set[float], set[float]]:
+    """数字来源标签池(M2 闭环 #113/#34 + #157 评审末值边界;VERDICT#6 更新):允许集 =
+    题面 ∪ (steps 值 − 终答数字) ∪ 学生历史数字。
+    ready_to_confirm 不再并入终答数字(#310 VERDICT#6,2026-09-17):确认/赞许轮
+    转述式确认,不引述终答值(#139/#149 泄露网零例外);终答文本只剩
+    bottom-out / finish 两条路径。
 
     终答数字按**值**从 steps 无条件允许集剥离(#157 评审:模型自报阶梯含末值=答案,
     整段照抄演算会 violations=[] 洗白——"自报进白名单"与 cited_numbers 同病);
     按值而非按位置(steps[:-1]):阶梯末级未必是答案(题库 16/10 阶梯答案 3/5),
     按位置会把诚实的末级中间值误伤,按值只锁真正要保护的答案数字。
 
-    返回 (允许集, 终答数字池)。终答数字在非确认态单独成池、不入允许集,供违规
+    返回 (允许集, 终答数字池)。终答数字单独成池、不入允许集,供违规
     来源标签判定:违规数字若在终答池 → 标签 "answer"(对话态提前说终答),否则
     "hallucinated"(无任何合法来源)。四个来源各自并上其算式结果(见 `_usable_numbers`,
     #184 不误伤),终答数字处处剔除。"""
@@ -147,5 +150,5 @@ def _drift_sources(session: LearnerSession, student_message: str | None,
         if message.get("role") == "user":
             student |= _usable_numbers(str(message.get("content") or ""), answer)
     student |= _usable_numbers(str(student_message or ""), answer)
-    allowed = face | (steps - answer) | (student - answer) | (answer if ready_to_confirm else set())
+    allowed = face | (steps - answer) | (student - answer)
     return allowed, answer

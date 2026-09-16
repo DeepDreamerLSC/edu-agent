@@ -1,0 +1,92 @@
+{
+ "question_id": "small_lecturer_math_gold_candidates_distance_speed_support_boundary",
+ "final_state": "needs_review",
+ "turns": [
+  {
+   "student": "",
+   "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "state": "first_question_ready",
+   "elapsed_ms": 0
+  },
+  {
+   "student": "我只想到先算一下，但还说不完整。",
+   "tutor": "你提到‘先算一下’，那你是想用速度乘以时间对吧？比如60×2.5，这一步能算出总路程吗？",
+   "state": "dialogue",
+   "elapsed_ms": 1753
+  },
+  {
+   "student": "路程等于速度乘时间。",
+   "tutor": "我们从这里入手:已知汽车每小时行60千米，这是它的速度。你接着算下一步。",
+   "state": "dialogue",
+   "elapsed_ms": 3242
+  }
+ ],
+ "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+ "total_ms": 8920,
+ "learner": {
+  "grade": ""
+ },
+ "guard_events": [
+  {
+   "branch": "model",
+   "cited": [
+    2.5,
+    60.0
+   ],
+   "extracted": [
+    2.5,
+    60.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 1
+  },
+  {
+   "branch": "model",
+   "cited": [
+    2.5,
+    60.0
+   ],
+   "extracted": [
+    2.5,
+    60.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 2
+  },
+  {
+   "guard": "premature_confirm",
+   "rule_ids": [],
+   "original": "你刚才说‘路程等于速度乘时间’，这一步已经抓住了核心关系，接下来我们算一下60×2.5，结果是多少呢？",
+   "regenerated": false,
+   "turn": 2
+  },
+  {
+   "branch": "model",
+   "cited": [
+    2.5,
+    60.0
+   ],
+   "extracted": [
+    2.0,
+    2.5,
+    60.0
+   ],
+   "violation_sources": [
+    {
+     "number": 2.0,
+     "source": "hallucinated"
+    }
+   ],
+   "gate": "blocked",
+   "turn": 2
+  },
+  {
+   "branch": "reveal",
+   "hint_level": 1,
+   "turn": 2
+  }
+ ],
+ "session_id": "kernel_cd083248bd"
+}
