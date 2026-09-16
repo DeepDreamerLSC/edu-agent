@@ -1,0 +1,18 @@
+{
+  "total_calls": 332,
+  "window_utc": [
+    "2026-09-16T06:43:26.954421+00:00",
+    "2026-09-16T09:48:33.301831+00:00"
+  ],
+  "coverage_note": "gepa-smoke-wt worktree 2026-09-16 全天全波混合:PM smoke / D 重跑 smoke / 诊断探针 / 方差探针 / 配对实验(simplified 口径期);波级精确拆分不可 derive,各波旧报告 26/26/4/8/50 系简化口径,以本文件 332 条为该 worktree 真实总量",
+  "provider_disclosure": {
+    "by_role_provider_model": {
+      "tutor/vision/qwen3_vl_8b/primary-direct": 269,
+      "judge_independent/deepseek/deepseek_chat/primary-direct": 63
+    },
+    "remote_deepseek_calls": 63,
+    "local_calls": 269,
+    "tokens_in": 660754,
+    "tokens_out": 71308
+  }
+}
