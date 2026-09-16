@@ -1,0 +1,22 @@
+{
+  "budget": {
+    "calls": 96,
+    "rounds": 30,
+    "wall_s": 494.6430322090164,
+    "exhausted": false
+  },
+  "population_size": 31,
+  "accepted_variants": 0,
+  "best_candidate": {
+    "template": "请复讲：先说核心思路，再写出第一步的具体算式或操作，最后给出明确结论。请用完整句子描述步骤与结果，以便确认掌握。",
+    "parent_id": null,
+    "round_idx": 0,
+    "candidate_id": 0
+  },
+  "best_scores": {
+    "mean_score": 10.5,
+    "needs_review_rate": 0.25,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0
+  }
+}

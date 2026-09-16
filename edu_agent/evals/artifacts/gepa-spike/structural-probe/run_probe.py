@@ -34,6 +34,15 @@ STRUCTURAL_VARIANT = (
 HARD_CAP_CALLS = 104
 
 
+def _artifact_path(name: str) -> Path:
+    """Mimosa 安全约束:工件路径规范化并收容在探针目录内,禁止穿越。"""
+    root = Path(__file__).resolve().parent
+    target = (root / name).resolve()
+    if not target.is_relative_to(root):
+        raise ValueError(f"工件路径越界:{target}")
+    return target
+
+
 def main() -> None:
     output_dir = Path(__file__).parent
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -85,7 +94,7 @@ def main() -> None:
         "variant_stats": variant_stats,
         "paired_cases": paired_cases,
     }
-    with open(output_dir / "round-00.json", "w", encoding="utf-8") as f:
+    with _artifact_path("round-00.json").open("w", encoding="utf-8") as f:
         json.dump(round_report, f, ensure_ascii=False, indent=2)
 
     # paired-report.json
@@ -103,7 +112,7 @@ def main() -> None:
         "over_budget": over_budget,
         "idle_detected": idle_detected,
     }
-    with open(output_dir / "paired-report.json", "w", encoding="utf-8") as f:
+    with _artifact_path("paired-report.json").open("w", encoding="utf-8") as f:
         json.dump(paired_report, f, ensure_ascii=False, indent=2)
 
     print(f"工件写入: {output_dir}")

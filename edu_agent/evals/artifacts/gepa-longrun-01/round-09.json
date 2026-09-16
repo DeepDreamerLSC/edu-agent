@@ -1,0 +1,32 @@
+{
+  "round": 9,
+  "parent_id": 0,
+  "variant_id": 2,
+  "parent_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "variant_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": true,
+  "parent_scores": {
+    "mean_score": 8.1875,
+    "needs_review_rate": 0.3125,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.3125
+  },
+  "variant_scores": {
+    "mean_score": 8.1875,
+    "needs_review_rate": 0.3125,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.3125
+  },
+  "accepted": false,
+  "diff": [],
+  "stats": {
+    "calls": 0,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 0
+  },
+  "failures": []
+}

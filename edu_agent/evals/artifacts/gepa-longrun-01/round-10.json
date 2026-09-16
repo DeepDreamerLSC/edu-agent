@@ -1,0 +1,99 @@
+{
+  "round": 10,
+  "parent_id": 0,
+  "variant_id": 3,
+  "parent_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "variant_template": "我们从头理一理你的思路：你最先想到的是哪一步？为什么先做这一步？说清楚后我们再往下看。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": false,
+  "parent_scores": {
+    "mean_score": 8.1875,
+    "needs_review_rate": 0.3125,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.3125
+  },
+  "variant_scores": {
+    "mean_score": 8.25,
+    "needs_review_rate": 0.4375,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.3125
+  },
+  "accepted": false,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+    "+我们从头理一理你的思路：你最先想到的是哪一步？为什么先做这一步？说清楚后我们再往下看。"
+  ],
+  "stats": {
+    "calls": 91,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 533753
+  },
+  "failures": [
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_number_pattern_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:先回到你刚说的「相邻两个数都相差3。」——你能从题目里再确认一个已知条件吗? 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; summary_mastery=0 — 对话在小讲师指出'学习证据还不够'后直接结束，无任何实质方法总结或掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_average_score_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师连续两轮未推进：'你能从题目里再确认一个已知条件吗?' 和 '这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?'，学生已给出第一步(相加得; summary_mastery=0 — 对话中无总结环节，小讲师以'学习证据还不够'为由中断，未对学生已完成的'相加得270'步骤进行确认或方法总结。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_simple_probability_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结环节，小讲师未复述学生关键学习证据或给出掌握判断，直接结束。; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'这一题的学习证据还不够,我们继续'结束，未复述学生已掌握内容或给出掌握判断。; termination=0 — 学生已给出正确数值答案(50.24)，小讲师未确认正确性即强行终止对话，称'学习证据还不够'。; total=6/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_percentage_discount_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师连续两轮输出，第一轮提问后未等待学生回答，第二轮直接给出完整解析和总结，属于一次性倾倒全部讲解。; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_rope_unit_app_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "total=8/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_division_remainder_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师连续两轮未获学生有效回应后，第三轮直接跳出引导逻辑，抛出系统提示语：'这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?'，导致教学节奏断裂; summary_mastery=0 — 对话在小讲师抛出'学习证据还不够'的提示后直接结束，无任何实质方法总结，也未对学生的掌握状态做出判断。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_fraction_addition_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_ratio_share_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "total=8/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_triangle_area_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中未出现实质性的方法总结或掌握判断，小讲师仅以'学习证据还不够'为由中断，未复述学生已给出的公式或确认掌握状态。; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=6/12"
+    }
+  ]
+}

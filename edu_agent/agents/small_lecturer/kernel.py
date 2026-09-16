@@ -90,6 +90,10 @@ def _masked_question(question: dict) -> dict:
 _ELICIT_TEMPLATE = ("我们从头把思路串一遍——"
                     "先说说你第一步算了什么、为什么这样算。")
 
+# 卡壳支持拆小问句(#198 确定性文本;提取为常量供 GEPA 双旋钮 seam 注入,行为零变化)
+_SUPPORT_HINT = ("我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,"
+                "从它开始你觉得能先算出什么?想到多少说多少。")
+
 
 def _feeds_method_hits(text: str, student_evidence: tuple[str, ...] = ()) -> list[str]:
     """tutor 输出里点名的方法词中,学生尚未自己说出的那部分(代喂命中,埋点用)。
@@ -190,7 +194,7 @@ def _stuck_hint(session: "LearnerSession") -> str:
     随轮提交补 turn);telling → `_reveal_stuck_hint`(下一级/耗尽 bottom-out,口径同 #185)。"""
     if _support_move(session) == "guiding_focus":
         session.guard_events.append({"branch": "support", "move": "guiding_focus"})
-        return "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。"
+        return _SUPPORT_HINT
     return _reveal_stuck_hint(session)
 
 
@@ -347,8 +351,9 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     step = _next_step(session)
     session.guard_events.append({"branch": "reveal", "hint_level": session.hint_level})
     if step is None:
-        # 不变量:终答文本只出现在 bottom-out(此处)/ finish / ready_to_confirm 三条
-        # 路径(锁在 tests/teaching/test_kernel_invariants.py);阶梯揭示只给步骤不给终答。
+        # 不变量(VERDICT#6 更新):终答文本只出现在 bottom-out(此处)/ finish 两条
+        # 路径(锁在 tests/teaching/test_kernel_invariants.py);阶梯揭示只给步骤不给终答;
+        # 确认/赞许轮转述式确认、不引述终答值(ready_to_confirm 不再入允许池)。
         answer = str(session.question.get("answer") or "").strip()
         if not answer and session.steps:
             answer = str(session.steps[-1].get("value") or "").strip()
@@ -398,6 +403,11 @@ def _contextual_fallback(session: "LearnerSession | None", guard: str,
     """按情境选一个兜底句;对话轮优先接学生原话(提问式引导,不重复万能句)。"""
     if student_message:
         snippet = str(student_message).strip()[:24]
+        # VERDICT#6(#310):回引不引述终答值——answer_leak 兜底若逐字引学生原话,
+        # 会把刚拦下的终答从确定性路径放回学生面(gate-02/03 冒烟实测)。
+        answer = _answer_numbers(session) if session is not None else set()
+        if answer and answer & _reply_numbers(snippet):
+            return "先回到你刚才的结论和验算——你能从题目里再确认一个已知条件吗?"
         return f"先回到你刚说的「{snippet}」——你能从题目里再确认一个已知条件吗?"
     # 纯图/无权威答案(十字绣/剪绳子/连线题):不逼学生答条件,软性回到看图
     if guard == "answer_leak" and any(
@@ -450,7 +460,7 @@ def _guard_check(ctx: "_GuardContext", text: str, session: "LearnerSession | Non
         student_evidence=list(ctx.student_evidence),
     )
     # 单一判据(仅模型回合):允许集口径见 `_drift_sources`;无会话时不判(fail-open)
-    allowed, answer_pool = (_drift_sources(session, ctx.student_message, ready_to_confirm)
+    allowed, answer_pool = (_drift_sources(session, ctx.student_message)
                             if session is not None else (set(), set()))
     extracted = _reply_numbers(text)
     violations = extracted - allowed

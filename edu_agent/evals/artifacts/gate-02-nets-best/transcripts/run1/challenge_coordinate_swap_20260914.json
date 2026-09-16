@@ -1,0 +1,160 @@
+{
+ "question_id": "challenge_coordinate_swap_20260914",
+ "final_state": "needs_review",
+ "turns": [
+  {
+   "student": "",
+   "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "state": "first_question_ready",
+   "elapsed_ms": 0
+  },
+  {
+   "student": "这道题我不是很会",
+   "tutor": "你先别急，我们一起来看这道题——点B的坐标是(2,4)，这代表它在点A的东边和北边各是多少格？每格是50米，你猜猜东边和北边分别对应坐标里的哪个数？",
+   "state": "dialogue",
+   "elapsed_ms": 1569
+  },
+  {
+   "student": "A和B的相对位置",
+   "tutor": "你提到了A和B的位置关系，这很好！那坐标(2,4)里的2和4，分别代表东边和北边的格数，对吗？",
+   "state": "dialogue",
+   "elapsed_ms": 1557
+  },
+  {
+   "student": "这不是很清楚",
+   "tutor": "你刚才说不太清楚，这很正常——我们来一起确认：坐标(2,4)里的2，是点B在点A东边的格数，4是北边的格数，对吗？",
+   "state": "dialogue",
+   "elapsed_ms": 1592
+  },
+  {
+   "student": "是0,0",
+   "tutor": "你刚才说‘是0,0’，但点B的坐标是(2,4)，这代表它在点A东边2格、北边4格，对吗？",
+   "state": "dialogue",
+   "elapsed_ms": 1545
+  },
+  {
+   "student": "在东边四格,北边两格",
+   "tutor": "你刚才说东边四格、北边两格，但坐标(2,4)里的2是东边格数，4是北边格数，你是不是把它们弄反了？",
+   "state": "dialogue",
+   "elapsed_ms": 1751
+  },
+  {
+   "student": "每一格不知道多少米",
+   "tutor": "你刚才说‘每一格不知道多少米’，但题目里已经告诉我们每格是50米哦！那点B在点A东边2格，北边4格，你猜猜实际距离是多少米？",
+   "state": "dialogue",
+   "elapsed_ms": 1655
+  },
+  {
+   "student": "B在A的东北方向",
+   "tutor": "你提到B在A的东北方向，这没错，但题目问的是东边和北边各多少米，你猜猜东边2格、北边4格，实际各是多少米？",
+   "state": "dialogue",
+   "elapsed_ms": 1700
+  }
+ ],
+ "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+ "total_ms": 14352,
+ "learner": {
+  "grade": "六年级"
+ },
+ "guard_events": [
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [
+    2.0,
+    4.0,
+    50.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 1
+  },
+  {
+   "branch": "model",
+   "cited": [
+    2.0,
+    4.0
+   ],
+   "extracted": [
+    2.0,
+    4.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 2
+  },
+  {
+   "branch": "model",
+   "cited": [
+    2.0,
+    4.0
+   ],
+   "extracted": [
+    2.0,
+    4.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 3
+  },
+  {
+   "branch": "model",
+   "cited": [
+    2.0,
+    4.0
+   ],
+   "extracted": [
+    0.0,
+    2.0,
+    4.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 4
+  },
+  {
+   "branch": "model",
+   "cited": [
+    2.0,
+    4.0
+   ],
+   "extracted": [
+    2.0,
+    4.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 5
+  },
+  {
+   "branch": "model",
+   "cited": [
+    2.0,
+    4.0
+   ],
+   "extracted": [
+    2.0,
+    4.0,
+    50.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 6
+  },
+  {
+   "branch": "model",
+   "cited": [
+    2.0,
+    4.0
+   ],
+   "extracted": [
+    2.0,
+    4.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 7
+  }
+ ],
+ "session_id": "kernel_b7791db66b"
+}

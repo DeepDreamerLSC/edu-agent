@@ -211,11 +211,27 @@ def _boot(db_path: Path, port: int) -> tuple[object, SqliteStore, str]:
     return server, db, f"http://127.0.0.1:{server.server_address[1]}"
 
 
+_SAFE_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
+
+
+def _assert_safe_url(url: str) -> None:
+    """Mimosa 安全约束:仅 http/https,目标主机白名单(本脚本目标=本机服务)。"""
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"仅允许 http/https:{parsed.scheme}")
+    hostname = parsed.hostname or ""
+    if hostname not in _SAFE_HOSTS:
+        raise ValueError(f"目标主机不在白名单:{hostname}")
+
+
 def _request(base: str, path: str, token: str = "",
              body: dict | None = None) -> tuple[int, dict]:
     """一发 POST/GET(演练服务在环回;4xx/5xx 返回状态码,不当网络错误)。"""
     data = json.dumps(body, ensure_ascii=False).encode("utf-8") if body is not None else None
-    request = urllib.request.Request(base.rstrip("/") + path, data=data,
+    url = base.rstrip("/") + path
+    _assert_safe_url(url)
+    request = urllib.request.Request(url, data=data,
                                      method="POST" if data is not None else "GET")
     request.add_header("Content-Type", "application/json")
     if token:
