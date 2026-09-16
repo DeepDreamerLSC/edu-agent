@@ -1,0 +1,34 @@
+{
+  "round": 22,
+  "parent_id": 0,
+  "variant_id": 23,
+  "parent_template": "请复讲：先说核心思路，再写出第一步的具体算式或操作，最后给出明确结论。请用完整句子描述步骤与结果，以便确认掌握。",
+  "variant_template": "请复讲：先说核心思路，再写出第一步的具体算式或操作，最后给出明确结论。请用完整句子描述步骤与结果，以便确认掌握。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": true,
+  "parent_scores": {
+    "mean_score": 10.5,
+    "needs_review_rate": 0.25,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0
+  },
+  "variant_scores": {
+    "mean_score": 10.5,
+    "needs_review_rate": 0.25,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0
+  },
+  "accepted": false,
+  "leak_net_veto": false,
+  "diff": [],
+  "stats": {
+    "calls": 0,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 0,
+    "leak_net_violations": 0
+  },
+  "failures": []
+}
