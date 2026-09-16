@@ -1,4 +1,4 @@
-# GEPA 手搓 Spike(#256,2026-09-16)——6 组件落地 + smoke test + 配对实验,Δ≈0 归因未定,红灯(冻结协议)
+# GEPA 手搓 Spike(#256,2026-09-16)——6 组件落地 + smoke + 配对 + 结构探针:空转=无效跑,judge 敏感度不可测(非不敏感)
 
 **点火依据**:PM 233d0fca 直发 2026-09-16,#275 已合 main@243553b(P1 前置满足)。
 
@@ -6,7 +6,7 @@
 
 按 #256 issue 规格手搓 GEPA 核心循环 spike,零依赖,复用现有 runner/judge 管线。
 
-### 6 组件(731 行组件 / 95 行驱动 / 478 行测试,落现有管线旁,不动 kernel)
+### 6 组件(769 行组件 / 95 行驱动 / 653 行测试,落现有管线旁,不动 kernel)
 
 1. **Prompt seam**(`ElicitSubject`):`run_case` 接受 elicit 模板变体注入(monkeypatch `kernel._ELICIT_TEMPLATE`,用完即恢复,不动仓库模板);
 2. **Mini-batch 采样**(`sample_batch`):每轮从 train 抽 k 个,同种子确定性,换种子刷新;
@@ -24,9 +24,9 @@
 ## 代码结构
 
 ```
-edu_agent/evals/gepa.py          # 6 组件主实现 + 配对实验(731 行)
+edu_agent/evals/gepa.py          # 6 组件主实现 + 配对实验(769 行)
 edu_agent/evals/gepa_driver.py   # CLI 驱动脚本(95 行,含 --paired 模式)
-tests/evals/test_gepa.py         # 单元测试(18 测试,零 API)
+tests/evals/test_gepa.py         # 单元测试(20 测试,零 API)
 ```
 
 ### 公开入口(已加入 `edu_agent/evals/__init__.__all__`)
@@ -125,14 +125,14 @@ uv run python -m edu_agent.evals.gepa_driver \
 
 ```bash
 uv run pytest tests/evals/test_gepa.py -v
-# 18 passed
+# 20 passed
 ```
 
 ### 全量检查
 
 ```bash
 make check
-# 940 passed, 1 skipped, 1 warning(本地基座 e2ae9c2d;PR 头 CI 口径以 CI job 为准)
+# 942 passed, 1 skipped, 1 warning(本提交本地实测;PR 头 CI 口径以 CI job 为准)
 ```
 
 ## Bug 诊断(smoke 首轮全零分)
@@ -165,7 +165,7 @@ make check
 **三项验证**(首轮,代码修复前):
 1. **编辑器反馈**:parent_failures 传给 edit_template,report 含 editor_feedback_sample ✓
 2. **硬失败筛选**:hard_fail_validation = "pass (no leaked variant)" ✓
-3. **模板命中**:hit_count=0/8(工件实录,代码读取 transcript["first_question"] 但 transcript 无此键 → 结构性失效;修复后读取 turns[0].tutor,**待重跑验证**)
+3. **模板命中**:hit_count=0/8(工件实录,代码读取 transcript["first_question"] 但 transcript 无此键 → 结构性失效;review-303 修为 turns[0].tutor;review-303-rerun 再修为**全转录扫描**——elicit 模板经 _ask_restatement 注入后轮,首问扫描漏检,见 §结构性变体探针)
 
 **代码修复**(2026-09-16,审查 review-303):
 - P1-1: 模板命中验证修复(读取 turns[0].tutor,逐案对比 parent vs variant 首问,含空转检测)
@@ -184,6 +184,41 @@ make check
 - **建议**:需重跑实验(新代码 + facts 实测 calls)验证模板是否真改变行为;若仍 Δ≈0 → PM+用户裁定下一步(更大搜索空间 / 换优化目标 / 停)
 
 **工件**:`paired-experiment/`(round-00.json, round-01.json, paired-report.json,首轮数据)
+
+## 结构性变体探针(2026-09-16,PM 派单 sha256=285ea571ba1905a4 / 重跑 b11fc28057650563)
+
+**目的**:区分「judge 不敏感」vs「措辞/结构都不敏感」——变体从叙事回述型换为评鉴反事实型(话语行为类型不同,非措辞微调),同批 8 案配对,一轮,无编辑器。
+
+**预算事实**(facts 真计量,01 §7):
+- 首跑:97 calls(81 tutor + 16 judge)超当时硬顶 80 → 按「超顶即停」停,报 PM(PM 裁决:估计错非执行错;工件未落 = harness P1 缺陷)
+- 重跑(用户点火):97 calls(81 tutor + 16 judge),硬顶 104 内;tokens 195,688 in / 22,050 out
+- 诊断 trace(root-cause 实证):10 calls tutor;本探针合计真耗 **204 calls**(全部在 facts 工件内逐条可核)
+
+**实测结果**(重跑,Mac,2026-09-16):全 8 案 Δ=0、变体首问与父代逐字相同(8/8 空转标记)。
+
+**判读:无效跑,非红灯**(review-303-rerun P1-1 修正,冻结前提是「空转 = 无效跑」):
+- 转录全同 + judge temp=0 确定性 → Δ=0 只复述确定性,**对 judge 敏感度零信息量**
+- 因此「judge 对 elicit 不敏感」**未测得**;正确表述:**judge 敏感度不可测(本轮)**
+- 此前回执把空转写成「红灯+归因收敛」是二犯(同类:#303 曾改写冻结判读)——已在 verdict 逻辑加 idle override(`_compute_paired_verdict(deltas, idle_detected)` → 「无效跑」先于 Δ 分支)
+
+**根因(审查者三重实证确认,仓内可复)**:
+- `_ELICIT_TEMPLATE` 唯一消费点是 `_ask_restatement()`(kernel.py,确定性零模型调用,模板逐字入轮)
+- 触发条件:学生「懂了」类理解信号 或 答案命中后复讲(kernel.py 两处)
+- 数据集 8 案剧本 student_turns **零理解信号、零答案命中** → `_ask_restatement` 一次未触发 → 模板从未进入任何转录
+- 首问由 `start()` 生成,与 elicit 模板无关 → 首问扫描天然全同(空转标记的直接来源)
+- **结论:elicit 缝隙在当前 8 案数据集上不可测(杠杆未挂钩),不是 judge 不敏感**
+
+**rider:tutor 确定性(零 calls,只报告不做门)**:
+- parent 模板跨跑逐案对比(paired-experiment round-00 vs 本探针 round-00):**6/8 逐案同分,2/8 异分**(circle_geometry_20: 9→8;percentage_multi_part_23: 8→7;judge 已证零方差,漂移在 tutor 侧)
+- **本地 tutor 非完全确定** → 跨跑分数不可复用为基线;配对/基线对照必须同批重跑(与用户「candidate 期统一 re-pair」裁决一致)
+
+**harness P1(超顶先落工件再退,69a1668→本提交)**:sys.exit 移到 artifact dump 之后;`over_budget`/`idle_detected` 入 paired-report.json;垫片测试钉死(超顶场景断言工件已写)。
+
+**空转检测改全转录扫描(P1-5)**:快照增 `tutor_turns`(全 tutor 轮文本)+ `template_in_transcript`;`idle` = 变体模板未出现在**任意** tutor 轮(旧首问扫描会漏检后轮注入)。
+
+**工件**:`structural-probe/`(round-00.json + paired-report.json 实测存档——其 verdict 字段系修复前代码产出「红灯」,以本节「无效跑」更正为准;facts/ 双跑全量 JSONL + facts-summary.json 三段归因;trace_elicit.py 根因诊断脚本)
+
+**下一步(待 PM+用户)**:① 扩数据集(含理解信号/答案命中剧本,挂钩 elicit 缝隙)或 ② 换确定性杠杆(`_ask_final_answer` / `_stuck_hint`)再探;judge 敏感度问题**保持开放,不可测 ≠ 不敏感**。
 
 ## 判读预注册(跑前冻结,跑后不改)
 
@@ -219,8 +254,8 @@ make check
   - 含 smoke + D rerun + probe + paired-exp,无法精确分离
   - PM 估计 ~144(24×6),实际 worktree 总量 332,paired-exp 子集估计 ~128-160
   - **根因**:旧代码用 `+=2/case` 简化口径,未从 facts 精确计量
-- **结构性探针**(structural-probe):97 calls(facts 实测,parent 48 + variant 49,硬顶 80 超 21%);
-- **本任务总消耗**:**~450 calls**(tier-2 扣账,含 332 worktree + 97 probe + 其他零散);
+- **结构性探针**(structural-probe,含首跑+重跑+trace):**204 calls**(facts 真计量,逐条可核:首跑 97 + 重跑 97 + 诊断 trace 10);
+- **本任务总消耗**:**~557 calls**(tier-2 扣账:worktree 332 + 探针 204 + 其他零散);
 - **Tier-2 预算**:K=4×S=16×I=6=384 案次 / ≈206-478 calls(双口径,见 §五问③);
 - **生产化启示**:必须从 facts ledger 精确计量(01 §7),不能依赖代码简化口径。
 

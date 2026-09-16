@@ -1,0 +1,40 @@
+{
+  "run1_blocked": {
+    "calls": 97,
+    "roles": {
+      "tutor": 81,
+      "judge_independent": 16
+    },
+    "tokens_in": 195688,
+    "tokens_out": 21593,
+    "window_utc": [
+      "2026-09-16T11:43:46.896952+00:00",
+      "2026-09-16T11:47:24.128444+00:00"
+    ]
+  },
+  "run2_rerun": {
+    "calls": 97,
+    "roles": {
+      "tutor": 81,
+      "judge_independent": 16
+    },
+    "tokens_in": 195688,
+    "tokens_out": 22050,
+    "window_utc": [
+      "2026-09-16T12:15:38.164185+00:00",
+      "2026-09-16T12:19:23.471946+00:00"
+    ]
+  },
+  "trace_diag": {
+    "calls": 10,
+    "roles": {
+      "tutor": 10
+    },
+    "tokens_in": 19570,
+    "tokens_out": 1878,
+    "window_utc": [
+      "2026-09-16T12:22:01.599473+00:00",
+      "2026-09-16T12:22:22.246361+00:00"
+    ]
+  }
+}

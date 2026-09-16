@@ -1,0 +1,22 @@
+{
+  "parent_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "variant_template": "这道题里有一个最关键的步骤——别的步骤错了都还能补救,就它错了整道题就歪了。你觉得是哪一步?为什么是它?如果这一步换一种做法,答案会怎么变?",
+  "total_paired_cases": 8,
+  "deltas": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "mean_delta": 0.0,
+  "verdict": "红灯",
+  "real_calls": 97,
+  "tokens_in": 195688,
+  "tokens_out": 22050,
+  "over_budget": false,
+  "idle_detected": true
+}

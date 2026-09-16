@@ -250,11 +250,15 @@ def evaluate_batch_paired(
     gateway: Gateway,
     judge_role: str = "judge_independent",
 ) -> tuple[list[dict], list[dict], dict]:
-    """配对实验:逐案跑 + 逐案判,返回 per-case scores 和首问快照。
+    """配对实验:逐案跑 + 逐案判,返回 per-case scores 和转录快照。
     
-    返回:(per_case_scores, first_questions, stats)。
+    返回:(per_case_scores, snapshots, stats)。
     per_case_scores = [{case_id, total, verdict, leaked, mi, hard_fail}, ...]
-    first_questions = [{case_id, first_question}, ...] (首问来自 turns[0].tutor)
+    snapshots = [{case_id, first_question, tutor_turns, template_in_transcript}, ...]
+      - first_question 来自 turns[0].tutor(transcript 无 first_question 键)
+      - tutor_turns = 全部 tutor 轮文本(空转全转录扫描证据)
+      - template_in_transcript = 模板文本是否出现在任意 tutor 轮(review-303-rerun:
+        elicit 模板经 _ask_restatement 确定性注入后轮,首问扫描会漏检 → 全转录扫描)
     stats = {calls, tokens_in, tokens_out, wall_ms, env_failures, content_failures}
     
     调用计数:从 facts ledger 实测,不硬编码(01 §7)。
@@ -266,7 +270,7 @@ def evaluate_batch_paired(
     facts_before = _count_facts_lines(facts_dir)
     
     per_case_scores = []
-    first_questions = []
+    snapshots = []
     stats = {"calls": 0, "tokens_in": 0, "tokens_out": 0, "env_failures": 0, "content_failures": 0}
     
     for case in cases:
@@ -275,7 +279,13 @@ def evaluate_batch_paired(
             # 首问来自 turns[0].tutor(transcript 无 first_question 键)
             turns = transcript.get("turns", [])
             first_q = turns[0]["tutor"] if turns else ""
-            first_questions.append({"case_id": case.get("id", ""), "first_question": first_q})
+            tutor_turns = [t.get("tutor", "") for t in turns]
+            snapshots.append({
+                "case_id": case.get("id", ""),
+                "first_question": first_q,
+                "tutor_turns": tutor_turns,
+                "template_in_transcript": template in "\n".join(tutor_turns),
+            })
             
             total, verdict, mi, is_hard_fail, _low_frames = _score_one_case(
                 gateway, case, transcript, judge_role)
@@ -312,7 +322,7 @@ def evaluate_batch_paired(
     stats["tokens_in"] = tokens_in
     stats["tokens_out"] = tokens_out
     stats["wall_ms"] = int((time.monotonic() - started) * 1000)
-    return per_case_scores, first_questions, stats
+    return per_case_scores, snapshots, stats
 
 
 # === 4. 反思编辑器 ===
@@ -556,12 +566,19 @@ def _validate_hard_fail(paired_cases: list[dict]) -> str:
 def _build_paired_cases(
     parent_scores: list[dict],
     variant_scores: list[dict],
-    parent_fqs: list[dict],
-    variant_fqs: list[dict],
+    parent_snaps: list[dict],
+    variant_snaps: list[dict],
     initial_template: str,
     variant_template: str,
 ) -> list[dict]:
-    """逐案配对 Δ + 首问对比(含空转检测)。"""
+    """逐案配对 Δ + 全转录空转扫描(review-303-rerun P1-5)。
+
+    空转判定改全转录口径:elicit 模板经 _ask_restatement(kernel.py 确定性零模型
+    调用)注入**后续轮**,首问(start() 生成)不含模板——只扫 turns[0] 会漏检。
+    - variant_template_in_transcript: 变体模板是否出现在变体转录任意 tutor 轮
+      (False = 模板未注入 → 空转,该案 Δ 对 judge 敏感度零信息量)
+    - transcripts_identical: parent/variant 转录逐字相同(空转辅证)
+    """
     paired_cases = []
     for i, (p, v) in enumerate(zip(parent_scores, variant_scores, strict=True)):
         if "error" in p or "error" in v:
@@ -570,9 +587,16 @@ def _build_paired_cases(
                 "error": p.get("error") or v.get("error"),
             })
             continue
-        p_fq = parent_fqs[i].get("first_question", "") if i < len(parent_fqs) else ""
-        v_fq = variant_fqs[i].get("first_question", "") if i < len(variant_fqs) else ""
-        is_idle = (p_fq == v_fq and p_fq != "")
+        p_snap = parent_snaps[i] if i < len(parent_snaps) else {}
+        v_snap = variant_snaps[i] if i < len(variant_snaps) else {}
+        p_turns = p_snap.get("tutor_turns", [])
+        v_turns = v_snap.get("tutor_turns", [])
+        p_fq = p_snap.get("first_question", "")
+        v_fq = v_snap.get("first_question", "")
+        variant_in_transcript = v_snap.get(
+            "template_in_transcript", variant_template in "\n".join(v_turns))
+        parent_in_transcript = p_snap.get(
+            "template_in_transcript", initial_template in "\n".join(p_turns))
         paired_cases.append({
             "case_id": p["case_id"],
             "parent_total": p.get("total", 0),
@@ -584,14 +608,26 @@ def _build_paired_cases(
             "variant_hard_fail": v.get("hard_fail", False),
             "parent_first_question": p_fq,
             "variant_first_question": v_fq,
-            "template_text_in_variant_first_question": initial_template in v_fq or variant_template in v_fq,
-            "idle": is_idle,
+            "parent_template_in_transcript": parent_in_transcript,
+            "variant_template_in_transcript": variant_in_transcript,
+            "transcripts_identical": p_turns == v_turns and bool(p_turns),
+            "idle": not variant_in_transcript,  # 全转录口径:模板未注入 = 空转
         })
     return paired_cases
 
 
-def _compute_paired_verdict(all_deltas: list[int | float]) -> str:
-    """判定逻辑(冻结协议):Δ≈0→红灯;稳定非零多数同向→GO;否则→mixed。"""
+def _compute_paired_verdict(
+    all_deltas: list[int | float], idle_detected: bool = False,
+) -> str:
+    """判定逻辑(冻结协议,review-303-rerun P1-1 修正):
+
+    - 空转(idle)→ **无效跑**(冻结前提:空转 = 无效,Δ 对 judge 敏感度
+      零信息量——转录全同 + judge temp=0 确定性,Δ=0 只复述确定性,不测得敏感度)
+    - Δ≈0 → 红灯
+    - 稳定非零多数同向 → GO;否则 mixed
+    """
+    if idle_detected:
+        return "无效跑"
     nonzero = [d for d in all_deltas if d != 0]
     if abs(sum(all_deltas) / len(all_deltas)) < 0.5 and len(nonzero) == 0:
         return "红灯"
@@ -619,7 +655,7 @@ def paired_loop(
     验证项:
     1. 编辑器反馈:日志记录传给 edit_template 的 failure_frames
     2. 硬失败筛选:断言无泄答案候选胜出
-    3. 模板命中:逐案核对 elicit 模板真塑造 tutor 首问
+    3. 模板命中:全转录扫描核对 elicit 模板真注入转录(经 _ask_restatement 后轮)
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     budget = Budget(max_calls=config.max_calls)
@@ -629,7 +665,7 @@ def paired_loop(
     facts_before = _count_facts_lines(facts_dir)
     
     # 跑 parent (全案例)
-    parent_scores, parent_fqs, parent_stats = evaluate_batch_paired(
+    parent_scores, parent_snaps, parent_stats = evaluate_batch_paired(
         cases, initial_template, gateway, config.judge_role)
     budget.add(parent_stats["calls"])
     budget.rounds += 1
@@ -657,23 +693,23 @@ def paired_loop(
         
         # 跑 variant (同批全案例)
         if is_noop:
-            variant_scores, variant_fqs = parent_scores, parent_fqs
+            variant_scores, variant_snaps = parent_scores, parent_snaps
             variant_stats = {"calls": 0, "tokens_in": 0, "tokens_out": 0,
                              "env_failures": 0, "content_failures": 0, "wall_ms": 0}
         else:
-            variant_scores, variant_fqs, variant_stats = evaluate_batch_paired(
+            variant_scores, variant_snaps, variant_stats = evaluate_batch_paired(
                 cases, variant_template, gateway, config.judge_role)
             budget.add(variant_stats["calls"])
         budget.rounds += 1
         
-        # 逐案配对 Δ + 首问对比
+        # 逐案配对 Δ + 全转录空转扫描
         paired_cases = _build_paired_cases(
-            parent_scores, variant_scores, parent_fqs, variant_fqs,
+            parent_scores, variant_scores, parent_snaps, variant_snaps,
             initial_template, variant_template,
         )
         
-        # 模板命中验证(逐案,非抽样)
-        template_hit_count = sum(1 for c in paired_cases if c.get("template_text_in_variant_first_question"))
+        # 模板命中验证(全转录扫描,逐案)
+        template_hit_count = sum(1 for c in paired_cases if c.get("variant_template_in_transcript"))
         idle_count = sum(1 for c in paired_cases if c.get("idle"))
         
         report = {
@@ -707,8 +743,9 @@ def paired_loop(
     ]
     mean_delta = sum(all_deltas) / len(all_deltas) if all_deltas else 0.0
     
-    # 判定(冻结协议)
-    verdict = _compute_paired_verdict(all_deltas)
+    # 判定(冻结协议):空转 → 无效跑(override,先于 Δ 分支)
+    idle_detected = any(c.get("idle") for r in paired_reports for c in r["paired_cases"])
+    verdict = _compute_paired_verdict(all_deltas, idle_detected=idle_detected)
     
     # 超预算检测
     over_budget = real_calls > config.max_calls
@@ -721,6 +758,7 @@ def paired_loop(
         "total_paired_cases": len(all_deltas),
         "mean_delta": mean_delta,
         "deltas": all_deltas,
+        "idle_detected": idle_detected,
         "verdict": verdict,
         "over_budget": over_budget,
     }

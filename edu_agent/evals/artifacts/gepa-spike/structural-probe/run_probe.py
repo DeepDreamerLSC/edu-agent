@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-#256 结构性变体探针驱动脚本
+#256 结构性变体探针驱动脚本(重跑信封:硬顶 104;首跑 97 calls 超顶 80 已按停)
 
-用户批 A 方案:结构性变体 ×1,同批配对,~68 真 calls(硬顶 80)
-无编辑器(变体手写);harness 复用 #303 修复版(pair evaluate + facts 记账)。
+结构性变体 ×1,同批配对,一轮,无编辑器(变体手写);harness 复用 #303 修复版
+(pair evaluate + facts 记账 + 全转录空转扫描)。
+
+判读(冻结,review-303-rerun P1-1 修正):空转 = 无效跑(judge 敏感度不可测),
+非红灯;Δ≈0 才是红灯;稳定非零 → GO。
 """
 
 from __future__ import annotations
@@ -27,8 +30,8 @@ STRUCTURAL_VARIANT = (
     "你觉得是哪一步?为什么是它?如果这一步换一种做法,答案会怎么变?"
 )
 
-# 预算硬顶
-HARD_CAP_CALLS = 80
+# 预算硬顶(用户批重跑信封,2026-09-16;review-303-rerun P1-2 入库)
+HARD_CAP_CALLS = 104
 
 
 def main() -> None:
@@ -60,13 +63,14 @@ def main() -> None:
         PARENT_TEMPLATE, STRUCTURAL_VARIANT,
     )
 
-    # 空转检查
+    # 空转检查(全转录口径:_build_paired_cases 内逐案扫描,模板未注入任意 tutor 轮 = 空转)
     idle_count = sum(1 for c in paired_cases if c.get("idle"))
     idle_detected = idle_count > 0
 
-    # verdict
+    # verdict(冻结协议):空转 → 无效跑(override,先于 Δ 分支;
+    # 转录全同 + judge temp=0 确定性 → Δ=0 对 judge 敏感度零信息量)
     deltas = [c["delta"] for c in paired_cases if "error" not in c]
-    verdict = _compute_paired_verdict(deltas)
+    verdict = _compute_paired_verdict(deltas, idle_detected=idle_detected)
     print(f"Verdict: {verdict}")
 
     # 预算统计
@@ -114,7 +118,8 @@ def main() -> None:
         sys.exit(1)
 
     if idle_detected:
-        print(f"ERROR: 检测到 {idle_count} 案空转(变体首问 = parent 逐字),无效跑")
+        print(f"ERROR: 检测到 {idle_count} 案空转(变体模板未注入全转录)→ 无效跑,"
+              f"judge 敏感度不可测,停,报 PM")
         sys.exit(1)
 
 
