@@ -4,14 +4,21 @@
 <!-- SQLite 每日备份(M3 DB 存储)。照 partner-api plist 惯例:绝对路径 ProgramArguments、
      日志同目录 ~/Library/Logs/edu-agent/、EDU_ENV 环境变量。
      每日 03:30 触发;手动触发:launchctl kickstart -k gui/$UID/com.edu-agent.backup。
+     首进程 = uv 的 python3.12(TCC 已授 DesktopFolder,与 partner-api 同源),由它派生
+     bash 跑 backup-db.sh——launchd 直跑 /bin/bash 会被 macOS TCC 拒(EPERM,2026-09-16
+     实测);子进程继承责任进程授权。注意:授权绑定该版本化二进制路径,uv 升级 python
+     需重授 TCC(哨兵测试看住启动器形状)。
+     14 天滚动 = 治理④:本地由 backup-db.sh RETENTION(默认 14)清理;远端 OSS 前缀由
+     bucket 生命周期规则清理(桶管理员配置,选型理由见 deploy/launchd/README.md)。
      凭据不进本文件:backup-db.sh 自己读 ~/.config/edu-agent/oss.env(0600)。 -->
 <dict>
   <key>Label</key>
   <string>com.edu-agent.backup</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/bin/bash</string>
-    <string>/Users/linsuchang/Desktop/work/github/edu-agent-deploy/scripts/backup-db.sh</string>
+    <string>/Users/linsuchang/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/bin/python3.12</string>
+    <string>-c</string>
+    <string>import subprocess,sys;sys.exit(subprocess.call(["/bin/bash","/Users/linsuchang/Desktop/work/github/edu-agent-deploy/scripts/backup-db.sh"]))</string>
   </array>
   <key>WorkingDirectory</key>
   <string>/Users/linsuchang/Desktop/work/github/edu-agent-deploy</string>
