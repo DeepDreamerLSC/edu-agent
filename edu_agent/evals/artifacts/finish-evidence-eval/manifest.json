@@ -1,0 +1,25 @@
+{
+ "purpose": "finish-evidence acceptance eval(2026-09-16 用户裁语义修订)",
+ "git_sha": "a33847705d1c4acaec270ef2d1ccd61fc5bde93d",
+ "prompts_sha256": "19edac0247f7ef2dab18155d7b8dac8ff1227c7e3ded0989801b7e4d35ea9379",
+ "models_yaml_sha256": "3feca1b443896d469000859c009d9d3281439c2bf09a740b7fe1a1b4488a862f",
+ "registry_sanitized_removed_providers": [
+  "deepseek"
+ ],
+ "registry_sanitized_removed_roles": [
+  "judge_independent"
+ ],
+ "tutor": "qwen3_vl_8b",
+ "judge": "mlx_27b",
+ "repeats": 2,
+ "expectations": {
+  "finish_evidence_zero_utterance__r1": "needs_review",
+  "finish_evidence_zero_utterance__r2": "needs_review",
+  "finish_evidence_answer_only__r1": "needs_review",
+  "finish_evidence_answer_only__r2": "needs_review",
+  "finish_evidence_vague_two__r1": "needs_review",
+  "finish_evidence_vague_two__r2": "needs_review",
+  "finish_evidence_full_explanation__r1": "completed",
+  "finish_evidence_full_explanation__r2": "completed"
+ }
+}

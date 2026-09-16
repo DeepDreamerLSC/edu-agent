@@ -1,0 +1,202 @@
+{
+ "finish_evidence_answer_only__r1": {
+  "scores": {
+   "first_question": 0,
+   "socratic_followup": 0,
+   "grade_fit": 1,
+   "pacing": 0,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 1,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "学生先给出'9 个'，小讲师第一轮回复'你好同学，这道题你做对啦，真棒!'直接确认终答，未进行引导性讲解或铺垫，属于第一轮自问自答完成教学。",
+   "socratic_followup": "小讲师后续追问'你能从题目里再确认一个已知条件吗?'及'我们还需要听你把关键思路讲清楚'，虽指向思路，但缺乏针对学生具体思考过程的引导，且前文已确认答案，追问流于形式，未形成有效引导链。",
+   "grade_fit": "语言简单，'已知条件'、'关键思路'等术语对三年级学生基本适配，但整体教学逻辑混乱，未体现年级适配的引导策略。",
+   "pacing": "小讲师在确认答案后，连续三轮输出（确认、追问条件、要求讲思路），信息重复且无实质推进，属于原地打转。",
+   "summary_mastery": "对话中无实质方法总结，未引用学生本人的关键学习证据（学生仅给出答案，未展示推理过程），也无明确的掌握判断依据。",
+   "termination": "对话在要求学生讲思路后突然结束，学生未展示思路，掌握状态未明，属于提前结束。",
+   "math_integrity": "小讲师确认学生答案'9 个'正确，未引入错误数学事实。学生答案正确，小讲师确认无误。",
+   "answer_leaked": "学生先给出'9 个'，小讲师随后确认，未在学生给出答案前泄露终答。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "finish_evidence_answer_only__r2": {
+  "scores": {
+   "first_question": 0,
+   "socratic_followup": 0,
+   "grade_fit": 1,
+   "pacing": 0,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 1,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "学生先给出'9 个'，小讲师第一轮回复'你好同学，这道题你做对啦，真棒!'直接确认终答，未进行引导性讲解或铺垫，属于第一轮自问自答完成教学。",
+   "socratic_followup": "小讲师后续追问'你能从题目里再确认一个已知条件吗?'及'我们还需要听你把关键思路讲清楚'，虽指向思路，但缺乏针对学生具体思考过程的引导，且前文已确认答案，追问流于形式，未形成有效引导链。",
+   "grade_fit": "语言简单，'已知条件'、'关键思路'等术语对三年级学生基本适配，但整体教学逻辑混乱，未体现年级适配的引导策略。",
+   "pacing": "小讲师在确认答案后，连续三轮输出（确认、追问条件、要求讲思路），信息重复且无实质推进，属于原地打转。",
+   "summary_mastery": "对话中无实质方法总结，未引用学生本人的关键学习证据（学生仅给出答案，未展示推理过程），也无明确的掌握判断依据。",
+   "termination": "对话在要求学生讲思路后突然结束，学生未展示思路，掌握状态未明，属于提前结束。",
+   "math_integrity": "小讲师确认学生答案'9 个'正确，未引入错误数学事实。学生答案正确，小讲师确认无误。",
+   "answer_leaked": "学生先给出'9 个'，小讲师随后确认，未在学生给出答案前泄露终答。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "finish_evidence_full_explanation__r1": {
+  "scores": {
+   "first_question": 1,
+   "socratic_followup": 0,
+   "grade_fit": 2,
+   "pacing": 0,
+   "summary_mastery": 1,
+   "termination": 1
+  },
+  "total": 5,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "学生先给出'所以是 9 个'，小讲师第一轮回复'这道题你做对啦'，虽未泄露终答（因学生已给），但未进行引导性铺垫，直接确认答案，属于切题但泄露了大部分推理（学生不需思考）。",
+   "socratic_followup": "小讲师追问'我们再确认一下是不是真的每份都是3个？'，但学生已给出完整正确推理，此追问无实质引导作用，且后续未推进，属于原地打转或无关追问。",
+   "grade_fit": "语言简单，'平均分成'、'每份'等术语符合三年级认知，例子贴近生活。",
+   "pacing": "小讲师在确认答案后，连续两轮重复确认同一已知事实（'你刚才说...'、'你自己讲了做法...'），无实质推进，属于原地打转。",
+   "summary_mastery": "小讲师复述了学生的做法，但总结中缺乏对学生关键学习证据的深入分析（如为何是3份），仅泛化确认'做对啦'，掌握判断依据不足。",
+   "termination": "学生已答对，小讲师提出'可以再做一道，或者今天先到这里'，终止时机合理，但学生状态未明确确认'懂了'，属于终止时状态未明。",
+   "math_integrity": "小讲师陈述：1. '每份3个，取3份就是9个'（正确）；2. '12个平均分成4份，每份3个'（正确）。无错误数学事实。",
+   "answer_leaked": "学生先给出'所以是 9 个'，小讲师后续确认不属于泄露。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "finish_evidence_full_explanation__r2": {
+  "scores": {
+   "first_question": 1,
+   "socratic_followup": 0,
+   "grade_fit": 2,
+   "pacing": 0,
+   "summary_mastery": 1,
+   "termination": 1
+  },
+  "total": 5,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "学生先给出'所以是 9 个'，小讲师第一轮回复'这道题你做对啦'，虽未泄露终答（因学生已给），但未进行引导性铺垫，直接确认答案，属于切题但泄露了大部分推理（学生不需思考）。",
+   "socratic_followup": "小讲师追问'我们再确认一下是不是真的每份都是3个？'，但学生已给出完整正确推理，此追问无实质引导作用，且后续未推进，属于原地打转或无关追问。",
+   "grade_fit": "语言简单，'平均分成'、'每份'等术语符合三年级认知，例子贴近生活。",
+   "pacing": "小讲师在确认答案后，连续两轮重复确认同一已知事实（'你刚才说...'、'你自己讲了做法...'），无实质推进，属于原地打转。",
+   "summary_mastery": "小讲师复述了学生的做法，但总结中缺乏对学生关键学习证据的深入分析（如为何是3份），仅泛化确认'做对啦'，掌握判断依据不足。",
+   "termination": "学生已答对，小讲师提出'可以再做一道，或者今天先到这里'，终止时机合理，但学生状态未明确确认'懂了'，属于终止时状态未明。",
+   "math_integrity": "小讲师陈述：1. '每份3个，取3份就是9个'（正确）；2. '12个平均分成4份，每份3个'（正确）。无错误数学事实。",
+   "answer_leaked": "学生先给出'所以是 9 个'，小讲师后续确认不属于泄露。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "finish_evidence_vague_two__r1": {
+  "scores": {
+   "first_question": 0,
+   "socratic_followup": 0,
+   "grade_fit": 1,
+   "pacing": 0,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 1,
+  "answer_leaked": true,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师第一轮直接说：'你好同学，这道题你做对啦，真棒!'，在学生未给出具体答案前直接确认正确，且后续未引导学生展示推理过程即结束。",
+   "socratic_followup": "小讲师连续多轮重复'我们来一步步理清楚吧'、'还需要听你把关键思路讲清楚'，未针对学生模糊回答进行具体引导或追问，属于原地打转。",
+   "grade_fit": "语言简单，符合三年级水平，但教学逻辑混乱，未有效适配学生认知需求。",
+   "pacing": "小讲师连续4轮输出，内容重复（'做对啦'、'理清楚'、'讲清楚'），无实质推进，属于一次性倾倒或原地打转。",
+   "summary_mastery": "对话中无实质方法总结，小讲师声称'之前已经答对了'但学生从未给出正确终答或推理，掌握判断缺乏依据。",
+   "termination": "学生未给出正确终答或明确掌握信号，小讲师即终止对话，属于未掌握即终止。",
+   "math_integrity": "小讲师陈述'这道题你做对啦'，虽未给出具体数值，但隐含确认了学生未展示的正确性；学生实际未给出答案，小讲师未引入错误数学事实，但教学逻辑错误。",
+   "answer_leaked": "小讲师第一轮直接说'这道题你做对啦'，在学生未给出终答前确认正确，构成终答泄露。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "finish_evidence_vague_two__r2": {
+  "scores": {
+   "first_question": 0,
+   "socratic_followup": 0,
+   "grade_fit": 1,
+   "pacing": 0,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 1,
+  "answer_leaked": true,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师第一轮直接说：'你好同学，这道题你做对啦，真棒!'，在学生未给出具体答案前直接确认正确，且后续未引导学生展示推理过程即结束。",
+   "socratic_followup": "小讲师连续三轮重复追问'你是怎么想的'，未针对学生模糊回答进行具体引导或缩小范围，属于原地打转。",
+   "grade_fit": "语言简单，符合三年级水平，但教学逻辑混乱，未体现有效引导。",
+   "pacing": "小讲师连续发送四条消息，信息重复且无实质推进，属于一次性倾倒且无有效互动。",
+   "summary_mastery": "对话中无实质方法总结，小讲师声称'之前已经答对了'但学生从未在对话中展示过正确推理或答案，掌握判断无依据。",
+   "termination": "学生未展示正确推理过程，小讲师即强行终止对话，属于未掌握即终止。",
+   "math_integrity": "小讲师陈述'这道题你做对啦'，假设学生已做对，但未指出学生实际未给出答案；虽未引入错误数学事实，但逻辑前提存疑。",
+   "answer_leaked": "小讲师第一轮直接说'这道题你做对啦'，在学生未给出终答前泄露了'做对'这一结论性判断，且未引导学生展示答案。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "finish_evidence_zero_utterance__r1": {
+  "scores": {
+   "first_question": 0,
+   "socratic_followup": 0,
+   "grade_fit": 1,
+   "pacing": 0,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 1,
+  "answer_leaked": true,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师:你好同学,这道题你做对啦,真棒!还有哪里不太明白吗?",
+   "socratic_followup": "对话中无学生回答，小讲师未进行任何引导性追问，仅重复要求讲思路。",
+   "grade_fit": "语言简单，但对话结构缺失，无法有效评估适配性，仅因无超纲术语给1分。",
+   "pacing": "对话仅两轮，无实质教学推进，属于原地打转。",
+   "summary_mastery": "对话未结束，无总结环节，且学生未展示任何解题过程或思路。",
+   "termination": "对话在未完成教学闭环（学生未展示思路）的情况下突然中断。",
+   "math_integrity": "小讲师陈述'这道题你做对啦'，基于题目'取其中的3份'，正确答案为9个。若学生此前已答对9个，则陈述为真；若学生未答，则小讲师预设学生答对。由于对话中未显示学生给出答案，小讲师直接断言'做对啦'存在逻辑跳跃，但未引入错误的数学事实（如错误的计算规则），故给2分。",
+   "answer_leaked": "小讲师:你好同学,这道题你做对啦,真棒!（隐含确认答案为9，且学生未在对话中先给出该答案）"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "finish_evidence_zero_utterance__r2": {
+  "scores": {
+   "first_question": 0,
+   "socratic_followup": 0,
+   "grade_fit": 1,
+   "pacing": 0,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 1,
+  "answer_leaked": true,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师:你好同学,这道题你做对啦,真棒!还有哪里不太明白吗?",
+   "socratic_followup": "对话中无学生回答，小讲师未进行任何引导性追问，仅重复要求讲思路。",
+   "grade_fit": "语言简单，但对话结构缺失，无法有效评估适配性，仅因无超纲术语给1分。",
+   "pacing": "对话仅两轮，无实质教学推进，属于原地打转。",
+   "summary_mastery": "对话未结束，无总结环节，且学生未展示任何解题过程或思路。",
+   "termination": "对话在未完成教学闭环（学生未展示思路）的情况下突然中断。",
+   "math_integrity": "小讲师陈述'这道题你做对啦'，基于题目'取其中的3份'，正确答案为9个。若学生此前已答对9个，则陈述为真；若学生未答，则小讲师预设学生答对。由于对话中未显示学生给出答案，小讲师直接断言'做对啦'存在逻辑跳跃，但未引入错误的数学事实（如错误的计算规则），故给2分。",
+   "answer_leaked": "小讲师:你好同学,这道题你做对啦,真棒!（隐含确认答案为9，且学生未在对话中先给出该答案）"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ }
+}
