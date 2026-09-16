@@ -90,6 +90,10 @@ def _masked_question(question: dict) -> dict:
 _ELICIT_TEMPLATE = ("我们从头把思路串一遍——"
                     "先说说你第一步算了什么、为什么这样算。")
 
+# 卡壳支持拆小问句(#198 确定性文本;提取为常量供 GEPA 双旋钮 seam 注入,行为零变化)
+_SUPPORT_HINT = ("我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,"
+                "从它开始你觉得能先算出什么?想到多少说多少。")
+
 
 def _feeds_method_hits(text: str, student_evidence: tuple[str, ...] = ()) -> list[str]:
     """tutor 输出里点名的方法词中,学生尚未自己说出的那部分(代喂命中,埋点用)。
@@ -190,7 +194,7 @@ def _stuck_hint(session: "LearnerSession") -> str:
     随轮提交补 turn);telling → `_reveal_stuck_hint`(下一级/耗尽 bottom-out,口径同 #185)。"""
     if _support_move(session) == "guiding_focus":
         session.guard_events.append({"branch": "support", "move": "guiding_focus"})
-        return "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。"
+        return _SUPPORT_HINT
     return _reveal_stuck_hint(session)
 
 

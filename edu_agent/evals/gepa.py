@@ -64,6 +64,10 @@ class ElicitSubject:
         """获取当前激活的 elicit 模板(测试用,验证 monkeypatch 生效)。"""
         return kernel._ELICIT_TEMPLATE
 
+    def get_active_support_hint(self) -> str:
+        """当前激活的 support 拆小问句(测试用,seam 生效性验证)。"""
+        return kernel._SUPPORT_HINT
+
     def run_case(self, case: dict) -> dict:
         saved = {name: getattr(kernel, name) for name in self.variants}
         try:
