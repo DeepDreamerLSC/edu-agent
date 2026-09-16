@@ -800,3 +800,72 @@ def test_edit_two_knobs_lint_guards():
         gateway.invoke.return_value.text = bad
         elicit, support = edit_two_knobs("旧elicit", "旧support", 1, [], gateway)
         assert (elicit, support) == ("旧elicit", "旧support"), bad
+
+
+# === 9. needs_review 靶向编辑(收敛#2 选项①准备件,默认关) ===
+
+
+def test_edit_template_nr_lint_and_targeting():
+    """nr 编辑器:review 靶向语与失败帧进 prompt;lint 不过(缺关键词/超窗)保留父代。"""
+    from edu_agent.evals import edit_template_nr
+
+    parent = "旧模板" * 15  # 45 字,合法父代
+    gateway = MagicMock()
+    ok = "复讲时请先说思路:第一步你算了什么、用哪个算式,把结论说出来,让老师能判定你懂了。"
+    gateway.invoke.return_value.text = ok
+    variant = edit_template_nr(parent, [
+        {"case_id": "c9", "kind": "judge_low_score", "detail": "total=9, verdict=review"}],
+        gateway)
+    assert variant == ok
+    sent = gateway.invoke.call_args[0][0].messages[0]["content"]
+    assert "review" in sent and "可判定" in sent  # 靶向指令真的进 prompt
+    assert "c9" in sent  # 失败帧进 prompt
+    for bad in ("太短", parent):  # 太短出窗 / 与父代相同 → 零退化
+        gateway = MagicMock()
+        gateway.invoke.return_value.text = bad
+        assert edit_template_nr(parent, [], gateway) == parent, bad
+
+
+def test_edit_two_knobs_injected_editor_routes_even_rounds():
+    """editor 显式注入:偶代 elicit 编辑走注入编辑器;不注入时晚绑定 edit_template。"""
+    from edu_agent.evals import edit_two_knobs
+
+    sentinel = MagicMock(return_value="nr变体")
+    elicit, support = edit_two_knobs("旧elicit", "旧support", 0, [], MagicMock(),
+                                     editor=sentinel)
+    assert (elicit, support) == ("nr变体", "旧support")
+    assert sentinel.call_args.args[:2] == ("旧elicit", [])
+
+
+def test_gepa_loop_editor_focus_nr_uses_nr_editor(tmp_path):
+    """全循环路由:two_knobs + editor_focus='nr' → 第 24 代(偶)编辑走 nr 编辑器,
+    mean 编辑器不被调用;默认 focus='mean' 契约钉。"""
+    from edu_agent.evals import GepaConfig, gepa_loop
+
+    assert GepaConfig(rounds=1).editor_focus == "mean"  # 默认关,裁决②则永不打开
+    checkpoint = {
+        "next_round": 24,
+        "budget": {"calls": 1107, "rounds": 23, "wall_s": 1.0, "exhausted": False},
+        "best": {"candidate_id": 0,
+                 "template": "best:说说你的思路,先说第一步",
+                 "scores": {"mean_score": 9.25, "needs_review_rate": 0.5,
+                            "numerical_violation_rate": 0.0, "hard_failure_rate": 0.06}},
+        "last_failures": [],
+    }
+    (tmp_path / "checkpoint.json").write_text(json.dumps(checkpoint), encoding="utf-8")
+
+    with patch("edu_agent.evals.gepa.evaluate_batch") as mock_eval, \
+         patch("edu_agent.evals.gepa.edit_template_nr", return_value="nr变体") as m_nr, \
+         patch("edu_agent.evals.gepa.edit_template") as m_mean:
+        mock_eval.return_value = (ScoreVector(9.0, 0.5, 0.0, 0.0), [],
+                                  {"calls": 5, "tokens_in": 0, "tokens_out": 0,
+                                   "env_failures": 0, "content_failures": 0, "wall_ms": 1})
+        gepa_loop(train_cases=[{"id": "c1", "question": "q", "student_turns": ["a"]}],
+                  initial_template="原始模板",
+                  config=GepaConfig(rounds=25, max_calls=1624, two_knobs=True,
+                                    editor_focus="nr"),
+                  gateway=MagicMock(),
+                  output_dir=tmp_path,
+                  resume=True)
+        assert m_nr.call_count == 1  # 第 24 代偶代:elicit 编辑走 nr 靶向
+        assert m_mean.call_count == 0
