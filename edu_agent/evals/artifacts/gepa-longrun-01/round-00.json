@@ -1,0 +1,88 @@
+{
+  "round": 0,
+  "parent_id": 0,
+  "variant_id": 1,
+  "parent_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "variant_template": "我们一步步来，你先说说看到题后想到的思路，第一步打算怎么算？说完停一下，我等你。",
+  "noop": false,
+  "parent_scores": {
+    "mean_score": 8.1875,
+    "needs_review_rate": 0.3125,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.3125
+  },
+  "variant_scores": {
+    "mean_score": 8.0625,
+    "needs_review_rate": 0.25,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.375
+  },
+  "accepted": false,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+    "+我们一步步来，你先说说看到题后想到的思路，第一步打算怎么算？说完停一下，我等你。"
+  ],
+  "stats": {
+    "calls": 92,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 517654
+  },
+  "failures": [
+    {
+      "case_id": "small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 小讲师:你用‘把6看成六分之六’的转化思路，成功将分数乘法转化为同分母分数相乘，约分后得到4，这一步很聪明！但要注意：直接用分数乘法法则（分子乘分子、分母乘分母; pacing=0 — 小讲师连续两轮输出，第一轮确认思路后未等待学生回应即进行第二轮完整讲解，且第二轮直接给出两种方法的对比结论，无实质互动推进。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'这一题的学习证据还不够,我们继续'结束，未复述学生已掌握内容或给出掌握判断。; termination=0 — 学生已给出正确数值答案(50.24)，小讲师未确认正确性即强行终止对话，称'学习证据还不够'。; total=6/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_parentheses_equation_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 学生已给出完整解题思路（展开、移项、除法）后，小讲师未针对学生思路进行苏格拉底式追问，而是直接复述并给出完整计算过程及终答'x=6'。; pacing=0 — 小讲师在第二轮一次性给出完整解题步骤和终答，属于'一次性倾倒全部讲解'，未给学生留出思考或验证空间。; total=4/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_distance_speed_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:我们从这里入手:已知汽车每小时行60千米，这是它的速度。你接着算下一步。小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; summary_mastery=0 — 对话中无实质总结，小讲师仅重复提问'你能说说目前想到的第一步吗'，未对学生已给出的'路程等于速度乘时间'进行方法总结或掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_average_score_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 小讲师:先回到你刚说的「受提示后,先算 6÷3=2,再 2×2=4。」——你能从题目里再确认一个已知条件吗? 小讲师:这一题的学习证据还不够,我们继续——你能说; pacing=0 — 小讲师连续两轮未推进解题,仅重复要求确认条件或重述第一步,未针对学生已给出的计算步骤(6÷3=2, 2×2=4)进行有效引导或纠错。; total=2/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_distance_speed_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_decimal_multiplication_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 小讲师:先回到你刚说的「我不太明白你问的是哪一步，可以说得更具体一点吗？」——你能从题目里再确认一个已知条件吗?; pacing=0 — 小讲师:先回到你刚说的「我不太明白你问的是哪一步，可以说得更具体一点吗？」——你能从题目里再确认一个已知条件吗? 小讲师:这一题的学习证据还不够,我们继续——你; total=3/12"
+    }
+  ]
+}
