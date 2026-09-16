@@ -1,7 +1,7 @@
 #!/bin/bash
 # test-watch.sh — issue-watch.sh / d-state-watch.sh 验收测试(零 API,纯 fixture)
 # 跑法: bash docs/skills/dispatch-loop/test-watch.sh
-# 期望输出: 12 PASS(三模拟/to= 三态/分页/多行body×to=三态/d-state),0 FAIL
+# 期望输出: 14 PASS(三模拟/to= 三态/分页/多行body×to=三态/d-state/gh垫片×2),0 FAIL
 set -u
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCRIPT="$SCRIPT_DIR/issue-watch.sh"
@@ -122,6 +122,42 @@ echo "9000" > "$WORK/fixture-list2.txt.receipt"  # 无新回执(id=9000 不 > la
 out=$(D_STATE_WATCH_FIXTURE="$WORK/fixture-list2.txt" D_STATE_WATCH_ROUNDS=5 \
       bash "$D_SCRIPT" sess456 --grace 4)
 echo "$out" | grep -q "疑似回合截断" && ok "d-state 无回执场景报警" || no "d-state 应在无回执时报警"
+
+# === 测试 6: gh 路径垫片 ① — gh 恒败 20 轮内 exit 2 ===
+FAKEBIN="$WORK/fakebin"
+mkdir -p "$FAKEBIN"
+cat > "$FAKEBIN/gh" <<'EOF'
+#!/bin/bash
+exit 1
+EOF
+chmod +x "$FAKEBIN/gh"
+echo "700=0" > "$STATE"
+rc=0; ISSUE_WATCH_FIXTURE=/nonexistent ISSUE_WATCH_ROUNDS=25 \
+      PATH="$FAKEBIN:$PATH" bash "$SCRIPT" 700 > /dev/null 2>&1; rc=$?
+[ "$rc" -eq 2 ] && ok "gh 恒败 20 轮内 exit 2(pipefail 生效)" || no "gh 恒败应 exit 2(实际 rc=$rc)"
+
+# === 测试 7: gh 路径垫片 ② — 升序多页评论全量有序交付 ===
+cat > "$FAKEBIN/gh" <<'EOF'
+#!/bin/bash
+# 模拟 gh api 返回升序多页评论(JSON 格式,每行一个对象)
+# page=1: ids 100-199 (100 条)
+# page=2: ids 200-216 (17 条)
+if [[ "$*" == *"&page=2"* ]]; then
+  for i in $(seq 200 216); do
+    printf '{"id": %s, "body": "page2-%s"}\n' "$i" "$i"
+  done
+elif [[ "$*" == *"&page=1"* ]]; then
+  for i in $(seq 100 199); do
+    printf '{"id": %s, "body": "page1-%s"}\n' "$i" "$i"
+  done
+fi
+EOF
+chmod +x "$FAKEBIN/gh"
+echo "800=99" > "$STATE"  # cursor=99,应看到 100-216
+out=$(ISSUE_WATCH_FIXTURE=/nonexistent ISSUE_WATCH_ROUNDS=1 \
+      PATH="$FAKEBIN:$PATH" bash "$SCRIPT" 800)
+count=$(echo "$out" | grep -c "^issue#800 新评论 c[12]")
+[ "$count" -eq 117 ] && ok "gh 升序多页全量有序交付(117 条)" || no "gh 升序多页应 117 条(实际 $count)"
 
 echo ""
 echo "===== 结果: $pass PASS / $fail FAIL ====="

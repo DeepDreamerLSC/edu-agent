@@ -5,6 +5,7 @@
 # 状态: issue-watch.state(每行 issue号=last_comment_id)
 # watch-list: issue-watch.issues(每行一个 issue 号)——运行中增删免杀狗
 # 唤醒纪律: 按 to= 字段筛选——to=pm 或无 to= 才叫醒 PM;to=reviewer/dev/log 只记不叫
+set -o pipefail  # gh|python 管道:gh 失败(exit 1)必须传播,否则 FAIL 永不计数
 STATE="$HOME/calibration-private/issue-watch.state"
 LIST="$HOME/calibration-private/issue-watch.issues"
 REPO=DeepDreamerLSC/edu-agent
