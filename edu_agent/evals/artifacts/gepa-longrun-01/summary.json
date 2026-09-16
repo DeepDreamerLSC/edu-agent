@@ -1,11 +1,11 @@
 {
   "budget": {
-    "calls": 270,
-    "rounds": 2,
-    "wall_s": 1536.7615440829832,
+    "calls": 276,
+    "rounds": 8,
+    "wall_s": 3.6936921669985168,
     "exhausted": false
   },
-  "population_size": 3,
+  "population_size": 7,
   "accepted_variants": 0,
   "best_candidate": {
     "template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",

@@ -759,7 +759,21 @@ def test_elicit_subject_support_hint_roundtrip():
     # 未提供 support 变体时 seam 集只有 elicit(向后兼容)
     plain = ElicitSubject("模板", MagicMock())
     assert set(plain.variants) == {"_ELICIT_TEMPLATE"}
-    assert DEFAULT_SUPPORT_HINT  # kernel 默认兜底文本非空(导入期常量)
+    # run_case 全程两个 seam 真被注入、用完恢复(r2 崩溃根因回归钉:
+    # seam 指向不存在的 kernel 属性时,这里会当场 AttributeError 而非静默)
+    original_elicit = subject.get_active_template()
+    original_support = subject.get_active_support_hint()
+    seen = {}
+    with patch.object(subject._kernel_subject, "run_case",
+                      side_effect=lambda case: seen.update(
+                          elicit=subject.get_active_template(),
+                          support=subject.get_active_support_hint()) or {}):
+        subject.run_case({"id": "c"})
+    assert seen["elicit"] == "说说思路和第一步"
+    assert seen["support"] == "拆小:你先看哪个数?"
+    assert subject.get_active_template() == original_elicit  # 用完恢复
+    assert subject.get_active_support_hint() == original_support
+    assert DEFAULT_SUPPORT_HINT == original_support  # 常量与 kernel 默认一致
 
 
 def test_edit_two_knobs_parity_routing():
