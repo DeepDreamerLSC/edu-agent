@@ -21,6 +21,8 @@ from edu_agent.agents.small_lecturer import (
     reply,
     start,
 )
+# 用户裁逐字文案(2026-09-16)直接字面断言钉死,不经私有导入(02 §6):
+FINISH_EVIDENCE_TEXT = "这道题之前已经答对了,我们还需要听你把关键思路讲清楚。"
 
 from teachkit import kernel_env, open_json, tutor_json
 
@@ -66,26 +68,83 @@ def test_opening_hint_constants_semantics():
 
 
 # ---------- A 端:结构化 summary 通路 ----------
+# 2026-09-16 用户裁语义修订:撤销 R6「摸底答对+不卡 → 直接 completed」旧规则,
+# 完成判定改由会话内讲述证据支持(教学定义:学生自己的表达已包含关键步骤、关键
+# 依据和结论,足以让听者理解这道题怎么做;教师说过、学生只附和不算)。finish 先查
+# ready_to_confirm;零调用模板仅在确认态 + correct + 无卡点时触达,且只总结学生
+# 实际表达(删「每一步都是你自己的思路」「这道题你已经完整讲清楚」无条件断言)。
 
-def test_structured_summary_on_correct_with_no_stuck(tmp_path):
-    """answer_status=correct + 无卡点 → finish 走确定性模板 completed,零模型调用。"""
+def test_structured_summary_on_correct_with_ready_state(tmp_path):
+    """correct + 已达确认态 → finish 走确定性模板 completed,零模型调用。"""
     with kernel_env(tmp_path, [
         completion(open_json(_OPENING_TEXT["correct"])),
-        completion(tutor_json("你说说为什么两边都减去 7?")),
-        completion(tutor_json("这一步的依据是什么?")),
-        completion(json.dumps({"summary": "不该被生成"})),  # 结构化通路不得触达模型(毒饵)
+        completion(tutor_json("你自己把做法和检验都说清楚了。", ready=True)),
+        completion(json.dumps({"summary": "不该被生成"})),  # 零调用通路不得触达模型(毒饵)
     ]) as (fake, gateway):
         first = start({"text": "解方程 3x+7=25。"}, {"grade": "五年级", "answer_status": "correct"},
                       gateway=gateway)
-        reply(first.session, "我想两边都减去7。", gateway=gateway)
-        reply(first.session, "得到 x=6,代回检验成立。", gateway=gateway)
+        reply(first.session, "我想两边都减去7,得到 x=6,代回检验成立。", gateway=gateway)
+        assert first.session.state == "ready_to_confirm"   # 完成前提 = 先达确认态
         calls_before_finish = len(fake.requests)
         summary = finish(first.session, gateway=gateway)
-        assert summary.status == "completed"  # 非 needs_review(人批②的核心)
+        assert summary.status == "completed"
         assert "解方程 3x+7=25" in summary.text and "x=6" in summary.text  # ①②引题面与学生原话
-        assert "再做一道" in summary.text      # ③固定收尾(SKILL 规则 9 的两个动作)
-        assert len(fake.requests) == calls_before_finish  # 结构化通路零模型调用
+        assert "再做一道" in summary.text                   # ③固定收尾(SKILL 规则 9 的两个动作)
+        assert "每一步都是你自己的思路" not in summary.text  # 撤销的无条件断言 1(用户裁)
+        assert "已经完整讲清楚" not in summary.text          # 撤销的无条件断言 2(用户裁)
+        assert len(fake.requests) == calls_before_finish    # 零调用通路保留
         assert first.session.state == "completed"
+
+
+def test_finish_correct_without_narration_needs_review(tmp_path):
+    """验收矩阵(用户裁):零发言 / 只报答案 / 两轮空泛回应 → 不能完成(needs_review,
+    correct 档专项文案,finish 零模型调用)。answer_status=correct 不再绕过确认态。"""
+    question = {"text": "解方程 3x+7=25。"}
+    learner = {"grade": "五年级", "answer_status": "correct"}
+    with kernel_env(tmp_path, [completion(open_json(_OPENING_TEXT["correct"]))]) as (fake, gateway):
+        first = start(question, learner, gateway=gateway)   # 零发言
+        summary = finish(first.session, gateway=gateway)
+        assert summary.status == "needs_review" and summary.text == FINISH_EVIDENCE_TEXT
+        assert len(fake.requests) == 1                      # finish 不调模型
+        assert first.session.summary is None
+    with kernel_env(tmp_path, [
+        completion(open_json(_OPENING_TEXT["correct"])),
+        completion(tutor_json("你是怎么算出 x=6 的?把你的做法讲给我听。")),
+    ]) as (fake, gateway):
+        first = start(question, learner, gateway=gateway)   # 只报答案
+        reply(first.session, "x=6。", gateway=gateway)
+        assert first.session.state == "dialogue"            # 无讲述证据 → 未达确认态
+        summary = finish(first.session, gateway=gateway)
+        assert summary.status == "needs_review" and summary.text == FINISH_EVIDENCE_TEXT
+    with kernel_env(tmp_path, [
+        completion(open_json(_OPENING_TEXT["correct"])),
+        completion(tutor_json("你先说说这道题要求什么?")),
+        completion(tutor_json("那关键的一步是怎么想的?")),
+    ]) as (fake, gateway):
+        first = start(question, learner, gateway=gateway)   # 两轮空泛回应
+        reply(first.session, "好像还行吧。", gateway=gateway)
+        reply(first.session, "就那样算的呗。", gateway=gateway)
+        summary = finish(first.session, gateway=gateway)
+        assert summary.status == "needs_review" and summary.text == FINISH_EVIDENCE_TEXT
+
+
+def test_finish_correct_ready_but_stuck_uses_model_summary(tmp_path):
+    """原条件保留:correct + 已达确认态但有卡点标记 → 模型总结(零调用模板不适用)。
+
+    卡点走确定性卡壳路径(学生「我不会」→ 阶梯揭示 → stuck,零 gateway 依赖)。"""
+    with kernel_env(tmp_path, [
+        completion(open_json(_OPENING_TEXT["correct"])),
+        completion(tutor_json("你自己把两边减 7、再除以 3 讲清楚了。", ready=True)),
+        completion(json.dumps({"summary": "模型总结:你把两步思路都讲清楚了。"}, ensure_ascii=False)),
+    ]) as (fake, gateway):
+        first = start({"text": "解方程 3x+7=25。"}, {"grade": "五年级", "answer_status": "correct"},
+                      gateway=gateway)
+        reply(first.session, "我不会,这道题太难了。", gateway=gateway)  # 卡壳 → 揭示 → stuck
+        assert first.session.stuck is True
+        reply(first.session, "两边同时减 7 得 18,再除以 3 得 x=6,代回检验成立。", gateway=gateway)
+        assert first.session.state == "ready_to_confirm"
+        summary = finish(first.session, gateway=gateway)
+        assert summary.status == "completed" and "模型总结" in summary.text
 
 
 def test_structured_summary_quotes_student_words_and_passes_guardrails(tmp_path):

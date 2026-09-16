@@ -1,0 +1,11 @@
+{
+ "providers_used": [
+  "mlx",
+  "vision"
+ ],
+ "fallback_to": [],
+ "calls_by_role": {
+  "tutor": 18,
+  "judge": 8
+ }
+}

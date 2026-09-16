@@ -1,0 +1,1 @@
+{"started_at": "2026-09-16T10:00:03.671190+00:00", "dataset": {"name": "cases.jsonl", "sha256": "be359e42d7b512b39fa7d7480d48e9e8a82b20cb2d5b7ae44052a1e07485e236"}, "config": {"concurrency": 2, "sha256": "4c2af83658fc64052b62e421c6d14b825a7d42242c2fcd8541ff5743fc38a428"}, "subject": "kernel-small-lecturer", "total_cases": 8}
