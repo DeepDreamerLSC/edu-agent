@@ -1,0 +1,364 @@
+{
+ "zero_model_calls": true,
+ "s1_dataset": {
+  "source": "/root/code/edu-ws15-knob-freq/edu_agent/evals/datasets/small_lecturer_image_teaching_v1.json",
+  "cases": [
+   {
+    "case_id": "image_v1_text_position_05",
+    "turns": 3,
+    "answer_status": null,
+    "signal_turns": {
+     "understanding": [],
+     "stuck": [],
+     "completion": []
+    }
+   },
+   {
+    "case_id": "image_v1_fraction_formula_06",
+    "turns": 3,
+    "answer_status": null,
+    "signal_turns": {
+     "understanding": [],
+     "stuck": [],
+     "completion": []
+    }
+   },
+   {
+    "case_id": "image_v1_fraction_formula_09",
+    "turns": 3,
+    "answer_status": null,
+    "signal_turns": {
+     "understanding": [],
+     "stuck": [],
+     "completion": []
+    }
+   },
+   {
+    "case_id": "image_v1_application_table_14",
+    "turns": 3,
+    "answer_status": null,
+    "signal_turns": {
+     "understanding": [],
+     "stuck": [],
+     "completion": []
+    }
+   },
+   {
+    "case_id": "image_v1_circle_geometry_20",
+    "turns": 3,
+    "answer_status": null,
+    "signal_turns": {
+     "understanding": [],
+     "stuck": [],
+     "completion": []
+    }
+   },
+   {
+    "case_id": "image_v1_percentage_multi_part_23",
+    "turns": 3,
+    "answer_status": null,
+    "signal_turns": {
+     "understanding": [],
+     "stuck": [],
+     "completion": []
+    }
+   },
+   {
+    "case_id": "image_v1_visual_statistics_open_27",
+    "turns": 3,
+    "answer_status": null,
+    "signal_turns": {
+     "understanding": [],
+     "stuck": [],
+     "completion": []
+    }
+   },
+   {
+    "case_id": "image_v1_visual_statistics_open_30",
+    "turns": 3,
+    "answer_status": null,
+    "signal_turns": {
+     "understanding": [],
+     "stuck": [
+      2
+     ],
+     "completion": []
+    }
+   }
+  ],
+  "n_cases": 8,
+  "reviewer_reproduction_understanding_cases": 0
+ },
+ "s2_results": {
+  "results_glob": "edu_agent/evals/artifacts/149-ready-gate/**/results/*.json",
+  "n_files": 128,
+  "n_turns": 638,
+  "files_by_arm": {
+   "F": 44,
+   "P": 44,
+   "R": 40
+  },
+  "knobs": {
+   "elicit": {
+    "cases": 20,
+    "turns": 54,
+    "case_ids": [
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r1",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r2",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract__r1",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract__r2",
+     "small_lecturer_dialogue_stability_20_stability_word_problem__r1",
+     "small_lecturer_dialogue_stability_20_stability_word_problem__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r2",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area__r1",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r2",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r1",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r2"
+    ]
+   },
+   "support": {
+    "cases": 0,
+    "turns": 0,
+    "case_ids": []
+   },
+   "reveal": {
+    "cases": 2,
+    "turns": 2,
+    "case_ids": [
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r1",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r2"
+    ]
+   },
+   "answer_collect": {
+    "cases": 0,
+    "turns": 0,
+    "case_ids": []
+   },
+   "premature_confirm": {
+    "cases": 8,
+    "turns": 16,
+    "case_ids": [
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r1",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r2",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit",
+     "small_lecturer_dialogue_stability_20_stability_word_problem",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r2"
+    ]
+   },
+   "leak_guard": {
+    "cases": 16,
+    "turns": 38,
+    "case_ids": [
+     "small_lecturer_dialogue_stability_20_stability_triangle_area__r1",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r2",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r1",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r2",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r2"
+    ]
+   }
+  },
+  "finish": {
+   "completed_zero_call": {
+    "cases": 8,
+    "ids": [
+     "small_lecturer_dialogue_scenarios_equation_complete_reasoning__r1",
+     "small_lecturer_dialogue_scenarios_equation_complete_reasoning__r2",
+     "small_lecturer_dialogue_scenarios_equation_complete_reasoning__r1",
+     "small_lecturer_dialogue_scenarios_equation_complete_reasoning__r2",
+     "small_lecturer_dialogue_stability_20_stability_word_problem",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem",
+     "small_lecturer_dialogue_stability_20_stability_word_problem",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem"
+    ]
+   },
+   "needs_review": {
+    "cases": 42,
+    "ids": [
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r1",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r2",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract__r1",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract__r2",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r1",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r2",
+     "small_lecturer_dialogue_stability_20_stability_word_problem__r1",
+     "small_lecturer_dialogue_stability_20_stability_word_problem__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r2",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract__r1",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract__r2",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r1",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r2",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area__r1",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area__r2",
+     "small_lecturer_dialogue_stability_20_stability_word_problem__r1",
+     "small_lecturer_dialogue_stability_20_stability_word_problem__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r2",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r1",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r2",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r1",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition__r2"
+    ]
+   },
+   "needs_review_text": {
+    "NEEDS_REVIEW_TEXT": 42
+   },
+   "other": {
+    "cases": 78,
+    "ids": [
+     "small_lecturer_dialogue_stability_20_stability_triangle_area__r1",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r2",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r1",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r2",
+     "small_lecturer_dialogue_scenarios_equation_complete_reasoning",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area",
+     "small_lecturer_dialogue_stability_20_stability_word_problem",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem",
+     "small_lecturer_dialogue_scenarios_equation_complete_reasoning",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area",
+     "small_lecturer_dialogue_stability_20_stability_word_problem",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem",
+     "small_lecturer_dialogue_scenarios_equation_complete_reasoning",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area",
+     "small_lecturer_dialogue_scenarios_equation_complete_reasoning",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract",
+     "small_lecturer_dialogue_stability_20_stability_fraction_addition",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r1",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r2",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract__r1",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract__r2",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area__r1",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area__r2",
+     "small_lecturer_dialogue_stability_20_stability_word_problem__r1",
+     "small_lecturer_dialogue_stability_20_stability_word_problem__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r2",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r1",
+     "small_lecturer_dialogue_stability_20_stability_chicken_rabbit__r2",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract__r1",
+     "small_lecturer_dialogue_stability_20_stability_equation_subtract__r2",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area__r1",
+     "small_lecturer_dialogue_stability_20_stability_triangle_area__r2",
+     "small_lecturer_dialogue_stability_20_stability_word_problem__r1",
+     "small_lecturer_dialogue_stability_20_stability_word_problem__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_triangle_area__r2",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r1",
+     "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem__r2"
+    ]
+   }
+  }
+ },
+ "s3_paired": {
+  "present": true,
+  "rounds": [
+   {
+    "file": "round-00.json",
+    "template_hit_validation": {
+     "hit_count": 0,
+     "total_cases": 8,
+     "samples": []
+    },
+    "n_cases": 8,
+    "delta_zero_cases": 7
+   },
+   {
+    "file": "round-01.json",
+    "template_hit_validation": {
+     "hit_count": 0,
+     "total_cases": 8,
+     "samples": []
+    },
+    "n_cases": 8,
+    "delta_zero_cases": 8
+   }
+  ]
+ },
+ "s4_probe": {
+  "present": true,
+  "n_cases": 8,
+  "idle_cases": 8,
+  "template_in_first_question": 0,
+  "first_questions_identical": 8
+ }
+}
