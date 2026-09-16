@@ -31,8 +31,9 @@ description: >
 ## 二、看门狗
 
 脚本与 SKILL.md 同仓(`docs/skills/dispatch-loop/`),运行时状态在 `calibration-private/`:
-- `issue-watch.sh`:状态文件 `issue-watch.state` 记每 issue 的 last_comment_id——**免手填阈值**(旧版手填是事故源);watch-list `issue-watch.issues` **每轮重读**(增删被盯 issue 免杀狗);gh 失败计数(连续 20 轮退出码 2,不吞错误);8h 超时退出码 1;**本轮收集全部新评论后**退出码 0 才唤醒(一条唤醒覆盖多 issue 多条评论,不漏后续回执);
-- `d-state-watch.sh <会话子串>`(缺省 D):只读盯 running 标志,idle ≥4min 报警(回合截断检测);审查者或任何干活会话都可盯;
+- `issue-watch.sh`:全量有序交付(同波新评论按 id 序全输出,2000 字大幅截断,不吞);watch-list `issue-watch.issues` 每轮重读;gh 失败计数(连续 20 轮退出码 2);8h 超时退出码 1;**按接收者筛选唤醒**——解析回执头 `to=` 字段,`to=pm` 或**无 to= 的旧头**(存量十余张,保守唤醒)才叫醒 PM,`to=reviewer/dev/log` 只记不叫;>100 评论分页取全;游标仅在全部交付后推进;
+- `d-state-watch.sh <会话子串> [--grace <min>]`(缺省 D,grace 10min):盯 running 标志,**结合任务状态**——只在「idle ≥ grace 且预期回执 issue 无新评论」才报警;正常完成(有回执)不报警;状态文件 `d-state-watch.state` 记 派发时戳/预期issue/grace;
+- **旧回执头兼容口径(P3 审查者动工前必补)**:无 `to=` 字段的旧 RECEIPT 头保守唤醒(存量十余张 issue),等同 `to=pm`——向后兼容,不遗漏;
 - 脚本内路径用 `$HOME/calibration-private/`(不硬编码绝对根路径);状态文件名只在脚本里定义一处;
 - 已知噪声:PM 自己的留痕评论也触发唤醒——可接受,便宜;
 - **重挂 = 直接再跑一次脚本**(自动读状态),禁止手动改阈值。
