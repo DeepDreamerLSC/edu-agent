@@ -15,6 +15,7 @@ import random
 import time
 from dataclasses import dataclass, field
 from difflib import unified_diff
+from functools import partial
 from pathlib import Path
 
 from edu_agent.agents.small_lecturer import kernel
@@ -26,34 +27,57 @@ from .kernel_subject import KernelSubject
 from .runner import EnvironmentFailure
 
 
-# === 1. Prompt seam:elicit 模板变体注入 ===
+# === 1. Prompt seam:旋钮变体注入 ===
+
+# 搜索空间(#304 频次分析头部可达旋钮):elicit 复讲 + support 拆小问句。
+# support 是 v2 训练池上唯一有数据面触发信号的旋钮(1/8 案 stuck 信号);
+# reveal 依赖阶梯消耗状态、answer_collect 双前提缺失,不进此版搜索空间。
+KNOB_SEAMS = ("_ELICIT_TEMPLATE", "_SUPPORT_HINT")
+
+# kernel 默认 support 拆小问句(#198 确定性文本)——变体经 edit_two_knobs 生成
+DEFAULT_SUPPORT_HINT = (
+    "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。"
+)
+
+
 
 class ElicitSubject:
-    """KernelSubject 包装:run_case 注入 elicit 模板变体(monkeypatch,用完即恢复)。
-    
+    """KernelSubject 包装:run_case 注入旋钮变体(monkeypatch,用完即恢复)。
+
     纪律:不动 kernel.py 常量;monkeypatch 是 spike 最小缝合面,生产化须外置。
+    variants 键 = kernel 常量名(KNOB_SEAMS 子集);未提供变体的旋钮用 kernel 原值。
     """
-    
-    def __init__(self, template: str, gateway: Gateway) -> None:
+
+    def __init__(self, template: str, gateway: Gateway,
+                 support_hint: str | None = None) -> None:
         self.template = template
         self.gateway = gateway
+        self.variants: dict[str, str] = {"_ELICIT_TEMPLATE": template}
+        if support_hint is not None:
+            self.variants["_SUPPORT_HINT"] = support_hint
         self._kernel_subject = KernelSubject(gateway)
-    
+
     @property
     def name(self) -> str:
         return f"elicit-{hash(self.template) % 10000:04d}"
-    
+
     def get_active_template(self) -> str:
         """获取当前激活的 elicit 模板(测试用,验证 monkeypatch 生效)。"""
         return kernel._ELICIT_TEMPLATE
-    
+
+    def get_active_support_hint(self) -> str:
+        """当前激活的 support 拆小问句(测试用,seam 生效性验证)。"""
+        return kernel._SUPPORT_HINT
+
     def run_case(self, case: dict) -> dict:
-        original = kernel._ELICIT_TEMPLATE
+        saved = {name: getattr(kernel, name) for name in self.variants}
         try:
-            kernel._ELICIT_TEMPLATE = self.template
+            for name, value in self.variants.items():
+                setattr(kernel, name, value)
             return self._kernel_subject.run_case(case)
         finally:
-            kernel._ELICIT_TEMPLATE = original
+            for name, value in saved.items():
+                setattr(kernel, name, value)
 
 
 # === 2. Mini-batch 采样 ===
@@ -148,14 +172,17 @@ def evaluate_batch(
     template: str,
     gateway: Gateway,
     judge_role: str = "judge",
+    support_hint: str | None = None,
 ) -> tuple[ScoreVector, list[dict], dict]:
-    """跑批 + 判卷一步到位(无 checkpoint/resume,spike 简化)。
-    
+    """跑批 + 判卷一步到位(calls = facts 实测,长跑口径:估算低估 ~3x 会超预算)。
+
     返回:(score_vector, failure_frames, stats)。
     stats = {calls, tokens_in, tokens_out, wall_ms, env_failures, content_failures}。
     """
     started = time.monotonic()
-    subject = ElicitSubject(template, gateway)
+    facts_dir = gateway.writer.root
+    facts_before = _count_facts_lines(facts_dir)
+    subject = ElicitSubject(template, gateway, support_hint=support_hint)
     
     transcripts = []
     failures = []
@@ -197,7 +224,9 @@ def evaluate_batch(
             failures.extend(low_frames)
     
     stats["wall_ms"] = int((time.monotonic() - started) * 1000)
-    stats["calls"] = len(cases) + judged
+    # facts 实测(01 §7,长跑口径):一案 = start+reply×N+finish + judge ≈ 4.23 调用,
+    # 估算 len+judged 低估 ~3x,硬限预算必须用真实计数(paired_loop 同款)。
+    stats["calls"] = _count_facts_lines(facts_dir) - facts_before
     
     if not scores:
         return ScoreVector(0.0, 1.0, 1.0, 1.0), failures, stats
@@ -342,7 +371,8 @@ _EDITOR_PROMPT = """你是一个提示词编辑器。当前 elicit 模板:
 - 不要围栏、不要解释,只输出改进后的模板文本。"""
 
 
-def edit_template(current: str, failure_frames: list[dict], gateway: Gateway) -> str:
+def edit_template(current: str, failure_frames: list[dict], gateway: Gateway,
+                  role: str = "judge_independent") -> str:
     """一次 gateway 调用:当前模板 + 失败帧浓缩 → 变体;带 lint。
     
     Lint:必须保住核心引导词(「思路」「第一步」),防进化出废模板。
@@ -359,7 +389,7 @@ def edit_template(current: str, failure_frames: list[dict], gateway: Gateway) ->
     prompt = _EDITOR_PROMPT.format(current=current, n_failures=len(failure_frames), failure_summary=failure_summary)
     
     request = ModelRequest(
-        role="judge_independent",
+        role=role,
         messages=[{"role": "user", "content": prompt}],
         max_tokens=200,
         temperature=0.3,
@@ -417,11 +447,14 @@ class Population:
 
 @dataclass(frozen=True)
 class GepaConfig:
-    """GEPA 循环配置:轮数 / 批次大小 / 预算上限。"""
+    """GEPA 循环配置:轮数 / 批次大小 / 预算上限 / 搜索空间旋钮族。"""
     rounds: int = 6
     batch_size: int = 16
     max_calls: int = 2000
     judge_role: str = "judge"
+    two_knobs: bool = False  # True = elicit+support 双旋钮(#304 头部可达族,选项 A)
+    editor_focus: str = "mean"  # "nr" = needs_review 靶向编辑(收敛#2 选项①)
+    editor_role: str = "judge_independent"  # 编辑器后端(搜索机械件,非冻结判分面)
 
 
 @dataclass
@@ -446,34 +479,108 @@ class Budget:
         }
 
 
+write_checkpoint = None  # 前向占位(定义后底部绑定公开名)
+
+
+def _write_checkpoint(output_dir: Path, state: "LoopState",
+                      next_round: int = 0, last_failures: list[dict] | None = None) -> None:
+    """每代落盘断点(长跑跨夜:最优解+预算+代次+失败帧,进程挂掉可恢复)。"""
+    population, scores = state.population, state.scores
+    budget = state.bind(0)
+    best = population.select_parent(scores)  # 返回 Candidate 对象本身
+    payload = {
+        "next_round": next_round,
+        "budget": budget.summary(),
+        "best": {"candidate_id": best.candidate_id, "template": best.template,
+                 "support_hint": state.support_hint,
+                 "scores": scores[best.candidate_id].__dict__},
+        "last_failures": (last_failures or [])[:5],
+    }
+    tmp = output_dir / "checkpoint.json.tmp"
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
+    tmp.replace(output_dir / "checkpoint.json")
+
+
+
+
+@dataclass
+class LoopState:
+    """gepa_loop 的语境束(断点恢复原语 + 循环常量,helper 只传一参)。"""
+
+    train_cases: list = field(default_factory=list)
+    initial_template: str = ""
+    support_hint: str = DEFAULT_SUPPORT_HINT
+    population: Population = field(default_factory=Population)
+    scores: dict = field(default_factory=dict)
+    budget: "Budget | None" = None
+
+    def bind(self, max_calls: int) -> "Budget":
+        if self.budget is None:
+            self.budget = Budget(max_calls=max_calls)
+        return self.budget
+
+
+def _restore_or_seed(
+    config: "GepaConfig",
+    gateway: Gateway,
+    output_dir: Path,
+    resume: bool,
+    state: LoopState,
+) -> tuple[int, list[dict]]:
+    """恢复或播种种群起点;返回(起始代次, 初始失败帧)。
+
+    恢复:最优候选入种群、预算与代次延续、失败帧带回、不重评初始(省预算;
+    种子 = round_idx 确定性,恢复后同代同批)。全新:评估初始模板并写 checkpoint。
+    """
+    population, scores = state.population, state.scores
+    budget = state.bind(config.max_calls)
+    checkpoint_path = output_dir / "checkpoint.json"
+    if resume and checkpoint_path.exists():
+        saved = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+        restored = Candidate(template=saved["best"]["template"])
+        restored_id = population.add(restored)
+        scores[restored_id] = ScoreVector(**saved["best"]["scores"])
+        budget.calls = saved["budget"]["calls"]
+        if saved.get("support_hint"):
+            state.support_hint = saved["support_hint"]
+        budget.rounds = saved["budget"]["rounds"]
+        print(f"[resume] 从 checkpoint 恢复:round={saved['next_round']}, "
+              f"budget={budget.calls}/{budget.max_calls}, "
+              f"best_mean={scores[restored_id].mean_score:.2f}")
+        return saved["next_round"], saved.get("last_failures", [])
+    initial_id = population.add(Candidate(template=state.initial_template))
+    initial_scores, failures, initial_stats = evaluate_batch(
+        state.train_cases[:config.batch_size], state.initial_template,
+        gateway, config.judge_role)
+    scores[initial_id] = initial_scores
+    budget.add(initial_stats["calls"])
+    _write_checkpoint(output_dir, state)
+    return 0, failures
+
+
 def gepa_loop(
     train_cases: list[dict],
     initial_template: str,
     config: GepaConfig,
     gateway: Gateway,
     output_dir: Path,
+    resume: bool = True,
 ) -> tuple[Population, dict[int, ScoreVector], list[dict]]:
-    """GEPA 主循环:轮数 / 预算计数 / 停止;每轮 dump prompt diff + 分数。
-    
+    """GEPA 主循环:轮数 / 预算计数 / 停止;每轮 dump prompt diff + 分数 + checkpoint。
+
+    resume=True 且 output_dir 存在 checkpoint.json 时恢复:最优候选作为种群起点、
+    预算余量与代次延续(种子 = round_idx,确定性,恢复后同代同批)。
     返回:(population, scores, round_reports)。
     """
     output_dir.mkdir(parents=True, exist_ok=True)
-    population = Population()
-    scores: dict[int, ScoreVector] = {}
+    state = LoopState(train_cases=train_cases, initial_template=initial_template)
+    population, scores = state.population, state.scores
+    budget = state.bind(config.max_calls)
     round_reports: list[dict] = []
-    budget = Budget(max_calls=config.max_calls)
-    
-    # 初始候选
-    initial = Candidate(template=initial_template)
-    initial_id = population.add(initial)
-    
-    # 评估初始
-    initial_scores, last_failures, initial_stats = evaluate_batch(
-        train_cases[:config.batch_size], initial_template, gateway, config.judge_role)
-    scores[initial_id] = initial_scores
-    budget.add(initial_stats["calls"])
-    
-    for round_idx in range(config.rounds):
+    start_round, last_failures = _restore_or_seed(
+        config, gateway, output_dir, resume, state)
+
+    for round_idx in range(start_round, config.rounds):
         if budget.exhausted():
             break
         
@@ -486,7 +593,17 @@ def gepa_loop(
         
         # 编辑模板:传入上一轮的失败(首轮传 initial 的,后续传上一变体的)
         # 修 P2-1:原始终传 initial_failures,编辑器看不到变体自身的失败模式
-        variant_template = edit_template(parent.template, last_failures, gateway)
+        editors = (
+            partial(edit_template_nr if config.editor_focus == "nr" else edit_template,
+                    role=config.editor_role),
+            partial(edit_support_hint, role=config.editor_role),
+        )
+        if config.two_knobs:
+            variant_template, state.support_hint = edit_two_knobs(
+                parent.template, state.support_hint, round_idx, last_failures, gateway,
+                editors=editors)
+        else:
+            variant_template = editors[0](parent.template, last_failures, gateway)
         budget.add(1)
         
         # No-op 检查:编辑器返回与父代逐字相同 → 跳过评估,省预算
@@ -508,7 +625,8 @@ def gepa_loop(
             # no-op 时 last_failures 保留上一轮,下轮编辑器继续用
         else:
             variant_scores, variant_failures, variant_stats = evaluate_batch(
-                batch, variant_template, gateway, config.judge_role)
+                batch, variant_template, gateway, config.judge_role,
+                support_hint=state.support_hint if config.two_knobs else None)
             scores[variant_id] = variant_scores
             budget.add(variant_stats["calls"])
             last_failures = variant_failures
@@ -523,6 +641,7 @@ def gepa_loop(
             "variant_id": variant_id,
             "parent_template": parent.template,
             "variant_template": variant_template,
+            "support_hint": getattr(state, "support_hint", None),
             "noop": is_noop,
             "parent_scores": parent_scores.__dict__,
             "variant_scores": variant_scores.__dict__,
@@ -539,7 +658,8 @@ def gepa_loop(
         round_reports.append(report)
         (output_dir / f"round-{round_idx:02d}.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    
+        _write_checkpoint(output_dir, state, round_idx + 1, last_failures)
+
     # 最终报告
     summary = {
         "budget": budget.summary(),
@@ -770,3 +890,104 @@ def paired_loop(
     
     return paired_reports
 
+
+write_checkpoint = _write_checkpoint  # 公开名(tests 只导公开入口,02 §6)
+
+
+_SUPPORT_EDITOR_PROMPT = """你是一个提示词编辑器。当前「卡壳支持」问句模板:
+---
+{current}
+---
+失败案例摘要(共 {n_failures} 个):
+{failure_summary}
+
+任务:生成改进版本,保持核心意图(学生卡住时把这一步拆成最小的一个小问题、只问不揭示、
+不含答案数字),但调整措辞以降低失败率。约束:
+- 长度 20-70 字(中文);
+- 必须是问句且以问号结尾;
+- 不出现任何数字或方法名;
+- 不要围栏、不要解释,只输出改进后的模板文本。"""
+
+
+_NR_EDITOR_PROMPT = """你是一个提示词编辑器。当前复讲引导模板:
+---
+{current}
+---
+以下案例被评审判为 review(学习证据不足,无法确认掌握):
+{failure_summary}
+
+任务:调整模板措辞,让学生复讲时更容易给出**可判定的回答**——明确请他说出
+具体步骤、算式或结论(而不是"说说想法"这类开放邀请),使评审能据以判定。
+约束:
+- 长度 30-100 字(中文);
+- 必须包含「思路」「第一步」或「算式/步骤」等价引导词;
+- 不要围栏、不要解释,只输出改进后的模板文本。"""
+
+
+def edit_template_nr(current: str, failure_frames: list[dict], gateway: Gateway,
+                      role: str = "judge_independent") -> str:
+    """needs_review 靶向编辑(收敛#2 选项①准备件):与 edit_template 同 lint 同角色,
+    唯一差异是指令瞄准 nr 维——让复讲引导产出可判定证据,而非更讨喜的开放邀请。"""
+    failure_summary = "\n".join(
+        f"- {f['case_id']}: {f['kind']} — {f['detail'][:100]}"
+        for f in failure_frames[:5]
+    ) if failure_frames else "(无失败案例)"
+    prompt = _NR_EDITOR_PROMPT.format(current=current, failure_summary=failure_summary)
+    try:
+        response = gateway.invoke(ModelRequest(
+            role=role, messages=[{"role": "user", "content": prompt}],
+            max_tokens=200, temperature=0.3))
+        variant = response.text.strip().strip("`").strip()
+    except GatewayError:
+        return current
+    linted = _lint_common(variant, current, 30, 100, ("思路", "第一步", "算式", "步骤"))
+    return variant if linted is not None else current
+
+
+def _lint_common(variant: str, current: str, floor: int, cap: int,
+                 keywords: tuple[str, ...]) -> str | None:
+    """共享 lint:长度窗、关键词、非退化;不合规返回 None(调用方保留父代)。"""
+    if variant == current or not (floor <= len(variant) <= cap):
+        return None
+    if not any(word in variant for word in keywords):
+        return None
+    return variant
+
+
+def edit_support_hint(support: str, failure_frames: list[dict], gateway: Gateway,
+                      role: str = "judge_independent") -> str:
+    """「卡壳支持」问句编辑(双旋钮的 support 分支):lint 不过保留父代。"""
+    failure_summary = "\n".join(
+        f"- {f['case_id']}: {f['kind']} — {f['detail'][:100]}"
+        for f in failure_frames[:5]
+    ) if failure_frames else "(无失败案例)"
+    prompt = _SUPPORT_EDITOR_PROMPT.format(
+        current=support, n_failures=len(failure_frames), failure_summary=failure_summary)
+    try:
+        response = gateway.invoke(ModelRequest(
+            role=role, messages=[{"role": "user", "content": prompt}],
+            max_tokens=160, temperature=0.3))
+        raw = response.text.strip().strip("`").strip()
+    except GatewayError:
+        return support
+    linted = _lint_common(raw, support, 20, 70, ("?", "?"))
+    return linted if linted is not None else support
+
+
+def edit_two_knobs(
+    elicit: str, support: str, round_idx: int,
+    failure_frames: list[dict], gateway: Gateway,
+    editors=None,
+) -> tuple[str, str]:
+    """双旋钮编辑(#256 阶段 2 选项 A 搜索空间):偶代编辑 elicit、奇代编辑 support。
+
+    单次 gateway 调用(编辑器预算 1 call/代不变);被编辑旋钮拿失败帧反馈,
+    另一旋钮原样保留。lint 失败保留父代(与 edit_template 同纪律)。
+    editors=(elicit编辑器, support编辑器);None 时晚绑定默认对(保持可 patch)。
+    """
+    if editors is None:
+        editors = (edit_template, edit_support_hint)
+    elicit_editor, support_editor = editors
+    if round_idx % 2 == 0:
+        return elicit_editor(elicit, failure_frames, gateway), support
+    return elicit, support_editor(support, failure_frames, gateway)

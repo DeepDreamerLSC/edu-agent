@@ -1,0 +1,32 @@
+{
+  "round": 11,
+  "parent_id": 3,
+  "variant_id": 4,
+  "parent_template": "我们从头理一理你的思路：你最先想到的是哪一步？为什么先做这一步？说清楚后我们再往下看。",
+  "variant_template": "我们从头理一理你的思路：你最先想到的是哪一步？为什么先做这一步？说清楚后我们再往下看。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": true,
+  "parent_scores": {
+    "mean_score": 8.25,
+    "needs_review_rate": 0.4375,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.3125
+  },
+  "variant_scores": {
+    "mean_score": 8.25,
+    "needs_review_rate": 0.4375,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.3125
+  },
+  "accepted": false,
+  "diff": [],
+  "stats": {
+    "calls": 0,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 0
+  },
+  "failures": []
+}

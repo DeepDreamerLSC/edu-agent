@@ -1,0 +1,46 @@
+{
+ "next_round": 29,
+ "budget": {
+  "calls": 1415,
+  "rounds": 29,
+  "wall_s": 1617.5044272920059,
+  "exhausted": false
+ },
+ "best": {
+  "candidate_id": 1,
+  "template": "别急，请复讲解题过程：先说出你的核心思路，再明确写出第一步的具体算式或操作。请给出可验证的结论，以便我们确认掌握情况。",
+  "scores": {
+   "mean_score": 10.0,
+   "needs_review_rate": 0.25,
+   "numerical_violation_rate": 0.0,
+   "hard_failure_rate": 0.125
+  }
+ },
+ "last_failures": [
+  {
+   "case_id": "small_lecturer_math_gold_candidates_decimal_multiplication_support_boundary",
+   "kind": "judge_low_score",
+   "detail": "summary_mastery=0 — 对话中未出现实质性的方法总结，也未对学生掌握情况进行判断，仅以'学习证据还不够'为由中断。; total=8/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_rectangle_perimeter_complete_reasoning",
+   "kind": "judge_low_score",
+   "detail": "pacing=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗? ... 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; summary_mastery=0 — 对话中无总结环节，小讲师重复提示后对话直接结束，未对学生表现进行任何掌握判断。; total=5/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_b2_unit_rate_complete_reasoning",
+   "kind": "judge_low_score",
+   "detail": "total=8/12"
+  },
+  {
+   "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition",
+   "kind": "judge_low_score",
+   "detail": "total=9/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_chicken_rabbit_support_boundary",
+   "kind": "judge_low_score",
+   "detail": "pacing=0 — 小讲师连续两轮未等待学生回应即输出: '那这10只脚差值能换算成几只兔子呢？' 紧接着 '这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?'; summary_mastery=0 — 对话中无实质总结，小讲师仅以 '这一题的学习证据还不够' 中断对话，未复述学生已完成的正确推理(16只脚、差10只)，也未给出掌握判断。; total=5/12"
+  }
+ ]
+}

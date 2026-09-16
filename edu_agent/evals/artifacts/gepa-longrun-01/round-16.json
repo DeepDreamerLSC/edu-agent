@@ -1,0 +1,79 @@
+{
+  "round": 16,
+  "parent_id": 1,
+  "variant_id": 3,
+  "parent_template": "别急，我们从头开始：你看到这道题，脑子里第一个冒出来的思路是什么？为什么先想到这一步？说说你的想法，我们再一起往下聊。",
+  "variant_template": "别急，我们从头来：这道题你第一眼看到时，脑子里先冒出的是什么？为什么先想到这一步？把你的思路说给我听听，我们再一起往下聊。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": false,
+  "parent_scores": {
+    "mean_score": 9.25,
+    "needs_review_rate": 0.5,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0625
+  },
+  "variant_scores": {
+    "mean_score": 9.125,
+    "needs_review_rate": 0.25,
+    "numerical_violation_rate": 0.0625,
+    "hard_failure_rate": 0.25
+  },
+  "accepted": false,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-别急，我们从头开始：你看到这道题，脑子里第一个冒出来的思路是什么？为什么先想到这一步？说说你的想法，我们再一起往下聊。",
+    "+别急，我们从头来：这道题你第一眼看到时，脑子里先冒出的是什么？为什么先想到这一步？把你的思路说给我听听，我们再一起往下聊。"
+  ],
+  "stats": {
+    "calls": 100,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 542769
+  },
+  "failures": [
+    {
+      "case_id": "small_lecturer_math_gold_candidates_triangle_area_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中未出现实质性的方法总结或掌握判断，小讲师仅以'学习证据还不够'为由中断，未复述学生已给出的公式或确认掌握状态。; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=6/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 小讲师:你刚才说两边同时减7，这一步是对的，但你有没有想过，为什么减7后等式两边还能保持相等？我们来想想，减7这个操作在等式里是怎么工作的？; grade_fit=0 — 学生回答圆面积计算时，小讲师突然引入'移项'、'等式两边同时减去7'、'x等于18'等与原题（圆面积）完全无关的方程概念，且原题无方程背景，严重超纲且逻辑混乱。; total=2/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_distance_speed_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_simple_probability_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'学习证据还不够'为由中断，未复述学生已掌握的正确推理（红球多则概率大），也未给出掌握判断。; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_equation_addition_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师连续两轮未等待学生回应即输出追问与终止声明: '你记得等式两边同时做相同操作会怎样吗？' 紧接着 '这一题的学习证据还不够,我们继续——你能说说目前想到的; summary_mastery=0 — 对话中无实质总结，小讲师仅以 '这一题的学习证据还不够' 结束，未复述学生已给出的正确步骤或方法，也未给出基于学生表现的掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_ratio_share_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中未出现实质性的方法总结或掌握判断，小讲师仅以'学习证据还不够'为由中断，未对学生已完成的'总份数=5'进行有效总结或确认掌握状态。; total=8/12"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_average",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:你正确地计算了三次测验的总分是264分...下一步只需将264除以3...注意：平均分不是最高分和最低分的平均值...但还需确认最终除法步骤。; summary_mastery=0 — 小讲师:你正确地计算了三次测验的总分是264分...这个关键区分你已经意识到，但还需确认最终除法步骤。; total=5/12"
+    }
+  ]
+}
