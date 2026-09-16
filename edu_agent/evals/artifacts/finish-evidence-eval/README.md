@@ -2,7 +2,7 @@
 
 **被测**:分支 `fix/finish-evidence` @ `a338477`(撤销摸底答对直接完成,完成判定改由会话内讲述证据支持);内核 = `KernelSubject(start→reply×N→finish)`;tutor = qwen3_vl_8b@8303(本地),judge = mlx_27b@8301(本地,六维单遍盲评)。
 
-**零远程硬保证**:跑批器(`scripts/finish_evidence_eval.py`)运行时从注册表剥离 deepseek provider 并摘除引用它的 fallback(configs/models.yaml 未动,manifest 申明);facts 审计 `providers_used=['mlx','vision']`、`fallback_to=无`——全部调用落在本地端点,零远程 API。
+**零远程硬保证**:跑批器(`edu_agent/evals/finish_evidence_eval.py`)运行时从注册表剥离 deepseek provider 并摘除引用它的 fallback(configs/models.yaml 未动,manifest 申明);facts 审计 `providers_used=['mlx','vision']`、`fallback_to=无`——全部调用落在本地端点,零远程 API。
 
 ## 验收矩阵(用户裁:缺一不可;每案 2 重复)
 
@@ -26,7 +26,7 @@
 
 ```bash
 ~/.local/bin/uv sync
-~/.local/bin/uv run python scripts/finish_evidence_eval.py \
+~/.local/bin/uv run python -m edu_agent.evals.finish_evidence_eval \
     --out edu_agent/evals/artifacts/finish-evidence-eval
 ```
 
@@ -37,3 +37,5 @@
 - `cases.jsonl` / `manifest.json` / `summary.md` / `judge-scores.json` / `remote-audit.json`——输入、身份、判定表、六维分、零远程审计;
 - `collect/cases-20260916T100003Z-3663/`——EvalRunner 原始结果(8 份 transcript + manifest);
 - `facts/model_calls-2026-09-16.jsonl`——26 次调用的 facts 台账(内容已脱敏)。
+
+> 位置勘误:跑批器首版落在 `scripts/`(结构路径通配,pr-gates 红),已迁 `edu_agent/evals/`(corpus_round 同款包内 CLI;代码逐字未变,仅导入面/REPO 定位随包位置调整)。manifest 的 git_sha `a338477` 为实际跑批 commit,其后迁移不影响运行语义。

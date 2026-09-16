@@ -13,7 +13,7 @@ tutor=qwen3_vl_8b@8303,judge=mlx_27b@8301。**零远程硬保证**:运行时从�
 provider 即非零退出。
 
 用法(在被测工作树里):
-    .venv/bin/python scripts/finish_evidence_eval.py --out <artifacts 目录>
+    .venv/bin/python -m edu_agent.evals.finish_evidence_eval --out <artifacts 目录>
 """
 
 from __future__ import annotations
@@ -23,11 +23,9 @@ import dataclasses
 import hashlib
 import json
 import subprocess
-import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO / "scripts"))
+REPO = Path(__file__).resolve().parents[2]
 
 from edu_agent.evals import EvalRunner, KernelSubject, RunnerConfig, load_results
 from edu_agent.evals.judge import judge_transcript
