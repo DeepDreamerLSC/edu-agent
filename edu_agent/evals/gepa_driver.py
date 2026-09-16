@@ -23,7 +23,7 @@ def main():
     # 加载 train cases (从 scenario 语料取,有 student_turns/steps)
     scenarios_path = Path("edu_agent/evals/datasets/small_lecturer_image_teaching_v1.json")
     scenarios = load_scenarios(scenarios_path)
-    train_cases = to_cases(scenarios)[:20]  # 取前 20 案
+    train_cases = to_cases(scenarios)[:20]  # v1 只有 8 个 scenario,[:20] 实际取全量 8 案
     
     # 初始 elicit 模板
     initial_template = "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。"

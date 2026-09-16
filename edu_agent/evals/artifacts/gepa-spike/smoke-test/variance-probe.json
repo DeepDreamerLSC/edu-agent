@@ -1,0 +1,21 @@
+{
+  "description": "五问⑤ 重评方差探针(judge-only,4 案 × 2 runs,不重跑 tutor)",
+  "date": "2026-09-16",
+  "calls": 8,
+  "batch_seed": 42,
+  "batch_size": 4,
+  "template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "scores_run1": [12, 8, 8, 12],
+  "scores_run2": [12, 8, 8, 12],
+  "per_case": [
+    {"case_id": "image_v1_fraction_formula_06", "run1": 12, "run2": 12, "diff": 0},
+    {"case_id": "image_v1_text_position_05", "run1": 8, "run2": 8, "diff": 0},
+    {"case_id": "image_v1_percentage_multi_part_23", "run1": 8, "run2": 8, "diff": 0},
+    {"case_id": "image_v1_fraction_formula_09", "run1": 12, "run2": 12, "diff": 0}
+  ],
+  "mean_run1": 10.0,
+  "mean_run2": 10.0,
+  "mean_diff": 0.0,
+  "judge_variance": "zero (temperature=0, judge deterministic)",
+  "batch_variance_observed": "2.0 (11.0 vs 9.0 on same template, different batch, from smoke R1 no-op)"
+}

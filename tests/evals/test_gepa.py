@@ -1,6 +1,6 @@
 """#256 GEPA spike 单元测试:6 组件逐一验证,零 API。"""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from edu_agent.evals import (
     Budget,
@@ -9,6 +9,7 @@ from edu_agent.evals import (
     Population,
     ScoreVector,
     edit_template,
+    evaluate_batch,
     sample_batch,
 )
 
@@ -188,3 +189,129 @@ def test_budget_exhausted():
     
     budget.add(60)  # total 110 > 100
     assert budget.exhausted()
+
+
+# === 契约:turns ↔ messages 形状 ===
+
+def test_evaluate_batch_passes_messages_shape():
+    """契约测试(#296 bug 防御):evaluate_batch 传给 judge_transcript 的 messages
+    必须是 OpenAI chat 格式([{role, content}]),不是 raw turns。
+    
+    历史 bug:直接传 transcript['turns']({student, tutor, state})→ judge 见空 transcript → 全零分。
+    修复:使用 corpus_round.transcript_messages() 转换。此测试锁死不再发生。
+    """
+    gateway = MagicMock()
+    subject_mock = MagicMock()
+    subject_mock.run_case.return_value = {
+        "turns": [
+            {"student": "", "tutor": "你好同学", "state": "first_question_ready", "elapsed_ms": 0},
+            {"student": "答案是 42", "tutor": "很好!", "state": "ready_to_confirm", "elapsed_ms": 100},
+        ],
+        "summary": "学生掌握了加法。",
+        "session_id": "test",
+    }
+    
+    cases = [{"id": "c1", "question": {"text": "1+1=?"}, "grade": "三年级", "reference_answer": "2"}]
+    
+    captured = {}
+    
+    def fake_judge(gw, judge_case, role="judge_independent"):
+        captured["messages"] = judge_case["messages"]
+        captured["question"] = judge_case["question"]
+        return {"total": 10, "verdict": "pass", "math_integrity": 2}
+    
+    with patch("edu_agent.evals.gepa.ElicitSubject", return_value=subject_mock), \
+         patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge):
+        evaluate_batch(cases, "template", gateway)
+    
+    # messages 必须是 list[dict],每个 dict 有 role+content
+    msgs = captured["messages"]
+    assert isinstance(msgs, list)
+    assert len(msgs) >= 2  # at least tutor turn + summary
+    for msg in msgs:
+        assert "role" in msg and "content" in msg, f"messages 项缺 role/content: {msg}"
+        assert msg["role"] in ("user", "assistant"), f"非法 role: {msg['role']}"
+    # question 必须是字符串(从 dict 提取了 text),不是 dict
+    assert isinstance(captured["question"], str), f"question 必须是 str,实际: {type(captured['question'])}"
+
+
+# === 契约:硬失败 + 编辑器反馈(外审 P1,2026-09-16)===
+
+def test_hard_failure_cannot_become_best():
+    """契约测试:硬失败候选(answer_leaked/verdict=fail)不能成为最优。
+    
+    场景:12 分 + 泄答案 vs 11 分合格 → 合格者胜。
+    外审确定性探针坐实,本测试锁死不再发生。
+    """
+    pop = Population()
+    # 候选 A:12 分但 100% 硬失败(全泄答案)
+    a = Candidate(template="A", candidate_id=0)
+    pop.candidates.append(a)
+    # 候选 B:11 分但 0% 硬失败(全合格)
+    b = Candidate(template="B", candidate_id=1)
+    pop.candidates.append(b)
+    
+    scores = {
+        0: ScoreVector(mean_score=12.0, needs_review_rate=0.0,
+                       numerical_violation_rate=0.0, hard_failure_rate=1.0),
+        1: ScoreVector(mean_score=11.0, needs_review_rate=0.0,
+                       numerical_violation_rate=0.0, hard_failure_rate=0.0),
+    }
+    
+    best = pop.select_parent(scores)
+    assert best.template == "B", "硬失败候选 A(12 分 + 泄答案)不可胜过合格候选 B(11 分)"
+
+
+def test_hard_failure_dominates_block():
+    """契约测试:硬失败率更高的候选不能 dominates 更干净的候选。"""
+    dirty = ScoreVector(mean_score=12.0, needs_review_rate=0.0,
+                        numerical_violation_rate=0.0, hard_failure_rate=0.5)
+    clean = ScoreVector(mean_score=11.0, needs_review_rate=0.0,
+                        numerical_violation_rate=0.0, hard_failure_rate=0.0)
+    # dirty 分数高但硬失败多 → 不能 dominates clean(hard_failure_rate 维度更差)
+    assert not dirty.dominates(clean)
+    # 同分场景:clean dominates dirty(硬失败率维度严格更好,其他维度不劣)
+    dirty_same = ScoreVector(mean_score=11.0, needs_review_rate=0.0,
+                             numerical_violation_rate=0.0, hard_failure_rate=0.5)
+    assert clean.dominates(dirty_same)
+
+
+def test_evaluate_batch_collects_low_score_evidence():
+    """契约测试:低分 case(total<10 或维度 0 分)的维度名+证据原句进 failures 列表。
+    
+    外审坐实:原 failures 只收 GatewayError,反思编辑器永远看到「无失败案例」。
+    本测试锁死低分反馈进入 failures,kind='judge_low_score'。
+    """
+    gateway = MagicMock()
+    subject_mock = MagicMock()
+    subject_mock.run_case.return_value = {
+        "turns": [{"student": "", "tutor": "好", "state": "x", "elapsed_ms": 0}],
+        "summary": "",
+        "session_id": "t",
+    }
+    cases = [{"id": "c_low", "question": "1+1?", "grade": "三年级", "reference_answer": "2"}]
+    
+    def fake_judge(gw, judge_case, role="judge_independent"):
+        return {
+            "total": 4,  # < 10 → 低分
+            "verdict": "fail",
+            "math_integrity": 2,
+            "answer_leaked": False,
+            "scores": {"first_question": 0, "socratic_followup": 2, "grade_fit": 2,
+                       "pacing": 0, "summary_mastery": 0, "termination": 0},
+            "evidence": {"first_question": "未切题讲解", "pacing": "无推进", "summary_mastery": "无总结", "termination": "无终止"},
+        }
+    
+    with patch("edu_agent.evals.gepa.ElicitSubject", return_value=subject_mock), \
+         patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge):
+        sv, failures, _stats = evaluate_batch(cases, "t", gateway)
+    
+    # ScoreVector 含 hard_failure_rate(verdict=fail)
+    assert sv.hard_failure_rate == 1.0
+    # failures 列表含 judge_low_score 项
+    low_score_frames = [f for f in failures if f["kind"] == "judge_low_score"]
+    assert low_score_frames, f"failures 未收低分反馈: {failures}"
+    # 证据包含维度名
+    detail = low_score_frames[0]["detail"]
+    assert any(dim in detail for dim in ("first_question", "pacing", "summary_mastery", "termination")), \
+        f"detail 未含维度名: {detail}"
