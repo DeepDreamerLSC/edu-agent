@@ -671,6 +671,7 @@ def test_write_checkpoint_and_restore_semantics(tmp_path):
     b = Candidate(template="模板B:从头讲讲你的思路,先说第一步")
     state.scores[state.population.add(a)] = ScoreVector(8.0, 0.2, 0.1, 0.0)
     state.scores[state.population.add(b)] = ScoreVector(9.0, 0.1, 0.1, 0.0)
+    state.support_hint = "拆小:你先看这一步里最小的一个数,能先算出什么?"
     state.bind(1624)
     state.budget.add(300)
     state.budget.rounds = 2
@@ -682,12 +683,13 @@ def test_write_checkpoint_and_restore_semantics(tmp_path):
     assert saved["budget"]["calls"] == 300 and saved["budget"]["rounds"] == 2
     assert saved["best"]["template"].startswith("模板B")  # select_parent 选最高分
     assert saved["best"]["scores"]["mean_score"] == 9.0
+    assert saved["best"]["support_hint"].startswith("拆小")
     assert saved["last_failures"][0]["case_id"] == "x"
 
 
 def test_gepa_loop_resume_skips_initial_evaluation(tmp_path):
     """resume=True 且 checkpoint 在:初始评估不再跑(省预算),代次从 next_round 起。"""
-    from edu_agent.evals import GepaConfig
+    from edu_agent.evals import DEFAULT_SUPPORT_HINT, GepaConfig
     from edu_agent.evals import gepa_loop
 
     checkpoint = {
@@ -717,6 +719,7 @@ def test_gepa_loop_resume_skips_initial_evaluation(tmp_path):
     saved = json.loads((tmp_path / "checkpoint.json").read_text(encoding="utf-8"))
     assert saved["budget"]["calls"] == 106  # 100(恢复)+ 1(编辑器)+ 5(变体批)
     assert saved["next_round"] == 6
+    assert saved["best"]["support_hint"] == DEFAULT_SUPPORT_HINT  # 双旋钮对完整落盘/带回
 
 
 def test_evaluate_batch_counts_calls_from_facts(tmp_path):

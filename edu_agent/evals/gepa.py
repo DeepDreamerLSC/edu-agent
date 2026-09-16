@@ -492,6 +492,7 @@ def _write_checkpoint(output_dir: Path, state: "LoopState",
         "next_round": next_round,
         "budget": budget.summary(),
         "best": {"candidate_id": best.candidate_id, "template": best.template,
+                 "support_hint": state.support_hint,
                  "scores": scores[best.candidate_id].__dict__},
         "last_failures": (last_failures or [])[:5],
     }
@@ -540,6 +541,8 @@ def _restore_or_seed(
         restored_id = population.add(restored)
         scores[restored_id] = ScoreVector(**saved["best"]["scores"])
         budget.calls = saved["budget"]["calls"]
+        if saved.get("support_hint"):
+            state.support_hint = saved["support_hint"]
         budget.rounds = saved["budget"]["rounds"]
         print(f"[resume] 从 checkpoint 恢复:round={saved['next_round']}, "
               f"budget={budget.calls}/{budget.max_calls}, "
