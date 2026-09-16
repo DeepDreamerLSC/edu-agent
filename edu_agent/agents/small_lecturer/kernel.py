@@ -351,8 +351,9 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     step = _next_step(session)
     session.guard_events.append({"branch": "reveal", "hint_level": session.hint_level})
     if step is None:
-        # 不变量:终答文本只出现在 bottom-out(此处)/ finish / ready_to_confirm 三条
-        # 路径(锁在 tests/teaching/test_kernel_invariants.py);阶梯揭示只给步骤不给终答。
+        # 不变量(VERDICT#6 更新):终答文本只出现在 bottom-out(此处)/ finish 两条
+        # 路径(锁在 tests/teaching/test_kernel_invariants.py);阶梯揭示只给步骤不给终答;
+        # 确认/赞许轮转述式确认、不引述终答值(ready_to_confirm 不再入允许池)。
         answer = str(session.question.get("answer") or "").strip()
         if not answer and session.steps:
             answer = str(session.steps[-1].get("value") or "").strip()
@@ -454,7 +455,7 @@ def _guard_check(ctx: "_GuardContext", text: str, session: "LearnerSession | Non
         student_evidence=list(ctx.student_evidence),
     )
     # 单一判据(仅模型回合):允许集口径见 `_drift_sources`;无会话时不判(fail-open)
-    allowed, answer_pool = (_drift_sources(session, ctx.student_message, ready_to_confirm)
+    allowed, answer_pool = (_drift_sources(session, ctx.student_message)
                             if session is not None else (set(), set()))
     extracted = _reply_numbers(text)
     violations = extracted - allowed

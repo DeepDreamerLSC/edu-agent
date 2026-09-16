@@ -139,6 +139,9 @@ def test_finish_completes_instead_of_needs_review_after_stated_answer():
     gateway = FakeGateway([
         CHICKEN_OPEN,
         CHICKEN_CONFIRM,
+        # VERDICT#6:CHICKEN_CONFIRM 引述终答(5/3)被拦 → 重生成为转述式确认
+        {"reply": "你算得完全对!验算和结论都齐了,这方法真棒!最后请你自己完整说一遍结论。",
+         "ready_to_confirm": True, "cited_numbers": [26]},
         {"summary": "你假设全是鸡,算出脚数差,再把兔子换出来——讲得很清楚。"},
     ])
     turn = start(dict(CHICKEN_QUESTION_EVAL), {"grade": "六年级"}, gateway=gateway)

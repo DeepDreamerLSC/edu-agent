@@ -4,7 +4,7 @@
 ②数字守卫抽取制(c1 合法三例不卡 / 幻觉数字卡 / 对话态说终答卡);
 ③guard_events 落盘(模型路径 {自报集,抽取集,来源标签} + 确定性 {branch,hint_level});
 (首问可见文本恒为固定模板,本文件的首问句只为对齐统一 open 的假上游序列);
-④终答披露只走 bottom-out / finish / ready_to_confirm 三路径。
+④终答披露只走 bottom-out / finish 两路径(确认轮转述式,VERDICT#6)。
 """
 
 from __future__ import annotations
@@ -142,8 +142,9 @@ def test_student_number_in_reply_is_legal_not_stuck():
     assert _drift_event(turn)["violation_sources"] == []
 
 
-def test_final_answer_in_confirm_state_is_legal_not_stuck():
-    # 合法例3:ready_to_confirm 态说终答(3/5 ∈ 终答池并入允许集)
+def test_final_answer_in_confirm_state_is_intercepted_not_stuck():
+    # 合法例3(VERDICT#6 翻转):ready_to_confirm 态引述终答(3/5)→ 拦截重生成
+    # (确认轮转述式确认);重生成为普通推进轮 → 不置卡点。
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "对,就是 3 只鸡和 5 只兔。", "ready_to_confirm": True,
@@ -153,7 +154,9 @@ def test_final_answer_in_confirm_state_is_legal_not_stuck():
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "答案是 3 和 5 吗?", gateway=gateway)
     assert turn.session.stuck is not True
-    assert _drift_event(turn)["violation_sources"] == []
+    assert turn.text == "你再想想。"  # 引述版被重生成为干净轮
+    assert _drift_event(turn)["violation_sources"] == [
+        {"number": 3.0, "source": "answer"}, {"number": 5.0, "source": "answer"}]
 
 
 def test_hallucinated_number_is_intercepted_but_not_stuck():
