@@ -366,6 +366,9 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     # (#198 独立审查实测:生产揭示轮 9/14 双句号,学生可见面)。
     return f"{lead}:{step_text.rstrip('。.')}。你接着算下一步。"
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
+# finish() 证据不足·correct 档(2026-09-16 用户裁,撤销摸底答对直接完成):答对过
+# 但尚未自己讲出思路 → 专项引导复讲文案(不写「今天没完整展开」——学生可能还想继续)。
+FINISH_EVIDENCE_TEXT = "这道题之前已经答对了,我们还需要听你把关键思路讲清楚。"
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
 SAFE_FALLBACK_TEXT = "先回到当前小问,你能说出题目明确给出的一个条件吗?"
@@ -845,7 +848,8 @@ def reply(session: LearnerSession, student_message: str, *,
         {"role": "user", "content": _user_prompt(_masked_question(session.question), {
             "学生": session.learner, "对话记录": session.history,
             "学生本轮回答": student_message,
-            "输出提醒": "若学生本轮已给出正确最终答案(或明确表示理解并完成检验),"
+            "输出提醒": "若学生自己的表达已把关键步骤、依据和结论讲清楚"
+                        "(足以让听者理解这道题怎么做;你讲过而他只附和的不算),"
                         "ready_to_confirm 置 true;否则 false。"}
             | ({"弧线步": arc_hint} if arc_hint else {}))},
     ]
@@ -914,41 +918,52 @@ def reply(session: LearnerSession, student_message: str, *,
 
 
 def _structured_summary(session: LearnerSession) -> str:
-    """确定性模板(人批②,00 §8.4 R6):①重述学生做到的事(引原话)②关键思路(题面+学生正确回答)③固定收尾。
+    """确定性模板(2026-09-16 用户裁:只总结学生实际表达;撤销「每一步都是你自己的
+    思路」「这道题你已经完整讲清楚」两个无条件断言——本模板仅在 ready_to_confirm
+    (= 讲述证据已按教学定义判定)且 correct 且无卡点时触达,模板内容以引学生原话为主)。
 
     纯文本短句(过语气/格式护栏);引用来自会话历史的学生原话与题面,不从模型生成。
     """
     user_turns = [m["content"] for m in session.history if m["role"] == "user"]
     first = user_turns[0] if user_turns else "你从题目本身开始"
-    last = user_turns[-1] if user_turns else "给出了你的结论"
+    last = user_turns[-1] if user_turns else "说出了你的结论"
     question = str(session.question.get("text") or "")
     return (
-        f"这一题(「{question}」)是你自己讲下来的:从「{first}」开始,一步步说到「{last}」,"
-        f"每一步都是你自己的思路,结论和题目的要求也对上了。"
-        f"这道题你已经完整讲清楚了,可以再做一道,或者今天先到这里。"
+        f"这一题(「{question}」)你自己讲了做法:从「{first}」开始,说到「{last}」,"
+        f"关键步骤和结论都在你自己的话里,和题目的要求也对上了。"
+        f"可以再做一道,或者今天先到这里。"
     )
 
 
 def finish(session: LearnerSession, *, gateway: Gateway | None = None) -> Summary:
     """学习总结(03 §4 ReadyToConfirm → Completed,summary 不可变;证据不足 needs_review)。
 
-    R6 结构化通路(人批②):learner.answer_status == "correct" 且会话无卡点标记
-    → 掌握已由数据侧证实,直接走确定性模板 completed(零模型调用);
-    条件不满足的会话零经过此分支。"""
+    完成判定改由会话内讲述证据支持(用户裁 2026-09-16,撤销 R6「摸底答对+不卡
+    → 直接 completed」旧规则):finish **先查 `ready_to_confirm`**,未达 → 既有
+    needs_review 路径(answer_status=correct 不再绕过);已达 → 按原条件(correct
+    且无卡点 → 零调用模板;否则模型总结,零调用路径保留)。教学定义(判卷口径,
+    用户裁逐字):学生自己的表达已包含关键步骤、关键依据和结论,足以让听者理解
+    这道题怎么做;没有尚未解决的关键错误或遗漏。教师说过、学生只答「对」「懂了」
+    不算学生自己讲出。"""
     if session.finished:
         if session.state == "completed" and session.summary is not None:
             return session.summary  # completed 终态:finish 幂等返回同一 Summary
         raise TerminalStateError(f"会话已终态({session.state})")
+    if session.state != "ready_to_confirm":
+        # 证据不足(00 §5.1):不调模型、不写 summary,确定性引导文案。
+        # correct 档专项文案:答对过但还没自己讲出思路(不写「今天没完整展开」
+        # ——学生可能还想继续);其余档沿 NEEDS_REVIEW_TEXT。
+        text = (FINISH_EVIDENCE_TEXT
+                if session.learner.get("answer_status") == "correct" else NEEDS_REVIEW_TEXT)
+        return Summary(text=text, status="needs_review",
+                       session_version=session.session_version)
     if session.learner.get("answer_status") == "correct" and not session.stuck:
+        # 零调用通路保留(原条件 + 已达确认态):完成由学生自己的讲述证据证实
         summary = Summary(text=_structured_summary(session), status="completed",
                           session_version=session.session_version)
         session.state = "completed"
         session.summary = summary
         return summary
-    if session.state != "ready_to_confirm":
-        # 证据不足(00 §5.1):不调模型、不写 summary,确定性引导文案
-        return Summary(text=NEEDS_REVIEW_TEXT, status="needs_review",
-                       session_version=session.session_version)
     gateway = gateway or default_gateway()
     output = json.loads(_invoke(
         gateway, "tutor",
