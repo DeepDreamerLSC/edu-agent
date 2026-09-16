@@ -22,6 +22,7 @@ from .judge import (
     user_prompt,
     verdict_from_scores,
 )
+from .gate_slice import gate_from_runs, load_runnable_cases, run_candidate_slice
 from .gepa import (
     DEFAULT_SUPPORT_HINT,
     KNOB_SEAMS,
@@ -115,6 +116,9 @@ __all__ = [
     "edit_template",
     "edit_support_hint",
     "edit_template_nr",
+    "gate_from_runs",
+    "load_runnable_cases",
+    "run_candidate_slice",
     "evaluate_batch",
     "evaluate_batch_paired",
     "facts_calibers",
