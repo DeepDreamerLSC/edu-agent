@@ -16,7 +16,7 @@ Phase B **绝不接受**教师 0|1|2 分数与机器 baseline 做数值比较（
 
 只接受三类输入：
 
-- **candidate 机器结果**：`rescore_judge.py` 判卷产出的字段。字段名映射（切片行标签 `criterion` ≠ judge 产出字段）：`mi`→`math_integrity`、`sm`/`sm_ge`→`student_mastery`、`leak`→`answer_leaked`；`mi` 覆盖数学真实性与慈善转述（C11）两个家族的机器读数。
+- **candidate 机器结果**：`rescore_judge.py` 判卷产出的字段。字段名映射（切片行标签 `criterion` ≠ judge 产出字段，且注意路径层级）：`mi`→**顶层** `math_integrity`、`sm`/`sm_ge`→**`scores.summary_mastery`**（六维在 `scores` 子对象下）、`leak`→**顶层** `answer_leaked`。`mi` 覆盖数学真实性与慈善转述（C11）两个家族的机器读数。
 - **frozen machine baseline**：`slice-baseline.jsonl` 9551d149 纪元双跑读数
 - **machine expectation**：`slice-baseline.jsonl` 的 `expected` 字段（按 `case_id` + `criterion` 行对齐；勘误：原稿误写「`slice-cases.jsonl` 的 `expectation` 字段」——该文件顶层键为 `id` / `question` / `grade` / `reference_answer` / `messages`，无此字段）
 
@@ -45,10 +45,12 @@ if baseline.score == expectation.score:
 if baseline.score != expectation.score:
     for run in [run_1, run_2]:
         delta = candidate.score[run] - baseline.score[run]
-        # 仅记录 delta，供 Lane H 参考；不产生 worse 判定
+        # 仅记录 delta，供 Lane H 参考
+    regression = "none"                 # 本 lane 不作退化判定（改善/退化由 Lane H 定性）
+    gate_result = "pass" | "review"     # delta ≤ −2 时置 review（见兜底）
 ```
 
-**兜底（防假绿）**：已知限位只有 2 行（C40/C11），Lane M 永不 fail。若 candidate 机器分较 baseline 下降 ≥2 档（delta ≤ −2，如 2→0），方向既可解释为「改善（识别盲区）」也可解释为「判据崩盘」——此时**门报告标红**，要求 Lane H 给出明确的 same/better 理由（引 transcript 证据），否则视为待复核、不得放行。
+**兜底（防假绿）**：已知限位只有 2 行（C40/C11），Lane M 永不 fail。若 candidate 机器分较 baseline 下降 ≥2 档（delta ≤ −2，如 2→0），方向既可解释为「改善（识别盲区）」也可解释为「判据崩盘」——此时**门报告标记「待复核」**（不是机械红、不进「机械红→门红」路径，而是强制进 Lane H），要求 Lane H 给出明确的 same/better 理由（引 transcript 证据），否则视为待复核、不得放行。
 
 ### 两跑不一致
 
@@ -68,7 +70,7 @@ final_score = min(run_1.score, run_2.score)
 
 教师**盲式**读 baseline 与 candidate 两个 transcript（A/B 随机标号，教师不知哪个是候选），对每个家族给出 **pairwise 定性**：
 
-> **candidate transcript 取哪一跑**：candidate 在 Lane M 有两跑（run_1/run_2）。Lane H 判读的 candidate transcript 取**两跑中机器分较低（更保守）的一跑**；两跑机器分相同时取 run_1。baseline transcript = `slice-cases.jsonl` 里对应该 case 的冻结 transcript。
+> **candidate transcript 取哪一跑**：candidate 在 Lane M 有两跑（run_1/run_2）。Lane H 判读的 candidate transcript 取**两跑中机器分较低（更保守）的一跑**，机器分以**该案 baseline 行 `criterion` 对应字段**为准（一 case 有两跑 × 多家族分，须先锁定 `criterion` 字段再比较）；两跑机器分相同时取 run_1。baseline transcript = `slice-cases.jsonl` 里对应该 case 的冻结 transcript。
 
 ```
 candidate worse / same / better
@@ -95,11 +97,18 @@ same → candidate same
 family green  ⇔  Lane M regression == "none"
                AND
                Lane H pairwise != "candidate worse"
+               AND
+               已知限位 delta ≤ −2 的「待复核」已由 Lane H 明确 same/better 解除
 ```
 
 三个家族（数学真实性 / 归因 / 慈善转述）都 green → ⑦门 green。
 
 任一家族 Lane M worse（健康位）或 Lane H candidate worse（教师轴）→ 该 candidate 出局或回炉，结果留档。
+
+**gate_result 三态**：
+- `pass` = 三家族全 green；
+- `fail` = 任一家族 Lane M worse（健康位）或 Lane H candidate worse；
+- `review`（待复核）= 已知限位 delta ≤ −2 且 Lane H 尚未给出明确 same/better 理由（暂不放行）。
 
 ---
 
