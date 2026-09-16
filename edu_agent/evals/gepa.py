@@ -451,6 +451,7 @@ class GepaConfig:
     max_calls: int = 2000
     judge_role: str = "judge"
     two_knobs: bool = False  # True = elicit+support 双旋钮(#304 头部可达族,选项 A)
+    editor_focus: str = "mean"  # "nr" = needs_review 靶向编辑(收敛#2 选项①)
 
 
 @dataclass
@@ -586,11 +587,13 @@ def gepa_loop(
         
         # 编辑模板:传入上一轮的失败(首轮传 initial 的,后续传上一变体的)
         # 修 P2-1:原始终传 initial_failures,编辑器看不到变体自身的失败模式
+        editor = edit_template_nr if config.editor_focus == "nr" else edit_template
         if config.two_knobs:
             variant_template, state.support_hint = edit_two_knobs(
-                parent.template, state.support_hint, round_idx, last_failures, gateway)
+                parent.template, state.support_hint, round_idx, last_failures, gateway,
+                editor=editor)
         else:
-            variant_template = edit_template(parent.template, last_failures, gateway)
+            variant_template = editor(parent.template, last_failures, gateway)
         budget.add(1)
         
         # No-op 检查:编辑器返回与父代逐字相同 → 跳过评估,省预算
@@ -896,6 +899,40 @@ _SUPPORT_EDITOR_PROMPT = """你是一个提示词编辑器。当前「卡壳支�
 - 不要围栏、不要解释,只输出改进后的模板文本。"""
 
 
+_NR_EDITOR_PROMPT = """你是一个提示词编辑器。当前复讲引导模板:
+---
+{current}
+---
+以下案例被评审判为 review(学习证据不足,无法确认掌握):
+{failure_summary}
+
+任务:调整模板措辞,让学生复讲时更容易给出**可判定的回答**——明确请他说出
+具体步骤、算式或结论(而不是"说说想法"这类开放邀请),使评审能据以判定。
+约束:
+- 长度 30-100 字(中文);
+- 必须包含「思路」「第一步」或「算式/步骤」等价引导词;
+- 不要围栏、不要解释,只输出改进后的模板文本。"""
+
+
+def edit_template_nr(current: str, failure_frames: list[dict], gateway: Gateway) -> str:
+    """needs_review 靶向编辑(收敛#2 选项①准备件):与 edit_template 同 lint 同角色,
+    唯一差异是指令瞄准 nr 维——让复讲引导产出可判定证据,而非更讨喜的开放邀请。"""
+    failure_summary = "\n".join(
+        f"- {f['case_id']}: {f['kind']} — {f['detail'][:100]}"
+        for f in failure_frames[:5]
+    ) if failure_frames else "(无失败案例)"
+    prompt = _NR_EDITOR_PROMPT.format(current=current, failure_summary=failure_summary)
+    try:
+        response = gateway.invoke(ModelRequest(
+            role="judge_independent", messages=[{"role": "user", "content": prompt}],
+            max_tokens=200, temperature=0.3))
+        variant = response.text.strip().strip("`").strip()
+    except GatewayError:
+        return current
+    linted = _lint_common(variant, current, 30, 100, ("思路", "第一步", "算式", "步骤"))
+    return variant if linted is not None else current
+
+
 def _lint_common(variant: str, current: str, floor: int, cap: int,
                  keywords: tuple[str, ...]) -> str | None:
     """共享 lint:长度窗、关键词、非退化;不合规返回 None(调用方保留父代)。"""
@@ -909,14 +946,18 @@ def _lint_common(variant: str, current: str, floor: int, cap: int,
 def edit_two_knobs(
     elicit: str, support: str, round_idx: int,
     failure_frames: list[dict], gateway: Gateway,
+    editor=None,
 ) -> tuple[str, str]:
     """双旋钮编辑(#256 阶段 2 选项 A 搜索空间):偶代编辑 elicit、奇代编辑 support。
 
     单次 gateway 调用(编辑器预算 1 call/代不变);被编辑旋钮拿失败帧反馈,
     另一旋钮原样保留。lint 失败保留父代(与 edit_template 同纪律)。
+    editor=None 时晚绑定 edit_template(保持可 patch,def 时绑定会打穿既有测试)。
     """
+    if editor is None:
+        editor = edit_template
     if round_idx % 2 == 0:
-        variant = edit_template(elicit, failure_frames, gateway)
+        variant = editor(elicit, failure_frames, gateway)
         return variant, support
     failure_summary = "\n".join(
         f"- {f['case_id']}: {f['kind']} — {f['detail'][:100]}"
