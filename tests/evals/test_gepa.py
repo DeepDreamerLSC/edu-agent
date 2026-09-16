@@ -745,3 +745,44 @@ def test_evaluate_batch_counts_calls_from_facts(tmp_path):
         _, _, stats = evaluate_batch([{"id": "c1", "question": "q", "student_turns": ["a"]}],
                                      "模板", gateway)
         assert stats["calls"] == 3  # tutor 1 + judge 2 的 facts 差值,不是估算的 2
+
+
+# === 8. 双旋钮搜索空间(#256 阶段 2 选项 A,#304 头部可达族) ===
+
+
+def test_elicit_subject_support_hint_roundtrip():
+    """ElicitSubject 带 support_hint 时 monkeypatch 两个 seam,用完恢复。"""
+    from edu_agent.evals import DEFAULT_SUPPORT_HINT
+
+    subject = ElicitSubject("说说思路和第一步", MagicMock(), support_hint="拆小:你先看哪个数?")
+    assert subject.variants["_SUPPORT_HINT"] == "拆小:你先看哪个数?"
+    # 未提供 support 变体时 seam 集只有 elicit(向后兼容)
+    plain = ElicitSubject("模板", MagicMock())
+    assert set(plain.variants) == {"_ELICIT_TEMPLATE"}
+    assert DEFAULT_SUPPORT_HINT  # kernel 默认兜底文本非空(导入期常量)
+
+
+def test_edit_two_knobs_parity_routing():
+    """偶代编辑 elicit(support 原样返回)、奇代编辑 support(elicit 原样)。"""
+    from edu_agent.evals import edit_two_knobs
+
+    with patch("edu_agent.evals.gepa.edit_template", return_value="新的elicit") as m:
+        elicit, support = edit_two_knobs("旧elicit", "旧support", 0, [], MagicMock())
+        assert elicit == "新的elicit" and support == "旧support"
+        m.assert_called_once()
+    gateway = MagicMock()
+    gateway.invoke.return_value.text = "拆小:先不想整道题,只看这一步里最小的那个数,你觉得能先算出什么?"
+    elicit, support = edit_two_knobs("旧elicit", "旧support", 1, [], gateway)
+    assert elicit == "旧elicit"
+    assert support == "拆小:先不想整道题,只看这一步里最小的那个数,你觉得能先算出什么?"
+
+
+def test_edit_two_knobs_lint_guards():
+    """support 变体 lint:太短/无问号/与父代相同 → 保留父代(零退化)。"""
+    from edu_agent.evals import edit_two_knobs
+
+    for bad in ("太短", "这不是问句", "旧support"):
+        gateway = MagicMock()
+        gateway.invoke.return_value.text = bad
+        elicit, support = edit_two_knobs("旧elicit", "旧support", 1, [], gateway)
+        assert (elicit, support) == ("旧elicit", "旧support"), bad

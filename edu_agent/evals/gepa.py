@@ -26,34 +26,53 @@ from .kernel_subject import KernelSubject
 from .runner import EnvironmentFailure
 
 
-# === 1. Prompt seam:elicit 模板变体注入 ===
+# === 1. Prompt seam:旋钮变体注入 ===
+
+# 搜索空间(#304 频次分析头部可达旋钮):elicit 复讲 + support 拆小问句。
+# support 是 v2 训练池上唯一有数据面触发信号的旋钮(1/8 案 stuck 信号);
+# reveal 依赖阶梯消耗状态、answer_collect 双前提缺失,不进此版搜索空间。
+KNOB_SEAMS = ("_ELICIT_TEMPLATE", "_SUPPORT_HINT")
+
+# kernel 默认 support 拆小问句(#198 确定性文本)——变体经 edit_two_knobs 生成
+DEFAULT_SUPPORT_HINT = (
+    "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。"
+)
+
+
 
 class ElicitSubject:
-    """KernelSubject 包装:run_case 注入 elicit 模板变体(monkeypatch,用完即恢复)。
-    
+    """KernelSubject 包装:run_case 注入旋钮变体(monkeypatch,用完即恢复)。
+
     纪律:不动 kernel.py 常量;monkeypatch 是 spike 最小缝合面,生产化须外置。
+    variants 键 = kernel 常量名(KNOB_SEAMS 子集);未提供变体的旋钮用 kernel 原值。
     """
-    
-    def __init__(self, template: str, gateway: Gateway) -> None:
+
+    def __init__(self, template: str, gateway: Gateway,
+                 support_hint: str | None = None) -> None:
         self.template = template
         self.gateway = gateway
+        self.variants: dict[str, str] = {"_ELICIT_TEMPLATE": template}
+        if support_hint is not None:
+            self.variants["_SUPPORT_HINT"] = support_hint
         self._kernel_subject = KernelSubject(gateway)
-    
+
     @property
     def name(self) -> str:
         return f"elicit-{hash(self.template) % 10000:04d}"
-    
+
     def get_active_template(self) -> str:
         """获取当前激活的 elicit 模板(测试用,验证 monkeypatch 生效)。"""
         return kernel._ELICIT_TEMPLATE
-    
+
     def run_case(self, case: dict) -> dict:
-        original = kernel._ELICIT_TEMPLATE
+        saved = {name: getattr(kernel, name) for name in self.variants}
         try:
-            kernel._ELICIT_TEMPLATE = self.template
+            for name, value in self.variants.items():
+                setattr(kernel, name, value)
             return self._kernel_subject.run_case(case)
         finally:
-            kernel._ELICIT_TEMPLATE = original
+            for name, value in saved.items():
+                setattr(kernel, name, value)
 
 
 # === 2. Mini-batch 采样 ===
@@ -148,6 +167,7 @@ def evaluate_batch(
     template: str,
     gateway: Gateway,
     judge_role: str = "judge",
+    support_hint: str | None = None,
 ) -> tuple[ScoreVector, list[dict], dict]:
     """跑批 + 判卷一步到位(calls = facts 实测,长跑口径:估算低估 ~3x 会超预算)。
 
@@ -157,7 +177,7 @@ def evaluate_batch(
     started = time.monotonic()
     facts_dir = gateway.writer.root
     facts_before = _count_facts_lines(facts_dir)
-    subject = ElicitSubject(template, gateway)
+    subject = ElicitSubject(template, gateway, support_hint=support_hint)
     
     transcripts = []
     failures = []
@@ -421,11 +441,12 @@ class Population:
 
 @dataclass(frozen=True)
 class GepaConfig:
-    """GEPA 循环配置:轮数 / 批次大小 / 预算上限。"""
+    """GEPA 循环配置:轮数 / 批次大小 / 预算上限 / 搜索空间旋钮族。"""
     rounds: int = 6
     batch_size: int = 16
     max_calls: int = 2000
     judge_role: str = "judge"
+    two_knobs: bool = False  # True = elicit+support 双旋钮(#304 头部可达族,选项 A)
 
 
 @dataclass
@@ -479,6 +500,7 @@ class LoopState:
 
     train_cases: list = field(default_factory=list)
     initial_template: str = ""
+    support_hint: str = DEFAULT_SUPPORT_HINT
     population: Population = field(default_factory=Population)
     scores: dict = field(default_factory=dict)
     budget: "Budget | None" = None
@@ -560,7 +582,11 @@ def gepa_loop(
         
         # 编辑模板:传入上一轮的失败(首轮传 initial 的,后续传上一变体的)
         # 修 P2-1:原始终传 initial_failures,编辑器看不到变体自身的失败模式
-        variant_template = edit_template(parent.template, last_failures, gateway)
+        if config.two_knobs:
+            variant_template, state.support_hint = edit_two_knobs(
+                parent.template, state.support_hint, round_idx, last_failures, gateway)
+        else:
+            variant_template = edit_template(parent.template, last_failures, gateway)
         budget.add(1)
         
         # No-op 检查:编辑器返回与父代逐字相同 → 跳过评估,省预算
@@ -582,7 +608,8 @@ def gepa_loop(
             # no-op 时 last_failures 保留上一轮,下轮编辑器继续用
         else:
             variant_scores, variant_failures, variant_stats = evaluate_batch(
-                batch, variant_template, gateway, config.judge_role)
+                batch, variant_template, gateway, config.judge_role,
+                support_hint=state.support_hint if config.two_knobs else None)
             scores[variant_id] = variant_scores
             budget.add(variant_stats["calls"])
             last_failures = variant_failures
@@ -597,6 +624,7 @@ def gepa_loop(
             "variant_id": variant_id,
             "parent_template": parent.template,
             "variant_template": variant_template,
+            "support_hint": getattr(state, "support_hint", None),
             "noop": is_noop,
             "parent_scores": parent_scores.__dict__,
             "variant_scores": variant_scores.__dict__,
@@ -847,3 +875,59 @@ def paired_loop(
 
 
 write_checkpoint = _write_checkpoint  # 公开名(tests 只导公开入口,02 §6)
+
+
+_SUPPORT_EDITOR_PROMPT = """你是一个提示词编辑器。当前「卡壳支持」问句模板:
+---
+{current}
+---
+失败案例摘要(共 {n_failures} 个):
+{failure_summary}
+
+任务:生成改进版本,保持核心意图(学生卡住时把这一步拆成最小的一个小问题、只问不揭示、
+不含答案数字),但调整措辞以降低失败率。约束:
+- 长度 20-70 字(中文);
+- 必须是问句且以问号结尾;
+- 不出现任何数字或方法名;
+- 不要围栏、不要解释,只输出改进后的模板文本。"""
+
+
+def _lint_common(variant: str, current: str, floor: int, cap: int,
+                 keywords: tuple[str, ...]) -> str | None:
+    """共享 lint:长度窗、关键词、非退化;不合规返回 None(调用方保留父代)。"""
+    if variant == current or not (floor <= len(variant) <= cap):
+        return None
+    if not any(word in variant for word in keywords):
+        return None
+    return variant
+
+
+def edit_two_knobs(
+    elicit: str, support: str, round_idx: int,
+    failure_frames: list[dict], gateway: Gateway,
+) -> tuple[str, str]:
+    """双旋钮编辑(#256 阶段 2 选项 A 搜索空间):偶代编辑 elicit、奇代编辑 support。
+
+    单次 gateway 调用(编辑器预算 1 call/代不变);被编辑旋钮拿失败帧反馈,
+    另一旋钮原样保留。lint 失败保留父代(与 edit_template 同纪律)。
+    """
+    if round_idx % 2 == 0:
+        variant = edit_template(elicit, failure_frames, gateway)
+        return variant, support
+    failure_summary = "\n".join(
+        f"- {f['case_id']}: {f['kind']} — {f['detail'][:100]}"
+        for f in failure_frames[:5]
+    ) if failure_frames else "(无失败案例)"
+    prompt = _SUPPORT_EDITOR_PROMPT.format(
+        current=support, n_failures=len(failure_frames), failure_summary=failure_summary)
+    try:
+        response = gateway.invoke(ModelRequest(
+            role="judge_independent", messages=[{"role": "user", "content": prompt}],
+            max_tokens=160, temperature=0.3))
+        raw = response.text.strip().strip("`").strip()
+    except GatewayError:
+        return elicit, support
+    linted = _lint_common(raw, support, 20, 70, ("?", "?"))
+    if linted is None:
+        return elicit, support
+    return elicit, linted

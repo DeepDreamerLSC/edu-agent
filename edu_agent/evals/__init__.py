@@ -22,6 +22,8 @@ from .judge import (
     verdict_from_scores,
 )
 from .gepa import (
+    DEFAULT_SUPPORT_HINT,
+    KNOB_SEAMS,
     LoopState,
     Budget,
     Candidate,
@@ -32,6 +34,7 @@ from .gepa import (
     edit_template,
     evaluate_batch,
     evaluate_batch_paired,
+    edit_two_knobs,
     gepa_loop,
     write_checkpoint,
     paired_loop,
@@ -109,7 +112,10 @@ __all__ = [
     "facts_calibers",
     "format_failures",
     "gepa_loop",
+    "DEFAULT_SUPPORT_HINT",
+    "KNOB_SEAMS",
     "LoopState",
+    "edit_two_knobs",
     "write_checkpoint",
     "paired_loop",
     "judge_rows",
