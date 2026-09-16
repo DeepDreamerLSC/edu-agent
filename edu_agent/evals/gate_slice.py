@@ -25,21 +25,31 @@ from .gepa import DEFAULT_SUPPORT_HINT, ElicitSubject
 from .judge import judge_transcript
 from .lane_m import compare_lane_m
 
-SLICE_DIR = Path(__file__).parent / "artifacts" / "teacher-gate-slice"
+SLICE_DIRS = {
+    "v1": Path(__file__).parent / "artifacts" / "teacher-gate-slice",
+    # v2(#310 C35 语义修复):C35 退位留作 judge calibration,慈善转述正向位换
+    # C36(转述忠实·机器下限 leak=false);基线 = 修复后内核×默认模板新纪元冻结
+    "v2": Path(__file__).parent / "artifacts" / "teacher-gate-slice-v2",
+}
+SLICE_DIR = SLICE_DIRS["v1"]  # 兼容旧引用;新代码用 slice_dir(version)
 POOL_PATH = Path(__file__).parent / "artifacts" / "corpus-round-v2" / "cases.jsonl"
 
 
-def load_slice_rows() -> dict[str, dict]:
+def slice_dir(version: str = "v1") -> Path:
+    return SLICE_DIRS[version]
+
+
+def load_slice_rows(version: str = "v1") -> dict[str, dict]:
     """slice-cases.jsonl 冻结判卷行,按 case_id 索引。"""
     rows = [json.loads(line) for line in
-            (SLICE_DIR / "slice-cases.jsonl").read_text(encoding="utf-8").splitlines()
+            (slice_dir(version) / "slice-cases.jsonl").read_text(encoding="utf-8").splitlines()
             if line.strip()]
     return {row["id"]: row for row in rows}
 
 
-def load_runnable_cases() -> list[dict]:
+def load_runnable_cases(version: str = "v1") -> list[dict]:
     """11 案可运行形态:池内用 steps 剧本,池外抽学生侧线性剧本。"""
-    slice_rows = load_slice_rows()
+    slice_rows = load_slice_rows(version)
     pool = {json.loads(line)["id"]: json.loads(line) for line in
             POOL_PATH.read_text(encoding="utf-8").splitlines() if line.strip()}
     cases = []
@@ -59,13 +69,14 @@ def load_runnable_cases() -> list[dict]:
 
 def run_candidate_slice(elicit: str, support: str, gateway: Gateway,
                         judge_role: str = "judge",
-                        transcripts_out: Path | None = None) -> tuple[dict, dict]:
+                        transcripts_out: Path | None = None,
+                        version: str = "v1") -> tuple[dict, dict]:
     """候选双旋钮 × 11 案 × 2 独立跑 → (run1, run2) 判分行({case_id: payload})。
 
     transcripts_out 给定时逐跑逐案落转录(Lane H Teacher Pack 材料)。
     """
-    cases = load_runnable_cases()
-    slice_rows = load_slice_rows()
+    cases = load_runnable_cases(version)
+    slice_rows = load_slice_rows(version)
     runs: list[dict] = []
     for run_idx in (1, 2):
         run = {}
@@ -101,7 +112,7 @@ def build_teacher_pack(candidate_dir: Path, out_dir: Path, seed: int = 7) -> dic
 
     out_dir.mkdir(parents=True, exist_ok=True)
     rng = random.Random(seed)
-    slice_rows = load_slice_rows()
+    slice_rows = load_slice_rows()  # 盲包用 v1 冻结面(v2 冻结后随版本切换,见 gate-05)
     mapping = {}
     for case_id, row in slice_rows.items():
         result = json.loads((candidate_dir / "run1" / f"{case_id}.json")
@@ -172,6 +183,8 @@ def main() -> None:
     parser.add_argument("--checkpoint", type=Path, required=True,
                         help="GEPA checkpoint(best.template + best.support_hint)")
     parser.add_argument("--judge-role", default="judge", choices=["judge", "judge_independent"])
+    parser.add_argument("--slice", default="v1", choices=["v1", "v2"],
+                        help="切片版本(v2 = C35 语义修复后新纪元冻结)")
     args = parser.parse_args()
 
     saved = json.loads(args.checkpoint.read_text(encoding="utf-8"))
@@ -182,7 +195,8 @@ def main() -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     try:
         run1, run2 = run_candidate_slice(elicit, support, gateway, args.judge_role,
-                                         transcripts_out=args.out_dir / "transcripts")
+                                         transcripts_out=args.out_dir / "transcripts",
+                                         version=args.slice)
     finally:
         gateway.close()
     (args.out_dir / "run1.json").write_text(json.dumps(run1, ensure_ascii=False, indent=1),
@@ -190,7 +204,7 @@ def main() -> None:
     (args.out_dir / "run2.json").write_text(json.dumps(run2, ensure_ascii=False, indent=1),
                                             encoding="utf-8")
     baseline_rows = [json.loads(line) for line in
-                     (SLICE_DIR / "slice-baseline.jsonl").read_text(encoding="utf-8").splitlines()
+                     (slice_dir(args.slice) / "slice-baseline.jsonl").read_text(encoding="utf-8").splitlines()
                      if line.strip()]
     result = gate_from_runs(baseline_rows, run1, run2)
     checks_rows = run_deterministic_checks(args.out_dir / "transcripts")
