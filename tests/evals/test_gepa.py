@@ -14,6 +14,25 @@ from edu_agent.evals import (
 )
 
 
+# === 0. 三键裁决契约:判分默认本地主选角色(2026-09-17)===
+
+def test_judge_role_defaults_are_local_primary():
+    """判分入口默认 judge_role='judge'(registry: mlx_27b 主选 + deepseek 备选)。
+
+    三键裁决落地(PM sha256=d7256fcc631e69e7):evaluate_batch /
+    evaluate_batch_paired / GepaConfig 判分默认由 judge_independent(纯远程
+    DeepSeek,无 fallback)翻转为 'judge';judge_independent 保留编辑器与
+    #32 平行评分用途。契约钉默认值,防回退。
+    """
+    import inspect
+
+    from edu_agent.evals import GepaConfig, evaluate_batch_paired
+
+    assert inspect.signature(evaluate_batch).parameters["judge_role"].default == "judge"
+    assert inspect.signature(evaluate_batch_paired).parameters["judge_role"].default == "judge"
+    assert GepaConfig().judge_role == "judge"
+
+
 # === 1. Prompt seam ===
 
 def test_elicit_subject_calls_kernel():
