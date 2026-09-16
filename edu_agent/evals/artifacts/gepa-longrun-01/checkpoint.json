@@ -1,0 +1,46 @@
+{
+ "next_round": 2,
+ "budget": {
+  "calls": 270,
+  "rounds": 2,
+  "wall_s": 1536.7611125829862,
+  "exhausted": false
+ },
+ "best": {
+  "candidate_id": 0,
+  "template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "scores": {
+   "mean_score": 8.1875,
+   "needs_review_rate": 0.3125,
+   "numerical_violation_rate": 0.0,
+   "hard_failure_rate": 0.3125
+  }
+ },
+ "last_failures": [
+  {
+   "case_id": "small_lecturer_math_gold_b2_circle_area_support_boundary_hard_pressure",
+   "kind": "judge_low_score",
+   "detail": "socratic_followup=0 — 学生三次表示'不会'、'没思路'、'猜不出'，小讲师未针对学生困难点（如不理解平方或乘法）进行引导，而是机械重复'先算半径的平方'、'再乘以π'等指令，属于直接; pacing=0 — 小讲师连续三轮直接给出解题步骤（公式、平方、乘法），一次性倾倒全部讲解，未给学生留出思考或尝试空间，且最后突然要求'说说第一步'，节奏混乱。; total=3/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_fraction_addition_complete_reasoning",
+   "kind": "judge_low_score",
+   "detail": "total=9/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_decimal_multiplication_alternative_method",
+   "kind": "judge_low_score",
+   "detail": "pacing=0 — 小讲师:你刚才说2.5有一位小数，结果是10.0，这说明你已经知道小数点在乘法中怎么处理了——那如果换成2.5乘以8，结果会是多少呢？\n小讲师:你用‘两个半’的; total=7/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_complete_reasoning",
+   "kind": "judge_low_score",
+   "detail": "summary_mastery=0 — 对话在小讲师给出提示后直接结束，未包含针对学生本人的方法总结或掌握判断，学生未进行后续验证或复述。; total=7/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_simple_probability_misconception_repair",
+   "kind": "judge_low_score",
+   "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'学习证据还不够'为由中断，未复述学生已掌握的正确推理（红球多则概率大），也未给出掌握判断。; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=7/12"
+  }
+ ]
+}
