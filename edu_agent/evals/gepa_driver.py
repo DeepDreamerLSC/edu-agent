@@ -30,6 +30,8 @@ def main():
                         help="双旋钮搜索空间(elicit+support,#304 头部可达族,选项 A)")
     parser.add_argument("--editor-focus", choices=["mean", "nr"], default="mean",
                     help="nr = needs_review 靶向编辑(收敛#2 选项①)")
+    parser.add_argument("--initial-template-file", type=Path, default=None,
+                        help="初始 elicit 模板文件(#310:nets-in-loop 从既有候选续搜)")
     parser.add_argument("--editor-role", choices=["judge_independent", "judge"],
                         default="judge_independent",
                         help="编辑器后端角色(搜索机械件;r24 起本地跑用 judge)")
@@ -48,8 +50,10 @@ def main():
         scenarios = load_scenarios(scenarios_path)
         train_cases = to_cases(scenarios)[:20]  # v1 只有 8 个 scenario,[:20] 实际取全量 8 案
     
-    # 初始 elicit 模板
-    initial_template = "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。"
+    # 初始 elicit 模板(#310:可从文件载入既有候选,如被⑦门拒的 r24)
+    initial_template = ("我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。"
+                        if args.initial_template_file is None
+                        else args.initial_template_file.read_text(encoding="utf-8").strip())
     
     # 加载 gateway
     gateway = Gateway(load_registry(Path("configs/models.yaml")))

@@ -783,7 +783,8 @@ def test_edit_two_knobs_parity_routing():
     """偶代编辑 elicit(support 原样返回)、奇代编辑 support(elicit 原样)。"""
     from edu_agent.evals import edit_two_knobs
 
-    with patch("edu_agent.evals.gepa.edit_template", return_value="新的elicit") as m:
+    with patch("edu_agent.evals.gepa_editors.edit_template",
+                return_value="新的elicit") as m:  # 编辑器晚绑定已随族迁居
         elicit, support = edit_two_knobs("旧elicit", "旧support", 0, [], MagicMock())
         assert elicit == "新的elicit" and support == "旧support"
         m.assert_called_once()
@@ -877,3 +878,58 @@ def test_gepa_loop_editor_focus_nr_uses_nr_editor(tmp_path):
                   resume=True)
         assert m_nr.call_count == 1  # 第 24 代偶代:elicit 编辑走 nr 靶向
         assert m_mean.call_count == 0
+
+
+# === 10. Net A:终答值泄露网进 loop(#310 试点,gate-01-r24 教训) ===
+
+
+def test_evaluate_batch_leak_net_violation_counted(tmp_path):
+    """泄露网违例:计数进 stats + 失败帧(kind=leak_net,带轮次原文)。"""
+    facts = tmp_path / "model_calls-2026-09-16.jsonl"
+    facts.write_text("", encoding="utf-8")
+    gateway = MagicMock()
+    gateway.writer.root = tmp_path
+    case = {"id": "c1", "question": {"text": "妈妈36岁是小华的3倍,小华几岁?", "answer": "12"},
+            "student_turns": ["x"]}
+    with patch("edu_agent.evals.gepa.ElicitSubject") as mock_subject, \
+         patch("edu_agent.evals.gepa.judge_transcript") as mock_judge:
+        mock_subject.return_value.run_case.return_value = {
+            "turns": [{"student": "", "tutor": "你用12乘3等于36验证了,很扎实", "state": "dialogue"}],
+            "summary": "s"}
+        mock_judge.return_value = {"total": 10, "verdict": "pass", "answer_leaked": False,
+                                   "math_integrity": 2, "evidence": {}, "scores": {}}
+        _, failures, stats = evaluate_batch([case], "模板", gateway)
+    assert stats["leak_net_violations"] == 1
+    leak_frames = [f for f in failures if f["kind"] == "leak_net"]
+    assert len(leak_frames) == 1 and "12" in leak_frames[0]["detail"]
+    # 干净转录零违例
+    mock_subject.return_value.run_case.return_value = {
+        "turns": [{"student": "", "tutor": "说说你的思路", "state": "dialogue"}], "summary": "s"}
+    _, failures2, stats2 = evaluate_batch([case], "模板", gateway)
+    assert stats2["leak_net_violations"] == 0 and not [f for f in failures2 if f["kind"] == "leak_net"]
+
+
+def test_gepa_loop_leak_net_veto_blocks_selection(tmp_path):
+    """否决双闸:泄露网违例变体 accepted=False 且不注册分数——
+    checkpoint best 与下轮父代都不会是脏变体(即使四维全优)。"""
+    from edu_agent.evals import GepaConfig, gepa_loop
+
+    clean_stats = {"calls": 5, "tokens_in": 0, "tokens_out": 0, "env_failures": 0,
+                   "content_failures": 0, "wall_ms": 1, "leak_net_violations": 0}
+    dirty_stats = dict(clean_stats, leak_net_violations=2)
+    returns = [
+        (ScoreVector(8.0, 0.3, 0.1, 0.1), [], clean_stats),        # 初始评估
+        (ScoreVector(9.5, 0.1, 0.0, 0.0), [], dirty_stats),        # r0:全优但泄露
+        (ScoreVector(9.6, 0.1, 0.0, 0.0), [], dirty_stats),        # r1:全优但泄露
+    ]
+    with patch("edu_agent.evals.gepa.evaluate_batch", side_effect=returns), \
+         patch("edu_agent.evals.gepa.edit_template",
+               side_effect=["脏变体A:讲讲思路的第一步", "脏变体B:说说思路的第一步"]):
+        _, _, reports = gepa_loop(
+            train_cases=[{"id": "c1", "question": "q", "student_turns": ["a"]}],
+            initial_template="初始:说说你的思路,先说第一步",
+            config=GepaConfig(rounds=2, max_calls=100),
+            gateway=MagicMock(), output_dir=tmp_path)
+    assert all(r["leak_net_veto"] and not r["accepted"] for r in reports)
+    saved = json.loads((tmp_path / "checkpoint.json").read_text(encoding="utf-8"))
+    assert saved["best"]["template"].startswith("初始")  # 脏变体永不被选为最优
