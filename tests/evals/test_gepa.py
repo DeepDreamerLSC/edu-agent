@@ -933,3 +933,50 @@ def test_gepa_loop_leak_net_veto_blocks_selection(tmp_path):
     assert all(r["leak_net_veto"] and not r["accepted"] for r in reports)
     saved = json.loads((tmp_path / "checkpoint.json").read_text(encoding="utf-8"))
     assert saved["best"]["template"].startswith("初始")  # 脏变体永不被选为最优
+
+
+# === 11. PM-RULING#5 两处置:同分布初始批 + nr 分母非 hard 案 ===
+
+
+def test_evaluate_batch_nr_denominator_excludes_hard(tmp_path):
+    """nr 分母 = 非 hard 案:4 案中 2 hard(fail/leaked)只 1 review → 0.5 而非 0.25。"""
+    facts = tmp_path / "model_calls-2026-09-17.jsonl"
+    facts.write_text("", encoding="utf-8")
+    gateway = MagicMock()
+    gateway.writer.root = tmp_path
+    cases = [{"id": f"c{i}", "question": "q", "student_turns": ["a"]} for i in range(4)]
+    verdicts = [
+        {"total": 6, "verdict": "fail", "answer_leaked": False, "math_integrity": 2,
+         "evidence": {}, "scores": {}},          # hard: fail
+        {"total": 8, "verdict": "review", "answer_leaked": True, "math_integrity": 2,
+         "evidence": {}, "scores": {}},          # hard: leaked(review 也不计 nr 分子分母)
+        {"total": 9, "verdict": "review", "answer_leaked": False, "math_integrity": 2,
+         "evidence": {}, "scores": {}},          # 非 hard 的 review → 计 nr
+        {"total": 10, "verdict": "pass", "answer_leaked": False, "math_integrity": 2,
+         "evidence": {}, "scores": {}},
+    ]
+    with patch("edu_agent.evals.gepa.ElicitSubject") as mock_subject, \
+         patch("edu_agent.evals.gepa.judge_transcript", side_effect=verdicts):
+        mock_subject.return_value.run_case.return_value = {
+            "turns": [{"student": "s", "tutor": "t", "state": "dialogue"}], "summary": "x"}
+        vector, _, _ = evaluate_batch(cases, "模板", gateway)
+    assert vector.hard_failure_rate == 0.5
+    assert vector.needs_review_rate == 0.5  # 1/(4-2),非 1/4
+
+
+def test_fresh_run_initial_batch_same_distribution_as_rounds(tmp_path):
+    """初始评估批 = sample_batch(seed=0),与代间批同分布(弃文件序前缀)。"""
+    from edu_agent.evals import GepaConfig, gepa_loop, sample_batch
+
+    train = [{"id": f"case-{i:02d}", "question": "q", "student_turns": ["a"]}
+             for i in range(93)]
+    stats = {"calls": 1, "tokens_in": 0, "tokens_out": 0, "env_failures": 0,
+             "content_failures": 0, "wall_ms": 1, "leak_net_violations": 0}
+    with patch("edu_agent.evals.gepa.evaluate_batch") as mock_eval, \
+         patch("edu_agent.evals.gepa.edit_template", return_value="变体:讲讲思路的第一步"):
+        mock_eval.return_value = (ScoreVector(8.0, 0.2, 0.0, 0.0), [], stats)
+        gepa_loop(train_cases=train, initial_template="初始:说说你的思路,先说第一步",
+                  config=GepaConfig(rounds=1, batch_size=16, max_calls=100),
+                  gateway=MagicMock(), output_dir=tmp_path)
+        initial_cases = mock_eval.call_args_list[0].args[0]
+    assert [c["id"] for c in initial_cases] == [c["id"] for c in sample_batch(train, 16, 0)]

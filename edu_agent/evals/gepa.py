@@ -222,8 +222,8 @@ def evaluate_batch(
             continue
         scores.append(total)
         judged += 1
-        if verdict == "review":
-            needs_review += 1
+        if verdict == "review" and not is_hard_fail:
+            needs_review += 1  # 分子分母同口径(RULING#5):hard 案不计 nr
         if mi < 2:
             violations += 1
         if is_hard_fail:
@@ -240,9 +240,12 @@ def evaluate_batch(
         return ScoreVector(0.0, 1.0, 1.0, 1.0), failures, stats
     
     mean_score = sum(scores) / len(scores)
+    # nr 分母 = 非 hard 案(PM-RULING#5:fail 案不计 review,verdict 互斥使
+    # hard 高的批 nr 虚低,四维独立 Pareto 对此盲);全 hard 时保守 1.0
+    non_hard = judged - hard_failures
     return ScoreVector(
         mean_score=mean_score,
-        needs_review_rate=needs_review / judged if judged else 1.0,
+        needs_review_rate=needs_review / non_hard if non_hard else 1.0,
         numerical_violation_rate=violations / judged if judged else 1.0,
         hard_failure_rate=hard_failures / judged if judged else 1.0,
     ), failures, stats
@@ -515,8 +518,10 @@ def _restore_or_seed(
               f"best_mean={scores[restored_id].mean_score:.2f}")
         return saved["next_round"], saved.get("last_failures", [])
     initial_id = population.add(Candidate(template=state.initial_template))
+    # 初始批与代间批同分布(PM-RULING#5:文件序前缀有偏,试点父代 hard .5
+    # 极端读数疑源于此;seed=0 与 round 0 批一致)
     initial_scores, failures, initial_stats = evaluate_batch(
-        state.train_cases[:config.batch_size], state.initial_template,
+        sample_batch(state.train_cases, config.batch_size, 0), state.initial_template,
         gateway, config.judge_role)
     scores[initial_id] = initial_scores
     budget.add(initial_stats["calls"])
