@@ -1,0 +1,92 @@
+{
+ "question_id": "small_lecturer_math_gold_candidates_distance_speed_alternative_method",
+ "final_state": "completed",
+ "turns": [
+  {
+   "student": "",
+   "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "state": "first_question_ready",
+   "elapsed_ms": 0
+  },
+  {
+   "student": "也可以分成2小时和半小时，120加30等于150千米。",
+   "tutor": "先回到你刚才的结论和验算——你能从题目里再确认一个已知条件吗?",
+   "state": "ready_to_confirm",
+   "elapsed_ms": 4651
+  }
+ ],
+ "summary": "你用分段计算的方法得出150千米，这一步很清晰；下一步可以确认题目中‘每小时行60千米’这个已知条件是否在你的计算中被正确应用了，比如2.5小时对应的路程是否能通过60×2.5验证。",
+ "total_ms": 9564,
+ "learner": {
+  "grade": ""
+ },
+ "guard_events": [
+  {
+   "branch": "model",
+   "cited": [
+    0.5,
+    2.0,
+    30.0,
+    120.0,
+    150.0
+   ],
+   "extracted": [
+    0.5,
+    2.0,
+    2.5,
+    30.0,
+    120.0,
+    150.0
+   ],
+   "violation_sources": [
+    {
+     "number": 0.5,
+     "source": "hallucinated"
+    },
+    {
+     "number": 150.0,
+     "source": "answer"
+    }
+   ],
+   "gate": "blocked",
+   "turn": 1
+  },
+  {
+   "branch": "model",
+   "cited": [
+    0.5,
+    2.0,
+    30.0,
+    120.0,
+    150.0
+   ],
+   "extracted": [
+    0.5,
+    2.0,
+    2.5,
+    30.0,
+    60.0,
+    120.0
+   ],
+   "violation_sources": [
+    {
+     "number": 0.5,
+     "source": "hallucinated"
+    }
+   ],
+   "gate": "blocked",
+   "turn": 1
+  },
+  {
+   "guard": "answer_leak",
+   "rule_ids": [
+    "source_value_disclosure:hallucinated",
+    "source_value_disclosure:answer"
+   ],
+   "original": "你把2.5小时拆成2小时和0.5小时，分别算出120和30，再加起来得到150，这个方法很聪明！那如果直接用速度乘时间，结果会一样吗？",
+   "regenerated": false,
+   "turn": 1
+  }
+ ],
+ "session_id": "kernel_cf272d60b3"
+}
