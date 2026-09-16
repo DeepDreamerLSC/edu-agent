@@ -407,7 +407,9 @@ def _contextual_fallback(session: "LearnerSession | None", guard: str,
         # 会把刚拦下的终答从确定性路径放回学生面(gate-02/03 冒烟实测)。
         answer = _answer_numbers(session) if session is not None else set()
         if answer and answer & _reply_numbers(snippet):
-            return "先回到你刚才的结论和验算——你能从题目里再确认一个已知条件吗?"
+            # 确认话姿(非重定向):学生已陈述完整结论时,转述确认 + 请自述收束
+            # (gate-03:C25 重定向话姿致 sm_ge 1→0——掌握陈述时刻需要确认而非追问)
+            return "你刚才的结论和验算都齐了,讲得很清楚——最后请你自己完整说一遍结论。"
         return f"先回到你刚说的「{snippet}」——你能从题目里再确认一个已知条件吗?"
     # 纯图/无权威答案(十字绣/剪绳子/连线题):不逼学生答条件,软性回到看图
     if guard == "answer_leak" and any(

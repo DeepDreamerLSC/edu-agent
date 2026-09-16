@@ -256,5 +256,5 @@ def test_leak_fallback_does_not_restate_answer_value():
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "兔有10除以2等于5只,鸡有3只,验算26只脚。", gateway=gateway)
 
-    assert turn.text == "先回到你刚才的结论和验算——你能从题目里再确认一个已知条件吗?"
+    assert turn.text == "你刚才的结论和验算都齐了,讲得很清楚——最后请你自己完整说一遍结论。"
     assert turn.session.stuck is True  # 修复失败落兜底的既有语义不变
