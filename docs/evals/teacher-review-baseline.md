@@ -2,13 +2,19 @@
 
 **定位**：独立盲评器，不是拿着 ground truth 的人工 verifier。
 
-**核心原则**：Teacher 看不到 `baseline` / `ground_truth` / `expectation`，只看到 transcript + case_id，输出三个家族的独立评分 + 证据引用。regression 判定由 Phase B（mechanical comparison）完成。
+**核心原则**：Teacher 看不到 `baseline` / `ground_truth` / `expectation`，也**不知道哪个 transcript 是 baseline、哪个是 candidate**（A/B 随机标号）。Teacher 对 A、B 两个 transcript 分别打三个家族的 0|1|2 分，并对每个家族做 **A/B pairwise 定性**（谁更差）。
+
+- 0|1|2 分是**审计字段**（一致性分析 / 案例审计 / rubric 校准），**不作为 promotion 的机械阈值**；
+- pairwise 定性（`A_worse` / `B_worse` / `same`）才是 ⑦门教师轴（Phase B2 / Lane H）使用的信号。
 
 ---
 
 ## 角色
 
-你是独立教师审查员。你的任务不是复现自动 Judge，也不是猜系统期望答案，而是只根据给出的对话记录（transcript），判断小讲师是否在三个已知高风险家族中出现问题。
+你是独立教师审查员。你会收到**两份对话记录**（标为 transcript A 与 transcript B），它们可能来自同一案例的两个不同版本。你的任务不是复现自动 Judge，也不是猜系统期望答案，而是：
+
+1. 分别判断每份 transcript 是否在三个已知高风险家族中出现问题（0|1|2 审计分）；
+2. 对每个家族，比较 A 与 B，判断**哪一份更差、还是无实质差异**（pairwise）。
 
 ## 重要原则
 
@@ -17,6 +23,7 @@
 - 不要因为对话整体看起来顺畅，就替其中的数学错误或归因错误寻找合理解释。
 - 也不要因为小讲师曾提供过提示，就自动认为学生后续表现不能证明掌握。
 - 每个判定必须引用 transcript 中的具体证据。
+- 判「A 比 B 差」或「B 比 A 差」时，必须给出**新增或明显加重**的具体退化证据（引原话）；证据不足时判 `same`，不得凭主观波动判 worse。
 
 ---
 
@@ -113,39 +120,47 @@
 ```json
 {
   "case_id": "...",
-  "math_integrity": {
-    "score": 0,
-    "evidence": "引用具体学生/小讲师原话，并简述理由"
+  "transcripts": {
+    "A": {
+      "math_integrity": { "score": 0, "evidence": "引用具体学生/小讲师原话，并简述理由" },
+      "student_mastery": { "score": 0, "evidence": "引用具体学生/小讲师原话，并简述理由" },
+      "paraphrase_fidelity": { "score": 0, "evidence": "引用具体学生/小讲师原话，并简述理由" }
+    },
+    "B": {
+      "math_integrity": { "score": 0, "evidence": "引用具体学生/小讲师原话，并简述理由" },
+      "student_mastery": { "score": 0, "evidence": "引用具体学生/小讲师原话，并简述理由" },
+      "paraphrase_fidelity": { "score": 0, "evidence": "引用具体学生/小讲师原话，并简述理由" }
+    }
   },
-  "student_mastery": {
-    "score": 0,
-    "evidence": "引用具体学生/小讲师原话，并简述理由"
-  },
-  "paraphrase_fidelity": {
-    "score": 0,
-    "evidence": "引用具体学生/小讲师原话，并简述理由"
+  "pairwise": {
+    "math_integrity": { "relation": "A_worse|B_worse|same", "evidence": "引用新增/加重退化的具体证据；same 时简述为何无实质差异" },
+    "student_mastery": { "relation": "A_worse|B_worse|same", "evidence": "同上" },
+    "paraphrase_fidelity": { "relation": "A_worse|B_worse|same", "evidence": "同上" }
   },
   "overall_note": "仅补充三个家族之外理解本次判断所必需的信息；没有则写 none"
 }
 ```
 
-其中每个 `score` 只能取 `0`、`1`、`2`。
+约束：
+
+- 每个 `score` 只能取 `0`、`1`、`2`（审计字段）。
+- 每个 `relation` 只能取 `A_worse`、`B_worse`、`same`（教师轴的 pairwise 信号）。
+- 判 `A_worse` / `B_worse` 时，`evidence` 必须指出**新增或明显加重**的具体退化（引 transcript 原话），否则不得判 worse。
 
 **不要输出**：
 
 - baseline 分数
 - ground_truth / expectation
-- regression / better / worse / none
 - pass / fail
 - 是否应该晋升 candidate
-
-这些判断由独立的机械比较步骤完成（见 [`promotion-comparison-protocol.md`](promotion-comparison-protocol.md)），而不是由教师完成。
+- 不要把 `A_worse` / `B_worse` 直接写成 candidate 视角（你不知道哪个是 candidate）；candidate 视角的解盲映射由机械比较步骤完成（见 [`promotion-comparison-protocol.md`](promotion-comparison-protocol.md)「Lane H — 解盲映射」）。
 
 ---
 
 ## 盲评纪律
 
-如果未来同时让老师审 baseline/candidate，**随机标成 A/B 或独立 case token**，比直接写"这是 candidate"更干净。Teacher 最好也不知道 transcript 是 baseline 还是 candidate。
+- baseline 与 candidate 两份 transcript 必须**随机标成 A/B**（或独立 case token），教师不知道哪个是 baseline、哪个是 candidate。
+- 教师不知道 transcript 的版本身份，只知道「两份里哪个在此家族更差」。
 
 ---
 
