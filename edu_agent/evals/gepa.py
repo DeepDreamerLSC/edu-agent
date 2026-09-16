@@ -147,7 +147,7 @@ def evaluate_batch(
     cases: list[dict],
     template: str,
     gateway: Gateway,
-    judge_role: str = "judge_independent",
+    judge_role: str = "judge",
 ) -> tuple[ScoreVector, list[dict], dict]:
     """跑批 + 判卷一步到位(无 checkpoint/resume,spike 简化)。
     
@@ -248,7 +248,7 @@ def evaluate_batch_paired(
     cases: list[dict],
     template: str,
     gateway: Gateway,
-    judge_role: str = "judge_independent",
+    judge_role: str = "judge",
 ) -> tuple[list[dict], list[dict], dict]:
     """配对实验:逐案跑 + 逐案判,返回 per-case scores 和转录快照。
     
@@ -347,6 +347,9 @@ def edit_template(current: str, failure_frames: list[dict], gateway: Gateway) ->
     
     Lint:必须保住核心引导词(「思路」「第一步」),防进化出废模板。
     角色:judge_independent(DeepSeek 直评,spike 复用,不加新角色)。
+    三键裁决(2026-09-17,PM sha256=d7256fcc631e69e7)保留:编辑器非判分,
+    走 judge_independent 属设计内(用户已追认);判分入口默认已改 "judge"
+    (本地 mlx_27b 主选),judge_independent 留 #32 平行评分用途。
     """
     failure_summary = "\n".join(
         f"- {f['case_id']}: {f['kind']} — {f['detail'][:100]}"
@@ -418,7 +421,7 @@ class GepaConfig:
     rounds: int = 6
     batch_size: int = 16
     max_calls: int = 2000
-    judge_role: str = "judge_independent"
+    judge_role: str = "judge"
 
 
 @dataclass
