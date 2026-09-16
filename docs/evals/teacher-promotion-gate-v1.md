@@ -31,7 +31,7 @@
 1. **跑**:candidate(任何 prompt 面/判据面改动,含 GEPA 优化产出)在切片 11 案 ×**2 独立调用**(同 acceptance aggregation 口径;引擎 = 判卷引擎梯现役档;不重试不修参数)。复算命令(既有工具,零新脚本):
    `uv run python scripts/rescore_judge.py --archive <collect 源> <题面> --only <切片 id 清单> --out <目录>`(judge 侧直接评 transcript 的 candidate 评测同此口径)。
 2. **机械比对**(先于人审,报告按案):健康位两跑均须达期望;mi/leak 两跑不一致 → 保守端计 fail(沿 52 案门协议,fail-closed);已知限位两跑均不得劣于基线。机械红 → 门红,不进人审。
-3. **教师抽审**(机械绿才进):抽审集 = 已知限案(C40/C11,**必审**)+ 健康位随机 ≥3 案;教师读 transcript + candidate 分数 + 证据引文,按三家族各自判「无新增退化」(数学真实性:有无新放过的假命题/新误判;归因:学生证据归因有无新错位;慈善转述:转述有无被新放过的错位/新冤枉)。记录沿 b2 人审侧车机制(打分表 + 回执,零新工具)。
+3. **教师抽审**(机械绿才进):抽审集 = 已知限案(C40/C11,**必审**)+ 健康位随机 ≥3 案;教师读 transcript + 证据引文(**盲评,不看 candidate 分数/基线/期望**——纪律同 Phase A),按三家族各自判「无新增退化」(数学真实性:有无新放过的假命题/新误判;归因:学生证据归因有无新错位;慈善转述:转述有无被新放过的错位/新冤枉)。记录沿 b2 人审侧车机制(打分表 + 回执,零新工具)。
 4. **判定**:机械 + 教师**双绿** → promotion 许可(合并键仍属人);任一红 → 该 candidate 出局或回炉,结果留档切片目录。
 
 ## 三、边界(不做什么)
@@ -43,3 +43,10 @@
 ## 四、对执行序的意义
 
 ⑦ 门(GEPA 全量/promotion 前置)的「教师盲区 gate」侧:**机制就位**(本件);实际就位判定 = 首次按 candidate 运行并产出双绿记录。与「成熟路 B」(#272 已过 spike 门,正式结构件未建)为**或**关系——其一完成即 ⑦ 开。
+
+---
+
+## 关联文档
+
+- Phase A(教师盲评):[`teacher-review-baseline.md`](teacher-review-baseline.md)
+- Phase B(机械比对):[`promotion-comparison-protocol.md`](promotion-comparison-protocol.md)
