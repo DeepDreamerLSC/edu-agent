@@ -26,6 +26,8 @@ def main():
     parser.add_argument("--train-corpus", choices=["image", "v2"], default="image",
                         help="训练池:image=v1 8 案(spike);v2=corpus-round-v2 93 案(#256 长跑)")
     parser.add_argument("--no-resume", action="store_true", help="忽略 checkpoint 从头跑")
+    parser.add_argument("--two-knobs", action="store_true",
+                        help="双旋钮搜索空间(elicit+support,#304 头部可达族,选项 A)")
     args = parser.parse_args()
     
     # 加载 train cases (从 scenario 语料取,有 student_turns/steps)
@@ -52,6 +54,7 @@ def main():
             rounds=args.rounds,
             batch_size=args.batch_size,
             max_calls=args.max_calls,
+            two_knobs=args.two_knobs,
         )
         
         if args.paired:
