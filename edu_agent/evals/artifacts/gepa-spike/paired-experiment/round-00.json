@@ -1,0 +1,127 @@
+{
+  "round": 0,
+  "parent_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "variant_template": "请从第一步开始，一步一步讲清你的思路：先说你最先想到什么、为什么先做这一步，再接着说后面怎么推进。",
+  "noop": false,
+  "parent_stats": {
+    "calls": 16,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 142765
+  },
+  "variant_stats": {
+    "calls": 16,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 112577
+  },
+  "paired_cases": [
+    {
+      "case_id": "image_v1_text_position_05",
+      "parent_total": 8,
+      "variant_total": 8,
+      "delta": 0,
+      "parent_verdict": "review",
+      "variant_verdict": "review",
+      "parent_hard_fail": false,
+      "variant_hard_fail": false
+    },
+    {
+      "case_id": "image_v1_fraction_formula_06",
+      "parent_total": 12,
+      "variant_total": 12,
+      "delta": 0,
+      "parent_verdict": "pass",
+      "variant_verdict": "pass",
+      "parent_hard_fail": false,
+      "variant_hard_fail": false
+    },
+    {
+      "case_id": "image_v1_fraction_formula_09",
+      "parent_total": 12,
+      "variant_total": 12,
+      "delta": 0,
+      "parent_verdict": "pass",
+      "variant_verdict": "pass",
+      "parent_hard_fail": false,
+      "variant_hard_fail": false
+    },
+    {
+      "case_id": "image_v1_application_table_14",
+      "parent_total": 12,
+      "variant_total": 12,
+      "delta": 0,
+      "parent_verdict": "pass",
+      "variant_verdict": "pass",
+      "parent_hard_fail": false,
+      "variant_hard_fail": false
+    },
+    {
+      "case_id": "image_v1_circle_geometry_20",
+      "parent_total": 9,
+      "variant_total": 8,
+      "delta": -1,
+      "parent_verdict": "review",
+      "variant_verdict": "review",
+      "parent_hard_fail": false,
+      "variant_hard_fail": false
+    },
+    {
+      "case_id": "image_v1_percentage_multi_part_23",
+      "parent_total": 8,
+      "variant_total": 8,
+      "delta": 0,
+      "parent_verdict": "review",
+      "variant_verdict": "review",
+      "parent_hard_fail": false,
+      "variant_hard_fail": false
+    },
+    {
+      "case_id": "image_v1_visual_statistics_open_27",
+      "parent_total": 7,
+      "variant_total": 7,
+      "delta": 0,
+      "parent_verdict": "review",
+      "variant_verdict": "review",
+      "parent_hard_fail": false,
+      "variant_hard_fail": false
+    },
+    {
+      "case_id": "image_v1_visual_statistics_open_30",
+      "parent_total": 7,
+      "variant_total": 7,
+      "delta": 0,
+      "parent_verdict": "review",
+      "variant_verdict": "review",
+      "parent_hard_fail": false,
+      "variant_hard_fail": false
+    }
+  ],
+  "hard_fail_validation": "pass (no leaked variant)",
+  "template_hit_validation": {
+    "hit_count": 0,
+    "total_cases": 8,
+    "samples": []
+  },
+  "editor_feedback_sample": [
+    {
+      "case_id": "image_v1_text_position_05",
+      "kind": "judge_low_score",
+      "detail": "total=8, hard_fail=False"
+    },
+    {
+      "case_id": "image_v1_circle_geometry_20",
+      "kind": "judge_low_score",
+      "detail": "total=9, hard_fail=False"
+    },
+    {
+      "case_id": "image_v1_percentage_multi_part_23",
+      "kind": "judge_low_score",
+      "detail": "total=8, hard_fail=False"
+    }
+  ]
+}

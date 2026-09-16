@@ -1,0 +1,30 @@
+{
+  "budget": {
+    "calls": 50,
+    "rounds": 0,
+    "wall_s": 372.83853649999946,
+    "exhausted": false
+  },
+  "total_paired_cases": 16,
+  "mean_delta": -0.0625,
+  "deltas": [
+    0,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "stable_nonzero": false,
+  "verdict": "mixed"
+}
