@@ -3,8 +3,10 @@
 from unittest.mock import MagicMock, patch
 
 from edu_agent.evals import (
+    build_teacher_pack,
     gate_from_runs,
     load_runnable_cases,
+    load_slice_rows,
     run_candidate_slice,
 )
 
@@ -67,3 +69,44 @@ def test_gate_from_runs_delegates_to_lane_m():
     result = gate_from_runs(baseline, {}, {})  # 读数缺失 → 保守端 expected=2 → pass?
     # 数值行保守端:缺失按 expected 计 → final=2 >= expected → pass(fail-closed 只对 leak)
     assert result.gate == "pass"
+
+
+def test_run_candidate_slice_persists_transcripts(tmp_path):
+    """transcripts_out 给定时逐跑逐案落盘(Lane H 材料)。"""
+    cases = load_runnable_cases()
+    ids = {c["id"] for c in cases}
+    with patch("edu_agent.evals.gate_slice.ElicitSubject") as mock_subject, \
+         patch("edu_agent.evals.gate_slice.judge_transcript",
+               return_value={"math_integrity": 2, "answer_leaked": False}):
+        mock_subject.return_value.run_case.return_value = {
+            "turns": [{"student": "s", "tutor": "t", "state": "dialogue"}], "summary": "x"}
+        run_candidate_slice("e", "s", MagicMock(), transcripts_out=tmp_path)
+    for run in ("run1", "run2"):
+        saved = {p.stem for p in (tmp_path / run).glob("*.json")}
+        assert saved == ids
+
+
+def test_build_teacher_pack_blind_and_reversible(tmp_path):
+    """盲包:A/B 随机可复现;解盲映射在返回值(调用方落包外);三判据判定栏在。"""
+    import json
+
+    for cid in load_slice_rows():
+        d = tmp_path / "run1"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / f"{cid}.json").write_text(json.dumps(
+            {"turns": [{"student": "候选学生", "tutor": "候选导师", "state": "dialogue"}],
+             "summary": "候选总结"}), encoding="utf-8")
+    pack_dir = tmp_path / "pack"
+    mapping = build_teacher_pack(tmp_path, pack_dir, seed=7)
+    assert set(mapping) == set(load_slice_rows())
+    assert not (pack_dir / "mapping.json").exists()  # 解盲映射不进教师包
+    again = build_teacher_pack(tmp_path, pack_dir, seed=7)
+    assert again == mapping  # seed 可复现
+    sample = (pack_dir / "challenge_coordinate_swap_20260914.md").read_text(encoding="utf-8")
+    for field in ("题目", "Transcript A", "Transcript B", "数学真实性", "学生掌握归因",
+                  "转述忠实性", "总体", "具体证据"):
+        assert field in sample
+    # A/B 二者之一是候选转录(解盲后能对上)
+    assert "候选导师" in (sample.split("## Transcript A")[1].split("## Transcript B")[0]
+                        if mapping["challenge_coordinate_swap_20260914"] == "A"
+                        else sample.split("## Transcript B")[1].split("## 判定")[0])

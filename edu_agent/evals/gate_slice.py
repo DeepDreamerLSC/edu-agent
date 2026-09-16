@@ -58,21 +58,81 @@ def load_runnable_cases() -> list[dict]:
 
 
 def run_candidate_slice(elicit: str, support: str, gateway: Gateway,
-                        judge_role: str = "judge") -> tuple[dict, dict]:
-    """候选双旋钮 × 11 案 × 2 独立跑 → (run1, run2) 判分行({case_id: payload})。"""
+                        judge_role: str = "judge",
+                        transcripts_out: Path | None = None) -> tuple[dict, dict]:
+    """候选双旋钮 × 11 案 × 2 独立跑 → (run1, run2) 判分行({case_id: payload})。
+
+    transcripts_out 给定时逐跑逐案落转录(Lane H Teacher Pack 材料)。
+    """
     cases = load_runnable_cases()
     slice_rows = load_slice_rows()
     runs: list[dict] = []
-    for _ in range(2):
+    for run_idx in (1, 2):
         run = {}
         for case in cases:
             subject = ElicitSubject(elicit, gateway, support_hint=support)
             result = subject.run_case(case)
+            if transcripts_out is not None:
+                run_dir = transcripts_out / f"run{run_idx}"
+                run_dir.mkdir(parents=True, exist_ok=True)
+                (run_dir / f"{case['id']}.json").write_text(
+                    json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")
             judge_case = dict(slice_rows[case["id"]])
             judge_case["messages"] = transcript_messages(result)
             run[case["id"]] = judge_transcript(gateway, judge_case, role=judge_role)
         runs.append(run)
     return runs[0], runs[1]
+
+
+def _render_transcript(messages: list[dict]) -> str:
+    """messages → 人读转录(导师/学生)。"""
+    role_label = {"assistant": "导师", "user": "学生"}
+    return "\n".join(f"{role_label.get(m.get('role'), m.get('role'))}: {m.get('content', '')}"
+                     for m in messages)
+
+
+def build_teacher_pack(candidate_dir: Path, out_dir: Path, seed: int = 7) -> dict:
+    """Lane H A/B 盲包(#293 规格):题目/Transcript A/B/三判据/判定栏。
+
+    baseline = slice-cases 冻结 messages;candidate = 跑批转录(run1)。
+    A/B 随机(seed 可复现);解盲映射随返回值交调用方落包外文件,不进教师包。
+    """
+    import random
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rng = random.Random(seed)
+    slice_rows = load_slice_rows()
+    mapping = {}
+    for case_id, row in slice_rows.items():
+        result = json.loads((candidate_dir / "run1" / f"{case_id}.json")
+                            .read_text(encoding="utf-8"))
+        candidate_msgs = transcript_messages(result)
+        a_is_candidate = rng.random() < 0.5
+        mapping[case_id] = "A" if a_is_candidate else "B"
+        transcript_a, transcript_b = ((candidate_msgs, row["messages"]) if a_is_candidate
+                                      else (row["messages"], candidate_msgs))
+        content = [
+            f"# {case_id}", "",
+            "## 题目", str(row["question"]), "",
+            "## Transcript A", _render_transcript(transcript_a), "",
+            "## Transcript B", _render_transcript(transcript_b), "",
+            "## 判定(每行选 A worse / B worse / same,并引 transcript 原句作证据)",
+            "- 数学真实性:",
+            "- 学生掌握归因:",
+            "- 转述忠实性:",
+            "- 总体(A worse · B worse · same):",
+            "- 具体证据:",
+        ]
+        (out_dir / f"{case_id}.md").write_text("\n".join(content), encoding="utf-8")
+    instructions = [
+        "# 教师 Review Pack 使用说明", "",
+        "每案两个转录(A/B 随机,你不知道哪个是新版本)。对每案给出 pairwise 定性:",
+        "A worse / B worse / same,并引用 transcript 原句作为证据。",
+        "三个维度(数学真实性/学生掌握归因/转述忠实性)+ 一个总体判定。",
+        "证据不足时判 same,不臆断 worse。C40/C11(已知机器盲区)必审。",
+    ]
+    (out_dir / "README.md").write_text("\n".join(instructions), encoding="utf-8")
+    return mapping
 
 
 def gate_from_runs(baseline_rows: list[dict], run1: dict, run2: dict):
@@ -101,11 +161,12 @@ def main() -> None:
     support = saved["best"].get("support_hint") or DEFAULT_SUPPORT_HINT
 
     gateway = Gateway(load_registry(Path("configs/models.yaml")))
+    args.out_dir.mkdir(parents=True, exist_ok=True)
     try:
-        run1, run2 = run_candidate_slice(elicit, support, gateway, args.judge_role)
+        run1, run2 = run_candidate_slice(elicit, support, gateway, args.judge_role,
+                                         transcripts_out=args.out_dir / "transcripts")
     finally:
         gateway.close()
-    args.out_dir.mkdir(parents=True, exist_ok=True)
     (args.out_dir / "run1.json").write_text(json.dumps(run1, ensure_ascii=False, indent=1),
                                             encoding="utf-8")
     (args.out_dir / "run2.json").write_text(json.dumps(run2, ensure_ascii=False, indent=1),
@@ -117,4 +178,8 @@ def main() -> None:
     (args.out_dir / "lane-m-result.json").write_text(
         json.dumps({"gate": result.gate, "rows": result.rows}, ensure_ascii=False, indent=1),
         encoding="utf-8")
+    (args.out_dir / "mapping.json").write_text(
+        json.dumps(build_teacher_pack(args.out_dir / "transcripts",
+                                      args.out_dir / "pack"), ensure_ascii=False, indent=1),
+        encoding="utf-8")  # 解盲映射在包外(pack/ 交教师)
     print(f"Lane M gate: {result.gate}")
