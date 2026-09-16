@@ -1,0 +1,55 @@
+{
+ "question_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1",
+ "final_state": "completed",
+ "turns": [
+  {
+   "student": "",
+   "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "state": "first_question_ready",
+   "elapsed_ms": 0
+  },
+  {
+   "student": "我能不能直接把分子和分母分别相加？",
+   "tutor": "你想到直接加分子分母，这个想法很有趣，但分数加法就像分蛋糕，得先切成同样大小的块才能加，比如三块四分之一和一块八分之一，得先都切成八分之一才能加，对吧？",
+   "state": "dialogue",
+   "elapsed_ms": 1525
+  },
+  {
+   "student": "直接算成十二分之四好像不对，因为每一份的大小不同。",
+   "tutor": "你说到‘每一份的大小不同’，这说明你明白为什么不能直接加分子分母了，那接下来我们该把四分之三换成多少个八分之一呢？",
+   "state": "ready_to_confirm",
+   "elapsed_ms": 1758
+  }
+ ],
+ "summary": "你正确理解了分数加法不能直接加分子分母，因为每份大小不同，比如四分之三换成两个八分之一后，再加八分之一得到三个八分之一，结果是八分之三。仍需注意：换算时要确保分母一致，不能只改分子。",
+ "total_ms": 7079,
+ "learner": {
+  "grade": "五年级"
+ },
+ "guard_events": [
+  {
+   "branch": "model",
+   "cited": [
+    1.0,
+    3.0
+   ],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 1
+  },
+  {
+   "branch": "model",
+   "cited": [
+    1.0,
+    3.0,
+    8.0
+   ],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 2
+  }
+ ],
+ "session_id": "kernel_ecb2c27517"
+}

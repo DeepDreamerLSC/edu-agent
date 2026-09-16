@@ -1,0 +1,94 @@
+{
+ "purpose": "配对核:裁决#2 选项① 的「hard 不回退」条件——r14/r24 读数原为不同种子批的不配对估计",
+ "batch": {
+  "seed": 24,
+  "size": 16,
+  "ids": [
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_order_operations",
+   "small_lecturer_math_gold_candidates_parentheses_equation_misconception_repair",
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_sign",
+   "small_lecturer_math_gold_candidates_chicken_rabbit_alternative_method",
+   "small_lecturer_math_gold_candidates_average_score_alternative_method",
+   "small_lecturer_math_gold_candidates_chicken_rabbit_misconception_repair",
+   "small_lecturer_math_gold_candidates_average_score_complete_reasoning",
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_age",
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_division_remainder",
+   "small_lecturer_math_gold_candidates_fraction_addition_alternative_method",
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_angles",
+   "small_lecturer_math_gold_candidates_rectangle_perimeter_alternative_method",
+   "small_lecturer_math_gold_candidates_distance_speed_complete_reasoning",
+   "small_lecturer_teaching_context_shadow_pilot_20_stability_word_problem",
+   "small_lecturer_math_gold_candidates_equation_addition_misconception_repair",
+   "small_lecturer_math_gold_candidates_simple_probability_complete_reasoning"
+  ]
+ },
+ "t14": "别急，我们从头开始：你看到这道题，脑子里第一个冒出来的思路是什么？为什么先想到这一步？说说你的想法，我们再一起往下聊。",
+ "t24": "别急，请复讲解题过程：先说出你的核心思路，再明确写出第一步的具体算式或操作。请给出可验证的结论，以便我们确认掌握情况。",
+ "r14_paired": {
+  "mean_score": 10.0625,
+  "needs_review_rate": 0.25,
+  "numerical_violation_rate": 0.0,
+  "hard_failure_rate": 0.125
+ },
+ "r24_paired": {
+  "mean_score": 10.0,
+  "needs_review_rate": 0.25,
+  "numerical_violation_rate": 0.0,
+  "hard_failure_rate": 0.125
+ },
+ "failures_14": [
+  {
+   "case_id": "small_lecturer_math_gold_candidates_chicken_rabbit_alternative_method",
+   "kind": "judge_low_score",
+   "detail": "pacing=0 — 小讲师:你刚才说每换成一只兔多2只脚，这个想法很关键，那我们来检查一下：如果兔有5只，鸡有3只，总脚数是不是真的等于26？小讲师:你用方程设兔有x只，通过化简得; total=7/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_average_score_alternative_method",
+   "kind": "judge_low_score",
+   "detail": "total=9/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_chicken_rabbit_misconception_repair",
+   "kind": "judge_low_score",
+   "detail": "total=9/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_rectangle_perimeter_alternative_method",
+   "kind": "judge_low_score",
+   "detail": "grade_fit=0 — 学生:我会再用代入或标准步骤复核，两个方法结果一致才算完整。; pacing=0 — 小讲师连续两轮未回应学生关于'复核'的表述，直接重复追问'长方形有几条长边和几条宽边'，随后又突然插入'学习证据还不够'的机械话术，导致对话逻辑断裂。; total=3/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_distance_speed_complete_reasoning",
+   "kind": "judge_low_score",
+   "detail": "total=9/12"
+  }
+ ],
+ "failures_24": [
+  {
+   "case_id": "small_lecturer_math_gold_candidates_chicken_rabbit_alternative_method",
+   "kind": "judge_low_score",
+   "detail": "pacing=0 — 小讲师:你刚才说每换成一只兔多2只脚，这个想法很关键，那我们来检查一下：如果兔有5只，鸡有3只，总脚数是不是真的等于26？小讲师:你用方程设兔有x只，通过化简得; total=7/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_average_score_alternative_method",
+   "kind": "judge_low_score",
+   "detail": "total=9/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_chicken_rabbit_misconception_repair",
+   "kind": "judge_low_score",
+   "detail": "total=9/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_rectangle_perimeter_alternative_method",
+   "kind": "judge_low_score",
+   "detail": "grade_fit=0 — 学生:我会再用代入或标准步骤复核，两个方法结果一致才算完整。; pacing=0 — 小讲师连续两轮未回应学生关于'复核'的表述，直接重复追问'长方形有几条长边和几条宽边'，随后又突然插入'学习证据还不够'的机械话术，导致对话逻辑断裂。; total=3/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_distance_speed_complete_reasoning",
+   "kind": "judge_low_score",
+   "detail": "total=9/12"
+  }
+ ],
+ "calls_used": 222
+}

@@ -1,0 +1,94 @@
+{
+  "round": 28,
+  "parent_id": 1,
+  "variant_id": 5,
+  "parent_template": "别急，请复讲解题过程：先说出你的核心思路，再明确写出第一步的具体算式或操作。请给出可验证的结论，以便我们确认掌握情况。",
+  "variant_template": "请复讲：先说核心思路，再写出第一步的具体算式或操作，最后给出可验证的结论。请确保包含明确数字或步骤，以便确认掌握。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": false,
+  "parent_scores": {
+    "mean_score": 10.0,
+    "needs_review_rate": 0.25,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.125
+  },
+  "variant_scores": {
+    "mean_score": 8.1875,
+    "needs_review_rate": 0.375,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.3125
+  },
+  "accepted": false,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-别急，请复讲解题过程：先说出你的核心思路，再明确写出第一步的具体算式或操作。请给出可验证的结论，以便我们确认掌握情况。",
+    "+请复讲：先说核心思路，再写出第一步的具体算式或操作，最后给出可验证的结论。请确保包含明确数字或步骤，以便确认掌握。"
+  ],
+  "stats": {
+    "calls": 92,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 513630
+  },
+  "failures": [
+    {
+      "case_id": "small_lecturer_math_gold_candidates_decimal_multiplication_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中未出现实质性的方法总结，也未对学生掌握情况进行判断，仅以'学习证据还不够'为由中断。; total=8/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_rectangle_perimeter_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗? ... 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; summary_mastery=0 — 对话中无总结环节，小讲师重复提示后对话直接结束，未对学生表现进行任何掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_unit_rate_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "total=8/12"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_chicken_rabbit_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师连续两轮未等待学生回应即输出: '那这10只脚差值能换算成几只兔子呢？' 紧接着 '这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?'; summary_mastery=0 — 对话中无实质总结，小讲师仅以 '这一题的学习证据还不够' 中断对话，未复述学生已完成的正确推理(16只脚、差10只)，也未给出掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_average",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:你正确地计算了三次测验的总分是264分...下一步只需将264除以3...注意：平均分不是最高分和最低分的平均值...但还需确认最终除法步骤。; summary_mastery=0 — 小讲师:你正确地计算了三次测验的总分是264分...这个关键区分你已经意识到，但还需确认最终除法步骤。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_simple_probability_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结环节，小讲师未复述学生关键学习证据或给出掌握判断，直接结束。; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_average_score_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师连续两轮未推进：'你能从题目里再确认一个已知条件吗?' 和 '这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?'，学生已给出第一步(相加得; summary_mastery=0 — 对话中无总结环节，小讲师以'学习证据还不够'为由中断，未对学生已完成的'相加得270'步骤进行确认或方法总结。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_average_score_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_rectangle_perimeter_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; pacing=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗? (连续重复两轮); total=4/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_parentheses_equation_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'这一题的学习证据还不够'为由中断，未复述学生已掌握的第一步，也未给出掌握判断。; termination=0 — 学生已正确完成第一步（x+3=9），小讲师未引导完成第二步即终止对话，属于学生未掌握就终止。; total=7/12"
+    }
+  ]
+}

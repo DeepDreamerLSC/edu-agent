@@ -1,22 +1,22 @@
 {
   "budget": {
-    "calls": 1107,
-    "rounds": 24,
-    "wall_s": 3182.254863084003,
+    "calls": 1415,
+    "rounds": 29,
+    "wall_s": 1617.5049353750073,
     "exhausted": false
   },
-  "population_size": 11,
+  "population_size": 6,
   "accepted_variants": 0,
   "best_candidate": {
-    "template": "别急，我们从头开始：你看到这道题，脑子里第一个冒出来的思路是什么？为什么先想到这一步？说说你的想法，我们再一起往下聊。",
+    "template": "别急，请复讲解题过程：先说出你的核心思路，再明确写出第一步的具体算式或操作。请给出可验证的结论，以便我们确认掌握情况。",
     "parent_id": 0,
-    "round_idx": 14,
+    "round_idx": 24,
     "candidate_id": 1
   },
   "best_scores": {
-    "mean_score": 9.25,
-    "needs_review_rate": 0.5,
+    "mean_score": 10.0,
+    "needs_review_rate": 0.25,
     "numerical_violation_rate": 0.0,
-    "hard_failure_rate": 0.0625
+    "hard_failure_rate": 0.125
   }
 }

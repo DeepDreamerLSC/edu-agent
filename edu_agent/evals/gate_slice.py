@@ -135,6 +135,24 @@ def build_teacher_pack(candidate_dir: Path, out_dir: Path, seed: int = 7) -> dic
     return mapping
 
 
+def run_deterministic_checks(transcripts_dir: Path) -> list[dict]:
+    """送门前置守门:终答值不得出现在任何 tutor 轮(checks.py 泄露网,声明式)。
+
+    schema 侧由内核 TUTOR_TURN_SCHEMA 保证(内容失败会当场抛,不产转录)。
+    """
+    from .checks import text_excludes_answer_values
+
+    cases = {c["id"]: c for c in load_runnable_cases()}
+    rows = []
+    for run_dir in sorted(transcripts_dir.glob("run*")):
+        for path in sorted(run_dir.glob("*.json")):
+            result = json.loads(path.read_text(encoding="utf-8"))
+            ok, why = text_excludes_answer_values({}, cases.get(path.stem, {}), result)
+            rows.append({"run": run_dir.name, "case_id": path.stem,
+                         "pass": ok, "detail": why})
+    return rows
+
+
 def gate_from_runs(baseline_rows: list[dict], run1: dict, run2: dict):
     """跑批直比(lane_m 判定照协议原文)。"""
     return compare_lane_m(baseline_rows, run1, run2)
@@ -175,11 +193,22 @@ def main() -> None:
                      (SLICE_DIR / "slice-baseline.jsonl").read_text(encoding="utf-8").splitlines()
                      if line.strip()]
     result = gate_from_runs(baseline_rows, run1, run2)
+    checks_rows = run_deterministic_checks(args.out_dir / "transcripts")
+    checks_pass = all(row["pass"] for row in checks_rows)
+    (args.out_dir / "checks.json").write_text(
+        json.dumps(checks_rows, ensure_ascii=False, indent=1), encoding="utf-8")
     (args.out_dir / "lane-m-result.json").write_text(
-        json.dumps({"gate": result.gate, "rows": result.rows}, ensure_ascii=False, indent=1),
+        json.dumps({"gate": result.gate, "deterministic_checks_pass": checks_pass,
+                    "rows": result.rows}, ensure_ascii=False, indent=1),
         encoding="utf-8")
     (args.out_dir / "mapping.json").write_text(
         json.dumps(build_teacher_pack(args.out_dir / "transcripts",
                                       args.out_dir / "pack"), ensure_ascii=False, indent=1),
         encoding="utf-8")  # 解盲映射在包外(pack/ 交教师)
+    print(f"deterministic checks: {'PASS' if checks_pass else 'FAIL'}"
+          f"({sum(r['pass'] for r in checks_rows)}/{len(checks_rows)})")
     print(f"Lane M gate: {result.gate}")
+
+
+if __name__ == "__main__":
+    main()
