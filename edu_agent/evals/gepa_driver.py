@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 from edu_agent.evals import gepa_loop, GepaConfig
+from edu_agent.evals.image_teaching import load_scenarios, to_cases
 from edu_agent.gateway import Gateway, load_registry
 
 
@@ -19,14 +20,10 @@ def main():
     parser.add_argument("--max-calls", type=int, default=100, help="预算上限(calls)")
     args = parser.parse_args()
     
-    # 加载 train cases (从 93 案工件取前 20 个)
-    cases_file = Path("edu_agent/evals/artifacts/judge-v3.2-rescore-93/judge-cases.jsonl")
-    train_cases = []
-    for i, line in enumerate(cases_file.read_text(encoding="utf-8").splitlines()):
-        if i >= 20:
-            break
-        if line.strip():
-            train_cases.append(json.loads(line))
+    # 加载 train cases (从 scenario 语料取,有 student_turns/steps)
+    scenarios_path = Path("edu_agent/evals/datasets/small_lecturer_image_teaching_v1.json")
+    scenarios = load_scenarios(scenarios_path)
+    train_cases = to_cases(scenarios)[:20]  # 取前 20 案
     
     # 初始 elicit 模板
     initial_template = "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。"
@@ -42,7 +39,7 @@ def main():
         )
         
         print(f"GEPA spike: rounds={config.rounds}, batch_size={config.batch_size}, max_calls={config.max_calls}")
-        print(f"Train cases: {len(train_cases)}")
+        print(f"Train cases: {len(train_cases)} (from scenario corpus with student_turns)")
         print(f"Initial template: {initial_template[:50]}...")
         
         population, scores, reports = gepa_loop(

@@ -34,6 +34,48 @@ def test_elicit_subject_calls_kernel():
     subject._kernel_subject.run_case.assert_called_once()
 
 
+def test_elicit_subject_sensitivity_proof():
+    """敏感性自证(P1-1):monkeypatch 实际影响 _ELICIT_TEMPLATE。
+    
+    同案、同 seed、不同 initial_template → 模板确实被替换。
+    这是目标函数敏感性的一票证据:monkeypatch 不是 noop。
+    
+    注意:此测试验证模板替换机制,不验证 transcript 差异(那需要真实 API)。
+    真实敏感性需 smoke test 验证(README §五问①)。
+    """
+    template1 = "模板 A:请说说你的思路"
+    template2 = "模板 B:从头讲一遍"
+    
+    gateway = MagicMock()
+    subject1 = ElicitSubject(template1, gateway)
+    subject2 = ElicitSubject(template2, gateway)
+    
+    # Mock to capture the template used during run_case
+    captured1 = []
+    captured2 = []
+    
+    def make_mock(subject, captured):
+        def mock_run_case(case):
+            captured.append(subject.get_active_template())
+            return {"turns": [], "summary": "", "session_id": "test"}
+        return mock_run_case
+    
+    subject1._kernel_subject.run_case = make_mock(subject1, captured1)
+    subject2._kernel_subject.run_case = make_mock(subject2, captured2)
+    
+    # Run both
+    subject1.run_case({"id": "test", "question": "1+1=?"})
+    subject2.run_case({"id": "test", "question": "1+1=?"})
+    
+    # Verify templates were different during execution
+    assert captured1[0] == template1
+    assert captured2[0] == template2
+    assert captured1[0] != captured2[0]
+    
+    # Verify original is restored after each call
+    # (We can't check kernel._ELICIT_TEMPLATE directly, but the finally block ensures restoration)
+
+
 # === 2. Mini-batch sampling ===
 
 def test_sample_batch_deterministic():

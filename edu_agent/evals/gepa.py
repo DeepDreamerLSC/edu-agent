@@ -42,6 +42,10 @@ class ElicitSubject:
     def name(self) -> str:
         return f"elicit-{hash(self.template) % 10000:04d}"
     
+    def get_active_template(self) -> str:
+        """获取当前激活的 elicit 模板(测试用,验证 monkeypatch 生效)。"""
+        return kernel._ELICIT_TEMPLATE
+    
     def run_case(self, case: dict) -> dict:
         original = kernel._ELICIT_TEMPLATE
         try:
