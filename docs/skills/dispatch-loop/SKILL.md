@@ -82,19 +82,26 @@ description: >
 - **派单给伪选项**:编号选项必须是接收者可执行的;禁止项放纪律段一句带过,不给编号(避免假决策);
 - **纪律 boilerplate 重复**:接收者有 AGENTS.md,纪律条款不重抄;压成"纪律照章程"一行,仅列本次例外。
 
-## 七、Issue 路由(粗粒度任务)
+## 七、Issue 生命周期(用户裁定 2026-09-16)
 
-派单时留痕到对应 issue,不再默认 #253。
+回执/留痕落点 = 派单消息写明的 issue(无固定路由表,旧表已废)。board.json 每个 task 带 `issue` 字段;看门狗盯 `issue-watch.issues` 所列 issue(每轮重读)。
 
-| 任务 | Issue |
-|---|---|
-| 人审标定集(judge 外部有效性) | #253 |
-| GEPA 执行序(①②③ 三键) | #284 |
-| ⑦ 门(教师 promotion gate) | #285 |
-| RM 试金石(T1 候选对) | #286 |
-| PM 运营日志(派发/收编/会话切换) | #287 |
+**创建门**——新 issue 前四问,缺一不开:
+1. Consumer:谁现在需要这个结果?
+2. Next action:未来 7 天具体做什么?
+3. Owner:谁执行?
+4. Exit:什么事实发生后关闭?
 
-**规则**:
-- 派单时根据任务性质选择对应 issue
-- board.json 每个 task 加 `issue` 字段指向对应 issue
-- 看门狗盯所有 7 个 issue(253/263/254/284/285/286/287)
+不开的分流:只是决定 → anchor comment(#238/#255);只是以后可能 → anchor 记 trigger 后结束;只是存研究结果 → 文档/工件/PR;只是另一 issue 的一步 → 父 issue checklist。
+
+**生命周期门**——Open 仅三种:ACTIVE(正做/马上能做)、BLOCKED(有 owner+解除条件,等外部输入)、ANCHOR(极少量 living anchor,#238/#255/#241)。DEFERRED / DECIDED / DONE / SUPERSEDED 一律 Closed。Closed ≠ 永久完成:触发时 reopen,或新开执行 issue 链回旧裁定——不用 Open 表示未来可能性。
+
+**死亡门**——关联 PR merge 后,同一收尾动作里二选一:exit 满足 → close;仍有真实工作 → 更新唯一 next action + owner。禁止「合了但留着以后可能有用」。
+
+**WIP 上限**——active execution issue ≤ 5(不含 anchor)。开第 6 个前,必须指认哪个旧 issue 被完成/关闭/合并/降级。
+
+**子 issue 拆分**——仅当可独立执行 + 独立验收 + 生命周期明显不同;否则就是父 issue checklist。
+
+**单一正本**——一个事实只有一个正本(例:「GEPA 当前状态」只在 #256);其他地方只链接,不复制状态。
+
+**开工 lint**——每轮开工对所有 open 非 anchor issue 核 owner / next action / exit 是否仍成立;「无 next action」或「等以后」→ close 或 rewrite。本 skill 自身执行,不上 bot/Action。
