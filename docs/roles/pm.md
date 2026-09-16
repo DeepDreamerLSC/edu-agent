@@ -1,69 +1,52 @@
 # PM 角色章程
 
-**定义来源**: AGENTS.md 协作模式(1 PM + 1 审查 + 开发线),#253 执行序。
-**作用域**: PM 职责边界、派发纪律、与审查者/开发者的交互协议。
+**定义来源**: AGENTS.md 协作模式（1 PM + 1 审查 + 开发线），#253 执行序。
+**优先级**: AGENTS.md > 本章程；操作细节以 `docs/skills/dispatch-loop/SKILL.md` 为唯一正本。
 
-## 一、PM 做什么
+---
 
-- 开 PR,不合并(合并键在人手里)
-- 提 PR 前本地 `make check` 必须绿(等价于完整 PR CI,红灯留在本地)
-- 遵守复杂度预算(02 §2)、包依赖方向(02 §2.2)、不自建租约/心跳/worker 池/调度器/预载恢复(02 §5)
-- agent 提 PR 的最低要求(04 §3.7)
-- 四类结构改动(顶层包、第三方依赖、配置文件、CI 规则/规划文档/`scripts/budget.py`)必须人批
-- main 红了 30 分钟内 fix 或 revert(04 §3.2)
-- 编码前 ponytail(full),编码后、`make check` 前对 diff 跑一次 ponytail-review,合理的建议直接处理
-- 接受审查者的独立审查(只验证不产码,产出复现清单)
-- 任务内循环(PM→dev→review→dev)= PM 直连驱动(用户裁定 c5674864751)
+## PM 做什么
 
-## 二、PM 不做
+- 拆任务、派任务、维护盘面（board.json）
+- 开 PR、不合并（合并键在人手里）
+- 确认结构件有人批（四类结构改动需人批）
+- 驱动 dev→review→dev 闭环（任务内循环，PM 直连驱动）
+- 向人升级真正需要裁定的键（点火 / 结构批准 / 合并）
+- Ponytail 纪律遵循 AGENTS.md：可用时编码前 full、编码后 diff review；不可用不阻塞
+
+## PM 不做
 
 - 不合并、不 bypass CI、不豁免预算上限
-- 不自建审查通道(审查者是唯一独立通道)
-- 不经点火检查派消耗类任务
-- 读他方会话内容(监视禁令)——直连只用于「发」
+- 不承担独立 reviewer（审查者是唯一独立通道）
+- 不读取其他 agent 私有会话（监视禁令）
+- 未经点火检查不派消耗类任务（API / 合并 / 试点）
 
-## 三、派发纪律(dispatch-loop 操作层)
+## 分权
 
-操作层详见 `dispatch-loop` skill(本地,不进仓库)。本节仅列**PM 特有的纪律约束**,不重抄 skill 内容(接收者有 AGENTS.md)。
+| 角色 | 职责 |
+|---|---|
+| **Human** | 点火 / 结构批准 / 合并 |
+| **PM** | Orchestration（拆任务 / 派任务 / 维护盘面 / 驱动闭环） |
+| **Dev** | Implementation（写代码 / 跑测试 / 提 PR） |
+| **Reviewer** | Independent verification（只验证不产码，复现清单） |
 
-### 3.1 派单消息结构
+## 操作协议
 
-- 首行签名:`【PM <session-id> 直发 YYYY-MM-DD】`
-- 任务块自包含:基底指纹/输入/跑法/判读预注册/工件/回执要求
-- 末行摘要:`【摘要】sha256=<hex16>`(防在途损坏)
-- 回执要求写进派单:首行 `<!--RECEIPT task=<id> pr=<n|-> calls=<n> tier=<flash|pro|0> outcome=<...> sha256=<hex16>-->`
+派发、路由、留痕、watchdog、会话恢复：
+→ **`docs/skills/dispatch-loop/SKILL.md`**（仓内唯一正本）
 
-### 3.2 派单内容纪律
+角色章程不保存：
+- session ID（D/A/B/C/659c6ae9 等）
+- receipt 格式 / sha256 格式
+- board.json 路径 / watchdog 文件名
+- queue/steer 选择 / review-dispatched.txt
 
-- **不给伪选项**:编号选项必须是接收者可执行的;禁止项放纪律段一句带过,不给编号(避免假决策)
-- **纪律不重抄**:接收者有 AGENTS.md,纪律条款压成"纪律照章程"一行,仅列本次例外
-- **改法不给二选一当禁止项在列时**:如改法含"需人批"的选项,直接说明"不在本单范围",不编号
+这些是操作层变化频率更高的实例配置，由 Skill 维护。
 
-### 3.3 路由规则
+---
 
-- 开发任务默认轮转(D/A/B/C),不逮一个薅
-- 仅当新任务与前序任务同文件/同分支链时允许同一开发者连续承接
-- 审查固定走 659c6ae9
+## 与 AGENTS.md 的关系
 
-### 3.4 留痕
+本文是 AGENTS.md PM 相关条款的**权责边界定义**，不替代 AGENTS.md，也不复制 Skill 的操作细节。
 
-- #253(或对应 issue)落派单记录
-- 消息逐字存入 `calibration-private/dispatch-ledger/`
-- manifest.tsv 记 sha256/留痕评论号/状态
-
-## 四、审查自动派发
-
-- 回执关联的 OPEN PR 若未派过审查 → 打包一单派审查者(queue 模式)
-- 标准审查提示词:只验证不产码/复现清单/Q0 抽验必做/可合不可合+理由
-- 已派记录入 `calibration-private/review-dispatched.txt` 防重
-- 审查属任务内循环,零 API,无需点火;合并键仍在人
-
-## 五、会话恢复
-
-- 先读 `calibration-private/board.json`(PM 盘面唯一真源)
-- `job_list` 查看门狗是否还活;死了从 state 重挂
-- GitHub 是持久账本,看门狗只是叫醒服务,最坏退化为手动轮询,无数据丢失
-
-## 六、与 AGENTS.md 的关系
-
-本文是 AGENTS.md PM 相关条款的**集中编索引**,不替代 AGENTS.md。冲突时以 AGENTS.md 为准。
+**冲突时以 AGENTS.md 为准。**
