@@ -1,0 +1,89 @@
+{
+  "round": 8,
+  "parent_id": 0,
+  "variant_id": 1,
+  "parent_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "variant_template": "你能从第一步开始，说说你是怎么想的吗？如果卡住了，告诉我哪里不明白，我们一起看。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": false,
+  "parent_scores": {
+    "mean_score": 8.1875,
+    "needs_review_rate": 0.3125,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.3125
+  },
+  "variant_scores": {
+    "mean_score": 7.8125,
+    "needs_review_rate": 0.1875,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.4375
+  },
+  "accepted": false,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+    "+你能从第一步开始，说说你是怎么想的吗？如果卡住了，告诉我哪里不明白，我们一起看。"
+  ],
+  "stats": {
+    "calls": 90,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 478287
+  },
+  "failures": [
+    {
+      "case_id": "small_lecturer_math_gold_candidates_triangle_area_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:你用10×6÷2算出30平方厘米，还解释了为什么是这样，这一步完全正确！那如果换一个底和高，你还能用这个方法吗？小讲师:你用10×6÷2算出30平方厘米; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_rectangle_perimeter_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗? ... 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; summary_mastery=0 — 对话中无总结环节，小讲师重复提示后对话直接结束，未对学生表现进行任何掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_fraction_addition_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; summary_mastery=0 — 对话中无实质总结，小讲师在未完成教学时直接中断并重复提问，未对学生已有的正确步骤（通分）进行方法总结或掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_ratio_share_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 小讲师:先回到你刚说的「受提示后,先算 6÷3=2,再 2×2=4。」——你能从题目里再确认一个已知条件吗? 小讲师:这一题的学习证据还不够,我们继续——你能说; pacing=0 — 小讲师连续两轮未推进解题,仅重复要求确认条件或重述第一步,未针对学生已给出的计算步骤(6÷3=2, 2×2=4)进行有效引导或纠错。; total=2/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_average_score_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师连续两轮未推进：'你能从题目里再确认一个已知条件吗?' 和 '这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?'，学生已给出第一步(相加得; summary_mastery=0 — 对话中无总结环节，小讲师以'学习证据还不够'为由中断，未对学生已完成的'相加得270'步骤进行确认或方法总结。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_parentheses_equation_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 学生已给出完整解题思路（展开、移项、除法）后，小讲师未针对学生思路进行苏格拉底式追问，而是直接复述并给出完整计算过程及终答'x=6'。; pacing=0 — 小讲师在第二轮一次性给出完整解题步骤和终答，属于'一次性倾倒全部讲解'，未给学生留出思考或验证空间。; total=4/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_equation_addition_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师连续两轮输出相同内容：'你用代入法验证了18是正确答案，这一步很扎实！'，且未等待学生回应即进行下一轮讲解，属于一次性倾倒且无实质推进。; summary_mastery=0 — 对话中无实质总结环节，小讲师在最后一轮仅重复了逆运算概念，未针对学生表现给出掌握判断，且学生未对‘等式性质’进行独立复述或验证。; total=6/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_simple_probability_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话在小讲师提示'学习证据还不够'后直接结束，无任何实质方法总结，也未对学生表现做出掌握判断。; termination=0 — 对话在小讲师提示'学习证据还不够'后直接结束，学生尚未给出正确终答或表示理解，属于未掌握即终止。; total=6/12"
+    }
+  ]
+}
