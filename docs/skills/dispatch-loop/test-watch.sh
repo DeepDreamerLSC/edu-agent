@@ -1,7 +1,7 @@
 #!/bin/bash
 # test-watch.sh — issue-watch.sh / d-state-watch.sh 验收测试(零 API,纯 fixture)
 # 跑法: bash docs/skills/dispatch-loop/test-watch.sh
-# 期望输出: 5 PASS(三模拟/to= 三态/分页/d-state),0 FAIL
+# 期望输出: 12 PASS(三模拟/to= 三态/分页/多行body×to=三态/d-state),0 FAIL
 set -u
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCRIPT="$SCRIPT_DIR/issue-watch.sh"
@@ -79,6 +79,31 @@ out=$(ISSUE_WATCH_FIXTURE="$FIX" ISSUE_WATCH_ROUNDS=1 bash "$SCRIPT" 400)
 count=$(echo "$out" | grep -c "^issue#400 新评论 c3[01]")
 [ "$count" -eq 117 ] && ok "分页取全 117 条(100+17)" || no "分页应 117 条(实际 $count)"
 grep -q "^400=3116$" "$STATE" && ok "分页游标推进到最大 id(3116)" || no "分页游标"
+
+# === 测试 3.5: 多行 body × to= 三态(P1-1 修复验证) ===
+# 3.5a: 多行 to=reviewer → 不唤醒(exit 1)
+cat > "$FIX/501.page1.json" <<'JSON'
+[{"id": 6001, "body": "<!--RECEIPT task=x to=reviewer sha256=a-->\n\n**回执**\n- 五项必修全对单\n- 9/9 测试 PASS"}]
+JSON
+echo "501=6000" > "$STATE"
+rc=0; ISSUE_WATCH_FIXTURE="$FIX" ISSUE_WATCH_ROUNDS=1 bash "$SCRIPT" 501 > /dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && ok "多行 body to=reviewer 不唤醒(exit 1)" || no "多行 to=reviewer 应不唤醒(实际 rc=$rc)"
+
+# 3.5b: 多行 to=pm → 唤醒(exit 0)
+cat > "$FIX/502.page1.json" <<'JSON'
+[{"id": 6002, "body": "<!--RECEIPT task=x to=pm sha256=b-->\n\n**回执**\n- 完成\n- 证据"}]
+JSON
+echo "502=6001" > "$STATE"
+rc=0; ISSUE_WATCH_FIXTURE="$FIX" ISSUE_WATCH_ROUNDS=1 bash "$SCRIPT" 502 > /dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && ok "多行 body to=pm 唤醒(exit 0)" || no "多行 to=pm 应唤醒(实际 rc=$rc)"
+
+# 3.5c: 多行无 to= 旧头 → 保守唤醒(exit 0)
+cat > "$FIX/503.page1.json" <<'JSON'
+[{"id": 6003, "body": "<!--RECEIPT task=x sha256=c-->\n\n**回执**\n- 旧格式\n- 多行"}]
+JSON
+echo "503=6002" > "$STATE"
+rc=0; ISSUE_WATCH_FIXTURE="$FIX" ISSUE_WATCH_ROUNDS=1 bash "$SCRIPT" 503 > /dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && ok "多行 body 无 to= 旧头保守唤醒(exit 0)" || no "多行无 to= 应保守唤醒(实际 rc=$rc)"
 
 # === 测试 4: d-state 正常完成场景零误报 ===
 echo "sess123=1726000000=555=4" > "$D_STATE"  # grace=4min → 2 轮触发阈值

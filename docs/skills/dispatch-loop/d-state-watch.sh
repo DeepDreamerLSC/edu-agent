@@ -36,8 +36,20 @@ for i in $(seq 1 "$MAX_ROUNDS"); do
         if [ -n "$D_STATE_WATCH_FIXTURE" ] && [ -f "${D_STATE_WATCH_FIXTURE}.receipt" ]; then
           latest_id=$(cat "${D_STATE_WATCH_FIXTURE}.receipt")
         else
-          latest_id=$(gh api "repos/DeepDreamerLSC/edu-agent/issues/$expected_issue/comments?per_page=1" \
-              --jq ".[0].id" 2>/dev/null)
+          # 取 max id(GitHub API 默认升序,.[0] 是最旧,需翻页取全)
+          page=1
+          max_id=0
+          while true; do
+            ids=$(gh api "repos/DeepDreamerLSC/edu-agent/issues/$expected_issue/comments?per_page=100&page=$page" \
+                  --jq ".[].id" 2>/dev/null)
+            [ -z "$ids" ] && break
+            page_max=$(echo "$ids" | sort -n | tail -1)
+            [ -n "$page_max" ] && [ "$page_max" -gt "$max_id" ] && max_id=$page_max
+            count=$(echo "$ids" | wc -l)
+            [ "$count" -lt 100 ] && break
+            page=$((page+1))
+          done
+          [ "$max_id" -gt 0 ] && latest_id=$max_id
         fi
         if [ -n "$latest_id" ] && echo "$latest_id" | grep -qE "^[0-9]+$" && [ "$latest_id" -gt "$last" ]; then
           echo "✓ 会话 $SID idle ≥${GRACE}min,但 issue#$expected_issue 有新回执——正常完成"

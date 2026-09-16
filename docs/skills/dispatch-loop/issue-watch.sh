@@ -30,22 +30,28 @@ import json, sys
 data = json.load(open('$ISSUE_WATCH_FIXTURE/$is.page${page}.json'))
 for c in data:
     if int(c['id']) > $last:
-        sys.stdout.write(str(c['id']) + '║' + c['body'] + '\n')
+        body_escaped = json.dumps(c['body'])[1:-1]  # JSON 转义,换行变 \\n
+        sys.stdout.write(str(c['id']) + '\t' + body_escaped + '\n')
 " 2>/dev/null) || out=""
       elif ! out=$(gh api "repos/$REPO/issues/$is/comments?per_page=100&page=$page" \
-          --jq ".[] | select((.id|tonumber) > $last) | (.id|tostring) + \"║\" + .body" 2>/dev/null); then
+          --jq ".[] | select((.id|tonumber) > $last)" 2>/dev/null | \
+          python3 -c "
+import json, sys
+for line in sys.stdin:
+    c = json.loads(line)
+    body_escaped = json.dumps(c['body'])[1:-1]
+    sys.stdout.write(str(c['id']) + '\t' + body_escaped + '\n')
+" 2>/dev/null); then
         FAIL=$((FAIL+1))
         if [ "$FAIL" -ge 20 ]; then echo "issue#$is: gh 连续失败 $FAIL 轮,退出待查(auth/网络)"; exit 2; fi
         break
       fi
       FAIL=0
       [ -z "$out" ] && break
-      # 累积本页新评论
-      while IFS= read -r line; do
-        cid=${line%%║*}
-        body=${line#*║}
+      # 累积本页新评论(TSV: id\tbody_escaped)
+      while IFS=$'\t' read -r cid body_escaped; do
         new_ids+=("$cid")
-        new_bodies+=("$body")
+        new_bodies+=("$body_escaped")
       done <<< "$out"
       # 检查是否满页(需翻页)
       count=$(echo "$out" | wc -l)
@@ -57,12 +63,27 @@ for c in data:
       max_id=0
       for i in "${!new_ids[@]}"; do
         cid=${new_ids[$i]}
-        body=${new_bodies[$i]}
+        body_escaped=${new_bodies[$i]}
+        body=$(python3 -c "import json,sys; print(json.loads('\"' + sys.argv[1] + '\"'))" "$body_escaped")
         echo "issue#$is 新评论 c$cid:"
         echo "${body:0:2000}"  # 大幅截断(2000字,非240)
         [ "$cid" -gt "$max_id" ] && max_id=$cid
-        # 解析 to= 字段(旧头无 to= 保守唤醒)
-        if echo "$body" | grep -qE '<!--RECEIPT .*to=(reviewer|dev|log)'; then
+        # 解析 to= 字段(精确抽字段值,非行内首次匹配)
+        to=$(python3 -c "
+import re, sys
+body = sys.argv[1]
+m = re.search(r'<!--RECEIPT\s+([^>]*?)-->', body)
+if m:
+    fields = m.group(1)
+    to_m = re.search(r'\bto=(\w+)', fields)
+    if to_m:
+        print(to_m.group(1))
+    else:
+        print('')  # 无 to= 旧头
+else:
+    print('')  # 非回执
+" "$body")
+        if [ "$to" = "reviewer" ] || [ "$to" = "dev" ] || [ "$to" = "log" ]; then
           : # 非 PM 目标,只记不叫
         else
           wake=1  # to=pm 或无 to= 保守唤醒
