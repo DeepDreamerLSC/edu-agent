@@ -476,3 +476,78 @@ def test_paired_loop_verdict_red_light_when_delta_zero(tmp_path):
     paired_summary = json.loads((tmp_path / "paired-report.json").read_text())
     # 全 Δ=0 → 红灯(冻结协议,不是 mixed)
     assert paired_summary["verdict"] == "红灯"
+
+
+def test_structural_probe_dumps_artifacts_before_over_budget_exit(tmp_path):
+    """Harness P1:超预算退出必须先落工件再退(付费数据不许销毁)。"""
+    import sys
+    import json
+    import pytest
+    from pathlib import Path
+    from unittest.mock import patch, MagicMock
+    
+    # 导入 probe 脚本
+    probe_path = Path("edu_agent/evals/artifacts/gepa-spike/structural-probe")
+    sys.path.insert(0, str(probe_path))
+    import run_probe
+    
+    # 设置输出目录为 tmp_path
+    original_parent = run_probe.PARENT_TEMPLATE
+    original_variant = run_probe.STRUCTURAL_VARIANT
+    original_cap = run_probe.HARD_CAP_CALLS
+    
+    try:
+        # 修改硬顶为低值以便测试
+        run_probe.HARD_CAP_CALLS = 10
+        
+        # Mock Gateway 和 load_scenarios
+        mock_gateway = MagicMock()
+        mock_cases = [
+            {"id": "c1", "question": "1+1?", "grade": "三年级", "reference_answer": "2"},
+            {"id": "c2", "question": "2+2?", "grade": "三年级", "reference_answer": "4"},
+        ]
+        
+        # Mock evaluate_batch_paired 返回高调用数(> HARD_CAP_CALLS)
+        def fake_evaluate(cases, template, gateway):
+            scores = [
+                {"case_id": f"c{i+1}", "total": 10, "verdict": "pass", "mi": 2, "hard_fail": False}
+                for i in range(len(cases))
+            ]
+            fqs = [{"case_id": f"c{i+1}", "first_question": "好"} for i in range(len(cases))]
+            stats = {"calls": 50, "tokens_in": 1000, "tokens_out": 500}  # 50 > 10 硬顶
+            return scores, fqs, stats
+        
+        # Mock 其他依赖
+        with patch.object(run_probe, 'load_registry'), \
+             patch.object(run_probe, 'Gateway', return_value=mock_gateway), \
+             patch.object(run_probe, 'load_scenarios', return_value=mock_cases), \
+             patch.object(run_probe, 'evaluate_batch_paired', side_effect=fake_evaluate), \
+             patch.object(run_probe, '__file__', str(tmp_path / "run_probe.py")):
+            
+            # 运行 main(),期望 sys.exit(1)
+            with pytest.raises(SystemExit) as exc_info:
+                run_probe.main()
+            
+            # 验证 exit code = 1
+            assert exc_info.value.code == 1
+            
+            # 验证工件已落(关键断言)
+            round_path = tmp_path / "round-00.json"
+            paired_path = tmp_path / "paired-report.json"
+            
+            assert round_path.exists(), "round-00.json 必须在超预算退出前写入"
+            assert paired_path.exists(), "paired-report.json 必须在超预算退出前写入"
+            
+            # 验证 paired-report.json 内容
+            paired_report = json.loads(paired_path.read_text())
+            assert paired_report["over_budget"] is True, "over_budget 标记必须为 true"
+            assert paired_report["real_calls"] == 100  # 50 + 50
+            assert "deltas" in paired_report
+            assert "verdict" in paired_report
+    
+    finally:
+        # 恢复原值
+        run_probe.PARENT_TEMPLATE = original_parent
+        run_probe.STRUCTURAL_VARIANT = original_variant
+        run_probe.HARD_CAP_CALLS = original_cap
+        sys.path.remove(str(probe_path))

@@ -38,7 +38,7 @@ def main() -> None:
     registry = load_registry(Path("configs/models.yaml"))
     gateway = Gateway(registry)
 
-    scenarios_path = Path("edu_agent/evals/datasets/image_teaching_v1.json")
+    scenarios_path = Path("edu_agent/evals/datasets/small_lecturer_image_teaching_v1.json")
     cases = load_scenarios(scenarios_path)
     print(f"加载 {len(cases)} cases,准备跑 parent + variant 配对...")
 
@@ -54,13 +54,6 @@ def main() -> None:
         cases, STRUCTURAL_VARIANT, gateway)
     print(f"  variant stats: {variant_stats}")
 
-    # 预算检查
-    total_calls = parent_stats["calls"] + variant_stats["calls"]
-    print(f"总调用: {total_calls} (硬顶 {HARD_CAP_CALLS})")
-    if total_calls > HARD_CAP_CALLS:
-        print(f"ERROR: 超预算 {total_calls} > {HARD_CAP_CALLS},停止")
-        sys.exit(1)
-
     # 配对
     paired_cases = _build_paired_cases(
         parent_scores, variant_scores, parent_fqs, variant_fqs,
@@ -69,16 +62,18 @@ def main() -> None:
 
     # 空转检查
     idle_count = sum(1 for c in paired_cases if c.get("idle"))
-    if idle_count > 0:
-        print(f"ERROR: 检测到 {idle_count} 案空转(变体首问 = parent 逐字),无效跑")
-        sys.exit(1)
+    idle_detected = idle_count > 0
 
     # verdict
     deltas = [c["delta"] for c in paired_cases if "error" not in c]
     verdict = _compute_paired_verdict(deltas)
     print(f"Verdict: {verdict}")
 
-    # round-00.json
+    # 预算统计
+    total_calls = parent_stats["calls"] + variant_stats["calls"]
+    over_budget = total_calls > HARD_CAP_CALLS
+
+    # round-00.json (先落工件,再检查预算)
     round_report = {
         "parent_template": PARENT_TEMPLATE,
         "variant_template": STRUCTURAL_VARIANT,
@@ -101,7 +96,8 @@ def main() -> None:
         "real_calls": total_calls,
         "tokens_in": parent_stats.get("tokens_in", 0) + variant_stats.get("tokens_in", 0),
         "tokens_out": parent_stats.get("tokens_out", 0) + variant_stats.get("tokens_out", 0),
-        "over_budget": total_calls > HARD_CAP_CALLS,
+        "over_budget": over_budget,
+        "idle_detected": idle_detected,
     }
     with open(output_dir / "paired-report.json", "w", encoding="utf-8") as f:
         json.dump(paired_report, f, ensure_ascii=False, indent=2)
@@ -110,6 +106,16 @@ def main() -> None:
     print(f"  round-00.json")
     print(f"  paired-report.json")
     print(f"Verdict: {verdict}, Mean Δ: {mean_delta:.2f}, Calls: {total_calls}")
+
+    # 预算检查 (工件已落,再退出)
+    print(f"总调用: {total_calls} (硬顶 {HARD_CAP_CALLS})")
+    if over_budget:
+        print(f"ERROR: 超预算 {total_calls} > {HARD_CAP_CALLS},停止")
+        sys.exit(1)
+
+    if idle_detected:
+        print(f"ERROR: 检测到 {idle_count} 案空转(变体首问 = parent 逐字),无效跑")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

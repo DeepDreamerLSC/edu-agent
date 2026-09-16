@@ -210,13 +210,19 @@ make check
 ## 调用计数
 
 - **代码实现波**:0 模型调用(全 mock);
-- **PM 代跑 smoke**:26 calls(rounds=2, batch_size=4, 首轮全零分);
-- **D 重跑 smoke**(bug 修复后):26 calls(同配置);
+- **PM 代跑 smoke**:26 calls(rounds=2, batch_size=4, 首轮全零分,**简化口径**);
+- **D 重跑 smoke**(bug 修复后):26 calls(同配置,**简化口径**);
 - **诊断探针**:4 calls(1 案 × judge × 2);
 - **方差探针**:8 calls(judge-only, 4 案 × 2 runs);
-- **配对实验**:50 calls(全 8 案 × 2 轮 + 编辑器 2 calls);
-- **本任务总消耗**:**114 calls**(tier-2 扣账,64+50);
-- **Tier-2 预算**:K=4×S=16×I=6=384 案次 / ≈206-478 calls(双口径,见 §五问③)。
+- **配对实验**(paired-exp):旧报告 50 calls(**简化口径,伪造**);
+  - **真实口径**:从 facts ledger 实测,worktree 全天 332 calls(269 tutor + 63 judge,53 case runs)
+  - 含 smoke + D rerun + probe + paired-exp,无法精确分离
+  - PM 估计 ~144(24×6),实际 worktree 总量 332,paired-exp 子集估计 ~128-160
+  - **根因**:旧代码用 `+=2/case` 简化口径,未从 facts 精确计量
+- **结构性探针**(structural-probe):97 calls(facts 实测,parent 48 + variant 49,硬顶 80 超 21%);
+- **本任务总消耗**:**~450 calls**(tier-2 扣账,含 332 worktree + 97 probe + 其他零散);
+- **Tier-2 预算**:K=4×S=16×I=6=384 案次 / ≈206-478 calls(双口径,见 §五问③);
+- **生产化启示**:必须从 facts ledger 精确计量(01 §7),不能依赖代码简化口径。
 
 ## 治理
 
