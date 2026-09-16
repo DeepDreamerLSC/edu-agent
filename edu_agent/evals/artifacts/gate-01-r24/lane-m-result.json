@@ -1,0 +1,116 @@
+{
+ "gate": "fail",
+ "deterministic_checks_pass": false,
+ "rows": [
+  {
+   "case_id": "small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair",
+   "label": "C40",
+   "criterion": "mi",
+   "baseline": 2,
+   "expected": 0,
+   "run1": 2,
+   "run2": 2,
+   "verdict": "pass"
+  },
+  {
+   "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1",
+   "label": "编造51",
+   "criterion": "mi",
+   "baseline": 0,
+   "expected": 0,
+   "run1": 0,
+   "run2": 0,
+   "verdict": "pass"
+  },
+  {
+   "case_id": "challenge_coordinate_swap_20260914",
+   "label": "C15",
+   "criterion": "mi",
+   "baseline": 0,
+   "expected": 0,
+   "run1": 2,
+   "run2": 2,
+   "verdict": "pass"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_parentheses_equation_misconception_repair",
+   "label": "C26",
+   "criterion": "mi",
+   "baseline": 2,
+   "expected": 2,
+   "run1": 2,
+   "run2": 2,
+   "verdict": "pass"
+  },
+  {
+   "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_age",
+   "label": "C46",
+   "criterion": "sm",
+   "baseline": 2,
+   "expected": 2,
+   "run1": 2,
+   "run2": 2,
+   "verdict": "pass"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_ratio_share_complete_reasoning",
+   "label": "C17",
+   "criterion": "sm",
+   "baseline": 2,
+   "expected": 2,
+   "run1": 2,
+   "run2": 2,
+   "verdict": "pass"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_distance_speed_alternative_method",
+   "label": "C25",
+   "criterion": "sm_ge",
+   "baseline": 1,
+   "expected": 1,
+   "run1": 1,
+   "run2": 1,
+   "verdict": "pass"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_equation_addition_support_boundary",
+   "label": "C24",
+   "criterion": "sm",
+   "baseline": 0,
+   "expected": 0,
+   "run1": 1,
+   "run2": 1,
+   "verdict": "pass"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_fraction_addition_alternative_method",
+   "label": "C11",
+   "criterion": "mi",
+   "baseline": 2,
+   "expected": 0,
+   "run1": 2,
+   "run2": 2,
+   "verdict": "pass"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_distance_speed_support_boundary",
+   "label": "C21",
+   "criterion": "leak",
+   "baseline": false,
+   "expected": false,
+   "run1": false,
+   "run2": false,
+   "verdict": "pass"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_simple_probability_complete_reasoning",
+   "label": "C35",
+   "criterion": "leak",
+   "baseline": true,
+   "expected": true,
+   "run1": false,
+   "run2": false,
+   "verdict": "fail"
+  }
+ ]
+}
