@@ -830,11 +830,16 @@ def test_edit_two_knobs_injected_editor_routes_even_rounds():
     """editor 显式注入:偶代 elicit 编辑走注入编辑器;不注入时晚绑定 edit_template。"""
     from edu_agent.evals import edit_two_knobs
 
-    sentinel = MagicMock(return_value="nr变体")
+    sentinel, support_spy = MagicMock(return_value="nr变体"), MagicMock(return_value="nr问句?")
     elicit, support = edit_two_knobs("旧elicit", "旧support", 0, [], MagicMock(),
-                                     editor=sentinel)
-    assert (elicit, support) == ("nr变体", "旧support")
+                                     editors=(sentinel, support_spy))
+    assert (elicit, support) == ("nr变体", "旧support")  # 偶代 support 原样
     assert sentinel.call_args.args[:2] == ("旧elicit", [])
+    assert not support_spy.called
+    elicit, support = edit_two_knobs("旧elicit", "旧support", 1, [], MagicMock(),
+                                     editors=(sentinel, support_spy))
+    assert (elicit, support) == ("旧elicit", "nr问句?")  # 奇代 elicit 原样
+    assert support_spy.call_args.args[:2] == ("旧support", [])
 
 
 def test_gepa_loop_editor_focus_nr_uses_nr_editor(tmp_path):

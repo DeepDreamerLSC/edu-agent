@@ -30,6 +30,9 @@ def main():
                         help="双旋钮搜索空间(elicit+support,#304 头部可达族,选项 A)")
     parser.add_argument("--editor-focus", choices=["mean", "nr"], default="mean",
                     help="nr = needs_review 靶向编辑(收敛#2 选项①)")
+    parser.add_argument("--editor-role", choices=["judge_independent", "judge"],
+                        default="judge_independent",
+                        help="编辑器后端角色(搜索机械件;r24 起本地跑用 judge)")
     args = parser.parse_args()
     
     # 加载 train cases (从 scenario 语料取,有 student_turns/steps)
@@ -54,6 +57,7 @@ def main():
     try:
         config = GepaConfig(
             editor_focus=args.editor_focus,
+            editor_role=args.editor_role,
             rounds=args.rounds,
             batch_size=args.batch_size,
             max_calls=args.max_calls,
