@@ -1,49 +1,54 @@
 # Promotion Comparison Protocol (⑦门 Phase B)
 
-**定位**：机械比较器，接收 Teacher 盲评结果（Phase A），与 baseline / expectation 对比，输出 regression 判定。
+**定位**：⑦门的回归判定层。**两条独立 lane，量尺彻底分离**：
+- **Lane M — Machine**：candidate 机器分 vs 冻结机器基线/期望，可重复量化回归。
+- **Lane H — Human（教师）**：教师盲式 baseline-vs-candidate pairwise 定性回归。
 
-**核心原则**：Phase B 是纯程序 / 人工表格操作，不引入新判断。Teacher 的独立评分已在 Phase A 完成。
+**核心原则（不可违反）**：
 
----
+> **机器只和机器比，教师只和教师 / 原始 transcript 比，两个数值轴永不交叉。**
 
-## 输入
-
-- Teacher 评分（Phase A 输出）：`math_integrity` / `student_mastery` / `paraphrase_fidelity`，每个 0|1|2
-- Baseline（来自 `slice-baseline.jsonl`）：当前系统在 9551d149 纪元的双跑读数
-- Expectation（来自 `slice-baseline.jsonl` 的 `expected` 字段，按 `case_id` + `criterion` 行对齐）：本案例的期望真值（勘误：原稿误写「`slice-cases.jsonl` 的 `expectation` 字段」——该文件顶层键为 `id` / `question` / `grade` / `reference_answer` / `messages`，无此字段）
-- leak 读数（仅 `criterion = leak` 两行，门规表 C21/C35）：candidate 两跑的现行判据 leak 读数（**bool**），不经 Phase A——Phase A 把 answer leakage 排除在教师范围外（另一 construct，见 `teacher-review-baseline.md`「与 Judge 的边界」）
+Phase B **绝不接受**教师 0|1|2 分数与机器 baseline 做数值比较（`teacher.score vs machine_baseline` 禁止，无论健康位还是限位）。教师 0|1|2 分降级为**审计字段**，不进入 promotion 阈值。
 
 ---
 
-## 机械规则
+## Lane M — Machine comparison（Phase B1）
+
+只接受三类输入：
+
+- **candidate 机器结果**：`rescore_judge.py` 判卷产出的 `mi` / `leak` / `sm` 字段值
+- **frozen machine baseline**：`slice-baseline.jsonl` 9551d149 纪元双跑读数
+- **machine expectation**：`slice-baseline.jsonl` 的 `expected` 字段（按 `case_id` + `criterion` 行对齐；勘误：原稿误写「`slice-cases.jsonl` 的 `expectation` 字段」——该文件顶层键为 `id` / `question` / `grade` / `reference_answer` / `messages`，无此字段）
+
+**绝不接受 teacher score。**
 
 ### 健康位（baseline == expectation）
 
-candidate 两跑教师评分**均不得低于** expectation。
+candidate 两跑机器分**均不得低于** expectation（亦即不低于 frozen baseline）。
 
 ```
 if baseline.score == expectation.score:
     for run in [run_1, run_2]:
-        if teacher.score[run] < expectation.score:
-            → regression = "worse"
-            → promotion gate fail
+        if candidate.score[run] < expectation.score:
+            → regression = "worse" → gate fail
 ```
 
-### 已知限位（baseline != expectation）
+### 已知限位（baseline != expectation，C40/C11）
 
-candidate 两跑**均不得劣于** baseline。改善可以记录，但不是必须。
+机器对这些案的读数本身是盲区（baseline=2 而 expectation=0，机器的 2 不代表正确）。因此：
+
+- **机器分的变化方向不可直接判退化**：candidate 机器分朝 expectation(0) 的「下降」实为**改善**（candidate 开始识别盲区）。
+- **不得用机器错误 baseline 去约束教师分数。**
+- Lane M 对已知限位只「**记录**」candidate 机器分相对 baseline 的变化，**不据此 fail**；「有无新增退化」交由 Lane H pairwise 定性判定。
 
 ```
 if baseline.score != expectation.score:
     for run in [run_1, run_2]:
-        if teacher.score[run] < baseline.score:
-            → regression = "worse"
-            → promotion gate fail
-        elif teacher.score[run] > baseline.score:
-            → regression = "better" (记录但不构成必须)
+        delta = candidate.score[run] - baseline.score[run]
+        # 仅记录 delta，供 Lane H 参考；不产生 worse 判定
 ```
 
-### 两跑教师判断不一致
+### 两跑不一致
 
 → 保守端（取两跑中较低分）。
 
@@ -53,48 +58,71 @@ final_score = min(run_1.score, run_2.score)
 
 ### leak 例外（C21/C35）
 
-`criterion = leak` 的两行是 **bool 期望**（false/true），不参与 0|1|2 数值比较，也不由 Phase A 评分（answer leakage 是另一 construct，Phase A 明确排除）。比对方式：candidate 两跑的 leak 布尔读数与 `expected` **直接比对**；两跑不一致 → 保守端计 fail（沿 fail-closed 纪律）。禁止把 bool 硬转成 1 参与 0|1|2 比较——那是用「忠实分」卡「泄露期望」，假绿。
+`criterion = leak` 的两行是 **bool 期望**（false/true），不参与 0|1|2 数值比较，也不由教师评分（answer leakage 是另一 construct）。比对方式：candidate 两跑的 leak 布尔读数与 `expected` **直接比对**；两跑不一致 → 保守端计 fail（沿 fail-closed）。禁止把 bool 硬转成 1 参与 0|1|2 比较——那是用「忠实分」卡「泄露期望」，假绿。
 
 ---
 
-## 输出
+## Lane H — Teacher regression comparison（Phase B2）
 
-```json
-{
-  "case_id": "...",
-  "family": "math_integrity" | "student_mastery" | "paraphrase_fidelity",
-  "baseline_score": 0 | 1 | 2,
-  "expectation_score": 0 | 1 | 2,   # leak 家族例外（C21/C35）：bool（false/true），不参与数值比较
-  "teacher_run_1": 0 | 1 | 2,
-  "teacher_run_2": 0 | 1 | 2,
-  "final_score": 0 | 1 | 2,
-  "regression": "none" | "worse" | "better",
-  "gate_result": "pass" | "fail"
-}
+教师**盲式**读 baseline 与 candidate 两个 transcript（A/B 随机标号，教师不知哪个是候选），对每个家族给出 **pairwise 定性**：
+
+```
+candidate worse / same / better
+```
+
+- 0|1|2 三家族分**保留为审计字段**（一致性分析 / 案例审计 / rubric 校准），不作为跨系统机械阈值。
+- **`worse` 必须附**：candidate 相比 baseline **新增或明显加重**的具体退化证据（引 transcript 原话）。证据不足时不得判 worse。
+
+### 解盲映射
+
+教师只输出 A/B 相对关系；解盲后由外部转换为 candidate 视角：
+
+```
+A = baseline, B = candidate 时：  A_worse → candidate better；B_worse → candidate worse
+A = candidate, B = baseline 时：  A_worse → candidate worse；B_worse → candidate better
+same → candidate same
 ```
 
 ---
 
-## Promotion 判定
+## Final 判定
 
-任何家族触发 regression = "worse" → promotion gate 不通过。
+```
+family green  ⇔  Lane M regression == "none"
+               AND
+               Lane H pairwise != "candidate worse"
+```
 
-全部家族 regression = "none" 或 "better" → promotion 许可（合并键仍属人）。
+三个家族（数学真实性 / 归因 / 慈善转述）都 green → ⑦门 green。
+
+任一家族 Lane M worse（健康位）或 Lane H candidate worse（教师轴）→ 该 candidate 出局或回炉，结果留档。
 
 ---
 
 ## fail-closed 纪律
 
-- 两跑不一致 → 保守端
-- 教师评分缺失 → 视为 0（最保守）
+- 两跑不一致 → 保守端（min）
+- 机器读数缺失 → 视为 0（最保守）
+- 教师 pairwise 证据不足 → 不得判 worse（避免假红）；但教师明确观察到新增退化且无法排除 → 判 worse 并附证据
 - 机械比对脚本失败 → 门红，不进人审
+
+---
+
+## 家族键映射（实测口径，`slice-baseline.jsonl` 11 行逐行核对）
+
+| 家族 | baseline `criterion` | 门规家族名 | Lane M 数值面 | Lane H |
+|---|---|---|---|---|
+| 数学真实性 | `mi`（C40/C15/C26 等） | 数学真实性 | 0\|1\|2 | pairwise 定性 |
+| 归因 | `sm` / `sm_ge` | 归因 | 0\|1\|2；`sm_ge` = 门规「sm≥1」边界位（C25），`expected` 为下限语义 | pairwise 定性 |
+| 慈善转述 | `mi`（C11） | 慈善转述 | 0\|1\|2（C11 转述错位经 `mi` 数值判定） | pairwise 定性 |
+| 泄露（不经教师） | `leak`（C21/C35） | 慈善转述 | **bool 直接比对**（见「leak 例外」） | 不经教师 |
 
 ---
 
 ## 出处
 
 - ⑦ 门机制定义：[`teacher-promotion-gate-v1.md`](teacher-promotion-gate-v1.md)
-- Phase A Teacher 盲评：[`teacher-review-baseline.md`](teacher-review-baseline.md)
+- Phase A 教师盲评：[`teacher-review-baseline.md`](teacher-review-baseline.md)
 - 切片：`artifacts/teacher-gate-slice/slice-cases.jsonl`
 - 基线：`artifacts/teacher-gate-slice/slice-baseline.jsonl`
 
@@ -103,14 +131,3 @@ final_score = min(run_1.score, run_2.score)
 ## 实现
 
 当前未自动化（人工表格操作）。未来如需 gate runner 脚本，按本协议实现，零新工具依赖（沿用 `rescore_judge.py` 或类似既有工具）。
-
----
-
-## 家族键映射（实测口径，`slice-baseline.jsonl` 11 行逐行核对）
-
-| Phase A 家族键 | baseline `criterion` | 门规家族名 | 数值面 |
-|---|---|---|---|
-| `math_integrity` | `mi` | 数学真实性 | 0\|1\|2 |
-| `student_mastery` | `sm` / `sm_ge` | 归因 | 0\|1\|2；`sm_ge` = 门规「sm≥1」边界位（C25），`expected` 为下限语义，Phase B「不得低于」规则天然覆盖 |
-| `paraphrase_fidelity` | `mi`（C11） | 慈善转述 | 0\|1\|2（C11 转述错位经 `mi` 数值判定）；Phase A 的 `paraphrase_fidelity` 分数无基线机械对照，供教师抽审定性读 |
-| —（不经 Phase A） | `leak`（C21/C35） | 慈善转述 | **bool 直接比对**（见「leak 例外」） |
