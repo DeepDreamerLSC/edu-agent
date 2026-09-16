@@ -1,0 +1,119 @@
+{
+  "round": 2,
+  "parent_id": 0,
+  "variant_id": 1,
+  "parent_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "variant_template": "我们从头理一理，你先说说看到题后想到的思路是什么，第一步打算怎么入手？为什么这么想？",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": false,
+  "parent_scores": {
+    "mean_score": 8.1875,
+    "needs_review_rate": 0.3125,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.3125
+  },
+  "variant_scores": {
+    "mean_score": 0.0,
+    "needs_review_rate": 1.0,
+    "numerical_violation_rate": 1.0,
+    "hard_failure_rate": 1.0
+  },
+  "accepted": false,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+    "+我们从头理一理，你先说说看到题后想到的思路是什么，第一步打算怎么入手？为什么这么想？"
+  ],
+  "stats": {
+    "calls": 0,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 16,
+    "wall_ms": 0
+  },
+  "failures": [
+    {
+      "case_id": "small_lecturer_math_gold_candidates_equation_multiplication_alternative_method",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_fraction_addition_alternative_method",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_fraction_addition_support_boundary",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_triangle_area_support_boundary",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_chicken_rabbit_misconception_repair",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_age",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_distance_speed_alternative_method",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_percentage_discount_complete_reasoning",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_decimal_multiply",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_average_score_alternative_method",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_equation_multiplication_complete_reasoning",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_sign",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_division_remainder",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_chicken_rabbit_complete_reasoning",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_number_pattern_alternative_method",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_average",
+      "kind": "content",
+      "detail": "module 'edu_agent.agents.small_lecturer.kernel' has no attribute '_SUPPORT_HINT'"
+    }
+  ]
+}

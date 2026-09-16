@@ -1,0 +1,99 @@
+{
+  "round": 22,
+  "parent_id": 1,
+  "variant_id": 9,
+  "parent_template": "别急，我们从头开始：你看到这道题，脑子里第一个冒出来的思路是什么？为什么先想到这一步？说说你的想法，我们再一起往下聊。",
+  "variant_template": "你刚才的思路是从哪里开始的？先说说你想到的第一步是什么，为什么先做这一步？我们一步步来聊。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": false,
+  "parent_scores": {
+    "mean_score": 9.25,
+    "needs_review_rate": 0.5,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0625
+  },
+  "variant_scores": {
+    "mean_score": 7.875,
+    "needs_review_rate": 0.5,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.25
+  },
+  "accepted": false,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-别急，我们从头开始：你看到这道题，脑子里第一个冒出来的思路是什么？为什么先想到这一步？说说你的想法，我们再一起往下聊。",
+    "+你刚才的思路是从哪里开始的？先说说你想到的第一步是什么，为什么先做这一步？我们一步步来聊。"
+  ],
+  "stats": {
+    "calls": 104,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 958323
+  },
+  "failures": [
+    {
+      "case_id": "small_lecturer_math_gold_candidates_ratio_share_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "total=8/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_equation_addition_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师连续两轮输出相同内容：'你用代入法验证了18是正确答案，这一步很扎实！'，且未等待学生回应即进行下一轮讲解，属于一次性倾倒且无实质推进。; summary_mastery=0 — 对话中无实质总结环节，小讲师在最后一轮仅重复了逆运算概念，未针对学生表现给出掌握判断，且学生未对‘等式性质’进行独立复述或验证。; total=6/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_simple_probability_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'学习证据还不够'为由中断，未复述学生已掌握的正确推理（红球多则概率大），也未给出掌握判断。; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_chicken_rabbit_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "total=8/12"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_probability",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_decimal_multiplication_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:你刚才说2.5有一位小数，结果是10.0，这说明你已经知道小数点在乘法中怎么处理了——那如果换成2.5乘以8，结果会是多少呢？\n小讲师:你用‘两个半’的; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_triangle_area_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:你刚才算出10乘6除以2等于30平方厘米，这个过程完全正确！那我们再想想，为什么面积要除以2呢？小讲师:你正确运用了三角形面积公式...; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_fraction_addition_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; summary_mastery=0 — 对话中无实质总结，小讲师在未完成教学时直接中断并重复提问，未对学生已有的正确步骤（通分）进行方法总结或掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_percentage_discount_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中未出现任何实质性的方法总结或掌握判断，小讲师仅以‘学习证据还不够’为由中断，未复述学生已掌握的概念（八折=80%）作为总结，也未给出掌握状态判断。; termination=0 — 对话在小讲师提出‘你能说说目前想到的第一步吗？’后直接结束，学生尚未给出最终答案或表示理解，属于未掌握即终止。; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_equation_multiplication_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师连续两轮输出：'你刚才说等式两边都减去7，得到3x等于18，这一步是想让两边都变小对吧？那减7之后，左边剩下3x，右边是25减7，你算的是不是18？' 紧; summary_mastery=0 — 对话中无实质总结，小讲师仅以'这一题的学习证据还不够'为由中断，未复述学生已完成的正确步骤（25-7=18），也未给出掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_division_remainder_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 小讲师:先回到你刚说的「我不太明白你问的是哪一步，可以说得更具体一点吗？」——你能从题目里再确认一个已知条件吗?; grade_fit=0 — 小讲师:先回到你刚说的「我不太明白你问的是哪一步，可以说得更具体一点吗？」——你能从题目里再确认一个已知条件吗?; total=2/12"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    }
+  ]
+}

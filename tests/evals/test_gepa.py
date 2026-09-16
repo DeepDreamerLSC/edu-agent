@@ -1,5 +1,6 @@
 """#256 GEPA spike 单元测试:6 组件逐一验证,零 API。"""
 
+import json
 from unittest.mock import MagicMock, patch
 
 from edu_agent.evals import (
@@ -12,6 +13,25 @@ from edu_agent.evals import (
     evaluate_batch,
     sample_batch,
 )
+
+
+# === 0. 三键裁决契约:判分默认本地主选角色(2026-09-17)===
+
+def test_judge_role_defaults_are_local_primary():
+    """判分入口默认 judge_role='judge'(registry: mlx_27b 主选 + deepseek 备选)。
+
+    三键裁决落地(PM sha256=d7256fcc631e69e7):evaluate_batch /
+    evaluate_batch_paired / GepaConfig 判分默认由 judge_independent(纯远程
+    DeepSeek,无 fallback)翻转为 'judge';judge_independent 保留编辑器与
+    #32 平行评分用途。契约钉默认值,防回退。
+    """
+    import inspect
+
+    from edu_agent.evals import GepaConfig, evaluate_batch_paired
+
+    assert inspect.signature(evaluate_batch).parameters["judge_role"].default == "judge"
+    assert inspect.signature(evaluate_batch_paired).parameters["judge_role"].default == "judge"
+    assert GepaConfig().judge_role == "judge"
 
 
 # === 1. Prompt seam ===
@@ -636,3 +656,327 @@ def test_structural_probe_dumps_artifacts_before_over_budget_exit(tmp_path):
         run_probe.STRUCTURAL_VARIANT = original_variant
         run_probe.HARD_CAP_CALLS = original_cap
         sys.path.remove(str(probe_path))
+
+
+# === 7. 长跑断点与实测计数(#256 阶段0) ===
+
+
+def test_write_checkpoint_and_restore_semantics(tmp_path):
+    """checkpoint 落盘最优解+预算+代次;resume 语义字段齐(跨夜可恢复)。"""
+    from edu_agent.evals import LoopState, write_checkpoint
+
+    state = LoopState()
+    state.population = Population()
+    a = Candidate(template="模板A:说说思路和第一步")
+    b = Candidate(template="模板B:从头讲讲你的思路,先说第一步")
+    state.scores[state.population.add(a)] = ScoreVector(8.0, 0.2, 0.1, 0.0)
+    state.scores[state.population.add(b)] = ScoreVector(9.0, 0.1, 0.1, 0.0)
+    state.support_hint = "拆小:你先看这一步里最小的一个数,能先算出什么?"
+    state.bind(1624)
+    state.budget.add(300)
+    state.budget.rounds = 2
+    write_checkpoint(tmp_path, state, 3,
+                      [{"case_id": "x", "kind": "k", "detail": "d"}])
+
+    saved = json.loads((tmp_path / "checkpoint.json").read_text(encoding="utf-8"))
+    assert saved["next_round"] == 3
+    assert saved["budget"]["calls"] == 300 and saved["budget"]["rounds"] == 2
+    assert saved["best"]["template"].startswith("模板B")  # select_parent 选最高分
+    assert saved["best"]["scores"]["mean_score"] == 9.0
+    assert saved["best"]["support_hint"].startswith("拆小")
+    assert saved["last_failures"][0]["case_id"] == "x"
+
+
+def test_gepa_loop_resume_skips_initial_evaluation(tmp_path):
+    """resume=True 且 checkpoint 在:初始评估不再跑(省预算),代次从 next_round 起。"""
+    from edu_agent.evals import DEFAULT_SUPPORT_HINT, GepaConfig
+    from edu_agent.evals import gepa_loop
+
+    checkpoint = {
+        "next_round": 5,
+        "budget": {"calls": 100, "rounds": 5, "wall_s": 1.0, "exhausted": False},
+        "best": {"candidate_id": 0,
+                 "template": "恢复模板:说说你的思路,先说第一步",
+                 "scores": {"mean_score": 9.0, "needs_review_rate": 0.1,
+                            "numerical_violation_rate": 0.1, "hard_failure_rate": 0.0}},
+        "last_failures": [],
+    }
+    (tmp_path / "checkpoint.json").write_text(json.dumps(checkpoint), encoding="utf-8")
+
+    with patch("edu_agent.evals.gepa.evaluate_batch") as mock_eval, \
+         patch("edu_agent.evals.gepa.edit_template", return_value="变体:讲讲思路的第一步"):
+        mock_eval.return_value = (ScoreVector(9.0, 0.1, 0.1, 0.0), [],
+                                  {"calls": 5, "tokens_in": 0, "tokens_out": 0,
+                                   "env_failures": 0, "content_failures": 0, "wall_ms": 1})
+        gepa_loop(train_cases=[{"id": "c1", "question": "q", "student_turns": ["a"]}],
+                  initial_template="原始模板",
+                  config=GepaConfig(rounds=6, max_calls=1624),
+                  gateway=MagicMock(),
+                  output_dir=tmp_path,
+                  resume=True)
+        # resume 后不再评估初始模板:唯一一次 evaluate_batch 是第 5 代变体批
+        assert mock_eval.call_count == 1
+    saved = json.loads((tmp_path / "checkpoint.json").read_text(encoding="utf-8"))
+    assert saved["budget"]["calls"] == 106  # 100(恢复)+ 1(编辑器)+ 5(变体批)
+    assert saved["next_round"] == 6
+    assert saved["best"]["support_hint"] == DEFAULT_SUPPORT_HINT  # 双旋钮对完整落盘/带回
+
+
+def test_evaluate_batch_counts_calls_from_facts(tmp_path):
+    """calls = facts 实测差值(长跑口径):估算 len+judged 低估 ~3x 会超预算。"""
+    facts = tmp_path / "model_calls-2026-09-16.jsonl"
+    facts.write_text("\n".join(json.dumps({"i": i}) for i in range(10)) + "\n",
+                     encoding="utf-8")
+    gateway = MagicMock()
+    gateway.writer.root = tmp_path
+
+    def fake_run_case(case):
+        with facts.open("a", encoding="utf-8") as handle:  # 模拟 tutor 真实调用落账
+            handle.write(json.dumps({"i": 99}) + "\n")
+        return {"turns": [{"student": "", "tutor": "好", "state": "dialogue"}]}
+
+    def fake_judge(gateway, judge_case, role="judge"):
+        with facts.open("a", encoding="utf-8") as handle:  # judge 侧真实落账 ×2
+            handle.write(json.dumps({"i": 100}) + "\n")
+            handle.write(json.dumps({"i": 101}) + "\n")
+        return {"total": 10, "verdict": "pass", "answer_leaked": False,
+                "math_integrity": 2, "evidence": {}, "scores": {}}
+
+    with patch("edu_agent.evals.gepa.ElicitSubject") as mock_subject, \
+         patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge):
+        mock_subject.return_value.run_case.side_effect = fake_run_case
+        _, _, stats = evaluate_batch([{"id": "c1", "question": "q", "student_turns": ["a"]}],
+                                     "模板", gateway)
+        assert stats["calls"] == 3  # tutor 1 + judge 2 的 facts 差值,不是估算的 2
+
+
+# === 8. 双旋钮搜索空间(#256 阶段 2 选项 A,#304 头部可达族) ===
+
+
+def test_elicit_subject_support_hint_roundtrip():
+    """ElicitSubject 带 support_hint 时 monkeypatch 两个 seam,用完恢复。"""
+    from edu_agent.evals import DEFAULT_SUPPORT_HINT
+
+    subject = ElicitSubject("说说思路和第一步", MagicMock(), support_hint="拆小:你先看哪个数?")
+    assert subject.variants["_SUPPORT_HINT"] == "拆小:你先看哪个数?"
+    # 未提供 support 变体时 seam 集只有 elicit(向后兼容)
+    plain = ElicitSubject("模板", MagicMock())
+    assert set(plain.variants) == {"_ELICIT_TEMPLATE"}
+    # run_case 全程两个 seam 真被注入、用完恢复(r2 崩溃根因回归钉:
+    # seam 指向不存在的 kernel 属性时,这里会当场 AttributeError 而非静默)
+    original_elicit = subject.get_active_template()
+    original_support = subject.get_active_support_hint()
+    seen = {}
+    with patch.object(subject._kernel_subject, "run_case",
+                      side_effect=lambda case: seen.update(
+                          elicit=subject.get_active_template(),
+                          support=subject.get_active_support_hint()) or {}):
+        subject.run_case({"id": "c"})
+    assert seen["elicit"] == "说说思路和第一步"
+    assert seen["support"] == "拆小:你先看哪个数?"
+    assert subject.get_active_template() == original_elicit  # 用完恢复
+    assert subject.get_active_support_hint() == original_support
+    assert DEFAULT_SUPPORT_HINT == original_support  # 常量与 kernel 默认一致
+
+
+def test_edit_two_knobs_parity_routing():
+    """偶代编辑 elicit(support 原样返回)、奇代编辑 support(elicit 原样)。"""
+    from edu_agent.evals import edit_two_knobs
+
+    with patch("edu_agent.evals.gepa_editors.edit_template",
+                return_value="新的elicit") as m:  # 编辑器晚绑定已随族迁居
+        elicit, support = edit_two_knobs("旧elicit", "旧support", 0, [], MagicMock())
+        assert elicit == "新的elicit" and support == "旧support"
+        m.assert_called_once()
+    gateway = MagicMock()
+    gateway.invoke.return_value.text = "拆小:先不想整道题,只看这一步里最小的那个数,你觉得能先算出什么?"
+    elicit, support = edit_two_knobs("旧elicit", "旧support", 1, [], gateway)
+    assert elicit == "旧elicit"
+    assert support == "拆小:先不想整道题,只看这一步里最小的那个数,你觉得能先算出什么?"
+
+
+def test_edit_two_knobs_lint_guards():
+    """support 变体 lint:太短/无问号/与父代相同 → 保留父代(零退化)。"""
+    from edu_agent.evals import edit_two_knobs
+
+    for bad in ("太短", "这不是问句", "旧support"):
+        gateway = MagicMock()
+        gateway.invoke.return_value.text = bad
+        elicit, support = edit_two_knobs("旧elicit", "旧support", 1, [], gateway)
+        assert (elicit, support) == ("旧elicit", "旧support"), bad
+
+
+# === 9. needs_review 靶向编辑(收敛#2 选项①准备件,默认关) ===
+
+
+def test_edit_template_nr_lint_and_targeting():
+    """nr 编辑器:review 靶向语与失败帧进 prompt;lint 不过(缺关键词/超窗)保留父代。"""
+    from edu_agent.evals import edit_template_nr
+
+    parent = "旧模板" * 15  # 45 字,合法父代
+    gateway = MagicMock()
+    ok = "复讲时请先说思路:第一步你算了什么、用哪个算式,把结论说出来,让老师能判定你懂了。"
+    gateway.invoke.return_value.text = ok
+    variant = edit_template_nr(parent, [
+        {"case_id": "c9", "kind": "judge_low_score", "detail": "total=9, verdict=review"}],
+        gateway)
+    assert variant == ok
+    sent = gateway.invoke.call_args[0][0].messages[0]["content"]
+    assert "review" in sent and "可判定" in sent  # 靶向指令真的进 prompt
+    assert "c9" in sent  # 失败帧进 prompt
+    for bad in ("太短", parent):  # 太短出窗 / 与父代相同 → 零退化
+        gateway = MagicMock()
+        gateway.invoke.return_value.text = bad
+        assert edit_template_nr(parent, [], gateway) == parent, bad
+
+
+def test_edit_two_knobs_injected_editor_routes_even_rounds():
+    """editor 显式注入:偶代 elicit 编辑走注入编辑器;不注入时晚绑定 edit_template。"""
+    from edu_agent.evals import edit_two_knobs
+
+    sentinel, support_spy = MagicMock(return_value="nr变体"), MagicMock(return_value="nr问句?")
+    elicit, support = edit_two_knobs("旧elicit", "旧support", 0, [], MagicMock(),
+                                     editors=(sentinel, support_spy))
+    assert (elicit, support) == ("nr变体", "旧support")  # 偶代 support 原样
+    assert sentinel.call_args.args[:2] == ("旧elicit", [])
+    assert not support_spy.called
+    elicit, support = edit_two_knobs("旧elicit", "旧support", 1, [], MagicMock(),
+                                     editors=(sentinel, support_spy))
+    assert (elicit, support) == ("旧elicit", "nr问句?")  # 奇代 elicit 原样
+    assert support_spy.call_args.args[:2] == ("旧support", [])
+
+
+def test_gepa_loop_editor_focus_nr_uses_nr_editor(tmp_path):
+    """全循环路由:two_knobs + editor_focus='nr' → 第 24 代(偶)编辑走 nr 编辑器,
+    mean 编辑器不被调用;默认 focus='mean' 契约钉。"""
+    from edu_agent.evals import GepaConfig, gepa_loop
+
+    assert GepaConfig(rounds=1).editor_focus == "mean"  # 默认关,裁决②则永不打开
+    checkpoint = {
+        "next_round": 24,
+        "budget": {"calls": 1107, "rounds": 23, "wall_s": 1.0, "exhausted": False},
+        "best": {"candidate_id": 0,
+                 "template": "best:说说你的思路,先说第一步",
+                 "scores": {"mean_score": 9.25, "needs_review_rate": 0.5,
+                            "numerical_violation_rate": 0.0, "hard_failure_rate": 0.06}},
+        "last_failures": [],
+    }
+    (tmp_path / "checkpoint.json").write_text(json.dumps(checkpoint), encoding="utf-8")
+
+    with patch("edu_agent.evals.gepa.evaluate_batch") as mock_eval, \
+         patch("edu_agent.evals.gepa.edit_template_nr", return_value="nr变体") as m_nr, \
+         patch("edu_agent.evals.gepa.edit_template") as m_mean:
+        mock_eval.return_value = (ScoreVector(9.0, 0.5, 0.0, 0.0), [],
+                                  {"calls": 5, "tokens_in": 0, "tokens_out": 0,
+                                   "env_failures": 0, "content_failures": 0, "wall_ms": 1})
+        gepa_loop(train_cases=[{"id": "c1", "question": "q", "student_turns": ["a"]}],
+                  initial_template="原始模板",
+                  config=GepaConfig(rounds=25, max_calls=1624, two_knobs=True,
+                                    editor_focus="nr"),
+                  gateway=MagicMock(),
+                  output_dir=tmp_path,
+                  resume=True)
+        assert m_nr.call_count == 1  # 第 24 代偶代:elicit 编辑走 nr 靶向
+        assert m_mean.call_count == 0
+
+
+# === 10. Net A:终答值泄露网进 loop(#310 试点,gate-01-r24 教训) ===
+
+
+def test_evaluate_batch_leak_net_violation_counted(tmp_path):
+    """泄露网违例:计数进 stats + 失败帧(kind=leak_net,带轮次原文)。"""
+    facts = tmp_path / "model_calls-2026-09-16.jsonl"
+    facts.write_text("", encoding="utf-8")
+    gateway = MagicMock()
+    gateway.writer.root = tmp_path
+    case = {"id": "c1", "question": {"text": "妈妈36岁是小华的3倍,小华几岁?", "answer": "12"},
+            "student_turns": ["x"]}
+    with patch("edu_agent.evals.gepa.ElicitSubject") as mock_subject, \
+         patch("edu_agent.evals.gepa.judge_transcript") as mock_judge:
+        mock_subject.return_value.run_case.return_value = {
+            "turns": [{"student": "", "tutor": "你用12乘3等于36验证了,很扎实", "state": "dialogue"}],
+            "summary": "s"}
+        mock_judge.return_value = {"total": 10, "verdict": "pass", "answer_leaked": False,
+                                   "math_integrity": 2, "evidence": {}, "scores": {}}
+        _, failures, stats = evaluate_batch([case], "模板", gateway)
+    assert stats["leak_net_violations"] == 1
+    leak_frames = [f for f in failures if f["kind"] == "leak_net"]
+    assert len(leak_frames) == 1 and "12" in leak_frames[0]["detail"]
+    # 干净转录零违例
+    mock_subject.return_value.run_case.return_value = {
+        "turns": [{"student": "", "tutor": "说说你的思路", "state": "dialogue"}], "summary": "s"}
+    _, failures2, stats2 = evaluate_batch([case], "模板", gateway)
+    assert stats2["leak_net_violations"] == 0 and not [f for f in failures2 if f["kind"] == "leak_net"]
+
+
+def test_gepa_loop_leak_net_veto_blocks_selection(tmp_path):
+    """否决双闸:泄露网违例变体 accepted=False 且不注册分数——
+    checkpoint best 与下轮父代都不会是脏变体(即使四维全优)。"""
+    from edu_agent.evals import GepaConfig, gepa_loop
+
+    clean_stats = {"calls": 5, "tokens_in": 0, "tokens_out": 0, "env_failures": 0,
+                   "content_failures": 0, "wall_ms": 1, "leak_net_violations": 0}
+    dirty_stats = dict(clean_stats, leak_net_violations=2)
+    returns = [
+        (ScoreVector(8.0, 0.3, 0.1, 0.1), [], clean_stats),        # 初始评估
+        (ScoreVector(9.5, 0.1, 0.0, 0.0), [], dirty_stats),        # r0:全优但泄露
+        (ScoreVector(9.6, 0.1, 0.0, 0.0), [], dirty_stats),        # r1:全优但泄露
+    ]
+    with patch("edu_agent.evals.gepa.evaluate_batch", side_effect=returns), \
+         patch("edu_agent.evals.gepa.edit_template",
+               side_effect=["脏变体A:讲讲思路的第一步", "脏变体B:说说思路的第一步"]):
+        _, _, reports = gepa_loop(
+            train_cases=[{"id": "c1", "question": "q", "student_turns": ["a"]}],
+            initial_template="初始:说说你的思路,先说第一步",
+            config=GepaConfig(rounds=2, max_calls=100),
+            gateway=MagicMock(), output_dir=tmp_path)
+    assert all(r["leak_net_veto"] and not r["accepted"] for r in reports)
+    saved = json.loads((tmp_path / "checkpoint.json").read_text(encoding="utf-8"))
+    assert saved["best"]["template"].startswith("初始")  # 脏变体永不被选为最优
+
+
+# === 11. PM-RULING#5 两处置:同分布初始批 + nr 分母非 hard 案 ===
+
+
+def test_evaluate_batch_nr_denominator_excludes_hard(tmp_path):
+    """nr 分母 = 非 hard 案:4 案中 2 hard(fail/leaked)只 1 review → 0.5 而非 0.25。"""
+    facts = tmp_path / "model_calls-2026-09-17.jsonl"
+    facts.write_text("", encoding="utf-8")
+    gateway = MagicMock()
+    gateway.writer.root = tmp_path
+    cases = [{"id": f"c{i}", "question": "q", "student_turns": ["a"]} for i in range(4)]
+    verdicts = [
+        {"total": 6, "verdict": "fail", "answer_leaked": False, "math_integrity": 2,
+         "evidence": {}, "scores": {}},          # hard: fail
+        {"total": 8, "verdict": "review", "answer_leaked": True, "math_integrity": 2,
+         "evidence": {}, "scores": {}},          # hard: leaked(review 也不计 nr 分子分母)
+        {"total": 9, "verdict": "review", "answer_leaked": False, "math_integrity": 2,
+         "evidence": {}, "scores": {}},          # 非 hard 的 review → 计 nr
+        {"total": 10, "verdict": "pass", "answer_leaked": False, "math_integrity": 2,
+         "evidence": {}, "scores": {}},
+    ]
+    with patch("edu_agent.evals.gepa.ElicitSubject") as mock_subject, \
+         patch("edu_agent.evals.gepa.judge_transcript", side_effect=verdicts):
+        mock_subject.return_value.run_case.return_value = {
+            "turns": [{"student": "s", "tutor": "t", "state": "dialogue"}], "summary": "x"}
+        vector, _, _ = evaluate_batch(cases, "模板", gateway)
+    assert vector.hard_failure_rate == 0.5
+    assert vector.needs_review_rate == 0.5  # 1/(4-2),非 1/4
+
+
+def test_fresh_run_initial_batch_same_distribution_as_rounds(tmp_path):
+    """初始评估批 = sample_batch(seed=0),与代间批同分布(弃文件序前缀)。"""
+    from edu_agent.evals import GepaConfig, gepa_loop, sample_batch
+
+    train = [{"id": f"case-{i:02d}", "question": "q", "student_turns": ["a"]}
+             for i in range(93)]
+    stats = {"calls": 1, "tokens_in": 0, "tokens_out": 0, "env_failures": 0,
+             "content_failures": 0, "wall_ms": 1, "leak_net_violations": 0}
+    with patch("edu_agent.evals.gepa.evaluate_batch") as mock_eval, \
+         patch("edu_agent.evals.gepa.edit_template", return_value="变体:讲讲思路的第一步"):
+        mock_eval.return_value = (ScoreVector(8.0, 0.2, 0.0, 0.0), [], stats)
+        gepa_loop(train_cases=train, initial_template="初始:说说你的思路,先说第一步",
+                  config=GepaConfig(rounds=1, batch_size=16, max_calls=100),
+                  gateway=MagicMock(), output_dir=tmp_path)
+        initial_cases = mock_eval.call_args_list[0].args[0]
+    assert [c["id"] for c in initial_cases] == [c["id"] for c in sample_batch(train, 16, 0)]

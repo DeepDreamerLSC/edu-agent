@@ -1,0 +1,93 @@
+{
+  "round": 1,
+  "parent_id": 0,
+  "variant_id": 2,
+  "parent_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "variant_template": "我们先从头理一理你的思路：你最先想到的是哪一步？为什么先做这一步？说说你的想法。",
+  "noop": false,
+  "parent_scores": {
+    "mean_score": 8.1875,
+    "needs_review_rate": 0.3125,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.3125
+  },
+  "variant_scores": {
+    "mean_score": 7.5625,
+    "needs_review_rate": 0.3125,
+    "numerical_violation_rate": 0.0625,
+    "hard_failure_rate": 0.375
+  },
+  "accepted": false,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+    "+我们先从头理一理你的思路：你最先想到的是哪一步？为什么先做这一步？说说你的想法。"
+  ],
+  "stats": {
+    "calls": 86,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 535268
+  },
+  "failures": [
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_support_boundary_hard_pressure",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 学生三次表示'不会'、'没思路'、'猜不出'，小讲师未针对学生困难点（如不理解平方或乘法）进行引导，而是机械重复'先算半径的平方'、'再乘以π'等指令，属于直接; pacing=0 — 小讲师连续三轮直接给出解题步骤（公式、平方、乘法），一次性倾倒全部讲解，未给学生留出思考或尝试空间，且最后突然要求'说说第一步'，节奏混乱。; total=3/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_fraction_addition_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_decimal_multiplication_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:你刚才说2.5有一位小数，结果是10.0，这说明你已经知道小数点在乘法中怎么处理了——那如果换成2.5乘以8，结果会是多少呢？\n小讲师:你用‘两个半’的; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话在小讲师给出提示后直接结束，未包含针对学生本人的方法总结或掌握判断，学生未进行后续验证或复述。; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_simple_probability_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'学习证据还不够'为由中断，未复述学生已掌握的正确推理（红球多则概率大），也未给出掌握判断。; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 小讲师:你刚才说两边同时减7，这一步是对的，但你有没有想过，为什么减7后等式两边还能保持相等？我们来想想，减7这个操作在等式里是怎么工作的？; grade_fit=0 — 学生回答圆面积计算时，小讲师突然引入'移项'、'等式两边同时减去7'、'x等于18'等与原题（圆面积）完全无关的方程概念，且原题无方程背景，严重超纲且逻辑混乱。; total=2/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_average_score_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师连续两轮未推进：'你能从题目里再确认一个已知条件吗?' 和 '这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?'，学生已给出第一步(相加得; summary_mastery=0 — 对话中无总结环节，小讲师以'学习证据还不够'为由中断，未对学生已完成的'相加得270'步骤进行确认或方法总结。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_decimal_multiplication_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 小讲师:先回到你刚说的「我不太明白你问的是哪一步，可以说得更具体一点吗？」——你能从题目里再确认一个已知条件吗?; pacing=0 — 小讲师:先回到你刚说的「我不太明白你问的是哪一步，可以说得更具体一点吗？」——你能从题目里再确认一个已知条件吗? 小讲师:这一题的学习证据还不够,我们继续——你; total=3/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'这一题的学习证据还不够,我们继续'结束，未复述学生已掌握内容或给出掌握判断。; termination=0 — 学生已给出正确数值答案(50.24)，小讲师未确认正确性即强行终止对话，称'学习证据还不够'。; total=6/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_equation_addition_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:你用代入法验证了18是正确答案，这一步很扎实！那我们来想想，为什么‘减7’这个操作能从等式两边同时进行呢？小讲师:你用代入法验证了18是正确答案，这一步; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_number_pattern_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:你用‘2加3乘序号减1’这个式子算出第五项是14，这说明你找到了数列的规律，真棒！那如果要验证这个规律，我们能不能用它算出第三项看看对不对？\n小讲师:你; summary_mastery=0 — 对话中无实质总结环节，小讲师重复提示后对话直接结束，未对学生掌握情况进行判断。; total=6/12"
+    }
+  ]
+}
