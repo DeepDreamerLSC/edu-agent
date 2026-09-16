@@ -316,6 +316,9 @@ def gepa_loop(
         variant_template = edit_template(parent.template, initial_failures, gateway)
         budget.add(1)
         
+        # No-op 检查:编辑器返回与父代逐字相同 → 跳过评估,省预算
+        is_noop = (variant_template == parent.template)
+        
         # 评估变体
         variant = Candidate(
             template=variant_template,
@@ -323,13 +326,20 @@ def gepa_loop(
             round_idx=round_idx,
         )
         variant_id = population.add(variant)
-        variant_scores, variant_failures, variant_stats = evaluate_batch(
-            batch, variant_template, gateway, config.judge_role)
-        scores[variant_id] = variant_scores
-        budget.add(variant_stats["calls"])
+        if is_noop:
+            variant_scores = parent_scores
+            variant_failures = []
+            variant_stats = {"calls": 0, "tokens_in": 0, "tokens_out": 0,
+                             "env_failures": 0, "content_failures": 0, "wall_ms": 0}
+            scores[variant_id] = variant_scores
+        else:
+            variant_scores, variant_failures, variant_stats = evaluate_batch(
+                batch, variant_template, gateway, config.judge_role)
+            scores[variant_id] = variant_scores
+            budget.add(variant_stats["calls"])
         
         # 选择:simplified Pareto
-        accepted = variant_scores.dominates(parent_scores)
+        accepted = False if is_noop else variant_scores.dominates(parent_scores)
         
         # dump round report
         report = {
@@ -338,6 +348,7 @@ def gepa_loop(
             "variant_id": variant_id,
             "parent_template": parent.template,
             "variant_template": variant_template,
+            "noop": is_noop,
             "parent_scores": parent_scores.__dict__,
             "variant_scores": variant_scores.__dict__,
             "accepted": accepted,

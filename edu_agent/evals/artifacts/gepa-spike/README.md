@@ -6,7 +6,7 @@
 
 按 #256 issue 规格手搓 GEPA 核心循环 spike,零依赖,复用现有 runner/judge 管线。
 
-### 6 组件(625 行,落现有管线旁,不动 kernel)
+### 6 组件(435 行组件 / 625 行含测试,落现有管线旁,不动 kernel)
 
 1. **Prompt seam**(`ElicitSubject`):`run_case` 接受 elicit 模板变体注入(monkeypatch `kernel._ELICIT_TEMPLATE`,用完即恢复,不动仓库模板);
 2. **Mini-batch 采样**(`sample_batch`):每轮从 train 抽 k 个,同种子确定性,换种子刷新;
@@ -57,25 +57,26 @@ tests/evals/test_gepa.py         # 单元测试(11 测试,零 API)
 ### ② Train mini-batch 增益?
 
 - **Smoke test 实测**(rounds=2, batch_size=4):
-  - 初始模板(parent): mean_score=11.0/12, needs_review_rate=0.25 (1/4), violation_rate=0.0
-  - 变体 1 (round 0): mean_score=8.5, needs_review_rate=0.75 (3/4), violation_rate=0.0 → **rejected** (worse on 2/3 dims)
-  - 变体 2 (round 1): mean_score=9.0, needs_review_rate=0.75 (3/4), violation_rate=0.0 → **rejected** (worse on 2/3 dims)
-  - **Pareto 前沿未动**:0/2 variants accepted, parent remains best
-- **目标函数敏感性**:变体分数确实不同(8.5/9.0 vs 11.0),证明目标函数对模板变化敏感,只是没找到更好的
+  - 初始模板(parent, 批 A): mean_score=11.0/12, needs_review_rate=0.25 (1/4), violation_rate=0.0
+  - 变体 1 (R0, 批 B): mean_score=8.5, needs_review_rate=0.75 (3/4), violation_rate=0.0 → **rejected** (worse on 2/3 dims)
+  - 变体 2 (R1, 批 C, **no-op 编辑**): mean_score=9.0, needs_review_rate=0.75 (3/4), violation_rate=0.0 → **rejected**
+- **关键发现**:R1 变体与 parent 模板**逐字相同**(no-op 编辑),但分数从 11.0 降至 9.0,Δ=2.0。**这全部是批次方差**(不同随机批 × 同模板),不是模板效应。
+- **敏感性判定**:**未定**。batch=4 / n=1 下无法区分模板效应与批次方差(R0 的 8.5 也混杂了批次差异)。需更大 batch 或配对评估(parent/variant 同批)才能分辨。
 - **次级留出片**:未实现(spikes 范围内,生产化再加)
-- **结论**:当前 elicit 模板已较优,2 轮搜索未找到改进;生产化需更多轮数或更大搜索空间
+- **生产化启示**:配对评估(parent/variant 在同 batch 上跑)可零成本消除批次效应,是下一步首选方案。
 
 ### ③ 单价(调用数/token/墙钟)?
 
 - **Smoke test 实测**(rounds=2, batch_size=4, max_calls=75):
-  - 总调用:26 calls(Budget.calls 口径)
-  - 墙钟:175s
-  - 拆分:初始评估 4 案 × 2(tutor+judge) = 8 calls;每轮 4 案 × 2 + 1 edit = 9 calls × 2 轮 = 18;合计 8+18=26 ✓
-  - 预算消耗:26/75 = 35%,未触顶
-- **实测公式**:`batch_size × 2 + rounds × (batch_size × 2 + 1)`(每案 tutor+judge 各 1 call,每轮 1 edit call)
-- **外推全量**(K=4×S=16×I=6):4×2 + 6×(16×2+1) = 8 + 198 = 206 calls(远低于 1,624 预算)
-- **墙钟外推**:175s × (206/26) ≈ 1,386s ≈ 23 min(全量单次)
-- **Token 口径**:本次未计量(stats 中 tokens_in/out 恒为 0,需 facts ledger 精确计量)
+  - Budget.calls = **26**(代码简化口径:`len(cases) + judged`,非真实调用数)
+  - 墙钟:**175s**
+  - R1 为 no-op 轮(省掉评估调用,只花 1 edit call)
+- **双口径并列**:
+  - **Budget 简化口径**:每案 2 calls(tutor 1 + judge 1),外推 K=4×S=16×I=6 → **≈206 calls**
+  - **真实口径估算**(GEPA feasibility spike 实测 tutor ≈3.23 calls/case + 1 judge/case + 1 edit/轮):外推 K=4×S=16×I=6 → **≈478 calls**
+  - **矛盾**:简化 vs 真实差 ≈2.3×,根因是 tutor 平均 3.23 calls/case(多轮对话),Budget 只计了 1。生产化需从 facts ledger 精确计量。
+  - 两口径均远低于 1,624 预算上限
+- **Token 口径**:未计量(stats 中 tokens_in/out 恒为 0,需 facts ledger 精确计量)
 
 ### ④ 产出的 prompt diff 人读着像话吗?
 
@@ -89,40 +90,48 @@ tests/evals/test_gepa.py         # 单元测试(11 测试,零 API)
 
 ### ⑤ Judge 同 prompt 重评方差多大?
 
-- **方差探针**(独立脚本,judge-only,4 案 × 2 runs = 8 calls):
+- **Judge 方差**(独立探针,judge-only,4 案 × 2 runs = 8 calls):
   - 同 batch 同 transcript,judge 跑 2 次,scores1=[12,8,8,12] scores2=[12,8,8,12]
   - mean1=10.00 mean2=10.00 |diff|=**0.00**(逐案 diff 也全为 0)
-  - **口径**:judge-only 重评(不重跑 tutor),最便宜且能回答问题
-- **结论**:**零方差**(temperature=0 生效),judge 确定性极高
-- **对 batch 尺寸的启示**:方差小 → batch_size=4 已足够代表(无需为降噪加大 batch)
+  - **Judge 方差 = 零**(temperature=0 生效,确定性极高)
+- **批次方差**(smoke R1 no-op 观测):
+  - 同模板 × 不同 batch:parent 批 A=11.0,变体 2 批 C(no-op 编辑,模板逐字相同)=9.0
+  - Δ=2.0,即 **17% 摆动**——这才是真噪声底
+  - Judge 方差(0)≠ 批次方差(2.0)
+- **对 batch 尺寸的启示**:batch=4 不足以分辨模板效应(噪声底 2.0 分,模板改进可能 <2 分)。生产化需:
+  - 加大 batch(8-16 案)
+  - 多 seed 取均值
+  - **配对评估**(parent/variant 在同 batch 上跑)——零成本消除批次效应,首选方案
+- **工件**:`smoke-test/variance-probe.json`(逐案 run1/run2 数据)
 
 ## 复算
 
-### Smoke test(待执行,需 API key)
+### Smoke test(已执行,Mac worktree 2026-09-16)
 
 ```bash
-# 小配置:2 轮,batch_size=4,max_calls=100
+# 实际跑法:rounds=2,batch_size=4,max_calls=75
 uv run python -m edu_agent.evals.gepa_driver \
   edu_agent/evals/artifacts/gepa-spike/smoke-test \
-  --rounds 2 --batch-size 4 --max-calls 100
+  --rounds 2 --batch-size 4 --max-calls 75
 
-# 预期产出:
-# - round-00.json, round-01.json(每轮 prompt diff + 分数)
+# 实际产出:
+# - round-00.json, round-01.json(每轮 prompt diff + 分数 + noop 标记)
 # - summary.json(预算 + 最优候选 + accepted 统计)
+# - variance-probe.json(五问⑤ 重评方差探针)
 ```
 
 ### 单元测试(零 API,已跑通)
 
 ```bash
 uv run pytest tests/evals/test_gepa.py -v
-# 11 passed
+# 12 passed
 ```
 
 ### 全量检查
 
 ```bash
 make check
-# 933 passed, 1 skipped, 1 warning
+# 934 passed, 1 skipped, 1 warning
 ```
 
 ## Bug 诊断(smoke 首轮全零分)
@@ -146,21 +155,22 @@ make check
 - 预算内完成
 
 **实测判定**:
-- ② 变体分差:2.5(11.0-8.5)和 2.0(11.0-9.0),⑤ 方差=0 → **满足**(增益方向可测)
-- ③ 外推 206 calls << 1,624 预算 → **满足**
+- ② 变体分差 > 批次方差? → **不可分辨**(R1 no-op Δ=2.0 全部是批次方差;R0 跨批混杂)
+- ③ 外推 206-478 calls << 1,624 预算 → **满足**
 - ④ diff 中文自然可读 → **满足**
 - 26 calls 预算内完成 → **满足**
 
-**初判倾向**:**GO**(管线通、目标函数敏感、judge 确定性高、预算可控)。但 Pareto 前沿未动(0/2 accepted),说明当前 elicit 模板已较优,生产化需更多轮数或更大搜索空间才能找到改进。最终 go/no-go 由 PM+用户裁定。
+**初判倾向**:**条件 GO**(管线通、judge 确定性高、预算可控、diff 可读)。但 ② 敏感性在 batch=4/n=1 下不可分辨(噪声底 2.0 分 >> judge 方差 0),需更大 batch 或配对评估才能判定模板是否可改进。最终 go/no-go 由 PM+用户裁定。
 
 ## 调用计数
 
 - **代码实现波**:0 模型调用(全 mock);
-- **Smoke test 实测**:26 calls(rounds=2, batch_size=4, 175s 墙钟);
+- **PM 代跑 smoke**:26 calls(rounds=2, batch_size=4, 首轮全零分);
+- **D 重跑 smoke**(bug 修复后):26 calls(同配置);
+- **诊断探针**:4 calls(1 案 × judge × 2);
 - **方差探针**:8 calls(judge-only, 4 案 × 2 runs);
-- **诊断探针**:4 calls(1 案 × judge × 2, 定位 transcript 格式 bug);
-- **本任务总消耗**:38 calls(tier-2 扣账);
-- **Tier-2 预算**:K=4×S=16×I=6=384 案次 / ≈206 calls(实测公式外推)。
+- **本任务总消耗**:**64 calls**(tier-2 扣账,与台账对齐);
+- **Tier-2 预算**:K=4×S=16×I=6=384 案次 / ≈206-478 calls(双口径,见 §五问③)。
 
 ## 治理
 
@@ -187,15 +197,15 @@ make check
 - **评分角色可比性**:编辑调用走 `judge_independent`(DeepSeek 直评),与既有 judge 基线(`judge` 角色,mlx_27b primary)不可比。spike 范围内可接受(验证管线),生产化需统一评分角色或做校准。
 - **Content 失败不进向量**:`evaluate_batch` 的 `content_failures` 只计入 stats,不影响 `ScoreVector`(mean_score/needs_review_rate/numerical_violation_rate)。spike 范围内可接受(简化指标),生产化需加 failure_rate 维度。
 - **初始评估固定前缀**:`gepa_loop` 第 300 行 `train_cases[:config.batch_size]` 取前 batch_size 个,非随机。spike 范围内可接受(验证初始分),生产化需改为随机采样。**注意**:当前 train 基础 = image_teaching v1 × **8 案**(`[:20]` 静默截断为 8,因 v1 只有 8 个 scenario),影响五问②⑤解读(样本小,结论外推需谨慎)。
-- **Budget 轮内不查**:`gepa_loop` 第 298 行只在轮首检查 `budget.exhausted()`,轮中不检查。spike 范围内可接受(轮数少),生产化需每 case 后检查。
+- **Budget 轮内不查**:`gepa_loop` 第 305 行只在轮首检查 `budget.exhausted()`,轮中不检查。spike 范围内可接受(轮数少),生产化需每 case 后检查。
 - **文档数字失准**:原版 README 多处数字错误(行数/符号数/calls 口径),本版已修正;`gepa_driver.py` 注释「前 20 案」失准(实际 8 案,因 v1 只有 8 个 scenario),`finally` 恢复路径无断言(记 known-limit)。
 - **Base 落后 main**:本分支 base 落后 main(#275 P1 已合),smoke test 前需 rebase。
 
 ## 代码改动摘要
 
-- `edu_agent/evals/gepa.py`:新增(6 组件主实现,368 行);bugfix:evaluate_batch 使用 `transcript_messages` 转换 turns→messages(原直接传 transcript["turns"] 导致 judge 见空 transcript,全零分)
+- `edu_agent/evals/gepa.py`:新增(6 组件主实现,368 行);bugfix:evaluate_batch 使用 `transcript_messages` 转换 turns→messages(原直接传 transcript["turns"] 导致 judge 见空 transcript,全零分);no-op 检查(edit_template 返回与父代相同 → 跳过评估省预算)
 - `edu_agent/evals/gepa_driver.py`:新增(CLI 驱动,67 行)
-- `tests/evals/test_gepa.py`:新增(单元测试,11 测试)
+- `tests/evals/test_gepa.py`:新增(单元测试 12 个,含契约测试 turns↔messages 形状断言)
 - `edu_agent/evals/__init__.py`:GEPA 符号加入 `__all__`(10 个)
 
 **PR 只开不合**(合并键在人)。

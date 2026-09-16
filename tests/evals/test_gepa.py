@@ -1,6 +1,6 @@
 """#256 GEPA spike 单元测试:6 组件逐一验证,零 API。"""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from edu_agent.evals import (
     Budget,
@@ -9,6 +9,7 @@ from edu_agent.evals import (
     Population,
     ScoreVector,
     edit_template,
+    evaluate_batch,
     sample_batch,
 )
 
@@ -188,3 +189,47 @@ def test_budget_exhausted():
     
     budget.add(60)  # total 110 > 100
     assert budget.exhausted()
+
+
+# === 契约:turns ↔ messages 形状 ===
+
+def test_evaluate_batch_passes_messages_shape():
+    """契约测试(#296 bug 防御):evaluate_batch 传给 judge_transcript 的 messages
+    必须是 OpenAI chat 格式([{role, content}]),不是 raw turns。
+    
+    历史 bug:直接传 transcript['turns']({student, tutor, state})→ judge 见空 transcript → 全零分。
+    修复:使用 corpus_round.transcript_messages() 转换。此测试锁死不再发生。
+    """
+    gateway = MagicMock()
+    subject_mock = MagicMock()
+    subject_mock.run_case.return_value = {
+        "turns": [
+            {"student": "", "tutor": "你好同学", "state": "first_question_ready", "elapsed_ms": 0},
+            {"student": "答案是 42", "tutor": "很好!", "state": "ready_to_confirm", "elapsed_ms": 100},
+        ],
+        "summary": "学生掌握了加法。",
+        "session_id": "test",
+    }
+    
+    cases = [{"id": "c1", "question": {"text": "1+1=?"}, "grade": "三年级", "reference_answer": "2"}]
+    
+    captured = {}
+    
+    def fake_judge(gw, judge_case, role="judge_independent"):
+        captured["messages"] = judge_case["messages"]
+        captured["question"] = judge_case["question"]
+        return {"total": 10, "verdict": "pass", "math_integrity": 2}
+    
+    with patch("edu_agent.evals.gepa.ElicitSubject", return_value=subject_mock), \
+         patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge):
+        evaluate_batch(cases, "template", gateway)
+    
+    # messages 必须是 list[dict],每个 dict 有 role+content
+    msgs = captured["messages"]
+    assert isinstance(msgs, list)
+    assert len(msgs) >= 2  # at least tutor turn + summary
+    for msg in msgs:
+        assert "role" in msg and "content" in msg, f"messages 项缺 role/content: {msg}"
+        assert msg["role"] in ("user", "assistant"), f"非法 role: {msg['role']}"
+    # question 必须是字符串(从 dict 提取了 text),不是 dict
+    assert isinstance(captured["question"], str), f"question 必须是 str,实际: {type(captured['question'])}"
