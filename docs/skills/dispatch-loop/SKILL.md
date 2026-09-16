@@ -17,7 +17,7 @@ description: >
 3. **写消息**:首行签名 `【PM <session-id> 直发 YYYY-MM-DD】`;任务块自包含(基底指纹/输入/跑法/判读预注册/工件/回执要求/纪律);按「先快后长」排序逐条发;
    - **末行摘要**:`【摘要】sha256=<hex16>`(对本行之前全文计算,追加在末行)——防「消息在途损坏/截断」;
    - **回执要求写进派单**:回执首行加机器可读头 `<!--RECEIPT task=<id> pr=<n|-> calls=<n> tier=<flash|pro|0> outcome=<...> sha256=<hex16>-->`(渲染不可见),并回显派单摘要值;
-4. **发送**:`python3 /root/calibration-private/dsh-rpc.py send <会话ID子串> queue "$(cat 消息文件)"`;
+4. **发送**:`python3 "$HOME/calibration-private/dsh-rpc.py" send <会话ID子串> queue "$(cat 消息文件)"`;
    - **坑1**:会话 id 带 `session-` 前缀,用子串匹配(脚本已改);
    - **坑2**:`steer` 会打断对方在跑轮,默认 `queue`(等本轮完自动接下一条);
    - **坑3**:目标会话 run 状态先查 `dsh-rpc.py list`,确认存在;
@@ -28,10 +28,12 @@ description: >
 5. **留痕**:①#253(或对应 issue)落派单记录(派给谁/内容摘要/用户批准范围);②消息逐字存入 `calibration-private/dispatch-ledger/`(命名 `YYYYMMDD-<目标>-<slug>.txt`),manifest.tsv 记 sha256/留痕评论号/状态——**#265 教训:派单原文必须可核,不留 /tmp**;
 6. **挂看门狗**:`bash` 工具 `run_in_background` 跑 `issue-watch.sh`(见下),**勿用 nohup**(不会唤醒);派单的回执 issue 不在 watch-list 里就往 `issue-watch.issues` 加一行(运行中的狗下轮自动纳入,免杀狗)。
 
-## 二、看门狗(calibration-private/)
+## 二、看门狗
 
-- `issue-watch.sh`:状态文件 `issue-watch.state` 记每 issue 的 last_comment_id——**免手填阈值**(旧版手填是事故源);watch-list `issue-watch.issues` **每轮重读**(增删被盯 issue 免杀狗);gh 失败计数(连续 20 轮退出码 2,不吞错误);8h 超时退出码 1;退出码 0 = 有新评论 → 我被唤醒;
+脚本与 SKILL.md 同仓(`docs/skills/dispatch-loop/`),运行时状态在 `calibration-private/`:
+- `issue-watch.sh`:状态文件 `issue-watch.state` 记每 issue 的 last_comment_id——**免手填阈值**(旧版手填是事故源);watch-list `issue-watch.issues` **每轮重读**(增删被盯 issue 免杀狗);gh 失败计数(连续 20 轮退出码 2,不吞错误);8h 超时退出码 1;**本轮收集全部新评论后**退出码 0 才唤醒(一条唤醒覆盖多 issue 多条评论,不漏后续回执);
 - `d-state-watch.sh <会话子串>`(缺省 D):只读盯 running 标志,idle ≥4min 报警(回合截断检测);审查者或任何干活会话都可盯;
+- 脚本内路径用 `$HOME/calibration-private/`(不硬编码绝对根路径);状态文件名只在脚本里定义一处;
 - 已知噪声:PM 自己的留痕评论也触发唤醒——可接受,便宜;
 - **重挂 = 直接再跑一次脚本**(自动读状态),禁止手动改阈值。
 
