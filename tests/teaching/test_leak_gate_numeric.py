@@ -243,3 +243,18 @@ def test_method_repair_in_confirm_state_paraphrases():
     assert "假设法" not in turn.text  # 方法名不再出现(重生成版本)
     repair = _repairs(turn.session.guard_events)[-1]
     assert repair["regenerated"] is True  # 终答引述(5/3)拦截,重生成为转述式
+
+
+def test_leak_fallback_does_not_restate_answer_value():
+    """VERDICT#6:泄露兜底回引不引述终答——学生原话含终答数字(5/3)时,
+    兜底句改转述锚点,终答不再从确定性路径回到学生面。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
+        _tutor("对,答案就是鸡 3 只、兔 5 只。"),
+        _tutor("答案是鸡 3 只、兔 5 只,没错。"),  # 重生成仍引述 → 修不好落兜底
+    ])
+    turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
+    turn = reply(turn.session, "兔有10除以2等于5只,鸡有3只,验算26只脚。", gateway=gateway)
+
+    assert turn.text == "先回到你刚才的结论和验算——你能从题目里再确认一个已知条件吗?"
+    assert turn.session.stuck is True  # 修复失败落兜底的既有语义不变

@@ -403,6 +403,11 @@ def _contextual_fallback(session: "LearnerSession | None", guard: str,
     """按情境选一个兜底句;对话轮优先接学生原话(提问式引导,不重复万能句)。"""
     if student_message:
         snippet = str(student_message).strip()[:24]
+        # VERDICT#6(#310):回引不引述终答值——answer_leak 兜底若逐字引学生原话,
+        # 会把刚拦下的终答从确定性路径放回学生面(gate-02/03 冒烟实测)。
+        answer = _answer_numbers(session) if session is not None else set()
+        if answer and answer & _reply_numbers(snippet):
+            return "先回到你刚才的结论和验算——你能从题目里再确认一个已知条件吗?"
         return f"先回到你刚说的「{snippet}」——你能从题目里再确认一个已知条件吗?"
     # 纯图/无权威答案(十字绣/剪绳子/连线题):不逼学生答条件,软性回到看图
     if guard == "answer_leak" and any(
