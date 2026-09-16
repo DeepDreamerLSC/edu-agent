@@ -1,0 +1,41 @@
+{
+  "total_calls": 204,
+  "window_utc": [
+    "2026-09-16T11:43:46.896952+00:00",
+    "2026-09-16T12:22:22.246361+00:00"
+  ],
+  "provider_disclosure": {
+    "run1_blocked": {
+      "calls": 97,
+      "by_role_provider_model": {
+        "tutor/vision/qwen3_vl_8b/primary-direct": 81,
+        "judge_independent/deepseek/deepseek_chat/primary-direct": 16
+      },
+      "remote_deepseek_calls": 16,
+      "local_calls": 81,
+      "tokens_in": 195688,
+      "tokens_out": 21593
+    },
+    "run2_rerun": {
+      "calls": 97,
+      "by_role_provider_model": {
+        "tutor/vision/qwen3_vl_8b/primary-direct": 81,
+        "judge_independent/deepseek/deepseek_chat/primary-direct": 16
+      },
+      "remote_deepseek_calls": 16,
+      "local_calls": 81,
+      "tokens_in": 195688,
+      "tokens_out": 22050
+    },
+    "trace_diag": {
+      "calls": 10,
+      "by_role_provider_model": {
+        "tutor/vision/qwen3_vl_8b/primary-direct": 10
+      },
+      "remote_deepseek_calls": 0,
+      "local_calls": 10,
+      "tokens_in": 19570,
+      "tokens_out": 1878
+    }
+  }
+}
