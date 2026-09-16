@@ -193,6 +193,7 @@ make check
 - 首跑:97 calls(81 tutor + 16 judge)超当时硬顶 80 → 按「超顶即停」停,报 PM(PM 裁决:估计错非执行错;工件未落 = harness P1 缺陷)
 - 重跑(用户点火):97 calls(81 tutor + 16 judge),硬顶 104 内;tokens 195,688 in / 22,050 out
 - 诊断 trace(root-cause 实证):10 calls tutor;本探针合计真耗 **204 calls**(全部在 facts 工件内逐条可核)
+- **provider 披露(r2 P1)**:两跑 32 条 judge 全部远程 DeepSeek 主选直连(本地 8301 零尝试),172 条 tutor 全本地;详见 §调用计数,矛盾已上交 PM/用户
 
 **实测结果**(重跑,Mac,2026-09-16):全 8 案 Δ=0、变体首问与父代逐字相同(8/8 空转标记)。
 
@@ -242,22 +243,27 @@ make check
 - **归因未定**:judge 不敏感 vs 空转(模板未改变 tutor 行为,首轮顺验③失效)vs 搜索空间窄 — 三可皆容,需重跑验证模板命中后定论
 - **下一步**:待 PM+用户裁定(是否重跑实验 / 更大搜索空间 / 停)
 
-## 调用计数
+## 调用计数(facts 全量入仓,provider 披露)
 
-- **代码实现波**:0 模型调用(全 mock);
-- **PM 代跑 smoke**:26 calls(rounds=2, batch_size=4, 首轮全零分,**简化口径**);
-- **D 重跑 smoke**(bug 修复后):26 calls(同配置,**简化口径**);
-- **诊断探针**:4 calls(1 案 × judge × 2);
-- **方差探针**:8 calls(judge-only, 4 案 × 2 runs);
-- **配对实验**(paired-exp):旧报告 50 calls(**简化口径,伪造**);
-  - **真实口径**:从 facts ledger 实测,worktree 全天 332 calls(269 tutor + 63 judge,53 case runs)
-  - 含 smoke + D rerun + probe + paired-exp,无法精确分离
-  - PM 估计 ~144(24×6),实际 worktree 总量 332,paired-exp 子集估计 ~128-160
-  - **根因**:旧代码用 `+=2/case` 简化口径,未从 facts 精确计量
-- **结构性探针**(structural-probe,含首跑+重跑+trace):**204 calls**(facts 真计量,逐条可核:首跑 97 + 重跑 97 + 诊断 trace 10);
-- **本任务总消耗**:**~557 calls**(tier-2 扣账:worktree 332 + 探针 204 + 其他零散);
-- **Tier-2 预算**:K=4×S=16×I=6=384 案次 / ≈206-478 calls(双口径,见 §五问③);
-- **生产化启示**:必须从 facts ledger 精确计量(01 §7),不能依赖代码简化口径。
+**worktree 双账本**(全部入仓,逐条可核):
+- `facts/model_calls-2026-09-16-gepa-smoke-wt.jsonl`:**332 calls**(06:43–09:48 UTC,smoke / D 重跑 / 诊断 / 方差探针 / 配对实验全波混合,波级拆分不可 derive,旧报告 26/26/4/8/50 均系简化口径作废);
+- `structural-probe/facts/model_calls-2026-09-16.jsonl`:**204 calls**(首跑 97 + 重跑 97 + 诊断 trace 10,三段归因);
+- **本任务真实总消耗:536 calls**(tier-2 扣账)。
+
+**provider 披露(review-303-rerun r2 P1,点火边界)**:
+
+| 角色 | provider / model | 条数 | 本地/远程 |
+|---|---|---|---|
+| tutor | vision / qwen3_vl_8b | 441(269+172) | 全本地 ✅ |
+| judge_independent | deepseek / deepseek_chat | **95**(63+32) | **全远程,本地 8301 零尝试** ❌ |
+
+- 95 条 judge 全部 `fallback_from=null` = **主选直连远程 DeepSeek**,非降级;
+- 根因:`gepa.py` 判分默认 `judge_role="judge_independent"`,registry 该角色 primary=deepseek_chat 且无 fallback——与三份派单明令「judge 本地 8301 主选,仅 fallback 用 DeepSeek」直接矛盾;
+- **处置:矛盾上交 PM/用户裁定,不自行改码;裁定前不再跑任何判分**(两轮回执零 provider 披露系失实,本节为更正披露);
+- 科学结论不受影响:探针转录全同,任何确定性 judge 都 Δ=0,无需重跑。
+
+- **Tier-2 预算**:K=4×S=16×I=6=384 案次 / ≈206-478 calls(双口径,见 §五问③);实际 536 已超外推上限口径,随判分角色矛盾一并报 PM;
+- **生产化启示**:①必须从 facts ledger 精确计量(01 §7);②provider 落哪个角色必须在回执披露,点火边界以 facts 为准不以为准口头。
 
 ## 治理
 
@@ -270,7 +276,9 @@ make check
 
 - `README.md`(本文件);
 - `smoke-test/`(round-*.json + summary.json + variance-probe.json);
-- `paired-experiment/`(round-*.json + paired-report.json,配对实验产出)。
+- `paired-experiment/`(round-*.json + paired-report.json,配对实验产出);
+- `facts/model_calls-2026-09-16-gepa-smoke-wt.jsonl` + `facts-summary-gepa-smoke-wt.json`(smoke/配对波全量 facts + provider 披露,r2 修改单④补仓);
+- `structural-probe/`(run_probe.py + round-00.json + paired-report.json + trace_elicit.py + `facts/` 双跑全量 JSONL + facts-summary.json 含 provider 段)。
 
 ## 已知局限
 
