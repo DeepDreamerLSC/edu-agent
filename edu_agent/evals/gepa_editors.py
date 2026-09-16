@@ -45,7 +45,7 @@ def edit_template(current: str, failure_frames: list[dict], gateway: Gateway,
         role=role,
         messages=[{"role": "user", "content": prompt}],
         max_tokens=200,
-        temperature=0.3,
+        temperature=0.7,
     )
     
     try:
@@ -87,7 +87,7 @@ _NR_EDITOR_PROMPT = """你是一个提示词编辑器。当前复讲引导模板
 以下案例被评审判为 review(学习证据不足,无法确认掌握):
 {failure_summary}
 
-任务:调整模板措辞,让学生复讲时更容易给出**可判定的回答**——明确请他说出
+任务:调整模板措辞(必须与当前版本不同,不得原样返回),让学生复讲时更容易给出**可判定的回答**——明确请他说出
 具体步骤、算式或结论(而不是"说说想法"这类开放邀请),使评审能据以判定。
 约束:
 - 长度 30-100 字(中文);
@@ -107,7 +107,7 @@ def edit_template_nr(current: str, failure_frames: list[dict], gateway: Gateway,
     try:
         response = gateway.invoke(ModelRequest(
             role=role, messages=[{"role": "user", "content": prompt}],
-            max_tokens=200, temperature=0.3))
+            max_tokens=200, temperature=0.7))
         variant = response.text.strip().strip("`").strip()
     except GatewayError:
         return current
@@ -137,7 +137,7 @@ def edit_support_hint(support: str, failure_frames: list[dict], gateway: Gateway
     try:
         response = gateway.invoke(ModelRequest(
             role=role, messages=[{"role": "user", "content": prompt}],
-            max_tokens=160, temperature=0.3))
+            max_tokens=160, temperature=0.7))
         raw = response.text.strip().strip("`").strip()
     except GatewayError:
         return support
