@@ -315,3 +315,111 @@ def test_evaluate_batch_collects_low_score_evidence():
     detail = low_score_frames[0]["detail"]
     assert any(dim in detail for dim in ("first_question", "pacing", "summary_mastery", "termination")), \
         f"detail 未含维度名: {detail}"
+
+
+# === 配对实验(2026-09-16, #256 配对实验)===
+
+def test_evaluate_batch_paired_returns_per_case_scores():
+    """配对模式:逐案返回 scores + first_question 快照 + stats。"""
+    from edu_agent.evals import evaluate_batch_paired
+    
+    gateway = MagicMock()
+    subject_mock = MagicMock()
+    subject_mock.run_case.return_value = {
+        "turns": [{"student": "", "tutor": "我们从头把思路串一遍", "state": "x", "elapsed_ms": 0}],
+        "summary": "",
+        "session_id": "t",
+        "first_question": "我们从头把思路串一遍——先说说你第一步算了什么",
+    }
+    cases = [
+        {"id": "c1", "question": "1+1?", "grade": "三年级", "reference_answer": "2"},
+        {"id": "c2", "question": "2+2?", "grade": "三年级", "reference_answer": "4"},
+    ]
+    
+    call_count = {"n": 0}
+    def fake_judge(gw, judge_case, role="judge_independent"):
+        call_count["n"] += 1
+        return {
+            "total": 10 + call_count["n"],
+            "verdict": "pass",
+            "math_integrity": 2,
+            "answer_leaked": False,
+            "scores": {"first_question": 2, "socratic_followup": 2, "grade_fit": 2,
+                       "pacing": 2, "summary_mastery": 2, "termination": 2},
+            "evidence": {},
+        }
+    
+    with patch("edu_agent.evals.gepa.ElicitSubject", return_value=subject_mock), \
+         patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge):
+        per_case, hits, stats = evaluate_batch_paired(cases, "template", gateway)
+    
+    assert len(per_case) == 2
+    assert per_case[0]["case_id"] == "c1"
+    assert per_case[0]["total"] == 11
+    assert per_case[1]["total"] == 12
+    assert per_case[0]["hard_fail"] is False
+    assert len(hits) == 2
+    assert "first_question" in hits[0]
+    assert stats["calls"] == 4  # 2 tutor + 2 judge
+
+
+def test_paired_loop_produces_paired_report(tmp_path):
+    """配对循环:产出 round-*.json + paired-report.json(含 Δ 和验证项)。"""
+    from edu_agent.evals import paired_loop, GepaConfig
+    import json
+    
+    gateway = MagicMock()
+    subject_mock = MagicMock()
+    subject_mock.run_case.return_value = {
+        "turns": [{"student": "", "tutor": "好", "state": "x", "elapsed_ms": 0}],
+        "summary": "",
+        "session_id": "t",
+        "first_question": "我们从头把思路串一遍——先说说你第一步算了什么",
+    }
+    cases = [
+        {"id": "c1", "question": "1+1?", "grade": "三年级", "reference_answer": "2"},
+        {"id": "c2", "question": "2+2?", "grade": "三年级", "reference_answer": "4"},
+    ]
+    
+    call_count = {"n": 0}
+    def fake_judge(gw, judge_case, role="judge_independent"):
+        call_count["n"] += 1
+        total = 10 if call_count["n"] <= 2 else 11  # parent=10, variant=11
+        return {
+            "total": total,
+            "verdict": "pass",
+            "math_integrity": 2,
+            "answer_leaked": False,
+            "scores": {"first_question": 2, "socratic_followup": 2, "grade_fit": 2,
+                       "pacing": 2, "summary_mastery": 2, "termination": 2},
+            "evidence": {},
+        }
+    
+    def fake_edit(current, failures, gw):
+        return "我们从头理一遍思路——你先说第一步怎么想的"
+    
+    config = GepaConfig(rounds=1, batch_size=2, max_calls=100)
+    
+    with patch("edu_agent.evals.gepa.ElicitSubject", return_value=subject_mock), \
+         patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge), \
+         patch("edu_agent.evals.gepa.edit_template", side_effect=fake_edit):
+        reports = paired_loop(cases, "initial", config, gateway, tmp_path)
+    
+    assert len(reports) == 1
+    report = reports[0]
+    assert "paired_cases" in report
+    assert len(report["paired_cases"]) == 2
+    # 验证 Δ 计算
+    assert report["paired_cases"][0]["delta"] == 1  # variant=11 - parent=10
+    # 验证三项验证字段存在
+    assert "hard_fail_validation" in report
+    assert "template_hit_validation" in report
+    assert "editor_feedback_sample" in report
+    
+    # 验证 paired-report.json 产出
+    paired_report_path = tmp_path / "paired-report.json"
+    assert paired_report_path.exists()
+    paired_summary = json.loads(paired_report_path.read_text())
+    assert "mean_delta" in paired_summary
+    assert paired_summary["mean_delta"] == 1.0
+    assert paired_summary["verdict"] in ("GO", "红灯", "mixed")

@@ -1,13 +1,15 @@
 """GEPA spike 驱动脚本:小配置跑一轮,验证管线通不通 + 产出工件。
 
-用法:python -m edu_agent.evals.gepa_driver <output_dir> [--rounds N] [--batch-size K]
+用法:
+  python -m edu_agent.evals.gepa_driver <output_dir> [--rounds N] [--batch-size K]
+  python -m edu_agent.evals.gepa_driver <output_dir> --paired [--rounds N]
 """
 
 import argparse
 import json
 from pathlib import Path
 
-from edu_agent.evals import gepa_loop, GepaConfig
+from edu_agent.evals import gepa_loop, paired_loop, GepaConfig
 from edu_agent.evals.image_teaching import load_scenarios, to_cases
 from edu_agent.gateway import Gateway, load_registry
 
@@ -16,8 +18,9 @@ def main():
     parser = argparse.ArgumentParser(description="GEPA spike 驱动")
     parser.add_argument("output_dir", type=Path, help="输出目录")
     parser.add_argument("--rounds", type=int, default=2, help="轮数")
-    parser.add_argument("--batch-size", type=int, default=4, help="批次大小")
+    parser.add_argument("--batch-size", type=int, default=4, help="批次大小(配对模式忽略)")
     parser.add_argument("--max-calls", type=int, default=100, help="预算上限(calls)")
+    parser.add_argument("--paired", action="store_true", help="配对实验模式(全案例不重采样)")
     args = parser.parse_args()
     
     # 加载 train cases (从 scenario 语料取,有 student_turns/steps)
@@ -38,26 +41,51 @@ def main():
             max_calls=args.max_calls,
         )
         
-        print(f"GEPA spike: rounds={config.rounds}, batch_size={config.batch_size}, max_calls={config.max_calls}")
-        print(f"Train cases: {len(train_cases)} (from scenario corpus with student_turns)")
-        print(f"Initial template: {initial_template[:50]}...")
-        
-        population, scores, reports = gepa_loop(
-            train_cases=train_cases,
-            initial_template=initial_template,
-            config=config,
-            gateway=gateway,
-            output_dir=args.output_dir,
-        )
-        
-        print(f"\n完成: population={len(population.candidates)}, rounds={len(reports)}")
-        print(f"Accepted variants: {sum(1 for r in reports if r['accepted'])}")
-        
-        # 输出 summary
-        summary_path = args.output_dir / "summary.json"
-        if summary_path.exists():
-            summary = json.loads(summary_path.read_text(encoding="utf-8"))
-            print(f"Budget: {summary['budget']}")
+        if args.paired:
+            # 配对实验模式
+            print(f"GEPA paired experiment: rounds={config.rounds}, max_calls={config.max_calls}")
+            print(f"Train cases: {len(train_cases)} (all, no resampling)")
+            print(f"Initial template: {initial_template[:50]}...")
+            
+            reports = paired_loop(
+                cases=train_cases,
+                initial_template=initial_template,
+                config=config,
+                gateway=gateway,
+                output_dir=args.output_dir,
+            )
+            
+            print(f"\n完成: {len(reports)} 轮")
+            
+            # 输出 paired-report
+            paired_report_path = args.output_dir / "paired-report.json"
+            if paired_report_path.exists():
+                paired_summary = json.loads(paired_report_path.read_text(encoding="utf-8"))
+                print(f"Budget: {paired_summary['budget']}")
+                print(f"Mean Δ: {paired_summary['mean_delta']:.2f}")
+                print(f"Verdict: {paired_summary['verdict']}")
+        else:
+            # 常规 GEPA 模式
+            print(f"GEPA spike: rounds={config.rounds}, batch_size={config.batch_size}, max_calls={config.max_calls}")
+            print(f"Train cases: {len(train_cases)} (from scenario corpus with student_turns)")
+            print(f"Initial template: {initial_template[:50]}...")
+            
+            population, scores, reports = gepa_loop(
+                train_cases=train_cases,
+                initial_template=initial_template,
+                config=config,
+                gateway=gateway,
+                output_dir=args.output_dir,
+            )
+            
+            print(f"\n完成: population={len(population.candidates)}, rounds={len(reports)}")
+            print(f"Accepted variants: {sum(1 for r in reports if r['accepted'])}")
+            
+            # 输出 summary
+            summary_path = args.output_dir / "summary.json"
+            if summary_path.exists():
+                summary = json.loads(summary_path.read_text(encoding="utf-8"))
+                print(f"Budget: {summary['budget']}")
         
     finally:
         gateway.close()

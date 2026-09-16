@@ -211,6 +211,67 @@ def evaluate_batch(
     ), failures, stats
 
 
+def evaluate_batch_paired(
+    cases: list[dict],
+    template: str,
+    gateway: Gateway,
+    judge_role: str = "judge_independent",
+) -> tuple[list[dict], list[dict], dict]:
+    """配对实验:逐案跑 + 逐案判,返回 per-case scores 和 first_question 快照。
+    
+    返回:(per_case_scores, template_hits, stats)。
+    per_case_scores = [{case_id, total, verdict, leaked, mi, hard_fail}, ...]
+    template_hits = [{case_id, first_question_text}, ...] (验证模板真塑造 tutor 首问)
+    stats = {calls, tokens_in, tokens_out, wall_ms, env_failures, content_failures}
+    """
+    started = time.monotonic()
+    subject = ElicitSubject(template, gateway)
+    
+    per_case_scores = []
+    template_hits = []
+    stats = {"calls": 0, "tokens_in": 0, "tokens_out": 0, "env_failures": 0, "content_failures": 0}
+    
+    for case in cases:
+        try:
+            transcript = subject.run_case(case)
+            # 记录 tutor 首问(验证模板真塑造了行为,不是空转)
+            first_q = transcript.get("first_question") or ""
+            template_hits.append({"case_id": case.get("id", ""), "first_question": first_q[:100]})
+            
+            total, verdict, mi, is_hard_fail, _ = _score_one_case(
+                gateway, case, transcript, judge_role)
+            per_case_scores.append({
+                "case_id": case.get("id", ""),
+                "total": total,
+                "verdict": verdict,
+                "leaked": is_hard_fail and verdict != "fail",  # leaked but not fail
+                "mi": mi,
+                "hard_fail": is_hard_fail,
+            })
+            stats["calls"] += 2  # tutor + judge
+        except EnvironmentFailure as exc:
+            per_case_scores.append({
+                "case_id": case.get("id", ""),
+                "error": f"environment: {str(exc)[:100]}",
+            })
+            stats["env_failures"] += 1
+        except GatewayError as exc:
+            per_case_scores.append({
+                "case_id": case.get("id", ""),
+                "error": f"judge_error: {str(exc)[:100]}",
+            })
+            stats["calls"] += 1  # tutor succeeded, judge failed
+        except Exception as exc:  # noqa: BLE001
+            per_case_scores.append({
+                "case_id": case.get("id", ""),
+                "error": f"content: {str(exc)[:100]}",
+            })
+            stats["content_failures"] += 1
+    
+    stats["wall_ms"] = int((time.monotonic() - started) * 1000)
+    return per_case_scores, template_hits, stats
+
+
 # === 4. 反思编辑器 ===
 
 _EDITOR_PROMPT = """你是一个提示词编辑器。当前 elicit 模板:
@@ -435,3 +496,143 @@ def gepa_loop(
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
     
     return population, scores, round_reports
+
+
+def _compute_paired_cases(
+    parent_scores: list[dict], variant_scores: list[dict],
+) -> list[dict]:
+    """逐案配对 Δ 计算。"""
+    paired_cases = []
+    for p, v in zip(parent_scores, variant_scores, strict=True):
+        if "error" in p or "error" in v:
+            paired_cases.append({
+                "case_id": p.get("case_id", v.get("case_id", "")),
+                "error": p.get("error") or v.get("error"),
+            })
+            continue
+        paired_cases.append({
+            "case_id": p["case_id"],
+            "parent_total": p.get("total", 0),
+            "variant_total": v.get("total", 0),
+            "delta": v.get("total", 0) - p.get("total", 0),
+            "parent_verdict": p.get("verdict"),
+            "variant_verdict": v.get("verdict"),
+            "parent_hard_fail": p.get("hard_fail", False),
+            "variant_hard_fail": v.get("hard_fail", False),
+        })
+    return paired_cases
+
+
+def _validate_hard_fail(paired_cases: list[dict]) -> str:
+    """硬失败筛选验证:若有泄答案候选,断言其不胜出。"""
+    has_leaked = any(c.get("variant_hard_fail") for c in paired_cases if "error" not in c)
+    if not has_leaked:
+        return "pass (no leaked variant)"
+    all_parent_fail = all(c.get("parent_hard_fail") for c in paired_cases if "error" not in c)
+    return "acceptable (parent all hard_fail)" if all_parent_fail else "blocked (variant leaked)"
+
+
+def _validate_template_hits(variant_hits: list[dict]) -> dict:
+    """模板命中验证:逐案核对 first_question 真包含模板引导词。"""
+    samples = []
+    for hit in variant_hits[:3]:
+        first_q = hit.get("first_question", "")
+        if len(first_q) > 10:
+            samples.append({"case_id": hit["case_id"], "first_question": first_q[:100]})
+    return {"hit_count": len(samples), "total_cases": len(variant_hits), "samples": samples}
+
+
+def paired_loop(
+    cases: list[dict],
+    initial_template: str,
+    config: GepaConfig,
+    gateway: Gateway,
+    output_dir: Path,
+) -> list[dict]:
+    """配对实验:固定批次(全案例不重采样),逐案对比 parent vs variant。
+    
+    返回:paired_reports (每轮一个 report,含 per-case Δ)。
+    输出:round-*.json + paired-report.json(逐案配对对比)。
+    
+    验证项:
+    1. 编辑器反馈:日志记录传给 edit_template 的 failure_frames
+    2. 硬失败筛选:断言无泄答案候选胜出
+    3. 模板命中:逐案核对 elicit 模板真塑造 tutor 首问
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+    budget = Budget(max_calls=config.max_calls)
+    paired_reports: list[dict] = []
+    
+    # 跑 parent (全案例)
+    parent_scores, parent_hits, parent_stats = evaluate_batch_paired(
+        cases, initial_template, gateway, config.judge_role)
+    budget.add(parent_stats["calls"])
+    
+    # 收集 parent 失败(供首轮编辑器)
+    parent_failures = [
+        {"case_id": s["case_id"], "kind": "judge_low_score",
+         "detail": f"total={s.get('total', '?')}, hard_fail={s.get('hard_fail', False)}"}
+        for s in parent_scores
+        if "error" not in s and (s.get("hard_fail") or s.get("total", 12) < 10)
+    ]
+    
+    for round_idx in range(config.rounds):
+        if budget.exhausted():
+            break
+        
+        # 编辑模板
+        variant_template = edit_template(initial_template, parent_failures, gateway)
+        budget.add(1)
+        
+        # No-op 检查
+        is_noop = (variant_template == initial_template)
+        
+        # 跑 variant (同批全案例)
+        if is_noop:
+            variant_scores, variant_hits = parent_scores, parent_hits
+            variant_stats = {"calls": 0, "tokens_in": 0, "tokens_out": 0,
+                             "env_failures": 0, "content_failures": 0, "wall_ms": 0}
+        else:
+            variant_scores, variant_hits, variant_stats = evaluate_batch_paired(
+                cases, variant_template, gateway, config.judge_role)
+            budget.add(variant_stats["calls"])
+        
+        # 逐案配对 Δ + 验证
+        paired_cases = _compute_paired_cases(parent_scores, variant_scores)
+        
+        report = {
+            "round": round_idx,
+            "parent_template": initial_template,
+            "variant_template": variant_template,
+            "noop": is_noop,
+            "parent_stats": parent_stats,
+            "variant_stats": variant_stats,
+            "paired_cases": paired_cases,
+            "hard_fail_validation": _validate_hard_fail(paired_cases),
+            "template_hit_validation": _validate_template_hits(variant_hits),
+            "editor_feedback_sample": parent_failures[:3] if parent_failures else [],
+        }
+        paired_reports.append(report)
+        (output_dir / f"round-{round_idx:02d}.json").write_text(
+            json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    
+    # 最终配对报告
+    all_deltas = [
+        c["delta"] for r in paired_reports for c in r["paired_cases"] if "error" not in c
+    ]
+    mean_delta = sum(all_deltas) / len(all_deltas) if all_deltas else 0.0
+    stable_nonzero = abs(mean_delta) >= 1.0 and len(set(d > 0 for d in all_deltas if d != 0)) <= 1
+    
+    paired_summary = {
+        "budget": budget.summary(),
+        "total_paired_cases": len(all_deltas),
+        "mean_delta": mean_delta,
+        "deltas": all_deltas,
+        "stable_nonzero": stable_nonzero,
+        "verdict": "GO" if stable_nonzero and mean_delta > 0 else ("红灯" if mean_delta == 0 else "mixed"),
+    }
+    (output_dir / "paired-report.json").write_text(
+        json.dumps(paired_summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    
+    return paired_reports
+

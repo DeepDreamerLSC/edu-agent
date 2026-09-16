@@ -30,7 +30,9 @@ from .gepa import (
     ScoreVector,
     edit_template,
     evaluate_batch,
+    evaluate_batch_paired,
     gepa_loop,
+    paired_loop,
     sample_batch,
 )
 from .legacy_adapter import LegacyAdapter
@@ -101,9 +103,11 @@ __all__ = [
     "dump_facts",
     "edit_template",
     "evaluate_batch",
+    "evaluate_batch_paired",
     "facts_calibers",
     "format_failures",
     "gepa_loop",
+    "paired_loop",
     "judge_rows",
     "judge_transcript",
     "judger_sha256",
