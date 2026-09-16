@@ -8,6 +8,7 @@ from .image_teaching import (
     validate_scenario,
 )
 from .kernel_subject import KernelSubject
+from .lane_m import LaneMResult, compare_lane_m, run as run_lane_m
 from .judge import (
     DIMENSION_GUIDE,
     DIMENSIONS,
@@ -88,6 +89,9 @@ __all__ = [
     "GepaConfig",
     "JudgeSubject",
     "KernelSubject",
+    "LaneMResult",
+    "compare_lane_m",
+    "run_lane_m",
     "LegacyAdapter",
     "Population",
     "REGISTRY",
