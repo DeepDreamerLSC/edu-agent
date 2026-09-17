@@ -1,0 +1,420 @@
+{
+  "case_id": "stability_chicken_rabbit",
+  "arm_blind": "B",
+  "transcript": {
+    "question_id": "stability_chicken_rabbit",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "我还不知道怎么同时算两种动物。",
+        "tutor": "你提到还不知道怎么同时算鸡和兔，那我们先想：如果全是鸡，脚会是多少？再和实际脚数比一比，差的脚数能告诉我们什么？",
+        "state": "dialogue",
+        "elapsed_ms": 3170
+      },
+      {
+        "student": "可以先假设8只全是鸡，这样有16只脚。",
+        "tutor": "你假设8只全是鸡，脚数是16，这个想法很棒！那实际有26只脚，多了多少？多出来的脚是不是兔子的？每只兔子比鸡多几只脚？",
+        "state": "dialogue",
+        "elapsed_ms": 1589
+      },
+      {
+        "student": "实际比16只多10只，每把一只鸡换成兔会多2只脚。",
+        "tutor": "你发现每换一只鸡为兔会多2只脚，那现在多出来的脚数和这个‘每换一次多2只’的关系，能帮我们算出换了几只吗？",
+        "state": "dialogue",
+        "elapsed_ms": 3236
+      },
+      {
+        "student": "所以兔有10除以2等于5只，鸡有3只，检查5乘4加3乘2等于26。",
+        "tutor": "你刚才说多出来的脚数和每换一次多2只脚有关，那换了多少次就能知道兔有多少只了？请你自己说说怎么从10和2算出兔的数量。",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 3393
+      }
+    ],
+    "summary": "你用假设法先算出全是鸡时脚数为16，再通过实际脚数26与之差值10，结合每换一只鸡为兔多2只脚的规律，正确推出兔有5只、鸡有3只。关键转折是你发现‘每换一次多2只’能帮助计算换的次数；仍需注意的是，后续检查步骤中要明确写出每只动物脚数的乘法运算，确保结果无误。",
+    "total_ms": 15823,
+    "learner": {
+      "grade": ""
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          5.0,
+          8.0,
+          10.0,
+          26.0
+        ],
+        "extracted": [
+          2.0,
+          3.0,
+          5.0,
+          8.0,
+          10.0,
+          16.0,
+          26.0
+        ],
+        "violation_sources": [
+          {
+            "number": 3.0,
+            "source": "answer"
+          },
+          {
+            "number": 5.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          5.0,
+          8.0,
+          10.0,
+          26.0
+        ],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "original": "你提到‘同时算’有点难，那我们先从鸡开始想：如果全是鸡，8只脚是16只脚，但实际有26只脚，多出来的10只脚是兔子带来的，每只兔子比鸡多2只脚，所以兔子有5只，鸡就是3只。你试试看这样想，是不是更清楚了？",
+        "regenerated": true,
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          8.0,
+          16.0,
+          26.0
+        ],
+        "extracted": [
+          8.0,
+          16.0,
+          26.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          5.0,
+          10.0
+        ],
+        "extracted": [
+          2.0,
+          5.0,
+          8.0,
+          10.0
+        ],
+        "violation_sources": [
+          {
+            "number": 5.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 3
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          5.0,
+          10.0
+        ],
+        "extracted": [
+          2.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 3
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "original": "你算出多10只脚，每换一只鸡为兔多2只脚，这说明兔子比鸡多5只，这个思路很清晰！那现在我们用总数8只，减去兔子数，就能算出鸡数了，你来试试看。",
+        "regenerated": true,
+        "turn": 3
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          3.0,
+          5.0,
+          10.0,
+          26.0
+        ],
+        "extracted": [
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          8.0,
+          10.0,
+          26.0
+        ],
+        "violation_sources": [
+          {
+            "number": 3.0,
+            "source": "answer"
+          },
+          {
+            "number": 5.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 4
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          3.0,
+          5.0,
+          10.0,
+          26.0
+        ],
+        "extracted": [
+          2.0,
+          10.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 4
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "original": "你用多出来的脚数10除以2，得出兔有5只，再用8减5得鸡有3只，最后验证5×4+3×2=26，这完全正确！",
+        "regenerated": true,
+        "turn": 4
+      }
+    ],
+    "session_id": "kernel_a758c0df2b"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        5.0,
+        8.0,
+        10.0,
+        26.0
+      ],
+      "extracted": [
+        2.0,
+        3.0,
+        5.0,
+        8.0,
+        10.0,
+        16.0,
+        26.0
+      ],
+      "violation_sources": [
+        {
+          "number": 3.0,
+          "source": "answer"
+        },
+        {
+          "number": 5.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        5.0,
+        8.0,
+        10.0,
+        26.0
+      ],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "original": "你提到‘同时算’有点难，那我们先从鸡开始想：如果全是鸡，8只脚是16只脚，但实际有26只脚，多出来的10只脚是兔子带来的，每只兔子比鸡多2只脚，所以兔子有5只，鸡就是3只。你试试看这样想，是不是更清楚了？",
+      "regenerated": true,
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        8.0,
+        16.0,
+        26.0
+      ],
+      "extracted": [
+        8.0,
+        16.0,
+        26.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        5.0,
+        10.0
+      ],
+      "extracted": [
+        2.0,
+        5.0,
+        8.0,
+        10.0
+      ],
+      "violation_sources": [
+        {
+          "number": 5.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 3
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        5.0,
+        10.0
+      ],
+      "extracted": [
+        2.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 3
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "original": "你算出多10只脚，每换一只鸡为兔多2只脚，这说明兔子比鸡多5只，这个思路很清晰！那现在我们用总数8只，减去兔子数，就能算出鸡数了，你来试试看。",
+      "regenerated": true,
+      "turn": 3
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        3.0,
+        5.0,
+        10.0,
+        26.0
+      ],
+      "extracted": [
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        8.0,
+        10.0,
+        26.0
+      ],
+      "violation_sources": [
+        {
+          "number": 3.0,
+          "source": "answer"
+        },
+        {
+          "number": 5.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 4
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        3.0,
+        5.0,
+        10.0,
+        26.0
+      ],
+      "extracted": [
+        2.0,
+        10.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 4
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "original": "你用多出来的脚数10除以2，得出兔有5只，再用8减5得鸡有3只，最后验证5×4+3×2=26，这完全正确！",
+      "regenerated": true,
+      "turn": 4
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 0,
+      "summary_mastery": 1,
+      "termination": 1
+    },
+    "total": 7,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你提到还不知道怎么同时算鸡和兔，那我们先想：如果全是鸡，脚会是多少？再和实际脚数比一比，差的脚数能告诉我们什么？",
+      "socratic_followup": "学生:所以兔有10除以2等于5只，鸡有3只，检查5乘4加3乘2等于26。小讲师:你刚才说多出来的脚数和每换一次多2只脚有关，那换了多少次就能知道兔有多少只了？请你自己说说怎么从10和2算出兔的数量。",
+      "grade_fit": "小讲师:如果全是鸡，脚会是多少？...每只兔子比鸡多几只脚？",
+      "pacing": "学生:所以兔有10除以2等于5只，鸡有3只，检查5乘4加3乘2等于26。小讲师:你刚才说多出来的脚数和每换一次多2只脚有关，那换了多少次就能知道兔有多少只了？请你自己说说怎么从10和2算出兔的数量。",
+      "summary_mastery": "小讲师:你用假设法先算出全是鸡时脚数为16，再通过实际脚数26与之差值10，结合每换一只鸡为兔多2只脚的规律，正确推出兔有5只、鸡有3只。关键转折是你发现‘每换一次多2只’能帮助计算换的次数；仍需注意的是，后续检查步骤中要明确写出每只动物脚数的乘法运算，确保结果无误。",
+      "termination": "小讲师:你用假设法先算出全是鸡时脚数为16...正确推出兔有5只、鸡有3只。",
+      "math_integrity": "小讲师陈述：1. 假设8只全是鸡，脚数16（8*2=16，正确）；2. 实际26只，多10只（26-16=10，正确）；3. 每只兔子比鸡多2只脚（4-2=2，正确）；4. 兔有10除以2等于5只（10/2=5，正确）；5. 鸡有3只（8-5=3，正确）；6. 检查5*4+3*2=26（20+6=26，正确）。所有数学事实均正确。",
+      "answer_leaked": "学生:所以兔有10除以2等于5只，鸡有3只，检查5乘4加3乘2等于26。"
+    },
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 20
+}
