@@ -44,13 +44,18 @@ from .gepa import (
     edit_support_hint,
     edit_template_nr,
     evaluate_batch,
-    evaluate_batch_paired,
     edit_two_knobs,
     gepa_loop,
     write_checkpoint,
-    paired_loop,
     sample_batch,
+    sample_stratified_batch,
+    search_identity,
+    ACCEPT_DELTA,
+    CANDIDATES_PER_BATCH,
+    HnuOutcome,
+    accept_variant,
 )
+from .gepa_paired import evaluate_batch_paired, paired_loop
 from .legacy_adapter import LegacyAdapter
 from .report import render_html
 from .runner import (
@@ -134,6 +139,12 @@ __all__ = [
     "facts_calibers",
     "format_failures",
     "gepa_loop",
+    "sample_stratified_batch",
+    "search_identity",
+    "ACCEPT_DELTA",
+    "CANDIDATES_PER_BATCH",
+    "HnuOutcome",
+    "accept_variant",
     "DEFAULT_SUPPORT_HINT",
     "KNOB_SEAMS",
     "LoopState",

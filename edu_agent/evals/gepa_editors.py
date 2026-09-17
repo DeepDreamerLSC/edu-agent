@@ -2,6 +2,10 @@
 
 四个编辑器共享同一纪律:单次 gateway 调用、lint 不过保留父代(零退化)、
 失败帧浓缩前 5 进 prompt。gepa.py 经 import 重导出,patch 目标与公共 API 不变。
+
+#324 A-e:编辑器返回 (variant, reason),reason ∈ {"edited", "unchanged",
+"lint_rejected", "upstream_error"}——每次编辑尝试的原因 100% 落 round report,
+不再与「编辑器真 noop」混为一谈。
 """
 
 from __future__ import annotations
@@ -13,7 +17,7 @@ _EDITOR_PROMPT = """你是一个提示词编辑器。当前 elicit 模板:
 ---
 {current}
 ---
-
+  
 失败案例摘要(共 {n_failures} 个):
 {failure_summary}
 
@@ -24,45 +28,48 @@ _EDITOR_PROMPT = """你是一个提示词编辑器。当前 elicit 模板:
 - 不要围栏、不要解释,只输出改进后的模板文本。"""
 
 
+def _failure_digest(failure_frames: list[dict]) -> str:
+    return "\n".join(
+        f"- {f['case_id']}: {f['kind']} — {f['detail'][:100]}"
+        for f in failure_frames[:5]
+    ) if failure_frames else "(无失败案例)"
+
+
 def edit_template(current: str, failure_frames: list[dict], gateway: Gateway,
-                  role: str = "judge_independent") -> str:
-    """一次 gateway 调用:当前模板 + 失败帧浓缩 → 变体;带 lint。
-    
+                  role: str = "judge_independent") -> tuple[str, str]:
+    """一次 gateway 调用:当前模板 + 失败帧浓缩 → (变体, 原因);带 lint。
+
     Lint:必须保住核心引导词(「思路」「第一步」),防进化出废模板。
     角色:judge_independent(DeepSeek 直评,spike 复用,不加新角色)。
     三键裁决(2026-09-17,PM sha256=d7256fcc631e69e7)保留:编辑器非判分,
     走 judge_independent 属设计内(用户已追认);判分入口默认已改 "judge"
     (本地 mlx_27b 主选),judge_independent 留 #32 平行评分用途。
     """
-    failure_summary = "\n".join(
-        f"- {f['case_id']}: {f['kind']} — {f['detail'][:100]}"
-        for f in failure_frames[:5]  # 浓缩前 5 个失败
-    ) if failure_frames else "(无失败案例)"
-    
-    prompt = _EDITOR_PROMPT.format(current=current, n_failures=len(failure_frames), failure_summary=failure_summary)
-    
+    prompt = _EDITOR_PROMPT.format(
+        current=current, n_failures=len(failure_frames),
+        failure_summary=_failure_digest(failure_frames))
     request = ModelRequest(
         role=role,
         messages=[{"role": "user", "content": prompt}],
         max_tokens=200,
         temperature=0.7,
     )
-    
+
     try:
         response = gateway.invoke(request)
         variant = response.text.strip().strip("`").strip()
     except GatewayError:
-        return current  # 编辑失败,保守保留当前
-    
+        return current, "upstream_error"  # 编辑失败,保守保留当前
+
     # Lint
     if len(variant) < 30 or len(variant) > 100:
-        return current
+        return current, "lint_rejected"
     if "思路" not in variant and "第一步" not in variant and "从头" not in variant:
-        return current
+        return current, "lint_rejected"
     if variant == current:
-        return current
-    
-    return variant
+        return current, "unchanged"
+
+    return variant, "edited"
 
 
 _SUPPORT_EDITOR_PROMPT = """你是一个提示词编辑器。当前「卡壳支持」问句模板:
@@ -96,23 +103,22 @@ _NR_EDITOR_PROMPT = """你是一个提示词编辑器。当前复讲引导模板
 
 
 def edit_template_nr(current: str, failure_frames: list[dict], gateway: Gateway,
-                      role: str = "judge_independent") -> str:
+                     role: str = "judge_independent") -> tuple[str, str]:
     """needs_review 靶向编辑(收敛#2 选项①准备件):与 edit_template 同 lint 同角色,
     唯一差异是指令瞄准 nr 维——让复讲引导产出可判定证据,而非更讨喜的开放邀请。"""
-    failure_summary = "\n".join(
-        f"- {f['case_id']}: {f['kind']} — {f['detail'][:100]}"
-        for f in failure_frames[:5]
-    ) if failure_frames else "(无失败案例)"
-    prompt = _NR_EDITOR_PROMPT.format(current=current, failure_summary=failure_summary)
+    prompt = _NR_EDITOR_PROMPT.format(
+        current=current, failure_summary=_failure_digest(failure_frames))
     try:
         response = gateway.invoke(ModelRequest(
             role=role, messages=[{"role": "user", "content": prompt}],
             max_tokens=200, temperature=0.7))
         variant = response.text.strip().strip("`").strip()
     except GatewayError:
-        return current
+        return current, "upstream_error"
     linted = _lint_common(variant, current, 30, 100, ("思路", "第一步", "算式", "步骤"))
-    return variant if linted is not None else current
+    if linted is None:
+        return current, "lint_rejected"
+    return linted, "edited"
 
 
 def _lint_common(variant: str, current: str, floor: int, cap: int,
@@ -126,39 +132,46 @@ def _lint_common(variant: str, current: str, floor: int, cap: int,
 
 
 def edit_support_hint(support: str, failure_frames: list[dict], gateway: Gateway,
-                      role: str = "judge_independent") -> str:
-    """「卡壳支持」问句编辑(双旋钮的 support 分支):lint 不过保留父代。"""
-    failure_summary = "\n".join(
-        f"- {f['case_id']}: {f['kind']} — {f['detail'][:100]}"
-        for f in failure_frames[:5]
-    ) if failure_frames else "(无失败案例)"
+                      role: str = "judge_independent") -> tuple[str, str]:
+    """「卡壳支持」问句编辑(双旋钮的 support 分支):lint 不过保留父代。
+
+    #324 A-c:问句 lint 接受 ASCII `?` 与全角 `?`——中文编辑器输出全角问号
+    是合法问句,原 ASCII-only 关键词把奇代 support 编辑全数退回(机械必然 noop)。
+    """
     prompt = _SUPPORT_EDITOR_PROMPT.format(
-        current=support, n_failures=len(failure_frames), failure_summary=failure_summary)
+        current=support, n_failures=len(failure_frames),
+        failure_summary=_failure_digest(failure_frames))
     try:
         response = gateway.invoke(ModelRequest(
             role=role, messages=[{"role": "user", "content": prompt}],
             max_tokens=160, temperature=0.7))
         raw = response.text.strip().strip("`").strip()
     except GatewayError:
-        return support
-    linted = _lint_common(raw, support, 20, 70, ("?", "?"))
-    return linted if linted is not None else support
+        return support, "upstream_error"
+    if raw == support:
+        return support, "unchanged"
+    if _lint_common(raw, support, 20, 70, ("?", "\uff1f")) is None:
+        return support, "lint_rejected"
+    return raw, "edited"
 
 
 def edit_two_knobs(
     elicit: str, support: str, round_idx: int,
     failure_frames: list[dict], gateway: Gateway,
     editors=None,
-) -> tuple[str, str]:
+) -> tuple[str, str, str]:
     """双旋钮编辑(#256 阶段 2 选项 A 搜索空间):偶代编辑 elicit、奇代编辑 support。
 
     单次 gateway 调用(编辑器预算 1 call/代不变);被编辑旋钮拿失败帧反馈,
     另一旋钮原样保留。lint 失败保留父代(与 edit_template 同纪律)。
     editors=(elicit编辑器, support编辑器);None 时晚绑定默认对(保持可 patch)。
+    #324 A-e:返回 (elicit, support, reason)——reason 是被编辑旋钮的编辑原因。
     """
     if editors is None:
         editors = (edit_template, edit_support_hint)
     elicit_editor, support_editor = editors
     if round_idx % 2 == 0:
-        return elicit_editor(elicit, failure_frames, gateway), support
-    return elicit, support_editor(support, failure_frames, gateway)
+        new_elicit, reason = elicit_editor(elicit, failure_frames, gateway)
+        return new_elicit, support, reason
+    new_support, reason = support_editor(support, failure_frames, gateway)
+    return elicit, new_support, reason

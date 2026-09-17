@@ -19,6 +19,18 @@ from edu_agent.evals import (
 )
 
 
+def _wire_writer_counters(gateway: MagicMock, *, start: int = 0) -> None:
+    """#324 C2:MagicMock gateway 的 writer 配进程内计数真值(int 差值可算)。
+
+    生产路径 FactWriter 自带 count/tokens_in/tokens_out 进程内累计;
+    mock 下需要显式配 int,否则 Mock 参与算术直接 TypeError。
+    fake 上游模拟"真实调用落账"时自增 gateway.writer.count 即可。
+    """
+    gateway.writer.count = start
+    gateway.writer.tokens_in = 0
+    gateway.writer.tokens_out = 0
+
+
 # === 0. 三键裁决契约:判分默认本地主选角色(2026-09-17)===
 
 def test_judge_role_defaults_are_local_primary():
@@ -146,8 +158,9 @@ def test_edit_template_lint_rejects_empty():
     gateway.invoke.return_value = MagicMock(text="")
     
     current = "当前模板"
-    result = edit_template(current, [], gateway)
+    result, reason = edit_template(current, [], gateway)
     assert result == current
+    assert reason == "lint_rejected"  # #324 A-e:原因随值返回
 
 
 def test_edit_template_lint_rejects_too_short():
@@ -156,8 +169,9 @@ def test_edit_template_lint_rejects_too_short():
     gateway.invoke.return_value = MagicMock(text="太短")
     
     current = "当前模板"
-    result = edit_template(current, [], gateway)
+    result, reason = edit_template(current, [], gateway)
     assert result == current
+    assert reason == "lint_rejected"
 
 
 def test_edit_template_lint_rejects_no_keywords():
@@ -166,8 +180,9 @@ def test_edit_template_lint_rejects_no_keywords():
     gateway.invoke.return_value = MagicMock(text="这是一段足够长的文本,但是完全不包含任何引导词,只有普通的描述性内容,没有任何教学引导")
     
     current = "当前模板包含思路"
-    result = edit_template(current, [], gateway)
+    result, reason = edit_template(current, [], gateway)
     assert result == current
+    assert reason == "lint_rejected"
 
 
 def test_edit_template_accepts_valid():
@@ -176,8 +191,9 @@ def test_edit_template_accepts_valid():
     gateway.invoke.return_value = MagicMock(text="请从头讲讲你的思路,先说说第一步做了什么,然后一步步往下讲,把整个解题过程都说清楚")
     
     current = "当前模板"
-    result = edit_template(current, [], gateway)
+    result, reason = edit_template(current, [], gateway)
     assert result == "请从头讲讲你的思路,先说说第一步做了什么,然后一步步往下讲,把整个解题过程都说清楚"
+    assert reason == "edited"
 
 
 # === 5. Selection + population ===
@@ -341,327 +357,6 @@ def test_evaluate_batch_collects_low_score_evidence():
         f"detail 未含维度名: {detail}"
 
 
-# === 配对实验(2026-09-16, #256 配对实验)===
-
-def test_evaluate_batch_paired_returns_per_case_scores(tmp_path):
-    """配对模式:逐案返回 scores + 转录快照(首问 + 全 tutor 轮 + 模板注入标记)+ stats。
-    
-    契约:transcript 真实形状无 first_question 键;首问来自 turns[0].tutor;
-    快照含全转录 tutor 轮(review-303-rerun P1-5:空转扫描用)。
-    """
-    from edu_agent.evals import evaluate_batch_paired
-    
-    gateway = MagicMock()
-    gateway.writer.root = tmp_path  # 空 facts 目录
-    subject_mock = MagicMock()
-    # 真实形状:无 first_question 键;首问在 turns[0].tutor
-    subject_mock.run_case.return_value = {
-        "turns": [{"student": "", "tutor": "我们从头把思路串一遍——先说说你第一步", "state": "first_question_ready", "elapsed_ms": 0}],
-        "summary": "",
-        "session_id": "t",
-    }
-    cases = [
-        {"id": "c1", "question": "1+1?", "grade": "三年级", "reference_answer": "2"},
-        {"id": "c2", "question": "2+2?", "grade": "三年级", "reference_answer": "4"},
-    ]
-    
-    call_count = {"n": 0}
-    def fake_judge(gw, judge_case, role="judge_independent"):
-        call_count["n"] += 1
-        return {
-            "total": 10 + call_count["n"],
-            "verdict": "pass",
-            "math_integrity": 2,
-            "answer_leaked": False,
-            "scores": {"first_question": 2, "socratic_followup": 2, "grade_fit": 2,
-                       "pacing": 2, "summary_mastery": 2, "termination": 2},
-            "evidence": {},
-        }
-    
-    with patch("edu_agent.evals.gepa.ElicitSubject", return_value=subject_mock), \
-         patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge):
-        per_case, snaps, stats = evaluate_batch_paired(cases, "template", gateway)
-    
-    assert len(per_case) == 2
-    assert per_case[0]["case_id"] == "c1"
-    assert per_case[0]["total"] == 11
-    assert per_case[1]["total"] == 12
-    assert per_case[0]["hard_fail"] is False
-    # 快照含首问 + 全 tutor 轮 + 模板注入标记
-    assert len(snaps) == 2
-    assert snaps[0]["first_question"] == "我们从头把思路串一遍——先说说你第一步"
-    assert snaps[0]["tutor_turns"] == ["我们从头把思路串一遍——先说说你第一步"]
-    assert snaps[0]["template_in_transcript"] is False  # "template" 不在 tutor 文本里
-    # stats.calls 来自 facts 计数(tmp_path 无文件 → 0)
-    assert stats["calls"] == 0  # facts 目录空,实测 0 行
-
-
-def test_paired_loop_produces_paired_report(tmp_path):
-    """配对循环:产出 round-*.json + paired-report.json(含 Δ 和验证项)。
-    
-    契约:变体模板经 _ask_restatement 注入后续轮(mock 转录 tutor 文本含变体模板,
-    模板命中 → 非空转);Δ 由逐案分驱动。
-    """
-    from edu_agent.evals import paired_loop, GepaConfig
-    import json
-    
-    gateway = MagicMock()
-    gateway.writer.root = tmp_path
-    subject_mock = MagicMock()
-    # 真实形状:首问是问候语,变体模板经后轮注入(模板命中 → 非空转);
-    # parent 与 variant 转录后轮文本不同(配对对照真实形态)
-    parent_transcript = {
-        "turns": [
-            {"student": "", "tutor": "你好同学,这道题你的答案是什么呀?", "state": "first_question_ready", "elapsed_ms": 0},
-            {"student": "答案是3", "tutor": "我们从头把思路串一遍——先说说你第一步怎么想的", "state": "dialogue", "elapsed_ms": 0},
-        ],
-        "summary": "", "session_id": "t",
-    }
-    variant_transcript = {
-        "turns": [
-            {"student": "", "tutor": "你好同学,这道题你的答案是什么呀?", "state": "first_question_ready", "elapsed_ms": 0},
-            {"student": "答案是3", "tutor": "我们从头理一遍思路——你先说第一步怎么想的", "state": "dialogue", "elapsed_ms": 0},
-        ],
-        "summary": "", "session_id": "t",
-    }
-    subject_mock.run_case.side_effect = [
-        parent_transcript, parent_transcript,  # parent run: c1, c2
-        variant_transcript, variant_transcript,  # variant run: c1, c2
-    ]
-    cases = [
-        {"id": "c1", "question": "1+1?", "grade": "三年级", "reference_answer": "2"},
-        {"id": "c2", "question": "2+2?", "grade": "三年级", "reference_answer": "4"},
-    ]
-    
-    call_count = {"n": 0}
-    def fake_judge(gw, judge_case, role="judge_independent"):
-        call_count["n"] += 1
-        total = 10 if call_count["n"] <= 2 else 11  # parent=10, variant=11
-        return {
-            "total": total,
-            "verdict": "pass",
-            "math_integrity": 2,
-            "answer_leaked": False,
-            "scores": {"first_question": 2, "socratic_followup": 2, "grade_fit": 2,
-                       "pacing": 2, "summary_mastery": 2, "termination": 2},
-            "evidence": {},
-        }
-    
-    def fake_edit(current, failures, gw):
-        return "我们从头理一遍思路——你先说第一步怎么想的"
-    
-    config = GepaConfig(rounds=1, batch_size=2, max_calls=100)
-    
-    with patch("edu_agent.evals.gepa.ElicitSubject", return_value=subject_mock), \
-         patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge), \
-         patch("edu_agent.evals.gepa.edit_template", side_effect=fake_edit):
-        reports = paired_loop(cases, "initial", config, gateway, tmp_path)
-    
-    assert len(reports) == 1
-    report = reports[0]
-    assert "paired_cases" in report
-    assert len(report["paired_cases"]) == 2
-    # 验证 Δ 计算
-    assert report["paired_cases"][0]["delta"] == 1  # variant=11 - parent=10
-    # 模板命中(全转录口径:变体模板在后轮出现)→ 非空转
-    assert report["paired_cases"][0]["variant_template_in_transcript"] is True
-    assert report["paired_cases"][0]["idle"] is False
-    assert report["paired_cases"][0]["transcripts_identical"] is False
-    assert report["template_hit_validation"]["hit_count"] == 2
-    assert report["template_hit_validation"]["idle_count"] == 0
-    # 验证三项验证字段存在
-    assert "hard_fail_validation" in report
-    assert "template_hit_validation" in report
-    assert "editor_feedback_sample" in report
-    # 首问对比字段存在
-    assert "parent_first_question" in report["paired_cases"][0]
-    assert "variant_first_question" in report["paired_cases"][0]
-    
-    # 验证 paired-report.json 产出
-    paired_report_path = tmp_path / "paired-report.json"
-    assert paired_report_path.exists()
-    paired_summary = json.loads(paired_report_path.read_text())
-    assert "mean_delta" in paired_summary
-    assert paired_summary["mean_delta"] == 1.0
-    # 冻结协议:非空转 + Δ>0 多数同向 → GO
-    assert paired_summary["verdict"] == "GO"
-    assert paired_summary["idle_detected"] is False
-    # facts 实测字段存在
-    assert "real_calls" in paired_summary
-    assert "tokens_in" in paired_summary
-    assert "tokens_out" in paired_summary
-
-
-def test_paired_loop_verdict_red_light_when_delta_zero(tmp_path):
-    """冻结协议:模板命中(非空转)+ Δ≈0 → 红灯。"""
-    from edu_agent.evals import paired_loop, GepaConfig
-    import json
-    
-    gateway = MagicMock()
-    gateway.writer.root = tmp_path
-    subject_mock = MagicMock()
-    # 变体模板出现在后续 tutor 轮(模板命中 → 非空转),Δ 才有信息量
-    subject_mock.run_case.return_value = {
-        "turns": [
-            {"student": "", "tutor": "你好同学,这道题你的答案是什么呀?", "state": "first_question_ready", "elapsed_ms": 0},
-            {"student": "答案是3", "tutor": "我们从头理一遍思路——你先说第一步怎么想的", "state": "dialogue", "elapsed_ms": 0},
-        ],
-        "summary": "", "session_id": "t",
-    }
-    cases = [{"id": "c1", "question": "1+1?", "grade": "三年级", "reference_answer": "2"}]
-    
-    def fake_judge(gw, judge_case, role="judge_independent"):
-        return {"total": 10, "verdict": "pass", "math_integrity": 2, "answer_leaked": False,
-                "scores": {"first_question": 2, "socratic_followup": 2, "grade_fit": 2,
-                           "pacing": 2, "summary_mastery": 2, "termination": 2}, "evidence": {}}
-    
-    def fake_edit(current, failures, gw):
-        return "我们从头理一遍思路——你先说第一步怎么想的"
-    
-    config = GepaConfig(rounds=1, batch_size=1, max_calls=100)
-    
-    with patch("edu_agent.evals.gepa.ElicitSubject", return_value=subject_mock), \
-         patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge), \
-         patch("edu_agent.evals.gepa.edit_template", side_effect=fake_edit):
-        paired_loop(cases, "initial", config, gateway, tmp_path)
-    
-    paired_summary = json.loads((tmp_path / "paired-report.json").read_text())
-    # 模板命中 + 全 Δ=0 → 红灯(冻结协议)
-    assert paired_summary["idle_detected"] is False
-    assert paired_summary["verdict"] == "红灯"
-
-
-def test_paired_loop_idle_override_invalid_run(tmp_path):
-    """冻结前提(review-303-rerun P1-1):空转 → 无效跑(override,非红灯)。
-    
-    变体模板未注入转录(全转录扫描不命中)→ Δ 对 judge 敏感度零信息量
-    (转录全同 + judge temp=0 确定性)→ 无效跑,即使 Δ 非零也不判 GO。
-    """
-    from edu_agent.evals import paired_loop, GepaConfig
-    import json
-    
-    gateway = MagicMock()
-    gateway.writer.root = tmp_path
-    subject_mock = MagicMock()
-    # 变体模板不出现在任何 tutor 轮(空转)——即使 judge 打出非零 Δ
-    idle_transcript = {
-        "turns": [
-            {"student": "", "tutor": "你好同学,这道题你的答案是什么呀?", "state": "first_question_ready", "elapsed_ms": 0},
-            {"student": "答案是3", "tutor": "好的,我们继续看下一问。", "state": "dialogue", "elapsed_ms": 0},
-        ],
-        "summary": "", "session_id": "t",
-    }
-    subject_mock.run_case.return_value = idle_transcript
-    cases = [{"id": "c1", "question": "1+1?", "grade": "三年级", "reference_answer": "2"}]
-    
-    call_count = {"n": 0}
-    def fake_judge(gw, judge_case, role="judge_independent"):
-        call_count["n"] += 1
-        total = 10 if call_count["n"] == 1 else 12  # 制造非零 Δ=2,但空转使其无效
-        return {"total": total, "verdict": "pass", "math_integrity": 2, "answer_leaked": False,
-                "scores": {"first_question": 2, "socratic_followup": 2, "grade_fit": 2,
-                           "pacing": 2, "summary_mastery": 2, "termination": 2}, "evidence": {}}
-    
-    def fake_edit(current, failures, gw):
-        return "我们从头理一遍思路——你先说第一步怎么想的"
-    
-    config = GepaConfig(rounds=1, batch_size=1, max_calls=100)
-    
-    with patch("edu_agent.evals.gepa.ElicitSubject", return_value=subject_mock), \
-         patch("edu_agent.evals.gepa.judge_transcript", side_effect=fake_judge), \
-         patch("edu_agent.evals.gepa.edit_template", side_effect=fake_edit):
-        reports = paired_loop(cases, "initial", config, gateway, tmp_path)
-    
-    paired_summary = json.loads((tmp_path / "paired-report.json").read_text())
-    # 空转 override:非零 Δ 也不判 GO/红灯 → 无效跑
-    assert paired_summary["idle_detected"] is True
-    assert paired_summary["verdict"] == "无效跑"
-    # 全转录口径逐案标记:模板未注入 + 转录逐字相同(空转辅证)
-    assert reports[0]["paired_cases"][0]["variant_template_in_transcript"] is False
-    assert reports[0]["paired_cases"][0]["transcripts_identical"] is True
-    assert reports[0]["paired_cases"][0]["idle"] is True
-
-
-def test_structural_probe_dumps_artifacts_before_over_budget_exit(tmp_path):
-    """Harness P1:超预算退出必须先落工件再退(付费数据不许销毁)。"""
-    import sys
-    import json
-    import pytest
-    from pathlib import Path
-    from unittest.mock import patch, MagicMock
-    
-    # 导入 probe 脚本
-    probe_path = Path("edu_agent/evals/artifacts/gepa-spike/structural-probe")
-    sys.path.insert(0, str(probe_path))
-    import run_probe
-    
-    # 设置输出目录为 tmp_path
-    original_parent = run_probe.PARENT_TEMPLATE
-    original_variant = run_probe.STRUCTURAL_VARIANT
-    original_cap = run_probe.HARD_CAP_CALLS
-    
-    try:
-        # 修改硬顶为低值以便测试
-        run_probe.HARD_CAP_CALLS = 10
-        
-        # Mock Gateway 和 load_scenarios
-        mock_gateway = MagicMock()
-        mock_cases = [
-            {"id": "c1", "question": "1+1?", "grade": "三年级", "reference_answer": "2"},
-            {"id": "c2", "question": "2+2?", "grade": "三年级", "reference_answer": "4"},
-        ]
-        
-        # Mock evaluate_batch_paired 返回高调用数(> HARD_CAP_CALLS)
-        def fake_evaluate(cases, template, gateway):
-            scores = [
-                {"case_id": f"c{i+1}", "total": 10, "verdict": "pass", "mi": 2, "hard_fail": False}
-                for i in range(len(cases))
-            ]
-            snaps = [
-                {"case_id": f"c{i+1}", "first_question": "你好同学",
-                 "tutor_turns": ["你好同学", template],
-                 "template_in_transcript": True}
-                for i in range(len(cases))
-            ]
-            stats = {"calls": 50, "tokens_in": 1000, "tokens_out": 500}  # 50 > 10 硬顶
-            return scores, snaps, stats
-        
-        # Mock 其他依赖
-        with patch.object(run_probe, 'load_registry'), \
-             patch.object(run_probe, 'Gateway', return_value=mock_gateway), \
-             patch.object(run_probe, 'load_scenarios', return_value=mock_cases), \
-             patch.object(run_probe, 'evaluate_batch_paired', side_effect=fake_evaluate), \
-             patch.object(run_probe, '__file__', str(tmp_path / "run_probe.py")):
-            
-            # 运行 main(),期望 sys.exit(1)
-            with pytest.raises(SystemExit) as exc_info:
-                run_probe.main()
-            
-            # 验证 exit code = 1
-            assert exc_info.value.code == 1
-            
-            # 验证工件已落(关键断言)
-            round_path = tmp_path / "round-00.json"
-            paired_path = tmp_path / "paired-report.json"
-            
-            assert round_path.exists(), "round-00.json 必须在超预算退出前写入"
-            assert paired_path.exists(), "paired-report.json 必须在超预算退出前写入"
-            
-            # 验证 paired-report.json 内容
-            paired_report = json.loads(paired_path.read_text())
-            assert paired_report["over_budget"] is True, "over_budget 标记必须为 true"
-            assert paired_report["real_calls"] == 100  # 50 + 50
-            assert "deltas" in paired_report
-            assert "verdict" in paired_report
-    
-    finally:
-        # 恢复原值
-        run_probe.PARENT_TEMPLATE = original_parent
-        run_probe.STRUCTURAL_VARIANT = original_variant
-        run_probe.HARD_CAP_CALLS = original_cap
-        sys.path.remove(str(probe_path))
-
-
 # === 7. 长跑断点与实测计数(#256 阶段0) ===
 
 
@@ -672,10 +367,14 @@ def test_write_checkpoint_and_restore_semantics(tmp_path):
     state = LoopState()
     state.population = Population()
     a = Candidate(template="模板A:说说思路和第一步")
-    b = Candidate(template="模板B:从头讲讲你的思路,先说第一步")
+    # #324 A-d:best 的 support_hint 属候选自身——与顶层 state.support_hint
+    # 不同值,验证不拼接(旧 bug:写顶层值会串台)
+    b_support = "拆小:你先看这一步里最小的一个数,能先算出什么?"
+    b = Candidate(template="模板B:从头讲讲你的思路,先说第一步",
+                  support_hint=b_support)
     state.scores[state.population.add(a)] = ScoreVector(8.0, 0.2, 0.1, 0.0)
     state.scores[state.population.add(b)] = ScoreVector(9.0, 0.1, 0.1, 0.0)
-    state.support_hint = "拆小:你先看这一步里最小的一个数,能先算出什么?"
+    state.support_hint = "顶层后来的 support(不应被写进 best)"  # 串台探针
     state.bind(1624)
     state.budget.add(300)
     state.budget.rounds = 2
@@ -687,20 +386,23 @@ def test_write_checkpoint_and_restore_semantics(tmp_path):
     assert saved["budget"]["calls"] == 300 and saved["budget"]["rounds"] == 2
     assert saved["best"]["template"].startswith("模板B")  # select_parent 选最高分
     assert saved["best"]["scores"]["mean_score"] == 9.0
-    assert saved["best"]["support_hint"].startswith("拆小")
+    assert saved["best"]["support_hint"] == b_support  # 候选自身的,非顶层串台值
     assert saved["last_failures"][0]["case_id"] == "x"
 
 
 def test_gepa_loop_resume_skips_initial_evaluation(tmp_path):
     """resume=True 且 checkpoint 在:初始评估不再跑(省预算),代次从 next_round 起。"""
-    from edu_agent.evals import DEFAULT_SUPPORT_HINT, GepaConfig
-    from edu_agent.evals import gepa_loop
+    from edu_agent.evals import GepaConfig, gepa_loop
+    from edu_agent.evals import search_identity
 
+    train = [{"id": "c1", "question": "q", "student_turns": ["a"]}]
     checkpoint = {
         "next_round": 5,
+        "identity": search_identity(GepaConfig(rounds=6, max_calls=1624), train),
         "budget": {"calls": 100, "rounds": 5, "wall_s": 1.0, "exhausted": False},
         "best": {"candidate_id": 0,
                  "template": "恢复模板:说说你的思路,先说第一步",
+                 "support_hint": "恢复support:你先看这一步里最小的数?",
                  "scores": {"mean_score": 9.0, "needs_review_rate": 0.1,
                             "numerical_violation_rate": 0.1, "hard_failure_rate": 0.0}},
         "last_failures": [],
@@ -708,22 +410,28 @@ def test_gepa_loop_resume_skips_initial_evaluation(tmp_path):
     (tmp_path / "checkpoint.json").write_text(json.dumps(checkpoint), encoding="utf-8")
 
     with patch("edu_agent.evals.gepa.evaluate_batch") as mock_eval, \
-         patch("edu_agent.evals.gepa.edit_template", return_value="变体:讲讲思路的第一步"):
+         patch("edu_agent.evals.gepa.edit_template",
+               return_value=("变体:讲讲思路的第一步", "edited")):  # #324 A-e 二元组
         mock_eval.return_value = (ScoreVector(9.0, 0.1, 0.1, 0.0), [],
                                   {"calls": 5, "tokens_in": 0, "tokens_out": 0,
                                    "env_failures": 0, "content_failures": 0, "wall_ms": 1})
-        gepa_loop(train_cases=[{"id": "c1", "question": "q", "student_turns": ["a"]}],
+        gepa_loop(train_cases=train,
                   initial_template="原始模板",
                   config=GepaConfig(rounds=6, max_calls=1624),
                   gateway=MagicMock(),
                   output_dir=tmp_path,
                   resume=True)
-        # resume 后不再评估初始模板:唯一一次 evaluate_batch 是第 5 代变体批
-        assert mock_eval.call_count == 1
+        # resume 后不再评估初始模板;#332 换批参考重评(当前最优)+第 5 代变体批
+        # = 2 次;参考调用的 template 是恢复的 best,不是初始模板
+        assert mock_eval.call_count == 2
+        assert mock_eval.call_args_list[0].args[1] == "恢复模板:说说你的思路,先说第一步"
     saved = json.loads((tmp_path / "checkpoint.json").read_text(encoding="utf-8"))
-    assert saved["budget"]["calls"] == 106  # 100(恢复)+ 1(编辑器)+ 5(变体批)
+    assert saved["budget"]["calls"] == 111  # 100(恢复)+ 1(编辑器)+ 5(#332 换批参考)+ 5(变体批)
     assert saved["next_round"] == 6
-    assert saved["best"]["support_hint"] == DEFAULT_SUPPORT_HINT  # 双旋钮对完整落盘/带回
+    # #324 A-d:best 的 support_hint 属候选自身——恢复带回 checkpoint 里的值,
+    # 不拼接顶层默认(旧 bug:写顶层 state.support_hint 会串台)
+    assert saved["best"]["support_hint"] == "恢复support:你先看这一步里最小的数?"
+    assert saved["best"]["template"].startswith("恢复模板")  # 同属恢复的 best 候选
 
 
 def test_evaluate_batch_counts_calls_from_facts(tmp_path):
@@ -733,16 +441,19 @@ def test_evaluate_batch_counts_calls_from_facts(tmp_path):
                      encoding="utf-8")
     gateway = MagicMock()
     gateway.writer.root = tmp_path
+    _wire_writer_counters(gateway)  # #324 C2:writer 进程内计数语义
 
     def fake_run_case(case):
         with facts.open("a", encoding="utf-8") as handle:  # 模拟 tutor 真实调用落账
             handle.write(json.dumps({"i": 99}) + "\n")
+        gateway.writer.count += 1  # writer 进程内计数同步 +1(#324 C2)
         return {"turns": [{"student": "", "tutor": "好", "state": "dialogue"}]}
 
     def fake_judge(gateway, judge_case, role="judge"):
         with facts.open("a", encoding="utf-8") as handle:  # judge 侧真实落账 ×2
             handle.write(json.dumps({"i": 100}) + "\n")
             handle.write(json.dumps({"i": 101}) + "\n")
+        gateway.writer.count += 2  # writer 进程内计数同步 +2
         return {"total": 10, "verdict": "pass", "answer_leaked": False,
                 "math_integrity": 2, "evidence": {}, "scores": {}}
 
@@ -751,7 +462,8 @@ def test_evaluate_batch_counts_calls_from_facts(tmp_path):
         mock_subject.return_value.run_case.side_effect = fake_run_case
         _, _, stats = evaluate_batch([{"id": "c1", "question": "q", "student_turns": ["a"]}],
                                      "模板", gateway)
-        assert stats["calls"] == 3  # tutor 1 + judge 2 的 facts 差值,不是估算的 2
+        assert stats["calls"] == 3  # tutor 1 + judge 2 的 writer 差值(#324 C2 进程内计数),
+        # 不再用当天文件行数差(跨 UTC 日/旁路 run 归属会错)
 
 
 # === 8. 双旋钮搜索空间(#256 阶段 2 选项 A,#304 头部可达族) ===
@@ -788,14 +500,15 @@ def test_edit_two_knobs_parity_routing():
     from edu_agent.evals import edit_two_knobs
 
     with patch("edu_agent.evals.gepa_editors.edit_template",
-                return_value="新的elicit") as m:  # 编辑器晚绑定已随族迁居
-        elicit, support = edit_two_knobs("旧elicit", "旧support", 0, [], MagicMock())
+                return_value=("新的elicit", "edited")) as m:  # #324 A-e:编辑器返回 (值, 原因)
+        elicit, support, _r = edit_two_knobs("旧elicit", "旧support", 0, [], MagicMock())
         assert elicit == "新的elicit" and support == "旧support"
         m.assert_called_once()
     gateway = MagicMock()
     gateway.invoke.return_value.text = "拆小:先不想整道题,只看这一步里最小的那个数,你觉得能先算出什么?"
-    elicit, support = edit_two_knobs("旧elicit", "旧support", 1, [], gateway)
+    elicit, support, _r = edit_two_knobs("旧elicit", "旧support", 1, [], gateway)
     assert elicit == "旧elicit"
+    assert _r == "edited"  # #324 A-e
     assert support == "拆小:先不想整道题,只看这一步里最小的那个数,你觉得能先算出什么?"
 
 
@@ -806,8 +519,9 @@ def test_edit_two_knobs_lint_guards():
     for bad in ("太短", "这不是问句", "旧support"):
         gateway = MagicMock()
         gateway.invoke.return_value.text = bad
-        elicit, support = edit_two_knobs("旧elicit", "旧support", 1, [], gateway)
+        elicit, support, _r = edit_two_knobs("旧elicit", "旧support", 1, [], gateway)
         assert (elicit, support) == ("旧elicit", "旧support"), bad
+        assert _r in ("lint_rejected", "unchanged"), bad  # #324 A-e
 
 
 # === 9. needs_review 靶向编辑(收敛#2 选项①准备件,默认关) ===
@@ -821,30 +535,31 @@ def test_edit_template_nr_lint_and_targeting():
     gateway = MagicMock()
     ok = "复讲时请先说思路:第一步你算了什么、用哪个算式,把结论说出来,让老师能判定你懂了。"
     gateway.invoke.return_value.text = ok
-    variant = edit_template_nr(parent, [
+    variant, reason = edit_template_nr(parent, [
         {"case_id": "c9", "kind": "judge_low_score", "detail": "total=9, verdict=review"}],
         gateway)
-    assert variant == ok
+    assert variant == ok and reason == "edited"  # #324 A-e
     sent = gateway.invoke.call_args[0][0].messages[0]["content"]
     assert "review" in sent and "可判定" in sent  # 靶向指令真的进 prompt
     assert "c9" in sent  # 失败帧进 prompt
     for bad in ("太短", parent):  # 太短出窗 / 与父代相同 → 零退化
         gateway = MagicMock()
         gateway.invoke.return_value.text = bad
-        assert edit_template_nr(parent, [], gateway) == parent, bad
+        assert edit_template_nr(parent, [], gateway)[0] == parent, bad
 
 
 def test_edit_two_knobs_injected_editor_routes_even_rounds():
     """editor 显式注入:偶代 elicit 编辑走注入编辑器;不注入时晚绑定 edit_template。"""
     from edu_agent.evals import edit_two_knobs
 
-    sentinel, support_spy = MagicMock(return_value="nr变体"), MagicMock(return_value="nr问句?")
-    elicit, support = edit_two_knobs("旧elicit", "旧support", 0, [], MagicMock(),
+    sentinel = MagicMock(return_value=("nr变体", "edited"))  # #324 A-e 二元组
+    support_spy = MagicMock(return_value=("nr问句?", "edited"))
+    elicit, support, _r = edit_two_knobs("旧elicit", "旧support", 0, [], MagicMock(),
                                      editors=(sentinel, support_spy))
     assert (elicit, support) == ("nr变体", "旧support")  # 偶代 support 原样
     assert sentinel.call_args.args[:2] == ("旧elicit", [])
     assert not support_spy.called
-    elicit, support = edit_two_knobs("旧elicit", "旧support", 1, [], MagicMock(),
+    elicit, support, _r = edit_two_knobs("旧elicit", "旧support", 1, [], MagicMock(),
                                      editors=(sentinel, support_spy))
     assert (elicit, support) == ("旧elicit", "nr问句?")  # 奇代 elicit 原样
     assert support_spy.call_args.args[:2] == ("旧support", [])
@@ -854,10 +569,15 @@ def test_gepa_loop_editor_focus_nr_uses_nr_editor(tmp_path):
     """全循环路由:two_knobs + editor_focus='nr' → 第 24 代(偶)编辑走 nr 编辑器,
     mean 编辑器不被调用;默认 focus='mean' 契约钉。"""
     from edu_agent.evals import GepaConfig, gepa_loop
+    from edu_agent.evals import search_identity
 
     assert GepaConfig(rounds=1).editor_focus == "mean"  # 默认关,裁决②则永不打开
+    train = [{"id": "c1", "question": "q", "student_turns": ["a"]}]
     checkpoint = {
         "next_round": 24,
+        "identity": search_identity(
+            GepaConfig(rounds=25, max_calls=1624, two_knobs=True,
+                       editor_focus="nr"), train),
         "budget": {"calls": 1107, "rounds": 23, "wall_s": 1.0, "exhausted": False},
         "best": {"candidate_id": 0,
                  "template": "best:说说你的思路,先说第一步",
@@ -868,12 +588,13 @@ def test_gepa_loop_editor_focus_nr_uses_nr_editor(tmp_path):
     (tmp_path / "checkpoint.json").write_text(json.dumps(checkpoint), encoding="utf-8")
 
     with patch("edu_agent.evals.gepa.evaluate_batch") as mock_eval, \
-         patch("edu_agent.evals.gepa.edit_template_nr", return_value="nr变体") as m_nr, \
+         patch("edu_agent.evals.gepa.edit_template_nr",
+               return_value=("nr变体", "edited")) as m_nr, \
          patch("edu_agent.evals.gepa.edit_template") as m_mean:
         mock_eval.return_value = (ScoreVector(9.0, 0.5, 0.0, 0.0), [],
                                   {"calls": 5, "tokens_in": 0, "tokens_out": 0,
                                    "env_failures": 0, "content_failures": 0, "wall_ms": 1})
-        gepa_loop(train_cases=[{"id": "c1", "question": "q", "student_turns": ["a"]}],
+        gepa_loop(train_cases=train,
                   initial_template="原始模板",
                   config=GepaConfig(rounds=25, max_calls=1624, two_knobs=True,
                                     editor_focus="nr"),
@@ -923,12 +644,14 @@ def test_gepa_loop_leak_net_veto_blocks_selection(tmp_path):
     dirty_stats = dict(clean_stats, leak_net_violations=2)
     returns = [
         (ScoreVector(8.0, 0.3, 0.1, 0.1), [], clean_stats),        # 初始评估
+        (ScoreVector(8.0, 0.3, 0.1, 0.1), [], clean_stats),        # #332 换批参考重评
         (ScoreVector(9.5, 0.1, 0.0, 0.0), [], dirty_stats),        # r0:全优但泄露
         (ScoreVector(9.6, 0.1, 0.0, 0.0), [], dirty_stats),        # r1:全优但泄露
     ]
     with patch("edu_agent.evals.gepa.evaluate_batch", side_effect=returns), \
          patch("edu_agent.evals.gepa.edit_template",
-               side_effect=["脏变体A:讲讲思路的第一步", "脏变体B:说说思路的第一步"]):
+               side_effect=[("脏变体A:讲讲思路的第一步", "edited"),
+                            ("脏变体B:说说思路的第一步", "edited")]):  # #324 A-e
         _, _, reports = gepa_loop(
             train_cases=[{"id": "c1", "question": "q", "student_turns": ["a"]}],
             initial_template="初始:说说你的思路,先说第一步",
@@ -969,18 +692,26 @@ def test_evaluate_batch_nr_denominator_excludes_hard(tmp_path):
 
 
 def test_fresh_run_initial_batch_same_distribution_as_rounds(tmp_path):
-    """初始评估批 = sample_batch(seed=0),与代间批同分布(弃文件序前缀)。"""
-    from edu_agent.evals import GepaConfig, gepa_loop, sample_batch
+    """初始评估批 = 分层批(seed=0),与 cohort 0 代间批同构成(#332 采样)。
+
+    无信号词的 93 案全落背景层 → 16 案 = 背景抽样;初始与 cohort 0 同
+    seed=0 → 同批(PM-RULING#5 同分布要求在分层口径下保持)。
+    """
+    from edu_agent.evals import GepaConfig, gepa_loop, sample_stratified_batch
 
     train = [{"id": f"case-{i:02d}", "question": "q", "student_turns": ["a"]}
              for i in range(93)]
     stats = {"calls": 1, "tokens_in": 0, "tokens_out": 0, "env_failures": 0,
              "content_failures": 0, "wall_ms": 1, "leak_net_violations": 0}
     with patch("edu_agent.evals.gepa.evaluate_batch") as mock_eval, \
-         patch("edu_agent.evals.gepa.edit_template", return_value="变体:讲讲思路的第一步"):
+         patch("edu_agent.evals.gepa.edit_template",
+               return_value=("变体:讲讲思路的第一步", "edited")):  # #324 A-e
         mock_eval.return_value = (ScoreVector(8.0, 0.2, 0.0, 0.0), [], stats)
         gepa_loop(train_cases=train, initial_template="初始:说说你的思路,先说第一步",
                   config=GepaConfig(rounds=1, batch_size=16, max_calls=100),
                   gateway=MagicMock(), output_dir=tmp_path)
         initial_cases = mock_eval.call_args_list[0].args[0]
-    assert [c["id"] for c in initial_cases] == [c["id"] for c in sample_batch(train, 16, 0)]
+        cohort0_cases = mock_eval.call_args_list[1].args[0]  # 换批参考重评
+    assert [c["id"] for c in initial_cases] == \
+        [c["id"] for c in sample_stratified_batch(train, 0)]
+    assert [c["id"] for c in initial_cases] == [c["id"] for c in cohort0_cases]
