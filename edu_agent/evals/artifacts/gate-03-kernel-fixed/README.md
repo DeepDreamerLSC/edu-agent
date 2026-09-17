@@ -26,3 +26,13 @@ candidate = epoch-2 best(= epoch-1 best 模板,nr 靶向族平台);内核 = 修�
 ## 账目
 
 主体段 epoch-2:182/716(收敛停跑保 534);gate 台账:gate-01/02/03 各 22 案次。
+
+---
+
+## SUPERCEDING NOTE(2026-09-17 人裁,C35 归因修正)
+
+上文「C35 纪元错配」的归因**部分作废**:人裁定性 C35 为 **test-role
+contamination**——其「正向位(终答泄露正确检出)」是 judge 校准正样本
+(检测器正向),被 promotion gate 误用作产品健康位;候选 leak=false 是
+**遵守新产品不变量**,不是能力缺失。泄露网 22/22 与 C17/C25 话姿归因
+不变;处置见 teacher-gate-slice-v2(PR #319)。

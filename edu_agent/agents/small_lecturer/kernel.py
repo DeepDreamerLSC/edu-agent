@@ -406,10 +406,11 @@ def _contextual_fallback(session: "LearnerSession | None", guard: str,
         # VERDICT#6(#310):回引不引述终答值——answer_leak 兜底若逐字引学生原话,
         # 会把刚拦下的终答从确定性路径放回学生面(gate-02/03 冒烟实测)。
         answer = _answer_numbers(session) if session is not None else set()
-        if answer and answer & _reply_numbers(snippet):
-            # 确认话姿(非重定向):学生已陈述完整结论时,转述确认 + 请自述收束
-            # (gate-03:C25 重定向话姿致 sm_ge 1→0——掌握陈述时刻需要确认而非追问)
-            return "你刚才的结论和验算都齐了,讲得很清楚——最后请你自己完整说一遍结论。"
+        if answer and _reply_numbers(snippet):
+            # 确认话姿(非重定向,人裁 2026-09-17 #318 修改后同意):转述锚点只断言
+            # 条件可证事实——「学生说到了结论」;不断言「验算齐/讲得清楚」(那需要
+            # mastery/ready 态证明,本分支条件只有 answer 数字交集,证据不足)
+            return "你已经说到了自己的结论。最后请你自己把完整思路和结论再说一遍。"
         return f"先回到你刚说的「{snippet}」——你能从题目里再确认一个已知条件吗?"
     # 纯图/无权威答案(十字绣/剪绳子/连线题):不逼学生答条件,软性回到看图
     if guard == "answer_leak" and any(

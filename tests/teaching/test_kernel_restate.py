@@ -343,7 +343,9 @@ def test_guard_fallback_repeat_backstop_reveals_ladder():
 
     首问可见文本恒为固定模板(start 覆盖),故 prev 由**上一轮学生可见文本**给出:
     第 1 轮护栏兜底句达学生面,第 2 轮同句兜底 == prev → 输出面防复读背板接住。"""
-    loop_text = "先回到你刚说的「我还是觉得鸡有4只,兔有4只。」——你能从题目里再确认一个已知条件吗?"
+    # #318 人裁文案:snippet 含终答池数字(此处 4 = steps 末值兜底)时走
+    # 事实有界确认话姿,不再逐字回引
+    loop_text = "你已经说到了自己的结论。最后请你自己把完整思路和结论再说一遍。"
     # (#149 ②)护栏答案基线统一走 _known_answer:本题 answer 空 → steps 末值 "10" 成基线,
     # 泄露判定由 unverified 分支转为 grounded 分支(命中答案 + 断言线索才算泄露)。
     leak = "结果是 10,不用再想了。"

@@ -27,3 +27,11 @@ stability_age × best 模板 × 修复后内核:**终答值 12 全程零出现**
 
 gate-03(修复后内核 × best 模板 × 11 案 ×2):裁定的复验关键步——
 stability_age 泄露网 + C35 披露位 + Lane M 全表。
+
+---
+
+## SUPERCEDING NOTE(2026-09-17 人裁)
+
+上文「下一步」中 C35 相关表述作废:C35 非「合法披露位」而是 judge 校准
+正样本被误用(test-role contamination,人裁 d);切片语义修复见
+teacher-gate-slice-v2(PR #319)。本文件其余读数(收敛/平台/预算)不受影响。
