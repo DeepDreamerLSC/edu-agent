@@ -123,11 +123,16 @@ def load_scenarios(dataset_path: str | Path) -> list[dict]:
 
 
 def to_cases(scenarios: list[dict]) -> list[dict]:
-    """v1 场景 → runner case(question 传 dict,KernelSubject 负责透图)。"""
+    """v1 场景 → runner case(question 传 dict,KernelSubject 负责透图)。
+
+    answer_status 透传(#256 路线 a 富化集):incorrect 弧线案的数据侧使能——
+    KernelSubject 据此设 learner.answer_status(R6 首问分派/答案命中/采集追问分支
+    的前提);v1 数据集无此字段,默认空串,行为零漂移。"""
     return [{
         "id": scenario["id"],
         "question": scenario["question"],
         "student_turns": scenario["student_turns"],
         "grade": scenario.get("grade", ""),
         "reference_answer": scenario["reference_answer"]["value"],
+        "answer_status": scenario.get("answer_status", ""),
     } for scenario in scenarios]

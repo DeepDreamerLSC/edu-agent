@@ -17,7 +17,8 @@ description: >
 3. **写消息**:首行签名 `【PM <session-id> 直发 YYYY-MM-DD】`;任务块自包含(基底指纹/输入/跑法/判读预注册/工件/回执要求/纪律);按「先快后长」排序逐条发;
    - **末行摘要**:`【摘要】sha256=<hex16>`(对本行之前全文计算,追加在末行)——防「消息在途损坏/截断」;
    - **派单一次定全要素**(2026-09-16 路由改革):开发者、独立审查者、范围、预算、回执落点——之后同一任务内的修复直接往返(dev→reviewer→dev),不再回 PM 中转;
-   - **回执要求写进派单**:回执首行加机器可读头 `<!--RECEIPT task=<id> pr=<n|-> calls=<n> tier=<flash|pro|0> outcome=<...> to=<reviewer|dev|pm|log> head=<git-sha8> sha256=<hex16>-->`(渲染不可见),并回显派单摘要值;`to=`=接收者(共用 GitHub 账号,不能按作者过滤;看门狗按此筛选唤醒,普通进度 `to=log` 不唤醒),`head=`=代码身份;
+   - **回执要求写进派单**:回执首行加机器可读头 `<!--RECEIPT task=<id> pr=<n|-> calls=<n> tier=<flash|pro|0> outcome=<...> to=<reviewer|dev|pm|log> head=<git-sha8> dev=<会话id> sha256=<hex16>-->`(渲染不可见),并回显派单摘要值;`to=`=接收者(共用 GitHub 账号,不能按作者过滤;看门狗按此筛选唤醒,普通进度 `to=log` 不唤醒),`head=`=代码身份,`dev=`=开发者会话身份(必填,自报家门;共用 GitHub 账号下区分回执提交者,**审查者见缺即退**);
+     - **v3.1(2026-09-17)**:增 `dev=` 必填字段。变更理由:路由争议 c5707343575——#310 链回执无自报家门、共用 GitHub 账号不可区分,致修改单路由失败实害;PM-RULING#6① 流程修补即刻生效落成文。
 4. **发送**:`python3 "$HOME/calibration-private/dsh-rpc.py" send <会话ID子串> queue "$(cat 消息文件)"`;
    - **坑1**:会话 id 带 `session-` 前缀,用子串匹配(脚本已改);
    - **坑2**:`steer` 会打断对方在跑轮,默认 `queue`(等本轮完自动接下一条);
