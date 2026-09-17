@@ -96,6 +96,7 @@ def sample_batch(cases: list[dict], k: int, seed: int) -> list[dict]:
 
 
 # #332 采样规格:信号族非存储字段,matcher 词形一手分类(复用 kernel 信号
+# #332 采样规格:信号族非存储字段,matcher 词形一手分类(复用 kernel 信号
 # 判据,与 knob-frequency 分类同款口径)。
 _SIGNAL_STRATA = (
     ("understanding", kernel._student_signals_understanding),
@@ -103,34 +104,56 @@ _SIGNAL_STRATA = (
     ("completion", kernel._student_signals_completion),
 )
 
+# #335 采样源接通:信号族源 = #327 富集集(彩排实测 v2 93 池词形 0u/2s/0c,
+# 规格的「自富化 12 案」从未接到真实语料路径;enriched12 就为此造)。
+ENRICHED12_PATH = Path(__file__).resolve().parent / "datasets" / \
+    "small_lecturer_image_teaching_v2_enriched12.json"
+
+
+def load_enriched12() -> list[dict]:
+    """加载 #327 富集 12 案(4u/4s/2c 词形可认 + 2 answerhit 词形归背景)。
+
+    answerhit 2 案的完成表达带答案数字,kernel 设计先判答案命中分支,
+    词形函数不重复计(#198 口径)——分层抽取按词形一手分类,它们不进
+    信号层(completion 层词形可认 2 案,取满即 2)。
+    """
+    payload = json.loads(ENRICHED12_PATH.read_text(encoding="utf-8"))
+    return [c for c in (payload.get("scenarios") or []) if isinstance(c, dict)]
+
 
 def sample_stratified_batch(
     train_cases: list[dict], seed: int, *,
     per_stratum: int = 3, background: int = 7,
+    enriched: "list[dict] | None | str" = "default",
 ) -> list[dict]:
-    """#332 分层采样:3 understanding + 3 stuck + 3 completion + 7 背景 = 16 案/批。
+    """#332+#335 分层采样:3u+3s+3c 自 enriched12 + 7 背景自 train 池。
 
-    一案按首个命中信号族归层(词形一手判据,确定性顺序);背景从无信号案
-    抽取(背景=无信号,未入选的信号案不冒充背景,换 seed 后可进富化槽)。
-    层内/背景不足时取全部(池小则全量,同 sample_batch clamp 语义——
-    小训练池下降级运行,不报错)。
+    信号族源 = enriched(#327 富集集,词形一手分类后每层抽 per_stratum,
+    层内不足取全部——completion 词形可认 2 案即取 2,批实际 3+3+2+7=15);
+    背景自 train_cases 抽(排除批内已选 id,两源合批同一去重/洗牌逻辑)。
+    enriched:"default"=加载 ENRICHED12_PATH 真文件(真实路径,防 fixture 绿
+    真语料红);None=空(纯背景,退化旧语义);list=显式注入(单测)。
     """
+    if enriched == "default":
+        enriched = load_enriched12()
+    elif enriched is None:
+        enriched = []
     rng = random.Random(seed)
-    strata: dict[str, list[int]] = {name: [] for name, _ in _SIGNAL_STRATA}
-    plain: list[int] = []
-    for i, case in enumerate(train_cases):
+    strata: dict[str, list[dict]] = {name: [] for name, _ in _SIGNAL_STRATA}
+    for case in enriched:
         turns = [t for t in case.get("student_turns") or [] if isinstance(t, str)]
         for name, fn in _SIGNAL_STRATA:
             if any(fn(t) for t in turns):
-                strata[name].append(i)
+                strata[name].append(case)
                 break
-        else:
-            plain.append(i)
-    picked: list[int] = []
+        # enriched 内词形无命中的案不进任何层也不冒充背景(信号源语义)
+    picked: list[dict] = []
     for name, _ in _SIGNAL_STRATA:
         picked += rng.sample(strata[name], min(per_stratum, len(strata[name])))
-    picked += rng.sample(plain, min(background, len(plain)))
-    return [train_cases[i] for i in picked]
+    chosen_ids = {c.get("id") for c in picked}
+    rest = [c for c in train_cases if c.get("id") not in chosen_ids]
+    picked += rng.sample(rest, min(background, len(rest)))
+    return picked
 
 
 # === 3. 打分向量 ===
@@ -448,7 +471,9 @@ def search_identity(config: "GepaConfig", train_cases: list[dict]) -> str:
     命名避开 corpus_round.run_identity(切片运行身份,已有语义)。
 
     口径:rounds/max_calls 不算身份(续跑调大合法);判据 = judge SYSTEM_PROMPT
-    哈希(rubric/dimension guide 任一改动即换身份);案集 = case id 序列。
+    哈希(rubric/dimension guide 任一改动即换身份);案集 = case id 序列
+    ∪ enriched12 案 id(#335 采样源接通后批构成含富集案,采样域变化即换
+    身份,拒复用旧分——保守方向)。
     """
     from hashlib import sha256
 
@@ -462,7 +487,8 @@ def search_identity(config: "GepaConfig", train_cases: list[dict]) -> str:
         "editor_role": config.editor_role,
         "judge_prompt_sha": sha256(
             judge_mod.SYSTEM_PROMPT.encode("utf-8")).hexdigest()[:16],
-        "case_ids": [c.get("id", "") for c in train_cases],
+        "case_ids": sorted({c.get("id", "") for c in train_cases}
+                           | {c.get("id", "") for c in load_enriched12()}),
     }
     return sha256(
         json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")

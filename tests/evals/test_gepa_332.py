@@ -59,31 +59,60 @@ def _classify(case):
 # === T1 采样 ===
 
 
-def test_t1_stratified_batch_composition():
-    """T1:16 案构成 3 understanding + 3 stuck + 3 completion + 7 背景;
-    同 seed 确定,小池降级不报错。"""
-    pool = (
-        [{"id": f"u{i}", "question": "q", "student_turns": [UNDE]} for i in range(5)]
-        + [{"id": f"s{i}", "question": "q", "student_turns": [STUCK]} for i in range(5)]
-        + [{"id": f"c{i}", "question": "q", "student_turns": [COMP]} for i in range(5)]
-        + [{"id": f"p{i}", "question": "q", "student_turns": [PLAIN]} for i in range(20)]
-    )
-    batch = sample_stratified_batch(pool, seed=7)
-    assert len(batch) == 16
-    kinds = [_classify(c) for c in batch]
-    assert kinds.count("understanding") == 3
-    assert kinds.count("stuck") == 3
-    assert kinds.count("completion") == 3
-    assert kinds.count("background") == 7
-    # 同 seed 确定性
-    again = sample_stratified_batch(pool, seed=7)
+def test_t1_stratified_batch_real_corpus():
+    """T1(真语料,防 fixture 绿真语料红复发):v2 93 池 + enriched12 真文件。
+
+    #335 采样源接通:信号族自 enriched12(#327)词形一手分类——真 matcher
+    实测 4u/4s/2c(answerhit 2 案完成表达带答案数字,kernel 先判答案命中
+    分支,词形不计)→ 批 = 3u+3s+2c+7 背景 = 15 案。
+    """
+    import json as _json
+    from pathlib import Path as _Path
+
+    corpus = (_Path(__file__).resolve().parents[2] / "edu_agent" / "evals" /
+              "artifacts" / "corpus-round-v2" / "cases.jsonl")
+    train = [_json.loads(line) for line in
+             corpus.read_text(encoding="utf-8").splitlines() if line.strip()]
+    batch = sample_stratified_batch(train, seed=0)  # default = enriched12 真文件
+    # 构成断言用 enriched12 的 id 族命名(#327 桶标注,与词形一手分类已交叉
+    # 验证对齐 4u/4s/2c;测试不 import 私有 kernel,02 §6)
+    ids = [str(c["id"]) for c in batch]
+    assert len(batch) == 15  # 3u+3s+2c(词形可认)+7 背景
+    assert sum(i.startswith("image_v2_understanding_") for i in ids) == 3
+    assert sum(i.startswith("image_v2_stuck_") for i in ids) == 3
+    assert sum(i.startswith("image_v2_answercollect_") for i in ids) == 2
+    assert sum(not i.startswith("image_v2_") for i in ids) == 7  # 背景自 93 池
+    # answerhit 2 案(带答案数字完成表达,词形不计)不进批——信号源语义
+    # 同 seed 确定性 / 换 seed 刷新
+    again = sample_stratified_batch(train, seed=0)
     assert [c["id"] for c in batch] == [c["id"] for c in again]
-    # 换 seed 刷新(防过拟合单批)
-    other = sample_stratified_batch(pool, seed=8)
+    other = sample_stratified_batch(train, seed=1)
     assert [c["id"] for c in batch] != [c["id"] for c in other]
-    # 小池降级:3 案全背景 → 3 案全量(rng 序),不报错
-    tiny = sample_stratified_batch(TRAIN_3, seed=0)
-    assert {c["id"] for c in tiny} == {"c1", "c2", "c3"}
+
+
+def test_t1_stratified_batch_fixture_mechanism():
+    """T1(机制,显式注入):理想 4/4/4 富集 fixture 下 3/3/3+7=16;
+    去重(id 撞)排除已选;None=纯背景退化。"""
+    enriched = (
+        [{"id": f"u{i}", "question": "q", "student_turns": [UNDE]} for i in range(4)]
+        + [{"id": f"s{i}", "question": "q", "student_turns": [STUCK]} for i in range(4)]
+        + [{"id": f"c{i}", "question": "q", "student_turns": [COMP]} for i in range(4)]
+    )
+    train = [{"id": f"p{i}", "question": "q", "student_turns": [PLAIN]}
+             for i in range(20)]
+    batch = sample_stratified_batch(train, seed=7, enriched=enriched)
+    assert len(batch) == 16  # 理想 4/4/4 → 3/3/3+7
+    kinds = [_classify(c) for c in batch]
+    assert (kinds.count("understanding"), kinds.count("stuck"),
+            kinds.count("completion"), kinds.count("background")) == (3, 3, 3, 7)
+    # 两源去重:背景池与已选 id 撞时排除
+    train_dup = train + enriched[:4]
+    batch_dup = sample_stratified_batch(train_dup, seed=7, enriched=enriched)
+    ids = [c["id"] for c in batch_dup]
+    assert len(ids) == len(set(ids)) == 16
+    # None = 纯背景(退化旧语义)
+    plain_only = sample_stratified_batch(TRAIN_3, seed=0, enriched=None)
+    assert {c["id"] for c in plain_only} == {"c1", "c2", "c3"}
 
 
 def test_t1_five_candidates_share_batch_and_refresh_on_switch(tmp_path):
