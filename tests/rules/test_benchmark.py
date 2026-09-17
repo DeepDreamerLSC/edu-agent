@@ -9,7 +9,15 @@ import subprocess
 import sys
 
 from scripts import benchmark
-from scripts.benchmark import GATED_CHECKS, ROLES, compare, gate_or_skip, live, render
+from scripts.benchmark import (
+    GATED_CHECKS,
+    ROLES,
+    compare,
+    gate_or_skip,
+    live,
+    render,
+    ttft_strata,
+)
 
 BASELINE = {
     "roles": {
@@ -69,6 +77,51 @@ def test_tutor_ttft_still_recorded_in_report():
     report = render(current)
     assert "| tutor | 0 | 59 / 126" in report  # TTFT p50/p95 列照记
     assert "TTFT p50/p95 (ms)" in report
+
+
+# ---------- #338/#188:TTFT 前缀缓存分层诊断列(不设门,零判定逻辑) ----------
+
+
+def test_render_shows_ttft_strata_columns():
+    """分层表进报告:命中/未命中两行 + 空谷注计数;缺失 strata 的 metrics 不炸。"""
+    current = {"tutor": {"n": 3, "ttft_p50_ms": 60, "ttft_p95_ms": 130, "e2e_p50_ms": 100,
+                         "e2e_p95_ms": 200, "speed_p50": 30.0,
+                         "ttft_strata": {"hit": {"n": 2, "ttft_p50_ms": 60, "ttft_p95_ms": 70},
+                                         "miss": {"n": 1, "ttft_p50_ms": 130, "ttft_p95_ms": 130},
+                                         "mid_n": 1}},
+               "judge": {"n": 2, "ttft_p50_ms": 400, "ttft_p95_ms": 500}}
+    report = render(current)
+    assert "## TTFT 前缀缓存分层(#188 诊断列,不设门)" in report
+    assert "| tutor | 命中(未缓存==1) | 2 | 60 | 70 |" in report
+    assert "| tutor | 未命中(未缓存≥10) | 1 | 130 | 130 |" in report
+    assert "| judge | 命中(未缓存==1) | 0 | - | - |" in report  # 缺 strata 的角色按零行渲染
+    assert "空谷(2–9)计数(tutor / judge):1 / 0" in report
+
+
+def test_ttft_strata_layering_by_uncached_tokens():
+    """分层口径(#188):未缓存==1→命中,≥10→未命中,2–9 空谷;usage 缺失行不计入。"""
+    rows = [
+        {"gen_ai.usage.input_tokens": 1001, "gen_ai.usage.cache_read.input_tokens": 1000,
+         "gen_ai.server.time_to_first_token": 60},                       # 未缓存 1 → 命中
+        {"gen_ai.usage.input_tokens": 800, "gen_ai.usage.cache_read.input_tokens": 799,
+         "gen_ai.server.time_to_first_token": 70},                       # 未缓存 1 → 命中
+        {"gen_ai.usage.input_tokens": 500, "gen_ai.usage.cache_read.input_tokens": 0,
+         "gen_ai.server.time_to_first_token": 130},                      # 未缓存 500 → 未命中
+        {"gen_ai.usage.input_tokens": 10, "gen_ai.usage.cache_read.input_tokens": 2,
+         "gen_ai.server.time_to_first_token": 90},                       # 未缓存 8 → 空谷
+        {"gen_ai.server.time_to_first_token": 100},                      # usage 缺失 → 不计入
+    ]
+    strata = ttft_strata(rows)
+    assert strata["hit"] == {"n": 2, "ttft_p50_ms": 65, "ttft_p95_ms": 70}   # 线性插值分位(69.5→70)
+    assert strata["miss"] == {"n": 1, "ttft_p50_ms": 130, "ttft_p95_ms": 130}
+    assert strata["mid_n"] == 1
+
+
+def test_strata_never_gated():
+    """纯诊断:分层键不进 GATED_CHECKS(门逻辑零改动,#246 原样)。"""
+    for checks in GATED_CHECKS.values():
+        for name, _ in checks:
+            assert name != "ttft_strata"
 
 
 # ---------- #241 行1:标志位让路门控(审查 P2-2 六探针落盘,import 级、零模型调用) ----------
