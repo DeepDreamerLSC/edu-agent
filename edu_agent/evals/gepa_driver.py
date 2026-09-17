@@ -56,7 +56,8 @@ def main():
                         else args.initial_template_file.read_text(encoding="utf-8").strip())
     
     # 加载 gateway
-    gateway = Gateway(load_registry(Path("configs/models.yaml")))
+    gateway = Gateway(load_registry(Path("configs/models.yaml")),
+                      facts_dir=args.output_dir / "facts")  # #332 账实:facts 随工件归位
     
     try:
         config = GepaConfig(
