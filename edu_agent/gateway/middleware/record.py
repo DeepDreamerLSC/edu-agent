@@ -20,12 +20,17 @@ from .redact import redact_messages, redact_text
 
 
 class FactWriter:
-    """JSONL 追加写,按 UTC 天切分文件。"""
+    """JSONL 追加写,按 UTC 天切分文件;进程内计数器承担跨运行归属(#324 C2)。"""
 
     # ponytail: 进程内一把锁;多进程部署时再换文件锁,单机单进程是 v1 部署形态
     def __init__(self, root: Path | str) -> None:
         self.root = Path(root)
         self._lock = threading.Lock()
+        # 进程内累计(#324):当天文件行数差承担不了跨 UTC 日/旁路 run 的归属,
+        # 计数只认本进程写过的行;恢复续跑的跨进程历史由 checkpoint 分项累计衔接。
+        self.count = 0
+        self.tokens_in = 0
+        self.tokens_out = 0
 
     def write(self, payload: dict) -> None:
         day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -35,6 +40,9 @@ class FactWriter:
             self.root.mkdir(parents=True, exist_ok=True)
             with target.open("a", encoding="utf-8") as handle:
                 handle.write(line)
+            self.count += 1
+            self.tokens_in += payload.get("gen_ai.usage.input_tokens") or 0
+            self.tokens_out += payload.get("gen_ai.usage.output_tokens") or 0
 
 
 def _ms_since(start: float) -> int:

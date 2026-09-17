@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import random
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from difflib import unified_diff
 from functools import partial
 from pathlib import Path
@@ -95,6 +95,44 @@ def sample_batch(cases: list[dict], k: int, seed: int) -> list[dict]:
     return rng.sample(cases, min(k, len(cases)))
 
 
+# #332 采样规格:信号族非存储字段,matcher 词形一手分类(复用 kernel 信号
+# 判据,与 knob-frequency 分类同款口径)。
+_SIGNAL_STRATA = (
+    ("understanding", kernel._student_signals_understanding),
+    ("stuck", kernel._student_signals_stuck),
+    ("completion", kernel._student_signals_completion),
+)
+
+
+def sample_stratified_batch(
+    train_cases: list[dict], seed: int, *,
+    per_stratum: int = 3, background: int = 7,
+) -> list[dict]:
+    """#332 分层采样:3 understanding + 3 stuck + 3 completion + 7 背景 = 16 案/批。
+
+    一案按首个命中信号族归层(词形一手判据,确定性顺序);背景从无信号案
+    抽取(背景=无信号,未入选的信号案不冒充背景,换 seed 后可进富化槽)。
+    层内/背景不足时取全部(池小则全量,同 sample_batch clamp 语义——
+    小训练池下降级运行,不报错)。
+    """
+    rng = random.Random(seed)
+    strata: dict[str, list[int]] = {name: [] for name, _ in _SIGNAL_STRATA}
+    plain: list[int] = []
+    for i, case in enumerate(train_cases):
+        turns = [t for t in case.get("student_turns") or [] if isinstance(t, str)]
+        for name, fn in _SIGNAL_STRATA:
+            if any(fn(t) for t in turns):
+                strata[name].append(i)
+                break
+        else:
+            plain.append(i)
+    picked: list[int] = []
+    for name, _ in _SIGNAL_STRATA:
+        picked += rng.sample(strata[name], min(per_stratum, len(strata[name])))
+    picked += rng.sample(plain, min(background, len(plain)))
+    return [train_cases[i] for i in picked]
+
+
 # === 3. 打分向量 ===
 
 @dataclass(frozen=True)
@@ -174,6 +212,46 @@ def _score_one_case(
     return total, verdict, mi, is_hard_fail, low_frames
 
 
+def _transcribe_with_net_a(
+    subject: "ElicitSubject", cases: list[dict],
+) -> tuple[list, list[dict], dict]:
+    """转录循环 + Net A 逐案早停(#324 C-a/C-b)。
+
+    每案转录生成后立即扫泄露网;命中 = 候选级硬否决,停整批后续评估
+    (剩余案 Tutor 与全部 Judge 都不跑),失败转录保留在帧里。
+    """
+    transcripts = []
+    failures = []
+    stats = {"calls": 0, "tokens_in": 0, "tokens_out": 0, "env_failures": 0,
+             "content_failures": 0, "tutor_calls": 0, "judge_calls": 0,
+             "leak_net_violations": 0, "hard_vetoed": False}
+
+    for case in cases:
+        try:
+            transcript = subject.run_case(case)
+        except EnvironmentFailure as exc:
+            failures.append({"case_id": case.get("id", ""), "kind": "environment", "detail": str(exc)})
+            stats["env_failures"] += 1
+            continue
+        except Exception as exc:  # noqa: BLE001
+            failures.append({"case_id": case.get("id", ""), "kind": "content", "detail": str(exc)})
+            stats["content_failures"] += 1
+            continue
+        # Net A 逐案立即扫描:命中 = 候选级硬否决,停后续全部评估
+        ok, why = text_excludes_answer_values({}, case, transcript)
+        if not ok:
+            stats["leak_net_violations"] += 1
+            stats["hard_vetoed"] = True
+            failures.append({
+                "case_id": case.get("id", ""), "kind": "leak_net",
+                "detail": why[:200],
+                "transcript": transcript,  # 失败转录保留(#324 C1)
+            })
+            break
+        transcripts.append((case, transcript))
+    return transcripts, failures, stats
+
+
 def evaluate_batch(
     cases: list[dict],
     template: str,
@@ -183,63 +261,78 @@ def evaluate_batch(
 ) -> tuple[ScoreVector, list[dict], dict]:
     """跑批 + 判卷一步到位(calls = facts 实测,长跑口径:估算低估 ~3x 会超预算)。
 
+    #324 C-a/C-b:每案转录生成后立即 Net A 扫描;命中 = 该候选硬否决,
+    停整批后续评估(剩余案 Tutor 与全部 Judge 都不跑),失败转录保留在帧里。
+    #324 C2:计量改 FactWriter 进程内计数器差值(跨 UTC 日/旁路 run 归属正确),
+    分项 tutor_calls/judge_calls 之和 = 本批 facts 增量。
+
     返回:(score_vector, failure_frames, stats)。
-    stats = {calls, tokens_in, tokens_out, wall_ms, env_failures, content_failures}。
+    stats = {calls, tokens_in, tokens_out, wall_ms, env_failures, content_failures,
+             tutor_calls, judge_calls, leak_net_violations, hard_vetoed}。
     """
     started = time.monotonic()
-    facts_dir = gateway.writer.root
-    facts_before = _count_facts_lines(facts_dir)
+    writer = gateway.writer
+    w0_count, w0_in, w0_out = writer.count, writer.tokens_in, writer.tokens_out
     subject = ElicitSubject(template, gateway, support_hint=support_hint)
-    
-    transcripts = []
-    failures = []
-    stats = {"calls": 0, "tokens_in": 0, "tokens_out": 0, "env_failures": 0, "content_failures": 0}
-    
-    for case in cases:
-        try:
-            transcript = subject.run_case(case)
-            transcripts.append((case, transcript))
-        except EnvironmentFailure as exc:
-            failures.append({"case_id": case.get("id", ""), "kind": "environment", "detail": str(exc)})
-            stats["env_failures"] += 1
-        except Exception as exc:  # noqa: BLE001
-            failures.append({"case_id": case.get("id", ""), "kind": "content", "detail": str(exc)})
-            stats["content_failures"] += 1
-    
+
+    transcripts, failures, stats = _transcribe_with_net_a(subject, cases)
+
     scores = []
     needs_review = 0
     violations = 0
     hard_failures = 0
     judged = 0
-    stats["leak_net_violations"] = _leak_net_scan(transcripts, failures)
-    
-    for case, transcript in transcripts:
-        try:
-            total, verdict, mi, is_hard_fail, low_frames = _score_one_case(
-                gateway, case, transcript, judge_role)
-        except GatewayError as exc:
-            failures.append({"case_id": case.get("id", ""), "kind": "judge_error", "detail": str(exc)})
-            continue
-        scores.append(total)
-        judged += 1
-        if verdict == "review" and not is_hard_fail:
-            needs_review += 1  # 分子分母同口径(RULING#5):hard 案不计 nr
-        if mi < 2:
-            violations += 1
-        if is_hard_fail:
-            hard_failures += 1
-        if low_frames:
-            failures.extend(low_frames)
-    
+
+    hnu_u = 0  # #332 U:verdict∈{fail,review} 案数
+    if not stats["hard_vetoed"]:
+        # tutor 臂分项 = 转录阶段 writer 增量
+        stats["tutor_calls"] = writer.count - w0_count
+        for case, transcript in transcripts:
+            try:
+                total, verdict, mi, is_hard_fail, low_frames = _score_one_case(
+                    gateway, case, transcript, judge_role)
+            except GatewayError as exc:
+                failures.append({"case_id": case.get("id", ""), "kind": "judge_error", "detail": str(exc)})
+                continue
+            scores.append(total)
+            hnu_u += verdict in ("fail", "review")
+            judged += 1
+            if verdict == "review" and not is_hard_fail:
+                needs_review += 1  # 分子分母同口径(RULING#5):hard 案不计 nr
+            if mi < 2:
+                violations += 1
+            if is_hard_fail:
+                hard_failures += 1
+            if low_frames:
+                failures.extend(low_frames)
+        # judge 臂分项 = 判卷阶段增量
+        stats["judge_calls"] = writer.count - w0_count - stats["tutor_calls"]
+
     stats["wall_ms"] = int((time.monotonic() - started) * 1000)
-    # facts 实测(01 §7,长跑口径):一案 = start+reply×N+finish + judge ≈ 4.23 调用,
-    # 估算 len+judged 低估 ~3x,硬限预算必须用真实计数(paired_loop 同款)。
-    stats["calls"] = _count_facts_lines(facts_dir) - facts_before
-    
-    if not scores:
+    # facts 实测(#324 C2:进程内计数器,不用当天文件行数差——跨日/旁路归属正确)
+    stats["calls"] = writer.count - w0_count
+    stats["tokens_in"] = writer.tokens_in - w0_in
+    stats["tokens_out"] = writer.tokens_out - w0_out
+
+    if stats["hard_vetoed"]:
+        # 硬否决批(#324 C1:提前失败不计全批成功):返回 hard-fail 向量,
+        # gepa_loop 侧 leak_veto 不注册分数,候选永不可被选
+        stats.update(h=stats["leak_net_violations"], n=0, u=len(transcripts) + 1,
+                     mean=0.0)
         return ScoreVector(0.0, 1.0, 1.0, 1.0), failures, stats
-    
+
+    if not scores:
+        stats.update(h=0, n=0, u=0, mean=0.0)
+        return ScoreVector(0.0, 1.0, 1.0, 1.0), failures, stats
+
     mean_score = sum(scores) / len(scores)
+    # #332 HNU 逐案计数:U = verdict∈{fail,review}(含 hard 案,合并口径——
+    # fail→review 在 U 上中性,不再被 review 率误判退化);报告字段
+    # needs_review_rate 等保留旧口径不动,仅接受判定换轨
+    stats.update(
+        h=hard_failures, n=violations,
+        u=hnu_u,
+        mean=mean_score)
     # nr 分母 = 非 hard 案(PM-RULING#5:fail 案不计 review,verdict 互斥使
     # hard 高的批 nr 虚低,四维独立 Pareto 对此盲);全 hard 时保守 1.0
     non_hard = judged - hard_failures
@@ -251,130 +344,84 @@ def evaluate_batch(
     ), failures, stats
 
 
-def _leak_net_scan(transcripts: list[tuple[dict, dict]], failures: list[dict]) -> int:
-    """Net A(#310):终答值泄露网确定性扫描(零模型调用);违例计数并落失败帧。"""
-    violations = 0
-    for case, transcript in transcripts:
-        ok, why = text_excludes_answer_values({}, case, transcript)
-        if not ok:
-            violations += 1
-            failures.append({"case_id": case.get("id", ""), "kind": "leak_net",
-                             "detail": why[:200]})
-    return violations
+# === 3.5 #332 接受函数:H/N/U 合并口径 + 单一阈值 ===
+
+# 预注册工程阈值(#332 规格原表述,不许美化):0.125 = 16 案净增 2 分,
+# 是预注册的工程阈值,不是测得的噪声边界,不证明总体教学效果提升
+# (配对 null 实验实测 |Δ|≈0.0625,阈值≈2×观测配对噪声——工程裕度合理)。
+ACCEPT_DELTA = 0.125
+
+# 每 5 个评估候选共用同一批(#332 采样规格);换批时重评当前最优作初筛参考。
+CANDIDATES_PER_BATCH = 5
 
 
-def _count_facts_lines(facts_dir: Path) -> int:
-    """统计 facts 目录当天 JSONL 行数(真实调用计数,01 §7)。"""
-    from datetime import datetime, timezone
-    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    target = facts_dir / f"model_calls-{day}.jsonl"
-    if not target.exists():
-        return 0
-    with target.open(encoding="utf-8") as f:
-        return sum(1 for _ in f)
+@dataclass(frozen=True)
+class HnuOutcome:
+    """#332 逐案计数口径:H=hard fail 数;N=数值违规数(mi<2);
+    U=verdict∈{fail,review} 案数(含 hard 案——U 合并替代 review 率单独
+    比较,fail→review 在 U 上中性,不再被误判退化)。"""
+
+    h: int
+    n: int
+    u: int
+    mean: float
+
+    def as_dict(self) -> dict:
+        return asdict(self)
 
 
-def _sum_facts_tokens(facts_dir: Path, since_line: int) -> tuple[int, int]:
-    """统计 facts 目录自 since_line 行起的 input_tokens + output_tokens。"""
-    from datetime import datetime, timezone
-    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    target = facts_dir / f"model_calls-{day}.jsonl"
-    tokens_in = 0
-    tokens_out = 0
-    if not target.exists():
-        return tokens_in, tokens_out
-    with target.open(encoding="utf-8") as f:
-        for i, line in enumerate(f):
-            if i < since_line:
-                continue
-            try:
-                rec = json.loads(line)
-                tokens_in += rec.get("gen_ai.usage.input_tokens") or 0
-                tokens_out += rec.get("gen_ai.usage.output_tokens") or 0
-            except (json.JSONDecodeError, TypeError):
-                continue
-    return tokens_in, tokens_out
+def hnu_from_stats(stats: dict) -> HnuOutcome:
+    """探索/初筛批(evaluate_batch stats)→ HNU。"""
+    return HnuOutcome(
+        h=stats.get("h", 0), n=stats.get("n", 0), u=stats.get("u", 0),
+        mean=stats.get("mean", 0.0))
 
 
-def evaluate_batch_paired(
-    cases: list[dict],
-    template: str,
-    gateway: Gateway,
-    judge_role: str = "judge",
-) -> tuple[list[dict], list[dict], dict]:
-    """配对实验:逐案跑 + 逐案判,返回 per-case scores 和转录快照。
-    
-    返回:(per_case_scores, snapshots, stats)。
-    per_case_scores = [{case_id, total, verdict, leaked, mi, hard_fail}, ...]
-    snapshots = [{case_id, first_question, tutor_turns, template_in_transcript}, ...]
-      - first_question 来自 turns[0].tutor(transcript 无 first_question 键)
-      - tutor_turns = 全部 tutor 轮文本(空转全转录扫描证据)
-      - template_in_transcript = 模板文本是否出现在任意 tutor 轮(review-303-rerun:
-        elicit 模板经 _ask_restatement 确定性注入后轮,首问扫描会漏检 → 全转录扫描)
-    stats = {calls, tokens_in, tokens_out, wall_ms, env_failures, content_failures}
-    
-    调用计数:从 facts ledger 实测,不硬编码(01 §7)。
+def hnu_from_per_case(per_case_scores: list[dict]) -> HnuOutcome:
+    """配对臂(evaluate_batch_paired per-case)→ HNU;error 案不计(结果不完整
+    由调用方另行保守处理)。"""
+    judged = [c for c in per_case_scores if "error" not in c]
+    if not judged:
+        return HnuOutcome(0, 0, 0, 0.0)
+    return HnuOutcome(
+        h=sum(1 for c in judged if c.get("hard_fail")),
+        n=sum(1 for c in judged if c.get("mi", 2) < 2),
+        u=sum(1 for c in judged if c.get("verdict") in ("fail", "review")),
+        mean=sum(c["total"] for c in judged) / len(judged))
+
+
+def accept_variant(parent: HnuOutcome, variant: HnuOutcome) -> tuple[bool, dict]:
+    """#332 接受函数(替代四维 dominates 判定),规格块伪代码逐条:
+
+        身份一致、同16案、结果完整,且通过泄露硬否决(调用方保证)。
+        若新增 hard fail 案例:本次不替换,保留证据。
+        若 H、N、U 任一增加:本次不替换。
+        否则,满足任一才替换:
+          ① 配对均值提升 ≥ 0.125;
+          ② H、N、U 至少一项减少,且配对均值不下降。
+        其余情况保留父代。
+
+    返回 (accepted, 证据 dict);证据含拒绝原因,落 round report 留证。
     """
-    started = time.monotonic()
-    subject = ElicitSubject(template, gateway)
-    
-    facts_dir = gateway.writer.root
-    facts_before = _count_facts_lines(facts_dir)
-    
-    per_case_scores = []
-    snapshots = []
-    stats = {"calls": 0, "tokens_in": 0, "tokens_out": 0, "env_failures": 0, "content_failures": 0}
-    
-    for case in cases:
-        try:
-            transcript = subject.run_case(case)
-            # 首问来自 turns[0].tutor(transcript 无 first_question 键)
-            turns = transcript.get("turns", [])
-            first_q = turns[0]["tutor"] if turns else ""
-            tutor_turns = [t.get("tutor", "") for t in turns]
-            snapshots.append({
-                "case_id": case.get("id", ""),
-                "first_question": first_q,
-                "tutor_turns": tutor_turns,
-                "template_in_transcript": template in "\n".join(tutor_turns),
-            })
-            
-            total, verdict, mi, is_hard_fail, _low_frames = _score_one_case(
-                gateway, case, transcript, judge_role)
-            per_case_scores.append({
-                "case_id": case.get("id", ""),
-                "total": total,
-                "verdict": verdict,
-                "leaked": is_hard_fail and verdict != "fail",
-                "mi": mi,
-                "hard_fail": is_hard_fail,
-            })
-        except EnvironmentFailure as exc:
-            per_case_scores.append({
-                "case_id": case.get("id", ""),
-                "error": f"environment: {str(exc)[:100]}",
-            })
-            stats["env_failures"] += 1
-        except GatewayError as exc:
-            per_case_scores.append({
-                "case_id": case.get("id", ""),
-                "error": f"judge_error: {str(exc)[:100]}",
-            })
-        except Exception as exc:  # noqa: BLE001
-            per_case_scores.append({
-                "case_id": case.get("id", ""),
-                "error": f"content: {str(exc)[:100]}",
-            })
-            stats["content_failures"] += 1
-    
-    # facts 实测计数(不硬编码 +=2)
-    facts_after = _count_facts_lines(facts_dir)
-    stats["calls"] = facts_after - facts_before
-    tokens_in, tokens_out = _sum_facts_tokens(facts_dir, facts_before)
-    stats["tokens_in"] = tokens_in
-    stats["tokens_out"] = tokens_out
-    stats["wall_ms"] = int((time.monotonic() - started) * 1000)
-    return per_case_scores, snapshots, stats
+    ev = {"parent": parent.as_dict(), "variant": variant.as_dict(),
+          "delta_mean": round(variant.mean - parent.mean, 6)}
+    # 新增 hard fail 案(同批同案集配对口径 = H 增加):即使均值大涨也拒,留证
+    if variant.h > parent.h:
+        ev["decision"] = "new_hard_fail"
+        return False, ev
+    # (H 增已被上一支接住,这里只查 N/U)
+    if variant.n > parent.n or variant.u > parent.u:
+        ev["decision"] = "hnu_increase"
+        return False, ev
+    if ev["delta_mean"] >= ACCEPT_DELTA:
+        ev["decision"] = "delta_ge_threshold"
+        return True, ev
+    if (variant.h < parent.h or variant.n < parent.n or variant.u < parent.u) \
+            and ev["delta_mean"] >= 0:
+        ev["decision"] = "hnu_reduced_mean_not_worse"
+        return True, ev
+    ev["decision"] = "keep_parent"
+    return False, ev
 
 
 # === 4. 反思编辑器 ===
@@ -383,10 +430,43 @@ def evaluate_batch_paired(
 
 @dataclass
 class Candidate:
+    """#324 A-a:候选身份 = template + support_hint 完整组合(不只 template)。
+
+    support_hint=None = 单旋钮模式;双旋钮模式下 support-only 改写是新候选,
+    noop 判定与 checkpoint 归属都以完整组合为准。
+    """
     template: str
+    support_hint: str | None = None
     parent_id: int | None = None
     round_idx: int = 0
     candidate_id: int = 0
+
+
+def search_identity(config: "GepaConfig", train_cases: list[dict]) -> str:
+    """#324 A3 搜索身份指纹:配置/判据/案集/搜索参数,任一变化拒绝复用旧分数。
+
+    命名避开 corpus_round.run_identity(切片运行身份,已有语义)。
+
+    口径:rounds/max_calls 不算身份(续跑调大合法);判据 = judge SYSTEM_PROMPT
+    哈希(rubric/dimension guide 任一改动即换身份);案集 = case id 序列。
+    """
+    from hashlib import sha256
+
+    from . import judge as judge_mod
+
+    payload = {
+        "judge_role": config.judge_role,
+        "batch_size": config.batch_size,
+        "two_knobs": config.two_knobs,
+        "editor_focus": config.editor_focus,
+        "editor_role": config.editor_role,
+        "judge_prompt_sha": sha256(
+            judge_mod.SYSTEM_PROMPT.encode("utf-8")).hexdigest()[:16],
+        "case_ids": [c.get("id", "") for c in train_cases],
+    }
+    return sha256(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()[:16]
 
 
 @dataclass
@@ -453,23 +533,34 @@ write_checkpoint = None  # 前向占位(定义后底部绑定公开名)
 
 def _write_checkpoint(output_dir: Path, state: "LoopState",
                       next_round: int = 0, last_failures: list[dict] | None = None) -> None:
-    """每代落盘断点(长跑跨夜:最优解+预算+代次+失败帧,进程挂掉可恢复)。"""
+    """每代落盘断点(长跑跨夜:最优解+预算+代次+失败帧,进程挂掉可恢复)。
+
+    #324 A-d:best 的 support_hint 取候选自身(不拼接顶层状态)。
+    #324 A3:落运行身份指纹——恢复时任一不匹配拒绝复用旧分数。
+    #324 C2:分项调用累计(tutor/judge/editor)跨恢复延续,不归零。
+    """
     population, scores = state.population, state.scores
     budget = state.bind(0)
-    best = population.select_parent(scores)  # 返回 Candidate 对象本身
+    # #332 选择器:best = 配对确认的当前最优(历史跨批池 max 不参与;
+    # 兜底 select_parent 仅防 current_best 未初始化的异常路径)
+    best = state.current_best or population.select_parent(scores)
     payload = {
         "next_round": next_round,
+        "identity": state.run_id,
         "budget": budget.summary(),
         "best": {"candidate_id": best.candidate_id, "template": best.template,
-                 "support_hint": state.support_hint,
+                 "support_hint": best.support_hint,
                  "scores": scores[best.candidate_id].__dict__},
-        "last_failures": (last_failures or [])[:5],
+        "call_breakdown": dict(state.call_breakdown),
+        # 失败帧瘦身:transcript 留在 round 报告,断点只留定位字段
+        "last_failures": [
+            {k: v for k, v in f.items() if k != "transcript"}
+            for f in (last_failures or [])[:5]
+        ],
     }
     tmp = output_dir / "checkpoint.json.tmp"
     tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
     tmp.replace(output_dir / "checkpoint.json")
-
-
 
 
 @dataclass
@@ -482,6 +573,16 @@ class LoopState:
     population: Population = field(default_factory=Population)
     scores: dict = field(default_factory=dict)
     budget: "Budget | None" = None
+    run_id: str = ""  # #324 A3 运行身份指纹(checkpoint 写/恢复核对)
+    current_best: "Candidate | None" = None  # #332:只维护配对确认的当前最优
+    # #332 循环状态(批管理;入语境束使 _process_round 只传一参)
+    batch: list = field(default_factory=list)
+    ref_outcome: "HnuOutcome | None" = None  # 当前批初筛参考(当前最优重评)
+    cohort_idx: int = -1
+    variant_evals: int = 0  # 非 noop 评估候选计数(每 5 候选同批)
+    last_failures: list = field(default_factory=list)
+    call_breakdown: dict = field(default_factory=lambda: {
+        "tutor_calls": 0, "judge_calls": 0, "editor_calls": 0})  # #324 C2
 
     def bind(self, max_calls: int) -> "Budget":
         if self.budget is None:
@@ -495,38 +596,272 @@ def _restore_or_seed(
     output_dir: Path,
     resume: bool,
     state: LoopState,
-) -> tuple[int, list[dict]]:
-    """恢复或播种种群起点;返回(起始代次, 初始失败帧)。
+) -> tuple[int, list[dict], bool]:
+    """恢复或播种种群起点;返回(起始代次, 初始失败帧, 种子硬否决)。
 
-    恢复:最优候选入种群、预算与代次延续、失败帧带回、不重评初始(省预算;
-    种子 = round_idx 确定性,恢复后同代同批)。全新:评估初始模板并写 checkpoint。
+    #324 A3 身份门:checkpoint 的 identity 与当前 run_identity 不符
+    (配置/判据/案集/搜索参数任一变化,或旧格式无指纹)→ 拒绝复用旧分数,
+    走全新路径(拒绝发生在任何模型调用前;旧模板要复用只能显式提取当种子)。
+    #324 A-d:恢复完整组合(template+support_hint+score 均属同一 best 候选)。
+    #324 C1:种子批 Net A 硬否决 → 返回 seed_vetoed,主循环停在开跑前。
     """
     population, scores = state.population, state.scores
     budget = state.bind(config.max_calls)
     checkpoint_path = output_dir / "checkpoint.json"
     if resume and checkpoint_path.exists():
         saved = json.loads(checkpoint_path.read_text(encoding="utf-8"))
-        restored = Candidate(template=saved["best"]["template"])
-        restored_id = population.add(restored)
-        scores[restored_id] = ScoreVector(**saved["best"]["scores"])
-        budget.calls = saved["budget"]["calls"]
-        if saved.get("support_hint"):
-            state.support_hint = saved["support_hint"]
-        budget.rounds = saved["budget"]["rounds"]
-        print(f"[resume] 从 checkpoint 恢复:round={saved['next_round']}, "
-              f"budget={budget.calls}/{budget.max_calls}, "
-              f"best_mean={scores[restored_id].mean_score:.2f}")
-        return saved["next_round"], saved.get("last_failures", [])
-    initial_id = population.add(Candidate(template=state.initial_template))
-    # 初始批与代间批同分布(PM-RULING#5:文件序前缀有偏,试点父代 hard .5
-    # 极端读数疑源于此;seed=0 与 round 0 批一致)
+        saved_identity = saved.get("identity")
+        if saved_identity != state.run_id:
+            print(f"[resume] 拒绝恢复:身份不匹配(checkpoint={saved_identity!r}, "
+                  f"当前={state.run_id!r})——判据/案集/搜索参数有变,旧分数不复用")
+        else:
+            best_saved = saved["best"]
+            restored = Candidate(template=best_saved["template"],
+                                 support_hint=best_saved.get("support_hint"))
+            restored_id = population.add(restored)
+            state.current_best = restored  # #332:恢复单一最优 lineage
+            scores[restored_id] = ScoreVector(**best_saved["scores"])
+            budget.calls = saved["budget"]["calls"]
+            if restored.support_hint:
+                state.support_hint = restored.support_hint
+            budget.rounds = saved["budget"]["rounds"]
+            state.call_breakdown.update(saved.get("call_breakdown", {}))
+            print(f"[resume] 从 checkpoint 恢复:round={saved['next_round']}, "
+                  f"budget={budget.calls}/{budget.max_calls}, "
+                  f"best_mean={scores[restored_id].mean_score:.2f}")
+            return saved["next_round"], saved.get("last_failures", []), False
+    initial = Candidate(
+        template=state.initial_template,
+        support_hint=state.support_hint if config.two_knobs else None)
+    initial_id = population.add(initial)
+    state.current_best = initial  # #332:种子 = 初始最优(确认基线)
+    # 初始批与代间批同分布(PM-RULING#5:文件序前缀有偏;#332 分层批
+    # seed=0 与 cohort 0 批一致)
     initial_scores, failures, initial_stats = evaluate_batch(
-        sample_batch(state.train_cases, config.batch_size, 0), state.initial_template,
-        gateway, config.judge_role)
-    scores[initial_id] = initial_scores
+        sample_stratified_batch(state.train_cases, 0), state.initial_template,
+        gateway, config.judge_role,
+        support_hint=state.support_hint if config.two_knobs else None)
     budget.add(initial_stats["calls"])
+    state.call_breakdown["tutor_calls"] += initial_stats.get("tutor_calls", 0)
+    state.call_breakdown["judge_calls"] += initial_stats.get("judge_calls", 0)
+    if initial_stats.get("hard_vetoed"):
+        # 种子硬失败(#324 C1):停在开跑前,初始分不注册(候选永不可被选)
+        print("[seed] 初始模板 Net A 硬否决,run 终止(停在开跑前)")
+        return 0, failures, True
+    scores[initial_id] = initial_scores
     _write_checkpoint(output_dir, state)
-    return 0, failures
+    return 0, failures, False
+
+
+def _edit_variant(
+    config: "GepaConfig",
+    state: "LoopState",
+    parent: "Candidate",
+    round_idx: int,
+    last_failures: list[dict],
+    gateway: Gateway,
+) -> tuple[str, str]:
+    """编辑器选择 + 单次调用(#324 A-e:返回 (variant, reason))。
+
+    传入上一轮的失败(修 P2-1:编辑器看到变体自身的失败模式);
+    双旋钮按代次奇偶路由,编辑器调用计入分项(编辑预算 1 call/代不变)。
+    state.support_hint 原地更新(双旋钮 support 臂)。
+    """
+    editors = (
+        partial(edit_template_nr if config.editor_focus == "nr" else edit_template,
+                role=config.editor_role),
+        partial(edit_support_hint, role=config.editor_role),
+    )
+    if config.two_knobs:
+        variant_template, state.support_hint, reason = edit_two_knobs(
+            parent.template, state.support_hint, round_idx, last_failures, gateway,
+            editors=editors)
+    else:
+        variant_template, reason = editors[0](parent.template, last_failures, gateway)
+    state.call_breakdown["editor_calls"] += 1  # #324 C2 分项累计
+    return variant_template, reason
+
+
+def _paired_gate(
+    batch: list[dict],
+    parent: "Candidate",
+    variant: "Candidate",
+    gateway: Gateway,
+    config: "GepaConfig",
+    state: "LoopState",
+) -> tuple[bool, dict | None]:
+    """#324 B 配对验收闸(PM 默认粒度:探索代不配,只在替换时刻配)。
+
+    父子两臂同批 case IDs、同运行身份、各注入自身完整旋钮组合;
+    #332 起配对判定走 HNU 接受函数(accept_variant:新增 hard fail 拒 /
+    H·N·U 不增 / Δ≥0.125 或 HNU 减且 Δ≥0)。
+    返回(accepted, 同批配对证据)。
+    """
+    from .gepa_paired import evaluate_batch_paired  # 晚绑定:配对面住 gepa_paired
+    budget = state.bind(0)  # 已绑定时返回既有 Budget(max_calls 不变)
+    p_pcs, _, p_gate_stats = evaluate_batch_paired(
+        batch, parent.template, gateway, config.judge_role,
+        support_hint=parent.support_hint)
+    v_pcs, _, v_gate_stats = evaluate_batch_paired(
+        batch, variant.template, gateway, config.judge_role,
+        support_hint=variant.support_hint)
+    budget.add(p_gate_stats["calls"] + v_gate_stats["calls"])
+    state.call_breakdown["tutor_calls"] += (
+        p_gate_stats.get("calls", 0) + v_gate_stats.get("calls", 0))
+    # #332:配对判定换 HNU 接受函数(替代四维 dominates);两臂 per-case
+    # 聚合口径见 hnu_from_per_case(U 含 hard 案,fail→review 中性)
+    parent_hnu = hnu_from_per_case(p_pcs)
+    variant_hnu = hnu_from_per_case(v_pcs)
+    accepted, accept_ev = accept_variant(parent_hnu, variant_hnu)
+    paired_evidence = {
+        "case_ids": [c.get("id", "") for c in batch],
+        "parent_hnu": parent_hnu.as_dict(),
+        "variant_hnu": variant_hnu.as_dict(),
+        "per_case": [
+            {"case_id": p.get("case_id"),
+             "parent_total": p.get("total"),
+             "variant_total": v.get("total"),
+             "delta": (v.get("total", 0) - p.get("total", 0))
+                      if "error" not in p and "error" not in v else None}
+            for p, v in zip(p_pcs, v_pcs, strict=False)
+        ],
+        "gate_calls": p_gate_stats["calls"] + v_gate_stats["calls"],
+        "accepted": accepted,
+        "accept_reason": accept_ev["decision"],
+        "delta_mean": accept_ev["delta_mean"],
+    }
+    return accepted, paired_evidence
+
+
+def _noop_stats() -> dict:
+    """noop 跳过评估的空 stats(计数全零,口径与 evaluate_batch 对齐)。"""
+    return {"calls": 0, "tokens_in": 0, "tokens_out": 0, "wall_ms": 0,
+            "env_failures": 0, "content_failures": 0,
+            "tutor_calls": 0, "judge_calls": 0,
+            "leak_net_violations": 0, "hard_vetoed": False,
+            "h": 0, "n": 0, "u": 0, "mean": 0.0}
+
+
+def _refresh_batch_reference(
+    batch: list[dict], state: "LoopState", config: "GepaConfig",
+    gateway: Gateway,
+) -> tuple["HnuOutcome", list[dict]]:
+    """#332 换批时重评当前最优作初筛参考(调用计入台账,T6)。
+
+    返回 (参考 HNU, 失败帧);参考失败帧并给编辑器(当前最优自身的短板)。
+    """
+    _, ref_failures, ref_stats = evaluate_batch(
+        batch, state.current_best.template, gateway, config.judge_role,
+        support_hint=state.current_best.support_hint)
+    budget = state.bind(0)
+    budget.add(ref_stats["calls"])
+    state.call_breakdown["tutor_calls"] += ref_stats.get("tutor_calls", 0)
+    state.call_breakdown["judge_calls"] += ref_stats.get("judge_calls", 0)
+    return hnu_from_stats(ref_stats), ref_failures
+
+
+def _process_round(
+    round_idx: int, state: "LoopState", config: "GepaConfig", gateway: Gateway,
+) -> dict:
+    """单代处理(#332):编辑 → noop 判定 → 评估 → 初筛 → 配对闸 → 替换/留证。
+
+    状态全走 state(语境束);返回 round report。泄露否决/初筛否决/配对
+    否决的候选都不成为父代或 best;配对确认才前进单一最优 lineage。
+    """
+    population, scores = state.population, state.scores
+    budget = state.bind(0)
+    parent = state.current_best  # #332 选择器:只认配对确认的当前最优
+    parent_scores = scores.get(parent.candidate_id)
+
+    variant_template, edit_reason = _edit_variant(
+        config, state, parent, round_idx, state.last_failures, gateway)
+    budget.add(1)
+
+    # No-op 检查(#324 A-b):完整组合比较——双旋钮下 support-only 改写
+    # 是新候选不再误判 noop;单旋钮 support 恒 None,保持原语义
+    variant_support = state.support_hint if config.two_knobs else None
+    is_noop = (variant_template == parent.template
+               and variant_support == parent.support_hint)
+
+    variant = Candidate(
+        template=variant_template,
+        support_hint=variant_support,
+        parent_id=parent.candidate_id,
+        round_idx=round_idx,
+    )
+    variant_id = population.add(variant)
+    if is_noop:
+        variant_scores = parent_scores
+        variant_failures = []
+        variant_stats = _noop_stats()
+        scores[variant_id] = variant_scores
+        # no-op 时 last_failures 保留上一轮,下轮编辑器继续用
+    else:
+        state.variant_evals += 1  # #332:评估候选计数(批切换依据)
+        variant_scores, variant_failures, variant_stats = evaluate_batch(
+            state.batch, variant_template, gateway, config.judge_role,
+            support_hint=variant_support)
+        budget.add(variant_stats["calls"])
+        state.call_breakdown["tutor_calls"] += variant_stats.get("tutor_calls", 0)
+        state.call_breakdown["judge_calls"] += variant_stats.get("judge_calls", 0)
+        state.last_failures = variant_failures
+
+    # Net A veto(#310 + #324 C):泄露网违例变体不注册分数
+    leak_veto = bool(variant_stats.get("leak_net_violations")) and not is_noop
+
+    # #332 初筛:接受函数(当前最优重评参考 vs 变体探索结果,同批)——
+    # 初筛决定是否值得配对(替 #329 的跨批 dominates 预判);泄露/noop 不进闸
+    if (not is_noop) and (not leak_veto) and state.ref_outcome is not None:
+        worth_pairing, screen_evidence = accept_variant(
+            state.ref_outcome, hnu_from_stats(variant_stats))
+    else:
+        worth_pairing, screen_evidence = False, None
+
+    # 配对验收闸(#324 B 既定 + #332 判定换轨):拟替换时父子同批配对;
+    # 配对确认才替换当前最优,配对成本计预算
+    if worth_pairing:
+        accepted, paired_evidence = _paired_gate(
+            state.batch, parent, variant, gateway, config, state)
+        if accepted:
+            state.current_best = variant  # #332:单一最优 lineage 前进
+            # 参考刷新:配对子臂即新最优在本批的逐案结果,零额外成本
+            state.ref_outcome = HnuOutcome(**paired_evidence["variant_hnu"])
+    else:
+        accepted, paired_evidence = False, None
+
+    # 分数注册:泄露否决/配对否决的候选不进池(0 次成为父代/best);
+    # noop 候选继承父代分进池;#332:池只作运行工件留证,选择走 current_best
+    if leak_veto or (worth_pairing and not accepted):
+        scores.pop(variant_id, None)
+    elif not leak_veto and variant_id not in scores and not is_noop:
+        scores[variant_id] = variant_scores
+
+    return {
+        "round": round_idx,
+        "parent_id": parent.candidate_id,
+        "variant_id": variant_id,
+        "parent_template": parent.template,
+        "variant_template": variant_template,
+        "support_hint": variant_support,
+        "parent_support_hint": parent.support_hint,
+        "noop": is_noop,
+        "edit_reason": edit_reason,  # #324 A-e:编辑尝试原因 100% 落报告
+        "parent_scores": parent_scores.__dict__,
+        "variant_scores": variant_scores.__dict__,
+        "accepted": accepted,
+        "leak_net_veto": leak_veto,
+        "screen_evidence": screen_evidence,  # #332:初筛证据(值得配对与否)
+        "cohort_idx": state.cohort_idx,  # #332:批代(每 5 评估候选同批)
+        "paired_evidence": paired_evidence,  # #324 B:最优替换 100% 附同批证据
+        "diff": list(unified_diff(
+            parent.template.splitlines(keepends=True),
+            variant_template.splitlines(keepends=True),
+            fromfile="parent",
+            tofile="variant",
+        )),
+        "stats": variant_stats,
+        "failures": variant_failures,
+    }
 
 
 def gepa_loop(
@@ -537,337 +872,72 @@ def gepa_loop(
     output_dir: Path,
     resume: bool = True,
 ) -> tuple[Population, dict[int, ScoreVector], list[dict]]:
-    """GEPA 主循环:轮数 / 预算计数 / 停止;每轮 dump prompt diff + 分数 + checkpoint。
+    """GEPA 主循环(薄循环):批管理(#332 每 5 评估候选同批+换批重评)+ 单代处理。
 
-    resume=True 且 output_dir 存在 checkpoint.json 时恢复:最优候选作为种群起点、
-    预算余量与代次延续(种子 = round_idx,确定性,恢复后同代同批)。
+    resume=True 且 checkpoint 在:恢复单一最优 lineage、预算与代次延续;
+    身份不匹配拒绝复用(#324 A3)。#332 选择器:只维护配对确认的当前最优,
+    历史跨批池 max 不参与选父代(池仅作工件留证)。
     返回:(population, scores, round_reports)。
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     state = LoopState(train_cases=train_cases, initial_template=initial_template)
+    state.run_id = search_identity(config, train_cases)  # #324 A3
     population, scores = state.population, state.scores
     budget = state.bind(config.max_calls)
     round_reports: list[dict] = []
-    start_round, last_failures = _restore_or_seed(
+    start_round, failures, seed_vetoed = _restore_or_seed(
         config, gateway, output_dir, resume, state)
+    state.last_failures = failures
+
+    if seed_vetoed:
+        # 种子硬失败(#324 C1):停在开跑前——不进代循环,不烧剩余预算
+        summary = {
+            "budget": budget.summary(),
+            "population_size": len(population.candidates),
+            "accepted_variants": 0,
+            "seed_hard_vetoed": True,
+        }
+        (output_dir / "summary.json").write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+        return population, scores, round_reports
 
     for round_idx in range(start_round, config.rounds):
         if budget.exhausted():
             break
-        
         budget.rounds += 1
-        batch = sample_batch(train_cases, config.batch_size, seed=round_idx)
-        
-        # 选父代
-        parent = population.select_parent(scores)
-        parent_scores = scores[parent.candidate_id]
-        
-        # 编辑模板:传入上一轮的失败(首轮传 initial 的,后续传上一变体的)
-        # 修 P2-1:原始终传 initial_failures,编辑器看不到变体自身的失败模式
-        editors = (
-            partial(edit_template_nr if config.editor_focus == "nr" else edit_template,
-                    role=config.editor_role),
-            partial(edit_support_hint, role=config.editor_role),
-        )
-        if config.two_knobs:
-            variant_template, state.support_hint = edit_two_knobs(
-                parent.template, state.support_hint, round_idx, last_failures, gateway,
-                editors=editors)
-        else:
-            variant_template = editors[0](parent.template, last_failures, gateway)
-        budget.add(1)
-        
-        # No-op 检查:编辑器返回与父代逐字相同 → 跳过评估,省预算
-        is_noop = (variant_template == parent.template)
-        
-        # 评估变体
-        variant = Candidate(
-            template=variant_template,
-            parent_id=parent.candidate_id,
-            round_idx=round_idx,
-        )
-        variant_id = population.add(variant)
-        if is_noop:
-            variant_scores = parent_scores
-            variant_failures = []
-            variant_stats = {"calls": 0, "tokens_in": 0, "tokens_out": 0,
-                             "env_failures": 0, "content_failures": 0, "wall_ms": 0,
-                             "leak_net_violations": 0}
-            scores[variant_id] = variant_scores
-            # no-op 时 last_failures 保留上一轮,下轮编辑器继续用
-        else:
-            variant_scores, variant_failures, variant_stats = evaluate_batch(
-                batch, variant_template, gateway, config.judge_role,
-                support_hint=state.support_hint if config.two_knobs else None)
-            budget.add(variant_stats["calls"])
-            last_failures = variant_failures
-        
-        # Net A veto(#310):泄露网违例变体不注册分数——select_parent 与
-        # checkpoint best 都走 scores,不注册即永不可被选(gate-01-r24 教训:
-        # 只挡 acceptance 挡不住 mean-贪心选择器捞回脏变体)
-        leak_veto = bool(variant_stats.get("leak_net_violations")) and not is_noop
-        if not leak_veto:
-            scores[variant_id] = variant_scores
-        
-        # 选择:simplified Pareto(泄露网违例与 noop 同级否决)
-        accepted = False if (is_noop or leak_veto) else variant_scores.dominates(parent_scores)
-        
-        # dump round report
-        report = {
-            "round": round_idx,
-            "parent_id": parent.candidate_id,
-            "variant_id": variant_id,
-            "parent_template": parent.template,
-            "variant_template": variant_template,
-            "support_hint": getattr(state, "support_hint", None),
-            "noop": is_noop,
-            "parent_scores": parent_scores.__dict__,
-            "variant_scores": variant_scores.__dict__,
-            "accepted": accepted,
-            "leak_net_veto": leak_veto,
-            "diff": list(unified_diff(
-                parent.template.splitlines(keepends=True),
-                variant_template.splitlines(keepends=True),
-                fromfile="parent",
-                tofile="variant",
-            )),
-            "stats": variant_stats,
-            "failures": variant_failures,
-        }
+
+        # #332 批管理:每 5 个评估候选同批;换批时重评当前最优作初筛参考
+        # (调用计入台账,T6);恢复后计数归零 → 首轮换批重评,保守方向
+        new_cohort = state.variant_evals // CANDIDATES_PER_BATCH
+        if new_cohort != state.cohort_idx:
+            state.cohort_idx = new_cohort
+            state.batch = sample_stratified_batch(train_cases, seed=new_cohort)
+            ref_outcome, ref_failures = _refresh_batch_reference(
+                state.batch, state, config, gateway)
+            state.ref_outcome = ref_outcome
+            state.last_failures = ref_failures or state.last_failures
+
+        report = _process_round(round_idx, state, config, gateway)
         round_reports.append(report)
         (output_dir / f"round-{round_idx:02d}.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-        _write_checkpoint(output_dir, state, round_idx + 1, last_failures)
+        _write_checkpoint(output_dir, state, round_idx + 1, state.last_failures)
 
     # 最终报告
     summary = {
         "budget": budget.summary(),
+        "call_breakdown": dict(state.call_breakdown),  # #324 C2:分项累计
+        "run_identity": state.run_id,
         "population_size": len(population.candidates),
         "accepted_variants": sum(1 for r in round_reports if r["accepted"]),
-        "best_candidate": population.select_parent(scores).__dict__,
-        "best_scores": scores[population.select_parent(scores).candidate_id].__dict__,
+        # #332:单一最优 lineage(配对确认),历史池 max 不参与
+        "best_candidate": state.current_best.__dict__,
+        "best_scores": scores[state.current_best.candidate_id].__dict__,
     }
     (output_dir / "summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
-    
+
     return population, scores, round_reports
-
-
-def _validate_hard_fail(paired_cases: list[dict]) -> str:
-    """硬失败筛选验证:硬失败变体不可胜出(对齐 #296 dominates 原则)。
-    
-    若变体存在硬失败(answer_leaked 或 verdict=fail)→ 必须 blocked。
-    无「acceptable」分支:硬失败候选不能成为最优,无条件。
-    """
-    has_leaked = any(c.get("variant_hard_fail") for c in paired_cases if "error" not in c)
-    if not has_leaked:
-        return "pass (no leaked variant)"
-    return "blocked (variant has hard_fail)"
-
-
-def _build_paired_cases(
-    parent_scores: list[dict],
-    variant_scores: list[dict],
-    parent_snaps: list[dict],
-    variant_snaps: list[dict],
-    initial_template: str,
-    variant_template: str,
-) -> list[dict]:
-    """逐案配对 Δ + 全转录空转扫描(review-303-rerun P1-5)。
-
-    空转判定改全转录口径:elicit 模板经 _ask_restatement(kernel.py 确定性零模型
-    调用)注入**后续轮**,首问(start() 生成)不含模板——只扫 turns[0] 会漏检。
-    - variant_template_in_transcript: 变体模板是否出现在变体转录任意 tutor 轮
-      (False = 模板未注入 → 空转,该案 Δ 对 judge 敏感度零信息量)
-    - transcripts_identical: parent/variant 转录逐字相同(空转辅证)
-    """
-    paired_cases = []
-    for i, (p, v) in enumerate(zip(parent_scores, variant_scores, strict=True)):
-        if "error" in p or "error" in v:
-            paired_cases.append({
-                "case_id": p.get("case_id", v.get("case_id", "")),
-                "error": p.get("error") or v.get("error"),
-            })
-            continue
-        p_snap = parent_snaps[i] if i < len(parent_snaps) else {}
-        v_snap = variant_snaps[i] if i < len(variant_snaps) else {}
-        p_turns = p_snap.get("tutor_turns", [])
-        v_turns = v_snap.get("tutor_turns", [])
-        p_fq = p_snap.get("first_question", "")
-        v_fq = v_snap.get("first_question", "")
-        variant_in_transcript = v_snap.get(
-            "template_in_transcript", variant_template in "\n".join(v_turns))
-        parent_in_transcript = p_snap.get(
-            "template_in_transcript", initial_template in "\n".join(p_turns))
-        paired_cases.append({
-            "case_id": p["case_id"],
-            "parent_total": p.get("total", 0),
-            "variant_total": v.get("total", 0),
-            "delta": v.get("total", 0) - p.get("total", 0),
-            "parent_verdict": p.get("verdict"),
-            "variant_verdict": v.get("verdict"),
-            "parent_hard_fail": p.get("hard_fail", False),
-            "variant_hard_fail": v.get("hard_fail", False),
-            "parent_first_question": p_fq,
-            "variant_first_question": v_fq,
-            "parent_template_in_transcript": parent_in_transcript,
-            "variant_template_in_transcript": variant_in_transcript,
-            "transcripts_identical": p_turns == v_turns and bool(p_turns),
-            "idle": not variant_in_transcript,  # 全转录口径:模板未注入 = 空转
-        })
-    return paired_cases
-
-
-def _compute_paired_verdict(
-    all_deltas: list[int | float], idle_detected: bool = False,
-) -> str:
-    """判定逻辑(冻结协议,review-303-rerun P1-1 修正):
-
-    - 空转(idle)→ **无效跑**(冻结前提:空转 = 无效,Δ 对 judge 敏感度
-      零信息量——转录全同 + judge temp=0 确定性,Δ=0 只复述确定性,不测得敏感度)
-    - Δ≈0 → 红灯
-    - 稳定非零多数同向 → GO;否则 mixed
-    """
-    if idle_detected:
-        return "无效跑"
-    nonzero = [d for d in all_deltas if d != 0]
-    if abs(sum(all_deltas) / len(all_deltas)) < 0.5 and len(nonzero) == 0:
-        return "红灯"
-    if len(nonzero) <= len(all_deltas) / 2:
-        return "mixed"
-    mean = sum(all_deltas) / len(all_deltas)
-    if abs(mean) < 0.5:
-        return "mixed"
-    same_sign = all(d > 0 for d in nonzero) or all(d < 0 for d in nonzero)
-    return "GO" if same_sign else "mixed"
-
-
-def paired_loop(
-    cases: list[dict],
-    initial_template: str,
-    config: GepaConfig,
-    gateway: Gateway,
-    output_dir: Path,
-) -> list[dict]:
-    """配对实验:固定批次(全案例不重采样),逐案对比 parent vs variant。
-    
-    返回:paired_reports (每轮一个 report,含 per-case Δ)。
-    输出:round-*.json + paired-report.json(逐案配对对比)。
-    
-    验证项:
-    1. 编辑器反馈:日志记录传给 edit_template 的 failure_frames
-    2. 硬失败筛选:断言无泄答案候选胜出
-    3. 模板命中:全转录扫描核对 elicit 模板真注入转录(经 _ask_restatement 后轮)
-    """
-    output_dir.mkdir(parents=True, exist_ok=True)
-    budget = Budget(max_calls=config.max_calls)
-    paired_reports: list[dict] = []
-    
-    facts_dir = gateway.writer.root
-    facts_before = _count_facts_lines(facts_dir)
-    
-    # 跑 parent (全案例)
-    parent_scores, parent_snaps, parent_stats = evaluate_batch_paired(
-        cases, initial_template, gateway, config.judge_role)
-    budget.add(parent_stats["calls"])
-    budget.rounds += 1
-    
-    # 收集 parent 失败(供首轮编辑器,用完整 failure frames)
-    parent_failures = []
-    for s in parent_scores:
-        if "error" not in s and (s.get("hard_fail") or s.get("total", 12) < 10):
-            parent_failures.append({
-                "case_id": s["case_id"],
-                "kind": "judge_low_score",
-                "detail": f"total={s.get('total', '?')}, verdict={s.get('verdict', '?')}, hard_fail={s.get('hard_fail', False)}",
-            })
-    
-    for round_idx in range(config.rounds):
-        if budget.exhausted():
-            break
-        
-        # 编辑模板
-        variant_template = edit_template(initial_template, parent_failures, gateway)
-        budget.add(1)
-        
-        # No-op 检查
-        is_noop = (variant_template == initial_template)
-        
-        # 跑 variant (同批全案例)
-        if is_noop:
-            variant_scores, variant_snaps = parent_scores, parent_snaps
-            variant_stats = {"calls": 0, "tokens_in": 0, "tokens_out": 0,
-                             "env_failures": 0, "content_failures": 0, "wall_ms": 0}
-        else:
-            variant_scores, variant_snaps, variant_stats = evaluate_batch_paired(
-                cases, variant_template, gateway, config.judge_role)
-            budget.add(variant_stats["calls"])
-        budget.rounds += 1
-        
-        # 逐案配对 Δ + 全转录空转扫描
-        paired_cases = _build_paired_cases(
-            parent_scores, variant_scores, parent_snaps, variant_snaps,
-            initial_template, variant_template,
-        )
-        
-        # 模板命中验证(全转录扫描,逐案)
-        template_hit_count = sum(1 for c in paired_cases if c.get("variant_template_in_transcript"))
-        idle_count = sum(1 for c in paired_cases if c.get("idle"))
-        
-        report = {
-            "round": round_idx,
-            "parent_template": initial_template,
-            "variant_template": variant_template,
-            "noop": is_noop,
-            "parent_stats": parent_stats,
-            "variant_stats": variant_stats,
-            "paired_cases": paired_cases,
-            "hard_fail_validation": _validate_hard_fail(paired_cases),
-            "template_hit_validation": {
-                "hit_count": template_hit_count,
-                "idle_count": idle_count,
-                "total_cases": len(paired_cases),
-            },
-            "editor_feedback_sample": parent_failures[:3] if parent_failures else [],
-        }
-        paired_reports.append(report)
-        (output_dir / f"round-{round_idx:02d}.json").write_text(
-            json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    
-    # facts 实测总计数
-    facts_after = _count_facts_lines(facts_dir)
-    real_calls = facts_after - facts_before
-    tokens_in, tokens_out = _sum_facts_tokens(facts_dir, facts_before)
-    
-    # 最终配对报告
-    all_deltas = [
-        c["delta"] for r in paired_reports for c in r["paired_cases"] if "error" not in c
-    ]
-    mean_delta = sum(all_deltas) / len(all_deltas) if all_deltas else 0.0
-    
-    # 判定(冻结协议):空转 → 无效跑(override,先于 Δ 分支)
-    idle_detected = any(c.get("idle") for r in paired_reports for c in r["paired_cases"])
-    verdict = _compute_paired_verdict(all_deltas, idle_detected=idle_detected)
-    
-    # 超预算检测
-    over_budget = real_calls > config.max_calls
-    
-    paired_summary = {
-        "budget": budget.summary(),
-        "real_calls": real_calls,
-        "tokens_in": tokens_in,
-        "tokens_out": tokens_out,
-        "total_paired_cases": len(all_deltas),
-        "mean_delta": mean_delta,
-        "deltas": all_deltas,
-        "idle_detected": idle_detected,
-        "verdict": verdict,
-        "over_budget": over_budget,
-    }
-    (output_dir / "paired-report.json").write_text(
-        json.dumps(paired_summary, ensure_ascii=False, indent=2), encoding="utf-8")
-    
-    return paired_reports
 
 
 write_checkpoint = _write_checkpoint  # 公开名(tests 只导公开入口,02 §6)
