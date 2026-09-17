@@ -198,3 +198,44 @@ def parse_sse(raw: bytes) -> list[tuple[str, dict]]:
         frames.append((lines[0].removeprefix("event: "),
                        json.loads(lines[1].removeprefix("data: "))))
     return frames
+
+
+@contextlib.contextmanager
+def serving_factory():
+    """server 工厂形态的 serving(#97 ①):start(kernel=None, **kwargs) → base。
+
+    与 serving() 同一启停语义,但允许同一测试内起多台(如 sse 重启族)且把
+    「结束统一停机」托管给调用方的 fixture/contextmanager;start 的 kwargs
+    全透传 serving(identity/files/source/service)。
+    """
+    servers: list = []
+
+    def start(kernel=None, **kwargs) -> str:
+        identity = kwargs.pop("identity", None)
+        files = kwargs.pop("files", None)
+        svc = kwargs.pop("service", None) or build_service(kernel, **kwargs)
+        server = build_server(svc, identity, files)
+        servers.append(server)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        return f"http://127.0.0.1:{server.server_address[1]}"
+
+    try:
+        yield start
+    finally:
+        for server in servers:
+            server.shutdown()
+            server.server_close()
+
+
+def serve_fixture():
+    """pytest fixture 体(#97 ①):serve 工厂 + 会话末统一停机。
+
+    由 tests/contracts/conftest.py 以 pytest.fixture(...) 绑定(本文件不计
+    测试比分子,02 §6);kwargs 全透传 serving(identity/files/source/service)。
+    """
+    import contextlib
+
+    with contextlib.ExitStack() as stack:
+        def start(kernel=None, **kwargs) -> str:
+            return stack.enter_context(serving(kernel, **kwargs))
+        yield start

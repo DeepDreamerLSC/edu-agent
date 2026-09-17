@@ -9,17 +9,16 @@ import secrets
 
 import httpx
 import pytest
-from partner_api import ScriptedKernel, post, serving
+from partner_api import ScriptedKernel, post
 
 
 @pytest.fixture
-def base(monkeypatch):
+def base(serve, monkeypatch):
     # HMAC 密钥在 build_server 时读 env,须在 serving 之前注入
     monkeypatch.setenv("DEMO_ACCOUNT", "student1")
     monkeypatch.setenv("DEMO_PASSWORD", "night-pass-4f1a")
     monkeypatch.setenv("IDENTITY_TOKEN_HMAC_KEY", "test-" + secrets.token_hex(8))
-    with serving(ScriptedKernel(["先看条件。"])) as url:
-        yield url
+    return serve(ScriptedKernel(["先看条件。"]))
 
 
 def test_login_success_returns_hmac_token(base):
