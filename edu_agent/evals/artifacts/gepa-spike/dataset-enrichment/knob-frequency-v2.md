@@ -34,8 +34,9 @@
 ## 运行时使能事实(如实申明,供探针单使用)
 
 - `answer_status=incorrect` 已随 v2 案入数据并经 `to_cases` 透传(本 PR 新增 1 行 + 2 测试)→ KernelSubject 会设 `learner.answer_status`(答案命中/采集追问分支的数据侧前提)✓;
-- 答案命中分支在**运行时**还需内核看到答案数字(`_known_answer` = `question.answer` 优先)——v2 的 C 族已把 `answer` 写入 `question` dict,但 `_question_payload` 仅在 `feed_answer=True`(显式测量断点,#146 条件变更登记)时才喂——**该开关属未来探针单的点火面,本单未动**;
+- 答案命中分支在**运行时**还需内核看到答案数字(`_known_answer` = `question.answer` 优先)——v2 的 C 族已把 `answer` 写入 `question` dict,但 `_question_payload` 仅在 `feed_answer=True`(显式测量断点,#178 条件变更登记)时才喂——**该开关属未来探针单的点火面,本单未动**;
 - 判停闸证据(C 族 hit 案的「已陈述结论数字」形态)同理:闸判据 `_student_stated_answer` 运行时依赖同上。
+- **互补件互引**(PM 2026-09-17 裁定两层并存):`small_lecturer_signal_enrichment_v2.json`(signal_enrichment/v2 schema,纯文本题面,信号检测语料,tests/teaching 消费;其 description 侧互引见 PR #330)≠ 本件(image_teaching/v1 schema,图片题教学场景,评测线 harness/to_cases 消费面)。
 
 ## 来源与身份
 
