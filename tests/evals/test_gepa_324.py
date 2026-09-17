@@ -32,11 +32,15 @@ def _sv(mean, nr, viol, hard=0.0):
     return ScoreVector(mean, nr, viol, hard)
 
 
-def _stats(calls=0, tutor=0, judge=0, leak=0, vetoed=False):
-    return {"calls": calls, "tokens_in": 0, "tokens_out": 0, "wall_ms": 1,
-            "env_failures": 0, "content_failures": 0,
-            "tutor_calls": tutor, "judge_calls": judge,
-            "leak_net_violations": leak, "hard_vetoed": vetoed}
+def _stats(**overrides):
+    """假批 stats(#332 起含 HNU 初筛口径);字段用 overrides 覆盖。"""
+    stats = {"calls": 0, "tokens_in": 0, "tokens_out": 0, "wall_ms": 1,
+             "env_failures": 0, "content_failures": 0,
+             "tutor_calls": 0, "judge_calls": 0,
+             "leak_net_violations": 0, "hard_vetoed": False,
+             "h": 0, "n": 0, "u": 0, "mean": 0.0}
+    stats.update(overrides)
+    return stats
 
 
 TRAIN_3 = [
@@ -93,8 +97,8 @@ def test_a1_both_knobs_unchanged_is_noop(tmp_path):
             train_cases=TRAIN_3, initial_template="初始:说说你的思路,先说第一步",
             config=GepaConfig(rounds=2, max_calls=100, two_knobs=True),
             gateway=MagicMock(), output_dir=tmp_path, resume=False)
-    # 两代编辑全原样 → 只有初始批一次 evaluate_batch
-    assert mock_eval.call_count == 1
+    # 两代编辑全原样 → 初始批 + #332 换批参考 = 2 次(noop 代零评估)
+    assert mock_eval.call_count == 2
     assert all(r["noop"] for r in reports)
 
 
@@ -162,10 +166,12 @@ def test_a2_checkpoint_restore_no_splicing(tmp_path):
             config=GepaConfig(rounds=4, max_calls=100, two_knobs=True),
             gateway=MagicMock(), output_dir=tmp_path, resume=True)
 
-    # 恢复后父代注入 = 保存值(属 A),不是初始模板、不是被拒变体 B
-    # (round 3 偶代编辑 elicit → edit 收到 A 的 template;noop 使 evaluate_batch
-    #  不重跑,恢复路径零额外评估 = A3「拒绝发生在模型调用前」的同款约束)
-    assert mock_eval.call_count == 0
+    # 恢复后唯一评估 = #332 换批参考重评(注入 A 的完整组合,不是初始模板/
+    # 不是被拒变体 B);noop 代零额外评估
+    assert mock_eval.call_count == 1
+    assert mock_eval.call_args_list[0].args[1] == "A:说说你的思路,先说第一步"
+    assert mock_eval.call_args_list[0].kwargs.get(
+        "support_hint") == a_support  # 参考也注入候选自身的完整旋钮
     # round 3 奇代:编辑 support 臂,父代注入的 support = A 的保存值(不拼接)
     assert editor_args == [("support", a_support)]
     assert reports[0]["parent_template"] == "A:说说你的思路,先说第一步"
@@ -272,7 +278,8 @@ def test_a3_same_identity_resumes_from_saved_round(tmp_path):
         gepa_loop(train_cases=TRAIN_3, initial_template="原始",
                   config=GepaConfig(rounds=6, max_calls=100),
                   gateway=MagicMock(), output_dir=tmp_path, resume=True)
-        assert mock_eval.call_count == 1  # 只有第 5 代变体批,初始不重评
+        # 初始不重评;#332 换批参考 + 第 5 代变体批 = 2 次
+        assert mock_eval.call_count == 2
 
 
 def _gate_per_case(total, hard=False):
@@ -288,8 +295,8 @@ def test_b1_cross_batch_pseudo_gain_rejected_by_paired_gate(tmp_path):
     def fake_eval(cases, template, gateway, judge_role="judge", support_hint=None):
         # 探索代读数:变体批「看起来」全面占优(跨批难度差,伪提升)
         if template.startswith("变体"):
-            return _sv(9.5, 0.05, 0.05), [], _stats(calls=5)
-        return _sv(9.0, 0.1, 0.1), [], _stats(calls=5)
+            return _sv(9.5, 0.05, 0.05), [], _stats(calls=5, mean=9.5)
+        return _sv(9.0, 0.1, 0.1), [], _stats(calls=5, mean=9.0)
 
     gate_batches = []
 
@@ -325,7 +332,8 @@ def test_b1_same_batch_real_improvement_accepted_with_evidence(tmp_path):
 
     def fake_eval(cases, template, gateway, judge_role="judge", support_hint=None):
         return (_sv(9.5, 0.05, 0.05) if template.startswith("变体")
-                else _sv(9.0, 0.1, 0.1)), [], _stats(calls=5)
+                else _sv(9.0, 0.1, 0.1)), [], \
+            _stats(calls=5, mean=9.5 if template.startswith("变体") else 9.0)
 
     def fake_paired(cases, template, gateway, judge_role="judge", support_hint=None):
         # 同批真读数:变体臂各案 +1 → mean 改善,其余三维持平
@@ -346,8 +354,8 @@ def test_b1_same_batch_real_improvement_accepted_with_evidence(tmp_path):
     assert r["accepted"] is True
     ev = r["paired_evidence"]
     assert ev["accepted"] is True
-    assert ev["parent_scores"]["mean_score"] == 10.0
-    assert ev["variant_scores"]["mean_score"] == 11.0
+    assert ev["parent_hnu"]["mean"] == 10.0  # #332:HNU 口径
+    assert ev["variant_hnu"]["mean"] == 11.0
     assert all(c["delta"] == 1 for c in ev["per_case"])
     best = population.select_parent(scores)
     assert best.template.startswith("变体")
@@ -359,7 +367,8 @@ def test_b1_regression_cannot_masquerade_as_improvement(tmp_path):
 
     def fake_eval(cases, template, gateway, judge_role="judge", support_hint=None):
         return (_sv(9.5, 0.05, 0.05) if template.startswith("变体")
-                else _sv(9.0, 0.1, 0.1)), [], _stats(calls=5)
+                else _sv(9.0, 0.1, 0.1)), [], \
+            _stats(calls=5, mean=9.5 if template.startswith("变体") else 9.0)
 
     def fake_paired(cases, template, gateway, judge_role="judge", support_hint=None):
         # 同批真读数:变体臂退化(配对臂 hard 一案 → 四维劣化)
@@ -377,7 +386,7 @@ def test_b1_regression_cannot_masquerade_as_improvement(tmp_path):
             gateway=MagicMock(), output_dir=tmp_path, resume=False)
 
     assert reports[0]["accepted"] is False
-    assert reports[0]["paired_evidence"]["variant_scores"]["hard_failure_rate"] > 0
+    assert reports[0]["paired_evidence"]["variant_hnu"]["h"] > 0  # #332
     assert all(s.mean_score != 9.5 for s in scores.values())
 
 
@@ -398,9 +407,11 @@ def test_b2_paired_gate_arms_carry_own_knobs_and_case_ids(tmp_path):
 
     def fake_eval(cases, template, gateway, judge_role="judge", support_hint=None):
         if support_hint == new_support:  # round 1:support 改写的变体
-            return _sv(9.6, 0.05, 0.05), [], _stats(calls=5)
+            # 探索读数与配对臂刷新后的参考同世界(参考=round0 配对臂 mean=11)
+            return _sv(9.6, 0.05, 0.05), [], _stats(calls=5, mean=11.5)
         return (_sv(9.5, 0.05, 0.05) if template.startswith("变体")
-                else _sv(9.0, 0.1, 0.1)), [], _stats(calls=5)
+                else _sv(9.0, 0.1, 0.1)), [], \
+            _stats(calls=5, mean=9.5 if template.startswith("变体") else 9.0)
 
     with patch("edu_agent.evals.gepa.evaluate_batch", side_effect=fake_eval), \
          patch("edu_agent.evals.gepa_paired.evaluate_batch_paired",
@@ -562,7 +573,7 @@ def test_c2_breakdown_sums_to_total_and_survives_resume(tmp_path):
     (tmp_path / "checkpoint.json").write_text(json.dumps(checkpoint), encoding="utf-8")
 
     def fake_eval(cases, template, gateway, judge_role="judge", support_hint=None):
-        return _sv(9.0, 0.1, 0.1), [], _stats(calls=5, tutor=3, judge=2)
+        return _sv(9.0, 0.1, 0.1), [], _stats(calls=5, tutor_calls=3, judge_calls=2)
 
     with patch("edu_agent.evals.gepa.evaluate_batch", side_effect=fake_eval), \
          patch("edu_agent.evals.gepa.edit_template",
@@ -571,6 +582,6 @@ def test_c2_breakdown_sums_to_total_and_survives_resume(tmp_path):
                   config=GepaConfig(rounds=6, max_calls=100),
                   gateway=MagicMock(), output_dir=tmp_path, resume=True)
     saved = json.loads((tmp_path / "checkpoint.json").read_text(encoding="utf-8"))
-    # 恢复前 40/9/1 + 本轮 3/2/1(editor) → 累计不归零
-    assert saved["call_breakdown"] == {"tutor_calls": 43, "judge_calls": 11,
+    # 恢复前 40/9/1 + #332 换批参考 3/2 + 变体批 3/2 + editor 1 → 累计不归零
+    assert saved["call_breakdown"] == {"tutor_calls": 46, "judge_calls": 13,
                                        "editor_calls": 2}
