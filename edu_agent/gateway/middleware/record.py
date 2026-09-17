@@ -20,7 +20,9 @@ from .redact import redact_messages, redact_text
 
 
 class FactWriter:
-    """JSONL 追加写,按 UTC 天切分文件;进程内计数器承担跨运行归属(#324 C2)。"""
+    """JSONL 追加写,按 UTC 天切分文件;进程内计数器承担跨运行归属(#324 C2)。
+    计费口径(#332 账实):count 只计成功调用(edu.outcome=="ok");失败行照写留诊断。
+    """
 
     # ponytail: 进程内一把锁;多进程部署时再换文件锁,单机单进程是 v1 部署形态
     def __init__(self, root: Path | str) -> None:
@@ -40,7 +42,8 @@ class FactWriter:
             self.root.mkdir(parents=True, exist_ok=True)
             with target.open("a", encoding="utf-8") as handle:
                 handle.write(line)
-            self.count += 1
+            if payload.get("edu.outcome") == "ok":  # 失败行照写,不进 calls 计费(#332)
+                self.count += 1
             self.tokens_in += payload.get("gen_ai.usage.input_tokens") or 0
             self.tokens_out += payload.get("gen_ai.usage.output_tokens") or 0
 
