@@ -48,7 +48,12 @@ from .gepa import (
     gepa_loop,
     write_checkpoint,
     sample_batch,
+    sample_stratified_batch,
     search_identity,
+    ACCEPT_DELTA,
+    CANDIDATES_PER_BATCH,
+    HnuOutcome,
+    accept_variant,
 )
 from .gepa_paired import evaluate_batch_paired, paired_loop
 from .legacy_adapter import LegacyAdapter
@@ -134,7 +139,12 @@ __all__ = [
     "facts_calibers",
     "format_failures",
     "gepa_loop",
+    "sample_stratified_batch",
     "search_identity",
+    "ACCEPT_DELTA",
+    "CANDIDATES_PER_BATCH",
+    "HnuOutcome",
+    "accept_variant",
     "DEFAULT_SUPPORT_HINT",
     "KNOB_SEAMS",
     "LoopState",
