@@ -30,9 +30,13 @@ REPO = Path(__file__).resolve().parents[5]
 from edu_agent.agents.small_lecturer.kernel import (  # noqa: E402
     FINISH_EVIDENCE_TEXT,
     NEEDS_REVIEW_TEXT,
+    _hits_numbers,
     _student_signals_completion,
     _student_signals_stuck,
     _student_signals_understanding,
+)
+from edu_agent.agents.small_lecturer.numeric import (  # noqa: E402
+    _question_numbers,
 )
 
 OLD_ZERO_CALL_PREFIX = "是你自己讲下来的"  # #302 前的零调用模板骨架(149 工件为旧文案)
@@ -45,23 +49,40 @@ SIGNALS = (("understanding", _student_signals_understanding),
 
 
 def scan_dataset(path: Path) -> dict:
-    """S1:elicit 数据集逐案逐轮信号扫描(审查者复现清单同款口径)。"""
+    """S1:elicit 数据集逐案逐轮信号扫描(审查者复现清单同款口径)。
+
+    v2 富化集扩展(#256 路线 a):answer_status=incorrect 的案加记 answer_hit_turns
+    ——判定用 kernel 一手判据(`_question_numbers`/`_hits_numbers`),结论数字集 =
+    `question.answer` 数字 − 题面数字;并核 question.answer 与 reference_answer.value
+    一致性(两处必须逐字同值,分叉即记入 inconsistencies)。"""
     payload = json.loads(path.read_text(encoding="utf-8"))
     scenarios = payload.get("scenarios") or payload.get("cases") or []
-    cases = []
+    cases, inconsistencies = [], []
     for scenario in scenarios:
         turns = [t for t in (scenario.get("student_turns")
                              or scenario.get("student_messages") or []) if isinstance(t, str)]
         hits = {name: [i for i, t in enumerate(turns) if fn(t)]
                 for name, fn in SIGNALS}
-        cases.append({"case_id": scenario.get("id"), "turns": len(turns),
-                      "answer_status": scenario.get("answer_status"), "signal_turns": hits})
+        case = {"case_id": scenario.get("id"), "turns": len(turns),
+                "answer_status": scenario.get("answer_status"), "signal_turns": hits}
+        answer_text = str((scenario.get("question") or {}).get("answer") or "")
+        ref_value = str((scenario.get("reference_answer") or {}).get("value") or "")
+        if scenario.get("answer_status") == "incorrect":
+            if answer_text and ref_value and answer_text.strip() != ref_value.strip():
+                inconsistencies.append({"case_id": scenario.get("id")})
+            given = _question_numbers(str((scenario.get("question") or {}).get("text") or ""))
+            focus = _question_numbers(answer_text) - given
+            case["answer_hit_turns"] = [i for i, t in enumerate(turns)
+                                        if _hits_numbers(focus, t)]
+            case["answer_focus_numbers"] = sorted(focus)
+        cases.append(case)
     # 复现清单原式逐字复算(口径对照锚点)
     reviewer_expr = sum(any(_student_signals_understanding(t) for t in
                             (c.get("student_turns") or c.get("student_messages") or [])
                             if isinstance(t, str)) for c in scenarios)
     return {"source": str(path), "cases": cases, "n_cases": len(cases),
-            "reviewer_reproduction_understanding_cases": reviewer_expr}
+            "reviewer_reproduction_understanding_cases": reviewer_expr,
+            "inconsistencies": inconsistencies}
 
 
 def _event_knob(event: dict) -> str | None:
@@ -164,14 +185,16 @@ def scan_probe(directory: Path) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--paired", type=Path, default=Path(), help="S3 配对工件目录")
+    parser.add_argument("--s1", type=Path, default=None,
+                        help="S1 数据集覆盖(默认 v1;#256 路线 a 富化集传 v2 文件)")
     parser.add_argument("--probe", type=Path, default=Path(), help="S4 探针工件目录")
     parser.add_argument("--out", type=Path, default=Path(__file__).parent / "matches.json")
     args = parser.parse_args()
 
     result = {
         "zero_model_calls": True,
-        "s1_dataset": scan_dataset(REPO / "edu_agent/evals/datasets"
-                                   / "small_lecturer_image_teaching_v1.json"),
+        "s1_dataset": scan_dataset(args.s1 or (REPO / "edu_agent/evals/datasets"
+                                               / "small_lecturer_image_teaching_v1.json")),
         "s2_results": scan_results(
         "edu_agent/evals/artifacts/149-ready-gate/**/results/*.json"),
         "s3_paired": scan_paired(args.paired),
