@@ -98,6 +98,18 @@ def test_load_scenarios_surfaces_validation_errors(tmp_path):
         load_scenarios(_dataset(tmp_path, [bad]))
 
 
+def test_to_cases_passes_answer_status_through(tmp_path):
+    # #256 路线 a:incorrect 弧线案的数据侧使能(答案命中/采集追问分支前提)
+    scenario = _scenario(tmp_path, answer_status="incorrect")
+    cases = to_cases([scenario])
+    assert cases[0]["answer_status"] == "incorrect"
+
+
+def test_to_cases_defaults_answer_status_empty(tmp_path):
+    cases = to_cases([_scenario(tmp_path)])
+    assert cases[0]["answer_status"] == ""
+
+
 def test_to_cases_keeps_v1_question_dict(tmp_path):
     cases = to_cases([_scenario(tmp_path)])
     case = cases[0]

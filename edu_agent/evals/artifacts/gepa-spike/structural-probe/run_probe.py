@@ -15,7 +15,7 @@ import json
 import sys
 from pathlib import Path
 
-from edu_agent.evals.gepa import (
+from edu_agent.evals.gepa_paired import (  # #324 拆分:配对面迁 gepa_paired
     _build_paired_cases,
     _compute_paired_verdict,
     evaluate_batch_paired,

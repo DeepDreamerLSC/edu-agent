@@ -1,0 +1,389 @@
+{
+ "schema_version": "small_lecturer_image_teaching/v1",
+ "scenarios": [
+  {
+   "id": "image_v2_understanding_01",
+   "title": "数对·先列后行",
+   "grade": "六年级",
+   "bucket": "text_position",
+   "misconception_seed": "把数对两个数看成先行后列,与「先列后行」约定混淆(二级)",
+   "question": {
+    "text": "教室座位图如下,小芳在第3列第2行,记作数对(3,2)。照这样,数对(5,4)表示第几列第几行?",
+    "image": {
+     "path": "synthetic_v2_u1_textpos.png",
+     "sha256": "e0219ae6a395b935ea83e527467375e20cb83847b43b5fef87cd77276171e479"
+    }
+   },
+   "reference_answer": {
+    "value": "第5列第4行(先列后行)",
+    "answer_type": "text"
+   },
+   "visual_dependency": "required",
+   "expected": {
+    "outcome": "ready_to_record"
+   },
+   "student_turns": [
+    "座位图上小芳在第3列第2行,旁边写的数对是(3,2),我猜是先列后行。",
+    "那(5,4)按先列后行就是第5列第4行,对吗?",
+    "懂了,先数列、再数行,(5,4)就是第5列第4行。"
+   ],
+   "source": {
+    "question_id": "synthetic_v2_image_v2_understanding_01",
+    "provider": "synthetic_v2_enrichment",
+    "lesson_name": "用数对确定位置"
+   }
+  },
+  {
+   "id": "image_v2_understanding_02",
+   "title": "条形图·相邻两周之差",
+   "grade": "六年级",
+   "bucket": "visual_statistics_open",
+   "misconception_seed": "把「比前一周增加最多」看成「借书最多」的绝对量比较(二级)",
+   "question": {
+    "text": "四(1)班图书角四周借书统计图:一周7本,二周9本,三周8本,四周12本。哪一周比前一周增加得最多?",
+    "image": {
+     "path": "synthetic_v2_u2_bars.png",
+     "sha256": "a0bfc3384d2e0e724fa2121c60eb1abf3cd531d140f7351c8f9e4496b14a9541"
+    }
+   },
+   "reference_answer": {
+    "value": "四周(比三周多4本)",
+    "answer_type": "text"
+   },
+   "visual_dependency": "required",
+   "expected": {
+    "outcome": "ready_to_record"
+   },
+   "student_turns": [
+    "图里四个柱子,一周7本、二周9本、三周8本、四周12本。",
+    "比前一周增加,是用这一周减去上一周来比吗?",
+    "明白了,相邻两周相减,四周比三周多,所以四周增加得最多。"
+   ],
+   "source": {
+    "question_id": "synthetic_v2_image_v2_understanding_02",
+    "provider": "synthetic_v2_enrichment",
+    "lesson_name": "条形统计图"
+   }
+  },
+  {
+   "id": "image_v2_understanding_03",
+   "title": "分数·再涂两份",
+   "grade": "六年级",
+   "bucket": "fraction_formula",
+   "misconception_seed": "再涂 2 份后仍用原来的 8 分之 3 表示,漏数新涂部分(一级)",
+   "question": {
+    "text": "下图长方形被平均分成8份,其中3份已涂色。再涂2份后,涂色部分占整个长方形的几分之几?",
+    "image": {
+     "path": "synthetic_v2_u3_strips.png",
+     "sha256": "b8c20dbe5a4fd0cdac8762bf27a2d93485cc9bc14fecec1de2245793dd6c90e4"
+    }
+   },
+   "reference_answer": {
+    "value": "8分之5",
+    "answer_type": "fraction"
+   },
+   "visual_dependency": "required",
+   "expected": {
+    "outcome": "ready_to_record"
+   },
+   "student_turns": [
+    "长方形分成8小格,涂了3格,涂色部分是8分之3。",
+    "再涂2格,就是3格加2格,一共5格……",
+    "会了!8份里涂色5份,涂色部分就是8分之5。"
+   ],
+   "source": {
+    "question_id": "synthetic_v2_image_v2_understanding_03",
+    "provider": "synthetic_v2_enrichment",
+    "lesson_name": "分数的意义"
+   }
+  },
+  {
+   "id": "image_v2_understanding_04",
+   "title": "圆·直径与半径",
+   "grade": "六年级",
+   "bucket": "circle_geometry",
+   "misconception_seed": "把「过圆心且两端在圆上」与一般弦混同,半径取成直径的一半再折半(二级)",
+   "question": {
+    "text": "下图中一条线段过圆心且两端都在圆上,长6厘米。这个圆的直径和半径各是多少厘米?",
+    "image": {
+     "path": "synthetic_v2_u4_circle.png",
+     "sha256": "8992a7ffb8680f61de959c6b6e37ab37dfab7e13e444b1ba96b944be9eb8b933"
+    }
+   },
+   "reference_answer": {
+    "value": "直径6厘米,半径3厘米",
+    "answer_type": "text"
+   },
+   "visual_dependency": "required",
+   "expected": {
+    "outcome": "ready_to_record"
+   },
+   "student_turns": [
+    "图里那条线穿过圆心,两头都落在圆上,标着6厘米。",
+    "过圆心、两端在圆上的线段,名字我一时想不起来……",
+    "没问题,这就是直径,半径是直径的一半,是3厘米。"
+   ],
+   "source": {
+    "question_id": "synthetic_v2_image_v2_understanding_04",
+    "provider": "synthetic_v2_enrichment",
+    "lesson_name": "圆的认识"
+   }
+  },
+  {
+   "id": "image_v2_stuck_01",
+   "title": "折线图·注水形状",
+   "grade": "六年级",
+   "bucket": "visual_statistics_open",
+   "misconception_seed": "把「水位上升快慢」读成「水量多少」,平缓段误读为没注水(二级)",
+   "question": {
+    "text": "向一个容器匀速注水,水位随时间变化如下图:前段平缓、后段陡。这个容器的形状是怎样的?",
+    "image": {
+     "path": "synthetic_v2_s1_polyline.png",
+     "sha256": "237cd6f3743c2d104809e19c655c6c58cc0f9f374c740f52ee5d121782cef7b6"
+    }
+   },
+   "reference_answer": {
+    "value": "下面粗、上面细(下粗上细)",
+    "answer_type": "text"
+   },
+   "visual_dependency": "required",
+   "expected": {
+    "outcome": "needed_reveal"
+   },
+   "student_turns": [
+    "这道题太难了,折线一段平一段陡,我完全没思路。",
+    "平缓是不是说明水位没动?可一直在注水啊,想不出哪里不对。"
+   ],
+   "source": {
+    "question_id": "synthetic_v2_image_v2_stuck_01",
+    "provider": "synthetic_v2_enrichment",
+    "lesson_name": "折线统计图"
+   }
+  },
+  {
+   "id": "image_v2_stuck_02",
+   "title": "分数·剪下四分之一",
+   "grade": "六年级",
+   "bucket": "fraction_formula",
+   "misconception_seed": "把「4分之1米」与「4分之1」量率混淆,直接照抄分母当结果(一级)",
+   "question": {
+    "text": "一根4分米长的纸条,剪下它的4分之1,剪下多少分米?",
+    "image": {
+     "path": "synthetic_v2_s2_strips.png",
+     "sha256": "becd84f69b5cc5de64f3f9da03ebdbead442d402ca27ed3b791228a2a6f404d6"
+    }
+   },
+   "reference_answer": {
+    "value": "1分米",
+    "answer_type": "integer"
+   },
+   "visual_dependency": "required",
+   "expected": {
+    "outcome": "needed_reveal"
+   },
+   "student_turns": [
+    "3乘4分之1这样的我会,这张图是先量再剪,我把3和4约分,得12分之3?",
+    "还是不会,越算越乱了。"
+   ],
+   "source": {
+    "question_id": "synthetic_v2_image_v2_stuck_02",
+    "provider": "synthetic_v2_enrichment",
+    "lesson_name": "分数乘法"
+   }
+  },
+  {
+   "id": "image_v2_stuck_03",
+   "title": "倒数·配对验证",
+   "grade": "六年级",
+   "bucket": "application_table",
+   "misconception_seed": "倒数只看「分子分母互换」的字形,不会用乘积是否为1验证(二级)",
+   "question": {
+    "text": "卡片上写着4分之3、3分之4、7分之5、5分之7,哪两张卡片上的数相乘积是1?",
+    "image": {
+     "path": "synthetic_v2_s3_cards.png",
+     "sha256": "cbdb518183f85ccd4456d2e5b622839cafafe54bc00e7d658f9f52234080d6f5"
+    }
+   },
+   "reference_answer": {
+    "value": "4分之3和3分之4;7分之5和5分之7",
+    "answer_type": "text"
+   },
+   "visual_dependency": "required",
+   "expected": {
+    "outcome": "needed_reveal"
+   },
+   "student_turns": [
+    "乘积是1的两个数互为倒数,图上四张卡是3分之2、2分之3、7分之5、5分之7。",
+    "我还是猜不出先验证哪一对,也想不出检查乘积是不是1的办法。"
+   ],
+   "source": {
+    "question_id": "synthetic_v2_image_v2_stuck_03",
+    "provider": "synthetic_v2_enrichment",
+    "lesson_name": "倒数的认识"
+   }
+  },
+  {
+   "id": "image_v2_stuck_04",
+   "title": "方位·两种说法互换",
+   "grade": "六年级",
+   "bucket": "text_position",
+   "misconception_seed": "方位角只照抄图上标注的角度,不会用「90°−已知角」换基准(二级)",
+   "question": {
+    "text": "下图以灯塔为观测点,邮局在北偏东60°方向。换成以「东」为基准,邮局在东偏北多少度方向?",
+    "image": {
+     "path": "synthetic_v2_s4_compass.png",
+     "sha256": "febb50906ccdb5ef941e033540a255510490d55622a7e5af551d4b16aef0c861"
+    }
+   },
+   "reference_answer": {
+    "value": "东偏北30°",
+    "answer_type": "text"
+   },
+   "visual_dependency": "required",
+   "expected": {
+    "outcome": "not_ready"
+   },
+   "student_turns": [
+    "灯塔在图的中间,邮局在灯塔北偏东60°方向,这个我看到了。",
+    "看不懂北偏东换成东偏北该怎么转,我有点不会这种互换。"
+   ],
+   "source": {
+    "question_id": "synthetic_v2_image_v2_stuck_04",
+    "provider": "synthetic_v2_enrichment",
+    "lesson_name": "位置与方向"
+   }
+  },
+  {
+   "id": "image_v2_answercollect_01",
+   "title": "剪绳·两段合计",
+   "grade": "六年级",
+   "bucket": "application_table",
+   "misconception_seed": "完成表达后不报数,结论数字滞留(采集端盲区,#178 口径)",
+   "question": {
+    "text": "一根绳子长20米,第一次剪去全长的4分之1,第二次剪去5米,两次一共剪去多少米?",
+    "image": {
+     "path": "synthetic_v2_c1_rope.png",
+     "sha256": "7166238bc966c14496eeacabd0a2e13743820c78ed46a697c51e31880e1c55ac"
+    },
+    "answer": "10米"
+   },
+   "reference_answer": {
+    "value": "10米",
+    "answer_type": "integer"
+   },
+   "visual_dependency": "required",
+   "expected": {
+    "outcome": "needed_reveal"
+   },
+   "student_turns": [
+    "第一次剪全长的4分之1,第二次剪5米,把两段加起来就行。",
+    "我算出来了。"
+   ],
+   "source": {
+    "question_id": "synthetic_v2_image_v2_answercollect_01",
+    "provider": "synthetic_v2_enrichment",
+    "lesson_name": "分数应用"
+   },
+   "answer_status": "incorrect"
+  },
+  {
+   "id": "image_v2_answercollect_02",
+   "title": "圆·周长求直径",
+   "grade": "六年级",
+   "bucket": "circle_geometry",
+   "misconception_seed": "完成表达不带结论数字,判停闸无料可判(采集端盲区,#178 口径)",
+   "question": {
+    "text": "一个圆的周长是12.56厘米(圆周率取3.14),这个圆的直径是多少厘米?",
+    "image": {
+     "path": "synthetic_v2_c2_circle.png",
+     "sha256": "0234b65bf5aab2c55986b4f9dd0becb43af427fe9756551ec548c8ea24dcb4da"
+    },
+    "answer": "4厘米"
+   },
+   "reference_answer": {
+    "value": "4厘米",
+    "answer_type": "decimal_1"
+   },
+   "visual_dependency": "required",
+   "expected": {
+    "outcome": "needed_reveal"
+   },
+   "student_turns": [
+    "周长是12.56厘米,圆周率取3.14,用周长除以圆周率应该就是直径。",
+    "做完了,你看下。"
+   ],
+   "source": {
+    "question_id": "synthetic_v2_image_v2_answercollect_02",
+    "provider": "synthetic_v2_enrichment",
+    "lesson_name": "圆的周长"
+   },
+   "answer_status": "incorrect"
+  },
+  {
+   "id": "image_v2_answerhit_01",
+   "title": "彩带·剪三分之一",
+   "grade": "六年级",
+   "bucket": "fraction_formula",
+   "misconception_seed": "先按「除以分母再乘分子」抄成只除分子,纠错后说出结论数字(S2 答案命中模式)",
+   "question": {
+    "text": "一根彩带长12米,剪掉全长的3分之1,剪掉多少米?",
+    "image": {
+     "path": "synthetic_v2_c3_ribbon.png",
+     "sha256": "4d3d896a926749155a91db08f52d80a25110ef8e767b4e91ec08d43dd20aab5a"
+    },
+    "answer": "4米"
+   },
+   "reference_answer": {
+    "value": "4米",
+    "answer_type": "integer"
+   },
+   "visual_dependency": "required",
+   "expected": {
+    "outcome": "ready_to_record"
+   },
+   "student_turns": [
+    "12米剪掉3分之1,我用12乘3分之1……等于6米?",
+    "重新想:12除以3是每份4米,剪掉这样的1份,就是4米。"
+   ],
+   "source": {
+    "question_id": "synthetic_v2_image_v2_answerhit_01",
+    "provider": "synthetic_v2_enrichment",
+    "lesson_name": "分数乘法"
+   },
+   "answer_status": "incorrect"
+  },
+  {
+   "id": "image_v2_answerhit_02",
+   "title": "打折·整套实付",
+   "grade": "六年级",
+   "bucket": "percentage_multi_part",
+   "misconception_seed": "八折小数点错位(14.4),纠错后报出结论数字(S2 答案命中模式)",
+   "question": {
+    "text": "一件外套120元,一条裤子60元。整套购买打八折,一套实际付多少元?",
+    "image": {
+     "path": "synthetic_v2_c4_shop.png",
+     "sha256": "a5b40b2072006ddf7b5801d48ad5bde77a8b0e867ce17d181b880d2b9a4abf72"
+    },
+    "answer": "144元"
+   },
+   "reference_answer": {
+    "value": "144元",
+    "answer_type": "integer"
+   },
+   "visual_dependency": "required",
+   "expected": {
+    "outcome": "ready_to_record"
+   },
+   "student_turns": [
+    "120加60等于180,打八折就是180乘0.8……我算得14.4,好像不对。",
+    "重新算:180乘0.8等于144,一套实付144元。"
+   ],
+   "source": {
+    "question_id": "synthetic_v2_image_v2_answerhit_02",
+    "provider": "synthetic_v2_enrichment",
+    "lesson_name": "百分数应用"
+   },
+   "answer_status": "incorrect"
+  }
+ ]
+}

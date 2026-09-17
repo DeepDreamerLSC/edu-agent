@@ -70,7 +70,7 @@ final_score = min(run_1.score, run_2.score)
 
 教师**盲式**读 baseline 与 candidate 两个 transcript（A/B 随机标号，教师不知哪个是候选），对每个家族给出 **pairwise 定性**：
 
-> **candidate transcript 取哪一跑**：candidate 在 Lane M 有两跑（run_1/run_2）。Lane H 判读的 candidate transcript 取**两跑中机器分较低（更保守）的一跑**，机器分以**该案 baseline 行 `criterion` 对应字段**为准（一 case 有两跑 × 多家族分，须先锁定 `criterion` 字段再比较）；两跑机器分相同时取 run_1。baseline transcript = `slice-cases.jsonl` 里对应该 case 的冻结 transcript。
+> **candidate transcript 取哪一跑**：candidate 在 Lane M 有两跑（run_1/run_2）。Lane H 判读的 candidate transcript 取**两跑中机器分较低（更保守）的一跑**，机器分以**该案 baseline 行 `criterion` 对应字段**为准（一 case 有两跑 × 多家族分，须先锁定 `criterion` 字段再比较）；两跑机器分相同时取 run_1。baseline transcript = **同纪元重跑臂**（PM-RULING#6② 修订，2026-09-17：现行冻结面默认模板 ×11×2 重跑转录，v2 面 = `teacher-gate-slice-v2/baseline-transcripts/`，跑次取保守跑规则同 candidate）。原稿「`slice-cases.jsonl` 冻结 transcript」写于 v1 两 baseline 同纪元时；v2 重冻结后该引用指向修复前内核纪元，两臂纪元错配使教师读出的差异不可归因于候选（晋升通胀），故废。
 
 ```
 candidate worse / same / better
@@ -136,8 +136,8 @@ family green  ⇔  Lane M regression == "none"
 
 - ⑦ 门机制定义：[`teacher-promotion-gate-v1.md`](teacher-promotion-gate-v1.md)
 - Phase A 教师盲评：[`teacher-review-baseline.md`](teacher-review-baseline.md)
-- 切片：`artifacts/teacher-gate-slice/slice-cases.jsonl`
-- 基线：`artifacts/teacher-gate-slice/slice-baseline.jsonl`
+- 切片：`artifacts/teacher-gate-slice-v2/slice-cases.jsonl`（现行冻结面；v1 = `teacher-gate-slice/` 留档）
+- 基线：`artifacts/teacher-gate-slice-v2/slice-baseline.jsonl`（读数）+ `baseline-transcripts/`（同纪元重跑臂转录，Lane H baseline 臂材料）
 
 ---
 
