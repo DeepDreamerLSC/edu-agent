@@ -1,0 +1,27 @@
+{
+ "next_round": 2,
+ "identity": "b31b4454e10d59cb",
+ "budget": {
+  "calls": 242,
+  "rounds": 2,
+  "wall_s": 0.013220445020124316,
+  "exhausted": false
+ },
+ "best": {
+  "candidate_id": 2,
+  "template": "变体乙:讲讲思路的第一步,想想为什么",
+  "support_hint": null,
+  "scores": {
+   "mean_score": 11.0,
+   "needs_review_rate": 0.0,
+   "numerical_violation_rate": 0.0,
+   "hard_failure_rate": 0.0
+  }
+ },
+ "call_breakdown": {
+  "tutor_calls": 180,
+  "judge_calls": 60,
+  "editor_calls": 2
+ },
+ "last_failures": []
+}

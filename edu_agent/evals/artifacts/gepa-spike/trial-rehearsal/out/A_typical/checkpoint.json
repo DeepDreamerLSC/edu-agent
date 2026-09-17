@@ -1,0 +1,53 @@
+{
+ "next_round": 2,
+ "identity": "b31b4454e10d59cb",
+ "budget": {
+  "calls": 122,
+  "rounds": 2,
+  "wall_s": 0.007775031961500645,
+  "exhausted": false
+ },
+ "best": {
+  "candidate_id": 0,
+  "template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "support_hint": null,
+  "scores": {
+   "mean_score": 9.0,
+   "needs_review_rate": 0.0,
+   "numerical_violation_rate": 0.0,
+   "hard_failure_rate": 0.0
+  }
+ },
+ "call_breakdown": {
+  "tutor_calls": 60,
+  "judge_calls": 60,
+  "editor_calls": 2
+ },
+ "last_failures": [
+  {
+   "case_id": "image_v2_understanding_04",
+   "kind": "judge_low_score",
+   "detail": "total=9.0/12"
+  },
+  {
+   "case_id": "image_v2_understanding_02",
+   "kind": "judge_low_score",
+   "detail": "total=9.0/12"
+  },
+  {
+   "case_id": "image_v2_understanding_01",
+   "kind": "judge_low_score",
+   "detail": "total=9.0/12"
+  },
+  {
+   "case_id": "image_v2_stuck_03",
+   "kind": "judge_low_score",
+   "detail": "total=9.0/12"
+  },
+  {
+   "case_id": "image_v2_stuck_04",
+   "kind": "judge_low_score",
+   "detail": "total=9.0/12"
+  }
+ ]
+}

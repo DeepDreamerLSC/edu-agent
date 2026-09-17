@@ -1,0 +1,143 @@
+{
+  "round": 0,
+  "parent_id": 0,
+  "variant_id": 1,
+  "parent_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "variant_template": "变体甲:讲讲思路的第一步,想想为什么",
+  "support_hint": null,
+  "parent_support_hint": null,
+  "noop": false,
+  "edit_reason": "edited",
+  "parent_scores": {
+    "mean_score": 9.0,
+    "needs_review_rate": 0.0,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0
+  },
+  "variant_scores": {
+    "mean_score": 9.0,
+    "needs_review_rate": 0.0,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0
+  },
+  "accepted": false,
+  "leak_net_veto": false,
+  "screen_evidence": {
+    "parent": {
+      "h": 0,
+      "n": 0,
+      "u": 0,
+      "mean": 9.0
+    },
+    "variant": {
+      "h": 0,
+      "n": 0,
+      "u": 0,
+      "mean": 9.0
+    },
+    "delta_mean": 0.0,
+    "decision": "keep_parent"
+  },
+  "cohort_idx": 0,
+  "paired_evidence": null,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+    "+变体甲:讲讲思路的第一步,想想为什么"
+  ],
+  "stats": {
+    "calls": 30,
+    "tokens_in": 300,
+    "tokens_out": 150,
+    "env_failures": 0,
+    "content_failures": 0,
+    "tutor_calls": 15,
+    "judge_calls": 15,
+    "leak_net_violations": 0,
+    "hard_vetoed": false,
+    "wall_ms": 1,
+    "h": 0,
+    "n": 0,
+    "u": 0,
+    "mean": 9.0
+  },
+  "failures": [
+    {
+      "case_id": "image_v2_understanding_04",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "image_v2_understanding_02",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "image_v2_understanding_01",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "image_v2_stuck_03",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "image_v2_stuck_04",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "image_v2_stuck_02",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "image_v2_answercollect_02",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "image_v2_answercollect_01",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_triangle_area_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_sign",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_average_score_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_rectangle_perimeter_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_distance_speed_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    }
+  ]
+}

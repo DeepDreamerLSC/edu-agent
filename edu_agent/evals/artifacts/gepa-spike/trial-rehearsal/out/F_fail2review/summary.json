@@ -1,0 +1,29 @@
+{
+  "budget": {
+    "calls": 151,
+    "rounds": 1,
+    "wall_s": 0.008344826055690646,
+    "exhausted": false
+  },
+  "call_breakdown": {
+    "tutor_calls": 105,
+    "judge_calls": 45,
+    "editor_calls": 1
+  },
+  "run_identity": "b31b4454e10d59cb",
+  "population_size": 2,
+  "accepted_variants": 1,
+  "best_candidate": {
+    "template": "变体甲:讲讲思路的第一步,想想为什么",
+    "support_hint": null,
+    "parent_id": 0,
+    "round_idx": 0,
+    "candidate_id": 1
+  },
+  "best_scores": {
+    "mean_score": 9.5,
+    "needs_review_rate": 0.0,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0
+  }
+}

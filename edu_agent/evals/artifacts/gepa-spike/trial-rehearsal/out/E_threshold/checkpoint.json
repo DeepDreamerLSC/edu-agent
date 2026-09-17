@@ -1,0 +1,53 @@
+{
+ "next_round": 2,
+ "identity": "b31b4454e10d59cb",
+ "budget": {
+  "calls": 242,
+  "rounds": 2,
+  "wall_s": 0.01329770206939429,
+  "exhausted": false
+ },
+ "best": {
+  "candidate_id": 1,
+  "template": "变体甲:讲讲思路的第一步,想想为什么",
+  "support_hint": null,
+  "scores": {
+   "mean_score": 9.125,
+   "needs_review_rate": 0.0,
+   "numerical_violation_rate": 0.0,
+   "hard_failure_rate": 0.0
+  }
+ },
+ "call_breakdown": {
+  "tutor_calls": 180,
+  "judge_calls": 60,
+  "editor_calls": 2
+ },
+ "last_failures": [
+  {
+   "case_id": "image_v2_understanding_04",
+   "kind": "judge_low_score",
+   "detail": "total=9.25/12"
+  },
+  {
+   "case_id": "image_v2_understanding_02",
+   "kind": "judge_low_score",
+   "detail": "total=9.25/12"
+  },
+  {
+   "case_id": "image_v2_understanding_01",
+   "kind": "judge_low_score",
+   "detail": "total=9.25/12"
+  },
+  {
+   "case_id": "image_v2_stuck_03",
+   "kind": "judge_low_score",
+   "detail": "total=9.25/12"
+  },
+  {
+   "case_id": "image_v2_stuck_04",
+   "kind": "judge_low_score",
+   "detail": "total=9.25/12"
+  }
+ ]
+}
