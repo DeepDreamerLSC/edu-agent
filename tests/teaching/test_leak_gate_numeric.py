@@ -256,5 +256,31 @@ def test_leak_fallback_does_not_restate_answer_value():
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "兔有10除以2等于5只,鸡有3只,验算26只脚。", gateway=gateway)
 
-    assert turn.text == "先回到你刚才的结论和验算——你能从题目里再确认一个已知条件吗?"
+    assert turn.text == "你已经说到了自己的结论。最后请你自己把完整思路和结论再说一遍。"
     assert turn.session.stuck is True  # 修复失败落兜底的既有语义不变
+
+
+def test_leak_fallback_wording_never_overclaims():
+    """#318 人裁(修改后同意)三类行为钉:确定性文案断言不得超过条件可证事实。
+
+    分支条件只有「snippet 与终答池数字交集」——不证明结论正确/验算完整/
+    ready 态。B(只报终答无解释)、C(结论存疑/否定式提及)与 A(完整结论+
+    验算)走同一文案时,不得出现「验算」「讲得很清楚」类过强断言。
+    """
+    forbidden = ("验算都齐了", "讲得很清楚", "都齐了")
+    cases = (
+        "兔有10除以2等于5只,鸡有3只,验算26只脚。",   # A:完整 → 命中确认话姿分支
+        "答案是 5,不知道为什么。",                    # B:只报终答(带卡壳信号,另走路径)
+        "我觉得不是 5,也不会验算。",                  # C:否定式提及(同上)
+    )
+    for i, student_msg in enumerate(cases):
+        gateway = FakeGateway(tutor_payloads=[
+            _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
+            _tutor("对,答案就是鸡 3 只、兔 5 只。"),
+            _tutor("答案就是鸡 3 只、兔 5 只,没错。"),
+        ])
+        turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
+        turn = reply(turn.session, student_msg, gateway=gateway)
+        assert not any(word in turn.text for word in forbidden)  # 过强断言零出现
+        if i == 0:  # A 类才命中该分支(逐字钉)
+            assert turn.text == "你已经说到了自己的结论。最后请你自己把完整思路和结论再说一遍。"

@@ -1,6 +1,10 @@
 """#256 GEPA spike 单元测试:6 组件逐一验证,零 API。"""
 
+from datetime import datetime
+
 import json
+from datetime import datetime, timezone
+
 from unittest.mock import MagicMock, patch
 
 from edu_agent.evals import (
@@ -724,7 +728,7 @@ def test_gepa_loop_resume_skips_initial_evaluation(tmp_path):
 
 def test_evaluate_batch_counts_calls_from_facts(tmp_path):
     """calls = facts 实测差值(长跑口径):估算 len+judged 低估 ~3x 会超预算。"""
-    facts = tmp_path / "model_calls-2026-09-16.jsonl"
+    facts = tmp_path / f"model_calls-{datetime.now(timezone.utc).strftime('%Y-%m-%d')}.jsonl"
     facts.write_text("\n".join(json.dumps({"i": i}) for i in range(10)) + "\n",
                      encoding="utf-8")
     gateway = MagicMock()
@@ -885,7 +889,7 @@ def test_gepa_loop_editor_focus_nr_uses_nr_editor(tmp_path):
 
 def test_evaluate_batch_leak_net_violation_counted(tmp_path):
     """泄露网违例:计数进 stats + 失败帧(kind=leak_net,带轮次原文)。"""
-    facts = tmp_path / "model_calls-2026-09-16.jsonl"
+    facts = tmp_path / f"model_calls-{datetime.now(timezone.utc).strftime('%Y-%m-%d')}.jsonl"
     facts.write_text("", encoding="utf-8")
     gateway = MagicMock()
     gateway.writer.root = tmp_path
@@ -940,7 +944,7 @@ def test_gepa_loop_leak_net_veto_blocks_selection(tmp_path):
 
 def test_evaluate_batch_nr_denominator_excludes_hard(tmp_path):
     """nr 分母 = 非 hard 案:4 案中 2 hard(fail/leaked)只 1 review → 0.5 而非 0.25。"""
-    facts = tmp_path / "model_calls-2026-09-17.jsonl"
+    facts = tmp_path / f"model_calls-{datetime.now(timezone.utc).strftime('%Y-%m-%d')}.jsonl"
     facts.write_text("", encoding="utf-8")
     gateway = MagicMock()
     gateway.writer.root = tmp_path
