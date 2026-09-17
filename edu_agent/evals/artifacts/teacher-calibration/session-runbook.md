@@ -8,7 +8,7 @@
 
 > **v2 增量改版(2026-09-17,#293 架构师裁定)**:会型改**最小 delta 审**——
 > ① **砍**:原「11 案盲评 pairwise 全读」段,改为 same-by-identity 记录引用(§3.1);
-> ② **增**:delta 对盲审段,8 对全题图 A/B(§3.2;材料占位,待 elicit-topup-v3 落地);
+> ② **增**:delta 对盲审段,4 对全题图 A/B(§3.2;材料占位,待 elicit-topup-v3 落地);
 > ③ **留**:校准段(练习案)原样;④ **入册**:材料制作规范(§2 末,用户反馈)。
 > 协议本体(#289/#291)零改动——先用一次,再决定制度化(裁定第 2 条)。
 
@@ -27,22 +27,22 @@
 
 ---
 
-## 1. 议程单(含时间预估;总时长 ≈ 2–2.5h,可拆两场)
+## 1. 议程单(含时间预估;总时长 ≈ 1.5–2h)
 
 | 段 | 时长 | 内容 | 材料 |
 |---|---|---|---|
 | ① 会前自学 | ≈10min(可提前) | 读 `teacher-onboarding.md` 一页纸:三家族 0\|1\|2 锚点 + 打分表用法 + pairwise 规则 | onboarding |
 | ② 校准段 | **30–40min** | 5 练习案(C40/C26/C25/C11/C36)独立打分 → 打完**才**翻参考读数对答案,重点看分叉点 | `practice-cases.md` + `scoring-template.md` A 表 |
 | ③ identity 记录讲解 | **10–15min**(非重读) | 主持人讲解 11 案切片双臂对比的机械结果与「为何不重读」(§3.1);教师可提问,记 debrief | 本单 §3.1 记录引用(出处 #293) |
-| ④ delta 对盲审段 | **50–65min**(8 对 × 6–8min) | 逐对 A/B pairwise(见 §3.2 节奏建议) | `teacher-delta-review/pack/*.md`【占位】+ `scoring-template.md` B 表(每对一张) |
+| ④ delta 对盲审段 | **25–35min**(4 对 × 6–8min) | 逐对 A/B pairwise(见 §3.2 节奏建议) | `teacher-delta-review/pack/*.md`【占位】+ `scoring-template.md` B 表(每对一张) |
 | ⑤ debrief | ≈15min | 三问(见 §4) | 无 |
 
-**时长重估口径(v2)**:原 2.5–3h → 现 **2–2.5h**——砍 11 案全读(80–100min),
-换入 identity 讲解(10–15min)+ 8 对 delta 审(50–65min);校准段与 debrief 不变。
-拆场建议:上半场 ①–③(≈1h),下半场 ④–⑤(≈1–1.5h)。
+**时长重估口径(v2)**:原 2.5–3h → 现 **约 1.5–2h**——砍 11 案全读(80–100min),
+换入 identity 讲解(10–15min)+ 4 对 delta 审(25–35min);校准段与 debrief 不变
+(单场可坐下,无需拆场)。
 
 **节奏建议(delta 审段)**:每对 6–8min——读题面(含题图)与两臂 transcript(2–3min)
-→ 逐家族 pairwise + 证据(2–3min)→ 逐案小结(1–2min);第 4 对后休息 5min。
+→ 逐家族 pairwise + 证据(2–3min)→ 逐案小结(1–2min)。
 **不催对**:宁可超时,不可压缩证据栏——`worse` 无证据按冻结规则判 `same`(防假红),
 而仓促填证据会制造假红。
 
@@ -54,7 +54,7 @@
 - [ ] `teacher-onboarding.md` ×1(会前发或自学)
 - [ ] `practice-cases.md` ×1(校准段;参考读数区叮嘱「打完才翻」)
 - [ ] `scoring-template.md` ×1(A 练习表 + B 空白表模板;delta 审段按 B 表每对复印 1 张)
-- [ ] delta 盲审包 8 对:`edu_agent/evals/artifacts/teacher-delta-review/pack/*.md`
+- [ ] delta 盲审包 4 对:`edu_agent/evals/artifacts/teacher-delta-review/pack/*.md`
       **【占位——elicit-topup-v3(#293)产物,落地后生成;文件名以工件为准】**——
       每对结构 = 完整题面(含题图)+ Transcript A + Transcript B + 判定栏(B 表同构);
       发前抽查:**包内无 baseline/candidate/臂名(X/Y)字样、无分数、无 mapping 线索**
@@ -73,7 +73,7 @@
 - [ ] 校准包 = `artifacts/teacher-calibration`(#328 合入版,基点 ffaef75);
       `practice-cases.md` 打印件含参考读数区(C36 案注明「替代 C35,#310 人裁」)
 - [ ] delta 盲审包 = `teacher-delta-review/`(elicit-topup-v3 产物;落地后核对:
-      8 对齐全、mapping 在包外、每对题面含题图)【占位】
+      4 对齐全、mapping 在包外、每对题面含题图)【占位】
 - [ ] gate-04-v2 机器面(checks 22/22 + Lane M 11/11)已绿——Lane M 侧证据,
       教师会不触碰(§6)
 
@@ -103,13 +103,13 @@
 **纪律**:本段**不发 pack、不翻 transcript、不打分**;记录引用只入主持人讲解与回执,
 不产生教师表格。
 
-### 3.2 delta 对盲审段执行程序(逐对循环,8 对全题图)
+### 3.2 delta 对盲审段执行程序(逐对循环,4 对全题图)
 
 1. 主持人发本对 B 表 + 盲审包对应对(教师报当前序号,主持人翻页发,防跳读);
 2. 教师独立填:三家族 × A/B 各 0\|1\|2 → 逐家族 pairwise(`A worse`/`B worse`/`same`)
    → 具体证据(引原话;**worse 必填**,新增或明显加重退化)→ 逐案小结;
 3. 教师在表头记**开始/结束时间**(§5 每对耗时);
-4. 主持人即收即点数,当场确认 8 对 × 教师数齐,缺即补;
+4. 主持人即收即点数,当场确认 4 对 × 教师数齐,缺即补;
 5. 全程不讨论、不互相看表;疑问记 debrief,会中不裁。
 
 **判读口径(冻结规则引用,零新规则)**:A/B 由盲包随机标号
@@ -147,7 +147,7 @@ Debrief 记录**同 §5 场外归档**;产出只用于下场会编排,不回灌�
 **治理铁律**:真实教师数据(身份、笔迹、原始表、debrief 原话)**不进本公开仓**
 (治理②);入仓的只有**摘要级判定计数**(每对三态 + abstain 数,无教师可识别信息)。
 
-1. **回收**:散会当场清点(8 对 × 教师数),信封密封,主持人保管;
+1. **回收**:散会当场清点(4 对 × 教师数),信封密封,主持人保管;
 2. **数字化**:主持人事后(建议 24h 内)把 B 表转录为私密结构化文件
    (字段 = B 表列:对/A 三家族分/B 三家族分/逐家族 pairwise/证据/耗时;
    教师以 T1/T2… 编号,**不记真名**),存 `calibration-private/teacher-calib/<date>/`
@@ -169,7 +169,7 @@ Debrief 记录**同 §5 场外归档**;产出只用于下场会编排,不回灌�
                                         ↓
         Lane H 判定(最小 delta 审口径,#293 架构师裁定;协议规则零改动):
           A 不变面 = 切片 10/11 same-by-identity(机械证据,教师不重读;§3.1 记录)
-          C 差异面 = 8 对 delta 盲审:逐家族 pairwise ≠ worse(且 worse 无证据→same)
+          C 差异面 = 4 对 delta 盲审:逐家族 pairwise ≠ worse(且 worse 无证据→same)
                     [promotion-comparison-protocol.md Lane H 规则]
                                         ↓
        Lane M(gate-04-v2,已绿):checks 22/22 + Lane M 11/11(lane-m-result.json gate=pass)
