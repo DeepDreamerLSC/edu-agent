@@ -1,0 +1,56 @@
+{
+ "question_id": "small_lecturer_math_gold_candidates_fraction_addition_alternative_method",
+ "final_state": "completed",
+ "turns": [
+  {
+   "student": "",
+   "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "state": "first_question_ready",
+   "elapsed_ms": 0
+  },
+  {
+   "student": "也可以画六等份，三分之一占两份，再加一份，共三份。",
+   "tutor": "你用画图的方法讲得很清楚，把三分之一和六分之一都分成了六等份，加起来是三份，这很直观！那如果用分数加法算，应该怎么写呢？",
+   "state": "dialogue",
+   "elapsed_ms": 2174
+  },
+  {
+   "student": "六分之二加六分之一等于六分之三，也就是二分之一。",
+   "tutor": "你用分数加法算得没错，六分之二加六分之一等于六分之三，再约分就是二分之一，这和画图法结果一致！",
+   "state": "ready_to_confirm",
+   "elapsed_ms": 2155
+  }
+ ],
+ "summary": "你用画图法把三分之一和六分之一都分成了六等份，加起来是三份，直观理解了分数加法；用分数加法算出六分之二加六分之一等于六分之三，再约分得到二分之一，结果一致。仍需注意：在约分时要确认分子分母的最大公约数，确保结果是最简分数。",
+ "total_ms": 10069,
+ "learner": {
+  "grade": ""
+ },
+ "guard_events": [
+  {
+   "branch": "model",
+   "cited": [
+    1.0,
+    2.0,
+    3.0
+   ],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 1
+  },
+  {
+   "branch": "model",
+   "cited": [
+    1.0,
+    2.0,
+    3.0
+   ],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 2
+  }
+ ],
+ "session_id": "kernel_540e30b8fc"
+}

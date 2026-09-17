@@ -102,11 +102,17 @@ def _render_transcript(messages: list[dict]) -> str:
                      for m in messages)
 
 
-def build_teacher_pack(candidate_dir: Path, out_dir: Path, seed: int = 7,
-                      version: str = "v1") -> dict:
+def build_teacher_pack(candidate_dir: Path, baseline_dir: Path, out_dir: Path,
+                       seed: int = 7, version: str = "v1") -> dict:
     """Lane H A/B 盲包(#293 规格):题目/Transcript A/B/三判据/判定栏。
 
-    baseline = slice-cases 冻结 messages;candidate = 跑批转录(run1)。
+    两臂同纪元(协议 B2,PM-RULING#6② 修订):candidate = 跑批转录(run1),
+    baseline = 同纪元重跑臂转录(baseline_dir/run1,现行冻结面默认模板 ×11×2,
+    v2 面 = teacher-gate-slice-v2/baseline-transcripts/)——禁止再回退
+    slice-cases 冻结 messages(v1 纪元,预修复内核,晋升归因失效)。
+    两臂各取 run1:本线 11 案两跑读数全平(候选 lane-m 11/11、基线重跑见
+    README),协议保守跑规则在此退化为 run1;# ponytail: 非平局逐判据保守
+    选择器待真实平局破缺场景出现再实现,记 P3-②。
     A/B 随机(seed 可复现);解盲映射随返回值交调用方落包外文件,不进教师包。
     """
     import random
@@ -119,10 +125,13 @@ def build_teacher_pack(candidate_dir: Path, out_dir: Path, seed: int = 7,
         result = json.loads((candidate_dir / "run1" / f"{case_id}.json")
                             .read_text(encoding="utf-8"))
         candidate_msgs = transcript_messages(result)
+        baseline_result = json.loads((baseline_dir / "run1" / f"{case_id}.json")
+                                     .read_text(encoding="utf-8"))
+        baseline_msgs = transcript_messages(baseline_result)
         a_is_candidate = rng.random() < 0.5
         mapping[case_id] = "A" if a_is_candidate else "B"
-        transcript_a, transcript_b = ((candidate_msgs, row["messages"]) if a_is_candidate
-                                      else (row["messages"], candidate_msgs))
+        transcript_a, transcript_b = ((candidate_msgs, baseline_msgs) if a_is_candidate
+                                      else (baseline_msgs, candidate_msgs))
         content = [
             f"# {case_id}", "",
             "## 题目", str(row["question"]), "",
@@ -186,6 +195,8 @@ def main() -> None:
     parser.add_argument("--judge-role", default="judge", choices=["judge", "judge_independent"])
     parser.add_argument("--slice", default="v1", choices=["v1", "v2"],
                         help="切片版本(v2 = C35 语义修复后新纪元冻结)")
+    parser.add_argument("--baseline-transcripts", type=Path, required=True,
+                        help="同纪元重跑臂转录目录(含 run1/;协议 B2 修订,PM-RULING#6②)")
     args = parser.parse_args()
 
     saved = json.loads(args.checkpoint.read_text(encoding="utf-8"))
@@ -218,6 +229,7 @@ def main() -> None:
         encoding="utf-8")
     (args.out_dir / "mapping.json").write_text(
         json.dumps(build_teacher_pack(args.out_dir / "transcripts",
+                                      args.baseline_transcripts,
                                       args.out_dir / "pack", version=args.slice),
                    ensure_ascii=False, indent=1),
         encoding="utf-8")  # 解盲映射在包外(pack/ 交教师)

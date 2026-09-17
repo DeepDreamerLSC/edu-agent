@@ -1,0 +1,119 @@
+{
+ "question_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1",
+ "final_state": "completed",
+ "turns": [
+  {
+   "student": "",
+   "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "state": "first_question_ready",
+   "elapsed_ms": 0
+  },
+  {
+   "student": "我能不能直接把分子和分母分别相加？",
+   "tutor": "先回到你刚说的「我能不能直接把分子和分母分别相加？」——你能从题目里再确认一个已知条件吗?",
+   "state": "dialogue",
+   "elapsed_ms": 5103
+  },
+  {
+   "student": "直接算成十二分之四好像不对，因为每一份的大小不同。",
+   "tutor": "你刚才说‘每一份的大小不同’，这说明你已经发现不能直接加分子和分母了，那接下来我们该怎么做才能让它们变成相同大小的份呢？",
+   "state": "dialogue",
+   "elapsed_ms": 1915
+  },
+  {
+   "student": "我把四分之三化成八分之六，再加八分之一。",
+   "tutor": "你刚才说把四分之三化成八分之六再加八分之一，这一步很聪明，因为这样就把两个分数变成了相同大小的份，能直接相加了，对吗？",
+   "state": "ready_to_confirm",
+   "elapsed_ms": 2288
+  }
+ ],
+ "summary": "你用‘通分’的方法把四分之三化成八分之六，再加八分之一，这一步很聪明，因为这样两个分数就变成了相同大小的份，能直接相加了。仍需注意：加完后要检查结果是否能约分，比如八分之七是否可以简化。",
+ "total_ms": 14111,
+ "learner": {
+  "grade": "五年级"
+ },
+ "guard_events": [
+  {
+   "branch": "model",
+   "cited": [
+    1.0,
+    3.0,
+    4.0,
+    8.0
+   ],
+   "extracted": [
+    1.0,
+    3.0,
+    4.0,
+    8.0
+   ],
+   "violation_sources": [
+    {
+     "number": 1.0,
+     "source": "hallucinated"
+    },
+    {
+     "number": 3.0,
+     "source": "hallucinated"
+    },
+    {
+     "number": 4.0,
+     "source": "hallucinated"
+    }
+   ],
+   "gate": "blocked",
+   "turn": 1
+  },
+  {
+   "branch": "model",
+   "cited": [
+    1.0,
+    3.0,
+    4.0,
+    8.0
+   ],
+   "extracted": [
+    4.0,
+    8.0
+   ],
+   "violation_sources": [
+    {
+     "number": 4.0,
+     "source": "hallucinated"
+    }
+   ],
+   "gate": "blocked",
+   "turn": 1
+  },
+  {
+   "guard": "answer_leak",
+   "rule_ids": [
+    "source_value_disclosure:hallucinated"
+   ],
+   "original": "你想到直接加分子分母，这个想法很有趣，但分数加法不能这样算哦。比如，如果分母一样，像 1/4 + 1/4，我们才能直接加分子。但这里 3/4 和 1/8 分母不一样，得先变成相同分母，你猜怎么改？",
+   "regenerated": false,
+   "turn": 1
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 2
+  },
+  {
+   "branch": "model",
+   "cited": [
+    1.0,
+    3.0,
+    6.0
+   ],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 3
+  }
+ ],
+ "session_id": "kernel_d35d85178e"
+}
