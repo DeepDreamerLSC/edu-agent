@@ -1,0 +1,10 @@
+{
+  "calls_used": 57,
+  "budget": 100,
+  "triggered_support": [
+    "image_v2_stuck_01",
+    "image_v2_stuck_02",
+    "image_v2_stuck_03",
+    "image_v2_stuck_04"
+  ]
+}
