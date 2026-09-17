@@ -421,10 +421,12 @@ def test_gepa_loop_resume_skips_initial_evaluation(tmp_path):
                   gateway=MagicMock(),
                   output_dir=tmp_path,
                   resume=True)
-        # resume 后不再评估初始模板:唯一一次 evaluate_batch 是第 5 代变体批
-        assert mock_eval.call_count == 1
+        # resume 后不再评估初始模板;#332 换批参考重评(当前最优)+第 5 代变体批
+        # = 2 次;参考调用的 template 是恢复的 best,不是初始模板
+        assert mock_eval.call_count == 2
+        assert mock_eval.call_args_list[0].args[1] == "恢复模板:说说你的思路,先说第一步"
     saved = json.loads((tmp_path / "checkpoint.json").read_text(encoding="utf-8"))
-    assert saved["budget"]["calls"] == 106  # 100(恢复)+ 1(编辑器)+ 5(变体批)
+    assert saved["budget"]["calls"] == 111  # 100(恢复)+ 1(编辑器)+ 5(#332 换批参考)+ 5(变体批)
     assert saved["next_round"] == 6
     # #324 A-d:best 的 support_hint 属候选自身——恢复带回 checkpoint 里的值,
     # 不拼接顶层默认(旧 bug:写顶层 state.support_hint 会串台)
@@ -642,6 +644,7 @@ def test_gepa_loop_leak_net_veto_blocks_selection(tmp_path):
     dirty_stats = dict(clean_stats, leak_net_violations=2)
     returns = [
         (ScoreVector(8.0, 0.3, 0.1, 0.1), [], clean_stats),        # 初始评估
+        (ScoreVector(8.0, 0.3, 0.1, 0.1), [], clean_stats),        # #332 换批参考重评
         (ScoreVector(9.5, 0.1, 0.0, 0.0), [], dirty_stats),        # r0:全优但泄露
         (ScoreVector(9.6, 0.1, 0.0, 0.0), [], dirty_stats),        # r1:全优但泄露
     ]
@@ -689,8 +692,12 @@ def test_evaluate_batch_nr_denominator_excludes_hard(tmp_path):
 
 
 def test_fresh_run_initial_batch_same_distribution_as_rounds(tmp_path):
-    """初始评估批 = sample_batch(seed=0),与代间批同分布(弃文件序前缀)。"""
-    from edu_agent.evals import GepaConfig, gepa_loop, sample_batch
+    """初始评估批 = 分层批(seed=0),与 cohort 0 代间批同构成(#332 采样)。
+
+    无信号词的 93 案全落背景层 → 16 案 = 背景抽样;初始与 cohort 0 同
+    seed=0 → 同批(PM-RULING#5 同分布要求在分层口径下保持)。
+    """
+    from edu_agent.evals import GepaConfig, gepa_loop, sample_stratified_batch
 
     train = [{"id": f"case-{i:02d}", "question": "q", "student_turns": ["a"]}
              for i in range(93)]
@@ -704,4 +711,7 @@ def test_fresh_run_initial_batch_same_distribution_as_rounds(tmp_path):
                   config=GepaConfig(rounds=1, batch_size=16, max_calls=100),
                   gateway=MagicMock(), output_dir=tmp_path)
         initial_cases = mock_eval.call_args_list[0].args[0]
-    assert [c["id"] for c in initial_cases] == [c["id"] for c in sample_batch(train, 16, 0)]
+        cohort0_cases = mock_eval.call_args_list[1].args[0]  # 换批参考重评
+    assert [c["id"] for c in initial_cases] == \
+        [c["id"] for c in sample_stratified_batch(train, 0)]
+    assert [c["id"] for c in initial_cases] == [c["id"] for c in cohort0_cases]
