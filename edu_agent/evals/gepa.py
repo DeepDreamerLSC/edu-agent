@@ -942,6 +942,9 @@ def gepa_loop(
                 state.batch, state, config, gateway)
             state.ref_outcome = ref_outcome
             state.last_failures = ref_failures or state.last_failures
+            # #332 账实:重评扣减即落盘——轮内崩溃后重启可续,台账不虚增
+            # (next_round=round_idx:该轮未跑完,恢复时重跑本轮)
+            _write_checkpoint(output_dir, state, round_idx, state.last_failures)
 
         report = _process_round(round_idx, state, config, gateway)
         round_reports.append(report)
