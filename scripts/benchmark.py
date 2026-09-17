@@ -6,6 +6,8 @@
 回放是自造的延迟测量负载,不是 M1 评测数据集(教学指标归评测线,01 §8)。
 对比 baselines/efficiency.json:门指标按角色定(见 GATED_CHECKS),p50 劣化 >10% 即
 非零退出;tutor.ttft_p50 逐题双峰不设门(#142)——**保留在报告与基线里,只记不阻断**。
+报告附 TTFT 前缀缓存分层诊断列(#338/#188:命中/未命中两列 n + TTFT 中位/p95,不设门,
+数据源 = 事实记录既有 cache_read 字段,无新采集点)。
 基线更新走 PR(--write-baseline 生成候选)。DEEPSEEK_API_KEY 走环境变量,
 绝不进日志与报告。
 
@@ -109,6 +111,37 @@ def run_role(role: str, run_id: str) -> None:
         print(f"  {role} #{i:02d} {time.monotonic() - start:.1f}s", flush=True)
 
 
+def ttft_strata(ok: list[dict]) -> dict:
+    """TTFT 前缀缓存分层(#338/#188,诊断列**不设门**)。分层口径照 #188 实测:
+    未缓存输入 token = gen_ai.usage.input_tokens − gen_ai.usage.cache_read.input_tokens;
+    ==1 → 命中层(前缀缓存整段命中),≥10 → 未命中层,2–9 为空谷(#188 本机实测
+    0 条)不计入两列、计数入 mid_n。usage 字段缺失的行不可分层,不计入(总数仍见
+    主表 n)。零判定逻辑:只产列,不进门(GATED_CHECKS 不含分层键)。"""
+    hit: list = []
+    miss: list = []
+    mid_n = 0
+    for p in ok:
+        total = p.get("gen_ai.usage.input_tokens")
+        cached = p.get("gen_ai.usage.cache_read.input_tokens")
+        ttft = p.get("gen_ai.server.time_to_first_token")
+        if total is None or cached is None or ttft is None:
+            continue
+        uncached = total - cached
+        if uncached == 1:
+            hit.append(ttft)
+        elif uncached >= 10:
+            miss.append(ttft)
+        else:
+            mid_n += 1
+
+    def layer(values: list) -> dict:
+        return {"n": len(values),
+                "ttft_p50_ms": round(percentile(values, 0.5)) if values else None,
+                "ttft_p95_ms": round(percentile(values, 0.95)) if values else None}
+
+    return {"hit": layer(hit), "miss": layer(miss), "mid_n": mid_n}
+
+
 def collect(run_id: str) -> dict:
     """从本次 run 的事实记录汇总指标(01 §5:事实记录是唯一来源)。"""
     rows: dict[str, list] = defaultdict(list)
@@ -141,6 +174,7 @@ def collect(run_id: str) -> dict:
         for key in ("ttft_p50_ms", "ttft_p95_ms", "e2e_p50_ms", "e2e_p95_ms"):
             if metrics[role][key] is not None:
                 metrics[role][key] = round(metrics[role][key])
+        metrics[role]["ttft_strata"] = ttft_strata(ok)
     return metrics
 
 
@@ -178,6 +212,27 @@ def render(metrics: dict) -> str:
             f"| {role} | {m.get('n', 0)} | {fmt(m.get('ttft_p50_ms'))} / {fmt(m.get('ttft_p95_ms'))} "
             f"| {fmt(m.get('e2e_p50_ms'))} / {fmt(m.get('e2e_p95_ms'))} | {fmt(m.get('speed_p50'))} |"
         )
+    # TTFT 前缀缓存分层(#338/#188):诊断列,不设门——零判定逻辑,阈值不属本件
+    lines += [
+        "",
+        "## TTFT 前缀缓存分层(#188 诊断列,不设门)",
+        "",
+        "未缓存输入 token = `usage.input_tokens` − `usage.cache_read.input_tokens`;"
+        " ==1 → 命中,≥10 → 未命中,2–9 空谷不计入两列(仅注计数);usage 缺失的行不可分层,不计入(总数见主表 n)。",
+        "",
+        "| 角色 | 层 | n | TTFT p50 (ms) | TTFT p95 (ms) |",
+        "|---|---|---|---|---|",
+    ]
+    for role in ROLES:
+        st = metrics.get(role, {}).get("ttft_strata", {})
+        for key, label in (("hit", "命中(未缓存==1)"), ("miss", "未命中(未缓存≥10)")):
+            layer = st.get(key, {})
+            lines.append(
+                f"| {role} | {label} | {layer.get('n', 0)} "
+                f"| {fmt(layer.get('ttft_p50_ms'))} | {fmt(layer.get('ttft_p95_ms'))} |"
+            )
+    mids = " / ".join(str(metrics.get(r, {}).get("ttft_strata", {}).get("mid_n", 0)) for r in ROLES)
+    lines.append(f"- 空谷(2–9)计数(tutor / judge):{mids}")
     return "\n".join(lines) + "\n"
 
 

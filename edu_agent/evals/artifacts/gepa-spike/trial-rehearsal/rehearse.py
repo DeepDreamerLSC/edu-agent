@@ -62,7 +62,8 @@ def _variant(n: int) -> str:
 
 
 def _facts(writer: FactWriter, kind: str, template: str) -> None:
-    writer.write({"gen_ai.usage.input_tokens": 10, "gen_ai.usage.output_tokens": 5,
+    writer.write({"edu.outcome": "ok",  # 与真实 middleware 同形状(#332 账实②:count 只计成功)
+                  "gen_ai.usage.input_tokens": 10, "gen_ai.usage.output_tokens": 5,
                   "trial_rehearsal": {"kind": kind, "template": template[:24]}})
 
 
