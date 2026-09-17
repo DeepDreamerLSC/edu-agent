@@ -39,3 +39,14 @@ candidate;权衡面从 mean↔nr 深化为 可验证性↔泄露姿态。
 
 门行使账(facts 实测,独立于 #284 优化器预算):22 案次 ×(tutor+judge),
 见 api-facts;#284 账本终态 1415 + 配对核 222 = 1637/1624(超支 13,已上报)。
+
+---
+
+## SUPERCEDING NOTE(2026-09-17 人裁,C35 归因修正)
+
+上文归因第 2 条「C35 合法披露被过度抑制」**作废**:人裁定性 C35 为
+**test-role contamination**——「正向位(终答泄露正确检出)」是 judge
+校准正样本(检测器正向),被 promotion gate 误用作产品健康位。候选
+leak=false 是遵守新产品不变量(#314/#315 移除确认轮披露),非模板族
+能力缺失;stability_age 泄露网归因(第 1 条)不变。处置见
+teacher-gate-slice-v2(PR #319)。

@@ -26,3 +26,12 @@ candidate = nets-in-loop 主体段 best(试点 r0 产物,10.5/.25/0/0,leak_net 0
 
 主体段 96/812(noop 风暴耗 28 代后停,编辑器去复读修复已提交 eb5a957);
 gate-02 门账 22 案次(独立台账)。试点段 48/300。
+
+---
+
+## SUPERCEDING NOTE(2026-09-17 人裁,C35 归因修正)
+
+上文归因第 2 条「C35 披露压制 = 模板族方向性」**作废**:C35 是 judge
+校准正样本被误用作产品健康位(test-role contamination,人裁 d),候选
+不披露是遵守新产品不变量,非方向性缺陷。stability_age 内核层归因
+(第 1 条)与跨模板逐字同一证据不变。处置见 teacher-gate-slice-v2。
