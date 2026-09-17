@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""RM T1 试跑:按 #276 预注册(c5711367673)从 rm-t1-proposal/pairs.jsonl 重建 16 片段 RM 输入。
+
+复用 v1 构建路径(rewardmodel-consistency-v1/build_dataset.py.txt):
+  记录 = {uid, problem, reference_solution, history, response}
+  history:student/teacher 交替(v1 口径);response = 侧引文最后一个 assistant 轮;
+  历史取源 messages 中该轮之前全量(v1 全前缀口径)。
+P08 输入面补 scenario 字段内容(两侧对称,#276 审查 P3:B=(2,4) 为片段外事实)。
+对内公平性断言:题面/参考答案两侧逐字一致(P08 含对称补充后仍一致)。
+一次性脚本,存档为 .txt(不落仓库 lint 范围);零模型调用。
+"""
+from __future__ import annotations
+
+import ast
+import json
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+ART = HERE.parent
+SOURCES = {
+    "judge-v3.2-rescore-93/judge-cases.jsonl":
+        ART / "judge-v3.2-rescore-93/judge-cases.jsonl",
+    "teacher-gate-slice/slice-cases.jsonl":
+        ART / "teacher-gate-slice/slice-cases.jsonl",
+}
+POOLS = {name: {c["id"]: c for c in
+                map(json.loads, filter(None, open(path, encoding="utf-8")))}
+         for name, path in SOURCES.items()}
+
+
+def qtext(question) -> str:
+    """question 可能是 str 或 dict 的字符串形式(照抄 v1 build_dataset.py.txt)。"""
+    if isinstance(question, str):
+        s = question.strip()
+        if s.startswith("{") and s.endswith("}"):
+            try:
+                d = ast.literal_eval(s)
+                if isinstance(d, dict):
+                    return str(d.get("text") or question)
+            except (ValueError, SyntaxError):
+                return question
+        return question
+    if isinstance(question, dict):
+        return str(question.get("text") or question)
+    return str(question)
+
+
+def fragment(pair: dict, side: str) -> dict:
+    spec = pair[side]
+    case = POOLS[spec["source"]][spec["case_id"]]
+    msgs = case["messages"]
+    cited_assistant = [t["index"] for t in spec["turns"] if t["role"] == "assistant"]
+    assert cited_assistant, f"{pair['pair_id']}/{side} 引文无 assistant 轮"
+    last = max(cited_assistant)
+    assert msgs[last]["role"] == "assistant" and msgs[last]["content"] == \
+        next(t["content"] for t in spec["turns"] if t["index"] == last)
+    problem = qtext(case["question"])
+    if pair["pair_id"] == "T1-P08":
+        problem += "\n场景:" + pair["scenario"]
+    return {"uid": f"{pair['pair_id']}|{side}", "pair_id": pair["pair_id"],
+            "side": side, "problem": problem,
+            "reference_solution": str(case.get("reference_answer") or ""),
+            "history": [{"role": "student" if m["role"] == "user" else "teacher",
+                         "text": m["content"]} for m in msgs[:last]],
+            "response": msgs[last]["content"]}
+
+
+def main() -> int:
+    pairs = [json.loads(l) for l in
+             open(HERE.parent / "rm-t1-proposal/pairs.jsonl", encoding="utf-8") if l.strip()]
+    assert len(pairs) == 8, f"预期 8 对,实得 {len(pairs)}"
+    frags = []
+    for pair in pairs:
+        a, b = fragment(pair, "a"), fragment(pair, "b")
+        assert a["problem"] == b["problem"], f"{pair['pair_id']} 题面两侧不一致"
+        assert a["reference_solution"] == b["reference_solution"], \
+            f"{pair['pair_id']} 参考答案两侧不一致"
+        frags += [a, b]
+    assert len({f["uid"] for f in frags}) == 16
+    with open(HERE / "to_score.jsonl", "w", encoding="utf-8") as f:
+        for r in frags:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    n_hist = sum(len(f["history"]) for f in frags)
+    print(f"16 片段就绪(to_score.jsonl);历史总轮数 {n_hist};公平性断言 8/8 通过")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
