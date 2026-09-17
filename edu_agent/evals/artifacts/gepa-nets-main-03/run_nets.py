@@ -54,7 +54,7 @@ class BudgetCapReached(RuntimeError):
     """硬帽触发:facts 实计 ≥ HARD_CAP_CALLS,下一次 invoke 前熔断。"""
 
 
-def _heartbeat(phase: str, calls: int) -> None:
+def _touch_state(phase: str, calls: int) -> None:
     """心跳原子落盘(看门狗盯 mtime;os.replace 保证不读半截)。"""
     payload = {"pid": os.getpid(), "phase": phase, "calls": calls,
                "ts": time.time(), "iso": time.strftime("%Y-%m-%dT%H:%M:%S")}
@@ -81,7 +81,7 @@ class CappedGateway:
         if self._inner.writer.count >= HARD_CAP_CALLS:
             raise BudgetCapReached(f"facts={self._inner.writer.count} ≥ {HARD_CAP_CALLS}")
         response = self._inner.invoke(request)
-        _heartbeat(self._phase, self._inner.writer.count)
+        _touch_state(self._phase, self._inner.writer.count)
         return response
 
     def __getattr__(self, name):
@@ -169,7 +169,7 @@ def main() -> int:
         editor_role="judge",  # r24 起本地跑口径;夜间无人值守不依赖远程 API
     )
     stop_reason = "generations_done"
-    _heartbeat("start", 0)
+    _touch_state("start", 0)
     try:
         gateway.set_phase("run")
         _, _, reports = gepa_loop(
@@ -196,7 +196,7 @@ def main() -> int:
                    "budget_ledger": ledger}
         (OUT_DIR / "run-exit.json").write_text(
             json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
-        _heartbeat("done", inner.writer.count)
+        _touch_state("done", inner.writer.count)
         inner.close()
     print(f"RUN-DONE stop={stop_reason} ledger={json.dumps(ledger, ensure_ascii=False)}")
     return 0
