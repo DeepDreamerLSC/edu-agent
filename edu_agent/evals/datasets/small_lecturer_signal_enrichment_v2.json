@@ -1,6 +1,6 @@
 {
   "schema_version": "small_lecturer_signal_enrichment/v2",
-  "description": "M3 收官 elicit 富化:12 案(understanding/stuck/completion 各 4),合成学生行为照 S2 信号模式建模,零真实学生数据。触发词形全部用 kernel 既有信号函数的匹配口径,经 tests/teaching/test_signal_enrichment_v2.py 逐案验证。",
+  "description": "M3 收官 elicit 富化:12 案(understanding/stuck/completion 各 4),合成学生行为照 S2 信号模式建模,零真实学生数据。触发词形全部用 kernel 既有信号函数的匹配口径,经 tests/teaching/test_signal_enrichment_v2.py 逐案验证。读法约定(审查 P3):expected.trigger_round 为 0 基 student_turns 索引(0=首问后第一轮);trigger_word 可复合(「+」分隔,逐个在触发轮原文命中);触发后轮不主张信号归零(持续卡壳/理解态真实,消费侧按首次信号触发)。",
   "scenarios": [
     {
       "id": "enrich_v2_understanding_01",
