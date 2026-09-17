@@ -1,0 +1,113 @@
+{
+  "round": 6,
+  "parent_id": 0,
+  "variant_id": 7,
+  "parent_template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "variant_template": "变体庚:讲讲思路的第一步,想想为什么",
+  "support_hint": null,
+  "parent_support_hint": null,
+  "noop": false,
+  "edit_reason": "edited",
+  "parent_scores": {
+    "mean_score": 9.0,
+    "needs_review_rate": 0.0,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0
+  },
+  "variant_scores": {
+    "mean_score": 9.0,
+    "needs_review_rate": 0.0,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0
+  },
+  "accepted": false,
+  "leak_net_veto": false,
+  "screen_evidence": {
+    "parent": {
+      "h": 0,
+      "n": 0,
+      "u": 0,
+      "mean": 9.0
+    },
+    "variant": {
+      "h": 0,
+      "n": 0,
+      "u": 0,
+      "mean": 9.0
+    },
+    "delta_mean": 0.0,
+    "decision": "keep_parent"
+  },
+  "cohort_idx": 1,
+  "paired_evidence": null,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+    "+变体庚:讲讲思路的第一步,想想为什么"
+  ],
+  "stats": {
+    "calls": 18,
+    "tokens_in": 180,
+    "tokens_out": 90,
+    "env_failures": 0,
+    "content_failures": 0,
+    "tutor_calls": 9,
+    "judge_calls": 9,
+    "leak_net_violations": 0,
+    "hard_vetoed": false,
+    "wall_ms": 0,
+    "h": 0,
+    "n": 0,
+    "u": 0,
+    "mean": 9.0
+  },
+  "failures": [
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_parentheses",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_angles",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_percentage_discount_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_decimal_multiplication_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_simple_probability_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_speed",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_parentheses_equation_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "total=9.0/12"
+    }
+  ]
+}

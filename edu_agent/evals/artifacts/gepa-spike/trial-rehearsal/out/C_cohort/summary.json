@@ -1,0 +1,29 @@
+{
+  "budget": {
+    "calls": 187,
+    "rounds": 7,
+    "wall_s": 0.013277036021463573,
+    "exhausted": false
+  },
+  "call_breakdown": {
+    "tutor_calls": 90,
+    "judge_calls": 90,
+    "editor_calls": 7
+  },
+  "run_identity": "32de2de6ae4b5673",
+  "population_size": 8,
+  "accepted_variants": 0,
+  "best_candidate": {
+    "template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+    "support_hint": null,
+    "parent_id": null,
+    "round_idx": 0,
+    "candidate_id": 0
+  },
+  "best_scores": {
+    "mean_score": 9.0,
+    "needs_review_rate": 0.0,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0
+  }
+}

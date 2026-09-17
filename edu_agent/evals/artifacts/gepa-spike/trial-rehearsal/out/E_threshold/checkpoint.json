@@ -1,0 +1,53 @@
+{
+ "next_round": 2,
+ "identity": "32de2de6ae4b5673",
+ "budget": {
+  "calls": 146,
+  "rounds": 2,
+  "wall_s": 0.008585038012824953,
+  "exhausted": false
+ },
+ "best": {
+  "candidate_id": 1,
+  "template": "变体甲:讲讲思路的第一步,想想为什么",
+  "support_hint": null,
+  "scores": {
+   "mean_score": 9.125,
+   "needs_review_rate": 0.0,
+   "numerical_violation_rate": 0.0,
+   "hard_failure_rate": 0.0
+  }
+ },
+ "call_breakdown": {
+  "tutor_calls": 108,
+  "judge_calls": 36,
+  "editor_calls": 2
+ },
+ "last_failures": [
+  {
+   "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_angles",
+   "kind": "judge_low_score",
+   "detail": "total=9.25/12"
+  },
+  {
+   "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_parentheses",
+   "kind": "judge_low_score",
+   "detail": "total=9.25/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair",
+   "kind": "judge_low_score",
+   "detail": "total=9.25/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_percentage_discount_misconception_repair",
+   "kind": "judge_low_score",
+   "detail": "total=9.25/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_alternative_method",
+   "kind": "judge_low_score",
+   "detail": "total=9.25/12"
+  }
+ ]
+}

@@ -1,0 +1,53 @@
+{
+ "next_round": 7,
+ "identity": "32de2de6ae4b5673",
+ "budget": {
+  "calls": 187,
+  "rounds": 7,
+  "wall_s": 0.01313939003739506,
+  "exhausted": false
+ },
+ "best": {
+  "candidate_id": 0,
+  "template": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+  "support_hint": null,
+  "scores": {
+   "mean_score": 9.0,
+   "needs_review_rate": 0.0,
+   "numerical_violation_rate": 0.0,
+   "hard_failure_rate": 0.0
+  }
+ },
+ "call_breakdown": {
+  "tutor_calls": 90,
+  "judge_calls": 90,
+  "editor_calls": 7
+ },
+ "last_failures": [
+  {
+   "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_parentheses",
+   "kind": "judge_low_score",
+   "detail": "total=9.0/12"
+  },
+  {
+   "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_angles",
+   "kind": "judge_low_score",
+   "detail": "total=9.0/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_percentage_discount_complete_reasoning",
+   "kind": "judge_low_score",
+   "detail": "total=9.0/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_candidates_decimal_multiplication_alternative_method",
+   "kind": "judge_low_score",
+   "detail": "total=9.0/12"
+  },
+  {
+   "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_complete_reasoning",
+   "kind": "judge_low_score",
+   "detail": "total=9.0/12"
+  }
+ ]
+}
