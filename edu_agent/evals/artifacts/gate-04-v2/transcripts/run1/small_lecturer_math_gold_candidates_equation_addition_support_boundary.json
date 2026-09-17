@@ -1,0 +1,84 @@
+{
+ "question_id": "small_lecturer_math_gold_candidates_equation_addition_support_boundary",
+ "final_state": "completed",
+ "turns": [
+  {
+   "student": "",
+   "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "state": "first_question_ready",
+   "elapsed_ms": 0
+  },
+  {
+   "student": "我还不知道从哪里开始，能先给我一个小提示吗？",
+   "tutor": "你刚说还不知道从哪里开始，这很正常！我们先看方程左边是x加7，右边是25，你想让x自己出来，那第一步可以想：要让x单独在一边，得把7从左边去掉，你猜怎么去掉？",
+   "state": "dialogue",
+   "elapsed_ms": 1899
+  },
+  {
+   "student": "等式两边都减去7，得到x等于18。",
+   "tutor": "你刚才说等式两边都减7，这一步很关键！那减7之后，左边只剩下x，右边变成多少呢？你再想想这个变化背后的道理是什么？",
+   "state": "ready_to_confirm",
+   "elapsed_ms": 3887
+  }
+ ],
+ "summary": "你通过等式两边同时减7，成功将x单独留在左边，右边得到18，这一步运用了等式的基本性质——等式两边同时做相同运算，等式仍成立。仍需注意：在写答案时，要明确写出x=18，并说明每一步的依据，这样才算完整掌握本题方法。",
+ "total_ms": 9218,
+ "learner": {
+  "grade": ""
+ },
+ "guard_events": [
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [
+    7.0,
+    25.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 1
+  },
+  {
+   "branch": "model",
+   "cited": [
+    7.0,
+    18.0
+   ],
+   "extracted": [
+    7.0,
+    18.0
+   ],
+   "violation_sources": [
+    {
+     "number": 18.0,
+     "source": "answer"
+    }
+   ],
+   "gate": "blocked",
+   "turn": 2
+  },
+  {
+   "branch": "model",
+   "cited": [
+    7.0,
+    18.0
+   ],
+   "extracted": [
+    7.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 2
+  },
+  {
+   "guard": "answer_leak",
+   "rule_ids": [
+    "source_value_disclosure:answer"
+   ],
+   "original": "你刚才说等式两边都减去7，得到x等于18，这一步是对的！你用的是等式的基本性质，两边同时减相同的数，等式仍然成立。那我们来确认一下，最后x的值是不是18？",
+   "regenerated": true,
+   "turn": 2
+  }
+ ],
+ "session_id": "kernel_4a14fb73c4"
+}

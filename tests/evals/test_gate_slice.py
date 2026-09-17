@@ -89,29 +89,37 @@ def test_run_candidate_slice_persists_transcripts(tmp_path):
 
 
 def test_build_teacher_pack_blind_and_reversible(tmp_path):
-    """盲包:A/B 随机可复现;解盲映射在返回值(调用方落包外);三判据判定栏在。"""
+    """盲包:A/B 随机可复现;两臂 = 同纪元重跑转录(候选×基线);解盲映射在返回值(调用方落包外);三判据判定栏在。"""
     import json
 
     for cid in load_slice_rows():
-        d = tmp_path / "run1"
-        d.mkdir(parents=True, exist_ok=True)
-        (d / f"{cid}.json").write_text(json.dumps(
+        c = tmp_path / "cand" / "run1"
+        c.mkdir(parents=True, exist_ok=True)
+        (c / f"{cid}.json").write_text(json.dumps(
             {"turns": [{"student": "候选学生", "tutor": "候选导师", "state": "dialogue"}],
              "summary": "候选总结"}), encoding="utf-8")
+        b = tmp_path / "base" / "run1"
+        b.mkdir(parents=True, exist_ok=True)
+        (b / f"{cid}.json").write_text(json.dumps(
+            {"turns": [{"student": "基线学生", "tutor": "基线导师", "state": "dialogue"}],
+             "summary": "基线总结"}), encoding="utf-8")
     pack_dir = tmp_path / "pack"
-    mapping = build_teacher_pack(tmp_path, pack_dir, seed=7)
+    mapping = build_teacher_pack(tmp_path / "cand", tmp_path / "base", pack_dir, seed=7)
     assert set(mapping) == set(load_slice_rows())
     assert not (pack_dir / "mapping.json").exists()  # 解盲映射不进教师包
-    again = build_teacher_pack(tmp_path, pack_dir, seed=7)
+    again = build_teacher_pack(tmp_path / "cand", tmp_path / "base", pack_dir, seed=7)
     assert again == mapping  # seed 可复现
     sample = (pack_dir / "challenge_coordinate_swap_20260914.md").read_text(encoding="utf-8")
     for field in ("题目", "Transcript A", "Transcript B", "数学真实性", "学生掌握归因",
                   "转述忠实性", "总体", "具体证据"):
         assert field in sample
-    # A/B 二者之一是候选转录(解盲后能对上)
-    assert "候选导师" in (sample.split("## Transcript A")[1].split("## Transcript B")[0]
-                        if mapping["challenge_coordinate_swap_20260914"] == "A"
-                        else sample.split("## Transcript B")[1].split("## 判定")[0])
+    # A/B 各承载一臂(解盲后能对上):mapping 指候选,另一臂是基线
+    section_a = sample.split("## Transcript A")[1].split("## Transcript B")[0]
+    section_b = sample.split("## Transcript B")[1].split("## 判定")[0]
+    if mapping["challenge_coordinate_swap_20260914"] == "A":
+        assert "候选导师" in section_a and "基线导师" in section_b
+    else:
+        assert "基线导师" in section_a and "候选导师" in section_b
 
 
 def test_slice_v2_semantic_repair():
