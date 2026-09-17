@@ -107,7 +107,7 @@
 ### 参考读数(打完再看)
 
 - 判据 `sm_ge` | 期望 **1** | 终冻基线双跑 **1/1**(total 8/8,verdict review/review;source:v2 终冻(#314/#315/#318 全修 × 默认模板 ×2,2026-09-17))
-- gate-04-v2 对拍:run1 = False(total 8,review);run2 = False(total 8,review)——与终冻基线一致 ✓
+- gate-04-v2 对拍:run1 = 1(total 8,review);run2 = 1(total 8,review)——与终冻基线一致 ✓
 - 对答案重点:你给 1 还是 2?机器按「学生本人证据不足」停在下限 1(=期望)——对照 C26 体会「学生证据充分」与「方法总结在场但证据缺」的差别。
 
 ---
