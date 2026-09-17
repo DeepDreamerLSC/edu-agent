@@ -1,23 +1,23 @@
 {
   "batch_composition": {
-    "understanding": 0,
-    "stuck": 2,
-    "completion": 0,
+    "understanding": 3,
+    "stuck": 3,
+    "completion": 2,
     "background": 7
   },
-  "batch_size": 9,
+  "batch_size": 15,
   "scenarios": [
     {
       "name": "典型(无替换,2 代)",
       "tag": "A_typical",
       "rounds": 2,
-      "budget_calls": 74,
+      "budget_calls": 122,
       "breakdown": {
-        "tutor_calls": 36,
-        "judge_calls": 36,
+        "tutor_calls": 60,
+        "judge_calls": 60,
         "editor_calls": 2
       },
-      "facts_lines": 74,
+      "facts_lines": 122,
       "accepted": 0,
       "best": "我们从头把思路串一遍——"
     },
@@ -25,13 +25,13 @@
       "name": "最坏(每代替换+配对,2 代)",
       "tag": "B_worst",
       "rounds": 2,
-      "budget_calls": 146,
+      "budget_calls": 242,
       "breakdown": {
-        "tutor_calls": 108,
-        "judge_calls": 36,
+        "tutor_calls": 180,
+        "judge_calls": 60,
         "editor_calls": 2
       },
-      "facts_lines": 146,
+      "facts_lines": 242,
       "accepted": 2,
       "best": "变体乙:讲讲思路的第一步"
     },
@@ -39,13 +39,13 @@
       "name": "换批触发(7 代,2 次换批重评)",
       "tag": "C_cohort",
       "rounds": 7,
-      "budget_calls": 187,
+      "budget_calls": 307,
       "breakdown": {
-        "tutor_calls": 90,
-        "judge_calls": 90,
+        "tutor_calls": 150,
+        "judge_calls": 150,
         "editor_calls": 7
       },
-      "facts_lines": 187,
+      "facts_lines": 307,
       "accepted": 0,
       "best": "我们从头把思路串一遍——"
     },
@@ -53,13 +53,13 @@
       "name": "新增 hard fail(每代配对拒,3 代)",
       "tag": "D_hardfail",
       "rounds": 3,
-      "budget_calls": 201,
+      "budget_calls": 333,
       "breakdown": {
-        "tutor_calls": 153,
-        "judge_calls": 45,
+        "tutor_calls": 255,
+        "judge_calls": 75,
         "editor_calls": 3
       },
-      "facts_lines": 201,
+      "facts_lines": 333,
       "accepted": 0,
       "best": "我们从头把思路串一遍——"
     },
@@ -67,13 +67,13 @@
       "name": "阈值边界(过/拒各 1 代)",
       "tag": "E_threshold",
       "rounds": 2,
-      "budget_calls": 146,
+      "budget_calls": 242,
       "breakdown": {
-        "tutor_calls": 108,
-        "judge_calls": 36,
+        "tutor_calls": 180,
+        "judge_calls": 60,
         "editor_calls": 2
       },
-      "facts_lines": 146,
+      "facts_lines": 242,
       "accepted": 1,
       "best": "变体甲:讲讲思路的第一步"
     },
@@ -81,13 +81,13 @@
       "name": "fail→review(1 代)",
       "tag": "F_fail2review",
       "rounds": 1,
-      "budget_calls": 91,
+      "budget_calls": 151,
       "breakdown": {
-        "tutor_calls": 63,
-        "judge_calls": 27,
+        "tutor_calls": 105,
+        "judge_calls": 45,
         "editor_calls": 1
       },
-      "facts_lines": 91,
+      "facts_lines": 151,
       "accepted": 1,
       "best": "变体甲:讲讲思路的第一步"
     }

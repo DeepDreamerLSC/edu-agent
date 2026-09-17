@@ -1,16 +1,16 @@
 {
   "budget": {
-    "calls": 146,
+    "calls": 242,
     "rounds": 2,
-    "wall_s": 0.008723601000383496,
+    "wall_s": 0.01343702303711325,
     "exhausted": false
   },
   "call_breakdown": {
-    "tutor_calls": 108,
-    "judge_calls": 36,
+    "tutor_calls": 180,
+    "judge_calls": 60,
     "editor_calls": 2
   },
-  "run_identity": "32de2de6ae4b5673",
+  "run_identity": "b31b4454e10d59cb",
   "population_size": 3,
   "accepted_variants": 1,
   "best_candidate": {

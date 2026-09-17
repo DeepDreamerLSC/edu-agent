@@ -41,15 +41,21 @@
   "cohort_idx": 0,
   "paired_evidence": {
     "case_ids": [
-      "small_lecturer_teaching_context_shadow_pilot_20_stability_angles",
-      "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_parentheses",
-      "small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair",
-      "small_lecturer_math_gold_candidates_percentage_discount_misconception_repair",
-      "small_lecturer_math_gold_b2_fraction_multiplication_alternative_method",
-      "small_lecturer_math_gold_b2_circle_area_alternative_method",
-      "small_lecturer_math_gold_candidates_parentheses_equation_alternative_method",
-      "small_lecturer_math_gold_candidates_distance_speed_support_boundary",
-      "small_lecturer_math_gold_b2_circle_area_support_boundary"
+      "image_v2_understanding_04",
+      "image_v2_understanding_02",
+      "image_v2_understanding_01",
+      "image_v2_stuck_03",
+      "image_v2_stuck_04",
+      "image_v2_stuck_02",
+      "image_v2_answercollect_02",
+      "image_v2_answercollect_01",
+      "small_lecturer_math_gold_b2_circle_area_support_boundary",
+      "small_lecturer_math_gold_candidates_triangle_area_misconception_repair",
+      "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_sign",
+      "small_lecturer_math_gold_candidates_average_score_alternative_method",
+      "small_lecturer_math_gold_b2_fraction_multiplication_support_boundary",
+      "small_lecturer_math_gold_candidates_rectangle_perimeter_misconception_repair",
+      "small_lecturer_math_gold_candidates_distance_speed_complete_reasoning"
     ],
     "parent_hnu": {
       "h": 0,
@@ -61,53 +67,53 @@
       "h": 1,
       "n": 1,
       "u": 1,
-      "mean": 10.488888888888889
+      "mean": 11.013333333333334
     },
     "per_case": [
       {
-        "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_angles",
+        "case_id": "image_v2_understanding_04",
         "parent_total": 10.0,
         "variant_total": 0.0,
         "delta": -10.0
       },
       {
-        "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_parentheses",
+        "case_id": "image_v2_understanding_02",
         "parent_total": 10.0,
         "variant_total": 11.8,
         "delta": 1.8000000000000007
       },
       {
-        "case_id": "small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair",
+        "case_id": "image_v2_understanding_01",
         "parent_total": 10.0,
         "variant_total": 11.8,
         "delta": 1.8000000000000007
       },
       {
-        "case_id": "small_lecturer_math_gold_candidates_percentage_discount_misconception_repair",
+        "case_id": "image_v2_stuck_03",
         "parent_total": 10.0,
         "variant_total": 11.8,
         "delta": 1.8000000000000007
       },
       {
-        "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_alternative_method",
+        "case_id": "image_v2_stuck_04",
         "parent_total": 10.0,
         "variant_total": 11.8,
         "delta": 1.8000000000000007
       },
       {
-        "case_id": "small_lecturer_math_gold_b2_circle_area_alternative_method",
+        "case_id": "image_v2_stuck_02",
         "parent_total": 10.0,
         "variant_total": 11.8,
         "delta": 1.8000000000000007
       },
       {
-        "case_id": "small_lecturer_math_gold_candidates_parentheses_equation_alternative_method",
+        "case_id": "image_v2_answercollect_02",
         "parent_total": 10.0,
         "variant_total": 11.8,
         "delta": 1.8000000000000007
       },
       {
-        "case_id": "small_lecturer_math_gold_candidates_distance_speed_support_boundary",
+        "case_id": "image_v2_answercollect_01",
         "parent_total": 10.0,
         "variant_total": 11.8,
         "delta": 1.8000000000000007
@@ -117,12 +123,48 @@
         "parent_total": 10.0,
         "variant_total": 11.8,
         "delta": 1.8000000000000007
+      },
+      {
+        "case_id": "small_lecturer_math_gold_candidates_triangle_area_misconception_repair",
+        "parent_total": 10.0,
+        "variant_total": 11.8,
+        "delta": 1.8000000000000007
+      },
+      {
+        "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_sign",
+        "parent_total": 10.0,
+        "variant_total": 11.8,
+        "delta": 1.8000000000000007
+      },
+      {
+        "case_id": "small_lecturer_math_gold_candidates_average_score_alternative_method",
+        "parent_total": 10.0,
+        "variant_total": 11.8,
+        "delta": 1.8000000000000007
+      },
+      {
+        "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_support_boundary",
+        "parent_total": 10.0,
+        "variant_total": 11.8,
+        "delta": 1.8000000000000007
+      },
+      {
+        "case_id": "small_lecturer_math_gold_candidates_rectangle_perimeter_misconception_repair",
+        "parent_total": 10.0,
+        "variant_total": 11.8,
+        "delta": 1.8000000000000007
+      },
+      {
+        "case_id": "small_lecturer_math_gold_candidates_distance_speed_complete_reasoning",
+        "parent_total": 10.0,
+        "variant_total": 11.8,
+        "delta": 1.8000000000000007
       }
     ],
-    "gate_calls": 36,
+    "gate_calls": 60,
     "accepted": false,
     "accept_reason": "new_hard_fail",
-    "delta_mean": 0.488889
+    "delta_mean": 1.013333
   },
   "diff": [
     "--- parent\n",
@@ -132,16 +174,16 @@
     "+变体丙:讲讲思路的第一步,想想为什么"
   ],
   "stats": {
-    "calls": 18,
-    "tokens_in": 180,
-    "tokens_out": 90,
+    "calls": 30,
+    "tokens_in": 300,
+    "tokens_out": 150,
     "env_failures": 0,
     "content_failures": 0,
-    "tutor_calls": 9,
-    "judge_calls": 9,
+    "tutor_calls": 15,
+    "judge_calls": 15,
     "leak_net_violations": 0,
     "hard_vetoed": false,
-    "wall_ms": 0,
+    "wall_ms": 1,
     "h": 0,
     "n": 0,
     "u": 0,
@@ -149,47 +191,77 @@
   },
   "failures": [
     {
-      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_angles",
+      "case_id": "image_v2_understanding_04",
       "kind": "judge_low_score",
       "detail": "total=9.5/12"
     },
     {
-      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_parentheses",
+      "case_id": "image_v2_understanding_02",
       "kind": "judge_low_score",
       "detail": "total=9.5/12"
     },
     {
-      "case_id": "small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair",
+      "case_id": "image_v2_understanding_01",
       "kind": "judge_low_score",
       "detail": "total=9.5/12"
     },
     {
-      "case_id": "small_lecturer_math_gold_candidates_percentage_discount_misconception_repair",
+      "case_id": "image_v2_stuck_03",
       "kind": "judge_low_score",
       "detail": "total=9.5/12"
     },
     {
-      "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_alternative_method",
+      "case_id": "image_v2_stuck_04",
       "kind": "judge_low_score",
       "detail": "total=9.5/12"
     },
     {
-      "case_id": "small_lecturer_math_gold_b2_circle_area_alternative_method",
+      "case_id": "image_v2_stuck_02",
       "kind": "judge_low_score",
       "detail": "total=9.5/12"
     },
     {
-      "case_id": "small_lecturer_math_gold_candidates_parentheses_equation_alternative_method",
+      "case_id": "image_v2_answercollect_02",
       "kind": "judge_low_score",
       "detail": "total=9.5/12"
     },
     {
-      "case_id": "small_lecturer_math_gold_candidates_distance_speed_support_boundary",
+      "case_id": "image_v2_answercollect_01",
       "kind": "judge_low_score",
       "detail": "total=9.5/12"
     },
     {
       "case_id": "small_lecturer_math_gold_b2_circle_area_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "total=9.5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_triangle_area_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "total=9.5/12"
+    },
+    {
+      "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_sign",
+      "kind": "judge_low_score",
+      "detail": "total=9.5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_average_score_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "total=9.5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "total=9.5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_rectangle_perimeter_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "total=9.5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_distance_speed_complete_reasoning",
       "kind": "judge_low_score",
       "detail": "total=9.5/12"
     }

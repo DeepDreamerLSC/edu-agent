@@ -7,6 +7,8 @@
 
 场景:A 典型(无替换)/ B 最坏(每代替换+配对)/ C 换批触发(7 代)/
 D 新增 hard fail 拒 / E 阈值边界(0.125 过/0.124 拒)/ F fail→review。
+批 = 15 案(#335 采样源接通:3u+3s+2c 自 enriched12 + 7 背景自 93 池;
+completion 词形可认 2 案——answerhit 2 案 kernel 先判答案命中,词形不计)。
 跑法:python -m edu_agent.evals.artifacts.gepa-spike.trial-rehearsal.rehearse
 (路径含连字符,直接 python edu_agent/evals/artifacts/gepa-spike/trial-rehearsal/rehearse.py)
 """
@@ -155,11 +157,12 @@ class Checker:
 
 
 def _check_batch() -> dict:
-    """T1:分层批构成(v2 池词形实测);返回构成统计,批案 ID 存模块级。"""
-    batch = sample_stratified_batch(V2_CASES, 0)
+    """T1:分层批构成(#335 接通后:enriched12 信号源 + 93 池背景)。"""
+    batch = sample_stratified_batch(V2_CASES, 0)  # default = enriched12 真文件
     comp = _composition(batch)
-    print(f"[T1] v2 93 案池分层批: {comp} 共 {len(batch)} 案")
-    assert len(batch) == sum(comp.values())
+    print(f"[T1] 批构成(enriched12+93 池): {comp} 共 {len(batch)} 案")
+    assert len(batch) == 15  # 3u+3s+2c+7p
+    assert (comp["understanding"], comp["stuck"], comp["completion"]) == (3, 3, 2)
     BATCH_CASE_IDS.extend(c.get("id", "") for c in batch)
     return comp
 

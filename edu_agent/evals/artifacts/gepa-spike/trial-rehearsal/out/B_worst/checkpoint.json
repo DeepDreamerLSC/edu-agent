@@ -1,10 +1,10 @@
 {
  "next_round": 2,
- "identity": "32de2de6ae4b5673",
+ "identity": "b31b4454e10d59cb",
  "budget": {
-  "calls": 146,
+  "calls": 242,
   "rounds": 2,
-  "wall_s": 0.008530591032467782,
+  "wall_s": 0.013220445020124316,
   "exhausted": false
  },
  "best": {
@@ -19,8 +19,8 @@
   }
  },
  "call_breakdown": {
-  "tutor_calls": 108,
-  "judge_calls": 36,
+  "tutor_calls": 180,
+  "judge_calls": 60,
   "editor_calls": 2
  },
  "last_failures": []
