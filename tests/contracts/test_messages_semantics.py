@@ -9,7 +9,7 @@ from __future__ import annotations
 import pytest
 
 from edu_agent.api import ApiError
-from partner_api import ScriptedKernel, open_session, parse_sse, post, serving
+from partner_api import ScriptedKernel, open_session, parse_sse, post
 
 REPLIES = ["你列了哪些已知量?", "很好,继续。", "结论对。", "总结:方法你讲清了。",
            "第五轮。", "第六轮。", "第七轮。", "第八轮。"]
@@ -31,10 +31,9 @@ class FlakyKernel:
 
 
 @pytest.fixture
-def api():
+def api(serve):
     kernel = ScriptedKernel(replies=list(REPLIES), ready_at=99)  # 本文件不测判停
-    with serving(kernel) as base:
-        yield base, kernel
+    return serve(kernel), kernel
 
 
 # ---------- interaction_action 路由(仅 confirm + 普通对话) ----------
@@ -96,20 +95,20 @@ def test_sse_success_frame_order_status_first(api):
     assert by_event["done"]["assistant_message"]["content"]
 
 
-def test_sse_kernel_error_frame_in_band():
+def test_sse_kernel_error_frame_in_band(serve):
     """内核异常(503 族)→ 流内 error 帧:友好文案+错误码(流已开,in-band)。"""
-    with serving(FlakyKernel()) as base:
-        opened = open_session(base, question_id="q-err")
-        response = post(base,
-                        f"/api/conversations/{opened['conversation']['conversation_id']}/messages/stream",
-                        {"content": "触发内核异常",
-                         "input": {"skill_session_id": opened["skill_session_id"],
-                                   "expected_session_version": 1}})
-        frames = parse_sse(response.content)
-        assert response.status_code == 200  # 流已开,错误 in-band
-        assert frames[-1][0] == "error"
-        error = frames[-1][1]
-        assert error["code"] and "稍后重试" in error["message"]  # 错误码+友好文案
+    base = serve(FlakyKernel())
+    opened = open_session(base, question_id="q-err")
+    response = post(base,
+                    f"/api/conversations/{opened['conversation']['conversation_id']}/messages/stream",
+                    {"content": "触发内核异常",
+                     "input": {"skill_session_id": opened["skill_session_id"],
+                               "expected_session_version": 1}})
+    frames = parse_sse(response.content)
+    assert response.status_code == 200  # 流已开,错误 in-band
+    assert frames[-1][0] == "error"
+    error = frames[-1][1]
+    assert error["code"] and "稍后重试" in error["message"]  # 错误码+友好文案
 
 
 # ---------- 消息幂等(message_idempotency_key) ----------

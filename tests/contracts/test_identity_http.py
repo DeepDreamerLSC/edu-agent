@@ -14,7 +14,7 @@ import pytest
 
 from edu_agent.api import IdentityService
 
-from partner_api import ScriptedKernel, serving
+from partner_api import ScriptedKernel
 from partner_fixture import generate_key, identity_config, pkce_challenge, public_pem, sign_rs256
 from auth_testing import signed_token
 
@@ -26,14 +26,13 @@ EXTERNAL_ID = "student-001"
 
 
 @pytest.fixture
-def base_url():
+def base_url(serve):
     """完整对话服务(stub 内核 + 真身份):PKCE 舞步打的就是部署形态的 HTTP 面。"""
     config = dict(identity_config(API_KEY, HMAC_KEY), verify_key_pem="")
     key = generate_key(1024)
     config["verify_key_pem"] = public_pem(key)
-    with serving(ScriptedKernel(["第一问"], start_text="第一问"),
-                 identity=IdentityService(config)) as base:
-        yield base, key
+    return serve(ScriptedKernel(["第一问"], start_text="第一问"),
+                 identity=IdentityService(config)), key
 
 
 def _assertion(key, external_id=EXTERNAL_ID):
