@@ -516,10 +516,15 @@ def test_c2_fact_writer_counts_only_its_own_process(tmp_path):
     from edu_agent.gateway import FactWriter
 
     mine, bystander = FactWriter(tmp_path), FactWriter(tmp_path)
-    mine.write({"gen_ai.usage.input_tokens": 10, "gen_ai.usage.output_tokens": 5})
-    bystander.write({"gen_ai.usage.input_tokens": 99, "gen_ai.usage.output_tokens": 99})
-    bystander.write({"gen_ai.usage.input_tokens": 99, "gen_ai.usage.output_tokens": 99})
-    mine.write({"gen_ai.usage.input_tokens": 20, "gen_ai.usage.output_tokens": 8,
+    # edu.outcome 补真实字段形态(#332 账实后 count 只计成功调用)
+    mine.write({"edu.outcome": "ok", "gen_ai.usage.input_tokens": 10,
+                "gen_ai.usage.output_tokens": 5})
+    bystander.write({"edu.outcome": "ok", "gen_ai.usage.input_tokens": 99,
+                     "gen_ai.usage.output_tokens": 99})
+    bystander.write({"edu.outcome": "ok", "gen_ai.usage.input_tokens": 99,
+                     "gen_ai.usage.output_tokens": 99})
+    mine.write({"edu.outcome": "ok", "gen_ai.usage.input_tokens": 20,
+                "gen_ai.usage.output_tokens": 8,
                 "gen_ai.usage.cache_read.input_tokens": 3})
     # 本 run 计数只含自己:2 行,不含旁路 2 行
     assert mine.count == 2 and mine.tokens_in == 30 and mine.tokens_out == 13
