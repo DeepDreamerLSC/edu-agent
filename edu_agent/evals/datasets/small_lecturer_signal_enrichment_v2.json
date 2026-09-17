@@ -1,249 +1,249 @@
 {
-  "schema_version": "small_lecturer_signal_enrichment/v2",
-  "description": "M3 收官 elicit 富化:12 案(understanding/stuck/completion 各 4),合成学生行为照 S2 信号模式建模,零真实学生数据。触发词形全部用 kernel 既有信号函数的匹配口径,经 tests/teaching/test_signal_enrichment_v2.py 逐案验证。读法约定(审查 P3):expected.trigger_round 为 0 基 student_turns 索引(0=首问后第一轮);trigger_word 可复合(「+」分隔,逐个在触发轮原文命中);触发后轮不主张信号归零(持续卡壳/理解态真实,消费侧按首次信号触发)。",
-  "scenarios": [
-    {
-      "id": "enrich_v2_understanding_01",
-      "title": "分数除法·倒数关系(understanding→elicit)",
-      "grade": "六年级",
-      "question": {
-        "text": "计算 3/4 ÷ 3/8,并说明你是怎么想的。"
-      },
-      "reference_answer": "3/4 ÷ 3/8 = 3/4 × 8/3 = 2",
-      "bucket": "signal_understanding",
-      "student_turns": [
-        "3/4 除以 3/8……除以一个分数要乘它的倒数,但是为什么要乘倒数啊？",
-        "哦，我明白了！除以 3/8 就等于乘 8/3，因为除以一个数等于乘它的倒数。3/4 × 8/3 = 24/12 = 2。",
-        "所以答案就是 2，而且我理解了为什么这样做。"
-      ],
-      "expected": {
-        "signal_family": "understanding",
-        "trigger_round": 1,
-        "trigger_word": "明白了",
-        "note": "第 1 轮学生说「明白了」→ elicit 复讲;第 2 轮复讲+结论"
-      }
-    },
-    {
-      "id": "enrich_v2_understanding_02",
-      "title": "百分数·折扣换算(understanding→elicit)",
-      "grade": "六年级",
-      "question": {
-        "text": "一件商品原价 200 元,现在打七五折出售,现价是多少元?"
-      },
-      "reference_answer": "200 × 75% = 150 元",
-      "bucket": "signal_understanding",
-      "student_turns": [
-        "七五折就是 75%，那现价是原价乘 75%……但为什么乘的是 75% 不是 25% 啊？",
-        "我懂了！打七五折的意思是按原价的 75% 出售，所以现价 = 200 × 0.75 = 150 元。不是便宜的那部分。",
-        "150 元，就是 200 元的 75%。"
-      ],
-      "expected": {
-        "signal_family": "understanding",
-        "trigger_round": 1,
-        "trigger_word": "懂了",
-        "note": "第 1 轮「我懂了」(负向断言排除「不会了」)→ elicit 复讲"
-      }
-    },
-    {
-      "id": "enrich_v2_understanding_03",
-      "title": "鸡兔同笼·假设法验证(understanding→elicit)",
-      "grade": "六年级",
-      "question": {
-        "text": "笼子里有鸡和兔共 10 只,脚共 28 只。鸡和兔各有几只?"
-      },
-      "reference_answer": "鸡 6 只,兔 4 只",
-      "bucket": "signal_understanding",
-      "student_turns": [
-        "假设全是鸡，脚是 20 只，差了 8 只脚。兔子比鸡多 2 只脚，所以兔是 8÷2=4 只，鸡是 6 只。",
-        "都没问题了！6×2+4×4=12+16=28 只脚，4+6=10 只动物，全部对上。"
-      ],
-      "expected": {
-        "signal_family": "understanding",
-        "trigger_round": 1,
-        "trigger_word": "没问题",
-        "note": "第 1 轮(验算轮)「都没问题了」→ elicit 复讲;只两轮(学生已自算完整)"
-      }
-    },
-    {
-      "id": "enrich_v2_understanding_04",
-      "title": "圆柱体积·公式推导(understanding→elicit)",
-      "grade": "六年级",
-      "question": {
-        "text": "一个圆柱底面半径 3 cm,高 5 cm,体积是多少立方厘米?"
-      },
-      "reference_answer": "π×3²×5 = 45π ≈ 141.3 cm³",
-      "bucket": "signal_understanding",
-      "student_turns": [
-        "圆柱体积是底面积乘高。底面积是 πr² = π×9 = 9π。",
-        "所以体积是 9π×5 = 45π 立方厘米，大约 141.3。我会了，就是把底面积乘高就行。",
-        "底面半径 3，π×3×3=9π，再乘高 5。"
-      ],
-      "expected": {
-        "signal_family": "understanding",
-        "trigger_round": 1,
-        "trigger_word": "会了",
-        "note": "第 1 轮「我会了」(负向断言排除「不会了」)→ elicit 复讲"
-      }
-    },
-    {
-      "id": "enrich_v2_stuck_01",
-      "title": "行程问题·相遇(stuck→support)",
-      "grade": "五年级",
-      "question": {
-        "text": "甲、乙两人同时从相距 24 km 的两地相向而行,甲每小时走 4 km,乙每小时走 5 km,几小时后两人相遇?"
-      },
-      "reference_answer": "24 ÷ (4+5) = 8/3 小时",
-      "bucket": "signal_stuck",
-      "student_turns": [
-        "相向而行……两个人都在走，那他们之间剩下的距离越来越小……但是我不知道该怎么列式子。",
-        "这道题太难了，我完全不知道从哪里下手。"
-      ],
-      "expected": {
-        "signal_family": "stuck",
-        "trigger_round": 0,
-        "trigger_word": "不知道",
-        "note": "第 0 轮裸「不知道」→ 卡壳族 support(量问守卫不触发:后面没有跟量问对象)"
-      }
-    },
-    {
-      "id": "enrich_v2_stuck_02",
-      "title": "分数应用·余量(stuck→support)",
-      "grade": "五年级",
-      "question": {
-        "text": "一根绳子长 12 米,第一次用去全长的 1/3,第二次用去 2 米,还剩多少米?"
-      },
-      "reference_answer": "12 × (1−1/3) − 2 = 6 米",
-      "bucket": "signal_stuck",
-      "student_turns": [
-        "第一次用去 1/3，就是 4 米。然后又用了 2 米……",
-        "可是我不知道剩下的应该怎么算，是 12−4−2=6 吗？还是先算剩的分数再减？我看不懂题目的意思。"
-      ],
-      "expected": {
-        "signal_family": "stuck",
-        "trigger_round": 1,
-        "trigger_word": "看不懂",
-        "note": "第 1 轮「看不懂」→ 卡壳族 support"
-      }
-    },
-    {
-      "id": "enrich_v2_stuck_03",
-      "title": "图形面积·组合(想不出→support)",
-      "grade": "五年级",
-      "question": {
-        "text": "一个长方形长 10 cm,宽 6 cm。在长方形内画一个最大的三角形(三个顶点在长方形的边上),这个三角形的面积是多少?"
-      },
-      "reference_answer": "10 × 6 ÷ 2 = 30 cm²",
-      "bucket": "signal_stuck",
-      "student_turns": [
-        "最大的三角形……三个顶点都要在长方形的边上……",
-        "我想不出应该怎么画，也不知道三角形的面积怎么算。这道题太难了。"
-      ],
-      "expected": {
-        "signal_family": "stuck",
-        "trigger_round": 1,
-        "trigger_word": "想不出+太难了",
-        "note": "第 1 轮双重卡壳信号(想不出+太难了)→ support"
-      }
-    },
-    {
-      "id": "enrich_v2_stuck_04",
-      "title": "比例尺·换算(还是不会→support)",
-      "grade": "六年级",
-      "question": {
-        "text": "在一幅比例尺为 1:50000 的地图上,量得两地距离为 6 cm。这两地的实际距离是多少千米?"
-      },
-      "reference_answer": "6 × 50000 = 300000 cm = 3 km",
-      "bucket": "signal_stuck",
-      "student_turns": [
-        "比例尺 1:50000，就是图上 1 cm 代表实际 50000 cm……50000 cm 就是 500 米？",
-        "6 cm 的话……6×50000=300000 cm……300000 cm 是多少千米啊？我还是不会换算。"
-      ],
-      "expected": {
-        "signal_family": "stuck",
-        "trigger_round": 1,
-        "trigger_word": "还是不会",
-        "note": "第 1 轮「还是不会」→ 卡壳族 support(第二次仍卡住)"
-      }
-    },
-    {
-      "id": "enrich_v2_completion_01",
-      "title": "小数乘法·竖式(completion→复讲+判停)",
-      "grade": "五年级",
-      "question": {
-        "text": "计算 2.5 × 0.4 = ?"
-      },
-      "reference_answer": "1",
-      "bucket": "signal_completion",
-      "student_turns": [
-        "2.5 × 0.4，先算 25 × 4 = 100，因数里一共两位小数，从 100 往回数两位，答案是 1。",
-        "我做完了，2.5×0.4 = 1，因为 25×4=100，两位小数点回去就是 1。"
-      ],
-      "expected": {
-        "signal_family": "completion",
-        "trigger_round": 1,
-        "trigger_word": "做完了",
-        "note": "第 1 轮「做完了」→ 复讲+判停"
-      }
-    },
-    {
-      "id": "enrich_v2_completion_02",
-      "title": "简易方程·解方程(completion→复讲+判停)",
-      "grade": "五年级",
-      "question": {
-        "text": "解方程:3x − 7 = 8"
-      },
-      "reference_answer": "x = 5",
-      "bucket": "signal_completion",
-      "student_turns": [
-        "3x − 7 = 8，那 3x = 8 + 7 = 15，x = 15 ÷ 3 = 5。",
-        "算出来了！x = 5。代回去验证：3×5−7 = 15−7 = 8 ✓"
-      ],
-      "expected": {
-        "signal_family": "completion",
-        "trigger_round": 1,
-        "trigger_word": "算出来了",
-        "note": "第 1 轮「算出来了」→ 复讲+判停"
-      }
-    },
-    {
-      "id": "enrich_v2_completion_03",
-      "title": "长方形周长·公式应用(completion→复讲+判停)",
-      "grade": "三年级",
-      "question": {
-        "text": "一个长方形长 8 厘米,宽 5 厘米,周长是多少厘米?"
-      },
-      "reference_answer": "(8+5)×2 = 26 cm",
-      "bucket": "signal_completion",
-      "student_turns": [
-        "长方形周长就是(长+宽)×2。(8+5)×2=13×2=26 厘米。",
-        "算好了！26 厘米。"
-      ],
-      "expected": {
-        "signal_family": "completion",
-        "trigger_round": 1,
-        "trigger_word": "算好了",
-        "note": "第 1 轮「算好了」→ 复讲+判停(三年级,回复应短且直白)"
-      }
-    },
-    {
-      "id": "enrich_v2_completion_04",
-      "title": "分数化小数·结果得出(completion→复讲+判停)",
-      "grade": "五年级",
-      "question": {
-        "text": "把 3/20 化成小数。"
-      },
-      "reference_answer": "0.15",
-      "bucket": "signal_completion",
-      "student_turns": [
-        "3/20,分母 20 = 4×5,3/20 = 3×5 / 100 = 15/100 = 0.15。",
-        "得出最终答案,0.15。"
-      ],
-      "expected": {
-        "signal_family": "completion",
-        "trigger_round": 1,
-        "trigger_word": "得出最终答案",
-        "note": "第 1 轮「得出最终答案」→ 复讲+判停"
-      }
-    }
-  ]
+ "schema_version": "small_lecturer_signal_enrichment/v2",
+ "description": "M3 收官 elicit 富化:12 案(understanding/stuck/completion 各 4),合成学生行为照 S2 信号模式建模,零真实学生数据。触发词形全部用 kernel 既有信号函数的匹配口径,经 tests/teaching/test_signal_enrichment_v2.py 逐案验证。读法约定(审查 P3):expected.trigger_round 为 0 基 student_turns 索引(0=首问后第一轮);trigger_word 可复合(「+」分隔,逐个在触发轮原文命中);触发后轮不主张信号归零(持续卡壳/理解态真实,消费侧按首次信号触发)。互补件(PM 2026-09-17 裁定两层并存,互引):small_lecturer_image_teaching_v2_enriched12.json(PR #327)= image_teaching/v1 schema、图片题教学场景、评测线 harness/to_cases 消费面;本件 = signal_enrichment/v2 schema、纯文本题面、信号检测语料(tests/teaching 消费)。",
+ "scenarios": [
+  {
+   "id": "enrich_v2_understanding_01",
+   "title": "分数除法·倒数关系(understanding→elicit)",
+   "grade": "六年级",
+   "question": {
+    "text": "计算 3/4 ÷ 3/8,并说明你是怎么想的。"
+   },
+   "reference_answer": "3/4 ÷ 3/8 = 3/4 × 8/3 = 2",
+   "bucket": "signal_understanding",
+   "student_turns": [
+    "3/4 除以 3/8……除以一个分数要乘它的倒数,但是为什么要乘倒数啊？",
+    "哦，我明白了！除以 3/8 就等于乘 8/3，因为除以一个数等于乘它的倒数。3/4 × 8/3 = 24/12 = 2。",
+    "所以答案就是 2，而且我理解了为什么这样做。"
+   ],
+   "expected": {
+    "signal_family": "understanding",
+    "trigger_round": 1,
+    "trigger_word": "明白了",
+    "note": "第 1 轮学生说「明白了」→ elicit 复讲;第 2 轮复讲+结论"
+   }
+  },
+  {
+   "id": "enrich_v2_understanding_02",
+   "title": "百分数·折扣换算(understanding→elicit)",
+   "grade": "六年级",
+   "question": {
+    "text": "一件商品原价 200 元,现在打七五折出售,现价是多少元?"
+   },
+   "reference_answer": "200 × 75% = 150 元",
+   "bucket": "signal_understanding",
+   "student_turns": [
+    "七五折就是 75%，那现价是原价乘 75%……但为什么乘的是 75% 不是 25% 啊？",
+    "我懂了！打七五折的意思是按原价的 75% 出售，所以现价 = 200 × 0.75 = 150 元。不是便宜的那部分。",
+    "150 元，就是 200 元的 75%。"
+   ],
+   "expected": {
+    "signal_family": "understanding",
+    "trigger_round": 1,
+    "trigger_word": "懂了",
+    "note": "第 1 轮「我懂了」(负向断言排除「不会了」)→ elicit 复讲"
+   }
+  },
+  {
+   "id": "enrich_v2_understanding_03",
+   "title": "鸡兔同笼·假设法验证(understanding→elicit)",
+   "grade": "六年级",
+   "question": {
+    "text": "笼子里有鸡和兔共 10 只,脚共 28 只。鸡和兔各有几只?"
+   },
+   "reference_answer": "鸡 6 只,兔 4 只",
+   "bucket": "signal_understanding",
+   "student_turns": [
+    "假设全是鸡，脚是 20 只，差了 8 只脚。兔子比鸡多 2 只脚，所以兔是 8÷2=4 只，鸡是 6 只。",
+    "都没问题了！6×2+4×4=12+16=28 只脚，4+6=10 只动物，全部对上。"
+   ],
+   "expected": {
+    "signal_family": "understanding",
+    "trigger_round": 1,
+    "trigger_word": "没问题",
+    "note": "第 1 轮(验算轮)「都没问题了」→ elicit 复讲;只两轮(学生已自算完整)"
+   }
+  },
+  {
+   "id": "enrich_v2_understanding_04",
+   "title": "圆柱体积·公式推导(understanding→elicit)",
+   "grade": "六年级",
+   "question": {
+    "text": "一个圆柱底面半径 3 cm,高 5 cm,体积是多少立方厘米?"
+   },
+   "reference_answer": "π×3²×5 = 45π ≈ 141.3 cm³",
+   "bucket": "signal_understanding",
+   "student_turns": [
+    "圆柱体积是底面积乘高。底面积是 πr² = π×9 = 9π。",
+    "所以体积是 9π×5 = 45π 立方厘米，大约 141.3。我会了，就是把底面积乘高就行。",
+    "底面半径 3，π×3×3=9π，再乘高 5。"
+   ],
+   "expected": {
+    "signal_family": "understanding",
+    "trigger_round": 1,
+    "trigger_word": "会了",
+    "note": "第 1 轮「我会了」(负向断言排除「不会了」)→ elicit 复讲"
+   }
+  },
+  {
+   "id": "enrich_v2_stuck_01",
+   "title": "行程问题·相遇(stuck→support)",
+   "grade": "五年级",
+   "question": {
+    "text": "甲、乙两人同时从相距 24 km 的两地相向而行,甲每小时走 4 km,乙每小时走 5 km,几小时后两人相遇?"
+   },
+   "reference_answer": "24 ÷ (4+5) = 8/3 小时",
+   "bucket": "signal_stuck",
+   "student_turns": [
+    "相向而行……两个人都在走，那他们之间剩下的距离越来越小……但是我不知道该怎么列式子。",
+    "这道题太难了，我完全不知道从哪里下手。"
+   ],
+   "expected": {
+    "signal_family": "stuck",
+    "trigger_round": 0,
+    "trigger_word": "不知道",
+    "note": "第 0 轮裸「不知道」→ 卡壳族 support(量问守卫不触发:后面没有跟量问对象)"
+   }
+  },
+  {
+   "id": "enrich_v2_stuck_02",
+   "title": "分数应用·余量(stuck→support)",
+   "grade": "五年级",
+   "question": {
+    "text": "一根绳子长 12 米,第一次用去全长的 1/3,第二次用去 2 米,还剩多少米?"
+   },
+   "reference_answer": "12 × (1−1/3) − 2 = 6 米",
+   "bucket": "signal_stuck",
+   "student_turns": [
+    "第一次用去 1/3，就是 4 米。然后又用了 2 米……",
+    "可是我不知道剩下的应该怎么算，是 12−4−2=6 吗？还是先算剩的分数再减？我看不懂题目的意思。"
+   ],
+   "expected": {
+    "signal_family": "stuck",
+    "trigger_round": 1,
+    "trigger_word": "看不懂",
+    "note": "第 1 轮「看不懂」→ 卡壳族 support"
+   }
+  },
+  {
+   "id": "enrich_v2_stuck_03",
+   "title": "图形面积·组合(想不出→support)",
+   "grade": "五年级",
+   "question": {
+    "text": "一个长方形长 10 cm,宽 6 cm。在长方形内画一个最大的三角形(三个顶点在长方形的边上),这个三角形的面积是多少?"
+   },
+   "reference_answer": "10 × 6 ÷ 2 = 30 cm²",
+   "bucket": "signal_stuck",
+   "student_turns": [
+    "最大的三角形……三个顶点都要在长方形的边上……",
+    "我想不出应该怎么画，也不知道三角形的面积怎么算。这道题太难了。"
+   ],
+   "expected": {
+    "signal_family": "stuck",
+    "trigger_round": 1,
+    "trigger_word": "想不出+太难了",
+    "note": "第 1 轮双重卡壳信号(想不出+太难了)→ support"
+   }
+  },
+  {
+   "id": "enrich_v2_stuck_04",
+   "title": "比例尺·换算(还是不会→support)",
+   "grade": "六年级",
+   "question": {
+    "text": "在一幅比例尺为 1:50000 的地图上,量得两地距离为 6 cm。这两地的实际距离是多少千米?"
+   },
+   "reference_answer": "6 × 50000 = 300000 cm = 3 km",
+   "bucket": "signal_stuck",
+   "student_turns": [
+    "比例尺 1:50000，就是图上 1 cm 代表实际 50000 cm……50000 cm 就是 500 米？",
+    "6 cm 的话……6×50000=300000 cm……300000 cm 是多少千米啊？我还是不会换算。"
+   ],
+   "expected": {
+    "signal_family": "stuck",
+    "trigger_round": 1,
+    "trigger_word": "还是不会",
+    "note": "第 1 轮「还是不会」→ 卡壳族 support(第二次仍卡住)"
+   }
+  },
+  {
+   "id": "enrich_v2_completion_01",
+   "title": "小数乘法·竖式(completion→复讲+判停)",
+   "grade": "五年级",
+   "question": {
+    "text": "计算 2.5 × 0.4 = ?"
+   },
+   "reference_answer": "1",
+   "bucket": "signal_completion",
+   "student_turns": [
+    "2.5 × 0.4，先算 25 × 4 = 100，因数里一共两位小数，从 100 往回数两位，答案是 1。",
+    "我做完了，2.5×0.4 = 1，因为 25×4=100，两位小数点回去就是 1。"
+   ],
+   "expected": {
+    "signal_family": "completion",
+    "trigger_round": 1,
+    "trigger_word": "做完了",
+    "note": "第 1 轮「做完了」→ 复讲+判停"
+   }
+  },
+  {
+   "id": "enrich_v2_completion_02",
+   "title": "简易方程·解方程(completion→复讲+判停)",
+   "grade": "五年级",
+   "question": {
+    "text": "解方程:3x − 7 = 8"
+   },
+   "reference_answer": "x = 5",
+   "bucket": "signal_completion",
+   "student_turns": [
+    "3x − 7 = 8，那 3x = 8 + 7 = 15，x = 15 ÷ 3 = 5。",
+    "算出来了！x = 5。代回去验证：3×5−7 = 15−7 = 8 ✓"
+   ],
+   "expected": {
+    "signal_family": "completion",
+    "trigger_round": 1,
+    "trigger_word": "算出来了",
+    "note": "第 1 轮「算出来了」→ 复讲+判停"
+   }
+  },
+  {
+   "id": "enrich_v2_completion_03",
+   "title": "长方形周长·公式应用(completion→复讲+判停)",
+   "grade": "三年级",
+   "question": {
+    "text": "一个长方形长 8 厘米,宽 5 厘米,周长是多少厘米?"
+   },
+   "reference_answer": "(8+5)×2 = 26 cm",
+   "bucket": "signal_completion",
+   "student_turns": [
+    "长方形周长就是(长+宽)×2。(8+5)×2=13×2=26 厘米。",
+    "算好了！26 厘米。"
+   ],
+   "expected": {
+    "signal_family": "completion",
+    "trigger_round": 1,
+    "trigger_word": "算好了",
+    "note": "第 1 轮「算好了」→ 复讲+判停(三年级,回复应短且直白)"
+   }
+  },
+  {
+   "id": "enrich_v2_completion_04",
+   "title": "分数化小数·结果得出(completion→复讲+判停)",
+   "grade": "五年级",
+   "question": {
+    "text": "把 3/20 化成小数。"
+   },
+   "reference_answer": "0.15",
+   "bucket": "signal_completion",
+   "student_turns": [
+    "3/20,分母 20 = 4×5,3/20 = 3×5 / 100 = 15/100 = 0.15。",
+    "得出最终答案,0.15。"
+   ],
+   "expected": {
+    "signal_family": "completion",
+    "trigger_round": 1,
+    "trigger_word": "得出最终答案",
+    "note": "第 1 轮「得出最终答案」→ 复讲+判停"
+   }
+  }
+ ]
 }
