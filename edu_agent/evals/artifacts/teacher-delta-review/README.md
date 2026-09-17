@@ -169,3 +169,13 @@ Mac(linmacbook-pro)worktree@08f2fdcd,`PYTHONPATH=$PWD` + 原 checkout
 
 `viability.py`(脚本)+ `out/viability/`(screen-support 4 案 + elicit 2 案×2 spec +
 support 2 案×2 spec + summaries + run.log)。
+
+## P3-② 台账补齐(审查者要求)
+
+viability 68 calls 的原始 FactWriter facts 误删(清 Mac worktree 时只收
+\`out/viability/\` 漏 \`out/facts/\`——收工不彻底同族失误,自报)。补齐:
+\`out/viability/calls-reconstructed.json\`——从在案工件重建的逐评测调用清单
+(筛段:start+model 轮+judge 重算口径,4 案合计 **11=实录 11**;续跑:run.log
+原始累计打印,末值 **57=实录 57**;总 68 与回执平)。**逐调用原始
+ts/role/redacted sha 不可重建,如实缺失**;顺序证明退化为弱化版(预注册评论
+ts 服务器时间 14:23:39 + commit ts 14:48 + 转录内容序),不再独立到调用级。
