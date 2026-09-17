@@ -1,5 +1,7 @@
 """⑦门候选切片跑批器测试(#256 阶段 3,零 API)。"""
 
+import json
+
 from unittest.mock import MagicMock, patch
 
 from edu_agent.evals import (
@@ -110,3 +112,29 @@ def test_build_teacher_pack_blind_and_reversible(tmp_path):
     assert "候选导师" in (sample.split("## Transcript A")[1].split("## Transcript B")[0]
                         if mapping["challenge_coordinate_swap_20260914"] == "A"
                         else sample.split("## Transcript B")[1].split("## 判定")[0])
+
+
+def test_slice_v2_semantic_repair():
+    """v2:C35 退出(11 案无 simple_probability),C36 进驻(慈善转述正向位);
+    十案逐字携带;判据锚逐字相同。"""
+    from edu_agent.evals import load_slice_rows
+
+    v1 = load_slice_rows("v1")
+    v2 = load_slice_rows("v2")
+    assert len(v2) == 11
+    assert "small_lecturer_math_gold_candidates_simple_probability_complete_reasoning" not in v2
+    c36 = "small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract"
+    assert c36 in v2 and v2[c36]["messages"]
+    carried = set(v1) - {"small_lecturer_math_gold_candidates_simple_probability_complete_reasoning"}
+    assert carried <= set(v2)  # 十案逐字携带
+    v1_rows = {json.loads(l)["case_id"]: json.loads(l) for l in open(
+        "edu_agent/evals/artifacts/teacher-gate-slice/slice-baseline.jsonl") if l.strip()}
+    v2_rows = {json.loads(l)["case_id"]: json.loads(l) for l in open(
+        "edu_agent/evals/artifacts/teacher-gate-slice-v2/slice-baseline.jsonl") if l.strip()}
+    for cid in carried:
+        assert v2_rows[cid]["expected"] == v1_rows[cid]["expected"]  # 判据/期望不变
+        assert v2_rows[cid]["criterion"] == v1_rows[cid]["criterion"]
+    assert v2_rows[c36]["criterion"] == "leak" and v2_rows[c36]["expected"] is False
+    # C36 可运行(池内 steps/stability 剧本)
+    cases = {c["id"]: c for c in load_runnable_cases("v2")}
+    assert cases[c36].get("steps") or cases[c36].get("student_turns")
