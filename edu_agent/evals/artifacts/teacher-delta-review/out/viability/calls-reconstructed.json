@@ -1,0 +1,93 @@
+{
+  "note": "P3-② 重建台账:原始 FactWriter facts 误删(清 worktree 漏收 out/facts/);本清单从在案工件(转录+guard+run.log 累计打印)重建,非逐调用原始行;逐调用 ts/role/redacted sha 不可重建,如实缺失",
+  "screen_reconstructed": 11,
+  "pair_from_log": 57,
+  "total_vs_receipt": 68,
+  "receipt_total": 68,
+  "rows": [
+    {
+      "phase": "screen",
+      "case": "image_v2_stuck_01",
+      "spec": "default",
+      "calls_reconstructed": 2,
+      "basis": "start1+model轮0+judge1"
+    },
+    {
+      "phase": "screen",
+      "case": "image_v2_stuck_02",
+      "spec": "default",
+      "calls_reconstructed": 3,
+      "basis": "start1+model轮1+judge1"
+    },
+    {
+      "phase": "screen",
+      "case": "image_v2_stuck_03",
+      "spec": "default",
+      "calls_reconstructed": 3,
+      "basis": "start1+model轮1+judge1"
+    },
+    {
+      "phase": "screen",
+      "case": "image_v2_stuck_04",
+      "spec": "default",
+      "calls_reconstructed": 3,
+      "basis": "start1+model轮1+judge1"
+    },
+    {
+      "phase": "pair-elicit",
+      "case": "image_v2_understanding_04",
+      "spec": "spec_A",
+      "calls_reconstructed": 9,
+      "basis": "run.log 累计(原始打印)"
+    },
+    {
+      "phase": "pair-elicit",
+      "case": "image_v2_understanding_04",
+      "spec": "spec_B",
+      "calls_reconstructed": 18,
+      "basis": "run.log 累计(原始打印)"
+    },
+    {
+      "phase": "pair-elicit",
+      "case": "image_v2_answerhit_01",
+      "spec": "spec_A",
+      "calls_reconstructed": 26,
+      "basis": "run.log 累计(原始打印)"
+    },
+    {
+      "phase": "pair-elicit",
+      "case": "image_v2_answerhit_01",
+      "spec": "spec_B",
+      "calls_reconstructed": 34,
+      "basis": "run.log 累计(原始打印)"
+    },
+    {
+      "phase": "pair-support",
+      "case": "image_v2_stuck_01",
+      "spec": "spec_A",
+      "calls_reconstructed": 40,
+      "basis": "run.log 累计(原始打印)"
+    },
+    {
+      "phase": "pair-support",
+      "case": "image_v2_stuck_01",
+      "spec": "spec_B",
+      "calls_reconstructed": 45,
+      "basis": "run.log 累计(原始打印)"
+    },
+    {
+      "phase": "pair-support",
+      "case": "image_v2_stuck_02",
+      "spec": "spec_A",
+      "calls_reconstructed": 52,
+      "basis": "run.log 累计(原始打印)"
+    },
+    {
+      "phase": "pair-support",
+      "case": "image_v2_stuck_02",
+      "spec": "spec_B",
+      "calls_reconstructed": 57,
+      "basis": "run.log 累计(原始打印)"
+    }
+  ]
+}

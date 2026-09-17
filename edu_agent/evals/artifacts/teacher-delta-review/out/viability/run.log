@@ -1,0 +1,16 @@
+[飞行前回显] 四份规格实际注入文本(逐字):
+  elicit_spec_A: '目标:让学生用自己的话讲出核心思路和第一步的做法。\n证据:需要听到学生自己的理由或依据,而不是复述小讲师的话;只报答案不算。\n动作:顺着学生刚才说的内容,问一个自然的追问(比如「你是怎么想到先这样做的?」);不要把几个要求一口气列给他。'
+  elicit_spec_B: '目标:让学生先讲清楚「下一步为什么这么做」这一件事。\n证据:学生能说出这一步的道理(哪怕不完整),不是沉默或只说「会了」。\n动作:用学生自己刚说过的原话开头,问他这一步是怎么推出来的;一次只问这一个点。'
+  support_spec_A: '目标:把学生卡住的这一步拆得更小,让他能接得上。\n证据:学生对拆小后的这一步有反应(能接着算或说出下一步),而不是继续说不会。\n动作:直接给出这一步的具体数值结果(照题面,如「这一步先算…得到…」),让他接着算下一步。'
+  support_spec_B: '目标:换一个更小的问点重新问,绕开卡住的表达。\n证据:学生对新问点有具体回应(给出数字、条件或判断),而不是重复卡住。\n动作:从题目条件里挑一个更基础的点直接问(比如「题目里告诉我们哪个数?」),语气放缓。'
+support 筛:4/4 触发:['image_v2_stuck_01', 'image_v2_stuck_02', 'image_v2_stuck_03', 'image_v2_stuck_04']
+[elicit/image_v2_understanding_04/spec_A] 轮数=5 elicit轮=[3] judge=5 calls=9
+[elicit/image_v2_understanding_04/spec_B] 轮数=5 elicit轮=[3] judge=5 calls=18
+[elicit/image_v2_answerhit_01/spec_A] 轮数=4 elicit轮=[2] judge=5 calls=26
+[elicit/image_v2_answerhit_01/spec_B] 轮数=4 elicit轮=[2] judge=5 calls=34
+[support/image_v2_stuck_01/spec_A] 轮数=4 support轮=[1, 2] judge=1 calls=40
+[support/image_v2_stuck_01/spec_B] 轮数=4 support轮=[1, 2] judge=6 calls=45
+[support/image_v2_stuck_02/spec_A] 轮数=4 support轮=[2, 3] judge=3 calls=52
+[support/image_v2_stuck_02/spec_B] 轮数=4 support轮=[2, 3] judge=3 calls=57
+
+viability 完成:calls 实计 57(硬顶 100)

@@ -1,0 +1,93 @@
+{
+  "transcript": {
+    "question_id": "image_v2_stuck_04",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "灯塔在图的中间,邮局在灯塔北偏东60°方向,这个我看到了。",
+        "tutor": "你看到邮局在灯塔北偏东60°方向，这没错！那如果以东为起点，邮局在东偏北多少度呢？我们来一起算算这个角度差。",
+        "state": "dialogue",
+        "elapsed_ms": 1538
+      },
+      {
+        "student": "看不懂北偏东换成东偏北该怎么转,我有点不会这种互换。",
+        "tutor": "我们从这里入手:北偏东60°表示从正北方向顺时针转60°指向邮局。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 4883,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          60.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 1,
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_fbe20e5f85"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        60.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 1,
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 1,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 4,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师第一轮未直接给答案，但紧接着说'我们来一起算算这个角度差'，泄露了关键解题步骤（计算角度差），学生无需思考即可得答案。",
+      "socratic_followup": "学生表示'看不懂...该怎么转'，小讲师解释'从正北方向顺时针转60°'后，仅说'你接着算下一步'，未针对'不懂怎么转'提供具体引导或追问，引导链断裂。",
+      "grade_fit": "语言通俗，'北偏东'、'东偏北'等术语符合六年级课标，解释角度转换逻辑清晰。",
+      "pacing": "小讲师连续两轮发言（'我们从这里入手...'和'这一题的学习证据还不够...'），未等待学生回应，属于一次性倾倒讲解且无实质推进，节奏失控。",
+      "summary_mastery": "对话中无总结环节，小讲师直接以'学习证据还不够'结束，未对学生表现进行任何掌握判断或方法总结。",
+      "termination": "学生明确表示'看不懂'且未给出任何答案，小讲师未进行有效引导即终止对话，属于学生未掌握就终止。",
+      "math_integrity": "小讲师陈述'北偏东60°表示从正北方向顺时针转60°'，该数学事实正确（北偏东即从北向东转，顺时针方向）；未引入错误数学事实。",
+      "answer_leaked": "小讲师全程未直接给出'东偏北30°'这一终答，学生也未给出该终答，故未发生终答泄露。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "case_id": "image_v2_stuck_04",
+  "spec": "default"
+}

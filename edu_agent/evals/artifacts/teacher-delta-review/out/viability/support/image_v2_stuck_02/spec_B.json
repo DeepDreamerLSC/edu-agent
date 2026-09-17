@@ -1,0 +1,179 @@
+{
+  "transcript": {
+    "question_id": "image_v2_stuck_02",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "3乘4分之1这样的我会,这张图是先量再剪,我把3和4约分,得12分之3?",
+        "tutor": "你刚才说3和4约分得到12分之3，这个想法很有趣，但题目里纸条是4分米，不是3分米哦，我们得用4×1/4来算，你试试看怎么分？",
+        "state": "dialogue",
+        "elapsed_ms": 2083
+      },
+      {
+        "student": "还是不会,越算越乱了。",
+        "tutor": "题目里纸条是4分米，我们先不约分，直接算4×1/4，你猜结果会是多少？",
+        "state": "dialogue",
+        "elapsed_ms": 1566
+      },
+      {
+        "student": "我还是不知道从哪儿开始算,完全没思路。",
+        "tutor": "题目里纸条是4分米，剪下它的1/4，你先告诉我，4分米的1/4是多少分米？",
+        "state": "dialogue",
+        "elapsed_ms": 1818
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 8157,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          4.0,
+          12.0
+        ],
+        "extracted": [
+          1.0,
+          3.0,
+          4.0,
+          12.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "support",
+        "move": "guiding_focus",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          1.0,
+          4.0
+        ],
+        "extracted": [
+          1.0,
+          4.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "branch": "support",
+        "move": "guiding_focus",
+        "turn": 3
+      },
+      {
+        "branch": "model",
+        "cited": [
+          1.0,
+          4.0
+        ],
+        "extracted": [
+          1.0,
+          4.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_2d83073fcd"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        4.0,
+        12.0
+      ],
+      "extracted": [
+        1.0,
+        3.0,
+        4.0,
+        12.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "support",
+      "move": "guiding_focus",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        1.0,
+        4.0
+      ],
+      "extracted": [
+        1.0,
+        4.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "branch": "support",
+      "move": "guiding_focus",
+      "turn": 3
+    },
+    {
+      "branch": "model",
+      "cited": [
+        1.0,
+        4.0
+      ],
+      "extracted": [
+        1.0,
+        4.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 0,
+      "grade_fit": 1,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 3,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "学生:还是不会,越算越乱了。小讲师:题目里纸条是4分米，我们先不约分，直接算4×1/4，你猜结果会是多少？",
+      "grade_fit": "小讲师:题目里纸条是4分米，剪下它的1/4，你先告诉我，4分米的1/4是多少分米？",
+      "pacing": "学生:我还是不知道从哪儿开始算,完全没思路。小讲师:题目里纸条是4分米，剪下它的1/4，你先告诉我，4分米的1/4是多少分米？小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+      "summary_mastery": "对话中无实质总结，小讲师仅以'这一题的学习证据还不够'结束，未复述学生任何正确步骤或给出掌握判断。",
+      "termination": "学生多次表示'还是不会'、'完全没思路'，小讲师未提供有效引导即终止对话，且未确认学生是否掌握。",
+      "math_integrity": "小讲师陈述'4×1/4'计算逻辑正确，未引入错误数学事实；学生错误约分'3和4'被指出，未强化错误。",
+      "answer_leaked": "小讲师全程未直接给出'1分米'这一终答，仅引导学生思考'4分米的1/4是多少'，未泄露答案。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "case_id": "image_v2_stuck_02",
+  "spec": "spec_B"
+}

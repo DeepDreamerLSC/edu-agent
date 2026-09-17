@@ -1,0 +1,149 @@
+{
+  "transcript": {
+    "question_id": "image_v2_stuck_01",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "这道题太难了,折线一段平一段陡,我完全没思路。",
+        "tutor": "你看到图里水位变化前段平缓、后段陡，这说明什么？比如前段水位升得慢，是不是容器那部分比较宽？",
+        "state": "dialogue",
+        "elapsed_ms": 1494
+      },
+      {
+        "student": "平缓是不是说明水位没动?可一直在注水啊,想不出哪里不对。",
+        "tutor": "你注意到图里水位前段升得慢、后段升得快吗？那前段容器是不是更宽、后段更窄？",
+        "state": "dialogue",
+        "elapsed_ms": 1231
+      },
+      {
+        "student": "我想想……每份是4,那剪掉一份后,剩下的就是12减4,等于8米!",
+        "tutor": "你刚才说的‘每份是4’和‘剪掉一份’是另一个题目的思路，这道题是关于水位变化和容器形状的，我们得从图里水位升得快慢来想，你愿意再看看图里前段和后段的坡度差异吗？",
+        "state": "dialogue",
+        "elapsed_ms": 1961
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 7653,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "branch": "support",
+        "move": "guiding_focus",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "support",
+        "move": "guiding_focus",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          4.0,
+          8.0,
+          12.0
+        ],
+        "extracted": [
+          4.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_9aa939b50e"
+  },
+  "guard_events": [
+    {
+      "branch": "support",
+      "move": "guiding_focus",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "support",
+      "move": "guiding_focus",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        4.0,
+        8.0,
+        12.0
+      ],
+      "extracted": [
+        4.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 1,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 6,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:你注意到图里水位前段升得慢、后段升得快吗？那前段容器是不是更宽、后段更窄？（学生答非所问后，小讲师指出错误并引导回图，但未针对学生‘每份是4’的混淆点进行更细致的拆解，直接跳回原问题）",
+      "grade_fit": "小讲师使用‘平缓’‘陡’‘宽’‘窄’等词汇，符合六年级认知水平，未出现超纲术语。",
+      "pacing": "学生答错后，小讲师连续两轮发言（先纠正思路，再追问第一步），中间未给学生新的思考缓冲，且学生已明显跑题，节奏略显急促。",
+      "summary_mastery": "对话在小讲师指出‘学习证据还不够’后直接结束，无任何实质方法总结，也未对学生的掌握状态做出判断。",
+      "termination": "学生未给出正确终答，也未表示理解，小讲师以‘学习证据还不够’为由直接终止对话，属于未掌握即终止。",
+      "math_integrity": "小讲师陈述：1.‘前段水位升得慢，是不是容器那部分比较宽’（正确，符合匀速注水原理）；2.‘前段容器是不是更宽、后段更窄’（正确）。未引入错误数学事实。",
+      "answer_leaked": "小讲师全程未直接给出‘下面粗、上面细’的终答，仅通过引导性问题提示思路。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "case_id": "image_v2_stuck_01",
+  "spec": "spec_B"
+}
