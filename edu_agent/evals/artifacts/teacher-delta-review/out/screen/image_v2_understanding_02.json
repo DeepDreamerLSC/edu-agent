@@ -1,0 +1,129 @@
+{
+  "case_id": "image_v2_understanding_02",
+  "arm": "default",
+  "transcript": {
+    "question_id": "image_v2_understanding_02",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "图里四个柱子,一周7本、二周9本、三周8本、四周12本。",
+        "tutor": "你把四周的借书数都列出来了，真棒！那我们来算算从第一周到第二周增加了多少本？",
+        "state": "dialogue",
+        "elapsed_ms": 1162
+      },
+      {
+        "student": "比前一周增加,是用这一周减去上一周来比吗?",
+        "tutor": "你想到用后一周减去前一周来算增加量，这方法完全对！那我们先算第一周到第二周增加了多少本？",
+        "state": "dialogue",
+        "elapsed_ms": 1224
+      },
+      {
+        "student": "明白了,相邻两周相减,四周比三周多,所以四周增加得最多。",
+        "tutor": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 5513,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          7.0,
+          8.0,
+          9.0,
+          12.0
+        ],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          7.0,
+          9.0
+        ],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "branch": "elicit",
+        "hint_level": 0,
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_e665998bd3"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        7.0,
+        8.0,
+        9.0,
+        12.0
+      ],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        7.0,
+        9.0
+      ],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "branch": "elicit",
+      "hint_level": 0,
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 5,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "学生:明白了,相邻两周相减,四周比三周多,所以四周增加得最多。小讲师:我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+      "grade_fit": "小讲师:你想到用后一周减去前一周来算增加量，这方法完全对！",
+      "pacing": "小讲师:我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+      "summary_mastery": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+      "termination": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+      "math_integrity": "小讲师确认'用后一周减去前一周来算增加量'的方法正确;学生推理'相邻两周相减'逻辑正确;小讲师未引入错误数学事实。",
+      "answer_leaked": "学生:明白了,相邻两周相减,四周比三周多,所以四周增加得最多。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "elicit_hits": 1,
+  "calls_used": 9
+}

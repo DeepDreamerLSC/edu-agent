@@ -1,0 +1,60 @@
+{
+  "n_screened": 8,
+  "triggered": [
+    "image_v2_understanding_04",
+    "image_v2_understanding_02",
+    "image_v2_answerhit_01",
+    "image_v2_answerhit_02"
+  ],
+  "per_case": [
+    {
+      "case_id": "image_v2_understanding_04",
+      "elicit_hits": 1,
+      "turns": 4,
+      "judge_total": 5
+    },
+    {
+      "case_id": "image_v2_understanding_02",
+      "elicit_hits": 1,
+      "turns": 4,
+      "judge_total": 5
+    },
+    {
+      "case_id": "image_v2_understanding_01",
+      "elicit_hits": 0,
+      "turns": 3,
+      "judge_total": 12
+    },
+    {
+      "case_id": "image_v2_understanding_03",
+      "elicit_hits": 0,
+      "turns": 3,
+      "judge_total": 10
+    },
+    {
+      "case_id": "image_v2_answercollect_01",
+      "elicit_hits": 0,
+      "turns": 3,
+      "judge_total": 5
+    },
+    {
+      "case_id": "image_v2_answercollect_02",
+      "elicit_hits": 0,
+      "turns": 3,
+      "judge_total": 4
+    },
+    {
+      "case_id": "image_v2_answerhit_01",
+      "elicit_hits": 1,
+      "turns": 3,
+      "judge_total": 5
+    },
+    {
+      "case_id": "image_v2_answerhit_02",
+      "elicit_hits": 1,
+      "turns": 3,
+      "judge_total": 5
+    }
+  ],
+  "calls_used": 35
+}

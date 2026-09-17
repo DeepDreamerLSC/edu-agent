@@ -1,0 +1,4 @@
+[stability_chicken_rabbit/A] 轮数=5 elicit埋点=0 judge_total=7 verdict=review calls累计=10
+[stability_chicken_rabbit/B] 轮数=5 elicit埋点=0 judge_total=7 verdict=review calls累计=20
+[stability_equation_subtract/A] 轮数=5 elicit埋点=0 judge_total=12 verdict=pass calls累计=28
+[ABORT] 预算将越顶(已用 28+储备 8>30),按派单停跑——已产工件保留
