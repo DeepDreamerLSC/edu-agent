@@ -1,0 +1,131 @@
+{
+  "case_id": "image_v2_understanding_02",
+  "arm": "X",
+  "arm_blind": "B",
+  "template": "请复讲：先说核心思路，再写出第一步的具体算式或操作，最后给出明确结论。请用完整句子描述步骤与结果，以便确认掌握。",
+  "transcript": {
+    "question_id": "image_v2_understanding_02",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "图里四个柱子,一周7本、二周9本、三周8本、四周12本。",
+        "tutor": "你把四周的借书数都列出来了，真棒！那我们来算算从第一周到第二周增加了多少本？",
+        "state": "dialogue",
+        "elapsed_ms": 1429
+      },
+      {
+        "student": "比前一周增加,是用这一周减去上一周来比吗?",
+        "tutor": "你想到用后一周减去前一周来算增加量，这方法完全对！那我们先算第一周到第二周增加了多少本？",
+        "state": "dialogue",
+        "elapsed_ms": 1483
+      },
+      {
+        "student": "明白了,相邻两周相减,四周比三周多,所以四周增加得最多。",
+        "tutor": "请复讲：先说核心思路，再写出第一步的具体算式或操作，最后给出明确结论。请用完整句子描述步骤与结果，以便确认掌握。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 6558,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          7.0,
+          8.0,
+          9.0,
+          12.0
+        ],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          7.0,
+          9.0
+        ],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "branch": "elicit",
+        "hint_level": 0,
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_719b077b1c"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        7.0,
+        8.0,
+        9.0,
+        12.0
+      ],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        7.0,
+        9.0
+      ],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "branch": "elicit",
+      "hint_level": 0,
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 5,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师第一轮提问：'这道题你的答案是什么呀？讲讲你的思路吧!'，未直接给答案，引导学生先思考。",
+      "socratic_followup": "学生提出'相邻两周相减'思路后，小讲师未针对学生跳步（未计算具体差值）进行引导，而是直接要求复讲格式，追问未指向具体计算缺失。",
+      "grade_fit": "语言通俗，'柱子'、'相减'等术语符合六年级认知，要求复讲步骤符合教学规范。",
+      "pacing": "小讲师连续两轮输出指令（'请复讲...'、'这一题的学习证据还不够...'），未给学生回应时间，属于一次性倾倒指令且无实质推进，导致对话中断。",
+      "summary_mastery": "对话在小讲师要求复讲后直接结束，无实质总结，无对学生掌握情况的判断，且学生未实际完成复讲。",
+      "termination": "学生尚未完成复讲或确认掌握，小讲师即判定'证据不够'并结束对话，属于学生未掌握即终止。",
+      "math_integrity": "小讲师确认'后一周减去前一周'方法正确；学生推理'四周比三周多'虽未展示计算过程但结论方向正确，小讲师未引入错误数学事实。",
+      "answer_leaked": "学生先给出结论'四周增加得最多'，小讲师后续未主动泄露终答，仅要求复讲。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "elicit_hits": 1,
+  "calls_used_this_run": 14
+}

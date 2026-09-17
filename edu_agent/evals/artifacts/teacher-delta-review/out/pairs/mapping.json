@@ -1,0 +1,5 @@
+{
+  "arm_X": "B",
+  "arm_Y": "A",
+  "note": "臂→盲标随机映射(seed=20260918);X=nets-main-02 epoch-2 正本,Y=kernel 默认;真实对应只存本件,不进教师材料"
+}

@@ -1,0 +1,14 @@
+[飞行前回显] 默认臂(kernel 原文,逐字):
+  '我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。'
+[image_v2_understanding_04] 轮数=4 elicit=1 judge=5 calls累计=5
+[image_v2_understanding_02] 轮数=4 elicit=1 judge=5 calls累计=9
+[image_v2_understanding_01] 轮数=3 elicit=0 judge=12 calls累计=16
+[image_v2_understanding_03] 轮数=3 elicit=0 judge=10 calls累计=22
+[image_v2_answercollect_01] 轮数=3 elicit=0 judge=5 calls累计=25
+[image_v2_answercollect_02] 轮数=3 elicit=0 judge=4 calls累计=28
+[image_v2_answerhit_01] 轮数=3 elicit=1 judge=5 calls累计=31
+[image_v2_answerhit_02] 轮数=3 elicit=1 judge=5 calls累计=35
+
+筛段完成:8 案,elicit 触发 4 案:['image_v2_understanding_04', 'image_v2_understanding_02', 'image_v2_answerhit_01', 'image_v2_answerhit_02']
+calls 实计:35
+[REPORT] 触发数 <8,按预注册停跑报 PM

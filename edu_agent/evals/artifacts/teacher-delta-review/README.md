@@ -74,3 +74,47 @@ trial-run-01 的 2/15 轨迹变化案(案 0/1)证明 elicit 在当前内核+runn
 Mac(linmacbook-pro)worktree@08f2fdcd,`PYTHONPATH=$PWD` + 原 checkout
 .venv(3.12.13);`python edu_agent/evals/artifacts/teacher-delta-review/run_pairs.py`
 (注意:重跑前先核对 worktree 内脚本 ARM_X 与预注册一致——流程修正条)。
+
+---
+
+# v3:全题图 4 对(用户裁 a,PM 派单 task=elicit-pair-topup-v3,sha256=5be473b98887dda3)
+
+预注册 v3 #293 评论 5714357402(判读冻结);硬顶 240 本地 calls 全程。
+
+## 判读:**4 对全部有效对**——教师盲审材料成立
+
+每对(4 案 × 两臂):
+- 判准①:两臂 elicit 埋点**同轮触发**(understanding_04/02 = 轮 3;answerhit_01/02 = 轮 2)
+- 判准②:elicit 轮 tutor 文本 = **各自臂模板逐字注入**(A 臂=kernel 默认原文 / B 臂=nets-main-02 epoch-2 全角正本)——elicit 轮即两臂唯一差异轮
+- 上游确定性:除 elicit 轮外两臂转录逐字全同(diff 轮=elicit 轮)
+- 判分:04 对 X 优 1(6v5)/ answerhit_01 对 Y 优 1(4v5)/ 02 与 answerhit_02 平——judge 对末轮模板文本分差敏感度低(±1/0,方向不一致)
+- 结构限制(如实):elicit 轮均为**末轮**(剧本 turns 用尽)——学生无后续复讲轮,双臂轨迹无 elicit 后分歧;材料的教学语义差异集中在复讲引导措辞本身
+
+## 筛段读数(8 案单臂,35 calls)
+
+- 触发 4/8:understanding_04/02(Tier1 实证复现)+ **answerhit_01/02(Tier3 意外触发——路径 B 运行时真实成立,静态数字半判偏低)**
+- 未触发 4:understanding_01/03(**ready_to_confirm 提前终态**,「懂了/会了」轮未达 reply——试跑无感矛盾解开)+ answercollect_01/02(「算出来了」走 completion 追问,语义不触发复讲)
+- 两条触发路径均实证:A=理解信号(understanding 案)/ B=答案命中(answerhit 案)
+
+## 成本台账(v3)
+
+| 段 | calls | 明细 |
+|---|---|---|
+| 筛段(8 案单臂) | 35 | tutor 29 + judge 8(v3-facts 前 35 行) |
+| 配对段(4×2) | 32 | tutor 22 + judge 8 |
+| **v3 合计** | **67** | ≤240 硬顶;零 API 零 editor 零远程 |
+
+(v2 作废 28 行与 v3 67 行已从 Mac 混合 facts 分账:v3-facts.jsonl;时间序单调,切分安全。)
+
+## 文件(v3)
+
+- `screen_v3.py` / `pairs_v3.py`:两段脚本
+- `out/screen/`:8 案筛段转录+guard+summary+log
+- `out/pairs/`:4 案×2 臂(盲标 A/B)+ mapping.json(臂→盲标 seed=20260918)+ pairs-summary + log
+- `out/v3-facts.jsonl`:v3 67 行台账
+
+## 飞行前检查执行记录(流程修正合规)
+
+- 筛段起跑前:Mac worktree 回显 ARM_DEFAULT 逐字 ✓(run.log 首行)
+- 配对段起跑前:Mac worktree 回显两臂模板原文逐字 ✓(pairs run.log 前三行,X 全角正本/Y 默认原文)
+- 每案落盘即验 guard_events(两段 log 逐案 elicit 计数)
