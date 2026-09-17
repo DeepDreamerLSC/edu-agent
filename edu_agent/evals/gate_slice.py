@@ -102,7 +102,8 @@ def _render_transcript(messages: list[dict]) -> str:
                      for m in messages)
 
 
-def build_teacher_pack(candidate_dir: Path, out_dir: Path, seed: int = 7) -> dict:
+def build_teacher_pack(candidate_dir: Path, out_dir: Path, seed: int = 7,
+                      version: str = "v1") -> dict:
     """Lane H A/B 盲包(#293 规格):题目/Transcript A/B/三判据/判定栏。
 
     baseline = slice-cases 冻结 messages;candidate = 跑批转录(run1)。
@@ -112,7 +113,7 @@ def build_teacher_pack(candidate_dir: Path, out_dir: Path, seed: int = 7) -> dic
 
     out_dir.mkdir(parents=True, exist_ok=True)
     rng = random.Random(seed)
-    slice_rows = load_slice_rows()  # 盲包用 v1 冻结面(v2 冻结后随版本切换,见 gate-05)
+    slice_rows = load_slice_rows(version)
     mapping = {}
     for case_id, row in slice_rows.items():
         result = json.loads((candidate_dir / "run1" / f"{case_id}.json")
@@ -217,7 +218,8 @@ def main() -> None:
         encoding="utf-8")
     (args.out_dir / "mapping.json").write_text(
         json.dumps(build_teacher_pack(args.out_dir / "transcripts",
-                                      args.out_dir / "pack"), ensure_ascii=False, indent=1),
+                                      args.out_dir / "pack", version=args.slice),
+                   ensure_ascii=False, indent=1),
         encoding="utf-8")  # 解盲映射在包外(pack/ 交教师)
     print(f"deterministic checks: {'PASS' if checks_pass else 'FAIL'}"
           f"({sum(r['pass'] for r in checks_rows)}/{len(checks_rows)})")
