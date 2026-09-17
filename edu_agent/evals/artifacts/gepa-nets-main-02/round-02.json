@@ -1,0 +1,56 @@
+{
+  "round": 2,
+  "parent_id": 0,
+  "variant_id": 3,
+  "parent_template": "请复讲：先说核心思路，再写出第一步的具体算式或操作，最后给出明确结论。请用完整句子描述步骤与结果，以便确认掌握。",
+  "variant_template": "请复讲：先简述解题思路，再写出第一步的具体算式或操作细节，最后给出明确结论。务必用完整句子描述每一步动作与结果，确保可被判定。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": false,
+  "parent_scores": {
+    "mean_score": 8.5,
+    "needs_review_rate": 0.6666666666666666,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.25
+  },
+  "variant_scores": {
+    "mean_score": 7.75,
+    "needs_review_rate": 0.6666666666666666,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.25
+  },
+  "accepted": false,
+  "leak_net_veto": false,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-请复讲：先说核心思路，再写出第一步的具体算式或操作，最后给出明确结论。请用完整句子描述步骤与结果，以便确认掌握。",
+    "+请复讲：先简述解题思路，再写出第一步的具体算式或操作细节，最后给出明确结论。务必用完整句子描述每一步动作与结果，确保可被判定。"
+  ],
+  "stats": {
+    "calls": 20,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "leak_net_violations": 0,
+    "wall_ms": 233269
+  },
+  "failures": [
+    {
+      "case_id": "small_lecturer_math_gold_candidates_equation_multiplication_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:你刚才说‘再把两边都除以3’，这一步是基于等式两边同时做相同运算保持平衡的，你能说说为什么这样操作不会改变等式成立吗？小讲师:你用逆向思维从结果倒推得到; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_fraction_addition_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; summary_mastery=0 — 对话中无实质总结，小讲师在未完成教学流程时直接中断并声称证据不足。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_triangle_area_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中未出现实质性的方法总结或针对学生表现的掌握判断，仅以'学习证据还不够'为由中断，无总结环节。; total=7/12"
+    }
+  ]
+}

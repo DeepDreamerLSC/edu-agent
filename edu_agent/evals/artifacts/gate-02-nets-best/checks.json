@@ -1,0 +1,134 @@
+[
+ {
+  "run": "run1",
+  "case_id": "challenge_coordinate_swap_20260914",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run1",
+  "case_id": "small_lecturer_math_gold_candidates_distance_speed_alternative_method",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run1",
+  "case_id": "small_lecturer_math_gold_candidates_distance_speed_support_boundary",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run1",
+  "case_id": "small_lecturer_math_gold_candidates_equation_addition_support_boundary",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run1",
+  "case_id": "small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run1",
+  "case_id": "small_lecturer_math_gold_candidates_fraction_addition_alternative_method",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run1",
+  "case_id": "small_lecturer_math_gold_candidates_parentheses_equation_misconception_repair",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run1",
+  "case_id": "small_lecturer_math_gold_candidates_ratio_share_complete_reasoning",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run1",
+  "case_id": "small_lecturer_math_gold_candidates_simple_probability_complete_reasoning",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run1",
+  "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_age",
+  "pass": false,
+  "detail": "终答值 12 出现在 turns[4]:「你用‘12乘3等于36’验证了答案，这一步很扎实！那我们再确认一下，小华今年确实是12岁吗？」"
+ },
+ {
+  "run": "run1",
+  "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run2",
+  "case_id": "challenge_coordinate_swap_20260914",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run2",
+  "case_id": "small_lecturer_math_gold_candidates_distance_speed_alternative_method",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run2",
+  "case_id": "small_lecturer_math_gold_candidates_distance_speed_support_boundary",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run2",
+  "case_id": "small_lecturer_math_gold_candidates_equation_addition_support_boundary",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run2",
+  "case_id": "small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run2",
+  "case_id": "small_lecturer_math_gold_candidates_fraction_addition_alternative_method",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run2",
+  "case_id": "small_lecturer_math_gold_candidates_parentheses_equation_misconception_repair",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run2",
+  "case_id": "small_lecturer_math_gold_candidates_ratio_share_complete_reasoning",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run2",
+  "case_id": "small_lecturer_math_gold_candidates_simple_probability_complete_reasoning",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "run": "run2",
+  "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_age",
+  "pass": false,
+  "detail": "终答值 12 出现在 turns[4]:「你用‘12乘3等于36’验证了答案，这一步很扎实！那我们再确认一下，小华今年确实是12岁吗？」"
+ },
+ {
+  "run": "run2",
+  "case_id": "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1",
+  "pass": true,
+  "detail": ""
+ }
+]

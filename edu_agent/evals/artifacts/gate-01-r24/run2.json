@@ -1,0 +1,277 @@
+{
+ "small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 1,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 7,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "socratic_followup": "小讲师:你提到‘25除以3’，但方程是3x+7=25，x是未知数，不能直接除以3，得先去掉+7，你试试看怎么操作才能让等式两边都变简单？",
+   "grade_fit": "小讲师:得先去掉+7，你试试看怎么操作才能让等式两边都变简单？",
+   "pacing": "小讲师:你刚才说要先消去加上的7，再处理乘在x前面的3，这思路很对！那去掉+7之后，等式右边变成了多少？小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+   "summary_mastery": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+   "termination": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+   "math_integrity": "小讲师陈述：'x是未知数，不能直接除以3，得先去掉+7'（正确，符合等式性质）；学生计算：'25减7等于18，18除以3等于6'（正确）；小讲师确认思路正确（正确）。",
+   "answer_leaked": "学生:要先消去加上的7，再处理乘在x前面的3。25减7等于18，18除以3等于6，x等于6。"
+  },
+  "verdict": "review",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition__r1": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 1,
+   "grade_fit": 2,
+   "pacing": 0,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 5,
+  "answer_leaked": true,
+  "math_integrity": 0,
+  "evidence": {
+   "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "socratic_followup": "小讲师:你说到‘每一份的大小不同’，这说明你明白为什么不能直接加分子分母了，那接下来我们该把四分之三换成多少个八分之一呢？",
+   "grade_fit": "小讲师:分数加法就像分蛋糕，得先切成同样大小的块才能加，比如三块四分之一和一块八分之一，得先都切成八分之一才能加，对吧？",
+   "pacing": "小讲师连续两轮发言，第二轮直接给出错误计算过程和结论，未给学生思考时间。",
+   "summary_mastery": "小讲师总结中声称学生正确理解，但学生从未给出正确推理或答案，且小讲师给出的结论错误。",
+   "termination": "对话在小讲师给出错误结论后直接结束，学生未掌握正确方法。",
+   "math_integrity": "小讲师陈述：'四分之三换成两个八分之一'（错误，应为六个八分之一）；'再加八分之一得到三个八分之一'（错误，应为七个八分之一）；'结果是八分之三'（错误，应为八分之七）。小讲师引入了错误的数值转换和计算结果。",
+   "answer_leaked": "小讲师:你正确理解了分数加法不能直接加分子分母，因为每份大小不同，比如四分之三换成两个八分之一后，再加八分之一得到三个八分之一，结果是八分之三。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "challenge_coordinate_swap_20260914": {
+  "scores": {
+   "first_question": 1,
+   "socratic_followup": 1,
+   "grade_fit": 2,
+   "pacing": 1,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 5,
+  "answer_leaked": true,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师第一轮直接给出关键步骤：'坐标(2,4)里的2，是点B在点A东边的格数，4是北边的格数'，泄露了核心推理，学生无需思考即可得格数关系。",
+   "socratic_followup": "学生多次答错或偏离（如'是0,0'、'东边四格,北边两格'），小讲师虽指出错误，但多轮重复'2是东边...4是北边'的陈述，未有效缩小范围或引导学生自主发现坐标与方向的对应逻辑，引导链断裂。",
+   "grade_fit": "语言通俗，使用'格数'、'东边北边'等符合六年级认知的词汇，未出现超纲术语。",
+   "pacing": "对话中连续多轮（至少4轮）小讲师重复解释坐标含义，学生始终未掌握，信息量虽不大但推进缓慢，存在原地打转现象。",
+   "summary_mastery": "对话未进行实质总结，小讲师最后仅说'这一题的学习证据还不够'，未复述学生任何正确步骤，也未给出基于学生表现的掌握判断，直接结束。",
+   "termination": "学生未给出正确终答（东100米、北200米），也未表示理解，小讲师在多次引导无效后直接终止对话，属于未掌握即终止。",
+   "math_integrity": "小讲师陈述：1.'坐标(2,4)里的2是东边格数，4是北边格数'（正确）；2.'每格是50米'（正确）；3.'东边2格、北边4格'（正确）。未引入错误数学事实，正确识别学生将坐标分量弄反的错误。",
+   "answer_leaked": "小讲师在对话中多次直接给出正确终答的数值推导：'点B在点A东边2格，北边4格，你猜猜实际距离是多少米？'（虽未直接说100/200，但已给出计算所需的全部数值条件，且学生未先给出该条件，属于泄露关键推理步骤；更严重的是，小讲师在后续轮次中隐含或直接给出了'东边2格、北边4格'这一核心结论，而学生从未主动给出此正确对应关系，属于终答泄露。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_math_gold_candidates_parentheses_equation_misconception_repair": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 12,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "socratic_followup": "小讲师:你刚才说先把2和3相加，但方程里是2乘以(x+3)，不是加法哦，得先算括号里的内容。你试试看，如果x+3等于9，那x是多少？",
+   "grade_fit": "小讲师:你刚才说两边先除以2，x+3等于9，再减3得x等于6，这一步很对，因为除以2后，括号里的内容就单独出来了，接着减3就能找到x的值了。",
+   "pacing": "学生:括号外的2乘的是整个x加3，不能把2和3直接相加。两边先除以2，x加3等于9，再两边减3，x等于6。",
+   "summary_mastery": "学生:两边先除以2，x加3等于9，再两边减3，x等于6。小讲师:你正确地通过先除以2，再减3，找到了x=6的解。关键转折是理解括号外的2乘的是整个x+3，而不是2和3相加。",
+   "termination": "小讲师:你正确地通过先除以2，再减3，找到了x=6的解。关键转折是理解括号外的2乘的是整个x+3，而不是2和3相加。仍需注意：在解方程时，每一步都要明确操作的是哪一部分表达式，避免混淆运算顺序。",
+   "math_integrity": "小讲师陈述：1. '方程里是2乘以(x+3)，不是加法' (正确，指出学生错误理解); 2. '如果x+3等于9，那x是多少' (正确引导，隐含2*9=18); 3. '两边先除以2，x加3等于9' (正确，18/2=9); 4. '再两边减3，x等于6' (正确，9-3=6); 5. '除以2后，括号里的内容就单独出来了' (正确解释去括号原理)。所有数学事实正确，且正确识别并纠正了学生'2和3相加'的错误推理。",
+   "answer_leaked": "学生:两边先除以2，x加3等于9，再两边减3，x等于6。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_teaching_context_shadow_pilot_20_stability_age": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 12,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "socratic_followup": "学生:但妈妈年龄更大，乘3会得到更大的数，不合理。小讲师:你发现乘3会让年龄变大，这很敏锐！那我们反过来，用36除以3，看看小华今年几岁？",
+   "grade_fit": "小讲师:你说到‘把36平均分成3份’，那每份是多少呢？",
+   "pacing": "学生:应该把36平均分成3份，用36除以3。小讲师:你说到‘把36平均分成3份’，那每份是多少呢？",
+   "summary_mastery": "学生:小华是12岁，12乘3等于36，符合题意。小讲师:你通过‘把36平均分成3份’正确理解了‘3倍’关系，用36÷3得出12岁，并用‘12×3=36’验证了答案，这一步很扎实；仍需注意：题目中‘妈妈是小华的3倍’意味着小华年龄是基准，计算时要除而不是乘。",
+   "termination": "学生:小华是12岁，12乘3等于36，符合题意。小讲师:你用‘12乘3等于36’验证了答案，这一步很扎实！那我们再确认一下，小华今年确实是12岁吗？",
+   "math_integrity": "小讲师陈述：1. '妈妈年龄是小华的3倍，说明小华年龄是36÷3' (正确); 2. '36平均分成3份' (正确); 3. '12乘3等于36' (正确); 4. '妈妈是小华的3倍意味着小华年龄是基准，计算时要除而不是乘' (正确)。所有数学事实均正确，且正确引导学生修正了'乘3'的错误思路。",
+   "answer_leaked": "学生:小华是12岁，12乘3等于36，符合题意。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_math_gold_candidates_ratio_share_complete_reasoning": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 12,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "socratic_followup": "小讲师:你算对了总份数是5份，那每份是30本除以5，等于多少呢？",
+   "grade_fit": "小讲师:每份6本，甲组拿2份就是12本，乙组拿3份就是18本",
+   "pacing": "小讲师:你算得真准！每份6本，甲组拿2份就是12本，乙组拿3份就是18本，这思路完全对！",
+   "summary_mastery": "学生:每份是30除以5等于6本，所以甲12本、乙18本。小讲师:你用分份数的方法正确解题：先算总份数5份，再求每份6本，最后得出甲12本、乙18本。",
+   "termination": "小讲师:关键转折是把比例转化为份数分配，仍需注意：每一步计算都要明确对应哪组，避免混淆。",
+   "math_integrity": "小讲师陈述：总份数2+3=5（对）；30/5=6（对）；甲2份=12（对）；乙3份=18（对）。所有数值与逻辑均正确。",
+   "answer_leaked": "学生:每份是30除以5等于6本，所以甲12本、乙18本。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_math_gold_candidates_distance_speed_alternative_method": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 1,
+   "grade_fit": 2,
+   "pacing": 1,
+   "summary_mastery": 1,
+   "termination": 1
+  },
+  "total": 8,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "socratic_followup": "小讲师:先回到你刚说的「也可以分成2小时和半小时，120加30等于150」——你能从题目里再确认一个已知条件吗?",
+   "grade_fit": "小讲师:你用拆分时间的方法算出了150千米，这一步很聪明！关键转折是把2.5小时拆成2小时和0.5小时，分别计算再相加；仍需注意的是，每小时60千米这个速度要始终用在每段计算里，不能漏掉单位换算。",
+   "pacing": "小讲师连续两轮发言，先追问确认条件，随后直接给出方法总结与注意事项，未给学生留出再次尝试或回应的空间。",
+   "summary_mastery": "小讲师总结了拆分时间的方法，但未引用学生本人对'速度始终使用'或'单位换算'的确认或复述，仅基于学生给出的正确数值结果进行泛化鼓励，缺乏学生掌握关键推理的证据。",
+   "termination": "对话在学生给出正确答案后，小讲师进行了总结但未确认学生是否真正理解'速度不变'这一关键点即结束，学生掌握状态未明。",
+   "math_integrity": "小讲师陈述：1. '2.5小时拆成2小时和0.5小时'（正确）；2. '分别计算再相加'（正确）；3. '每小时60千米这个速度要始终用在每段计算里'（正确）；4. '不能漏掉单位换算'（正确，2.5小时即2小时30分，无需额外换算，但强调速度单位一致性是合理的）。小讲师未引入错误数学事实，且正确确认了学生的计算结果。",
+   "answer_leaked": "学生:也可以分成2小时和半小时，120加30等于150千米。"
+  },
+  "verdict": "review",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_math_gold_candidates_equation_addition_support_boundary": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 1,
+   "termination": 1
+  },
+  "total": 10,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "socratic_followup": "小讲师:你刚说还不知道从哪里开始，那我们先看方程左边是x加7，右边是25，你想让x自己出来，第一步可以考虑把7从左边拿走，你猜怎么拿？",
+   "grade_fit": "小讲师:你刚说还不知道从哪里开始，那我们先看方程左边是x加7，右边是25，你想让x自己出来，第一步可以考虑把7从左边拿走，你猜怎么拿？",
+   "pacing": "小讲师:你刚说还不知道从哪里开始，那我们先看方程左边是x加7，右边是25，你想让x自己出来，第一步可以考虑把7从左边拿走，你猜怎么拿？",
+   "summary_mastery": "小讲师:你通过等式两边同时减去7，成功将x单独解出，得到x=18，这一步正确运用了等式性质。仍需注意：在解题过程中，每一步都要明确写出依据...",
+   "termination": "小讲师:你通过等式两边同时减去7，成功将x单独解出，得到x=18，这一步正确运用了等式性质。仍需注意：在解题过程中，每一步都要明确写出依据...",
+   "math_integrity": "小讲师陈述：'等式两边同时做相同运算，等式仍然成立'（正确）；'等式两边都减去7，得到x等于18'（正确，25-7=18）。小讲师未引入错误数学事实，且正确确认了学生的推理与结论。",
+   "answer_leaked": "学生:等式两边都减去7，得到x等于18。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_math_gold_candidates_fraction_addition_alternative_method": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 2,
+   "grade_fit": 2,
+   "pacing": 2,
+   "summary_mastery": 2,
+   "termination": 2
+  },
+  "total": 12,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "socratic_followup": "小讲师:你用画图的方法讲得很清楚，能帮我们看到三分之一是两份、六分之一是一份，加起来是三份，那这三份在六等份里占多少呢？",
+   "grade_fit": "小讲师:你用画图的方法讲得很清楚，能帮我们看到三分之一是两份、六分之一是一份，加起来是三份...",
+   "pacing": "小讲师:那这三份在六等份里占多少呢？学生:六分之二加六分之一等于六分之三，也就是二分之一。",
+   "summary_mastery": "学生:六分之二加六分之一等于六分之三，也就是二分之一。小讲师:你刚才说六分之二加六分之一等于六分之三，再化简成二分之一，这一步算得对...",
+   "termination": "小讲师:你用画图的方法把三分之一和六分之一转化为六等份中的份数，正确得出六分之三并化简为二分之一，画图帮助你理清了份数关系，这是很好的方法！",
+   "math_integrity": "小讲师陈述：1. '三分之一是两份'（在六等份背景下，正确）；2. '六分之一是一份'（正确）；3. '六分之二加六分之一等于六分之三'（正确）；4. '六分之三...化简成二分之一'（正确）。所有数学事实均正确，且正确确认了学生的推理与结论。",
+   "answer_leaked": "学生先给出终答：'六分之二加六分之一等于六分之三，也就是二分之一。' 小讲师随后仅进行确认与总结，未在学生给出前泄露答案。"
+  },
+  "verdict": "pass",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_math_gold_candidates_distance_speed_support_boundary": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 1,
+   "grade_fit": 2,
+   "pacing": 0,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 5,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "socratic_followup": "小讲师:你提到‘先算一下’，那你是想用速度乘以时间对吧？比如60×2.5，这一步能算出总路程吗？",
+   "grade_fit": "小讲师:已知汽车每小时行60千米，这是它的速度。",
+   "pacing": "小讲师:我们从这里入手:已知汽车每小时行60千米，这是它的速度。你接着算下一步。小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+   "summary_mastery": "对话中无实质总结，小讲师仅重复提问'你能说说目前想到的第一步吗'，未对学生已给出的'路程等于速度乘时间'进行方法总结或掌握判断。",
+   "termination": "对话在学生未给出最终数值答案、且小讲师重复提问同一问题后突然结束，未确认学生是否掌握。",
+   "math_integrity": "小讲师陈述'路程等于速度乘时间'（正确）；'60×2.5'（正确算式）；'每小时行60千米是速度'（正确）。无错误数学事实。",
+   "answer_leaked": "小讲师未直接给出'150千米'等最终数值答案，仅引导算式。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ },
+ "small_lecturer_math_gold_candidates_simple_probability_complete_reasoning": {
+  "scores": {
+   "first_question": 2,
+   "socratic_followup": 1,
+   "grade_fit": 1,
+   "pacing": 1,
+   "summary_mastery": 0,
+   "termination": 0
+  },
+  "total": 5,
+  "answer_leaked": false,
+  "math_integrity": 2,
+  "evidence": {
+   "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "socratic_followup": "小讲师:你刚才说‘代回原题检查’，这通常是解方程或验证答案时用的，但本题是直接比较数量，不需要代入计算哦！我们来想想，红球3个、蓝球1个，摸到红球的概率是不是3倍于蓝球？",
+   "grade_fit": "小讲师:你刚才说‘代回原题检查’，这通常是解方程或验证答案时用的...",
+   "pacing": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+   "summary_mastery": "对话中无实质总结，小讲师仅以‘学习证据还不够’为由中断，未复述学生已掌握的数量比较逻辑，也未给出掌握判断。",
+   "termination": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+   "math_integrity": "小讲师陈述：1. '红球3个、蓝球1个'（正确，符合题意）；2. '摸到红球的概率是不是3倍于蓝球'（正确，3/4 vs 1/4，比例为3:1）。小讲师未引入错误数学事实，且正确指出了学生‘代回原题’这一方法在此题中的不适用性。",
+   "answer_leaked": "学生未给出完整终答（如‘红球更可能’），小讲师在引导中提出‘摸到红球的机会是不是比摸到蓝球大’及‘概率是不是3倍’，属于引导性提问，未直接给出‘红球更可能’这一最终结论性陈述。"
+  },
+  "verdict": "fail",
+  "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+ }
+}

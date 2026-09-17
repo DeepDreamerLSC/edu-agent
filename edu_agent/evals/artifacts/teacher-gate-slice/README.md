@@ -52,3 +52,18 @@
 - 历史纪元读数源(#271)= `judge-v3.2-rescore-93/judge-scores-r{1,2}.jsonl`(92 案双跑,已合 main@`df72e95`)
 - 携带口径:`baseline_9551d149` 值 = `baseline` 逐案携带(读数来源同上两行;携带依据见「基线纪元」节)
 - 判据字段映射:mi=math_integrity;sm=scores.summary_mastery;leak=answer_leaked
+
+---
+
+## 归档注(2026-09-17,#310 人裁 d:切片语义修复)
+
+本目录(v1)**整体留档,不再是现行冻结面**;现行面 = `teacher-gate-slice-v2/`。
+
+- **C35 的「正向位」是 judge 校准正样本(终答泄露正确检出),被 promotion
+  gate 误用作产品健康位**——要求候选复现按 rubric 属非法、且已被内核修复
+  (#314/#315/#318)刻意移除的披露行为,对一切候选永红(test-role
+  contamination,人裁 2026-09-17)。
+- C35 原转录继续作为 **judge leakage detector 正样本**服务判卷线校准
+  (本目录 + judge-v3.2-rescore-93 存档)。
+- 慈善转述正向位由 v2 的 **C36**(转述忠实 desired-behavior)承担;
+  v2 基线为修复后内核×默认模板新纪元实测。详见 v2 README。

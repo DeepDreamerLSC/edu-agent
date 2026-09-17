@@ -1,0 +1,57 @@
+{
+ "question_id": "small_lecturer_math_gold_candidates_equation_addition_support_boundary",
+ "final_state": "completed",
+ "turns": [
+  {
+   "student": "",
+   "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "state": "first_question_ready",
+   "elapsed_ms": 0
+  },
+  {
+   "student": "我还不知道从哪里开始，能先给我一个小提示吗？",
+   "tutor": "你刚说还不知道从哪里开始，那我们先看方程左边是x加7，右边是25，你想让x自己出来，第一步可以考虑把7从左边拿走，你猜怎么拿？",
+   "state": "dialogue",
+   "elapsed_ms": 1824
+  },
+  {
+   "student": "等式两边都减去7，得到x等于18。",
+   "tutor": "你刚才说等式两边都减去7，得到x等于18，这一步是对的，因为等式两边同时做相同运算，等式仍然成立，你已经把x单独解出来了，很棒！",
+   "state": "ready_to_confirm",
+   "elapsed_ms": 2009
+  }
+ ],
+ "summary": "你通过等式两边同时减去7，成功将x单独解出，得到x=18，这一步正确运用了等式性质。仍需注意：在解题过程中，每一步都要明确写出依据，比如‘等式两边同时减去7’，这样能帮助你更清晰地理解解题逻辑。",
+ "total_ms": 7212,
+ "learner": {
+  "grade": ""
+ },
+ "guard_events": [
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [
+    7.0,
+    25.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 1
+  },
+  {
+   "branch": "model",
+   "cited": [
+    7.0,
+    18.0
+   ],
+   "extracted": [
+    7.0,
+    18.0
+   ],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 2
+  }
+ ],
+ "session_id": "kernel_7d7327d19f"
+}

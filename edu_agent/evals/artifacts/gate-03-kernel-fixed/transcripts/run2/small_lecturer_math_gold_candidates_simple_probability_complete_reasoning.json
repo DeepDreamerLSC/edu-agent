@@ -1,0 +1,51 @@
+{
+ "question_id": "small_lecturer_math_gold_candidates_simple_probability_complete_reasoning",
+ "final_state": "needs_review",
+ "turns": [
+  {
+   "student": "",
+   "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+   "state": "first_question_ready",
+   "elapsed_ms": 0
+  },
+  {
+   "student": "红球有3个，蓝球只有1个。",
+   "tutor": "你注意到红球和蓝球的数量不一样，这很关键！那如果袋子里只有这两种球，摸到红球的概率是不是比蓝球大？你能说说为什么数量多就更可能被摸到吗？",
+   "state": "dialogue",
+   "elapsed_ms": 2035
+  },
+  {
+   "student": "我会把求出的结果代回原题，检查它是否满足全部条件。",
+   "tutor": "你刚才说要代入检查，这在解方程时很实用，但本题我们只需要比较数量比例，不用代入计算。你能说说为什么红球数量多，摸到它的可能性就更大吗？",
+   "state": "dialogue",
+   "elapsed_ms": 2835
+  }
+ ],
+ "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+ "total_ms": 8056,
+ "learner": {
+  "grade": ""
+ },
+ "guard_events": [
+  {
+   "branch": "model",
+   "cited": [
+    1.0,
+    3.0
+   ],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 1
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 2
+  }
+ ],
+ "session_id": "kernel_b1bf6959b6"
+}

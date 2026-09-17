@@ -1,0 +1,84 @@
+{
+  "round": 18,
+  "parent_id": 1,
+  "variant_id": 5,
+  "parent_template": "别急，我们从头开始：你看到这道题，脑子里第一个冒出来的思路是什么？为什么先想到这一步？说说你的想法，我们再一起往下聊。",
+  "variant_template": "来，我们先从最开头说起：这道题你第一眼看到时，脑子里先想到的是哪一步？为什么是它？把你的思路讲给我听，我们顺着你的想法往下走。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": false,
+  "parent_scores": {
+    "mean_score": 9.25,
+    "needs_review_rate": 0.5,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.0625
+  },
+  "variant_scores": {
+    "mean_score": 9.0625,
+    "needs_review_rate": 0.375,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.1875
+  },
+  "accepted": false,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-别急，我们从头开始：你看到这道题，脑子里第一个冒出来的思路是什么？为什么先想到这一步？说说你的想法，我们再一起往下聊。",
+    "+来，我们先从最开头说起：这道题你第一眼看到时，脑子里先想到的是哪一步？为什么是它？把你的思路讲给我听，我们顺着你的想法往下走。"
+  ],
+  "stats": {
+    "calls": 105,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "env_failures": 0,
+    "content_failures": 0,
+    "wall_ms": 556466
+  },
+  "failures": [
+    {
+      "case_id": "small_lecturer_math_gold_candidates_chicken_rabbit_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:你刚才说每换成一只兔多2只脚，这个想法很关键，那我们来检查一下：如果兔有5只，鸡有3只，总脚数是不是真的等于26？小讲师:你用方程设兔有x只，通过化简得; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_decimal_multiplication_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:你刚才说2.5有一位小数，结果是10.0，这说明你已经知道小数点在乘法中怎么处理了——那如果换成2.5乘以8，结果会是多少呢？\n小讲师:你用‘两个半’的; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_simple_probability_misconception_repair",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'学习证据还不够'为由中断，未复述学生已掌握的正确推理（红球多则概率大），也未给出掌握判断。; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_division_remainder_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'学习证据还不够'为由中断，未对学生已完成的'7余5'及'余数需进一'的推理进行方法总结或掌握判断。; termination=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_ratio_share_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中未出现实质性的方法总结或掌握判断，小讲师仅以'学习证据还不够'为由中断，未对学生已完成的'总份数=5'进行有效总结或确认掌握状态。; total=8/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师仅以'这一题的学习证据还不够,我们继续'结束，未复述学生已掌握内容或给出掌握判断。; termination=0 — 学生已给出正确数值答案(50.24)，小讲师未确认正确性即强行终止对话，称'学习证据还不够'。; total=6/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话在小讲师给出提示后直接结束，未包含针对学生本人的方法总结或掌握判断，学生未进行后续验证或复述。; total=7/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_simple_probability_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话在小讲师提示'学习证据还不够'后直接结束，无任何实质方法总结，也未对学生表现做出掌握判断。; termination=0 — 对话在小讲师提示'学习证据还不够'后直接结束，学生尚未给出正确终答或表示理解，属于未掌握即终止。; total=6/12"
+    }
+  ]
+}

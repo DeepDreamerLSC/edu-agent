@@ -8,6 +8,7 @@ from .image_teaching import (
     validate_scenario,
 )
 from .kernel_subject import KernelSubject
+from .lane_m import LaneMResult, compare_lane_m, run as run_lane_m
 from .judge import (
     DIMENSION_GUIDE,
     DIMENSIONS,
@@ -21,7 +22,18 @@ from .judge import (
     user_prompt,
     verdict_from_scores,
 )
+from .gate_slice import (
+    build_teacher_pack,
+    gate_from_runs,
+    load_runnable_cases,
+    load_slice_rows,
+    run_candidate_slice,
+    run_deterministic_checks,
+)
 from .gepa import (
+    DEFAULT_SUPPORT_HINT,
+    KNOB_SEAMS,
+    LoopState,
     Budget,
     Candidate,
     ElicitSubject,
@@ -29,8 +41,14 @@ from .gepa import (
     Population,
     ScoreVector,
     edit_template,
+    edit_support_hint,
+    edit_template_nr,
     evaluate_batch,
+    evaluate_batch_paired,
+    edit_two_knobs,
     gepa_loop,
+    write_checkpoint,
+    paired_loop,
     sample_batch,
 )
 from .legacy_adapter import LegacyAdapter
@@ -81,6 +99,9 @@ __all__ = [
     "GepaConfig",
     "JudgeSubject",
     "KernelSubject",
+    "LaneMResult",
+    "compare_lane_m",
+    "run_lane_m",
     "LegacyAdapter",
     "Population",
     "REGISTRY",
@@ -100,10 +121,25 @@ __all__ = [
     "diff_checks",
     "dump_facts",
     "edit_template",
+    "edit_support_hint",
+    "edit_template_nr",
+    "build_teacher_pack",
+    "gate_from_runs",
+    "load_runnable_cases",
+    "load_slice_rows",
+    "run_candidate_slice",
+    "run_deterministic_checks",
     "evaluate_batch",
+    "evaluate_batch_paired",
     "facts_calibers",
     "format_failures",
     "gepa_loop",
+    "DEFAULT_SUPPORT_HINT",
+    "KNOB_SEAMS",
+    "LoopState",
+    "edit_two_knobs",
+    "write_checkpoint",
+    "paired_loop",
     "judge_rows",
     "judge_transcript",
     "judger_sha256",
