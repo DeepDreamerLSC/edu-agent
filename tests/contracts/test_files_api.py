@@ -19,7 +19,7 @@ import pytest
 from PIL import Image
 
 from edu_agent.api import ApiError, FileService
-from partner_api import ScriptedKernel, _assert_local_base, get, post, put, serving
+from partner_api import ScriptedKernel, _assert_local_base, get, post, put
 
 from auth_testing import TEST_TOKEN
 
@@ -41,10 +41,9 @@ def png_bytes(width: int = 64, height: int = 64, fmt: str = "PNG") -> bytes:
 
 
 @pytest.fixture
-def api(tmp_path):
-    with serving(ScriptedKernel(replies=["好"], ready_at=99),
-                 files=FileService(tmp_path / "files")) as base:
-        yield base, tmp_path
+def api(serve, tmp_path):
+    return serve(ScriptedKernel(replies=["好"], ready_at=99),
+                 files=FileService(tmp_path / "files")), tmp_path
 
 
 def _request_upload(base, size=None, purpose="micro_lesson_question_image",

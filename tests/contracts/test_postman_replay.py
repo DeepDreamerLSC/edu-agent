@@ -16,21 +16,18 @@ import pytest
 
 from edu_agent.contracts import partner_endpoints, postman_dir
 
-from partner_api import ScriptedKernel, _serve, post
+from partner_api import ScriptedKernel, post
 
 _BARE_PLACEHOLDER = re.compile(r":\s*\{\{\w+\}\}")  # 裸值占位("k": {{v}})非合法 JSON
 
 
 @pytest.fixture
-def api():
+def api(serve):
     kernel = ScriptedKernel(
         replies=["题目要我们求什么?", "你已经用了哪个条件?", "很好,乘法就是几个几相加。", "你已经掌握了。"],
         ready_at=4,
     )
-    base, server = _serve(kernel)
-    yield base, kernel
-    server.shutdown()
-    server.server_close()
+    return serve(kernel), kernel
 
 
 def _postman_bodies() -> dict[str, dict | None]:
