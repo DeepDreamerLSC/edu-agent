@@ -1,0 +1,232 @@
+{
+  "case_id": "stability_equation_subtract",
+  "arm_blind": "A",
+  "transcript": {
+    "question_id": "stability_equation_subtract",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "我还没有想清楚，能先给我一个方向吗？",
+        "tutor": "你刚说还没想清楚，没关系！我们先从方程左边的 3x+7=25 开始，第一步你想让 x 单独在一边，那应该先做什么？比如，你打算先减去 7 吗？",
+        "state": "dialogue",
+        "elapsed_ms": 1480
+      },
+      {
+        "student": "是不是先处理加上的7，但我不确定该怎么处理。",
+        "tutor": "你想到要处理加上的7，这很对！那为什么可以两边同时减7呢？比如，如果左边减7，右边也减7，等式两边变化一样，结果还是相等的，对吧？",
+        "state": "dialogue",
+        "elapsed_ms": 1594
+      },
+      {
+        "student": "我想两边都减去7，得到3x等于18。",
+        "tutor": "你刚才说两边减7得到3x=18，这一步很对，因为等式两边同时减7，结果仍然相等。那下一步，你打算怎么让x单独出来呢？",
+        "state": "dialogue",
+        "elapsed_ms": 1855
+      },
+      {
+        "student": "因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。",
+        "tutor": "你刚才说两边除以3得到x，这一步很对！那最后一步，你打算怎么验证这个结果是否正确？",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 3117
+      }
+    ],
+    "summary": "你用等式性质一步步解方程：先两边减7得到3x=18，再两边除以3得到x=6，最后验证代入成立。关键转折是理解‘等式两边同时做相同运算结果仍相等’；仍需注意：验证步骤虽正确，但可更明确写出代入过程如‘左边3×6+7=25，右边25，相等’。",
+    "total_ms": 11376,
+    "learner": {
+      "grade": ""
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          3.0,
+          7.0,
+          25.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          7.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          7.0,
+          18.0
+        ],
+        "extracted": [
+          3.0,
+          7.0,
+          18.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 3
+      },
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          6.0
+        ],
+        "extracted": [
+          3.0,
+          6.0
+        ],
+        "violation_sources": [
+          {
+            "number": 6.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 4
+      },
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          6.0
+        ],
+        "extracted": [
+          3.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 4
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "original": "你刚才说两边同时除以3得到x=6，还验证了代入成立，这一步很扎实！你已经把解方程的完整过程和依据都讲清楚了，现在自己完整说一遍结论吧。",
+        "regenerated": true,
+        "turn": 4
+      }
+    ],
+    "session_id": "kernel_9bb813663e"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        3.0,
+        7.0,
+        25.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        7.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        7.0,
+        18.0
+      ],
+      "extracted": [
+        3.0,
+        7.0,
+        18.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 3
+    },
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        6.0
+      ],
+      "extracted": [
+        3.0,
+        6.0
+      ],
+      "violation_sources": [
+        {
+          "number": 6.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 4
+    },
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        6.0
+      ],
+      "extracted": [
+        3.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 4
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "original": "你刚才说两边同时除以3得到x=6，还验证了代入成立，这一步很扎实！你已经把解方程的完整过程和依据都讲清楚了，现在自己完整说一遍结论吧。",
+      "regenerated": true,
+      "turn": 4
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 2,
+      "grade_fit": 2,
+      "pacing": 2,
+      "summary_mastery": 2,
+      "termination": 2
+    },
+    "total": 12,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你刚说还没想清楚，没关系！我们先从方程左边的 3x+7=25 开始，第一步你想让 x 单独在一边，那应该先做什么？比如，你打算先减去 7 吗？",
+      "socratic_followup": "小讲师:你想到要处理加上的7，这很对！那为什么可以两边同时减7呢？...小讲师:那下一步，你打算怎么让x单独出来呢？",
+      "grade_fit": "小讲师:比如，如果左边减7，右边也减7，等式两边变化一样，结果还是相等的，对吧？",
+      "pacing": "小讲师:你刚才说两边减7得到3x=18，这一步很对...那下一步，你打算怎么让x单独出来呢？",
+      "summary_mastery": "学生:因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。小讲师:关键转折是理解‘等式两边同时做相同运算结果仍相等’；仍需注意：验证步骤虽正确，但可更明确写出代入过程...",
+      "termination": "学生:因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。小讲师:你刚才说两边除以3得到x，这一步很对！那最后一步，你打算怎么验证这个结果是否正确？",
+      "math_integrity": "小讲师陈述：1. '两边同时减7，结果仍然相等'（正确，等式性质）；2. '3x=18'（正确，25-7=18）；3. '两边除以3得到x=6'（正确，18/3=6）；4. '验证代入成立'（正确，3*6+7=25）。所有数学事实正确，且正确确认了学生的推理步骤。",
+      "answer_leaked": "学生:因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。"
+    },
+    "verdict": "pass",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 28
+}

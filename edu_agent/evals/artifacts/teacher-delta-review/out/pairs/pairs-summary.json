@@ -1,0 +1,72 @@
+{
+  "segment_calls": 32,
+  "screen_spent": 35,
+  "total_calls": 67,
+  "budget": 240,
+  "per_eval": [
+    {
+      "case_id": "image_v2_understanding_04",
+      "arm": "X",
+      "arm_blind": "B",
+      "elicit_hits": 1,
+      "judge_total": 6,
+      "judge_verdict": "fail"
+    },
+    {
+      "case_id": "image_v2_understanding_04",
+      "arm": "Y",
+      "arm_blind": "A",
+      "elicit_hits": 1,
+      "judge_total": 5,
+      "judge_verdict": "fail"
+    },
+    {
+      "case_id": "image_v2_understanding_02",
+      "arm": "X",
+      "arm_blind": "B",
+      "elicit_hits": 1,
+      "judge_total": 5,
+      "judge_verdict": "fail"
+    },
+    {
+      "case_id": "image_v2_understanding_02",
+      "arm": "Y",
+      "arm_blind": "A",
+      "elicit_hits": 1,
+      "judge_total": 5,
+      "judge_verdict": "fail"
+    },
+    {
+      "case_id": "image_v2_answerhit_01",
+      "arm": "X",
+      "arm_blind": "B",
+      "elicit_hits": 1,
+      "judge_total": 4,
+      "judge_verdict": "fail"
+    },
+    {
+      "case_id": "image_v2_answerhit_01",
+      "arm": "Y",
+      "arm_blind": "A",
+      "elicit_hits": 1,
+      "judge_total": 5,
+      "judge_verdict": "fail"
+    },
+    {
+      "case_id": "image_v2_answerhit_02",
+      "arm": "X",
+      "arm_blind": "B",
+      "elicit_hits": 1,
+      "judge_total": 5,
+      "judge_verdict": "fail"
+    },
+    {
+      "case_id": "image_v2_answerhit_02",
+      "arm": "Y",
+      "arm_blind": "A",
+      "elicit_hits": 1,
+      "judge_total": 5,
+      "judge_verdict": "fail"
+    }
+  ]
+}
