@@ -81,7 +81,9 @@ def test_check_rows_distinguishes_undeclared_from_all_green():
     # x_s3 无场景声明 → check_rows 按缺失场景容错?不:scenario 查找必须命中,先补声明
     scenarios["x_s3"] = _scenario("s3")
     rows = check_rows(scenarios, results)
-    assert rows["x_s1"] == {"status": "ok", "declared": True, "final_state": "completed", "failures": []}
+    # advisories = #333 no-progress 非阻断诊断(空转录零报,仅报告不进 failures)
+    assert rows["x_s1"] == {"status": "ok", "declared": True, "final_state": "completed",
+                            "failures": [], "advisories": []}
     assert rows["x_s2"]["declared"] is False and rows["x_s2"]["failures"] is None
     assert rows["x_s3"]["status"] == "environment"
 
