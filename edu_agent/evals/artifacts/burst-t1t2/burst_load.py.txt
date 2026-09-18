@@ -1,0 +1,303 @@
+#!/usr/bin/env python3
+"""课堂拍题 burst 负载(#255 判据2 第1件:T1 stub / T2 本地模型)。
+
+负载形态:N 路并发在 window 秒窗口内随机起跑,每路完整合同走查:
+login → open(幂等键)→ open 幂等重放 → 轮1 → 轮2(消息幂等键)+ 重放 →
+SSE 轮(首 token 计时)→ confirm。读数全部既有观测面:
+- HTTP 状态分类计数(2xx/4xx 精确码/5xx/超时异常)
+- 各阶段 P50/P95/max(端到端)+ SSE 首 token
+- SSE 掉线(无 done 帧/异常)
+- 幂等破坏(open 重放异会话;消息重放版本或内容漂移)
+- /healthz 轮询(store probe_failures)
+零依赖标准库;合同步骤改自 scripts/m3_smoke.py(#221 裁定 6 形状)。
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import http.client
+import json
+import math
+import random
+import time
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urlparse
+
+
+def _request(host: str, port: int, method: str, path: str, token: str,
+             body: dict | None, timeout: float) -> tuple[int, dict, dict, int]:
+    """一发请求;返回 (status, headers, parsed_body, ms)。异常上抛由调用方记账。"""
+    conn = http.client.HTTPConnection(host, port, timeout=timeout)
+    payload = json.dumps(body, ensure_ascii=False).encode() if body is not None else None
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    t0 = time.monotonic()
+    try:
+        conn.request(method, path, body=payload, headers=headers)
+        resp = conn.getresponse()
+        raw = resp.read().decode("utf-8")
+        return resp.status, dict(resp.getheaders()), \
+            (json.loads(raw) if raw.startswith("{") else {"_raw": raw}), \
+            int((time.monotonic() - t0) * 1000)
+    finally:
+        conn.close()
+
+
+def _post_sse(host: str, port: int, path: str, token: str, body: dict,
+              timeout: float) -> tuple[int, int, int, str]:
+    """SSE POST;返回 (status, ttfb_ms, total_ms, raw_text)。首 token = 首个 body 字节。"""
+    conn = http.client.HTTPConnection(host, port, timeout=timeout)
+    payload = json.dumps(body, ensure_ascii=False).encode()
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+    t0 = time.monotonic()
+    try:
+        conn.request("POST", path, body=payload, headers=headers)
+        resp = conn.getresponse()
+        first = resp.read(1)  # 阻塞到首字节(首 token 近似)
+        ttfb = int((time.monotonic() - t0) * 1000)
+        raw = first.decode("utf-8", "replace") + resp.read().decode("utf-8", "replace")
+        return resp.status, ttfb, int((time.monotonic() - t0) * 1000), raw
+    finally:
+        conn.close()
+
+
+def _sse_done(raw: str) -> dict:
+    """SSE 文本 → done 帧的 data dict(无则空 dict)。"""
+    for block in raw.strip().split("\n\n"):
+        lines = dict(line.split(": ", 1) for line in block.splitlines() if ": " in line)
+        if lines.get("event") == "done":
+            try:
+                return json.loads(lines.get("data", "{}"))
+            except json.JSONDecodeError:
+                return {}
+    return {}
+
+
+class Tally:
+    def __init__(self) -> None:
+        self.counts: dict[str, int] = {}
+
+    def hit(self, status: int | None, error: str | None = None) -> None:
+        if error:
+            key = f"err:{error}"
+        elif status is None:
+            key = "err:no-status"
+        elif status < 400:
+            key = f"{status // 100}xx"
+        else:
+            key = f"{status}"
+        self.counts[key] = self.counts.get(key, 0) + 1
+
+
+async def worker(i: int, cfg: argparse.Namespace, tally: Tally,
+                 results: list, loop: asyncio.AbstractEventLoop) -> None:
+    host, port = cfg.host, cfg.port
+
+    async def post(path: str, token: str, body: dict | None,
+                   timeout: float = 120.0) -> tuple[int, dict, dict, int]:
+        return await asyncio.wrap_future(loop.run_in_executor(
+            None, lambda: _request(host, port, "POST", path, token, body, timeout)))
+
+    rec = {"worker": i, "start_offset_s": None, "phases": {}, "ok": False}
+    results.append(rec)
+    try:
+        offset = random.uniform(0, cfg.window_s)
+        rec["start_offset_s"] = round(offset, 3)
+        await asyncio.sleep(offset)
+
+        status, _, body, ms = await post("/api/auth/login", "",
+                                         {"account": cfg.account,
+                                          "password": cfg.password})
+        tally.hit(status)
+        rec["phases"]["login_ms"] = ms
+        if status != 200:
+            rec["error"] = f"login {status}"
+            return
+        token = body.get("access_token") or ""
+
+        idem = f"burst-{i}-{uuid.uuid4().hex[:8]}"
+        status, _, body, ms = await post("/api/prepared-questions/open", token, {
+            "idempotency_key": idem, "external_question_id": cfg.question_id,
+            "grade": cfg.grade})
+        tally.hit(status)
+        rec["phases"]["open_ms"] = ms
+        if status != 200:
+            rec["error"] = f"open {status}"
+            return
+        session = ((body.get("question") or {}).get("active_session") or {})
+        cid = session.get("conversation") or ""
+        ssid = session.get("skill_session_id") or ""
+        version = session.get("session_version")
+        if not (cid and ssid and isinstance(version, int)):
+            rec["error"] = "open shape"
+            return
+
+        status, _, body2, _ = await post("/api/prepared-questions/open", token, {
+            "idempotency_key": idem, "external_question_id": cfg.question_id,
+            "grade": cfg.grade})
+        tally.hit(status)
+        session2 = ((body2.get("question") or {}).get("active_session") or {})
+        rec["idem_open_ok"] = (status == 200
+                               and session2.get("conversation") == cid
+                               and session2.get("session_version") == version)
+
+        status, _, body, ms = await post(f"/api/conversations/{cid}/messages", token, {
+            "content": "我想两边都减去7,得到3x等于18。",
+            "input": {"skill_session_id": ssid,
+                      "expected_session_version": version}})
+        tally.hit(status)
+        rec["phases"]["turn1_ms"] = ms
+        if status != 200:
+            rec["error"] = f"turn1 {status}"
+            return
+        version = body.get("session_version") or version
+
+        msg_key = f"burst-msg-{i}-{uuid.uuid4().hex[:8]}"
+        payload = {"content": "然后两边都除以3,所以x等于6。代回去3乘6加7等于25。",
+                   "message_idempotency_key": msg_key,
+                   "input": {"skill_session_id": ssid,
+                             "expected_session_version": version}}
+        status, _, body_a, ms = await post(f"/api/conversations/{cid}/messages",
+                                           token, payload)
+        tally.hit(status)
+        rec["phases"]["turn2_ms"] = ms
+        if status != 200:
+            rec["error"] = f"turn2 {status}"
+            return
+        status, _, body_b, _ = await post(f"/api/conversations/{cid}/messages",
+                                          token, payload)
+        tally.hit(status)
+        rec["idem_turn_ok"] = (status == 200
+                               and body_b.get("session_version")
+                               == body_a.get("session_version")
+                               and (body_b.get("assistant_message") or {}).get("content")
+                               == (body_a.get("assistant_message") or {}).get("content"))
+        version = body_b.get("session_version") or version
+
+        status, ttfb, total_ms, raw = await asyncio.wrap_future(
+            loop.run_in_executor(
+                None, lambda: _post_sse(host, port,
+                                        f"/api/conversations/{cid}/messages/stream",
+                                        token, {
+                                            "content": "我完整讲一遍:第一步两边同时减7,"
+                                                       "得3x=18;第二步两边除以3,得x=6;"
+                                                       "代回3×6+7=25 验证成立。",
+                                            "input": {"skill_session_id": ssid,
+                                                      "expected_session_version": version}},
+                                        cfg.sse_timeout)))
+        tally.hit(status)
+        rec["phases"]["sse_ttfb_ms"] = ttfb
+        rec["phases"]["sse_total_ms"] = total_ms
+        rec["sse_ok"] = (status == 200 and bool(_sse_done(raw)))
+        done = _sse_done(raw) if status == 200 else {}
+        if isinstance(done.get("session_version"), int):
+            version = done["session_version"]
+
+        status, _, body, ms = await post(f"/api/conversations/{cid}/messages", token, {
+            "content": "", "input": {"skill_session_id": ssid,
+                                     "expected_session_version": version,
+                                     "interaction_action": "confirm"}})
+        tally.hit(status)
+        rec["phases"]["confirm_ms"] = ms
+        rec["confirm_status"] = body.get("status") if status == 200 else f"err{status}"
+        rec["ok"] = (rec.get("idem_open_ok") and rec.get("idem_turn_ok")
+                     and rec["sse_ok"] and status == 200)
+    except Exception as error:  # noqa: BLE001 - 负载面异常全额记账
+        tally.hit(None, type(error).__name__)
+        rec["error"] = f"{type(error).__name__}: {error}"[:200]
+
+
+async def healthz_poller(cfg: argparse.Namespace, samples: list,
+                         stop: asyncio.Event) -> None:
+    while not stop.is_set():
+        try:
+            status, _, body, _ = await asyncio.to_thread(
+                _request, cfg.host, cfg.port, "GET", "/healthz", "", None, 5)
+            samples.append({"t": round(time.monotonic(), 1), "status": status,
+                            "store": body.get("store"),
+                            "upstreams": body.get("upstreams")})
+        except Exception as error:  # noqa: BLE001
+            samples.append({"t": round(time.monotonic(), 1),
+                            "error": type(error).__name__})
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=1.0)
+        except asyncio.TimeoutError:
+            pass
+
+
+def _pct(values: list[float], p: float) -> int:
+    if not values:
+        return -1
+    ordered = sorted(values)
+    return int(ordered[min(math.ceil(p / 100 * len(ordered)) - 1, len(ordered) - 1)])
+
+
+async def main() -> None:
+    parser = argparse.ArgumentParser(description="课堂拍题 burst 负载")
+    parser.add_argument("--base-url", required=True)
+    parser.add_argument("--account", required=True)
+    parser.add_argument("--password", required=True)
+    parser.add_argument("--workers", type=int, default=30)
+    parser.add_argument("--window-s", type=float, default=2.0)
+    parser.add_argument("--question-id", default="equation_subtract")
+    parser.add_argument("--grade", default="六年级")
+    parser.add_argument("--sse-timeout", type=float, default=600.0)
+    parser.add_argument("--out", required=True)
+    cfg = parser.parse_args()
+    parsed = urlparse(cfg.base_url)
+    cfg.host, cfg.port = parsed.hostname, parsed.port or 80
+
+    loop = asyncio.get_running_loop()
+    loop.set_default_executor(ThreadPoolExecutor(max_workers=256))
+
+    tally = Tally()
+    results: list = []
+    samples: list = []
+    stop = asyncio.Event()
+    poller = asyncio.create_task(healthz_poller(cfg, samples, stop))
+    t0 = time.monotonic()
+    await asyncio.gather(*[worker(i, cfg, tally, results, loop)
+                           for i in range(cfg.workers)])
+    wall_s = round(time.monotonic() - t0, 1)
+    stop.set()
+    await poller
+
+    phases = ["login_ms", "open_ms", "turn1_ms", "turn2_ms",
+              "sse_ttfb_ms", "sse_total_ms", "confirm_ms"]
+    agg = {}
+    for p in phases:
+        vals = [r["phases"][p] for r in results if r["phases"].get(p) is not None]
+        agg[p] = {"n": len(vals), "p50": _pct(vals, 50), "p95": _pct(vals, 95),
+                  "max": int(max(vals)) if vals else -1}
+    sse_drops = sum(1 for r in results if r.get("sse_ok") is False)
+    idem_breaks = sum(1 for r in results
+                      if r.get("idem_open_ok") is False or r.get("idem_turn_ok") is False)
+    report = {
+        "config": {"workers": cfg.workers, "window_s": cfg.window_s,
+                   "question_id": cfg.question_id, "base_url": cfg.base_url,
+                   "wall_s": wall_s},
+        "tally": tally.counts,
+        "aggregates": agg,
+        "sse_drops": sse_drops,
+        "idempotency_breaks": idem_breaks,
+        "workers_ok": sum(1 for r in results if r.get("ok")),
+        "confirm_statuses": {s: sum(1 for r in results
+                                    if r.get("confirm_status") == s)
+                             for s in {r.get("confirm_status") for r in results}},
+        "healthz_samples": len(samples),
+        "healthz_probe_failures_max": max(
+            (s.get("store") or {}).get("probe_failures", 0) for s in samples
+        ) if samples else -1,
+        "per_worker": results,
+    }
+    with open(cfg.out, "w", encoding="utf-8") as fh:
+        json.dump(report, fh, ensure_ascii=False, indent=1)
+    print(json.dumps({k: v for k, v in report.items() if k != "per_worker"},
+                     ensure_ascii=False, indent=1))
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

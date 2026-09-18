@@ -1,0 +1,163 @@
+{
+  "schema": "leak-net-v1-anchor-seeds/v1",
+  "ruling": "#333 采纳记录 c5717512971(架构师 V1 窄授权,PM 2026-09-18);本单=测试面备料(PM 88ccdbcabde5da82)",
+  "layer": "Q5 第一层:纯函数边界对(A 中间值≠终答允许 / B 相同=禁 / C 非telling路径=禁 / D ready_to_confirm=禁)",
+  "session_note": "session = LearnerSession 字段子集(question/learner/state/stuck/steps/hint_level);steps 为**合成 plan 步**(标注 synthetic)——session.steps 是运行期产物,数据集不落盘;答案/题面取自数据集 canonical 字段(pilot: question.answer;enriched12: reference_answer.value)",
+  "v1_condition": "锚仅: deterministic reveal/telling 路径 × 当前 next step 的 value × anchor=value数字−answer_pool 非空且 ∩answer_pool=∅ × hint_level>0 且再次 stuck × state≠ready_to_confirm;模型自由生成路径零例外",
+  "seeds": [
+    {
+      "name": "A_anchor_legal_intermediate_not_answer",
+      "boundary": "A 中间值≠终答 → 允许(锚-合法)",
+      "case_ref": "stability_chicken_rabbit(pilot_20,canonical answer)",
+      "session": {
+        "question": {"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?", "answer": "鸡3只,兔5只"},
+        "learner": {"grade": "四年级", "answer_status": "unanswered"},
+        "state": "dialogue",
+        "stuck": true,
+        "hint_level": 1,
+        "steps": [
+          {"step": "先算全部按鸡的脚数:8×2=16", "value": "16"},
+          {"step": "再算脚数差:26−16=10", "value": "10"},
+          {"step": "兔的只数:10÷2=5", "value": "5"}
+        ],
+        "steps_synthetic": true
+      },
+      "expect": {
+        "anchor_allowed": true,
+        "anchor_numbers": [10.0],
+        "reveal_path": "telling",
+        "note": "当前 next step=第2级 value=10:∉answer_pool{3,5} 且 ∉题面{8,26} → 可锚。第1级 16 虽同样 ∉answer_pool 但**非当前级**(Q1:不扫全 steps);第3级 5=终答部件,永禁。"
+      }
+    },
+    {
+      "name": "B_single_step_collision_stuck02",
+      "boundary": "B 单步碰撞(value=终答)→ 禁(锚-非法)",
+      "case_ref": "image_v2_stuck_02(enriched12,canonical answer)",
+      "session": {
+        "question": {"text": "一根4分米长的纸条,剪下它的4分之1,剪下多少分米?", "answer": "1分米"},
+        "learner": {"grade": "三年级", "answer_status": "unanswered"},
+        "state": "dialogue",
+        "stuck": true,
+        "hint_level": 1,
+        "steps": [{"step": "每份是多少:4÷4=1", "value": "1"}],
+        "steps_synthetic": true
+      },
+      "expect": {
+        "anchor_allowed": false,
+        "anchor_numbers": [],
+        "reveal_path": "telling",
+        "note": "steps 仅1级且 value=终答 → anchor={1}−{1}=∅ → 『anchor 非空』条件失败;repeated stuck 仍不给,走既有兜底(bottom-out 才是设计内披露点,不变量锁在 test_kernel_invariants)。"
+      }
+    },
+    {
+      "name": "B_single_step_collision_answerhit01",
+      "boundary": "B 单步碰撞(同型第二例)→ 禁",
+      "case_ref": "image_v2_answerhit_01(enriched12,canonical answer)",
+      "session": {
+        "question": {"text": "一根彩带长12米,剪掉全长的3分之1,剪掉多少米?", "answer": "4米"},
+        "learner": {"grade": "三年级", "answer_status": "unanswered"},
+        "state": "dialogue",
+        "stuck": true,
+        "hint_level": 1,
+        "steps": [{"step": "剪掉多少米:12÷3=4", "value": "4"}],
+        "steps_synthetic": true
+      },
+      "expect": {
+        "anchor_allowed": false,
+        "anchor_numbers": [],
+        "reveal_path": "telling",
+        "note": "value=4=终答 → anchor ∩answer_pool≠∅(Q3 单步题选a:即禁,走更小问点/操作提示)。"
+      }
+    },
+    {
+      "name": "C_support_guiding_focus_no_anchor",
+      "boundary": "C 非telling路径 → 禁(零锚)",
+      "case_ref": "stability_chicken_rabbit 形态(support 路径)",
+      "session": {
+        "question": {"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?", "answer": "鸡3只,兔5只"},
+        "learner": {"grade": "四年级", "answer_status": "unanswered"},
+        "state": "dialogue",
+        "stuck": true,
+        "hint_level": 1,
+        "history": [
+          {"role": "assistant", "content": "我们从这里入手:先算全部按鸡的脚数。你接着算下一步。"},
+          {"role": "user", "content": "我知道了,全部按鸡算是 16 只脚。"}
+        ],
+        "steps": [
+          {"step": "先算全部按鸡的脚数:8×2=16", "value": "16"},
+          {"step": "再算脚数差:26−16=10", "value": "10"}
+        ],
+        "steps_synthetic": true
+      },
+      "expect": {
+        "anchor_allowed": false,
+        "anchor_numbers": [],
+        "reveal_path": "support_guiding_focus",
+        "note": "上一学生轮已复述当前级 value 数字(_support_move 判据)→ guiding_focus 拆小问句(只问不揭示,#169 不含数字);support 路径零锚——V1 模型/引导路径零例外。"
+      }
+    },
+    {
+      "name": "D_ready_to_confirm_blocks_anchor",
+      "boundary": "D ready_to_confirm → 禁(即便 A 形态)",
+      "case_ref": "image_v2_answerhit_01 形态(state=ready_to_confirm)",
+      "session": {
+        "question": {"text": "一根彩带长12米,剪掉全长的3分之1,剪掉多少米?", "answer": "4米"},
+        "learner": {"grade": "三年级", "answer_status": "correct"},
+        "state": "ready_to_confirm",
+        "stuck": true,
+        "hint_level": 1,
+        "steps": [
+          {"step": "先算剩下的:12−4=8", "value": "8"},
+          {"step": "剪掉多少米:12÷3=4", "value": "4"}
+        ],
+        "steps_synthetic": true
+      },
+      "expect": {
+        "anchor_allowed": false,
+        "anchor_numbers": [],
+        "reveal_path": "telling_blocked",
+        "note": "state=ready_to_confirm → 七条件之『≠ready_to_confirm』失败;确认/赞许轮转述式确认、不引述数值(既有不变量,test_kernel_invariants)。"
+      }
+    },
+    {
+      "name": "M_multi_part_overlap_still_withheld",
+      "boundary": "多部件答案全部件保护,重叠仍不给(PM 断言4)",
+      "case_ref": "image_v2_understanding_04(enriched12,C 类)",
+      "session": {
+        "question": {"text": "下图中一条线段过圆心且两端都在圆上,长6厘米。这个圆的直径和半径各是多少厘米?", "answer": "直径6厘米,半径3厘米"},
+        "learner": {"grade": "六年级", "answer_status": "unanswered"},
+        "state": "dialogue",
+        "stuck": true,
+        "hint_level": 1,
+        "steps": [{"step": "半径是直径的一半:6÷2=3", "value": "3"}],
+        "steps_synthetic": true
+      },
+      "expect": {
+        "anchor_allowed": false,
+        "anchor_numbers": [],
+        "reveal_path": "telling",
+        "note": "answer_pool={6,3}(多部件**全部**=终答,V1 Q1:不造答案 ontology,保守全保护);value=3 与部件重叠 → 禁。"
+      }
+    },
+    {
+      "name": "F_answer_undeterminable_fail_closed",
+      "boundary": "答案侧不可判定 → 保守不给(扫描建议面,实现 PR 裁定采纳与否)",
+      "case_ref": "image_v2_stuck_01(enriched12,纯文字答案)",
+      "session": {
+        "question": {"text": "向一个容器匀速注水,水位随时间变化如下图:前段平缓、后段陡。这个容器的形状是怎样的?", "answer": "下面粗、上面细(下粗上细)"},
+        "learner": {"grade": "五年级", "answer_status": "unanswered"},
+        "state": "dialogue",
+        "stuck": true,
+        "hint_level": 1,
+        "steps": [{"step": "对比前后段水位上升快慢", "value": ""}],
+        "steps_synthetic": true
+      },
+      "expect": {
+        "anchor_allowed": false,
+        "anchor_numbers": [],
+        "reveal_path": "telling",
+        "note": "answer_pool=∅(纯文字答案,ASCII 提取空)→ 『∩answer_pool=∅』字面恒过、保护不可验证 → **保守 fail-closed 不给数字锚**(分类清单标 answer_pool_empty;与 kernel 既有口径一致:参考答案侧不可判定 → 模型路径,确定性锚更不应放行)。"
+      }
+    }
+  ]
+}
