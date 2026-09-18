@@ -86,6 +86,11 @@ numeric.py 零改动。唯一精确串更新:`test_repeat_fallback_ladder_texts_
 answer 不喂(pool=steps 末值,形态与 value 自洽)无漏面;仅 feed_answer 测量断点下存在,
 且单数值门槛已把多位分数收禁。**不造数值等价 ontology**(裁定 Q1:保守正确优先)。
 
+**P2-① 追认(PM 裁定 2026-09-18,经 dsh-rpc 派单线;裁决链 #333 审查 P2-①)**:上表
+「千分位双侧归一」(真漏向量修复,纯收紧)与「单数值门槛」(保守收紧)两条 kernel
+行为变化**追认批准**——Q7 合规(numeric.py 零改动),原派单(PM 233d0fca,
+sha256=49255c5dba108a0b)授权面内;审查者 P3-nano② 措辞口径=「漏向量收紧+伪拦解除」。
+
 ## 7. soften 无分句边界收紧候选评估(记 finding,不硬改)
 
 现状:soften 找不到分句边界 → 保留原句(「宁可直给,不出残句」)。V1 语义下的张力:
