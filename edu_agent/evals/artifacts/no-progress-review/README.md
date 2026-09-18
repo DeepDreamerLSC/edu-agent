@@ -45,3 +45,23 @@ judge=mlx_27b(8301),**calls=24**(tutor 21+judge 3,逐调用台账 facts.jsonl �
 
 `controls-v1/`——cases/checks/judge-scores 三 jsonl + collect/(逐案 result JSON
 含 transcript/guard_events + manifest + **facts.jsonl 逐调用台账**)+ report.md。
+
+---
+
+# 控制案 baseline 补跑(PM 裁 a;跑前冻结 2026-09-18)
+
+**baseline 钉 pre-#361 main=49003b7e**(合并后 main 带新 prompt 不可作对照);
+同 fixture(controls-v1)同设置,Mac 本地零远程,calls 记数(预算 18-24);
+candidate 侧复用已跑件(controls-v1 replay,零新 calls)。
+
+## 跑前冻结:baseline 三案判读预期(M2 同形态口径)
+
+- **①合理复核**:baseline(窄改前)预期=复核轮正常(追问依据/请学生复述);
+  若现「重问已答事实」症状=读数记录(控制案非病灶案,症状为阴性预期)
+- **②答错重新引导**:预期=换角度纠错引导接学生修正推进;不重问原问点
+- **③答对理由不足**:预期=追问依据/收束引导(学生讲全思路后 completed)
+- 判读面=transcript 行为定性 + advisories 计数(诊断器在 49003b7e 上
+  不可用[checks.py 无该函数]——advisories 面由 candidate 侧承担,baseline
+  判读纯行为定性,如实记录)
+- **盲对判读线不变**:真实案 candidate 须 better;3 控制案不得 worse
+  (worse 判据=baseline 三形态预期行为在 candidate 上缺失/退化)
