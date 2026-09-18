@@ -33,6 +33,7 @@ CASE_IDS = [
 
 
 def main() -> None:
+    case_ids = sys.argv[1:] or CASE_IDS  # 补验轮:可传子集只重跑目标案
     from edu_agent.evals.corpus_round import transcript_messages
     from edu_agent.evals.judge import judge_transcript
     from edu_agent.evals.kernel_subject import KernelSubject
@@ -49,7 +50,7 @@ def main() -> None:
     subject = KernelSubject(gateway)
 
     results = []
-    for cid in CASE_IDS:
+    for cid in case_ids:
         used = gateway.writer.count - w0
         if used + PER_CASE_RESERVE > MAX_CALLS:
             print(f"[ABORT] 预算将越顶(已用 {used}+储备 {PER_CASE_RESERVE} > {MAX_CALLS}),停跑")

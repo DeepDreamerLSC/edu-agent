@@ -397,7 +397,8 @@
      "path": "synthetic_v2_c3_ribbon.png",
      "sha256": "4d3d896a926749155a91db08f52d80a25110ef8e767b4e91ec08d43dd20aab5a"
     },
-    "answer": "8米"
+    "answer": "8米",
+    "analysis": "先算每份是 12÷3=4 米。再算剩下 12-4=8 米。"
    },
    "reference_answer": {
     "value": "12÷3=4(每份);12-4=8米",
@@ -432,7 +433,8 @@
      "path": "synthetic_v2_s2_strips.png",
      "sha256": "becd84f69b5cc5de64f3f9da03ebdbead442d402ca27ed3b791228a2a6f404d6"
     },
-    "answer": "3分米"
+    "answer": "3分米",
+    "analysis": "先算剪掉 4×4分之1=1 分米。再算剩下 4-1=3 分米。"
    },
    "reference_answer": {
     "value": "4×1/4=1(剪掉);4-1=3分米",
