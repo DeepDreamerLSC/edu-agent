@@ -236,12 +236,20 @@ def build_plan(effective: dict, cases: list[dict]) -> dict:
     }
 
 
+def _display_path(raw: str) -> str:
+    """显示口径(#351 审 P3-2):仓内路径显示相对仓根,贴 spec 原文;仓外保持原样。"""
+    try:
+        return str(Path(raw).resolve().relative_to(REPO.resolve()))
+    except ValueError:
+        return raw
+
+
 def format_plan(plan: dict) -> str:
     """计划 → 人读文本(--plan 打印件;零模型调用)。"""
     scale = plan["call_scale"]
     lines = [
         f"name: {plan['name']}",
-        f"corpora: {','.join(plan['corpora'])}",
+        f"corpora: {','.join(_display_path(p) for p in plan['corpora'])}",
         f"resolved_cases ({len(plan['resolved_cases'])}): {','.join(plan['resolved_cases'])}",
         f"judge: {'on' if plan['judge'] else 'off(0 judge calls)'}",
         f"concurrency: {plan['concurrency']}",
@@ -320,11 +328,19 @@ def real_model_scenarios(corpus_paths: list[Path]) -> dict[str, dict]:
     """读 corpus 文件,取真模型口径子集(无 fake_model);case id 加数据集前缀防跨文件撞名。
 
     loader(load_shortboard_corpus)已做形状/答案可提取校验——写错在这里红,不静默跳过。
+    JSONL(逐行 JSON)不是 envelope JSON:json 的 Extra data 转成可行动提示(#351 审 P3-1,
+    审查者亲踩:corpora 指到 artifacts 的 cases.jsonl 时裸错最难懂)。
     """
     scenarios: dict[str, dict] = {}
     for path in corpus_paths:
         stem = Path(path).stem
-        for scenario in load_shortboard_corpus(path):
+        try:
+            loaded = load_shortboard_corpus(path)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"corpus 需要 envelope JSON(含 schema_version/scenarios):{path}"
+                f" 疑似 JSONL(逐行 JSON,如 artifacts 的 cases.jsonl)——{exc}") from exc
+        for scenario in loaded:
             if scenario.get("fake_model"):
                 continue  # 确定性口径:pytest 已永久回放(#216 边界)
             case_id = f"{stem}_{scenario['id']}"
@@ -838,7 +854,11 @@ def _plan_mode(args, spec: dict | None) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(
+        description=__doc__.splitlines()[0],
+        epilog="示例:先 --config spec.yaml --plan 看计划(零调用),再 --config spec.yaml "
+               "--out var/runs/<名> 真跑;--out 与 --config 是并排两参,只传 --config 不传 "
+               "--out 时必须带 --plan(#351 审 P3-3)")
     parser.add_argument("--corpus", action="append", default=[],
                         help="corpus 数据集 JSON(可多次;缺省 = teaching_context pilot 20;"
                              "#350 ④:CLI 优先于 --config 的 corpora)")

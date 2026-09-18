@@ -196,6 +196,16 @@ def test_ambiguous_bare_id_fails_fast(tmp_path):
         resolve_spec_cases(["s1"], scenarios)
 
 
+def test_jsonl_as_corpus_gets_actionable_error(tmp_path):
+    """JSONL 冒充 corpus(#351 审 P3-1 审查者亲踩):裸 Extra data → 可行动提示。"""
+    jsonl = tmp_path / "cases.jsonl"
+    jsonl.write_text('{"id": "s1"}\n{"id": "s2"}\n', encoding="utf-8")
+    spec_path = _write_spec(tmp_path, _spec_yaml(str(jsonl), "\n  - s1"))
+    spec = load_run_spec(spec_path)  # 存在性检查过(是文件)
+    with pytest.raises(ValueError, match="envelope JSON.*疑似 JSONL"):
+        resolve_round(_args(), spec)  # 裸错在装载面转可行动提示
+
+
 # ⑦ source+resolved 落工件且指纹可复算
 def test_spec_artifacts_and_fingerprint(tmp_path):
     src = _write_spec(tmp_path, "version: 1\nname: t\ncorpora: [x]\ncases: [a]\n")
