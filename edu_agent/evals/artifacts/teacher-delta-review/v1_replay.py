@@ -15,8 +15,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]  # 仓库根
-DATASET = ROOT / "edu_agent/evals/datasets/"
-DATASET /= "small_lecturer_v1anchor_verification_v1.json"  # 裁 b 补验独立验案集(enriched12 不扩:#332 分层抽样锚)
+ENRICHED12 = ROOT / "edu_agent/evals/datasets/small_lecturer_image_teaching_v2_enriched12.json"
+# 裁 b 补验自有 fixture(PM 裁:enriched12 是分层抽样数据集不作宿主,字节还原 main)
+FIXTURES_V1ANCHOR = Path(__file__).resolve().parent / "fixtures_v1anchor.json"
 OUT = Path(__file__).resolve().parent / "out" / "v1"
 FACTS = Path(__file__).resolve().parent / "out" / "facts"
 MAX_CALLS = 40  # PM ~30 预算+裕量硬顶
@@ -42,8 +43,10 @@ def main() -> None:
     from edu_agent.gateway.registry import load_registry
 
     OUT.mkdir(parents=True, exist_ok=True)
-    payload = json.loads(DATASET.read_text(encoding="utf-8"))
-    cases = {c["id"]: c for c in payload["scenarios"]}
+    cases = {}
+    for src in (ENRICHED12, FIXTURES_V1ANCHOR):
+        payload = json.loads(src.read_text(encoding="utf-8"))
+        cases.update({c["id"]: c for c in payload["scenarios"]})
 
     gateway = Gateway(load_registry(ROOT / "configs/models.yaml"),
                       facts_dir=str(FACTS))
