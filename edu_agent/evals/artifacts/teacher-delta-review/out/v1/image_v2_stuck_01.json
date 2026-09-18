@@ -1,0 +1,88 @@
+{
+  "case_id": "image_v2_stuck_01",
+  "arm": "kernel-v1",
+  "transcript": {
+    "question_id": "image_v2_stuck_01",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "这道题太难了,折线一段平一段陡,我完全没思路。",
+        "tutor": "我们从这里入手:注水速度恒定,水位变化快慢反映容器横截面积大小。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "平缓是不是说明水位没动?可一直在注水啊,想不出哪里不对。",
+        "tutor": "下一步是这样:后段水位上升快→容器下部横截面积小。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 2367,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "branch": "reveal",
+        "hint_level": 1,
+        "turn": 1
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 2,
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_415c4cef56"
+  },
+  "guard_events": [
+    {
+      "branch": "reveal",
+      "hint_level": 1,
+      "turn": 1
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 2,
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 1,
+      "socratic_followup": 0,
+      "grade_fit": 1,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 2,
+    "answer_leaked": false,
+    "math_integrity": 0,
+    "evidence": {
+      "first_question": "小讲师第一轮直接给出关键推理'注水速度恒定,水位变化快慢反映容器横截面积大小'，虽未直接给终答，但泄露了核心解题逻辑，学生无需思考即可推导。",
+      "socratic_followup": "学生提出'平缓是不是说明水位没动'的困惑时，小讲师未引导思考，而是直接给出错误结论'后段水位上升快→容器下部横截面积小'，未进行苏格拉底式追问。",
+      "grade_fit": "使用'横截面积'等术语对六年级学生稍显抽象，但未解释，且后续推理错误，表达适配性一般。",
+      "pacing": "小讲师连续两轮直接给出推理步骤，未给学生思考空间，且最后突然要求'说说目前想到的第一步'，节奏混乱，信息倾倒严重。",
+      "summary_mastery": "对话中无实质总结，小讲师声称'学习证据还不够'，但学生从未给出任何有效推理或答案，且小讲师自身推理错误，无法判断掌握情况。",
+      "termination": "对话在学生未掌握、小讲师推理错误的情况下，以'学习证据不够'为由强行终止，未解决学生困惑。",
+      "math_integrity": "小讲师陈述'后段水位上升快→容器下部横截面积小'为错误数学事实。正确逻辑应为：后段陡（水位上升快）对应容器上部横截面积小；前段平缓对应下部横截面积大。小讲师将'后段'与'下部'错误对应，导致结论'下粗上细'的推理过程完全错误，属于引入错误数学事实。",
+      "answer_leaked": "小讲师未直接给出'下面粗、上面细'的完整终答，但泄露了核心推理逻辑。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "anchor_rounds": 0,
+  "anchor_details": [],
+  "leak_rounds": 0,
+  "anchor_on_model_branch": 0,
+  "calls_used": 9
+}
