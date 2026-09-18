@@ -173,6 +173,7 @@ def test_property_anchor_never_leaks_answer():
     """P1/P2/P3/P4 合一:任意(题面,终答,阶梯值,梯长)组合下——
     锚与终答数字集交恒空(fail-closed)/首次 stuck 零锚/锚恒为单数值/键只增不改。"""
     rng = random.Random(20260918)
+    anchored = 0
     for i in range(120):
         seed, pool = _synth_seed(rng)
         turn = _drive(seed, stuck_rounds=2)
@@ -181,8 +182,12 @@ def test_property_anchor_never_leaks_answer():
         for event in events[1:]:
             anchor = event.get("anchor_numbers")
             if anchor is not None:
+                anchored += 1
                 assert len(anchor) == 1, f"case{i}: 锚必须单数值,实得 {anchor}"
                 assert not set(anchor) & pool, f"case{i}: 锚 {anchor} 撞终答池 {pool}"
+    # 防网格退化空转(P3-nano③,reviewer 659c6ae9):锚面下限(当前种子实测 76;
+    # 网格/判据若改到不足此限,说明授权面样本萎缩——先查网格再动阈值)
+    assert anchored >= 30, f"property 网格退化:仅 {anchored} 案有锚(<30)"
 
 
 def test_property_anchor_audit_single_field():
