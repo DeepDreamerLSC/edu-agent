@@ -11,19 +11,16 @@ import pytest
 
 from edu_agent.contracts import skill_interaction_schema
 
-from partner_api import ScriptedKernel, _serve, open_session, parse_sse, post
+from partner_api import ScriptedKernel, open_session, parse_sse, post
 
 
 @pytest.fixture
-def api():
+def api(serve):
     kernel = ScriptedKernel(
         replies=["你列了哪些已知量?", "很好,那两个量之间是什么关系?", "你已经掌握了乘法意义。"],
         ready_at=3,
     )
-    base, server = _serve(kernel)
-    yield base, kernel
-    server.shutdown()
-    server.server_close()
+    return serve(kernel), kernel
 
 
 def _messages_path(opened: dict) -> str:

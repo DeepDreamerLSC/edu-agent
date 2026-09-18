@@ -1,0 +1,25 @@
+{
+ "stop_reason": "budget_cap(轮内熔断或轮首截断)",
+ "hard_cap": 300,
+ "generations": 2,
+ "ts": "2026-09-18T01:15:00",
+ "budget_ledger": {
+  "total_calls": 300,
+  "tokens_in": 593741,
+  "tokens_out": 51756,
+  "breakdown": {
+   "tutor@vision": {
+    "calls": 253,
+    "tokens_in": 468374,
+    "tokens_out": 31103,
+    "fallbacks": 0
+   },
+   "judge@mlx": {
+    "calls": 47,
+    "tokens_in": 125367,
+    "tokens_out": 20653,
+    "fallbacks": 0
+   }
+  }
+ }
+}

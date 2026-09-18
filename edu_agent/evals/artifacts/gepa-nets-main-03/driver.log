@@ -1,0 +1,2 @@
+SELF-CHECK-OK checkpoint=干净 facts=空 硬帽=300 代数=2 heldout隔离=∅ (corpus 93 / enriched 12 / heldout 4) 本地端口 (8301, 8303) 全通
+RUN-DONE stop=budget_cap(轮内熔断或轮首截断) ledger={"total_calls": 300, "tokens_in": 593741, "tokens_out": 51756, "breakdown": {"tutor@vision": {"calls": 253, "tokens_in": 468374, "tokens_out": 31103, "fallbacks": 0}, "judge@mlx": {"calls": 47, "tokens_in": 125367, "tokens_out": 20653, "fallbacks": 0}}}

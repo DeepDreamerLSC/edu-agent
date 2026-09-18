@@ -8,16 +8,15 @@ from __future__ import annotations
 
 import httpx
 import pytest
-from partner_api import MapSource, RecordingKernel, post, serving
+from partner_api import MapSource, RecordingKernel, post
 
 from edu_agent.api import build_service
 
 
 @pytest.fixture
-def env():
+def env(serve):
     kernel = RecordingKernel(["我们先看已知条件,题目要我们求什么?"])
-    with serving(kernel, source=MapSource()) as base:
-        yield base, kernel
+    return serve(kernel, source=MapSource()), kernel
 
 
 def unified(base: str, body: dict) -> httpx.Response:
@@ -292,31 +291,31 @@ def test_per_question_open_missing_idempotency_key_is_422(env):
     assert kernel.learners == []
 
 
-def test_bank_hit_with_client_image_merges_into_question():
+def test_bank_hit_with_client_image_merges_into_question(serve):
     """同题组合(§5):题库命中 + 客户端题图 → 文答用题库的,题图用客户端的。"""
     kernel = RecordingKernel(["题图已合并。"])
     service = build_service(kernel, source=MapSource(),
                             image_resolver=lambda fid: f"data:image/png;base64,{fid}")
-    with serving(service=service) as base:
-        response = post(base, "/api/prepared-questions/open", {
-            "external_question_id": "equation_subtract", "idempotency_key": "u-img-merge",
-            "question_image": "file_abc123"})
-        assert response.status_code == 200
-        question = kernel.questions[0]
-        # 文答以题库为准;题图 = 客户端 file_id 经解析器翻译的 data URL
-        assert question["text"].startswith("解方程 3x+7=25")
-        assert question["answer"] == "x=6"
-        assert question["image"] == "data:image/png;base64,file_abc123"
+    base = serve(service=service)
+    response = post(base, "/api/prepared-questions/open", {
+        "external_question_id": "equation_subtract", "idempotency_key": "u-img-merge",
+        "question_image": "file_abc123"})
+    assert response.status_code == 200
+    question = kernel.questions[0]
+    # 文答以题库为准;题图 = 客户端 file_id 经解析器翻译的 data URL
+    assert question["text"].startswith("解方程 3x+7=25")
+    assert question["answer"] == "x=6"
+    assert question["image"] == "data:image/png;base64,file_abc123"
 
 
-def test_unresolvable_image_file_id_is_early_422():
+def test_unresolvable_image_file_id_is_early_422(serve):
     """解析器注入时 file_id 不存在 → 422 FILE_NOT_READY(坏引用不进模型层变 503)。"""
     kernel = RecordingKernel(["不该被调用"])
     service = build_service(kernel, source=MapSource(), image_resolver=lambda fid: None)
-    with serving(service=service) as base:
-        response = post(base, "/api/prepared-questions/open", {
-            "external_question_id": "equation_subtract", "idempotency_key": "u-img-bad",
-            "question_image": "file_gone"})
-        assert response.status_code == 422
-        assert response.json()["error"]["code"] == "FILE_NOT_READY"
-        assert kernel.questions == []  # 未产生内核调用
+    base = serve(service=service)
+    response = post(base, "/api/prepared-questions/open", {
+        "external_question_id": "equation_subtract", "idempotency_key": "u-img-bad",
+        "question_image": "file_gone"})
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "FILE_NOT_READY"
+    assert kernel.questions == []  # 未产生内核调用

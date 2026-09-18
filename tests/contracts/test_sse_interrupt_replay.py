@@ -24,7 +24,7 @@ from edu_agent.api import build_service
 from edu_agent.store import FileConversationStore, FileSessionStore
 
 from auth_testing import TEST_TOKEN
-from partner_api import ScriptedKernel, get, open_session, parse_sse, post, serving
+from partner_api import ScriptedKernel, get, open_session, parse_sse, post
 
 REPLY = "你列了哪些已知量?"
 
@@ -79,121 +79,121 @@ def _committed_turn(base: str, *, key: str, question_id: str) -> dict:
 # ---------- 同进程:断线 → 同键重放,只提交一轮 ----------
 
 @pytest.mark.parametrize("replay_path", ["/messages", "/messages/stream"])
-def test_interrupted_stream_replay_same_process_single_turn(tmp_path, replay_path):
+def test_interrupted_stream_replay_same_process_single_turn(serve, tmp_path, replay_path):
     """断线 → 同进程同键重放(非流式/流式两路共用同一幂等缓存):同一轮原样
     返回,内核只调一次,会话只前进一版。"""
     kernel = ScriptedKernel(replies=[REPLY, "第二轮的回复"])
-    with serving(kernel) as base:
-        opened = open_session(base, question_id="q-sse-inproc")
-        cid = opened["conversation"]["conversation_id"]
-        body = {"content": "先看条件。", "message_idempotency_key": "midem-inproc",
-                "input": {"skill_session_id": opened["skill_session_id"],
-                          "expected_session_version": 1}}
-        _interrupted_stream(base, f"/api/conversations/{cid}/messages/stream", body)
-        _await_version(base, cid, 2)
+    base = serve(kernel)
+    opened = open_session(base, question_id="q-sse-inproc")
+    cid = opened["conversation"]["conversation_id"]
+    body = {"content": "先看条件。", "message_idempotency_key": "midem-inproc",
+            "input": {"skill_session_id": opened["skill_session_id"],
+                      "expected_session_version": 1}}
+    _interrupted_stream(base, f"/api/conversations/{cid}/messages/stream", body)
+    _await_version(base, cid, 2)
 
-        replay = post(base, f"/api/conversations/{cid}{replay_path}", body)
-        assert replay.status_code == 200  # 断线后的重放拿到那一轮,不是 409
-        if replay_path.endswith("/stream"):
-            frames = parse_sse(replay.content)
-            assert [event for event, _ in frames] == \
-                ["status", "start", "interaction", "delta", "done"]
-            done = dict(frames)["done"]
-            assert done["assistant_message"]["content"] == REPLY
-            assert done["session_version"] == 2
-        else:
-            assert replay.json()["assistant_message"]["content"] == REPLY
-            assert replay.json()["session_version"] == 2
-        assert kernel.reply_calls == 1  # 断线重放不重调模型
-        status = get(base, f"/api/conversations/{cid}").json()
-        assert status["session_version"] == 2 and status["turn_count"] == 2  # 只提交一轮
+    replay = post(base, f"/api/conversations/{cid}{replay_path}", body)
+    assert replay.status_code == 200  # 断线后的重放拿到那一轮,不是 409
+    if replay_path.endswith("/stream"):
+        frames = parse_sse(replay.content)
+        assert [event for event, _ in frames] == \
+            ["status", "start", "interaction", "delta", "done"]
+        done = dict(frames)["done"]
+        assert done["assistant_message"]["content"] == REPLY
+        assert done["session_version"] == 2
+    else:
+        assert replay.json()["assistant_message"]["content"] == REPLY
+        assert replay.json()["session_version"] == 2
+    assert kernel.reply_calls == 1  # 断线重放不重调模型
+    status = get(base, f"/api/conversations/{cid}").json()
+    assert status["session_version"] == 2 and status["turn_count"] == 2  # 只提交一轮
 
 
 # ---------- #255 原文口径:服务重启 → 重放仍幂等 ----------
 
-def test_interrupted_stream_replay_after_restart_single_turn(tmp_path):
+def test_interrupted_stream_replay_after_restart_single_turn(serve, tmp_path):
     """断线客户端拿不回 done 帧,重放时可能连 expected_session_version 都没有——
     重启后内存幂等缓存冷启动,落盘存根必须兜底:同一轮原样返回、新进程内核
     零调用、无第二轮提交(省略版本号的重放若落进版本门之后,会二次提交)。"""
     first = ScriptedKernel(replies=[REPLY])
-    with serving(service=_file_service(tmp_path, first)) as base:
-        opened = open_session(base, question_id="q-sse-restart")
-        cid = opened["conversation"]["conversation_id"]
-        _interrupted_stream(base, f"/api/conversations/{cid}/messages/stream",
-                            {"content": "先看条件。", "message_idempotency_key": "midem-restart",
-                             "input": {"skill_session_id": opened["skill_session_id"],
-                                       "expected_session_version": 1}})
-        _await_version(base, cid, 2)
+    base = serve(service=_file_service(tmp_path, first))
+    opened = open_session(base, question_id="q-sse-restart")
+    cid = opened["conversation"]["conversation_id"]
+    _interrupted_stream(base, f"/api/conversations/{cid}/messages/stream",
+                        {"content": "先看条件。", "message_idempotency_key": "midem-restart",
+                         "input": {"skill_session_id": opened["skill_session_id"],
+                                   "expected_session_version": 1}})
+    _await_version(base, cid, 2)
 
     restarted = ScriptedKernel(replies=["重启后若真调了内核,内容会是这句"])
-    with serving(service=_file_service(tmp_path, restarted)) as base:
-        replay = post(base, f"/api/conversations/{cid}/messages", {
-            "content": "先看条件。", "message_idempotency_key": "midem-restart",
-            "input": {"skill_session_id": opened["skill_session_id"]}})  # 断线重放:无版本号
-        assert replay.status_code == 200
-        assert replay.json()["assistant_message"]["content"] == REPLY  # 原轮原样
-        assert replay.json()["session_version"] == 2
-        assert restarted.reply_calls == 0  # 重启后重放不重调模型
-        status = get(base, f"/api/conversations/{cid}").json()
-        assert status["session_version"] == 2 and status["turn_count"] == 2  # 无第二轮提交
+    base = serve(service=_file_service(tmp_path, restarted))
+    replay = post(base, f"/api/conversations/{cid}/messages", {
+        "content": "先看条件。", "message_idempotency_key": "midem-restart",
+        "input": {"skill_session_id": opened["skill_session_id"]}})  # 断线重放:无版本号
+    assert replay.status_code == 200
+    assert replay.json()["assistant_message"]["content"] == REPLY  # 原轮原样
+    assert replay.json()["session_version"] == 2
+    assert restarted.reply_calls == 0  # 重启后重放不重调模型
+    status = get(base, f"/api/conversations/{cid}").json()
+    assert status["session_version"] == 2 and status["turn_count"] == 2  # 无第二轮提交
 
 
-def test_replay_after_restart_stale_version_returns_turn_not_conflict(tmp_path):
+def test_replay_after_restart_stale_version_returns_turn_not_conflict(serve, tmp_path):
     """原请求原样重放(带已过期的 expected_session_version=1):首次已成功,
     重试不该被新版本门槛拦住——该语义重启后同样成立(409 即回归)。"""
     first = ScriptedKernel(replies=[REPLY])
-    with serving(service=_file_service(tmp_path, first)) as base:
-        opened = _committed_turn(base, key="midem-stale", question_id="q-sse-stale")
-        cid = opened["conversation"]["conversation_id"]
+    base = serve(service=_file_service(tmp_path, first))
+    opened = _committed_turn(base, key="midem-stale", question_id="q-sse-stale")
+    cid = opened["conversation"]["conversation_id"]
 
     restarted = ScriptedKernel(replies=["第二轮的回复"])
-    with serving(service=_file_service(tmp_path, restarted)) as base:
-        replay = post(base, f"/api/conversations/{cid}/messages", {
-            "content": "先看条件。", "message_idempotency_key": "midem-stale",
-            "input": {"skill_session_id": opened["skill_session_id"],
-                      "expected_session_version": 1}})  # 原请求原样重放
-        assert replay.status_code == 200  # 不是 409
-        assert replay.json()["assistant_message"]["content"] == REPLY
-        assert replay.json()["session_version"] == 2
-        assert restarted.reply_calls == 0
+    base = serve(service=_file_service(tmp_path, restarted))
+    replay = post(base, f"/api/conversations/{cid}/messages", {
+        "content": "先看条件。", "message_idempotency_key": "midem-stale",
+        "input": {"skill_session_id": opened["skill_session_id"],
+                  "expected_session_version": 1}})  # 原请求原样重放
+    assert replay.status_code == 200  # 不是 409
+    assert replay.json()["assistant_message"]["content"] == REPLY
+    assert replay.json()["session_version"] == 2
+    assert restarted.reply_calls == 0
 
 
 # ---------- 边界:存根只认最后一轮的同键,防过幂等 ----------
 
-def test_new_turn_after_restart_different_key_advances(tmp_path):
+def test_new_turn_after_restart_different_key_advances(serve, tmp_path):
     """换新键的新一轮照常推进(存兜底不是全局去重)。"""
     first = ScriptedKernel(replies=[REPLY])
-    with serving(service=_file_service(tmp_path, first)) as base:
-        opened = _committed_turn(base, key="midem-old", question_id="q-sse-newkey")
-        cid = opened["conversation"]["conversation_id"]
+    base = serve(service=_file_service(tmp_path, first))
+    opened = _committed_turn(base, key="midem-old", question_id="q-sse-newkey")
+    cid = opened["conversation"]["conversation_id"]
 
     restarted = ScriptedKernel(replies=["第二轮的回复"])
-    with serving(service=_file_service(tmp_path, restarted)) as base:
-        turn = post(base, f"/api/conversations/{cid}/messages", {
-            "content": "第二轮。", "message_idempotency_key": "midem-new",
-            "input": {"skill_session_id": opened["skill_session_id"],
-                      "expected_session_version": 2}})
-        assert turn.status_code == 200
-        assert turn.json()["assistant_message"]["content"] == "第二轮的回复"
-        assert turn.json()["session_version"] == 3  # 正常推进
-        assert restarted.reply_calls == 1
+    base = serve(service=_file_service(tmp_path, restarted))
+    turn = post(base, f"/api/conversations/{cid}/messages", {
+        "content": "第二轮。", "message_idempotency_key": "midem-new",
+        "input": {"skill_session_id": opened["skill_session_id"],
+                  "expected_session_version": 2}})
+    assert turn.status_code == 200
+    assert turn.json()["assistant_message"]["content"] == "第二轮的回复"
+    assert turn.json()["session_version"] == 3  # 正常推进
+    assert restarted.reply_calls == 1
 
 
-def test_unknown_key_stale_version_after_restart_conflicts_no_commit(tmp_path):
+def test_unknown_key_stale_version_after_restart_conflicts_no_commit(serve, tmp_path):
     """边界钉:不是最后一轮的键(陌生键)不享受存根,落回版本门——过期版本
     409、零内核调用、零提交(00 §5.2 约定 3 的重启面)。"""
     first = ScriptedKernel(replies=[REPLY])
-    with serving(service=_file_service(tmp_path, first)) as base:
-        opened = _committed_turn(base, key="midem-mine", question_id="q-sse-other")
-        cid = opened["conversation"]["conversation_id"]
+    base = serve(service=_file_service(tmp_path, first))
+    opened = _committed_turn(base, key="midem-mine", question_id="q-sse-other")
+    cid = opened["conversation"]["conversation_id"]
 
     restarted = ScriptedKernel(replies=["第二轮的回复"])
-    with serving(service=_file_service(tmp_path, restarted)) as base:
-        replay = post(base, f"/api/conversations/{cid}/messages", {
-            "content": "旧轮重放。", "message_idempotency_key": "midem-other",
-            "input": {"skill_session_id": opened["skill_session_id"],
-                      "expected_session_version": 1}}, status=409)
-        assert replay.json()["error"]["code"] == "SKILL_SESSION_CONFLICT"
-        assert restarted.reply_calls == 0
-        status = get(base, f"/api/conversations/{cid}").json()
-        assert status["session_version"] == 2 and status["turn_count"] == 2
+    base = serve(service=_file_service(tmp_path, restarted))
+    replay = post(base, f"/api/conversations/{cid}/messages", {
+        "content": "旧轮重放。", "message_idempotency_key": "midem-other",
+        "input": {"skill_session_id": opened["skill_session_id"],
+                  "expected_session_version": 1}}, status=409)
+    assert replay.json()["error"]["code"] == "SKILL_SESSION_CONFLICT"
+    assert restarted.reply_calls == 0
+    status = get(base, f"/api/conversations/{cid}").json()
+    assert status["session_version"] == 2 and status["turn_count"] == 2

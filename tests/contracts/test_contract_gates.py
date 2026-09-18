@@ -31,21 +31,17 @@ import pytest
 
 from auth_testing import TEST_TOKEN
 from edu_agent.api import ConversationService
-from partner_api import (ScriptedKernel, StubSummary, StubTurn, _serve, get,
-                         open_session, parse_sse, post)
+from partner_api import (ScriptedKernel, StubSummary, StubTurn, get, open_session,
+                         parse_sse, post, serving)
 
 FORBIDDEN = ["answer", "analysis", "verified", "mastery_status"]
 
 
 @contextmanager
-def served(kernel):
-    """本地测试服务:起来,退出时关闭(替代 7 处 try/finally 样板)。"""
-    base, server = _serve(kernel)
-    try:
+def served(kernel, **kwargs):
+    """本地测试服务(#97 ① 收编为 partner_api.serving 直通)。"""
+    with serving(kernel, **kwargs) as base:
         yield base
-    finally:
-        server.shutdown()
-        server.server_close()
 
 
 # ---------- 1. 客户端禁止字段:3 个入口 × 4 项 → 403 ----------
