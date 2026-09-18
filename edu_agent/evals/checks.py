@@ -12,6 +12,7 @@
 
 from __future__ import annotations
 
+import difflib
 import re
 from collections.abc import Callable
 
@@ -114,6 +115,34 @@ REGISTRY: dict[str, CheckFn] = {
     "state_is_not": state_is_not,
     "finish_status": finish_status,
 }
+
+
+def possible_no_progress_cycle(case: dict, result: dict,
+                               window: int = 3, threshold: float = 0.6) -> list[str]:
+    """非阻断诊断(#333 no-progress,裁定 c5725369684 SMART 版):学生已明确回答的
+    问点在最近 N 轮被 tutor 重新询问。**仅报告**(evals 输出+reviewer 提示),
+    不进 REGISTRY 硬门、不进 kernel——网不是第二套门,这里连门都不是。
+
+    机械代理(YAGNI):学生轮文本与其后 window 轮内 tutor 轮文本的 difflib
+    相似度超 threshold → 疑似换措辞重问已答问点。合理复核(「你自己说说
+    这步的依据」)与学生已答内容词面差异大,天然低相似不报;换措辞重问
+    (同一事实换问法)词面重合高必报。阈值/窗口为机械代理参数,由
+    tests/evals 的参数化+Hypothesis property 双面钉边界(#350 引入后补)。"""
+    turns = result.get("turns") or []
+    findings: list[str] = []
+    for i, answered in enumerate(turns):
+        student = str(answered.get("student") or "").strip()
+        if len(student) < 4:
+            continue  # 太短构不成「明确回答过的问点」
+        for j in range(i + 1, min(i + 1 + window, len(turns))):
+            tutor = str(turns[j].get("tutor") or "").strip()
+            ratio = difflib.SequenceMatcher(None, student, tutor).ratio()
+            if ratio > threshold:
+                findings.append(
+                    f"possible_no_progress_cycle:turns[{j}] tutor 疑似重问学生"
+                    f" turns[{i}] 已答问点(相似度 {ratio:.2f}>"
+                    f"{threshold}):「{student[:24]}…」→「{tutor[:24]}…」")
+    return findings
 
 
 def run_check(check: dict, case: dict, result: dict) -> tuple[bool, str]:

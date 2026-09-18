@@ -1,0 +1,76 @@
+{
+  "schema_version": "small_lecturer_regression_shortboard/v1",
+  "scenarios": [
+    {
+      "id": "no-progress-control-reasonable-review",
+      "title": "控制案①合理复核:学生答对,tutor 复核依据而非重问事实",
+      "question": {
+        "text": "一个圆的直径是 10 厘米,这个圆的半径是多少厘米?",
+        "answer": "5厘米"
+      },
+      "answer_status": "correct",
+      "grade": "六年级",
+      "tags": ["no-progress", "控制案", "合理复核", "真模型"],
+      "student_turns": [
+        "半径是 5 厘米,因为半径就是直径的一半。",
+        "依据是圆的半径定义:直径是过圆心的一条线段,被圆心平分成两段相等的半径,所以 10 的一半就是半径。",
+        "这道题我先看直径是 10 厘米,然后用半径等于直径除以 2,算出半径是 10 除以 2,得到结论。"
+      ],
+      "expect": {
+        "checks": [
+          {"name": "text_excludes_answer_values"},
+          {"name": "finish_status", "status": "completed"}
+        ]
+      },
+      "source": {"issue": 333, "note": "no-progress-fix 控制案:prompt 窄改后不得误伤合理复核形态(裁定 c5725369684)"}
+    },
+    {
+      "id": "no-progress-control-wrong-then-reguide",
+      "title": "控制案②学生答错:tutor 换角度重新引导(纠错不是重问)",
+      "question": {
+        "text": "解方程 3x+7=25,求 x 的值。",
+        "answer": "x=6"
+      },
+      "answer_status": "incorrect",
+      "grade": "六年级",
+      "tags": ["no-progress", "控制案", "答错重新引导", "真模型"],
+      "student_turns": [
+        "x 等于 25 减 7,所以 x 是 18。",
+        "哦不对,左边是 3x 加 7,我先两边同时减去 7,就剩下 3x 等于 18。",
+        "然后两边同时除以 3,左边剩 x,右边 18 除以 3,所以 x 就算出来了。",
+        "我先在方程两边同时减去 7,把常数项消掉,得到 3x 等于 18;再在两边同时除以 3,把系数变成 1,就得到 x 的值,最后代回原方程检验,左边等于右边,说明做对了。"
+      ],
+      "expect": {
+        "checks": [
+          {"name": "text_excludes_answer_values"},
+          {"name": "finish_status", "status": "completed"}
+        ]
+      },
+      "source": {"issue": 333, "note": "no-progress-fix 控制案:答错后换角度重新引导不得被『不重问』规则误伤"}
+    },
+    {
+      "id": "no-progress-control-thin-reasoning",
+      "title": "控制案③答对但理由不足:tutor 只追问依据,不重问事实答案",
+      "question": {
+        "text": "笼子里有鸡和兔一共 8 只,数一数脚一共 26 只。鸡和兔各有几只?",
+        "answer": "鸡3只兔5只"
+      },
+      "answer_status": "correct",
+      "grade": "五年级",
+      "tags": ["no-progress", "控制案", "答对理由不足", "真模型"],
+      "student_turns": [
+        "鸡有 3 只,兔有 5 只。",
+        "我是用假设法想的:先假设笼子里全是鸡,那脚就有 8 乘 2 是 16 只,但实际有 26 只,多出了 10 只脚。",
+        "多出的脚是因为每只兔比鸡多 2 只脚,所以用 10 除以 2 就得到兔的只数,再用总数 8 减去兔就是鸡的只数。",
+        "这道题我用的假设法:先假设全是鸡算出脚数,跟实际脚数比,多出来的脚数除以每只兔多出的脚数就是兔的数量,最后用总数减去兔得到鸡的数量,再验算一遍脚数正好对上。"
+      ],
+      "expect": {
+        "checks": [
+          {"name": "text_excludes_answer_values"},
+          {"name": "finish_status", "status": "completed"}
+        ]
+      },
+      "source": {"issue": 333, "note": "no-progress-fix 控制案:事实已说清只追问依据(新规则的正确行为面)"}
+    }
+  ]
+}

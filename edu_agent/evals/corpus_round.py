@@ -35,6 +35,7 @@ from urllib.parse import urlparse
 
 import yaml  # 已有依赖(models.yaml 同源),#350 V0 不新增
 
+from .checks import possible_no_progress_cycle
 from .judge import judge_transcript
 from .kernel_subject import KernelSubject
 from .runner import EvalRunner, ResumeMismatch, RunnerConfig
@@ -421,6 +422,8 @@ def check_rows(scenarios: dict[str, dict], results: list[dict]) -> dict[str, dic
             "declared": declared,
             "final_state": row["transcript"].get("final_state", ""),
             "failures": run_scenario_checks(scenario, row["transcript"]) if declared else None,
+            # #333 no-progress 非阻断诊断:仅报告,reviewer 提示面,不进 failures 硬门
+            "advisories": possible_no_progress_cycle(scenario, row["transcript"]),
         }
     return rows
 

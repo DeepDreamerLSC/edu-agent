@@ -1,6 +1,6 @@
 """评测线入口(00 §4/§8.2):runner 骨架、晨间摘要、judge 评分器与老系统适配器雏形。"""
 
-from .checks import REGISTRY, UnknownCheck, run_check
+from .checks import REGISTRY, UnknownCheck, possible_no_progress_cycle, run_check
 from .image_teaching import (
     load_scenarios,
     question_image_data_url,
@@ -113,6 +113,7 @@ __all__ = [
     "LegacyAdapter",
     "Population",
     "REGISTRY",
+    "possible_no_progress_cycle",
     "ResumeMismatch",
     "RunnerConfig",
     "SCHEMA",
