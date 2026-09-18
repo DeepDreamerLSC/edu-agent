@@ -1,0 +1,217 @@
+{
+  "case_id": "no-progress-control-thin-reasoning",
+  "arm": "B",
+  "transcript": {
+    "question_id": "no-progress-control-thin-reasoning",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你做对啦,真棒!还有哪里不太明白吗?",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "鸡有 3 只,兔有 5 只。",
+        "tutor": "你刚才说鸡和兔的数量加起来是 8，脚总数是 26，这个条件很关键。那你是怎么从这两个数字推算出具体只数的呢？",
+        "state": "dialogue",
+        "elapsed_ms": 3468
+      },
+      {
+        "student": "我是用假设法想的:先假设笼子里全是鸡,那脚就有 8 乘 2 是 16 只,但实际有 26 只,多出了 10 只脚。",
+        "tutor": "你刚才说假设全是鸡时脚数差10只，这一步很聪明！那你知道每换一只鸡为兔，脚数会多出几只吗？",
+        "state": "dialogue",
+        "elapsed_ms": 1951
+      },
+      {
+        "student": "多出的脚是因为每只兔比鸡多 2 只脚,所以用 10 除以 2 就得到兔的只数,再用总数 8 减去兔就是鸡的只数。",
+        "tutor": "你刚才说用10除以2得到兔的只数，再用8减去兔就是鸡的只数，这一步推理很清晰！那最后你能自己完整说一遍结论吗？",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 2343
+      }
+    ],
+    "summary": "这一题(「笼子里有鸡和兔一共 8 只,数一数脚一共 26 只。鸡和兔各有几只?」)你自己讲了做法:从「鸡有 3 只,兔有 5 只。」开始,说到「多出的脚是因为每只兔比鸡多 2 只脚,所以用 10 除以 2 就得到兔的只数,再用总数 8 减去兔就是鸡的只数。」,关键步骤和结论都在你自己的话里,和题目的要求也对上了。可以再做一道,或者今天先到这里。",
+    "total_ms": 11584,
+    "learner": {
+      "grade": "五年级",
+      "answer_status": "correct"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          5.0
+        ],
+        "extracted": [
+          3.0,
+          5.0
+        ],
+        "violation_sources": [
+          {
+            "number": 3.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 1,
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          5.0
+        ],
+        "extracted": [
+          8.0,
+          26.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          8.0,
+          10.0,
+          16.0,
+          26.0
+        ],
+        "extracted": [
+          10.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          8.0,
+          10.0
+        ],
+        "extracted": [
+          2.0,
+          8.0,
+          10.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_1423fd5630"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        5.0
+      ],
+      "extracted": [
+        3.0,
+        5.0
+      ],
+      "violation_sources": [
+        {
+          "number": 3.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 1,
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        5.0
+      ],
+      "extracted": [
+        8.0,
+        26.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        8.0,
+        10.0,
+        16.0,
+        26.0
+      ],
+      "extracted": [
+        10.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        8.0,
+        10.0
+      ],
+      "extracted": [
+        2.0,
+        8.0,
+        10.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 0,
+      "socratic_followup": 2,
+      "grade_fit": 2,
+      "pacing": 1,
+      "summary_mastery": 2,
+      "termination": 2
+    },
+    "total": 9,
+    "answer_leaked": true,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师第一轮直接说：'你好同学,这道题你做对啦,真棒!'，在学生尚未给出任何答案前就确认了'做对'，隐含泄露了终答结论。",
+      "socratic_followup": "学生解释假设法后，小讲师追问：'那你知道每换一只鸡为兔，脚数会多出几只吗？'，指向具体推理步骤，引导学生完善逻辑。",
+      "grade_fit": "对话使用'假设法'、'每只兔比鸡多2只脚'等符合五年级课标的术语，语言自然，例子贴近生活。",
+      "pacing": "小讲师在第三轮和第四轮连续追问，但第四轮追问后紧接着又自问自答总结，存在信息倾倒和节奏拖沓（连续两轮小讲师主导）。",
+      "summary_mastery": "总结中引用学生原话：'从「鸡有 3 只,兔有 5 只。」开始,说到「多出的脚是因为每只兔比鸡多 2 只脚...」'，明确指向学生本人的关键推理证据，并给出掌握判断。",
+      "termination": "学生完整复述结论后，小讲师自然收尾：'可以再做一道,或者今天先到这里。'，符合掌握后终止。",
+      "math_integrity": "小讲师陈述：'8乘2是16'（对），'多出了10只脚'（对），'每只兔比鸡多2只脚'（对），'10除以2得到兔的只数'（对），'8减去兔就是鸡'（对）。所有数学事实正确，且正确确认了学生的推理。",
+      "answer_leaked": "小讲师第一轮：'你好同学,这道题你做对啦,真棒!'，在学生未给出答案前即确认'做对'，泄露了终答结论（学生随后才说出'鸡有3只,兔有5只'）。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 10
+}

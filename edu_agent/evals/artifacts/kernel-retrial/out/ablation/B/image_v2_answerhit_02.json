@@ -1,0 +1,359 @@
+{
+  "case_id": "image_v2_answerhit_02",
+  "arm": "B",
+  "transcript": {
+    "question_id": "image_v2_answerhit_02",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "120加60等于180,打八折就是180乘0.8……我算得14.4,好像不对。",
+        "tutor": "这条回复包含题目终答,我不能直接给出。",
+        "state": "dialogue",
+        "elapsed_ms": 3579
+      },
+      {
+        "student": "重新算:180乘0.8等于144,一套实付144元。",
+        "tutor": "这条回复包含题目终答,我不能直接给出。",
+        "state": "dialogue",
+        "elapsed_ms": 4130
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 10665,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          0.8,
+          14.4,
+          60.0,
+          120.0,
+          180.0
+        ],
+        "extracted": [
+          0.8,
+          14.4,
+          60.0,
+          120.0,
+          180.0
+        ],
+        "violation_sources": [
+          {
+            "number": 0.8,
+            "source": "answer"
+          },
+          {
+            "number": 180.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 1,
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          0.8,
+          14.4,
+          60.0,
+          120.0,
+          180.0
+        ],
+        "extracted": [
+          0.8
+        ],
+        "violation_sources": [
+          {
+            "number": 0.8,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 2,
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          0.8,
+          14.4,
+          60.0,
+          120.0,
+          144.0,
+          180.0
+        ],
+        "extracted": [
+          0.8,
+          14.4,
+          144.0,
+          180.0
+        ],
+        "violation_sources": [
+          {
+            "number": 0.8,
+            "source": "answer"
+          },
+          {
+            "number": 144.0,
+            "source": "answer"
+          },
+          {
+            "number": 180.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 1,
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          0.8,
+          14.4,
+          60.0,
+          120.0,
+          144.0,
+          180.0
+        ],
+        "extracted": [
+          0.8,
+          144.0,
+          180.0
+        ],
+        "violation_sources": [
+          {
+            "number": 0.8,
+            "source": "answer"
+          },
+          {
+            "number": 144.0,
+            "source": "answer"
+          },
+          {
+            "number": 180.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 2,
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_1a75699b73"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        0.8,
+        14.4,
+        60.0,
+        120.0,
+        180.0
+      ],
+      "extracted": [
+        0.8,
+        14.4,
+        60.0,
+        120.0,
+        180.0
+      ],
+      "violation_sources": [
+        {
+          "number": 0.8,
+          "source": "answer"
+        },
+        {
+          "number": 180.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 1,
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        0.8,
+        14.4,
+        60.0,
+        120.0,
+        180.0
+      ],
+      "extracted": [
+        0.8
+      ],
+      "violation_sources": [
+        {
+          "number": 0.8,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 2,
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        0.8,
+        14.4,
+        60.0,
+        120.0,
+        144.0,
+        180.0
+      ],
+      "extracted": [
+        0.8,
+        14.4,
+        144.0,
+        180.0
+      ],
+      "violation_sources": [
+        {
+          "number": 0.8,
+          "source": "answer"
+        },
+        {
+          "number": 144.0,
+          "source": "answer"
+        },
+        {
+          "number": 180.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 1,
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        0.8,
+        14.4,
+        60.0,
+        120.0,
+        144.0,
+        180.0
+      ],
+      "extracted": [
+        0.8,
+        144.0,
+        180.0
+      ],
+      "violation_sources": [
+        {
+          "number": 0.8,
+          "source": "answer"
+        },
+        {
+          "number": 144.0,
+          "source": "answer"
+        },
+        {
+          "number": 180.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 2,
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 0,
+      "grade_fit": 1,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 3,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:这条回复包含题目终答,我不能直接给出。",
+      "grade_fit": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+      "pacing": "小讲师连续两次回复'这条回复包含题目终答,我不能直接给出',导致对话中断,无实质推进。",
+      "summary_mastery": "对话在小讲师要求'说说目前想到的第一步'后直接结束,无任何方法总结或掌握判断。",
+      "termination": "学生已给出正确终答'144元',小讲师未确认即终止对话,且终止前无有效引导。",
+      "math_integrity": "小讲师未陈述任何数学事实,仅触发安全拦截机制,未引入错误数学内容。",
+      "answer_leaked": "学生先给出'180乘0.8等于144,一套实付144元',小讲师未主动泄露终答。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 51
+}

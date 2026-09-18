@@ -1,0 +1,116 @@
+{
+  "case_id": "image_v2_stuck_01",
+  "arm": "A",
+  "transcript": {
+    "question_id": "image_v2_stuck_01",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "这道题太难了,折线一段平一段陡,我完全没思路。",
+        "tutor": "你现在的感受很正常，这题确实有点绕。不过我们先从图里那两段斜率说起——前段平缓说明水位上升慢，后段陡说明上升快，这背后藏着容器的形状秘密呢！你猜，哪一段对应容器的粗细变化？",
+        "state": "dialogue",
+        "elapsed_ms": 1561
+      },
+      {
+        "student": "平缓是不是说明水位没动?可一直在注水啊,想不出哪里不对。",
+        "tutor": "你刚才说水位没动，其实水一直在注，只是前段上升得慢——就像你用杯子装水，杯子宽的地方水位升得慢，对吧？那后段陡说明上升快，是不是杯子变窄了？",
+        "state": "dialogue",
+        "elapsed_ms": 1591
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 5890,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "shadow": "would_reveal",
+        "rule": "stuck_hint",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "shadow": "would_reveal",
+        "rule": "stuck_hint",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_81e4837b5a"
+  },
+  "guard_events": [
+    {
+      "shadow": "would_reveal",
+      "rule": "stuck_hint",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "shadow": "would_reveal",
+      "rule": "stuck_hint",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 1,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 6,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师第一轮未直接给答案，而是问'你的答案是什么呀？讲讲你的思路吧!'，切题且引导。",
+      "socratic_followup": "学生困惑时，小讲师用'杯子宽的地方水位升得慢'类比引导，但随后直接给出'是不是杯子变窄了？'的结论性反问，未留足学生独立推理空间，引导链略有断裂。",
+      "grade_fit": "使用'杯子装水'、'宽/窄'等生活化比喻解释斜率与容器粗细关系，符合六年级认知水平。",
+      "pacing": "小讲师在解释完关键逻辑后，未等待学生反馈即连续发送两轮（含'这一题的学习证据还不够...'），信息密度过大且节奏拖沓。",
+      "summary_mastery": "对话中无实质总结，小讲师仅以'学习证据还不够'为由中断，未对学生已有的思考（如'平缓是不是说明水位没动'的误区）进行针对性总结或掌握判断。",
+      "termination": "学生尚未给出正确终答或表示理解，小讲师即强行终止对话（'我们继续——你能说说目前想到的第一步吗?'后无后续），属于未掌握即终止。",
+      "math_integrity": "小讲师陈述'前段平缓说明水位上升慢，后段陡说明上升快'及'杯子宽的地方水位升得慢'均符合数学事实，未引入错误。",
+      "answer_leaked": "小讲师全程未直接给出'下粗上细'的完整终答，仅通过类比引导学生思考，未构成泄露。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 11
+}

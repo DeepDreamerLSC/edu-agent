@@ -1,0 +1,284 @@
+{
+  "case_id": "ablation-comma-collision-01",
+  "arm": "A",
+  "transcript": {
+    "question_id": "ablation-comma-collision-01",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "一半是 500……是要用 500 加什么吗?我想不出来。",
+        "tutor": "你想到‘一半是500’，那这个数是不是比500多？我们来想想，如果一个数的一半是500，那这个数就是500的2倍，就像你有1个苹果，分给两个人，每人分到半个，那原来就有2个半个苹果——对吧？",
+        "state": "dialogue",
+        "elapsed_ms": 1913
+      },
+      {
+        "student": "还是不会,倒推到底怎么算,我又卡住了。",
+        "tutor": "你刚才说‘倒推到底怎么算’，那我们来想：如果一半是500，那这个数就是500×2，就像你有500块糖，分给两个人，每人分到一半，那原来就有500×2块——你试试看，500×2等于多少？",
+        "state": "dialogue",
+        "elapsed_ms": 2090
+      },
+      {
+        "student": "哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!",
+        "tutor": "你刚才说‘一半倒过来就是乘2’，还算出500×2=1000，这个数就是1000，真棒！你用自己的方法讲清楚了这道题，现在自己完整说一遍结论吧。",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 1948
+      }
+    ],
+    "summary": "你通过‘一半倒过来就是乘2’这个关键想法，正确算出500×2=1000，这个数是1000。下一步要注意：在类似题中，如果题目说‘一半是X’，直接用X×2就能求出原数，不用再加或减其他数。",
+    "total_ms": 9192,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "shadow": "would_reveal",
+        "rule": "stuck_hint",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          500.0
+        ],
+        "extracted": [
+          1.0,
+          2.0,
+          500.0
+        ],
+        "violation_sources": [
+          {
+            "number": 1.0,
+            "source": "hallucinated"
+          },
+          {
+            "number": 2.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "shadow": "would_block",
+        "rule": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:hallucinated"
+        ],
+        "violations": [
+          1.0,
+          2.0
+        ],
+        "turn": 1
+      },
+      {
+        "shadow": "would_reveal",
+        "rule": "stuck_hint",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          500.0
+        ],
+        "extracted": [
+          2.0,
+          500.0
+        ],
+        "violation_sources": [
+          {
+            "number": 2.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "shadow": "would_block",
+        "rule": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:hallucinated"
+        ],
+        "violations": [
+          2.0
+        ],
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          500.0,
+          1000.0
+        ],
+        "extracted": [
+          2.0,
+          500.0,
+          1000.0
+        ],
+        "violation_sources": [
+          {
+            "number": 1000.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 3
+      },
+      {
+        "shadow": "would_block",
+        "rule": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "violations": [
+          1000.0
+        ],
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_d772cb67c7"
+  },
+  "guard_events": [
+    {
+      "shadow": "would_reveal",
+      "rule": "stuck_hint",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        500.0
+      ],
+      "extracted": [
+        1.0,
+        2.0,
+        500.0
+      ],
+      "violation_sources": [
+        {
+          "number": 1.0,
+          "source": "hallucinated"
+        },
+        {
+          "number": 2.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "shadow": "would_block",
+      "rule": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:hallucinated"
+      ],
+      "violations": [
+        1.0,
+        2.0
+      ],
+      "turn": 1
+    },
+    {
+      "shadow": "would_reveal",
+      "rule": "stuck_hint",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        500.0
+      ],
+      "extracted": [
+        2.0,
+        500.0
+      ],
+      "violation_sources": [
+        {
+          "number": 2.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "shadow": "would_block",
+      "rule": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:hallucinated"
+      ],
+      "violations": [
+        2.0
+      ],
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        500.0,
+        1000.0
+      ],
+      "extracted": [
+        2.0,
+        500.0,
+        1000.0
+      ],
+      "violation_sources": [
+        {
+          "number": 1000.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 3
+    },
+    {
+      "shadow": "would_block",
+      "rule": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "violations": [
+        1000.0
+      ],
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 2,
+      "grade_fit": 2,
+      "pacing": 2,
+      "summary_mastery": 2,
+      "termination": 2
+    },
+    "total": 12,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师第一轮提问：'你好同学,这道题你的答案是什么呀?讲讲你的思路吧!'，未直接给出答案，而是引导学生思考。",
+      "socratic_followup": "学生卡住时，小讲师通过类比引导：'就像你有500块糖，分给两个人，每人分到一半，那原来就有500×2块——你试试看，500×2等于多少？'，指向具体计算步骤，给予思考空间。",
+      "grade_fit": "使用'一半'、'2倍'、'500×2'等符合六年级认知的生活化类比（苹果、糖），术语解释清晰，无超纲内容。",
+      "pacing": "每轮对话目标明确：先确认思路，再引导倒推概念，最后让学生计算，节奏紧凑无冗余。",
+      "summary_mastery": "总结中引用学生原话'一半倒过来就是乘2'及计算'500×2=1000'作为关键证据，并给出'正确算出'的掌握判断，符合学生实际表现。",
+      "termination": "学生已明确给出正确答案'1,000'并复述思路后，小讲师进行总结并自然结束对话，未拖堂。",
+      "math_integrity": "小讲师陈述：1.'一半是500，这个数是500的2倍'（正确）；2.'500×2=1000'（正确）；3.'一半倒过来就是乘2'（正确）。所有数学事实准确，未引入错误。",
+      "answer_leaked": "学生先给出终答：'哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!'，小讲师随后确认，未构成泄露。"
+    },
+    "verdict": "pass",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 52
+}

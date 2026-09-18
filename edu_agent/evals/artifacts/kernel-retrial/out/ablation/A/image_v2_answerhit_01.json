@@ -1,0 +1,171 @@
+{
+  "case_id": "image_v2_answerhit_01",
+  "arm": "A",
+  "transcript": {
+    "question_id": "image_v2_answerhit_01",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "12米剪掉3分之1,我用12乘3分之1……等于6米?",
+        "tutor": "你刚才说用12乘3分之1，能说说为什么这样算吗？比如这3分之1代表什么？",
+        "state": "dialogue",
+        "elapsed_ms": 1405
+      },
+      {
+        "student": "重新想:12除以3是每份4米,剪掉这样的1份,就是4米。",
+        "tutor": "你刚才说12除以3是每份4米，剪掉这样的1份，这想法很聪明！但剪掉的是全长的3分之1，不是平均分成3份取1份，你能说说为什么这样算更符合题意吗？",
+        "state": "dialogue",
+        "elapsed_ms": 1717
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 5763,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          1.0,
+          12.0
+        ],
+        "extracted": [
+          1.0,
+          3.0,
+          12.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "shadow": "would_rewrite",
+        "rule": "answer_hit_restatement",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          4.0,
+          12.0
+        ],
+        "extracted": [
+          1.0,
+          3.0,
+          4.0,
+          12.0
+        ],
+        "violation_sources": [
+          {
+            "number": 4.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "shadow": "would_block",
+        "rule": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "violations": [
+          4.0
+        ],
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_a129b93af7"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        1.0,
+        12.0
+      ],
+      "extracted": [
+        1.0,
+        3.0,
+        12.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "shadow": "would_rewrite",
+      "rule": "answer_hit_restatement",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        4.0,
+        12.0
+      ],
+      "extracted": [
+        1.0,
+        3.0,
+        4.0,
+        12.0
+      ],
+      "violation_sources": [
+        {
+          "number": 4.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "shadow": "would_block",
+      "rule": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "violations": [
+        4.0
+      ],
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 5,
+    "answer_leaked": false,
+    "math_integrity": 0,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:你刚才说12除以3是每份4米，剪掉这样的1份，这想法很聪明！但剪掉的是全长的3分之1，不是平均分成3份取1份，你能说说为什么这样算更符合题意吗？",
+      "grade_fit": "小讲师使用'每份'、'全长的3分之1'等符合六年级认知的表述，未出现超纲术语。",
+      "pacing": "小讲师连续两轮发言未等待学生回应：'小讲师:你刚才说12除以3是每份4米...你能说说为什么这样算更符合题意吗？' 紧接着 '小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?'，导致学生无思考空间，信息倾倒且无实质推进。",
+      "summary_mastery": "对话未进行任何实质总结，小讲师直接以'学习证据还不够'为由中断，未引用学生已给出的正确推理（12除以3是每份4米）作为掌握证据，也未给出掌握判断。",
+      "termination": "学生在第二轮已给出正确终答'4米'并解释正确思路，小讲师未确认正确性，反而否定其正确推理并强行终止对话，属于学生已答对仍强行继续/错误终止。",
+      "math_integrity": "小讲师陈述：'剪掉的是全长的3分之1，不是平均分成3份取1份'。该陈述为假。在数学上，'全长的3分之1'即意味着将全长平均分成3份取其中1份。小讲师将正确的概念（平均分成3份取1份）错误地表述为不符合题意，引入了错误的数学事实，导致学生正确推理被否定。",
+      "answer_leaked": "学生先给出正确终答'4米'（'重新想:12除以3是每份4米,剪掉这样的1份,就是4米。'），小讲师后续未主动泄露终答。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 41
+}
