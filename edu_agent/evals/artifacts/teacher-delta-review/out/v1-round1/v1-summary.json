@@ -1,0 +1,48 @@
+{
+  "n": 6,
+  "calls": 20,
+  "per_case": [
+    {
+      "case_id": "image_v2_answerhit_01",
+      "anchor_rounds": 0,
+      "leak_rounds": 0,
+      "anchor_on_model_branch": 0,
+      "final_state": "needs_review"
+    },
+    {
+      "case_id": "image_v2_understanding_04",
+      "anchor_rounds": 0,
+      "leak_rounds": 0,
+      "anchor_on_model_branch": 0,
+      "final_state": "needs_review"
+    },
+    {
+      "case_id": "image_v2_stuck_01",
+      "anchor_rounds": 0,
+      "leak_rounds": 0,
+      "anchor_on_model_branch": 0,
+      "final_state": "needs_review"
+    },
+    {
+      "case_id": "image_v2_stuck_02",
+      "anchor_rounds": 0,
+      "leak_rounds": 0,
+      "anchor_on_model_branch": 0,
+      "final_state": "needs_review"
+    },
+    {
+      "case_id": "image_v2_v1anchor_01",
+      "anchor_rounds": 0,
+      "leak_rounds": 1,
+      "anchor_on_model_branch": 0,
+      "final_state": "completed"
+    },
+    {
+      "case_id": "image_v2_v1anchor_02",
+      "anchor_rounds": 0,
+      "leak_rounds": 0,
+      "anchor_on_model_branch": 0,
+      "final_state": "needs_review"
+    }
+  ]
+}
