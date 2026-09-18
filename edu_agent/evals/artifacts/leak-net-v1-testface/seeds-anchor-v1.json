@@ -10,21 +10,38 @@
       "boundary": "A 中间值≠终答 → 允许(锚-合法)",
       "case_ref": "stability_chicken_rabbit(pilot_20,canonical answer)",
       "session": {
-        "question": {"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?", "answer": "鸡3只,兔5只"},
-        "learner": {"grade": "四年级", "answer_status": "unanswered"},
+        "question": {
+          "text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?",
+          "answer": "鸡3只,兔5只"
+        },
+        "learner": {
+          "grade": "四年级",
+          "answer_status": "unanswered"
+        },
         "state": "dialogue",
         "stuck": true,
         "hint_level": 1,
         "steps": [
-          {"step": "先算全部按鸡的脚数:8×2=16", "value": "16"},
-          {"step": "再算脚数差:26−16=10", "value": "10"},
-          {"step": "兔的只数:10÷2=5", "value": "5"}
+          {
+            "step": "先算全部按鸡的脚数:8×2=16",
+            "value": "16"
+          },
+          {
+            "step": "再算脚数差:26-16=10",
+            "value": "10"
+          },
+          {
+            "step": "兔的只数:10÷2=5",
+            "value": "5"
+          }
         ],
         "steps_synthetic": true
       },
       "expect": {
         "anchor_allowed": true,
-        "anchor_numbers": [10.0],
+        "anchor_numbers": [
+          10.0
+        ],
         "reveal_path": "telling",
         "note": "当前 next step=第2级 value=10:∉answer_pool{3,5} 且 ∉题面{8,26} → 可锚。第1级 16 虽同样 ∉answer_pool 但**非当前级**(Q1:不扫全 steps);第3级 5=终答部件,永禁。"
       }
@@ -34,12 +51,23 @@
       "boundary": "B 单步碰撞(value=终答)→ 禁(锚-非法)",
       "case_ref": "image_v2_stuck_02(enriched12,canonical answer)",
       "session": {
-        "question": {"text": "一根4分米长的纸条,剪下它的4分之1,剪下多少分米?", "answer": "1分米"},
-        "learner": {"grade": "三年级", "answer_status": "unanswered"},
+        "question": {
+          "text": "一根4分米长的纸条,剪下它的4分之1,剪下多少分米?",
+          "answer": "1分米"
+        },
+        "learner": {
+          "grade": "三年级",
+          "answer_status": "unanswered"
+        },
         "state": "dialogue",
         "stuck": true,
         "hint_level": 1,
-        "steps": [{"step": "每份是多少:4÷4=1", "value": "1"}],
+        "steps": [
+          {
+            "step": "每份是多少:4÷4=1",
+            "value": "1"
+          }
+        ],
         "steps_synthetic": true
       },
       "expect": {
@@ -54,12 +82,23 @@
       "boundary": "B 单步碰撞(同型第二例)→ 禁",
       "case_ref": "image_v2_answerhit_01(enriched12,canonical answer)",
       "session": {
-        "question": {"text": "一根彩带长12米,剪掉全长的3分之1,剪掉多少米?", "answer": "4米"},
-        "learner": {"grade": "三年级", "answer_status": "unanswered"},
+        "question": {
+          "text": "一根彩带长12米,剪掉全长的3分之1,剪掉多少米?",
+          "answer": "4米"
+        },
+        "learner": {
+          "grade": "三年级",
+          "answer_status": "unanswered"
+        },
         "state": "dialogue",
         "stuck": true,
         "hint_level": 1,
-        "steps": [{"step": "剪掉多少米:12÷3=4", "value": "4"}],
+        "steps": [
+          {
+            "step": "剪掉多少米:12÷3=4",
+            "value": "4"
+          }
+        ],
         "steps_synthetic": true
       },
       "expect": {
@@ -74,18 +113,36 @@
       "boundary": "C 非telling路径 → 禁(零锚)",
       "case_ref": "stability_chicken_rabbit 形态(support 路径)",
       "session": {
-        "question": {"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?", "answer": "鸡3只,兔5只"},
-        "learner": {"grade": "四年级", "answer_status": "unanswered"},
+        "question": {
+          "text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?",
+          "answer": "鸡3只,兔5只"
+        },
+        "learner": {
+          "grade": "四年级",
+          "answer_status": "unanswered"
+        },
         "state": "dialogue",
         "stuck": true,
         "hint_level": 1,
         "history": [
-          {"role": "assistant", "content": "我们从这里入手:先算全部按鸡的脚数。你接着算下一步。"},
-          {"role": "user", "content": "我知道了,全部按鸡算是 16 只脚。"}
+          {
+            "role": "assistant",
+            "content": "我们从这里入手:先算全部按鸡的脚数。你接着算下一步。"
+          },
+          {
+            "role": "user",
+            "content": "我知道了,全部按鸡算是 16 只脚。"
+          }
         ],
         "steps": [
-          {"step": "先算全部按鸡的脚数:8×2=16", "value": "16"},
-          {"step": "再算脚数差:26−16=10", "value": "10"}
+          {
+            "step": "先算全部按鸡的脚数:8×2=16",
+            "value": "16"
+          },
+          {
+            "step": "再算脚数差:26-16=10",
+            "value": "10"
+          }
         ],
         "steps_synthetic": true
       },
@@ -99,16 +156,28 @@
     {
       "name": "D_ready_to_confirm_blocks_anchor",
       "boundary": "D ready_to_confirm → 禁(即便 A 形态)",
-      "case_ref": "image_v2_answerhit_01 形态(state=ready_to_confirm)",
+      "case_ref": "stability_chicken_rabbit 形态(state=ready_to_confirm 弧)",
       "session": {
-        "question": {"text": "一根彩带长12米,剪掉全长的3分之1,剪掉多少米?", "answer": "4米"},
-        "learner": {"grade": "三年级", "answer_status": "correct"},
+        "question": {
+          "text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?",
+          "answer": "鸡3只,兔5只"
+        },
+        "learner": {
+          "grade": "四年级",
+          "answer_status": "correct"
+        },
         "state": "ready_to_confirm",
         "stuck": true,
         "hint_level": 1,
         "steps": [
-          {"step": "先算剩下的:12−4=8", "value": "8"},
-          {"step": "剪掉多少米:12÷3=4", "value": "4"}
+          {
+            "step": "先算全部按鸡的脚数:8×2=16",
+            "value": "16"
+          },
+          {
+            "step": "再算脚数差:26-16=10",
+            "value": "10"
+          }
         ],
         "steps_synthetic": true
       },
@@ -116,7 +185,7 @@
         "anchor_allowed": false,
         "anchor_numbers": [],
         "reveal_path": "telling_blocked",
-        "note": "state=ready_to_confirm → 七条件之『≠ready_to_confirm』失败;确认/赞许轮转述式确认、不引述数值(既有不变量,test_kernel_invariants)。"
+        "note": "弧:轮1 首次 stuck 揭示第1级(不给数值)→ 轮2 学生答对进 ready_to_confirm → 轮3 复读兜底揭示第2级(value=10 与 pool{3,5} 无重叠、re-stuck 资格具备)——唯 state=ready_to_confirm 拦下锚,隔离验证七条件之 state 面。"
       }
     },
     {
@@ -124,19 +193,34 @@
       "boundary": "多部件答案全部件保护,重叠仍不给(PM 断言4)",
       "case_ref": "image_v2_understanding_04(enriched12,C 类)",
       "session": {
-        "question": {"text": "下图中一条线段过圆心且两端都在圆上,长6厘米。这个圆的直径和半径各是多少厘米?", "answer": "直径6厘米,半径3厘米"},
-        "learner": {"grade": "六年级", "answer_status": "unanswered"},
+        "question": {
+          "text": "下图中一条线段过圆心且两端都在圆上,长6厘米。这个圆的直径和半径各是多少厘米?",
+          "answer": "直径6厘米,半径3厘米"
+        },
+        "learner": {
+          "grade": "六年级",
+          "answer_status": "unanswered"
+        },
         "state": "dialogue",
         "stuck": true,
         "hint_level": 1,
-        "steps": [{"step": "半径是直径的一半:6÷2=3", "value": "3"}],
+        "steps": [
+          {
+            "step": "直径就是图中那条过圆心的线段",
+            "value": "6"
+          },
+          {
+            "step": "半径是直径的一半:6÷2=3",
+            "value": "3"
+          }
+        ],
         "steps_synthetic": true
       },
       "expect": {
         "anchor_allowed": false,
         "anchor_numbers": [],
         "reveal_path": "telling",
-        "note": "answer_pool={6,3}(多部件**全部**=终答,V1 Q1:不造答案 ontology,保守全保护);value=3 与部件重叠 → 禁。"
+        "note": "answer_pool={6,3}(多部件**全部**=终答,V1 Q1:不造答案 ontology,保守全保护);再次 stuck 揭示第2级 value=3 与部件重叠 → 禁(两级 value 均与 pool 重叠,整梯无锚面)。"
       }
     },
     {
@@ -144,12 +228,23 @@
       "boundary": "答案侧不可判定 → 保守不给(扫描建议面,实现 PR 裁定采纳与否)",
       "case_ref": "image_v2_stuck_01(enriched12,纯文字答案)",
       "session": {
-        "question": {"text": "向一个容器匀速注水,水位随时间变化如下图:前段平缓、后段陡。这个容器的形状是怎样的?", "answer": "下面粗、上面细(下粗上细)"},
-        "learner": {"grade": "五年级", "answer_status": "unanswered"},
+        "question": {
+          "text": "向一个容器匀速注水,水位随时间变化如下图:前段平缓、后段陡。这个容器的形状是怎样的?",
+          "answer": "下面粗、上面细(下粗上细)"
+        },
+        "learner": {
+          "grade": "五年级",
+          "answer_status": "unanswered"
+        },
         "state": "dialogue",
         "stuck": true,
         "hint_level": 1,
-        "steps": [{"step": "对比前后段水位上升快慢", "value": ""}],
+        "steps": [
+          {
+            "step": "对比前后段水位上升快慢",
+            "value": ""
+          }
+        ],
         "steps_synthetic": true
       },
       "expect": {

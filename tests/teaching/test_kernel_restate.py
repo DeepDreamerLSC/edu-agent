@@ -190,10 +190,14 @@ def test_repeat_fallback_advances_ladder():
 
 
 def test_repeat_fallback_ladder_texts_differ_consecutively():
-    """连续两轮复读兜底:内容逐级推进且互不相同(旧兜底同句复读即循环源头)。"""
+    """连续两轮复读兜底:内容逐级推进且互不相同(旧兜底同句复读即循环源头)。
+
+    第二轮 = 再次 stuck(#333 泄露网 V1):当前级 value=10 与 answer_pool{3,5}
+    无双重身份 → 授权,文本附当前步中间值(「这一步先算,得到 10」);
+    首轮(首次 stuck)不给数值,本级 16 不出现。"""
     question_text = FIRST_QUESTION_COLLECT   # 首问固定模板 = 第一轮被复读的上一轮文本
     lead1 = "我们从这里入手:先算全部按鸡的脚数。你接着算下一步。"
-    lead2 = "下一步是这样:再算脚数差。你接着算下一步。"
+    lead2 = "下一步是这样:再算脚数差。这一步先算,得到 10。你接着算下一步。"
     gateway = FakeGateway(tutor_payloads=[
         _open_payload(question_text),
         _tutor_payload(question_text), _tutor_payload(question_text),  # 第一轮:复读首问×2
@@ -204,6 +208,8 @@ def test_repeat_fallback_ladder_texts_differ_consecutively():
     turn2 = reply(turn1.session, "嗯,我看看。", gateway=gateway)
     assert turn1.text == lead1
     assert turn2.text == lead2
+    assert "16" not in turn2.text and "5" not in turn2.text  # 非当前级/终答部件不上学生面
+    assert [e for e in turn2.session.guard_events if e.get("branch") == "reveal"][-1]["anchor_numbers"] == [10.0]
     assert turn2.text != turn1.text            # 每轮不同 → 复读循环消失
     assert turn2.session.hint_level == 2
 
