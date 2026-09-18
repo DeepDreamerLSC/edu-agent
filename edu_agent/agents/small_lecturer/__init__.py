@@ -22,6 +22,7 @@ from .kernel import (
     _student_signals_understanding,
     finish,
     reply,
+    set_ablation_arm,
     start,
 )
 # numeric 确定性纯函数随包公开(#350 属性测试直连;口径归属见 numeric.py 模块头):
@@ -109,6 +110,7 @@ __all__ = [
     "grade_grounding",
     "opening_hint",
     "reply",
+    "set_ablation_arm",
     "start",
     "style_directives",
     "summary_system_prompt",

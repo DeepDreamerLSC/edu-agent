@@ -1,0 +1,44 @@
+{
+ "schema_version": "small_lecturer_image_teaching/v1",
+ "scenarios": [
+  {
+   "id": "no-progress-real-paraphrase-probe",
+   "title": "换写探针(v2):真实案学生轮同义改写——抓字面服从",
+   "question": {
+    "text": "等边三角形草地三个顶点分别住着小羊、小兔、小马，边长20m。按方位描述四只题目中的相对位置并写距离。",
+    "answer": "北偏西30°20m；北偏东30°20m；南偏西30°20m；南偏东30°20m。"
+   },
+   "answer_status": "incorrect",
+   "grade": "六年级",
+   "tags": [
+    "no-progress",
+    "换写探针",
+    "v2",
+    "真模型"
+   ],
+   "student_turns": [
+    "三种动物的位置构成了一个三角形。",
+    "把小兔当作参照点的话,小马就在它的正东方向,小羊在东北那一侧。",
+    "从小马的位置看,小羊处于它的西北方向。",
+    "小马往西看过去就是小兔的位置。",
+    "小羊相对小兔来说是靠东北的。",
+    "小羊那一边在小马的西北角上。",
+    "以小兔为中心,小羊落在东北位置。",
+    "小羊从小马这边数是西北方向。",
+    "小马处在小兔的东边。"
+   ],
+   "expect": {
+    "checks": [
+     {
+      "name": "finish_status",
+      "status": "needs_review"
+     }
+    ]
+   },
+   "source": {
+    "issue": 333,
+    "note": "M1 真实案冻结 fixture(user-session-extract 提取件 real-case-v1/extract.json;9 轮学生真实文本;finish 期望保守——重问根除前不应 completed);answer check 摘除:终答值 30/20 与题面边长 20m 撞值,真实案 tutor 合法复述题面会假阳性(M1 判据为行为面:advisories+transcript 判读);换写探针=同案学生轮同义改写(语义同/词面异),v2 条款:判模型对新规则的字面服从(变换开场是否真行为,非原剧本记忆)"
+   }
+  }
+ ]
+}

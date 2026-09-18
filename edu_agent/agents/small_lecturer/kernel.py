@@ -94,6 +94,12 @@ _ELICIT_TEMPLATE = ("我们从头把思路串一遍——"
 _SUPPORT_HINT = ("我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,"
                 "从它开始你觉得能先算出什么?想到多少说多少。")
 
+# === 消融臂门控(伴生模块 ablation.py;C=生产默认不注入,#333 三臂协议) ===
+from .ablation import (arm_bypass as _arm_bypass, arm_b_leak_funnel as _arm_b_leak_funnel,
+                       current_arm as _current_arm, guard_early as _ablation_guard_early,
+                       set_ablation_arm as set_ablation_arm,  # 02 §6 白名单 re-export
+                       shadow_event as _shadow_event)
+
 
 def _feeds_method_hits(text: str, student_evidence: tuple[str, ...] = ()) -> list[str]:
     """tutor 输出里点名的方法词中,学生尚未自己说出的那部分(代喂命中,埋点用)。
@@ -368,32 +374,10 @@ def _current_step_anchor_numbers(session: "LearnerSession", step: dict) -> set[f
 
 
 def _reveal_stuck_hint(session: "LearnerSession") -> str:
-    """学生卡住/复读兜底 → 揭示下一级阶梯(确定性,零模型调用,不重复)。
-
-    内容 = session.steps 下一级(**动作化**后:`_soften_step_text` 收回算式结果与
-    自带终答的序数/导出值形态;裸数字形状读不成句 → 整步弃用,本函数返回
-    NEEDS_REVIEW_TEXT,#185);
-    开场用 _STEP_LEADS 轮换,避免固定前缀生硬。
-    模型措辞版实测会重复(3/7)且过度揭示,故仍用确定性。
-
-    泄露网 V1 窄授权(#333 裁定 c5717512971,**新产品 policy,非 guard 误报修复**——
-    事实:reveal 档从未有过锚豁免,`_soften_step_text` 一直在收回算式结果,#165 WS4):
-    **再次 stuck**(进入本函数前 hint_level>0,裁定 Q2 的机械代理)且 state≠
-    ready_to_confirm 时,若当前步 value 通过 `_current_step_anchor_numbers`
-    (非空 + 与 answer_pool 无双重身份),reveal 文本附当前步中间值
-    (「这一步先算,得到 X」);**首次 stuck(hint_level==0)不给任何数值**,
-    现有动作化 reveal 原样。模型自由生成路径零例外(锚由本确定性路径产生,
-    不是放行模型输出)。
-
-    埋点(#112 评审建议):三条调用方(卡壳揭示 / 复读降级 / 输出面背板)统一在此记
-    `{branch: reveal, hint_level}`,hint_level 为消耗后的级数——记的是**阶梯消耗**
-    (阶梯有限,影子数据要能看「推进次数」与「是否过早烧到 bottom-out」);该轮最终
-    学生可见文本若又被下游护栏替换,以 transcript 为准。bottom-out 与普通推进同记
-    reveal;裸数字形状整步弃用的轮加记 `dropped`;改写路径记 `soften`
-    (cut = 同分句边界收回 / mask = 兜底改写「几」,网级报数用,#241 行 4)。NEEDS_REVIEW_TEXT 有**两个来源**:
-    无终答 bottom-out(无 answer 可披露时,无前缀亦无 dropped,两项统计均不可见——
-    罕见,要数需先加事件)与弃用轮(dropped 可筛);bottom-out 率按「这一步我们
-    直接看结果:」前缀统计、勿按文本匹配(会把弃用轮算进);复讲引导同 _ELICIT_TEMPLATE。"""
+    """学生卡住/复读兜底 → 揭示下一级阶梯(确定性,零模型,不重复;动作化见
+    _soften_step_text)。泄露网 V1 窄授权(#333 裁定 c5717512971):再次 stuck 且非
+    ready 态附当前步中间值,首次 stuck 零数值。埋点:reveal/hint_level=阶梯消耗,
+    弃用轮记 dropped,改写记 soften;bottom-out 按「这一步我们直接看结果:」前缀统计。"""
     re_stuck = session.hint_level > 0  # V1:首次 stuck=0 不给数值;再次 stuck 才有授权资格(推进前捕获)
     step = _next_step(session)
     session.guard_events.append({"branch": "reveal", "hint_level": session.hint_level})
@@ -582,17 +566,19 @@ def _regenerate(ctx: "_GuardContext", session: "LearnerSession | None", reply_te
 def _guard_output(reply_text: str, session: "LearnerSession | None" = None,
                   ctx: "_GuardContext | None" = None,
                   ready_to_confirm: bool = False) -> str:
-    """三护栏响应策略(检测规则不动,只改策略与调用方式):
-    - 修复重生成优先:命中 → 带规则 id+命中片段重调 tutor 一次,再命中才降级;
-    - 兜底句情境化(接学生原话);LaTeX 双修由格式护栏归一化 \\frac{a}{b} → a/b;
-    - 数值披露门(#184):`_guard_check` 的单一判据命中(泄漏 answer / 幻觉 hallucinated)
-      即走本漏斗同一三档(#168 引入),不再只是记账。
-    **stuck 语义(#184)**:仅「修复失败 → 兜底句」时置卡点(修好不置,否则一次部分泄漏
-    就把对话推向 needs_review);已判过的兜底句不再重生成一次(见下)。"""
+    """三护栏响应策略(检测规则不动,只改策略):修复重生成优先(带 rule_ids+
+    命中片段重调一次)→ 再命中降级情境化兜底句(接学生原话);数值披露门(#184)
+    同漏斗三档;stuck 语义=仅「修复失败→兜底句」置卡点,已判过的兜底句不再重生成。"""
     if ctx is None:
         return reply_text
     guard, rule_ids, normalized, violations = _guard_check(ctx, reply_text, session,
                                                            ready_to_confirm)
+    early = _ablation_guard_early(guard, session, rule_ids, violations, reply_text)
+    if early is None and _current_arm() == "B" and guard == "answer_leak":
+        early = _arm_b_leak_funnel(_regenerate, ctx, session, rule_ids,
+                                   reply_text, ready_to_confirm)
+    if early is not None:
+        return early
     if guard is None:
         return normalized
     prev_text = (str(session.history[-1].get("content") or "")
@@ -769,15 +755,7 @@ def _ask_final_answer(session: LearnerSession, student_message: str) -> Turn:
 
 
 def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> Turn:
-    """生成首问(03 §4 Preparing → FirstQuestionReady / Failed)。
-
-    任务包2步4 统一 open:一次调用产出 {acceptable, transcription, steps, reply}。
-    - 因 tutor 即 VL 模型,vision 判定与首问合入同一次调用(图文题不再两次调用);
-    - steps 由 _store_steps(独立 solver 职责)校验并存 session.steps;
-    - reply 经护栏后即首问。
-    fail-closed 语义保留:纯图题(question.text 为空)判 unacceptable → 不采信 reply/steps,
-    Turn.state=failed。图文题(题库命中)判 unacceptable 仍降级纯文教学(题面文答是权威)。
-    """
+    """生成首问:一次调用产出 steps+reply,reply 经护栏后即首问;纯图题 unacceptable 走 fail-closed。"""
     gateway = gateway or default_gateway()
     session = LearnerSession(question=question, learner=learner)
     images = [str(question["image"])] if question.get("image") is not None else None
@@ -810,10 +788,6 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
     if not safe_text.strip():
         safe_text = _OPENING_FALLBACK  # 图文题 acceptable=false 且 reply 留空 → 确定性兜底首问
     else:
-        # 首问固定模板(见 prompting.first_question_text):模型生成的可见文本一律不用——
-        # 实测首问会把答案数字报出来;模型调用照旧,仍产出 steps/transcription。
-        # transcription 供模板复述题面(读出内容 → 图像招呼语 + 半句复述);
-        # question 供文字档采集句按题型分流(选择题/非选择题)。
         safe_text = first_question_text(learner.get("answer_status"),
                                         str(payload.get("transcription") or ""),
                                         session.question)
@@ -827,19 +801,12 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
 
 def _gate_premature_confirm(session: LearnerSession, ctx: "_GuardContext", output: dict,
                             safe_text: str, student_message: str) -> str:
-    """判停闸(#149):模型想判停,但学生尚未陈述已知答案 → 闸下并重写。
-
-    `ready_to_confirm` 只是**模型建议**,判停权威在确定性验证层(#112 同源判据,
-    见 `_hits_answer_numbers`)。缺口实测:incorrect 弧线第 3 轮学生尚未说出答案,
-    模型已置 ready_to_confirm 并把答案讲完,而判停语义(kernel_subject.py 的
-    ready_to_confirm break)随即结束对话 → 复讲步/后续步骤永远到不了。
-    处置走既有 `_regenerate`(judge→refiner 的 refiner):不新增学生可见模板、不删词、
-    不做解析脱敏;重写失败落既有阶梯兜底 + stuck。fail-open:答案无数字时不闸。
-
-    返回学生可见文本(闸未触发时原样返回)。"""
+    """判停闸:模型想判停但学生未陈述答案 → 闸下并重写(消融 A/B 臂旁路)。"""
     if not (output.get("ready_to_confirm") and _answer_numbers(session)
             and not _student_stated_answer(session, student_message)):
         return safe_text
+    if _arm_bypass("would_rewrite", "premature_confirm", session):
+        return safe_text  # 消融 A/B 臂:闸检测照跑(A 记 shadow),处置旁路
     _record_event(session, "premature_confirm", [], str(output.get("reply") or ""),
                   regenerated=False)
     refined = _regenerate(ctx, session, safe_text, _PREMATURE_CONFIRM_CRITIQUE)
@@ -869,6 +836,48 @@ def _repair_feeds_method(ctx: "_GuardContext", session: LearnerSession, text: st
     return _ELICIT_TEMPLATE, "template"  # 兜底:词表无互为子串项,脱敏理论上必清空命中
 
 
+def _repeat_refine(ctx, session, safe_text: str, ready: bool) -> str:
+    """复读自批评的消融臂分发:C 臂照原逻辑(_regenerate+兜底);A/B 臂旁路。"""
+    prev = session.history[-1]["content"] if session.history else session.first_question
+    if not (prev and _is_repeat(prev, safe_text)):
+        return safe_text
+    if _current_arm() == "A":
+        _shadow_event(session, "would_rewrite", "repeat_regen")
+        return safe_text
+    if _current_arm() == "B":
+        return safe_text
+    refined = _regenerate(ctx, session, safe_text, _SELF_CRITIQUE, ready)
+    if refined is None or _is_repeat(prev, refined):
+        refined = _reveal_stuck_hint(session)
+        session.stuck = True
+    return refined
+
+
+def _deterministic_turn(session: LearnerSession, student_message: str,
+                        gateway: Gateway | None = None) -> Turn | None:
+    """reply 的确定性分支集(消融门控:A 记 would_* 旁路,B 静默旁路,C 照旧);
+    None=无命中走模型路径(四分支:understanding/stuck/答案命中/完成表达)。"""
+    if (_student_signals_understanding(student_message)
+            and not _arm_bypass("would_rewrite", "elicit_restatement", session)):
+        return _ask_restatement(session, student_message)
+    if (_student_signals_stuck(student_message)
+            and not _arm_bypass("would_reveal", "stuck_hint", session)):
+        hint = _stuck_hint(session)
+        session.stuck = True
+        return _commit_turn(session, student_message, hint, "dialogue")
+    if (_student_hits_known_answer(session, student_message)
+            and not _arm_bypass("would_rewrite", "answer_hit_restatement", session)):
+        return _ask_restatement(session, student_message)
+    if (session.learner.get("answer_status") == "incorrect"
+            and session.state != "ready_to_confirm"
+            and _student_signals_completion(student_message)
+            and not _student_stated_answer(session, student_message)
+            and not any(event.get("branch") == "answer_collect" for event in session.guard_events)
+            and not _arm_bypass("would_rewrite", "answer_collect", session)):
+        return _ask_final_answer(session, student_message)
+    return None
+
+
 def reply(session: LearnerSession, student_message: str, *,
           gateway: Gateway | None = None, expected_session_version: int | None = None) -> Turn:
     """多轮苏格拉底交流(03 §4 Dialogue 自旋;Conflict 为可选校验,#34 映射表决策)。"""
@@ -877,38 +886,10 @@ def reply(session: LearnerSession, student_message: str, *,
     if expected_session_version is not None and expected_session_version != session.session_version:
         raise SessionVersionConflict(  # 不推进:旧版本不静默覆盖新一轮诊断(00 §5.2 约定 3)
             f"expected_session_version={expected_session_version} != 当前 {session.session_version}")
-    if _student_signals_understanding(student_message):
-        # 学生说「懂了」→ 直接请学生讲思路(确定性,不调模型),不 confirm、不报答案。
-        # 这是教学弧线的固定策略(00 §8.5/人定):学生表示懂,就该由学生自己讲,而非 tutor 复述。
-        return _ask_restatement(session, student_message)
-    if _student_signals_stuck(student_message):
-        # 学生说「不会/猜不出」→ 支持动作(#198 第一步):`_stuck_hint` 按 move 枚举 +
-        # 确定性选择分发——上一学生轮做出刚揭示的那步(掌握度)→ 只问不揭示(拆小
-        # 问句,#174 渐隐档折叠至此);否则揭示下一级阶梯,耗尽 bottom-out(设计内不动)。
-        gateway = gateway or default_gateway()
-        hint = _stuck_hint(session)  # 埋点:两条路径各自记(#112 评审)
-        session.stuck = True
-        return _commit_turn(session, student_message, hint, "dialogue")
-    if _student_hits_known_answer(session, student_message):
-        # incorrect 弧线:学生被纠错后说出已知答案 → 同样确定性请他从头复讲(#112:
-        # 交给模型会直接置 ready_to_confirm 从模型侧确认,复讲步落空——issue 实测
-        # 复讲未达成 3/4 的根因)。人定弧线「答对后学生复讲,讲完讲师才点名方法」。
-        return _ask_restatement(session, student_message)
-    if (session.learner.get("answer_status") == "incorrect"
-            and session.state != "ready_to_confirm"
-            and _student_signals_completion(student_message)
-            and not _student_stated_answer(session, student_message)
-            and not any(event.get("branch") == "answer_collect" for event in session.guard_events)):
-        # 完成表达但没带答案数字(#178 判停分析:8/8 实测模型路径没有一次干净追问,
-        # 闸无料可判)→ 确定性追问答案,把判停闸要的证据采上来。仅 incorrect 弧线
-        # (对齐答案命中分支先例;实录 8/8 均 incorrect;correct 档完成表达保持模型
-        # 路径——泄漏护栏面在那,r6 结构化总结钉);完成≠理解,不触发复讲;确认态
-        # 不问(与答案命中分支同款护栏,追问会把 ready 态降级回 dialogue);学生已
-        # 陈述过答案(本轮或历史)不问;一次会话至多问一次(埋点防重复)。
-        return _ask_final_answer(session, student_message)
+    turn = _deterministic_turn(session, student_message, gateway)
+    if turn is not None:
+        return turn
     gateway = gateway or default_gateway()
-    # 弧线诊断阶段(#165 WS4 第 5 条):incorrect 弧线「首问后的前两次回应」= ②追问思路 + ③找卡点
-    # (首问不入 history → 每次 reply 提交两条 → reply_index = len(history)//2)。只影响这两轮。
     arc_hint = diagnose_turn_hint(session.learner.get("answer_status"),
                                   reply_index=len(session.history) // 2)
     _reply_messages = [
@@ -933,52 +914,29 @@ def reply(session: LearnerSession, student_message: str, *,
                             str(message["content"]) for message in session.history
                             if message.get("role") == "user"
                         ) + (student_message,)))
-    # 泄露/语气/格式三护栏 + 数值披露门(#184):检测 → 重生成 → 兜底同一漏斗(事件在
-    # 漏斗内落,含 rule_ids/regenerated);只判模型输出,确定性揭示/兜底句不在判据范围。
     safe_text = _guard_output(output["reply"], session, ctx,
                               bool(output["ready_to_confirm"]))
-    # 复读自批评(self-refine):与上一轮 tutor 输出高度相似 → 打回重生成一次,仍复读才降级。
     prev = session.history[-1]["content"] if session.history else session.first_question
-    if prev and _is_repeat(prev, safe_text):
-        refined = _regenerate(ctx, session, safe_text, _SELF_CRITIQUE,
-                              bool(output["ready_to_confirm"]))
-        if refined is None or _is_repeat(prev, refined):
-            # 复读仍未破 → 阶梯推进替代同款问句兜底(#112 复读循环:旧兜底「先回到你
-            # 刚说的…」以同句反复,自身成为复读源头;实测 chicken_rabbit/triangle_area
-            # 9 轮不推进)。揭示下一级阶梯 = 每轮内容不同且推进教学,阶梯耗尽走
-            # bottom-out(终答仅该路径披露,不变量保持)。
-            refined = _reveal_stuck_hint(session)
-            session.stuck = True  # 复读打断 = 卡点标记(R6 同款)
-        safe_text = refined
+    safe_text = _repeat_refine(ctx, session, safe_text, bool(output["ready_to_confirm"]))
     method_hits = _feeds_method_hits(safe_text, ctx.student_evidence)
+    if method_hits and _arm_bypass("would_rewrite", "feeds_method", session):
+        method_hits = []
     if method_hits:
-        # 复讲轮代喂(仅「学生尚未说出」的方法词,#157 裁定 1)。**替换粒度**(#152
-        # follow-up / #165 WS4):命中 ≠ 整轮作废——先带指令重生成(保留本轮引导/确认
-        # 语义),失败再确定性脱敏(只隐去命中词),模板仅末位兜底。埋点补齐(#112):
-        # 记被换下的原文 + 命中词 + 处置路径 mode(护栏重生成 vs 解析脱敏对照口径)。
         repaired, mode = _repair_feeds_method(ctx, session, safe_text, method_hits,
                                                bool(output["ready_to_confirm"]))
         _record_event(session, "feeds_method", method_hits, safe_text,
                       regenerated=(mode != "template"), mode=mode)
         safe_text = repaired
         if not _student_stated_answer(session, student_message):
-            # 学生尚未说出终答 → 不关对话,继续收集学生的讲题内容(原语义)。
-            # 学生**已陈述终答**的末轮不再强制不确认:一次方法词命中不该把本该收束的
-            # 轮次推向 needs_review(#152 实测把 12 分场景压到 3 分)。
             output["ready_to_confirm"] = False
     if prev and safe_text == prev:
-        # 输出面防复读(#112 终极不变量,精确等值——不吞正当的相近推进):任何兜底
-        # (护栏兜底/复读自批评降级/代喂替换)的产出若与上一轮学生可见文本完全相同,
-        # 即同句复读 → 阶梯推进给新内容。复读探针实测(修复前):同句兜底可连发
-        # 8 轮——泄露兜底「先回到你刚说的…」×8、代喂替换复讲引导 ×8,9 轮零推进。
-        safe_text = _reveal_stuck_hint(session)
-        output["reply"] = safe_text
-        output["ready_to_confirm"] = False
-        session.stuck = True
-    # 判停闸(#149)在漏斗/代喂/防复读**之后**:模型建议的 ready_to_confirm 由确定性校验
-    # 决定(学生未陈述答案 → 闸下并重写,按非确认态取数值允许池,#157 末值边界)。
-    # 泄漏拦截在本轮**更早**完成(见上 `_guard_output`):闸改写的文本若再引入未验证数值,
-    # 由下一轮漏斗与埋点接住(#184 只把观测升级为门,不新增第二套判据)。
+        if _current_arm() == "A":
+            _shadow_event(session, "would_reveal", "output_repeat_fallback")
+        elif _current_arm() == "C":
+            safe_text = _reveal_stuck_hint(session)
+            output["reply"] = safe_text
+            output["ready_to_confirm"] = False
+            session.stuck = True
     safe_text = _gate_premature_confirm(session, ctx, output, safe_text, student_message)
     state = "ready_to_confirm" if output["ready_to_confirm"] else "dialogue"
     return _commit_turn(session, student_message, safe_text, state,

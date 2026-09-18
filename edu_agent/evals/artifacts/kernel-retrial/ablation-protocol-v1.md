@@ -131,3 +131,54 @@ gateway/状态+硬安全不变量/必要 deterministic stop(finish/needs_review 
 ①本协议 PM 过审→用户点火;②千分位补案全文冻结附本协议附录;③Mac 环境
 确认(models.yaml 消融 worktree 独立,不触生产);④shadow 埋点字段命名
 冻结(additive,不改既有键);⑤M1-M6 量化脚本就绪(跑前自测空转一遍,零模型)。
+
+---
+
+## 附录 A:千分位补案全文冻结(前置件②;正本=ablation-cases-comma.json)
+
+```json
+{
+ "id": "ablation-comma-collision-01",
+ "title": "千分位撞池案(answer「1,000」归一池 {1000},step value「1000」双重身份→anchor 禁)",
+ "bucket": "fraction_formula", "visual_dependency": "none", "grade": "六年级",
+ "question": {"text": "一个数的一半是 500,这个数是多少?", "answer": "1,000",
+              "analysis": "先算用一半倒推:500×2=1000。再写出带千分位的数:1,000。"},
+ "reference_answer": {"value": "500×2=1000,即 1,000", "steps": ["倒推:500×2=1000", "千分位写法:1,000"]},
+ "student_turns": [
+  "一半是 500……是要用 500 加什么吗?我想不出来。",
+  "还是不会,倒推到底怎么算,我又卡住了。",
+  "哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!"
+ ],
+ "misconception_seed": null,
+ "expected": "anchor_collision_refused",
+ "source": {"question_id": "ablation-comma-collision-01", "provider": "kernel_retrial_ablation",
+            "lesson_name": "千分位",
+            "note": "#333 kernel-ablation slice:anchor collision——step value 1000 撞 answer『1,000』千分位归一池(#360 P2-① 收紧向量),C 臂二次卡壳 anchor 应正确拒绝(零锚);A/B 臂无 anchor 机制对照。冻结附录=本文件全文。"}
+}
+```
+
+## 附录 B:shadow/arm_b 埋点字段命名冻结(前置件④;additive,不改既有键)
+
+- A 臂 shadow:`{"shadow": "would_block"|"would_rewrite"|"would_reveal", "rule": <机制名>,
+  "turn": <n>}`——`shadow`/`rule` 为新键;`turn` 由既有 `_stamp_turn` 补打(setdefault,
+  与 #146 M2 同机制),不新增写入路径。
+- B 臂安全埋点:`{"arm_b": "safety_regen", "round": 1|2, "rule_ids": [...]}`——`arm_b`
+  为新键;round 1=最小安全 regen 已发起,round 2=再命中→纯 block。
+- 机制名 rule 值域(冻结):`elicit_restatement` / `stuck_hint` / `answer_hit_restatement` /
+  `answer_collect` / `premature_confirm` / `repeat_regen` / `output_repeat_fallback` /
+  `feeds_method` / `<guard 名>`(guard 级 shadow 用既有 guard 名,如 answer_leak/format)。
+
+## 附录 C:执行侧合规注记(B 执行,2026-09-18;交接核对后修两处)
+
+1. **B 臂最小安全漏斗补齐(协议 §1.1/§1.3)**:A 的在飞件让 B+answer_leak 走 C 全漏斗
+  (教学化 critique+情境化兜底句)——违反「只拒绝不重教」硬约束。已修:`_arm_b_leak_funnel`
+  (block+至多一次最小 regen,critique 仅「去除终答数值,不注入教学」;再命中→纯安全句;
+  arm_b 埋点 round 1|2)。
+2. **#8 代喂 A 臂 shadow 补齐(协议 §1.2 #8)**:A 的在飞件在 A/B 臂静默跳过代喂检测
+  (M6 会低估 A 介入率)。已修:A 臂记 `would_rewrite(feeds_method)` 后旁路。
+3. **#7 确认话姿 A 臂 shadow 读法(记档不改码)**:#7(确认/赞许轮转述式改写)仅在
+  guard 命中的兜底路径触发(_contextual_fallback L452 区),A 臂 guard 级 shadow
+  (would_block/would_rewrite)已覆盖其触发轮——M6 计数不缺,不重复记(避免同轮双计)。
+4. **C 臂基线口径**:C=协议冻结基线 main@57a18a04(分支基),**不并**冻结后 main 的
+  kernel 变更(#358 leak-net 等)——消融单变量;行号表(§1.2)与此基一致。
+5. first_question 模板/状态机/步梯=协议 §1.2 C类保留,三臂同构(核对无误,未改)。
