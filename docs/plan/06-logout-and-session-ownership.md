@@ -31,7 +31,7 @@
 
 ### 1.4 幂等键归属:全局命名空间
 
-- open 幂等键全局:`find_by_idempotency(key)` 不分人(sessions.py:35-38;SQLite 唯一索引 `uq_records_idempotency` 全局,sqlite.py:63-66)——**学生 B 重放学生 A 的幂等键,open 幂等路径直接返回 A 的会话**(service.py:301-306);
+- open 幂等键全局:`find_by_idempotency(key)` 不分人(sessions.py:35-38;SQLite 唯一索引 `uq_records_idempotency` 全局,sqlite.py:58-59)——**学生 B 重放学生 A 的幂等键,open 幂等路径直接返回 A 的会话**(service.py:301-306);
 - 学生轮 `message_idempotency_key` 同为全局缓存键(service.py:458-463);
 - 登录面 `Idempotency-Key`(native-codes)在 IdentityService 全局 dict(identity.py:163)——该面属合作方服务器侧(指纹绑定、单合作方),试点无跨人风险,**不动**。
 
