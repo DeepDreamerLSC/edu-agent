@@ -6,13 +6,12 @@
 from __future__ import annotations
 
 import pytest
-from partner_api import ScriptedKernel, get, serving
+from partner_api import ScriptedKernel, get
 
 
 @pytest.fixture
-def base():
-    with serving(ScriptedKernel([])) as url:
-        yield url
+def base(serve):
+    return serve(ScriptedKernel([]))
 
 
 def test_docs_index_lists_all_guides_without_auth(base):

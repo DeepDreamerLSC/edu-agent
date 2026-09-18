@@ -1,0 +1,123 @@
+{
+  "round": 0,
+  "parent_id": 0,
+  "variant_id": 1,
+  "parent_template": "请复讲：先说核心思路，再写出第一步的具体算式或操作，最后给出明确结论。请用完整句子描述步骤与结果，以便确认掌握。",
+  "variant_template": "请先完整复述解题思路，并写出第一步的具体算式或操作。确认无误后，我会总结关键点并给出明确结论，确保你真正掌握该方法。",
+  "support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "parent_support_hint": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+  "noop": false,
+  "edit_reason": "edited",
+  "parent_scores": {
+    "mean_score": 6.933333333333334,
+    "needs_review_rate": 0.5,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.6
+  },
+  "variant_scores": {
+    "mean_score": 7.4,
+    "needs_review_rate": 0.42857142857142855,
+    "numerical_violation_rate": 0.0,
+    "hard_failure_rate": 0.5333333333333333
+  },
+  "accepted": false,
+  "leak_net_veto": false,
+  "screen_evidence": {
+    "parent": {
+      "h": 8,
+      "n": 0,
+      "u": 11,
+      "mean": 7.533333333333333
+    },
+    "variant": {
+      "h": 8,
+      "n": 0,
+      "u": 11,
+      "mean": 7.4
+    },
+    "delta_mean": -0.133333,
+    "decision": "keep_parent"
+  },
+  "cohort_idx": 0,
+  "paired_evidence": null,
+  "diff": [
+    "--- parent\n",
+    "+++ variant\n",
+    "@@ -1 +1 @@\n",
+    "-请复讲：先说核心思路，再写出第一步的具体算式或操作，最后给出明确结论。请用完整句子描述步骤与结果，以便确认掌握。",
+    "+请先完整复述解题思路，并写出第一步的具体算式或操作。确认无误后，我会总结关键点并给出明确结论，确保你真正掌握该方法。"
+  ],
+  "stats": {
+    "calls": 79,
+    "tokens_in": 159531,
+    "tokens_out": 14683,
+    "env_failures": 0,
+    "content_failures": 0,
+    "tutor_calls": 64,
+    "judge_calls": 15,
+    "leak_net_violations": 0,
+    "hard_vetoed": false,
+    "wall_ms": 521510,
+    "h": 8,
+    "n": 0,
+    "u": 11,
+    "mean": 7.4
+  },
+  "failures": [
+    {
+      "case_id": "image_v2_understanding_04",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:请先完整复述解题思路，并写出第一步的具体算式或操作。确认无误后，我会总结关键点并给出明确结论，确保你真正掌握该方法。小讲师:这一题的学习证据还不够,我们; summary_mastery=0 — 对话在小讲师要求复述后直接中断，未进行任何实质总结，也未给出掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "image_v2_understanding_02",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:请先完整复述解题思路，并写出第一步的具体算式或操作。确认无误后，我会总结关键点并给出明确结论，确保你真正掌握该方法。小讲师:这一题的学习证据还不够,我们; summary_mastery=0 — 对话在小讲师要求复述后直接中断，未进行任何实质总结，也未给出掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "image_v2_stuck_03",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:我们从这里入手:先看第一个数3/4，它要和哪个数相乘得1？。你接着算下一步。\n小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; summary_mastery=0 — 对话中无实质总结，小讲师仅以'学习证据还不够'为由中断，未复述学生已掌握的'倒数'概念或确认其理解，也未给出掌握判断。; total=5/12"
+    },
+    {
+      "case_id": "image_v2_stuck_04",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师连续两轮发言（'我们从这里入手...'和'这一题的学习证据还不够...'），未等待学生回应即进行下一轮，且第二轮直接以'证据不够'为由中断教学流程，属于一; summary_mastery=0 — 对话中无任何实质总结，小讲师直接以'学习证据还不够'为由结束，未对学生表现进行任何掌握判断或方法归纳。; total=4/12"
+    },
+    {
+      "case_id": "image_v2_stuck_02",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 学生:还是不会,越算越乱了。小讲师:我们从这里入手:先看纸条总长是多少分米。你接着算下一步。; pacing=0 — 小讲师:我们从这里入手:先看纸条总长是多少分米。你接着算下一步。小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=3/12"
+    },
+    {
+      "case_id": "image_v2_answercollect_02",
+      "kind": "judge_low_score",
+      "detail": "socratic_followup=0 — 小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; pacing=0 — 小讲师:你算出的是多少?把答案说出来,我们对一对。小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; total=4/12"
+    },
+    {
+      "case_id": "image_v2_answercollect_01",
+      "kind": "judge_low_score",
+      "detail": "pacing=0 — 小讲师:你算出的是多少?把答案说出来,我们对一对。小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?; summary_mastery=0 — 对话中无实质总结，小讲师仅以'学习证据还不够'为由中断，未复述学生已给出的'把两段加起来'思路，也未确认学生计算结果。; total=5/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_circle_area_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "total=8/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_average_score_alternative_method",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_b2_fraction_multiplication_support_boundary",
+      "kind": "judge_low_score",
+      "detail": "summary_mastery=0 — 对话中无实质总结，小讲师在给出答案后直接结束，未引导学生复述或确认掌握情况。; total=6/12"
+    },
+    {
+      "case_id": "small_lecturer_math_gold_candidates_distance_speed_complete_reasoning",
+      "kind": "judge_low_score",
+      "detail": "total=9/12"
+    }
+  ]
+}
