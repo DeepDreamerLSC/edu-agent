@@ -45,7 +45,10 @@ roles:
     primary: qwen3_vl_8b # 原 9B llama 退备选线外;可靠性由 VL M2 复验量化
     fallback: mlx_27b
     json_strict: true # 主选 llama grammar 级真强制(#34);备选 mlx 走路线 1 校验
-    concurrency: 2
+    concurrency: 4 # 2026-09-18 #255 试点并发实验(PM 233d0fca,人批载体=派单+PR
+                    # 合并键):与 8303 --parallel 4 配套(burst T2 实测单槽×2 并发
+                    # 排队,P95 open 79s)。实验性质;回滚线=回退 2 + 8303 去掉
+                    # --parallel 并 launchctl 重载(deploy/launchd/vision-8303 plist)
     first_token_timeout_s: 5
     total_timeout_s: 120
     max_attempts: 3
