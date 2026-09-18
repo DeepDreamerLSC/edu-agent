@@ -15,7 +15,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]  # 仓库根
-DATASET = ROOT / "edu_agent/evals/datasets/small_lecturer_image_teaching_v2_enriched12.json"
+DATASET = ROOT / "edu_agent/evals/datasets/"
+DATASET /= "small_lecturer_v1anchor_verification_v1.json"  # 裁 b 补验独立验案集(enriched12 不扩:#332 分层抽样锚)
 OUT = Path(__file__).resolve().parent / "out" / "v1"
 FACTS = Path(__file__).resolve().parent / "out" / "facts"
 MAX_CALLS = 40  # PM ~30 预算+裕量硬顶
