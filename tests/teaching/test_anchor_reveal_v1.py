@@ -17,6 +17,7 @@ V1 授权面(裁定原文):终答数字永远 protected;中间步锚仅 determin
 from __future__ import annotations
 
 import json
+import random
 from pathlib import Path
 
 from edu_agent.agents.small_lecturer import FIRST_QUESTION_COLLECT, reply, start
@@ -142,4 +143,94 @@ def test_F_answer_undeterminable_fail_closed():
     """F 答案侧不可判定(纯文字答案)→ 保守不给:answer_pool=∅ 时锚数字面无从
     验证保护,空 value 步不入梯(_store_steps 口径)→ 首轮耗尽 bottom-out,全程零锚。"""
     turn = _drive(SEEDS["F_answer_undeterminable_fail_closed"], stuck_rounds=2)
+    assert not any(e.get("anchor_numbers") for e in _reveal_events(turn))
+
+
+# ---------- ③ V1 锚不变量 property 化(v1-property-supplement;随机合成网格,
+# 固定种子无新依赖;+四数字等价类定夺的确定性钉) ----------
+
+_ALLOWED_EVENT_KEYS = {"branch", "hint_level", "turn", "soften", "dropped", "anchor_numbers"}
+
+
+def _synth_seed(rng: random.Random) -> tuple[dict, set[float]]:
+    """随机合成 A 形种子:题面数/终答数/阶梯值,重叠与非重叠都造(不变量与
+    是否授权无关——锚无论何时出现都必须 ∩pool=∅ 且单数值)。"""
+    qnums = rng.sample(range(2, 60), 2)
+    pool = rng.sample([n for n in range(2, 99) if n not in qnums], rng.choice([1, 2]))
+    # 阶梯值只避题面数(可撞池):重叠面进样本,不变量须在重叠下仍成立(P4)
+    ladder = [rng.choice([n for n in range(2, 99) if n not in qnums])
+              for _ in range(rng.choice([1, 2, 3]))]
+    steps = [{"step": f"第{i + 1}步:先处理这一项", "value": str(v)} for i, v in enumerate(ladder)]
+    answer = "、".join(f"{n}只" for n in pool)
+    seed = {"session": {"question": {"text": f"一共 {qnums[0]} 只和 {qnums[1]} 只,问各多少?",
+                                     "answer": answer},
+                        "learner": {"grade": "四年级", "answer_status": "incorrect"},
+                        "steps": steps}}
+    return seed, {float(n) for n in pool}
+
+
+def test_property_anchor_never_leaks_answer():
+    """P1/P2/P3/P4 合一:任意(题面,终答,阶梯值,梯长)组合下——
+    锚与终答数字集交恒空(fail-closed)/首次 stuck 零锚/锚恒为单数值/键只增不改。"""
+    rng = random.Random(20260918)
+    anchored = 0
+    for i in range(120):
+        seed, pool = _synth_seed(rng)
+        turn = _drive(seed, stuck_rounds=2)
+        events = _reveal_events(turn)
+        assert events[0].get("anchor_numbers") is None, f"case{i}: 首次 stuck 不得带锚"
+        for event in events[1:]:
+            anchor = event.get("anchor_numbers")
+            if anchor is not None:
+                anchored += 1
+                assert len(anchor) == 1, f"case{i}: 锚必须单数值,实得 {anchor}"
+                assert not set(anchor) & pool, f"case{i}: 锚 {anchor} 撞终答池 {pool}"
+    # 防网格退化空转(P3-nano③,reviewer 659c6ae9):锚面下限(当前种子实测 76;
+    # 网格/判据若改到不足此限,说明授权面样本萎缩——先查网格再动阈值)
+    assert anchored >= 30, f"property 网格退化:仅 {anchored} 案有锚(<30)"
+
+
+def test_property_anchor_audit_single_field():
+    """P5 授权单字段审计:reveal 事件键集 ⊆ 既有键 ∪ {anchor_numbers}(Q6 只增不改,
+    不造新事件类型);锚键出现 ⟺ 授权轮。"""
+    rng = random.Random(20260919)
+    for i in range(40):
+        seed, _pool = _synth_seed(rng)
+        turn = _drive(seed, stuck_rounds=2)
+        for event in _reveal_events(turn):
+            assert set(event) <= _ALLOWED_EVENT_KEYS, f"case{i}: 新键 {set(event) - _ALLOWED_EVENT_KEYS}"
+            if "anchor_numbers" in event:  # 单方向:锚 ⟹ 非首次 stuck(授权 ⟸ 由 P1 网格+七种子钉)
+                assert event["hint_level"] > 1, f"case{i}: 首次 stuck 带锚"
+
+
+def _class_seed(answer: str, ladder: list[str]) -> dict:
+    steps = [{"step": f"第{i + 1}步:先处理这一项", "value": v} for i, v in enumerate(ladder)]
+    return {"session": {"question": {"text": "仓库里有 12 箱和 9 箱,问合计与余量。", "answer": answer},
+                        "learner": {"grade": "四年级", "answer_status": "incorrect"},
+                        "steps": steps}}
+
+
+def test_gap_thousands_separator_normalized():
+    """千分位(补):answer「1,000」归一池={1000},value「1000」撞池即禁——
+    不归一则池={1,0} 与 {1000} 交空 → 锚漏终答(本测试=漏 vector 的关死钉)。"""
+    turn = _drive(_class_seed("共 1,000 千克", ["9", "1000"]), stuck_rounds=2)
+    assert not any(e.get("anchor_numbers") for e in _reveal_events(turn))
+
+
+def test_gap_multi_number_value_fail_closed():
+    """单数值门槛(补):多位值「8组,余5人」={8,5} 渲染「得到 8、5」破相 → 禁
+    (answer「35人」池={35} 本不撞,禁来自门槛非重叠)。"""
+    turn = _drive(_class_seed("共 35 人", ["9", "8组,余5人"]), stuck_rounds=2)
+    assert not any(e.get("anchor_numbers") for e in _reveal_events(turn))
+
+
+def test_gap_percent_sign_conservative():
+    """百分号(不补,回归钉):「50%」→{50} 双侧一致,撞池即禁(行为与 V1 合并版一致)。"""
+    turn = _drive(_class_seed("占 50%", ["9", "50%"]), stuck_rounds=2)
+    assert not any(e.get("anchor_numbers") for e in _reveal_events(turn))
+
+
+def test_gap_negative_sign_blind():
+    """负数(不补,回归钉):「-5」→{5} 符号双侧一致剔除,撞池即禁=保守正确。"""
+    turn = _drive(_class_seed("变化 -5 度", ["9", "-5"]), stuck_rounds=2)
     assert not any(e.get("anchor_numbers") for e in _reveal_events(turn))
