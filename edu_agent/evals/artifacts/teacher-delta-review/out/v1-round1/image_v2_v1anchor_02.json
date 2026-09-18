@@ -1,0 +1,118 @@
+{
+  "case_id": "image_v2_v1anchor_02",
+  "arm": "kernel-v1",
+  "transcript": {
+    "question_id": "image_v2_v1anchor_02",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "纸条4分米,剪掉4分之1……是剪掉4分米吗?不对吧,我算不清。",
+        "tutor": "你想到剪掉的是全长的四分之一，不是4分米，这很关键！那我们怎么算出剩下的是多少分米呢？",
+        "state": "dialogue",
+        "elapsed_ms": 1371
+      },
+      {
+        "student": "还是不会,4分之1到底怎么求,我又卡住了。",
+        "tutor": "我们从这里入手:先算出剪掉的部分是多少分米。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "明白了!4分之1就是4除以4,每份1分米;剪掉1分米,剩4减1……3分米!",
+        "tutor": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 3532,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          4.0
+        ],
+        "extracted": [
+          4.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 1,
+        "turn": 2
+      },
+      {
+        "branch": "elicit",
+        "hint_level": 1,
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_b3d9af0021"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        4.0
+      ],
+      "extracted": [
+        4.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 1,
+      "turn": 2
+    },
+    {
+      "branch": "elicit",
+      "hint_level": 1,
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 2,
+      "grade_fit": 2,
+      "pacing": 1,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 7,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:我们从这里入手:先算出剪掉的部分是多少分米。你接着算下一步。",
+      "grade_fit": "小讲师:你想到剪掉的是全长的四分之一，不是4分米，这很关键！",
+      "pacing": "小讲师:我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+      "summary_mastery": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+      "termination": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+      "math_integrity": "小讲师陈述：'剪掉的是全长的四分之一，不是4分米'（正确）；'4分之1就是4除以4,每份1分米'（正确，对应4×1/4=1）；'剩4减1……3分米'（正确）。小讲师未引入错误数学事实，且正确确认了学生的推理。",
+      "answer_leaked": "学生:明白了!4分之1就是4除以4,每份1分米;剪掉1分米,剩4减1……3分米!"
+    },
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "anchor_rounds": 0,
+  "anchor_details": [],
+  "leak_rounds": 0,
+  "anchor_on_model_branch": 0,
+  "calls_used": 20
+}

@@ -330,23 +330,39 @@ def _soften_step_text(step_text: str, answer_numbers: frozenset[float]) -> tuple
     return masked, "mask" if masked else "none"
 
 
+_THOUSANDS_RE = re.compile(r"(?<=\d),(?=\d\d\d(?:\D|$))")
+
+
 def _current_step_anchor_numbers(session: "LearnerSession", step: dict) -> set[float]:
     """泄露网 V1(#333 裁定 c5717512971):当前步的**可授权中间值锚**。
 
     anchor = numbers(step.value) − answer_pool,且**无双重身份**:value 数字与
     answer_pool 任一重叠 → 整步禁(返回空集,fail-closed)——单步题(value=终答)、
-    多部件答案、末级步(value 即终答)天然落禁面。answer_pool 用全量
-    `_answer_numbers`(漂移池口径,question.answer 优先/steps 末值兜底);
+    多部件答案、末级步(value 即终答)天然落禁面。answer_pool 用全量终答数字
+    (question.answer 优先/steps 末值兜底,同 `_known_answer`);
     **勿用 `_answer_focus_numbers` 做锚减法**——focus 剔题面数是「已陈述」判据口径,
     不是保护面(题面数不减:授权面含题面数无害,保护面一个都不能少)。
+
+    数字等价类定夺(v1-property-supplement,#333):
+    - **千分位归一(补)**:「1,000」与「1000」双侧同口径归一后比对——不归一则
+      answer「1,000」池={1,0} 而 value「1000」={1000} 交空 → 锚漏终答(真漏 vector)。
+      kernel 侧归一,numeric.py 归因不动(Q7);漂移池 `_answer_numbers` 口径独立不受影响。
+    - **单数值门槛(补)**:value 提取后非恰一个数字 → 禁(分数「3/4」={3,4}、
+      「8组,余5人」={8,5} 等多位值渲染成「得到 3、4」破相;保守方向)。保护面不受影响
+      (pool 仍全量多部件)。
+    - **百分号(不补)**:「50%」→{50} 双侧一致,overlap 保护成立;渲染丢 % 由动作
+      文本语境承接。
+    - **负数(不补)**:符号双侧一致剔除 = 保守正确(「-5」与「5」撞池即禁);
+      补符号解析反开「-5≠5 可锚」的漏洞面。
 
     七条件收敛(裁定原文):stuck × telling 由调用方结构保证(`_reveal_stuck_hint`
     只从 `_stuck_hint` 的 telling 分支到达);next step 存在由调用方 step 非 None;
     hint_level>0 / state≠ready_to_confirm 同由调用方判定——本函数只管数字面:
     value 非空、anchor 非空、∩answer_pool=∅。纯函数:只读 step 与 session 的
     question/steps,不知道 stuck/telling/hint_level(Q7:归因不进 numeric.py)。"""
-    value_numbers = _question_numbers(str(step.get("value") or ""))
-    if not value_numbers or value_numbers & _answer_numbers(session):
+    value_numbers = _question_numbers(_THOUSANDS_RE.sub("", str(step.get("value") or "")))
+    pool = _question_numbers(_THOUSANDS_RE.sub("", _known_answer(session)))
+    if len(value_numbers) != 1 or value_numbers & pool:
         return set()
     return value_numbers
 

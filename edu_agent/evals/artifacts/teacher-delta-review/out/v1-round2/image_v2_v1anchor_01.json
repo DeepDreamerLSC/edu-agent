@@ -1,0 +1,190 @@
+{
+  "case_id": "image_v2_v1anchor_01",
+  "arm": "kernel-v1",
+  "transcript": {
+    "question_id": "image_v2_v1anchor_01",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "12米剪掉3分之1……是要用12乘3分之1吗?我有点乱,想不出来。",
+        "tutor": "我们从这里入手:先算出剪掉的长度是多少米。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "还是不会,12和3分之1到底怎么算,我卡住了。",
+        "tutor": "下一步是这样:再用全长减去剪掉的长度。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "哦!先用12除以3,每份是4米;剪掉一份4米,剩下12减4……是8米!",
+        "tutor": "你刚才说剪掉的是4米，那剩下的长度就是12减4，你再确认一下这个减法算式是不是对的？",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 2672
+      }
+    ],
+    "summary": "你用‘12除以3得4’正确拆分了全长，再用‘12减4’算出剩余长度，方法很清晰！下一步要注意：在写减法算式时，确保数字和单位对应准确，比如‘12米减4米’，避免混淆单位。",
+    "total_ms": 5084,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "branch": "reveal",
+        "hint_level": 1,
+        "turn": 1
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 2,
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          4.0,
+          8.0,
+          12.0
+        ],
+        "extracted": [
+          4.0,
+          8.0,
+          12.0
+        ],
+        "violation_sources": [
+          {
+            "number": 8.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 3
+      },
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          4.0,
+          8.0,
+          12.0
+        ],
+        "extracted": [
+          4.0,
+          12.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 3
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "grounded_solution_path_disclosure",
+          "source_value_disclosure:answer"
+        ],
+        "original": "你刚才说先算出每份是4米，再用12减4得到8米，这一步完全对！最后请你自己完整说一遍结论。",
+        "regenerated": true,
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_d5bab419c8"
+  },
+  "guard_events": [
+    {
+      "branch": "reveal",
+      "hint_level": 1,
+      "turn": 1
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 2,
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        4.0,
+        8.0,
+        12.0
+      ],
+      "extracted": [
+        4.0,
+        8.0,
+        12.0
+      ],
+      "violation_sources": [
+        {
+          "number": 8.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 3
+    },
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        4.0,
+        8.0,
+        12.0
+      ],
+      "extracted": [
+        4.0,
+        12.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 3
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "grounded_solution_path_disclosure",
+        "source_value_disclosure:answer"
+      ],
+      "original": "你刚才说先算出每份是4米，再用12减4得到8米，这一步完全对！最后请你自己完整说一遍结论。",
+      "regenerated": true,
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 1,
+      "summary_mastery": 1,
+      "termination": 1
+    },
+    "total": 8,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "学生:还是不会,12和3分之1到底怎么算,我卡住了。小讲师:下一步是这样:再用全长减去剪掉的长度。你接着算下一步。",
+      "grade_fit": "小讲师:你用‘12除以3得4’正确拆分了全长，再用‘12减4’算出剩余长度，方法很清晰！",
+      "pacing": "学生:还是不会,12和3分之1到底怎么算,我卡住了。小讲师:下一步是这样:再用全长减去剪掉的长度。你接着算下一步。",
+      "summary_mastery": "小讲师:你用‘12除以3得4’正确拆分了全长，再用‘12减4’算出剩余长度，方法很清晰！下一步要注意：在写减法算式时，确保数字和单位对应准确，比如‘12米减4米’，避免混淆单位。",
+      "termination": "对话在小讲师给出总结性建议后结束，学生未再次确认或复述，状态未明。",
+      "math_integrity": "小讲师陈述：1. '12除以3得4' (正确); 2. '12减4' (正确); 3. '12米减4米' (正确)。无错误数学事实。",
+      "answer_leaked": "学生:哦!先用12除以3,每份是4米;剪掉一份4米,剩下12减4……是8米!"
+    },
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "anchor_rounds": 0,
+  "anchor_details": [],
+  "leak_rounds": 1,
+  "anchor_on_model_branch": 0,
+  "calls_used": 5
+}
