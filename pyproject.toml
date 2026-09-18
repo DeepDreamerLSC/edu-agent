@@ -15,10 +15,13 @@ dependencies = [
 ]
 
 [dependency-groups]
+# dev-only,不进 runtime(runtime 5/15 不动;#350 hypothesis 引入,架构师 c5724777246)。
+# hypothesis=属性测试(现状确定性不变量;property 失败反例固化进参数化回归)。
 dev = [
+    "hypothesis>=6",
+    "import-linter>=2.1",
     "pytest>=8.3",
     "ruff>=0.12",
-    "import-linter>=2.1",
 ]
 
 [build-system]

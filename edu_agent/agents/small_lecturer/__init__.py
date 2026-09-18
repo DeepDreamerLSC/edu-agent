@@ -8,15 +8,34 @@ from .guardrails import (
 )
 # 信号匹配器随包公开:judge 与 B 线测试/匹配器统一口径(02 §6 测试禁私有导入),
 # 名下划线是历史成形,judge.py/analyze.py 早已按此消费。
+# kernel 段增补(#350):属性测试要直连的确定性私有件随包公开,同款先例见上
+# (02 §6 测试禁私有导入,零行为变更纯导出面)。
 from .kernel import (
     SAFE_FALLBACK_TEXT,
     TUTOR_TURN_SCHEMA,
+    _STEP_LEADS,
+    _answer_leak_span,
+    _reveal_stuck_hint,
+    _soften_step_text,
     _student_signals_completion,
     _student_signals_stuck,
     _student_signals_understanding,
     finish,
     reply,
     start,
+)
+# numeric 确定性纯函数随包公开(#350 属性测试直连;口径归属见 numeric.py 模块头):
+# _question_numbers/_spoken_numbers/_reply_numbers/_arithmetic_results/_usable_numbers/
+# _answer_numbers/_answer_focus_numbers/_drift_sources——纯函数族,零行为变更。
+from .numeric import (
+    _answer_focus_numbers,
+    _answer_numbers,
+    _arithmetic_results,
+    _drift_sources,
+    _question_numbers,
+    _reply_numbers,
+    _spoken_numbers,
+    _usable_numbers,
 )
 from .prompting import (
     FIRST_QUESTION_COLLECT,
@@ -67,9 +86,21 @@ __all__ = [
     "ToneGuardrailResult",
     "TUTOR_TURN_SCHEMA",
     "Turn",
+    "_STEP_LEADS",
+    "_answer_focus_numbers",
+    "_answer_leak_span",
+    "_answer_numbers",
+    "_arithmetic_results",
+    "_drift_sources",
+    "_question_numbers",
+    "_reply_numbers",
+    "_reveal_stuck_hint",
+    "_soften_step_text",
+    "_spoken_numbers",
     "_student_signals_completion",
     "_student_signals_stuck",
     "_student_signals_understanding",
+    "_usable_numbers",
     "apply_tone_guardrail",
     "evaluate_student_visible_format",
     "evaluate_student_visible_question",
