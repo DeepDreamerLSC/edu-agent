@@ -14,6 +14,8 @@ KernelSubject + EvalRunner(case 级 checkpoint/续跑/失败台账)+ judge 单�
         [--corpus <数据集 JSON>]... [--diff-from <上轮 collect run 目录>]
     uv run python -m edu_agent.evals.corpus_round --render-from <运行根目录> \
         [--diff-from <上轮 collect run 目录>]   # 不跑批,零模型重渲染 report(#257 审 P3-2)
+    uv run python -m edu_agent.evals.corpus_round --config <run-spec.yaml> \
+        [--plan] [--out <运行根目录>]           # #350 V0:声明式小试跑配方;--plan 零模型打印计划
 """
 
 from __future__ import annotations
@@ -31,9 +33,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
+import yaml  # 已有依赖(models.yaml 同源),#350 V0 不新增
+
 from .judge import judge_transcript
 from .kernel_subject import KernelSubject
-from .runner import EvalRunner, RunnerConfig
+from .runner import EvalRunner, ResumeMismatch, RunnerConfig
 from .scenario_corpus import load_shortboard_corpus, run_scenario_checks, to_kernel_case
 from .summary import load_results
 from edu_agent.gateway import Gateway, GatewayError, load_registry
@@ -72,16 +76,244 @@ def _git_sha() -> str | None:
 
 
 def run_identity() -> dict:
-    """跑批身份三件套(#238 件 A,GEPA 前置):git HEAD / prompt 组件 / models 配置。
+    """跑批身份(#238 件 A,GEPA 前置):git HEAD / prompt 组件 / models 配置
+    + 脏工作树证据(#350 ⑧:git_dirty / git_diff_sha256——dirty 详情 patch 落 run 目录)。
 
     GEPA 优化对象是 prompting.py——每次迭代的可归因性从这三个哈希起步;
     机器可读进 manifest(此前只有 README 手写,不算溯源)。老轮次不回填。"""
+    dirty = git_dirty_state()
     return {
         "git_sha": _git_sha(),
+        "git_dirty": dirty["git_dirty"],
+        "git_diff_sha256": dirty["git_diff_sha256"],
         "prompts_sha256": _file_sha256(
             REPO / "edu_agent" / "agents" / "small_lecturer" / "prompting.py"),
         "models_sha256": _file_sha256(REPO / "configs" / "models.yaml"),
     }
+
+
+# === Run Spec V0(#350 用户裁定 2026-09-18:可复现的小试跑配方,不是可配置的产品) ===
+# 只管怎么跑,不管产品怎么行为:状态机/prompt/泄露网/判据一概不可配(真实代码 diff 才是产品变更的证据)。
+# 字段封闭集合五项 + version;优先级 CLI > run-spec > 代码默认;未知键/未知 case id fail closed。
+
+RUN_SPEC_VERSION = 1
+RUN_SPEC_KEYS = frozenset({"version", "name", "corpora", "cases", "judge", "concurrency"})
+
+
+def load_run_spec(path: Path | str) -> dict:
+    """读+校验 run spec(封闭键集;未知键/坏类型/坏值 fail closed,#350 ⑤)。
+
+    spec 内相对路径按仓根解析(配方要可移植,不随 CWD 漂移);corpora 文件缺失即刻红。"""
+    text = Path(path).read_text(encoding="utf-8")
+    spec = yaml.safe_load(text)
+    if not isinstance(spec, dict):
+        raise ValueError(f"run spec 必须是映射,实际 {type(spec).__name__}")
+    unknown = sorted(set(spec) - RUN_SPEC_KEYS)
+    if unknown:
+        raise ValueError(f"run spec 未知字段:{','.join(unknown)}"
+                         f"(V0 封闭集合:{','.join(sorted(RUN_SPEC_KEYS))};"
+                         "新字段先 #350 评论提案,等裁定再进代码)")
+    if spec.get("version") != RUN_SPEC_VERSION:
+        raise ValueError(f"version 必须为 {RUN_SPEC_VERSION}(实际 {spec.get('version')!r})")
+    if not (isinstance(spec.get("name"), str) and spec["name"].strip()):
+        raise ValueError("name 必须为非空字符串")
+    corpora = spec.get("corpora")
+    if not (isinstance(corpora, list) and corpora
+            and all(isinstance(p, str) and p.strip() for p in corpora)):
+        raise ValueError("corpora 必须为非空字符串路径列表")
+    missing = [p for p in corpora if not _spec_repo_path(p).is_file()]
+    if missing:
+        raise ValueError(f"corpora 文件不存在:{','.join(missing)}(相对路径按仓根解析)")
+    cases = spec.get("cases")
+    if not (isinstance(cases, list) and cases
+            and all(isinstance(c, str) and c.strip() for c in cases)):
+        raise ValueError("cases 必须为非空字符串 id 列表(V0 只支持明确 case ID,无 query DSL)")
+    if len(set(cases)) != len(cases):
+        dupes = sorted({c for c in cases if cases.count(c) > 1})
+        raise ValueError(f"cases 重复:{','.join(dupes)}")
+    if not isinstance(spec.get("judge", True), bool):
+        raise ValueError("judge 必须为布尔(缺省 true)")
+    concurrency = spec.get("concurrency", 2)
+    if isinstance(concurrency, bool) or not isinstance(concurrency, int) or concurrency < 1:
+        raise ValueError("concurrency 必须为 ≥1 整数(缺省 2)")
+    return spec
+
+
+def _spec_repo_path(raw: str) -> Path:
+    """spec 内相对路径按仓根解析;绝对路径原样。"""
+    p = Path(raw)
+    return p if p.is_absolute() else REPO / p
+
+
+def resolve_spec_cases(spec_cases: list[str], scenarios: dict[str, dict]) -> list[str]:
+    """spec.cases → 前缀化 case id 序列(#350 ①⑥):裸 id 单命中即解析,跨数据集
+    歧义/零命中 fail fast(不静默少跑);已带前缀的 id 直接用。"""
+    by_bare: dict[str, list[str]] = {}
+    for prefixed, scenario in scenarios.items():
+        by_bare.setdefault(scenario["id"], []).append(prefixed)
+    resolved: list[str] = []
+    for raw in spec_cases:
+        if raw in scenarios:
+            resolved.append(raw)
+            continue
+        matches = by_bare.get(raw, [])
+        if len(matches) > 1:
+            raise ValueError(f"case id 跨数据集歧义:{raw} 命中 {matches}(用前缀全名)")
+        if not matches:
+            raise ValueError(f"case id 不存在:{raw}(检索范围 = spec 声明的 corpora)")
+        resolved.append(matches[0])
+    return resolved
+
+
+def merge_options(args, spec: dict | None) -> dict:
+    """运行参数三级合并(#350 ④:CLI > run-spec > 代码默认)。
+
+    corpora:CLI --corpus(可多传)> spec.corpora > DEFAULT_CORPUS;
+    concurrency:--concurrency > spec > 2;judge:仅 spec 可关(缺省 true)。"""
+    if args.corpus:
+        corpora = list(args.corpus)
+    elif spec is not None:
+        corpora = [str(_spec_repo_path(p)) for p in spec["corpora"]]
+    else:
+        corpora = [DEFAULT_CORPUS]
+    concurrency = args.concurrency
+    if concurrency is None:
+        concurrency = spec.get("concurrency", 2) if spec is not None else 2
+    return {
+        "name": spec["name"] if spec is not None else None,
+        "corpora": corpora,
+        "concurrency": concurrency,
+        "judge": spec.get("judge", True) if spec is not None else True,
+        "cases": list(spec["cases"]) if spec is not None else None,
+    }
+
+
+def git_dirty_state() -> dict:
+    """脏工作树证据(#350 ⑧):dirty = status --porcelain 非空(含未跟踪);
+    patch/diff_sha256 基于 `git diff HEAD`(已跟踪未提交改动;未跟踪文件不进
+    patch,由 dirty 标记单独披露)。git 不可用时 dirty=None(不伪造)。"""
+    status = _git_output("status", "--porcelain")
+    if status is None:
+        return {"git_dirty": None, "git_diff_sha256": None, "patch": ""}
+    diff = _git_output("diff", "HEAD") or ""
+    return {
+        "git_dirty": bool(status.strip()),
+        "git_diff_sha256": hashlib.sha256(diff.encode("utf-8")).hexdigest() if diff else None,
+        "patch": diff,
+    }
+
+
+def _git_output(*cmd: str) -> str | None:
+    """git 子命令输出(列表形参,无 shell);失败/不可用返回 None(不伪造)。"""
+    try:
+        out = subprocess.run(["git", *cmd], cwd=REPO, capture_output=True,
+                             text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return out.stdout if out.returncode == 0 else None
+
+
+def build_plan(effective: dict, cases: list[dict]) -> dict:
+    """--plan 的计划对象(#350 ②):与活跑同源解析(resolve_round),计划即事实。
+
+    调用规模是估算口径:每案 tutor ≈ 首问 1 + 学生轮数(judge 关闭不计),
+    不含修复重调/重试/降级——上界未封,数字仅供排队与夜间窗口规划。"""
+    tutor_est = sum(1 + len(c.get("student_turns") or c.get("steps") or []) for c in cases)
+    judge_est = len(cases) if effective["judge"] else 0
+    dirty = git_dirty_state()
+    return {
+        "name": effective["name"],
+        "corpora": effective["corpora"],
+        "resolved_cases": [c["id"] for c in cases],
+        "judge": effective["judge"],
+        "concurrency": effective["concurrency"],
+        "git_sha": _git_sha(),
+        "git_dirty": dirty["git_dirty"],
+        "git_diff_sha256": dirty["git_diff_sha256"],
+        "call_scale": {"tutor_est": tutor_est, "judge_est": judge_est,
+                       "total_est": tutor_est + judge_est,
+                       "caliber": "估算:首问+每学生轮各 1 tutor;judge 每案 1;不含修复重调与重试"},
+    }
+
+
+def format_plan(plan: dict) -> str:
+    """计划 → 人读文本(--plan 打印件;零模型调用)。"""
+    scale = plan["call_scale"]
+    lines = [
+        f"name: {plan['name']}",
+        f"corpora: {','.join(plan['corpora'])}",
+        f"resolved_cases ({len(plan['resolved_cases'])}): {','.join(plan['resolved_cases'])}",
+        f"judge: {'on' if plan['judge'] else 'off(0 judge calls)'}",
+        f"concurrency: {plan['concurrency']}",
+        f"git_sha: {plan['git_sha']}",
+        f"git_dirty: {plan['git_dirty']}",
+        f"git_diff_sha256: {plan['git_diff_sha256']}",
+        f"call_scale: tutor≈{scale['tutor_est']} + judge≈{scale['judge_est']}"
+        f" = ≈{scale['total_est']} calls({scale['caliber']})",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def resolve_round(args, spec: dict | None) -> tuple[dict, dict[str, dict], list[dict], list[str]]:
+    """corpora/cases/judge/concurrency 统一解析(#350 ①④⑥):--plan 与活跑同一条
+    路径,计划打印的即活跑将执行的。"""
+    effective = merge_options(args, spec)
+    scenarios = real_model_scenarios([Path(p) for p in effective["corpora"]])
+    if effective["cases"] is not None:
+        wanted = resolve_spec_cases(effective["cases"], scenarios)
+        scenarios = {case_id: scenarios[case_id] for case_id in wanted}
+    cases, skipped = build_cases(scenarios)
+    return effective, scenarios, cases, skipped
+
+
+def judge_gate(gateway: Gateway, scenarios: dict[str, dict],
+               results: list[dict], enabled: bool) -> dict[str, dict]:
+    """judge 启停闸(#350 ③):关 = 硬零 judge calls(judge_rows 不进,网关零触达)。"""
+    return judge_rows(gateway, scenarios, results) if enabled else {}
+
+
+def dump_spec_artifacts(out_dir: Path, source_path: Path, resolved: dict) -> str:
+    """run spec 双工件(#350 ⑦):source 原样拷贝 + resolved(含指纹)落运行根目录。
+
+    指纹 = canonical JSON(resolved,排序键,去 resolved_sha256 自身)的 sha256;
+    resume 身份校验(⑨)与 manifest identity 消费同一指纹。"""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source_path, out_dir / "run-spec.source.yaml")
+    payload = {k: v for k, v in resolved.items() if k != "resolved_sha256"}
+    fingerprint = hashlib.sha256(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+    body = {**payload, "resolved_sha256": fingerprint}
+    (out_dir / "run-spec.resolved.json").write_text(
+        json.dumps(body, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    return fingerprint
+
+
+def resume_run_dir(collect_root: Path, cases_sha256: str, identity: dict) -> Path | None:
+    """续跑闸(#350 ⑨):上轮 run 未完成 → 校验身份一致才返回该目录(续跑),
+    不一致 ResumeMismatch(防拿另一份未提交代码/另一份 spec 续跑旧结果);
+    上轮已完成 → None(照旧新开目录,不拦截改配方重跑)。
+
+    身份面:git_sha / git_diff_sha256 / run_spec_sha256 / case 集哈希;
+    配置与被测对象由 runner._verify_resume 在显式 run_dir 路径二次核对。"""
+    runs = sorted(collect_root.glob("*-*Z-*"))
+    if not runs:
+        return None
+    prior = runs[-1]
+    manifest = json.loads((prior / "manifest.json").read_text(encoding="utf-8"))
+    done = list((prior / "results").glob("*.json"))
+    statuses = [json.loads(p.read_text(encoding="utf-8"))["status"] for p in done]
+    incomplete = manifest["total_cases"] > len(done) or "environment" in statuses
+    if not incomplete:
+        return None
+    prior_identity = manifest.get("identity") or {}
+    mismatches = [key for key in ("git_sha", "git_diff_sha256", "run_spec_sha256")
+                  if identity.get(key) != prior_identity.get(key)]
+    if manifest["dataset"]["sha256"] != cases_sha256:
+        mismatches.append("case 集(cases.jsonl)")
+    if mismatches:
+        raise ResumeMismatch(
+            f"{prior} 未完成且身份不一致:{'/'.join(mismatches)}——续跑被拒,换新 --out 目录")
+    return prior
 
 
 def real_model_scenarios(corpus_paths: list[Path]) -> dict[str, dict]:
@@ -402,6 +634,18 @@ def _compute_diff(diff_from: str | None, scenarios: dict, checks: dict):
     return verdicts, scores
 
 
+def _judge_cell(score: dict, diff: dict | None, case_id: str) -> str:
+    """报告 judge 列:评分失败 / judge 关闭(run-spec,#350 ③)/ 分数(带跨轮前缀)。"""
+    if "error" in score:
+        return f"评分失败:{score['error'][:40]}"
+    if not score:
+        return "judge 关闭(run-spec)"  # judge:off 的 ok 行;空分不冒充 0 分
+    prev_total = ((diff or {}).get("prev_scores") or {}).get(case_id, {}).get("total")
+    prefix = f"{prev_total}→" if prev_total is not None else ""
+    return (f"total={prefix}{score.get('total')} {score.get('verdict')}"
+            f" 追问={score.get('scores', {}).get('socratic_followup')}")
+
+
 def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict],
                   diff: dict | None = None, skipped: list[str] | None = None,
                   provenance: dict | None = None) -> str:
@@ -448,13 +692,7 @@ def render_report(out_dir: Path, checks: dict[str, dict], scores: dict[str, dict
         else:
             check_cell = "全绿"
         score = scores.get(case_id, {})
-        if "error" in score:
-            judge_cell = f"评分失败:{score['error'][:40]}"
-        else:
-            prev_total = ((diff or {}).get("prev_scores") or {}).get(case_id, {}).get("total")
-            prefix = f"{prev_total}→" if prev_total is not None else ""
-            judge_cell = (f"total={prefix}{score.get('total')} {score.get('verdict')}"
-                          f" 追问={score.get('scores', {}).get('socratic_followup')}")
+        judge_cell = _judge_cell(score, diff, case_id)
         diff_cell = diff["verdicts"].get(case_id, "-") if diff else "-"
         lines.append(f"| {case_id} | ok | {row['final_state']} | {check_cell} | {diff_cell} | {judge_cell} |")
     return "\n".join(lines) + "\n"
@@ -506,11 +744,13 @@ def render_from(out_dir: Path, diff_from: str | None = None) -> int:
     return 0
 
 
-def _live_round(args, gateway: Gateway, facts_dir: Path) -> int:
+def _live_round(args, gateway: Gateway, facts_dir: Path,
+                spec: dict | None = None, spec_source: Path | None = None) -> int:
     """活跑路径(#257 审 P3 后从 main 拆出:语句预算 PLR0915 + 平铺);facts
-    tempdir 的清理在 main 的 finally(任何退出路径不留残骸)。"""
-    scenarios = real_model_scenarios([Path(p) for p in (args.corpus or DEFAULT_CORPUS)])
-    cases, skipped = build_cases(scenarios)
+    tempdir 的清理在 main 的 finally(任何退出路径不留残骸)。
+    #350:spec 在场时经 resolve_round 统一解析(CLI > spec > 默认;case 子集),
+    spec 双工件与 dirty patch 落运行根目录,manifest identity 带 spec 指纹。"""
+    effective, scenarios, cases, skipped = resolve_round(args, spec)
     if skipped:
         print(f"跳过无剧本场景 {len(skipped)} 条(模拟器消费面未接线,#211 边界):{','.join(skipped)}")
     if not cases:
@@ -518,19 +758,37 @@ def _live_round(args, gateway: Gateway, facts_dir: Path) -> int:
         return 1
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
+    identity = run_identity()
+    if spec is not None and spec_source is not None:
+        resolved_payload = {**{k: v for k, v in effective.items() if k != "cases"},
+                            "version": RUN_SPEC_VERSION,
+                            "resolved_cases": [c["id"] for c in cases]}
+        identity["run_spec_sha256"] = dump_spec_artifacts(out_dir, spec_source, resolved_payload)
     cases_file = out_dir / "cases.jsonl"
     cases_file.write_text("\n".join(json.dumps(c, ensure_ascii=False) for c in cases) + "\n",
                           encoding="utf-8")
     collect_root = out_dir / "collect"
+    resume_dir = resume_run_dir(collect_root, _file_sha256(cases_file), identity)
+    if resume_dir is not None:
+        print(f"续跑:{resume_dir}(上轮未完成,身份一致)")
     print(f"批跑:{len(cases)} 场景(真模型口径;确定性口径不在本面)→ {collect_root}")
-    EvalRunner(KernelSubject(gateway), RunnerConfig(concurrency=args.concurrency),
-               collect_root).run(cases_file, cases, identity=run_identity())
-    run_dir = sorted(collect_root.glob("*-*Z-*"))[-1]
+    runner = EvalRunner(KernelSubject(gateway), RunnerConfig(concurrency=effective["concurrency"]),
+                        collect_root)
+    runner.run(cases_file, cases, run_dir=resume_dir, identity=identity)
+    run_dir = resume_dir or sorted(collect_root.glob("*-*Z-*"))[-1]
+    dirty = git_dirty_state()
+    if identity.get("git_dirty") and dirty["patch"]:
+        # ⑧:dirty 证据进 run 目录;仅未跟踪文件变脏时 patch 为空,由 git_diff_sha256=None 自述
+        (run_dir / "worktree.patch").write_text(dirty["patch"], encoding="utf-8")
     results = load_results(run_dir)
 
     checks = check_rows(scenarios, results)
-    print(f"评分:{sum(1 for r in results if r['status'] == 'ok')} 行(judge 单遍 primary)")
-    scores = judge_rows(gateway, scenarios, results)
+    if effective["judge"]:
+        print(f"评分:{sum(1 for r in results if r['status'] == 'ok')} 行(judge 单遍 primary)")
+        scores = judge_rows(gateway, scenarios, results)
+    else:
+        print("judge:off(run-spec)——本跑 0 judge calls")
+        scores = {}
 
     def dump(path: Path, rows: dict[str, dict]) -> None:
         path.write_text("\n".join(json.dumps({"case_id": k, **v}, ensure_ascii=False)
@@ -538,10 +796,12 @@ def _live_round(args, gateway: Gateway, facts_dir: Path) -> int:
 
     # 判定与 judge 分按轮留存在各自 run 目录(与 transcript 同处 = 该轮自足可复算);
     # out_dir 根下同名文件是最新一轮的便捷副本。—— 审查 P3(2026-09-12)
+    # judge:off 不落 judge-scores(空文件冒充评分面比缺文件更糟,#350 ③)
     dump(run_dir / "checks.jsonl", checks)
-    dump(run_dir / "judge-scores.jsonl", scores)
     dump(out_dir / "checks.jsonl", checks)
-    dump(out_dir / "judge-scores.jsonl", scores)
+    if effective["judge"]:
+        dump(run_dir / "judge-scores.jsonl", scores)
+        dump(out_dir / "judge-scores.jsonl", scores)
 
     # #238 件 B:model_call facts(tutor + judge 全轮)落 run 目录——原 tempdir 随进程丢,
     # 落盘后该轮自足(offline rescore 的地基),报告层据此拆三口径。
@@ -564,23 +824,54 @@ def _live_round(args, gateway: Gateway, facts_dir: Path) -> int:
     return 0
 
 
+def _plan_mode(args, spec: dict | None) -> int:
+    """--plan(#350 ②):零模型调用打印计划后退出;解析类失败干净退 2。"""
+    try:
+        effective, _scenarios, cases, skipped = resolve_round(args, spec)
+    except ValueError as exc:
+        print(f"计划解析失败:{exc}", file=sys.stderr)
+        return 2
+    if skipped:
+        print(f"跳过无剧本场景 {len(skipped)} 条(#211 边界):{','.join(skipped)}")
+    print(format_plan(build_plan(effective, cases)), end="")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--corpus", action="append", default=[],
-                        help="corpus 数据集 JSON(可多次;缺省 = teaching_context pilot 20)")
+                        help="corpus 数据集 JSON(可多次;缺省 = teaching_context pilot 20;"
+                             "#350 ④:CLI 优先于 --config 的 corpora)")
     parser.add_argument("--out", help="运行根目录(cases/collect/report 落这里;跑批模式必填)")
     parser.add_argument("--diff-from", dest="diff_from", default=None,
                         help="上轮 collect 下某 run 目录(跨轮对照)")
     parser.add_argument("--render-from", dest="render_from_arg", metavar="OUT_DIR",
                         help="不跑批:从既有运行根目录(cases.jsonl/collect/…)零模型重渲染"
                              " report.md;可配 --diff-from(#257 审 P3-2,tuning_round 同款先例)")
-    parser.add_argument("--concurrency", type=int, default=2)
+    parser.add_argument("--config", type=Path, default=None,
+                        help="run spec YAML(#350 V0:version/name/corpora/cases/judge/"
+                             "concurrency 封闭五字段;只管怎么跑,不管产品行为)")
+    parser.add_argument("--plan", action="store_true",
+                        help="零模型调用:打印执行计划(resolved cases/judge 启停/并发/"
+                             "git SHA/dirty/调用规模)后退出——在端点预检之前,不建网关")
+    parser.add_argument("--concurrency", type=int, default=None,
+                        help="并发(缺省 = run-spec 的 concurrency,再缺省 2;#350 ④ 三级优先)")
     args = parser.parse_args(argv)
 
     if args.render_from_arg:
         return render_from(Path(args.render_from_arg), args.diff_from)
+
+    spec = None
+    if args.config is not None:
+        try:
+            spec = load_run_spec(args.config)
+        except ValueError as exc:
+            print(f"run spec 校验失败:{exc}", file=sys.stderr)
+            return 2
+    if args.plan:
+        return _plan_mode(args, spec)
     if not args.out:
-        parser.error("跑批模式需要 --out;纯重渲染用 --render-from <运行根目录>")
+        parser.error("跑批模式需要 --out;纯重渲染用 --render-from <运行根目录>;看计划用 --plan")
 
     registry = load_registry(REPO / "configs" / "models.yaml")
     probes = {name: _probe(provider.base_url) for name, provider in registry.providers.items()}
@@ -591,7 +882,11 @@ def main(argv: list[str] | None = None) -> int:
     facts_dir = Path(tempfile.mkdtemp(prefix="corpus-round-facts-"))
     gateway = Gateway(registry, facts_dir=facts_dir)
     try:
-        return _live_round(args, gateway, facts_dir)
+        return _live_round(args, gateway, facts_dir, spec, args.config)
+    except (ValueError, ResumeMismatch) as exc:
+        # fail fast/fail closed 走干净退出码(2),不甩 traceback(夜间无人值守可读)
+        print(f"运行失败:{type(exc).__name__}: {exc}", file=sys.stderr)
+        return 2
     finally:
         # #257 审 P3-1:facts 已落 run 目录,tempdir 保留理由消失;任何退出路径不留残骸。
         shutil.rmtree(facts_dir, ignore_errors=True)
