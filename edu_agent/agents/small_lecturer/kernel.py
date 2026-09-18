@@ -330,6 +330,27 @@ def _soften_step_text(step_text: str, answer_numbers: frozenset[float]) -> tuple
     return masked, "mask" if masked else "none"
 
 
+def _current_step_anchor_numbers(session: "LearnerSession", step: dict) -> set[float]:
+    """泄露网 V1(#333 裁定 c5717512971):当前步的**可授权中间值锚**。
+
+    anchor = numbers(step.value) − answer_pool,且**无双重身份**:value 数字与
+    answer_pool 任一重叠 → 整步禁(返回空集,fail-closed)——单步题(value=终答)、
+    多部件答案、末级步(value 即终答)天然落禁面。answer_pool 用全量
+    `_answer_numbers`(漂移池口径,question.answer 优先/steps 末值兜底);
+    **勿用 `_answer_focus_numbers` 做锚减法**——focus 剔题面数是「已陈述」判据口径,
+    不是保护面(题面数不减:授权面含题面数无害,保护面一个都不能少)。
+
+    七条件收敛(裁定原文):stuck × telling 由调用方结构保证(`_reveal_stuck_hint`
+    只从 `_stuck_hint` 的 telling 分支到达);next step 存在由调用方 step 非 None;
+    hint_level>0 / state≠ready_to_confirm 同由调用方判定——本函数只管数字面:
+    value 非空、anchor 非空、∩answer_pool=∅。纯函数:只读 step 与 session 的
+    question/steps,不知道 stuck/telling/hint_level(Q7:归因不进 numeric.py)。"""
+    value_numbers = _question_numbers(str(step.get("value") or ""))
+    if not value_numbers or value_numbers & _answer_numbers(session):
+        return set()
+    return value_numbers
+
+
 def _reveal_stuck_hint(session: "LearnerSession") -> str:
     """学生卡住/复读兜底 → 揭示下一级阶梯(确定性,零模型调用,不重复)。
 
@@ -338,6 +359,15 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     NEEDS_REVIEW_TEXT,#185);
     开场用 _STEP_LEADS 轮换,避免固定前缀生硬。
     模型措辞版实测会重复(3/7)且过度揭示,故仍用确定性。
+
+    泄露网 V1 窄授权(#333 裁定 c5717512971,**新产品 policy,非 guard 误报修复**——
+    事实:reveal 档从未有过锚豁免,`_soften_step_text` 一直在收回算式结果,#165 WS4):
+    **再次 stuck**(进入本函数前 hint_level>0,裁定 Q2 的机械代理)且 state≠
+    ready_to_confirm 时,若当前步 value 通过 `_current_step_anchor_numbers`
+    (非空 + 与 answer_pool 无双重身份),reveal 文本附当前步中间值
+    (「这一步先算,得到 X」);**首次 stuck(hint_level==0)不给任何数值**,
+    现有动作化 reveal 原样。模型自由生成路径零例外(锚由本确定性路径产生,
+    不是放行模型输出)。
 
     埋点(#112 评审建议):三条调用方(卡壳揭示 / 复读降级 / 输出面背板)统一在此记
     `{branch: reveal, hint_level}`,hint_level 为消耗后的级数——记的是**阶梯消耗**
@@ -348,6 +378,7 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     无终答 bottom-out(无 answer 可披露时,无前缀亦无 dropped,两项统计均不可见——
     罕见,要数需先加事件)与弃用轮(dropped 可筛);bottom-out 率按「这一步我们
     直接看结果:」前缀统计、勿按文本匹配(会把弃用轮算进);复讲引导同 _ELICIT_TEMPLATE。"""
+    re_stuck = session.hint_level > 0  # V1:首次 stuck=0 不给数值;再次 stuck 才有授权资格(推进前捕获)
     step = _next_step(session)
     session.guard_events.append({"branch": "reveal", "hint_level": session.hint_level})
     if step is None:
@@ -367,8 +398,16 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
         return NEEDS_REVIEW_TEXT
     if soften_path != "none":  # 只在真命中两路径时写:无泄漏保留/弃用轮不加键(整 dict 断言不变)
         session.guard_events[-1]["soften"] = soften_path  # #241 行 4:cut(分句收回)/mask(改写「几」)
+    # 泄露网 V1(#333):七条件过 → 动作化文本附当前步中间值;审计单字段 anchor_numbers
+    # (additive,只在授权轮写;未授权轮不加键,整 dict 断言不变,#187/A4 指标连续)。
+    anchor = (set() if session.state == "ready_to_confirm"
+              else _current_step_anchor_numbers(session, step)) if re_stuck else set()
     # 句末标点由模板统一补:step/answer 自带「。」先剥掉,不叠「。。」
     # (#198 独立审查实测:生产揭示轮 9/14 双句号,学生可见面)。
+    if anchor:
+        shown = "、".join(str(int(n)) if n == int(n) else str(n) for n in sorted(anchor))
+        session.guard_events[-1]["anchor_numbers"] = sorted(anchor)
+        return f"{lead}:{step_text.rstrip('。.')}。这一步先算,得到 {shown}。你接着算下一步。"
     return f"{lead}:{step_text.rstrip('。.')}。你接着算下一步。"
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # finish() 证据不足·correct 档(2026-09-16 用户裁,撤销摸底答对直接完成):答对过
