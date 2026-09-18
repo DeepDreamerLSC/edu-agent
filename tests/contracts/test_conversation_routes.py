@@ -9,14 +9,13 @@ idempotency_key 必填}——external_question_id 走题源,question_text/questi
 from __future__ import annotations
 
 import pytest
-from partner_api import MapSource, RecordingKernel, get, post, serving
+from partner_api import MapSource, RecordingKernel, get, post
 
 
 @pytest.fixture
-def env():
+def env(serve):
     kernel = RecordingKernel(["我们先看已知条件,题目要我们求什么?"])
-    with serving(kernel, source=MapSource()) as base:
-        yield base, kernel
+    return serve(kernel, source=MapSource()), kernel
 
 
 def test_create_then_get_roundtrip(env):

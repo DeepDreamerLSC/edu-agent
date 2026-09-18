@@ -13,13 +13,12 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from partner_api import ScriptedKernel, serving
+from partner_api import ScriptedKernel
 
 
 @pytest.fixture
-def healthz_url():
-    with serving(ScriptedKernel(["嗯,你接着说"], start_text="第一问")) as base:
-        yield f"{base}/healthz"
+def healthz_url(serve):
+    return serve(ScriptedKernel(["嗯,你接着说"], start_text="第一问")) + "/healthz"
 
 
 def _get(url: str) -> dict:
