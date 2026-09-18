@@ -26,6 +26,9 @@ CASE_IDS = [
     "image_v2_understanding_04",  # elicit 线(理解信号)
     "image_v2_stuck_01",        # support 线(再次 stuck→V1 锚过应实证)
     "image_v2_stuck_02",        # support 线
+    # 裁 b 补验(#333 5727499202 冻结):二次卡壳+数字步骤,中间值≠终答
+    "image_v2_v1anchor_01",     # 12米剪1/3 剩(中间值4/终答8)
+    "image_v2_v1anchor_02",     # 4分米剪1/4 剩(中间值1/终答3)
 ]
 
 
