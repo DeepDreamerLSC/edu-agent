@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""T1 压测 stub 上游(#255 判据2 第1件):固定文本/固定延迟的假模型响应。
+
+零产品代码改动:经 EDU_MODELS_YAML 把隔离实例的 provider 指到本进程。
+路线 1 的 schema 以文本附在 user 消息里(_SCHEMA_INSTRUCTION),本 stub 解析
+该 schema 并按类型最小填充(固定内容),覆盖 open/turn/summary 任意形状。
+stdio 日志一行一请求(role 不感知,只记延迟与流式与否)。
+"""
+import asyncio
+import json
+import os
+import time
+from http import HTTPStatus
+
+from asyncio import StreamReader, StreamWriter
+
+DELAY_S = float(os.environ.get("STUB_DELAY_MS", "150")) / 1000.0
+PORT = int(os.environ.get("STUB_PORT", "8321"))
+
+_MARK = "严格遵守以下 JSON Schema:"
+
+
+def _fill(schema: dict) -> object:
+    """按 JSON Schema 类型最小填充(固定值;array→[] 使各形状均合法)。"""
+    if not isinstance(schema, dict):
+        return ""
+    t = schema.get("type")
+    if t == "object":
+        return {k: _fill(v) for k, v in schema.get("properties", {}).items()}
+    if t == "boolean":
+        return True
+    if t == "number":
+        return 0
+    if t == "array":
+        return []
+    return "我们先理清这一步的思路:说说你已经算出了什么、下一步打算怎么算。"
+
+
+def _content_from(messages: list) -> str:
+    """从消息里找 schema 指令并填形;找不到则回退 turn 形状。"""
+    for m in reversed(messages or []):
+        text = m.get("content") if isinstance(m.get("content"), str) else ""
+        if _MARK in text:
+            try:
+                schema = json.loads(text.split(_MARK, 1)[1].strip())
+                return json.dumps(_fill(schema), ensure_ascii=False)
+            except json.JSONDecodeError:
+                pass
+    return json.dumps({"reason": "r", "reply": "先说说你这一步怎么想的。",
+                       "ready_to_confirm": False, "cited_numbers": []},
+                      ensure_ascii=False)
+
+
+async def _handle(reader: StreamReader, writer: StreamWriter) -> None:
+    try:
+        line = await reader.readline()
+        parts = line.decode().split()
+        method, path = (parts[0], parts[1]) if len(parts) >= 2 else ("", "")
+        headers = {}
+        while True:
+            h = await reader.readline()
+            if h in (b"\r\n", b"\n", b""):
+                break
+            k, _, v = h.decode().partition(":")
+            headers[k.strip().lower()] = v.strip()
+        body = await reader.readexactly(int(headers.get("content-length", 0) or 0)) \
+            if headers.get("content-length") else b""
+        await asyncio.sleep(DELAY_S)
+        if method == "GET":  # /v1/models 探针:任意应答即可达
+            payload = json.dumps({"object": "list", "data": [
+                {"id": "stub-model"}]}).encode()
+            writer.write(b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
+                         + f"Content-Length: {len(payload)}\r\n\r\n".encode() + payload)
+        else:
+            req = json.loads(body or b"{}")
+            content = _content_from(req.get("messages"))
+            model = req.get("model", "stub")
+            if req.get("stream"):
+                writer.write(b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\n\r\n")
+                chunk = {"id": "stub", "object": "chat.completion.chunk", "model": model,
+                         "choices": [{"index": 0, "delta": {"role": "assistant"},
+                                      "finish_reason": None}]}
+                writer.write(f"data: {json.dumps(chunk)}\n\n".encode())
+                chunk["choices"] = [{"index": 0, "delta": {"content": content},
+                                     "finish_reason": "stop"}]
+                writer.write(f"data: {json.dumps(chunk)}\n\n".encode())
+                writer.write(b"data: [DONE]\n\n")
+            else:
+                payload = json.dumps({"id": "stub", "object": "chat.completion",
+                                      "model": model,
+                                      "choices": [{"index": 0, "finish_reason": "stop",
+                                                   "message": {"role": "assistant",
+                                                               "content": content}}],
+                                      "usage": {"prompt_tokens": 10,
+                                                "completion_tokens": 5,
+                                                "total_tokens": 15}}).encode()
+                writer.write(b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
+                             + f"Content-Length: {len(payload)}\r\n\r\n".encode() + payload)
+        await writer.drain()
+    except Exception as error:  # noqa: BLE001 - stub 不静默,日志一行
+        print(f"[stub] error: {type(error).__name__}: {error}", flush=True)
+    finally:
+        writer.close()
+
+
+async def main() -> None:
+    server = await asyncio.start_server(_handle, "127.0.0.1", PORT)
+    print(f"[stub] listening on 127.0.0.1:{PORT} delay={DELAY_S}s", flush=True)
+    async with server:
+        await server.serve_forever()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
