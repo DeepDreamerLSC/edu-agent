@@ -1,0 +1,356 @@
+{
+ "source": {
+  "task": "user-session-extract(#333 no-progress-fix M1;原派 B 改派 A,用户已批加急)",
+  "db": "生产 edu-agent.db 只读(deploy 重启窗 2026-09-18T11:02:29+0800 后)",
+  "conversation_id": "conv_4fb858a0bb45",
+  "kernel_session_id": "kernel_71b01ac347",
+  "created_at": "2026-09-18T03:16:38.074348Z",
+  "idempotency_key": "demo-6a61aa32-1789701389210",
+  "non_smoke": true,
+  "selection": "重启窗后非冒烟(m3-smoke-*)最新会话",
+  "desensitization": "零操作(learner 仅 grade/answer_status/provenance,无姓名/ID/联系方式;题目内容全保留)"
+ },
+ "question": {
+  "question_id": "6a61aa32",
+  "text": "等边三角形草地三个顶点分别住着小羊、小兔、小马，边长20m。按方位描述四只题目中的相对位置并写距离。",
+  "answer": "北偏西30°20m；北偏东30°20m；南偏西30°20m；南偏东30°20m。",
+  "analysis": "等边三角形三边相等，方向由对称与60°顶角确定。",
+  "knowledge_points": []
+ },
+ "learner": {
+  "grade": "六年级",
+  "answer_correct_provenance": "partner_question_bank",
+  "answer_status": "incorrect"
+ },
+ "turns": [
+  {
+   "n": 1,
+   "role": "user",
+   "content": "三只小动物呈现了三角形的关系"
+  },
+  {
+   "n": 1,
+   "role": "assistant",
+   "content": "你说到三只小动物在三角形里，那你是怎么想到它们之间有方向和距离关系的呢？"
+  },
+  {
+   "n": 2,
+   "role": "user",
+   "content": "如果以小兔为原点，小马再小兔的东方，小羊在小兔的东北方"
+  },
+  {
+   "n": 2,
+   "role": "assistant",
+   "content": "你说到小羊在小兔的东北方，那如果小马在小兔正东，小羊和小马之间是不是也像这样对称？你能说说小羊和小马的相对方向吗？"
+  },
+  {
+   "n": 3,
+   "role": "user",
+   "content": "小羊在小马的西北方"
+  },
+  {
+   "n": 3,
+   "role": "assistant",
+   "content": "你刚才说小羊在小马的西北方，那如果小马在小兔正东，小羊在小兔东北方，小马和小羊之间是不是也像这样对称？你能说说小马和小兔的相对方向吗？"
+  },
+  {
+   "n": 4,
+   "role": "user",
+   "content": "小兔在小马的正西方"
+  },
+  {
+   "n": 4,
+   "role": "assistant",
+   "content": "你刚才说小兔在小马正西，这和你之前说小马在小兔正东是一致的，那小羊在小马的西北方，小马和小羊之间是不是也像这样对称？你能说说小羊和小兔的相对方向吗？"
+  },
+  {
+   "n": 5,
+   "role": "user",
+   "content": "小羊在小兔的东北方"
+  },
+  {
+   "n": 5,
+   "role": "assistant",
+   "content": "你说到小羊在小兔的东北方，这一步很准！但小羊和小马之间还有对称方向没说清楚，你能说说小羊在小马的什么方向吗？"
+  },
+  {
+   "n": 6,
+   "role": "user",
+   "content": "小羊在小马的西北方"
+  },
+  {
+   "n": 6,
+   "role": "assistant",
+   "content": "你刚才说小羊在小马的西北方，这一步很准！那小羊和小兔之间是不是也像这样对称？你能说说小羊在小兔的什么方向吗？"
+  },
+  {
+   "n": 7,
+   "role": "user",
+   "content": "小羊在小兔的东北方"
+  },
+  {
+   "n": 7,
+   "role": "assistant",
+   "content": "你说到小羊在小兔的东北方，这一步很准！但小羊和小马之间还有对称方向没说清楚，你能说说小羊在小马的什么方向吗？"
+  },
+  {
+   "n": 8,
+   "role": "user",
+   "content": "小羊在小马的西北方"
+  },
+  {
+   "n": 8,
+   "role": "assistant",
+   "content": "你说到小羊在小马的西北方，这一步很准！那小马和小兔之间是不是也像这样对称？你能说说小马在小兔的什么方向吗？"
+  },
+  {
+   "n": 9,
+   "role": "user",
+   "content": "小马再小兔的东方"
+  },
+  {
+   "n": 9,
+   "role": "assistant",
+   "content": "你刚才说小马在小兔正东，小羊在小兔东北方，那小羊和小马之间是不是也像这样对称？你能说说小羊在小马的什么方向吗？"
+  }
+ ],
+ "state_trajectory": {
+  "session_version_final": 10,
+  "hint_level_final": 0,
+  "reveal_count": 0,
+  "support_move_sequence": [],
+  "per_turn_state": [
+   {
+    "turn": 1,
+    "branch": "model",
+    "gate": "observed"
+   },
+   {
+    "turn": 2,
+    "branch": "model",
+    "gate": "blocked"
+   },
+   {
+    "turn": 2,
+    "branch": "model",
+    "gate": "observed"
+   },
+   {
+    "turn": 3,
+    "branch": "model",
+    "gate": "blocked"
+   },
+   {
+    "turn": 3,
+    "branch": "model",
+    "gate": "observed"
+   },
+   {
+    "turn": 4,
+    "branch": "model",
+    "gate": "observed"
+   },
+   {
+    "turn": 5,
+    "branch": "model",
+    "gate": "observed"
+   },
+   {
+    "turn": 6,
+    "branch": "model",
+    "gate": "observed"
+   },
+   {
+    "turn": 6,
+    "branch": "model",
+    "gate": "observed"
+   },
+   {
+    "turn": 7,
+    "branch": "model",
+    "gate": "observed"
+   },
+   {
+    "turn": 8,
+    "branch": "model",
+    "gate": "observed"
+   },
+   {
+    "turn": 9,
+    "branch": "model",
+    "gate": "blocked"
+   },
+   {
+    "turn": 9,
+    "branch": "model",
+    "gate": "observed"
+   }
+  ]
+ },
+ "guard_events": [
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 1
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [
+    30.0,
+    60.0
+   ],
+   "violation_sources": [
+    {
+     "number": 30.0,
+     "source": "answer"
+    },
+    {
+     "number": 60.0,
+     "source": "hallucinated"
+    }
+   ],
+   "gate": "blocked",
+   "turn": 2
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 2
+  },
+  {
+   "guard": "answer_leak",
+   "rule_ids": [
+    "source_value_disclosure:answer",
+    "source_value_disclosure:hallucinated"
+   ],
+   "original": "你说到小马在小兔的东方、小羊在东北方，这很直观！但等边三角形的三个顶点，每个角都是60°，方向应该对称分布，比如小马在小兔正东，小羊应该在小兔北偏东30°，你能再想想怎么用‘偏’字描述小羊和小马的准确方向吗？",
+   "regenerated": true,
+   "turn": 2
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [
+    30.0,
+    60.0
+   ],
+   "violation_sources": [
+    {
+     "number": 30.0,
+     "source": "answer"
+    },
+    {
+     "number": 60.0,
+     "source": "hallucinated"
+    }
+   ],
+   "gate": "blocked",
+   "turn": 3
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 3
+  },
+  {
+   "guard": "answer_leak",
+   "rule_ids": [
+    "source_value_disclosure:answer",
+    "source_value_disclosure:hallucinated"
+   ],
+   "original": "你说到小羊在小马的西北方，这个方向感不错，但等边三角形里每个角都是60°，我们得用更精确的方向描述，比如北偏西30°，你能说说小兔和小马之间的方向吗？",
+   "regenerated": true,
+   "turn": 3
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 4
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 5
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 6
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 6
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 7
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 8
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [
+    30.0
+   ],
+   "violation_sources": [
+    {
+     "number": 30.0,
+     "source": "answer"
+    }
+   ],
+   "gate": "blocked",
+   "turn": 9
+  },
+  {
+   "branch": "model",
+   "cited": [],
+   "extracted": [],
+   "violation_sources": [],
+   "gate": "observed",
+   "turn": 9
+  },
+  {
+   "guard": "answer_leak",
+   "rule_ids": [
+    "source_value_disclosure:answer"
+   ],
+   "original": "你说到小马在小兔正东，小羊在小兔东北，小羊在小马西北，这三者位置关系已经很清晰了！但题目要求用‘北偏东30°’这样的方位描述，你能说说小兔看小马的具体方向吗？",
+   "regenerated": true,
+   "turn": 9
+  }
+ ]
+}

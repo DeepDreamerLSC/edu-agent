@@ -1,0 +1,22 @@
+{
+ "seed": 20260919,
+ "note": "臂→盲标随机映射(seed=20260919);盲审完成前不得启封;启封后注记:护栏张力天花板说明与三层定性见 real-case-v1/README.md",
+ "pairs": {
+  "pair-1": {
+   "baseline": "A",
+   "candidate": "B"
+  },
+  "pair-2": {
+   "baseline": "A",
+   "candidate": "B"
+  },
+  "pair-3": {
+   "baseline": "B",
+   "candidate": "A"
+  },
+  "pair-4": {
+   "baseline": "A",
+   "candidate": "B"
+  }
+ }
+}
