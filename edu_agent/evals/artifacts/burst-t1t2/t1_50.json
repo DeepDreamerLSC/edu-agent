@@ -1,0 +1,966 @@
+{
+ "config": {
+  "workers": 50,
+  "window_s": 2.0,
+  "question_id": "equation_subtract",
+  "base_url": "http://127.0.0.1:8310",
+  "wall_s": 19.2
+ },
+ "tally": {
+  "2xx": 400
+ },
+ "aggregates": {
+  "login_ms": {
+   "n": 50,
+   "p50": 1,
+   "p95": 2,
+   "max": 8
+  },
+  "open_ms": {
+   "n": 50,
+   "p50": 1863,
+   "p95": 3656,
+   "max": 3801
+  },
+  "turn1_ms": {
+   "n": 50,
+   "p50": 7655,
+   "p95": 7674,
+   "max": 7674
+  },
+  "turn2_ms": {
+   "n": 50,
+   "p50": 1,
+   "p95": 2,
+   "max": 4
+  },
+  "sse_ttfb_ms": {
+   "n": 50,
+   "p50": 3707,
+   "p95": 3841,
+   "max": 3845
+  },
+  "sse_total_ms": {
+   "n": 50,
+   "p50": 3707,
+   "p95": 3841,
+   "max": 3845
+  },
+  "confirm_ms": {
+   "n": 50,
+   "p50": 3102,
+   "p95": 3843,
+   "max": 3844
+  }
+ },
+ "sse_drops": 0,
+ "idempotency_breaks": 0,
+ "workers_ok": 50,
+ "confirm_statuses": {
+  "completed": 50
+ },
+ "healthz_samples": 12,
+ "healthz_probe_failures_max": 0,
+ "per_worker": [
+  {
+   "worker": 0,
+   "start_offset_s": 1.529,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 2762,
+    "turn1_ms": 7657,
+    "turn2_ms": 3,
+    "sse_ttfb_ms": 3516,
+    "sse_total_ms": 3516,
+    "confirm_ms": 2758
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 1,
+   "start_offset_s": 0.446,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 961,
+    "turn1_ms": 6584,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3840,
+    "sse_total_ms": 3840,
+    "confirm_ms": 3515
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 2,
+   "start_offset_s": 0.564,
+   "phases": {
+    "login_ms": 2,
+    "open_ms": 1280,
+    "turn1_ms": 7388,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3824,
+    "sse_total_ms": 3824,
+    "confirm_ms": 3366
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 3,
+   "start_offset_s": 1.628,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 2997,
+    "turn1_ms": 7670,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3360,
+    "sse_total_ms": 3361,
+    "confirm_ms": 2755
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 4,
+   "start_offset_s": 0.387,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 866,
+    "turn1_ms": 6434,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3841,
+    "sse_total_ms": 3841,
+    "confirm_ms": 3514
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 5,
+   "start_offset_s": 0.951,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 2118,
+    "turn1_ms": 7655,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3668,
+    "sse_total_ms": 3668,
+    "confirm_ms": 3101
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 6,
+   "start_offset_s": 0.172,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 599,
+    "turn1_ms": 5355,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3826,
+    "sse_total_ms": 3826,
+    "confirm_ms": 3712
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 7,
+   "start_offset_s": 1.37,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 2614,
+    "turn1_ms": 7658,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3517,
+    "sse_total_ms": 3517,
+    "confirm_ms": 2909
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 8,
+   "start_offset_s": 0.147,
+   "phases": {
+    "login_ms": 8,
+    "open_ms": 464,
+    "turn1_ms": 4921,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3845,
+    "sse_total_ms": 3845,
+    "confirm_ms": 3824
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 9,
+   "start_offset_s": 0.749,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 1424,
+    "turn1_ms": 7674,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3780,
+    "sse_total_ms": 3780,
+    "confirm_ms": 3255
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 10,
+   "start_offset_s": 1.76,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 3323,
+    "turn1_ms": 7671,
+    "turn2_ms": 4,
+    "sse_ttfb_ms": 3359,
+    "sse_total_ms": 3359,
+    "confirm_ms": 2600
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 11,
+   "start_offset_s": 0.837,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 1642,
+    "turn1_ms": 7673,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3781,
+    "sse_total_ms": 3781,
+    "confirm_ms": 3102
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 12,
+   "start_offset_s": 1.826,
+   "phases": {
+    "login_ms": 2,
+    "open_ms": 3537,
+    "turn1_ms": 7655,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3368,
+    "sse_total_ms": 3368,
+    "confirm_ms": 2600
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 13,
+   "start_offset_s": 0.197,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 751,
+    "turn1_ms": 6096,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3827,
+    "sse_total_ms": 3827,
+    "confirm_ms": 3672
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 14,
+   "start_offset_s": 0.875,
+   "phases": {
+    "login_ms": 2,
+    "open_ms": 1755,
+    "turn1_ms": 7674,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3782,
+    "sse_total_ms": 3782,
+    "confirm_ms": 3101
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 15,
+   "start_offset_s": 0.809,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 1646,
+    "turn1_ms": 7655,
+    "turn2_ms": 2,
+    "sse_ttfb_ms": 3708,
+    "sse_total_ms": 3708,
+    "confirm_ms": 3177
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 16,
+   "start_offset_s": 0.542,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 1173,
+    "turn1_ms": 7170,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3825,
+    "sse_total_ms": 3825,
+    "confirm_ms": 3368
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 17,
+   "start_offset_s": 1.011,
+   "phases": {
+    "login_ms": 0,
+    "open_ms": 2391,
+    "turn1_ms": 7670,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3665,
+    "sse_total_ms": 3665,
+    "confirm_ms": 3063
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 18,
+   "start_offset_s": 0.855,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 1753,
+    "turn1_ms": 7654,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3708,
+    "sse_total_ms": 3708,
+    "confirm_ms": 3179
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 19,
+   "start_offset_s": 0.026,
+   "phases": {
+    "login_ms": 0,
+    "open_ms": 155,
+    "turn1_ms": 2733,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3823,
+    "sse_total_ms": 3823,
+    "confirm_ms": 3831
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 20,
+   "start_offset_s": 1.825,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 3410,
+    "turn1_ms": 7672,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3363,
+    "sse_total_ms": 3363,
+    "confirm_ms": 2599
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 21,
+   "start_offset_s": 1.869,
+   "phases": {
+    "login_ms": 0,
+    "open_ms": 3801,
+    "turn1_ms": 7655,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3252,
+    "sse_total_ms": 3253,
+    "confirm_ms": 2564
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 22,
+   "start_offset_s": 0.93,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 2011,
+    "turn1_ms": 7668,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3669,
+    "sse_total_ms": 3669,
+    "confirm_ms": 3177
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 23,
+   "start_offset_s": 1.395,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 2743,
+    "turn1_ms": 7656,
+    "turn2_ms": 0,
+    "sse_ttfb_ms": 3518,
+    "sse_total_ms": 3518,
+    "confirm_ms": 2793
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 24,
+   "start_offset_s": 0.999,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 2376,
+    "turn1_ms": 7655,
+    "turn2_ms": 2,
+    "sse_ttfb_ms": 3669,
+    "sse_total_ms": 3669,
+    "confirm_ms": 3062
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 25,
+   "start_offset_s": 1.98,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 3715,
+    "turn1_ms": 7668,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3327,
+    "sse_total_ms": 3327,
+    "confirm_ms": 2483
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 26,
+   "start_offset_s": 0.898,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 1863,
+    "turn1_ms": 7655,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3707,
+    "sse_total_ms": 3707,
+    "confirm_ms": 3179
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 27,
+   "start_offset_s": 0.953,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 2142,
+    "turn1_ms": 7669,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3669,
+    "sse_total_ms": 3669,
+    "confirm_ms": 3179
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 28,
+   "start_offset_s": 0.662,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 1357,
+    "turn1_ms": 7674,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3779,
+    "sse_total_ms": 3779,
+    "confirm_ms": 3255
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 29,
+   "start_offset_s": 0.913,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 1875,
+    "turn1_ms": 7670,
+    "turn2_ms": 0,
+    "sse_ttfb_ms": 3785,
+    "sse_total_ms": 3785,
+    "confirm_ms": 3100
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 30,
+   "start_offset_s": 0.177,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 618,
+    "turn1_ms": 5359,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3843,
+    "sse_total_ms": 3843,
+    "confirm_ms": 3783
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 31,
+   "start_offset_s": 1.2,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 2508,
+    "turn1_ms": 7672,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3628,
+    "sse_total_ms": 3628,
+    "confirm_ms": 2947
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 32,
+   "start_offset_s": 0.031,
+   "phases": {
+    "login_ms": 0,
+    "open_ms": 305,
+    "turn1_ms": 3497,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3825,
+    "sse_total_ms": 3825,
+    "confirm_ms": 3829
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 33,
+   "start_offset_s": 1.196,
+   "phases": {
+    "login_ms": 0,
+    "open_ms": 2485,
+    "turn1_ms": 7656,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3553,
+    "sse_total_ms": 3553,
+    "confirm_ms": 3026
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 34,
+   "start_offset_s": 1.54,
+   "phases": {
+    "login_ms": 0,
+    "open_ms": 2910,
+    "turn1_ms": 7651,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3401,
+    "sse_total_ms": 3401,
+    "confirm_ms": 2755
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 35,
+   "start_offset_s": 0.532,
+   "phases": {
+    "login_ms": 3,
+    "open_ms": 1156,
+    "turn1_ms": 7040,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3826,
+    "sse_total_ms": 3826,
+    "confirm_ms": 3367
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 36,
+   "start_offset_s": 0.032,
+   "phases": {
+    "login_ms": 0,
+    "open_ms": 434,
+    "turn1_ms": 3852,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3824,
+    "sse_total_ms": 3824,
+    "confirm_ms": 3844
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 37,
+   "start_offset_s": 0.714,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 1435,
+    "turn1_ms": 7654,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3710,
+    "sse_total_ms": 3710,
+    "confirm_ms": 3331
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 38,
+   "start_offset_s": 1.651,
+   "phases": {
+    "login_ms": 2,
+    "open_ms": 3101,
+    "turn1_ms": 7654,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3370,
+    "sse_total_ms": 3370,
+    "confirm_ms": 2752
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 39,
+   "start_offset_s": 0.002,
+   "phases": {
+    "login_ms": 0,
+    "open_ms": 157,
+    "turn1_ms": 1838,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3821,
+    "sse_total_ms": 3821,
+    "confirm_ms": 3830
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 40,
+   "start_offset_s": 1.769,
+   "phases": {
+    "login_ms": 0,
+    "open_ms": 3443,
+    "turn1_ms": 7654,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3366,
+    "sse_total_ms": 3366,
+    "confirm_ms": 2601
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 41,
+   "start_offset_s": 1.651,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 3126,
+    "turn1_ms": 7670,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3363,
+    "sse_total_ms": 3363,
+    "confirm_ms": 2754
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 42,
+   "start_offset_s": 0.135,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 352,
+    "turn1_ms": 3983,
+    "turn2_ms": 2,
+    "sse_ttfb_ms": 3823,
+    "sse_total_ms": 3823,
+    "confirm_ms": 3843
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 43,
+   "start_offset_s": 1.861,
+   "phases": {
+    "login_ms": 0,
+    "open_ms": 3656,
+    "turn1_ms": 7656,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3365,
+    "sse_total_ms": 3365,
+    "confirm_ms": 2484
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 44,
+   "start_offset_s": 0.296,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 782,
+    "turn1_ms": 6273,
+    "turn2_ms": 2,
+    "sse_ttfb_ms": 3827,
+    "sse_total_ms": 3827,
+    "confirm_ms": 3672
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 45,
+   "start_offset_s": 0.96,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 2288,
+    "turn1_ms": 7668,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3668,
+    "sse_total_ms": 3668,
+    "confirm_ms": 3063
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 46,
+   "start_offset_s": 1.592,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 3009,
+    "turn1_ms": 7654,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3366,
+    "sse_total_ms": 3366,
+    "confirm_ms": 2755
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 47,
+   "start_offset_s": 0.03,
+   "phases": {
+    "login_ms": 0,
+    "open_ms": 283,
+    "turn1_ms": 3241,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3825,
+    "sse_total_ms": 3825,
+    "confirm_ms": 3844
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 48,
+   "start_offset_s": 0.414,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 972,
+    "turn1_ms": 6454,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3841,
+    "sse_total_ms": 3841,
+    "confirm_ms": 3514
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  },
+  {
+   "worker": 49,
+   "start_offset_s": 1.709,
+   "phases": {
+    "login_ms": 1,
+    "open_ms": 3221,
+    "turn1_ms": 7671,
+    "turn2_ms": 1,
+    "sse_ttfb_ms": 3362,
+    "sse_total_ms": 3362,
+    "confirm_ms": 2717
+   },
+   "ok": true,
+   "idem_open_ok": true,
+   "idem_turn_ok": true,
+   "sse_ok": true,
+   "confirm_status": "completed"
+  }
+ ]
+}
