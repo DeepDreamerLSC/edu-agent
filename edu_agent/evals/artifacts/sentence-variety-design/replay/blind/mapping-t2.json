@@ -1,0 +1,22 @@
+{
+ "seed": 20260920,
+ "note": "靶②句式去复读化 nr 盲评·臂→盲标随机映射(seed=20260920);盲审完成前不得启封;baseline=#361 时代臂(m1-replay/controls-v1),candidate=#366 靶②窄改臂;启封注记三件见 README",
+ "pairs": {
+  "pair-1": {
+   "baseline": "A",
+   "candidate": "B"
+  },
+  "pair-2": {
+   "baseline": "B",
+   "candidate": "A"
+  },
+  "pair-3": {
+   "baseline": "A",
+   "candidate": "B"
+  },
+  "pair-4": {
+   "baseline": "A",
+   "candidate": "B"
+  }
+ }
+}
