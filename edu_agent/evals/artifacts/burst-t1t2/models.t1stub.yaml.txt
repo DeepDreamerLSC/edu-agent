@@ -1,0 +1,78 @@
+# T1 压测配置(#255 判据2 第1件):全部 provider 指向本地 stub(127.0.0.1:8321)。
+# 结构/角色参数与生产 models.yaml 逐字同款(concurrency/timeout/重试),只有
+# provider 地址不同——测的是纯服务栈(网关/存储/合同面)在真实角色并发配置下
+# 的行为。经 EDU_MODELS_YAML 注入,零产品代码改动,零远端 API。
+
+providers:
+  deepseek:
+    base_url: http://127.0.0.1:8321/v1
+    api_key_env: STUB_UNUSED_KEY
+    json_strict: true
+  mlx:
+    base_url: http://127.0.0.1:8321/v1
+    json_strict: false
+  llama:
+    base_url: http://127.0.0.1:8321/v1
+    json_strict: true
+  vision:
+    base_url: http://127.0.0.1:8321/v1
+    json_strict: true
+
+models:
+  mlx_27b:
+    provider: mlx
+    name: stub-model
+  llama_9b:
+    provider: llama
+    name: stub-model
+  vision_8b:
+    provider: vision
+    name: stub-model
+  qwen3_vl_8b:
+    provider: vision
+    name: stub-model
+  deepseek_chat:
+    provider: deepseek
+    name: stub-model
+
+roles:
+  tutor:
+    primary: qwen3_vl_8b
+    fallback: mlx_27b
+    json_strict: true
+    concurrency: 2
+    first_token_timeout_s: 5
+    total_timeout_s: 120
+    max_attempts: 3
+    backoff_base_ms: 400
+    backoff_cap_ms: 8000
+  judge:
+    primary: mlx_27b
+    fallback: deepseek_chat
+    json_strict: true
+    concurrency: 2
+    first_token_timeout_s: 15
+    total_timeout_s: 120
+    max_attempts: 3
+    backoff_base_ms: 400
+    backoff_cap_ms: 8000
+  judge_independent:
+    primary: deepseek_chat
+    fallback: null
+    json_strict: true
+    concurrency: 4
+    first_token_timeout_s: 15
+    total_timeout_s: 60
+    max_attempts: 3
+    backoff_base_ms: 400
+    backoff_cap_ms: 8000
+  vision:
+    primary: vision_8b
+    fallback: null
+    json_strict: true
+    concurrency: 1
+    first_token_timeout_s: 15
+    total_timeout_s: 60
+    max_attempts: 3
+    backoff_base_ms: 400
+    backoff_cap_ms: 8000
