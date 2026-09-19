@@ -373,3 +373,23 @@ def test_question_form_guess_not_stated_boundary():
     assert turn.text == "对,就是 □ 千克,你猜对了。"
     repair = _repairs(turn.session.guard_events)[-1]
     assert repair["regenerated"] is False and repair["mode"] == "masked"
+
+
+def test_mid_dialogue_authoritative_string_echo_student_stated_passes():
+    """guard-provenance-fix ① 值级补全(A/B 跑面揭出):学生说「0.4千克」(陈述),
+    权威答案串是「0.4kg」——字符串粒度豁免漏放,学生刚答完还吃「不能直接给出」。
+    值级注入后:对话态复述权威串不再句级拦截(数字池早已放行,两门口径对齐)。"""
+    question = {"text": "一瓶水重2kg,求它的1/5是多少重。", "answer": "0.4kg",
+                "analysis": "", "knowledge_points": []}
+    gateway = FakeGateway(tutor_payloads=[
+        _open("你先说说你的想法。", steps=[]),
+        _tutor("你用2000克除以5得到400克,这个换算和计算都没问题!", ready=False),
+        _tutor("你刚才说2kg等于2000克,除以5得400克,再换算成0.4kg,这三步都对!",
+               ready=False),
+    ])
+    turn = start(dict(question), dict(LEARNER), gateway=gateway)
+    turn = reply(turn.session, "2千克就是2000克,然后除以5得到了400。", gateway=gateway)
+    turn = reply(turn.session, "那就是0.4千克。", gateway=gateway)
+
+    assert turn.text == "你刚才说2kg等于2000克,除以5得400克,再换算成0.4kg,这三步都对!"
+    assert _repairs(turn.session.guard_events) == []

@@ -72,10 +72,10 @@ def evaluate_student_visible_question(
     reply: str,
     *,
     answer_reference: str = "",
-    active_subquestion_text: str = "",
     analysis_reference: str = "",
     student_evidence: Sequence[str] = (),
     allow_solution_output: bool = False,
+    answer_values_stated_by_student: bool = False,
 ) -> StudentVisibleGuardrailEvaluation:
     """Evaluate only facts that the runtime can verify deterministically.
 
@@ -104,7 +104,10 @@ def evaluate_student_visible_question(
         for item in student_evidence
     )
     if not allow_solution_output and answer_present and answer_asserted:
-        if not answer_already_stated_by_student:
+        # guard-provenance-fix ① 值级注入:字符串粒度豁免之外,内核值级归因
+        # (student_stated_answer,判据单源 #184)认定学生已陈述式说出全部终答值
+        # 时同样豁免(「0.4千克」陈述 ↔ 权威串「0.4kg」);问句猜答不算已述。
+        if not answer_already_stated_by_student and not answer_values_stated_by_student:
             findings.append(
                 StudentVisibleGuardrailFinding(
                     rule_id="grounded_answer_disclosure",

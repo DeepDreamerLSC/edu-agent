@@ -132,6 +132,26 @@ def _declarative(text: str) -> bool:
     return not str(text or "").rstrip().endswith(("?", "?"))
 
 
+def student_stated_answer(session: LearnerSession,
+                          student_message: str | None) -> bool:
+    """值级「学生已述终答」判定(guard-provenance-fix ① 值级补全,PM 追加令 A/B
+    跑面揭出):guardrails 答案串门是**字符串粒度**(学生说「0.4千克」≠ 权威串
+    「0.4kg」→ 句级豁免漏放 → 学生刚说完答案还吃「不能直接给出」)。本判定把
+    内核值级归因注入句级门:终答数字**全体**在学生陈述式消息里(问句不算,
+    _declarative 同口径)→ 导师复述非首次披露。判据单源(#184):值级抽取只在
+    本模块,guardrails 纯参数消费。"""
+    answer = _answer_numbers(session)
+    if not answer:
+        return False
+    stated: set[float] = set()
+    for message in session.history:
+        if message.get("role") == "user" and _declarative(str(message.get("content") or "")):
+            stated |= _question_numbers(str(message.get("content") or ""))
+    if _declarative(str(student_message or "")):
+        stated |= _question_numbers(str(student_message or ""))
+    return answer <= stated
+
+
 def _drift_sources(session: LearnerSession,
                    student_message: str | None) -> tuple[set[float], set[float]]:
     """数字来源标签池(M2 闭环 #113/#34 + #157 评审末值边界;VERDICT#6 更新):允许集 =

@@ -29,6 +29,7 @@ from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 from .format_guard import evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
 from .numeric import (_ASCII_NUMBER, _answer_focus_numbers, _drift_sources,
+                      student_stated_answer,
                       _known_answer, _question_numbers, _reply_numbers, _spoken_numbers,
                       mask_numbers)
 from .prompting import (OPEN_SCHEMA, TUTOR_SUMMARY_SCHEMA, TUTOR_TURN_SCHEMA,
@@ -342,9 +343,13 @@ def _guard_check(ctx: "_GuardContext", text: str, session: "LearnerSession | Non
         # #149:答案基线统一走 _known_answer(answer 优先、steps 末值兜底);
         # ctx 未带基线(旧调用方)时退回 question["answer"],行为与改动前一致。
         answer_reference=ctx.answer_reference or str(ctx.question.get("answer") or ""),
-        active_subquestion_text=str(ctx.question.get("text") or ""),
         analysis_reference=str(ctx.question.get("analysis") or ""),
         student_evidence=list(ctx.student_evidence),
+        # guard-provenance-fix ① 值级注入(判据单源 #184):学生已陈述式说出
+        # 全部终答值 → 句级答案串门同豁免;无会话(旧调用方)不豁免,行为同前。
+        answer_values_stated_by_student=(
+            student_stated_answer(session, ctx.student_message)
+            if session is not None else False),
     )
     # 单一判据(仅模型回合):允许集口径见 `_drift_sources`;无会话时不判(fail-open)
     allowed, answer_pool = (_drift_sources(session, ctx.student_message)
