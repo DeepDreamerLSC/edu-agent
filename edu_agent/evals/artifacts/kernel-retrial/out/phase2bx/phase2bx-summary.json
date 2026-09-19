@@ -12,6 +12,17 @@
         "judge": 12,
         "turns": 4
       },
+      "BASE-C": {
+        "m1": 0.107,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.5,
+        "state": "needs_review",
+        "judge": 2,
+        "turns": 4
+      },
       "B-elicit": {
         "m1": 0.167,
         "m2": 0,
@@ -21,6 +32,17 @@
         "rate": 0.25,
         "state": "needs_review",
         "judge": 5,
+        "turns": 4
+      },
+      "B-reveal_ladder": {
+        "m1": 0.248,
+        "m2": 0,
+        "m3": 1,
+        "m4": 1,
+        "m5": 0,
+        "rate": 0.5,
+        "state": "completed",
+        "judge": 6,
         "turns": 4
       }
     },
@@ -35,6 +57,17 @@
         "state": "completed",
         "judge": 10,
         "turns": 3
+      },
+      "BASE-C": {
+        "m1": 0.164,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 1,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
       }
     },
     "image_v2_answerhit_02": {
@@ -48,6 +81,17 @@
         "state": "completed",
         "judge": 12,
         "turns": 3
+      },
+      "BASE-C": {
+        "m1": 0.108,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 1,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
       }
     },
     "image_v2_stuck_02": {
@@ -58,6 +102,17 @@
         "m4": 0,
         "m5": null,
         "rate": 0.0,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      },
+      "BASE-C": {
+        "m1": 0.139,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.333,
         "state": "needs_review",
         "judge": 5,
         "turns": 3
@@ -83,6 +138,28 @@
         "state": "needs_review",
         "judge": 5,
         "turns": 3
+      },
+      "B-repeat_regen-reveal": {
+        "m1": 0.139,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.333,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      },
+      "B-reveal_ladder": {
+        "m1": 0.139,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.333,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
       }
     },
     "image_v2_understanding_04": {
@@ -95,6 +172,17 @@
         "rate": 0.25,
         "state": "completed",
         "judge": 10,
+        "turns": 4
+      },
+      "BASE-C": {
+        "m1": 0.204,
+        "m2": 1,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 7,
         "turns": 4
       },
       "B-elicit": {
@@ -121,6 +209,17 @@
         "judge": 5,
         "turns": 2
       },
+      "BASE-C": {
+        "m1": 0.235,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 1.0,
+        "state": "completed",
+        "judge": 5,
+        "turns": 2
+      },
       "B-repeat_regen": {
         "m1": 0.254,
         "m2": 0,
@@ -130,6 +229,17 @@
         "rate": 0.5,
         "state": "completed",
         "judge": 5,
+        "turns": 2
+      },
+      "B-repeat_regen-reveal": {
+        "m1": 0.219,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.0,
+        "state": "completed",
+        "judge": 7,
         "turns": 2
       }
     },
@@ -145,7 +255,29 @@
         "judge": 7,
         "turns": 3
       },
+      "BASE-C": {
+        "m1": 0.221,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.0,
+        "state": "completed",
+        "judge": 7,
+        "turns": 3
+      },
       "B-repeat_regen": {
+        "m1": 0.221,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.0,
+        "state": "completed",
+        "judge": 7,
+        "turns": 3
+      },
+      "B-repeat_regen-reveal": {
         "m1": 0.221,
         "m2": 0,
         "m3": 1,
@@ -169,6 +301,17 @@
         "judge": 3,
         "turns": 10
       },
+      "BASE-C": {
+        "m1": 0.188,
+        "m2": 1,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 1.6,
+        "state": "needs_review",
+        "judge": 3,
+        "turns": 10
+      },
       "B-repeat_regen": {
         "m1": 0.255,
         "m2": 5,
@@ -179,64 +322,68 @@
         "state": "needs_review",
         "judge": 3,
         "turns": 10
+      },
+      "B-repeat_regen-reveal": {
+        "m1": 0.153,
+        "m2": 1,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.3,
+        "state": "needs_review",
+        "judge": 3,
+        "turns": 10
       }
     }
   },
   "verdicts": {
-    "B-repeat_regen": {
-      "class": "DELETE(带内)",
-      "positives": {
-        "no-progress-real-6a61aa32-replay": {
-          "dm2": -1,
-          "djudge": 0
-        },
-        "image_v2_stuck_02": {
-          "dm2": 0,
-          "djudge": 0
-        }
-      },
-      "negatives_harmed": [],
-      "note": "正例全带内(Δm2=−1/0,Δjudge=0)且负例零伤害→冻结 DELETE 线;与二阶段 LOO(C 内关掉 m2 2→6)对撞=机制价值上下文耦合:C 路径赚头主要在复读 regen 失败后的 reveal 兜底(B 变体按 thin-safety 未含),regen 单独加回 B 不赚"
+    "repeat_regen(单独)": {
+      "class": "DELETE(带内)——PM 已裁,维持",
+      "evidence": "6a61 Δm2=−1(<2)/stuck_02 0;负例零伤(batch-1)"
     },
-    "B-elicit": {
-      "class": "净值呈 PM 裁(点火单⑤);净值强负,偏 DELETE",
-      "positives": {
-        "image_v2_stuck_02": {
-          "djudge": 0
-        },
-        "ablation-comma-collision-01": {
-          "djudge": -7,
-          "state_flip": true
-        }
-      },
-      "negatives": {
-        "image_v2_understanding_04": {
-          "djudge": -3,
-          "state_flip": true
-        },
-        "no-progress-control-thin-reasoning": "预算砍(带满)"
-      },
-      "net": "正例持平/重损(stuck_02 0,comma −7+state 翻转 completed→needs_review),负例 u4 −3+翻转:零调用归因(u4 T3 elicit 模板替换)独立复现"
+    "repeat_regen×reveal(复合体)": {
+      "class": "KEEP(路径单元重议成立,派单③)",
+      "evidence": "6a61 m2 6→1(Δ=−5≥2),T5/T7/T9 三次 repeat_regen→reveal 破复读链;负例 reasonable Δjudge=+2/thin 0/stuck_02 0 零伤;rate 0.3 vs BASE-C 1.6(同效更省介入)。赚点集中于复读案(stuck_02 带内)——单正例结构如实呈"
+    },
+    "reveal_ladder(单独)": {
+      "class": "无独立存在权(仅作复合体兜底组件)",
+      "evidence": "stuck_02 带内(0);comma Δjudge=−6(正例变差);价值仅在 repeat 失败后的兜底位(联合变体证据)"
+    },
+    "elicit": {
+      "class": "DELETE——PM 已裁,维持",
+      "evidence": "BASE-C u4 judge 10→7(T3 elicit 模板轮)独立再证"
+    },
+    "BASE-C parity 锚": {
+      "class": "参照读数(非三态)",
+      "evidence": "C 在 judge 面 8 案 0 胜 4 负(u4 −3/comma −10/ah01 −5/ah02 −7,4 案全为确定性族毁分:comma T1-T3 全 0ms 模板轮=reveal+soften+anchor+elicit 栈);唯一明确赚点=6a61 复读压制 m2 1 vs B 6(复合体所为)。parity 世界:C 的机制集对 thin-B 无 judge 质量增益"
+    },
+    "附录A掩码(联合变体安全面)": {
+      "class": "实弹通过(呈审)",
+      "evidence": "3 发全 round-1 掩码即净(零模型零 regen):reasonable T1/6a61 T1+T2;产物教学结构逐字保留仅终答数值→□(『北偏西□°』)"
     }
   },
   "budget": {
-    "total_calls": 97,
-    "max_calls": 100,
+    "total_calls": 75,
+    "max_calls": 80,
     "breakdown": {
-      "BASE-B": 53,
-      "B-repeat_regen": 31,
-      "B-elicit": 13
+      "B-repeat_regen-reveal": 24,
+      "BASE-C": 44,
+      "B-reveal_ladder": 7
     },
     "cut": [
-      "BASE-C(带满;parity 后 C 参考缺,补跑键呈 PM)",
-      "B-reveal_ladder(派单明示可砍)",
-      "B-elicit/no-progress-control-thin-reasoning(负例之一,带满)"
+      "B-reveal_ladder/thin+reasonable(带满:75+4×2>80;负例面由联合变体 reasonable/thin 零伤部分覆盖)"
     ],
-    "surgical": "u4 外科补跑 +4(93→97≤100;同 phase2b 先例,透明记档)"
+    "surgical": "comma 外科补跑 +4(71→75≤80;同批一/二先例,透明记档)"
   },
-  "judgment_lines": "phase2bx-design-v0.md §3(2026-09-19 冻结,跑后不改)",
+  "batch": "批二(收尾补跑);批一见 run-meta-batch1.json+phase2bx-summary-v1-batch1.json",
+  "judgment_lines": "phase2bx-design-v0.md §3(冻结,跑后不改)",
+  "remote_refs": {
+    "task/kernel-retrial-protocol": "4078d77",
+    "phase2bx-joint": "a70d94f",
+    "phase2bx-reveal_ladder-b2": "f1ee9cd"
+  },
   "anomalies": [
-    "runner 中止路径不写 variants{} 台账(u4 补记账时 KeyError,已从 artifact calls_used 手工补真值)",
-    "BASE-B 6a61aa32 重于历史(15 calls/17 事件):parity 喂答案后漏斗活络,事件面变厚属预期"
+    "批一 reveal 分支基线早于批二 runner 提交,跨 checkout 会撞 tracked 工件——重建 phase2bx-reveal_ladder-b2(task 基+同补丁);origin 旧分支留档不重写",
+    "BASE-C 6a61 31 事件/rate 1.6(parity 喂答案后 C 全漏斗活络,同批一 BASE-B 观察)"
   ]
 }

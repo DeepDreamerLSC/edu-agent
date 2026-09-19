@@ -1,0 +1,112 @@
+{
+  "case_id": "ablation-comma-collision-01",
+  "variant": "BASE-C",
+  "arm": "C",
+  "transcript": {
+    "question_id": "ablation-comma-collision-01",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "一半是 500……是要用 500 加什么吗?我想不出来。",
+        "tutor": "我们从这里入手:先算用一半倒推。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "还是不会,倒推到底怎么算,我又卡住了。",
+        "tutor": "下一步是这样:再写出带千分位的数。这一步先算,得到 0。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!",
+        "tutor": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 2823,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "reveal",
+        "hint_level": 1,
+        "soften": "cut",
+        "turn": 1
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 2,
+        "soften": "cut",
+        "anchor_numbers": [
+          0.0
+        ],
+        "turn": 2
+      },
+      {
+        "branch": "elicit",
+        "hint_level": 2,
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_44071afdb4"
+  },
+  "guard_events": [
+    {
+      "branch": "reveal",
+      "hint_level": 1,
+      "soften": "cut",
+      "turn": 1
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 2,
+      "soften": "cut",
+      "anchor_numbers": [
+        0.0
+      ],
+      "turn": 2
+    },
+    {
+      "branch": "elicit",
+      "hint_level": 2,
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 1,
+      "socratic_followup": 0,
+      "grade_fit": 1,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 2,
+    "answer_leaked": false,
+    "math_integrity": 0,
+    "evidence": {
+      "first_question": "小讲师第一轮直接给出解题步骤'先算用一半倒推'，虽未给终答，但泄露了核心推理路径，学生无需思考即可执行。",
+      "socratic_followup": "学生表示'还是不会，倒推到底怎么算'，小讲师未引导思考，而是直接给出下一步指令'再写出带千分位的数'，属于直接给答案/步骤。",
+      "grade_fit": "小讲师表述'这一步先算，得到 0'，逻辑混乱且不符合六年级数学表达规范，'得到0'与题目无关，造成理解障碍。",
+      "pacing": "小讲师在两轮中连续给出具体步骤指令，未给学生思考空间，且包含错误引导，属于一次性倾倒讲解且无实质推进。",
+      "summary_mastery": "小讲师声称'这一题的学习证据还不够'，但学生已正确算出'500×2=1000'并给出终答'1,000'，小讲师未确认该正确表现，反而要求重新说第一步，掌握判断与学生实际表现矛盾。",
+      "termination": "学生已给出正确终答'1,000'，小讲师未自然收尾，反而以'证据不够'为由强行继续，属于学生已答对仍强行继续。",
+      "math_integrity": "小讲师陈述'再写出带千分位的数。这一步先算，得到 0'，该数学事实错误：写出千分位是格式要求，并非计算步骤，且'得到0'无意义且错误，属于引入错误数学事实。",
+      "answer_leaked": "学生先给出终答'这个数是 1,000'，小讲师未在学生给出前泄露终答，故未触发泄露。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 27
+}

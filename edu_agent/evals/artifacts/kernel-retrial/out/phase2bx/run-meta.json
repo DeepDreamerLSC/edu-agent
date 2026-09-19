@@ -1,4 +1,18 @@
 {
-  "total_calls": 0,
-  "note": "批二=收尾补跑(≤80);批一账本见 run-meta-batch1.json"
+  "total_calls": 75,
+  "note": "批二=收尾补跑(≤80);批一账本见 run-meta-batch1.json",
+  "variants": {
+    "B-repeat_regen-reveal": {
+      "calls": 24,
+      "arm": "B"
+    },
+    "BASE-C": {
+      "calls": 44,
+      "arm": "C"
+    },
+    "B-reveal_ladder": {
+      "calls": 7,
+      "arm": "B"
+    }
+  }
 }
