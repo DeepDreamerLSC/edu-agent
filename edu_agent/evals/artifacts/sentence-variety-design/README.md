@@ -158,3 +158,10 @@ prompt 对三变体给轮换指引(如「相邻两轮不重复同一变体」)�
 
 *工件零 calls(既有 replay 工件读数);数据源 no-progress-review/(PR #364 入仓后
 main 可见);本稿经 PM 过审后呈用户,prompt 窄改另开单。*
+
+---
+
+**R2 终稿 v1(2026-09-19,task=r2-design-v1)**:`r2-warmth-first-v1.md`——以 #367
+冻结稿为基,对 Thin Kernel 现实(main@cacbe9c)修:prompt 独占语气面(tone 直通)、
+教学面独占清单逐面映射、收束复述行已在生产(净 diff=承认位 1 行)、v2 全链协议
+(判读线跑前冻结;~53 calls 硬顶 60,点火键=用户)。R1 数值仅历史锚(v2 世界重冻结)。
