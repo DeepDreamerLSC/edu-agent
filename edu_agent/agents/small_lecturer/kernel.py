@@ -837,8 +837,10 @@ def _repeat_refine(ctx, session, safe_text: str, ready: bool) -> str:
     if _current_arm() == "A":
         _shadow_event(session, "would_rewrite", "repeat_regen")
         return safe_text
-    if _current_arm() == "B":
-        return safe_text
+    if _current_arm() == "B":  # phase2bx-repeat_regen:B 臂加回复读重生成(无兜底)
+        session.guard_events.append({"branch": "repeat_regen"})
+        refined = _regenerate(ctx, session, safe_text, _SELF_CRITIQUE, ready)
+        return safe_text if refined is None or _is_repeat(prev, refined) else refined
     if _mech_off("repeat_regen"):
         return safe_text
     session.guard_events.append({"branch": "repeat_regen"})  # 裁②:复读重生成落点
