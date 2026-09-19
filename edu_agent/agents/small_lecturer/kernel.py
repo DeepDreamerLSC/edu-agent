@@ -856,7 +856,8 @@ def _deterministic_turn(session: LearnerSession, student_message: str,
     """reply 的确定性分支集(消融门控:A 记 would_* 旁路,B 静默旁路,C 照旧);
     None=无命中走模型路径(四分支:understanding/stuck/答案命中/完成表达)。"""
     if (_student_signals_understanding(student_message)
-            and not _arm_bypass("would_rewrite", "elicit_restatement", session)):
+            and (_current_arm() == "B"  # phase2bx-elicit:B 臂加回确定性问句族
+             or not _arm_bypass("would_rewrite", "elicit_restatement", session))):
         return _ask_restatement(session, student_message)
     if (_student_signals_stuck(student_message)
             and not _arm_bypass("would_reveal", "stuck_hint", session)):
@@ -864,14 +865,16 @@ def _deterministic_turn(session: LearnerSession, student_message: str,
         session.stuck = True
         return _commit_turn(session, student_message, hint, "dialogue")
     if (_student_hits_known_answer(session, student_message)
-            and not _arm_bypass("would_rewrite", "answer_hit_restatement", session)):
+            and (_current_arm() == "B"  # phase2bx-elicit
+             or not _arm_bypass("would_rewrite", "answer_hit_restatement", session))):
         return _ask_restatement(session, student_message)
     if (session.learner.get("answer_status") == "incorrect"
             and session.state != "ready_to_confirm"
             and _student_signals_completion(student_message)
             and not _student_stated_answer(session, student_message)
             and not any(event.get("branch") == "answer_collect" for event in session.guard_events)
-            and not _arm_bypass("would_rewrite", "answer_collect", session)):
+            and (_current_arm() == "B"  # phase2bx-elicit
+             or not _arm_bypass("would_rewrite", "answer_collect", session))):
         return _ask_final_answer(session, student_message)
     return None
 
