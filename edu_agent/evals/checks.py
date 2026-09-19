@@ -90,6 +90,16 @@ def text_excludes_unauthorized_numbers(check: dict, case: dict, result: dict) ->
     return True, ""
 
 
+def state_is(check: dict, case: dict, result: dict) -> tuple[bool, str]:
+    """末轮 state 必须等于 check["state"](Thin Kernel:闸删后判停直通的正向钉)。"""
+    expected = str(check.get("state") or "")
+    turns = result.get("turns") or []
+    actual = str((turns[-1] if turns else {}).get("state") or "")
+    if actual != expected:
+        return False, f"末轮 state 期望 {expected},实际 {actual or '(无)'}"
+    return True, ""
+
+
 def state_is_not(check: dict, case: dict, result: dict) -> tuple[bool, str]:
     """任何轮次的 state 不得等于 check["state"](如 ready_to_confirm:#149 判停闸)。"""
     banned = str(check.get("state") or "")
@@ -112,6 +122,7 @@ def finish_status(check: dict, case: dict, result: dict) -> tuple[bool, str]:
 REGISTRY: dict[str, CheckFn] = {
     "text_excludes_answer_values": text_excludes_answer_values,
     "text_excludes_unauthorized_numbers": text_excludes_unauthorized_numbers,
+    "state_is": state_is,
     "state_is_not": state_is_not,
     "finish_status": finish_status,
 }

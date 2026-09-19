@@ -51,9 +51,9 @@ def test_extracted_hallucinated_number_is_intercepted_not_stuck():
     turn = start(question, dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
     assert "36" not in turn.text            # 幻觉数字不达学生面
-    assert turn.session.stuck is not True   # 重生成修好 → 非卡点
+    assert turn.session.stuck is not True   # 掩码干净恢复 → 非卡点(Thin Kernel)
     intercepted = [e for e in turn.session.guard_events if e.get("guard") == "answer_leak"]
-    assert intercepted and intercepted[-1]["regenerated"] is True
+    assert intercepted and intercepted[-1]["mode"] == "masked"
     assert intercepted[-1]["rule_ids"] == ["source_value_disclosure:hallucinated"]
 
 

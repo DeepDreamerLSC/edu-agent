@@ -1,0 +1,242 @@
+{
+  "by_case": {
+    "ablation-comma-collision-01": {
+      "BASE-B": {
+        "m1": 0.284,
+        "m2": 0,
+        "m3": 1,
+        "m4": 1,
+        "m5": 0,
+        "rate": 0.25,
+        "state": "completed",
+        "judge": 12,
+        "turns": 4
+      },
+      "B-elicit": {
+        "m1": 0.167,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.25,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 4
+      }
+    },
+    "image_v2_answerhit_01": {
+      "BASE-B": {
+        "m1": 0.155,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 1,
+        "rate": 0.333,
+        "state": "completed",
+        "judge": 10,
+        "turns": 3
+      }
+    },
+    "image_v2_answerhit_02": {
+      "BASE-B": {
+        "m1": 0.118,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 1,
+        "rate": 0.333,
+        "state": "completed",
+        "judge": 12,
+        "turns": 3
+      }
+    },
+    "image_v2_stuck_02": {
+      "BASE-B": {
+        "m1": 0.121,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      },
+      "B-repeat_regen": {
+        "m1": 0.121,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      },
+      "B-elicit": {
+        "m1": 0.121,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      }
+    },
+    "image_v2_understanding_04": {
+      "BASE-B": {
+        "m1": 0.242,
+        "m2": 1,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.25,
+        "state": "completed",
+        "judge": 10,
+        "turns": 4
+      },
+      "B-elicit": {
+        "m1": 0.204,
+        "m2": 1,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 7,
+        "turns": 4
+      }
+    },
+    "no-progress-control-reasonable-review": {
+      "BASE-B": {
+        "m1": 0.254,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.5,
+        "state": "completed",
+        "judge": 5,
+        "turns": 2
+      },
+      "B-repeat_regen": {
+        "m1": 0.254,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.5,
+        "state": "completed",
+        "judge": 5,
+        "turns": 2
+      }
+    },
+    "no-progress-control-thin-reasoning": {
+      "BASE-B": {
+        "m1": 0.221,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.0,
+        "state": "completed",
+        "judge": 7,
+        "turns": 3
+      },
+      "B-repeat_regen": {
+        "m1": 0.221,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.0,
+        "state": "completed",
+        "judge": 7,
+        "turns": 3
+      }
+    },
+    "no-progress-real-6a61aa32-replay": {
+      "BASE-B": {
+        "m1": 0.262,
+        "m2": 6,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.4,
+        "state": "needs_review",
+        "judge": 3,
+        "turns": 10
+      },
+      "B-repeat_regen": {
+        "m1": 0.255,
+        "m2": 5,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.5,
+        "state": "needs_review",
+        "judge": 3,
+        "turns": 10
+      }
+    }
+  },
+  "verdicts": {
+    "B-repeat_regen": {
+      "class": "DELETE(带内)",
+      "positives": {
+        "no-progress-real-6a61aa32-replay": {
+          "dm2": -1,
+          "djudge": 0
+        },
+        "image_v2_stuck_02": {
+          "dm2": 0,
+          "djudge": 0
+        }
+      },
+      "negatives_harmed": [],
+      "note": "正例全带内(Δm2=−1/0,Δjudge=0)且负例零伤害→冻结 DELETE 线;与二阶段 LOO(C 内关掉 m2 2→6)对撞=机制价值上下文耦合:C 路径赚头主要在复读 regen 失败后的 reveal 兜底(B 变体按 thin-safety 未含),regen 单独加回 B 不赚"
+    },
+    "B-elicit": {
+      "class": "净值呈 PM 裁(点火单⑤);净值强负,偏 DELETE",
+      "positives": {
+        "image_v2_stuck_02": {
+          "djudge": 0
+        },
+        "ablation-comma-collision-01": {
+          "djudge": -7,
+          "state_flip": true
+        }
+      },
+      "negatives": {
+        "image_v2_understanding_04": {
+          "djudge": -3,
+          "state_flip": true
+        },
+        "no-progress-control-thin-reasoning": "预算砍(带满)"
+      },
+      "net": "正例持平/重损(stuck_02 0,comma −7+state 翻转 completed→needs_review),负例 u4 −3+翻转:零调用归因(u4 T3 elicit 模板替换)独立复现"
+    }
+  },
+  "budget": {
+    "total_calls": 97,
+    "max_calls": 100,
+    "breakdown": {
+      "BASE-B": 53,
+      "B-repeat_regen": 31,
+      "B-elicit": 13
+    },
+    "cut": [
+      "BASE-C(带满;parity 后 C 参考缺,补跑键呈 PM)",
+      "B-reveal_ladder(派单明示可砍)",
+      "B-elicit/no-progress-control-thin-reasoning(负例之一,带满)"
+    ],
+    "surgical": "u4 外科补跑 +4(93→97≤100;同 phase2b 先例,透明记档)"
+  },
+  "judgment_lines": "phase2bx-design-v0.md §3(2026-09-19 冻结,跑后不改)",
+  "anomalies": [
+    "runner 中止路径不写 variants{} 台账(u4 补记账时 KeyError,已从 artifact calls_used 手工补真值)",
+    "BASE-B 6a61aa32 重于历史(15 calls/17 事件):parity 喂答案后漏斗活络,事件面变厚属预期"
+  ]
+}

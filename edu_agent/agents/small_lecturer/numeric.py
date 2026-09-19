@@ -152,3 +152,24 @@ def _drift_sources(session: LearnerSession,
     student |= _usable_numbers(str(student_message or ""), answer)
     allowed = face | (steps - answer) | (student - answer)
     return allowed, answer
+
+
+def _number_forms(number: float) -> list[str]:
+    """终答数值的可见文本形态:整数补千分位逗号形态,小数补去零形态(f"{n:g}")。"""
+    if number == int(number):
+        whole = str(int(number))
+        return [whole] if abs(number) < 1000 else [whole, f"{int(number):,}"]
+    return [str(number), f"{number:g}"]
+
+
+def mask_numbers(text: str, numbers) -> str:
+    """确定性数值掩码(#333 Thin Kernel·附录 A):把命中的终答数值替换为 □,其余
+    逐字保留。词边界防误伤:千分位片段(「1,000」里的 1/000)与小数片段(「3.0」
+    里的 3/0)不掩,裸逗号/顿号邻接照掩(property 实测边界)。零模型、零重生成。"""
+    masked = str(text)
+    for number in numbers or ():
+        for form in _number_forms(float(number)):
+            masked = re.sub(
+                rf"(?<!\d)(?<!\d,)(?<!\.){re.escape(form)}(?![\d.])(?!,\d)",
+                "□", masked)
+    return masked

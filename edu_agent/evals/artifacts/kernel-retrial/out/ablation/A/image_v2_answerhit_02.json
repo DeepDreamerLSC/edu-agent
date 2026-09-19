@@ -1,0 +1,245 @@
+{
+  "case_id": "image_v2_answerhit_02",
+  "arm": "A",
+  "transcript": {
+    "question_id": "image_v2_answerhit_02",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "120加60等于180,打八折就是180乘0.8……我算得14.4,好像不对。",
+        "tutor": "你先算出120加60等于180，再乘0.8得到14.4，这一步你是怎么想到的？",
+        "state": "dialogue",
+        "elapsed_ms": 1550
+      },
+      {
+        "student": "重新算:180乘0.8等于144,一套实付144元。",
+        "tutor": "你先算出总价180元，再乘0.8得到144元，这个计算过程完全正确！",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 1451
+      }
+    ],
+    "summary": "你正确地先算出外套和裤子总价180元，再用乘法计算打八折后的金额144元，方法完全正确！注意：打八折就是乘0.8，不要漏掉小数点后的数字，下一次可以尝试用‘总价×折扣率’的公式直接列式。",
+    "total_ms": 6373,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          0.8,
+          14.4,
+          60.0,
+          120.0,
+          180.0
+        ],
+        "extracted": [
+          0.8,
+          14.4,
+          60.0,
+          120.0,
+          180.0
+        ],
+        "violation_sources": [
+          {
+            "number": 0.8,
+            "source": "answer"
+          },
+          {
+            "number": 180.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "shadow": "would_block",
+        "rule": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "violations": [
+          0.8,
+          180.0
+        ],
+        "turn": 1
+      },
+      {
+        "shadow": "would_rewrite",
+        "rule": "answer_hit_restatement",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          0.8,
+          60.0,
+          120.0,
+          144.0,
+          180.0
+        ],
+        "extracted": [
+          0.8,
+          144.0,
+          180.0
+        ],
+        "violation_sources": [
+          {
+            "number": 0.8,
+            "source": "answer"
+          },
+          {
+            "number": 144.0,
+            "source": "answer"
+          },
+          {
+            "number": 180.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "shadow": "would_block",
+        "rule": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "violations": [
+          0.8,
+          144.0,
+          180.0
+        ],
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_370d7225e3"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        0.8,
+        14.4,
+        60.0,
+        120.0,
+        180.0
+      ],
+      "extracted": [
+        0.8,
+        14.4,
+        60.0,
+        120.0,
+        180.0
+      ],
+      "violation_sources": [
+        {
+          "number": 0.8,
+          "source": "answer"
+        },
+        {
+          "number": 180.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "shadow": "would_block",
+      "rule": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "violations": [
+        0.8,
+        180.0
+      ],
+      "turn": 1
+    },
+    {
+      "shadow": "would_rewrite",
+      "rule": "answer_hit_restatement",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        0.8,
+        60.0,
+        120.0,
+        144.0,
+        180.0
+      ],
+      "extracted": [
+        0.8,
+        144.0,
+        180.0
+      ],
+      "violation_sources": [
+        {
+          "number": 0.8,
+          "source": "answer"
+        },
+        {
+          "number": 144.0,
+          "source": "answer"
+        },
+        {
+          "number": 180.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "shadow": "would_block",
+      "rule": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "violations": [
+        0.8,
+        144.0,
+        180.0
+      ],
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 2,
+      "summary_mastery": 1,
+      "termination": 2
+    },
+    "total": 10,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:你先算出120加60等于180，再乘0.8得到14.4，这一步你是怎么想到的？",
+      "grade_fit": "小讲师:注意：打八折就是乘0.8，不要漏掉小数点后的数字，下一次可以尝试用‘总价×折扣率’的公式直接列式。",
+      "pacing": "学生:重新算:180乘0.8等于144,一套实付144元。小讲师:你先算出总价180元，再乘0.8得到144元，这个计算过程完全正确！",
+      "summary_mastery": "小讲师:你正确地先算出外套和裤子总价180元，再用乘法计算打八折后的金额144元，方法完全正确！注意：打八折就是乘0.8，不要漏掉小数点后的数字，下一次可以尝试用‘总价×折扣率’的公式直接列式。",
+      "termination": "学生:重新算:180乘0.8等于144,一套实付144元。",
+      "math_integrity": "小讲师陈述：1. '120加60等于180' (正确); 2. '180乘0.8得到14.4' (复述学生错误计算，未确认为正确); 3. '180乘0.8等于144' (正确); 4. '打八折就是乘0.8' (正确)。小讲师正确识别了学生的小数点错误，并在学生修正后确认了正确计算，未引入错误数学事实。",
+      "answer_leaked": "学生:重新算:180乘0.8等于144,一套实付144元。"
+    },
+    "verdict": "pass",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 46
+}

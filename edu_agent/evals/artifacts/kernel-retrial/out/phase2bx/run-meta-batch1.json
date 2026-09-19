@@ -1,0 +1,17 @@
+{
+  "total_calls": 97,
+  "variants": {
+    "BASE-B": {
+      "calls": 53,
+      "arm": "B"
+    },
+    "B-repeat_regen": {
+      "calls": 31,
+      "arm": "B"
+    },
+    "B-elicit": {
+      "calls": 13,
+      "arm": "B"
+    }
+  }
+}

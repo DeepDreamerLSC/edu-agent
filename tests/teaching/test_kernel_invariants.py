@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from edu_agent.agents.small_lecturer import reply, start
+from edu_agent.agents.small_lecturer import NEEDS_REVIEW_TEXT, reply, start
 
 from test_drift_and_tone import LEARNER
 from teachkit import FakeGateway
@@ -46,23 +46,6 @@ def _route_branch(session, phrase: str, gateway) -> str:
 # --------------------------------------------------------------------------- #
 # c2:意图分类器对抗样例(负向断言补全,含两条实弹)——经 reply 路由断言
 # --------------------------------------------------------------------------- #
-
-@pytest.mark.parametrize("phrase,is_elicit", [
-    ("都懂了", True),
-    ("我懂了", True),
-    ("明白了", True),
-    ("我会了", True),
-    ("没有不懂", True),
-    ("没问题", True),
-    ("我越来越不懂了", False),  # 实弹1:不懂了 ≠ 懂 → 揭示,非请讲
-    ("我不会了", False),
-])
-def test_understanding_routes_to_elicit(phrase, is_elicit):
-    gateway = FakeGateway(tutor_payloads=[_open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS)])
-    session = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway).session
-    branch = _route_branch(session, phrase, gateway)
-    assert (branch == "elicit") is is_elicit
-
 
 @pytest.mark.parametrize("phrase,is_stuck", [
     ("我不太会", True),
@@ -149,12 +132,12 @@ def test_final_answer_in_confirm_state_is_intercepted_not_stuck():
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "对,就是 3 只鸡和 5 只兔。", "ready_to_confirm": True,
          "cited_numbers": [3, 5]},
-        {"reply": "你再想想。", "ready_to_confirm": False, "cited_numbers": []},
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "答案是 3 和 5 吗?", gateway=gateway)
-    assert turn.session.stuck is not True
-    assert turn.text == "你再想想。"  # 引述版被重生成为干净轮
+    assert turn.session.stuck is not True  # 掩码=干净恢复,不置卡点
+    # Thin Kernel 掩码:结构逐字保留,仅终答数值 → □(确认轮转述式确认语义不变)
+    assert turn.text == "对,就是 □ 只鸡和 □ 只兔。"
     assert _drift_event(turn)["violation_sources"] == [
         {"number": 3.0, "source": "answer"}, {"number": 5.0, "source": "answer"}]
 
@@ -181,16 +164,15 @@ def test_final_answer_in_dialogue_state_is_intercepted():
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "答案是 3 只鸡和 5 只兔。", "ready_to_confirm": False,
          "cited_numbers": [3, 5]},
-        {"reply": "你再想想。", "ready_to_confirm": False, "cited_numbers": []},
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
-    assert turn.text == "你再想想。" and turn.session.stuck is not True
+    assert turn.text == "答案是 □ 只鸡和 □ 只兔。" and turn.session.stuck is not True
     assert _drift_event(turn)["violation_sources"] == [
         {"number": 3.0, "source": "answer"}, {"number": 5.0, "source": "answer"}]
     assert _drift_event(turn)["gate"] == "blocked"
     leak = [e for e in turn.session.guard_events if e.get("guard") == "answer_leak"][-1]
-    assert leak["regenerated"] is True
+    assert leak["regenerated"] is False and leak["mode"] == "masked"  # 确定性掩码处置
     assert leak["rule_ids"] == ["source_value_disclosure:answer"]
 
 
@@ -204,11 +186,10 @@ def test_selfreported_ladder_answer_not_whitelisted_but_intercepted():
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", ladder),
         {"reply": "剩下的就是鸡:8-5=3只,兔5只。", "ready_to_confirm": False,
          "cited_numbers": [8, 5, 3]},
-        {"reply": "你再想想。", "ready_to_confirm": False, "cited_numbers": []},
     ])
     turn = start(question, dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
-    assert turn.session.stuck is not True        # #184:修好不置卡点
+    assert turn.session.stuck is not True        # 掩码=干净恢复,不置卡点
     assert _drift_event(turn)["violation_sources"] == [
         {"number": 3.0, "source": "answer"}, {"number": 5.0, "source": "answer"}]
     assert "3" not in turn.text and "5" not in turn.text  # 末值答案数字不达学生面
@@ -254,27 +235,26 @@ def test_deterministic_branches_record_guard_events():
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     assert turn.session.guard_events == []  # start 不跑数字守卫/分支埋点
-    turn = reply(turn.session, "都懂了", gateway=gateway)
-    assert turn.session.guard_events[-1] == {"branch": "elicit", "hint_level": 0, "turn": 1}
-    turn = reply(turn.session, "我不太会", gateway=gateway)
-    assert turn.session.guard_events[-1] == {"branch": "reveal", "hint_level": 1, "turn": 2}
+    turn = reply(turn.session, "我不太会", gateway=gateway)  # Thin Kernel:唯一确定性分支=卡住支持
+    assert turn.session.guard_events[-1] == {"branch": "reveal", "hint_level": 1, "turn": 1}
 
 
 # --------------------------------------------------------------------------- #
 # c1 不变量:终答披露只走三条路径
 # --------------------------------------------------------------------------- #
 
-def test_final_answer_only_disclosed_via_bottomout_not_elicit_or_step_reveal():
-    # elicit(请讲思路)/ 阶梯揭示(给步骤)确定性文本均不含终答;阶梯耗尽才 bottom-out 给终答。
+def test_final_answer_only_disclosed_via_finish_not_step_reveal():
+    # Thin Kernel(#333 终裁):阶梯揭示(给步骤)确定性文本不含终答;阶梯耗尽
+    # 不再 bottom-out 披露(终答唯一披露点 = finish 路径)。
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
-    elicit = reply(turn.session, "都懂了", gateway=gateway)
-    assert "鸡3只兔5只" not in elicit.text  # elicit 不披露终答
-    reveal1 = reply(elicit.session, "我不太会", gateway=gateway)
+    reveal1 = reply(turn.session, "我不太会", gateway=gateway)
     assert "鸡3只兔5只" not in reveal1.text  # 第一级阶梯只给步骤,不给终答
     reveal2 = reply(reveal1.session, "我不知道", gateway=gateway)
     assert "鸡3只兔5只" not in reveal2.text  # 第二级阶梯仍只给步骤
-    bottomout = reply(reveal2.session, "我猜不出来", gateway=gateway)
-    assert "鸡3只兔5只" in bottomout.text  # 阶梯耗尽 → bottom-out 披露终答
+    exhausted = reply(reveal2.session, "我猜不出来", gateway=gateway)
+    # 阶梯耗尽 → 通用引导,不披露终答(bottom-out 已删,句族入土)
+    assert "鸡3只兔5只" not in exhausted.text
+    assert exhausted.text == NEEDS_REVIEW_TEXT

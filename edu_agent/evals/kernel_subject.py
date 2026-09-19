@@ -27,22 +27,29 @@ class KernelSubject:
     name = "kernel-small-lecturer"
 
     @staticmethod
-    def _question_payload(raw: object, feed_answer: bool = False) -> dict:
+    def _question_payload(raw: object, reference: dict | None = None) -> dict:
         """题面 → 内核 start() 入参:纯文本(旧)或 v1 图文(question.text + image)。
 
-        v1 的 image(path+sha256)读文件、对账后转 data URL,内核 L380 直接消费。
-        P 口径(#34 台账):answer/analysis/knowledge_points 默认不喂——内核与
-        生产不同,看不到参考答案。`feed_answer=True` 是**显式测量断点**(#178
-        条件对照帧用,按 #146 条件变更登记):仅喂 answer,让代喂/泄漏的数值
-        口径可判;默认路径零漂移(断言钉在 tests/evals/test_kernel_subject.py)。
+        parity 口径(#333 方向修正单 2026-09-19 裁①):对齐生产 question_source
+        resolve() 契约——answer/analysis/knowledge_points 照喂(question 字段优先,
+        缺口由场景 reference_answer 的 value/steps 补),内核与生产同看权威答案;
+        旧 P 口径(#34 默认不喂+feed_answer 断点)作废,测试钉同步改。
         """
         if isinstance(raw, str):
             return {"text": raw}
         if not isinstance(raw, dict):
             raise ValueError(f"question 必须是字符串或 dict,实际 {type(raw).__name__}")
         payload = {"text": raw.get("text", "")}
-        if feed_answer and raw.get("answer"):
-            payload["answer"] = str(raw["answer"])
+        reference = reference or {}
+        answer = raw.get("answer") or reference.get("value")
+        if answer:
+            payload["answer"] = str(answer)
+        analysis = raw.get("analysis") or ";".join(
+            str(s) for s in reference.get("steps") or [])
+        if analysis:
+            payload["analysis"] = str(analysis)
+        if raw.get("knowledge_points"):
+            payload["knowledge_points"] = list(raw["knowledge_points"])
         image = raw.get("image")
         if image is not None:
             payload["image"] = question_image_data_url(image)
@@ -51,10 +58,11 @@ class KernelSubject:
     def run_case(self, case: dict) -> dict:
         started = time.monotonic()
         question = self._question_payload(case["question"],
-                                          feed_answer=bool(case.get("feed_answer")))
+                                          case.get("reference_answer"))
         learner = {"grade": case.get("grade", "")}
-        if case.get("answer_status"):  # R6 首问策略分派信号(评测数据侧)
-            learner["answer_status"] = case["answer_status"]
+        # parity 裁①:answer_status 恒有(生产由 answer_correct 映射;评测缺省
+        # 补 incorrect——切片学生均未达正确终态,与生产 no-progress 主弧一致)
+        learner["answer_status"] = case.get("answer_status") or "incorrect"
         turns: list[dict] = []
         try:
             first = start(question, learner, gateway=self.gateway)

@@ -47,21 +47,6 @@ def _incorrect_session(gateway: FakeGateway, question: dict | None = None) -> ob
 
 # ---------- 答案命中触发(确定性,零模型) ----------
 
-def test_answer_hit_elicits_restatement_without_model():
-    """incorrect 弧线第 2+ 轮:学生说出已知答案 → 确定性请复讲,零模型调用。"""
-    gateway = FakeGateway(tutor_payloads=[
-        _open_payload("你现在觉得鸡和兔各有多少只?"),
-        _tutor_payload("好,那我们一步步来看这 26 只脚。"),
-    ])
-    session = _incorrect_session(gateway)
-    reply(session, "我觉得鸡有5只,兔有3只。", gateway=gateway)  # 采集轮(见下一条测试)
-    calls = len(gateway.requests)
-    turn = reply(session, "我重算了:兔有10除以2等于5只,鸡有3只,验算26只脚。", gateway=gateway)
-    assert turn.text == ELICIT
-    assert turn.state == "dialogue" and turn.ready_to_confirm is False
-    assert len(gateway.requests) == calls  # 确定性分支不调模型
-    assert turn.session.guard_events[-1] == {"branch": "elicit", "hint_level": 0, "turn": 2}
-
 
 def test_collection_turn_number_clash_does_not_elicit():
     """采集轮护栏:incorrect 首轮是错答采集,数字对调(5/3 vs 3/5)撞答案数字集也不触发。"""
@@ -90,22 +75,6 @@ def test_correct_and_unknown_status_never_elicit_on_answer_hit():
         assert turn.text != ELICIT, f"status={status} 不应触发复讲"
         assert turn.session.guard_events[-1]["branch"] == "model"
 
-
-def test_restatement_after_elicit_does_not_re_elicit():
-    """防循环:复讲引导之后的学生消息(复讲内容,含答案数字)不再触发,交模型路径。"""
-    gateway = FakeGateway(tutor_payloads=[
-        _open_payload("你现在觉得鸡和兔各有多少只?"),
-        _tutor_payload("我们先看看脚数。"),
-        _tutor_payload("你讲得很完整。"),
-    ])
-    session = _incorrect_session(gateway)
-    reply(session, "我觉得鸡有5只,兔有3只。", gateway=gateway)
-    elicited = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
-    assert elicited.text == ELICIT
-    turn = reply(session, "我从头讲:先假设全是鸡16只脚,差10只,每换一只多2只,兔5只鸡3只。",
-                 gateway=gateway)
-    assert turn.text == "你讲得很完整。"  # 复讲内容 → 模型路径,不再请复讲
-    assert turn.session.guard_events[-1]["branch"] == "model"
 
 
 def test_confirm_state_blocks_elicit():
@@ -139,36 +108,6 @@ def test_number_free_answer_never_elicits():
     assert turn.session.guard_events[-1]["branch"] == "model"
 
 
-def test_steps_value_fallback_as_known_answer():
-    """答案源兜底:question.answer 为空 → 阶梯末级 value 作已知答案(与 bottom-out 同源)。"""
-    question = {"text": "解方程 3x+7=25。", "answer": "", "analysis": "", "knowledge_points": []}
-    steps = [{"step": "两边减7", "value": "18"}, {"step": "得 x", "value": "6"}]
-    gateway = FakeGateway(tutor_payloads=[
-        _open_payload("你想从哪一步开始?", steps=steps),
-        _tutor_payload("我们一步一步来。"),
-    ])
-    session = _incorrect_session(gateway, question)
-    reply(session, "我先两边减7。", gateway=gateway)
-    turn = reply(session, "得到x等于6,代回去是对的。", gateway=gateway)
-    assert turn.text == ELICIT
-    assert turn.session.guard_events[-1] == {"branch": "elicit", "hint_level": 0, "turn": 2}
-
-
-def test_cjk_spoken_numbers_hit():
-    """中文数字单字:「八分之七」含 7/8,命中答案 7/8(参考答案侧仍按 ASCII)。"""
-    question = {"text": "计算四分之三加八分之一,并说明为什么这样算。", "answer": "7/8",
-                "analysis": "", "knowledge_points": []}
-    gateway = FakeGateway(tutor_payloads=[
-        _open_payload("你先说说你的想法。", steps=[{"step": "通分", "value": "6/8"}]),
-        _tutor_payload("我们看看分母。"),
-    ])
-    session = _incorrect_session(gateway, question)
-    reply(session, "我先把两个分数都变成八分之几。", gateway=gateway)
-    turn = reply(session, "通分后分子相加,得到八分之七。", gateway=gateway)
-    assert turn.text == ELICIT  # 学生口述含「八」「七」→ 数字集 {8,7} ⊇ {7,8}
-
-
-# ---------- 复读循环治疗(兜底不再同句复读) ----------
 
 def test_repeat_fallback_advances_ladder():
     """复读自批评重生成仍复读 → 揭示下一级阶梯(新内容推进),不再同款问句兜底。
@@ -229,52 +168,40 @@ def _reveal_after_repeat(step_text: str) -> str:
 
 
 @pytest.mark.parametrize("step_text,expected_reveal,forbidden", [
-    # 规划句带结果(「10 × 6 = 60」):只给动作,结果收回(学生自己算)。
-    # 用不含方法词的句子构造:揭示句若含方法词会被代喂护栏接走(#165 第 1 条已改为
-    # 重生成/脱敏,见 PR #168),那是另一条路径,不在本条断言范围。
+    # Thin Kernel(#333 终裁):soften 教学改写删——非答案数字原样保留(含算式结果),
+    # 答案数字(focus=答案−题面)一律 □ 掩码;结构逐字保留。
     ("先算两个数相乘：10 × 6 = 60",
-     "我们从这里入手:先算两个数相乘。你接着算下一步。", ("60", "×")),
-    # 整句都是算式(没有动作段)→ 不空揭示,退回原文(宁可少改,不把揭示变空)
+     "我们从这里入手:先算两个数相乘：10 × 6 = 60。你接着算下一步。", ()),
     ("26-16=10", "我们从这里入手:26-16=10。你接着算下一步。", ()),
-    # 动作段只是序号(「第二步」)→ 同样退回原文
     ("第二步：10 ÷ 2 = 5 只兔",
-     "我们从这里入手:第二步：10 ÷ 2 = 5 只兔。你接着算下一步。", ()),
-    # L 口径实测的残句回归:按「截到算式起始」会切出「8只鸡有。」——
-    # 改为**按分句边界截断**,整段丢掉带结果的分句(「假设全是鸡」)
+     "我们从这里入手:第二步：10 ÷ 2 = □ 只兔。你接着算下一步。", ("5",)),
     ("假设全是鸡，8只鸡有 8×2=16 只脚",
-     "我们从这里入手:假设全是鸡。你接着算下一步。", ("16", "有。")),
-    # 没有分句边界可切时**原样保留**(宁可直给,不出残句)——不做机械截断
+     "我们从这里入手:假设全是鸡，8只鸡有 8×2=16 只脚。你接着算下一步。", ()),
     ("8只鸡有 8×2=16 只脚",
      "我们从这里入手:8只鸡有 8×2=16 只脚。你接着算下一步。", ()),
-    # 无算式结果的规划句原样揭示(条件数字如「8只鸡」不算结果,不动)
     ("假设8只全是鸡，算出脚的总数",
      "我们从这里入手:假设8只全是鸡，算出脚的总数。你接着算下一步。", ()),
-    # #185 序数形态:step 自带终答数字(本题答案数字 3/5 之一)→ 按分句边界收回
+    # 序数形态:第3只 → 第□只(#185 口径:裸数字段检得出就掩)
     ("先算脚数差，第3只开始换成兔",
-     "我们从这里入手:先算脚数差。你接着算下一步。", ("3",)),
-    # #185 导出值形态:「得到 5」把答案算给学生 → 收回该分句
+     "我们从这里入手:先算脚数差，第□只开始换成兔。你接着算下一步。", ("3",)),
+    # 导出值形态:得到 5 → 得到 □(句子形状不破)
     ("用脚数差除以 2，得到 5",
-     "我们从这里入手:用脚数差除以 2。你接着算下一步。", ("5",)),
-    # #185 无分句边界可切:命中数字改写成「几」(句子形状不破,宁可问句不漏终答)
-    ("兔有5只",
-     "我们从这里入手:兔有几只。你接着算下一步。", ("5",)),
-    # 双句号回归(#198 独立审查实测 9/14):step 自带句号 → 模板只补一个,不叠「。。」
+     "我们从这里入手:用脚数差除以 2，得到 □。你接着算下一步。", ("5",)),
+    ("兔有5只", "我们从这里入手:兔有□只。你接着算下一步。", ("5",)),
+    # 全命中改写(复审 ①):同句多处答案数字全掩
+    ("兔有5只和3只", "我们从这里入手:兔有□只和□只。你接着算下一步。", ("5", "3")),
+    # 裸数字步(掩码后无汉字读不成句)→ 整步弃用走通用兜底
+    ("3", NEEDS_REVIEW_TEXT, ()),
+    ("3 就是答案", "我们从这里入手:□ 就是答案。你接着算下一步。", ("3",)),
+    ("3 为所求", "我们从这里入手:□ 为所求。你接着算下一步。", ("3",)),
+    ("还是 3 只", "我们从这里入手:还是 □ 只。你接着算下一步。", ("3",)),
+    # 双句号回归(#198):step 自带句号 → 模板只补一个
     ("先看题里给的记法规则。",
      "我们从这里入手:先看题里给的记法规则。你接着算下一步。", ()),
-    # #185 复审 ①:掩码必须**全命中**改写(只掩首处会残留同句后文的第二处答案)
-    ("兔有5只和3只",
-     "我们从这里入手:兔有几只和几只。你接着算下一步。", ("5", "3")),
-    # #185 复审 ②:裸数字形状读不成句 → 整步弃用走通用兜底,不出「等于 几」
-    ("等于 3", NEEDS_REVIEW_TEXT, ()),
-    # #185 复审 ②:揭示框架词(就是/得到/结果是/等于)前后不改写 → 同样整步弃用
-    ("3 就是答案", NEEDS_REVIEW_TEXT, ()),
-    # #185 复审三轮:单字框架词(为/是)的触发面钉两条——follower「为所求」与 before「还是」
-    ("3 为所求", NEEDS_REVIEW_TEXT, ()),
-    ("还是 3 只", NEEDS_REVIEW_TEXT, ()),
-], ids=["result_withheld", "pure_expression_kept", "ordinal_head_kept",
-        "clause_boundary_cut", "no_boundary_kept", "no_arithmetic_kept",
-        "ordinal_form_withheld", "derived_value_withheld", "answer_masked",
-        "multi_hit_masked", "bare_number_dropped", "disclosure_frame_dropped",
+], ids=["arithmetic_result_kept", "pure_expression_kept", "answer_masked_in_expr",
+        "clause_boundary_kept", "no_boundary_kept", "no_arithmetic_kept",
+        "ordinal_form_masked", "derived_value_masked", "answer_masked",
+        "multi_hit_masked", "bare_number_dropped", "disclosure_frame_masked",
         "frame_word_after", "frame_word_before", "trailing_period_not_doubled"])
 def test_reveal_actionization(step_text, expected_reveal, forbidden):
     """揭示句构造十二形态:该收回的收回、该保留的保留(前六 = #165 原用例,
@@ -303,26 +230,6 @@ def test_reveal_keeps_question_numbers_when_answer_falls_back_to_steps_value():
     assert "几" not in turn.text
 
 
-def test_reveal_soften_path_tagged_in_guard_events():
-    """#241 行 4:软化两条路径在埋点可分——cut(同分句边界收回)/ mask(兜底改写「几」);
-    文本产出不变,只加元数据,报数层(corpus_round.soften_counts)据此聚合计数。"""
-    repeated = FIRST_QUESTION_COLLECT
-    reveal1 = "我们从这里入手:先算脚数差。你接着算下一步。"
-    gateway = FakeGateway(tutor_payloads=[
-        _open_payload(repeated, steps=[{"step": "先算脚数差，第3只开始换成兔", "value": "x"},
-                                       {"step": "兔有5只", "value": "x"}]),
-        _tutor_payload(repeated), _tutor_payload(repeated),   # 第 1 轮复读 → 揭示 1(分句收回)
-        _tutor_payload(reveal1), _tutor_payload(reveal1),     # 第 2 轮复读揭示句 → 揭示 2(改写「几」)
-    ])
-    first = start(dict(CHICKEN_QUESTION), {"grade": "六年级"}, gateway=gateway)
-    turn1 = reply(first.session, "嗯,我看看。", gateway=gateway)
-    events1 = list(turn1.session.guard_events)   # 同一 session 可变对象:turn2 前快照
-    turn2 = reply(turn1.session, "嗯,我再看看。", gateway=gateway)
-    assert turn1.text == reveal1
-    assert events1[-1]["soften"] == "cut"
-    assert turn2.text == "下一步是这样:兔有几只。你接着算下一步。"
-    assert turn2.session.guard_events[-1]["soften"] == "mask"
-
 
 def test_dropped_reveal_step_is_flagged_in_guard_events():
     """#185 复审三轮 P2:整步弃用的揭示轮在埋点里可辨识(dropped=True)——
@@ -330,7 +237,7 @@ def test_dropped_reveal_step_is_flagged_in_guard_events():
     按这份影子数据来(先量再收)。"""
     gateway = FakeGateway(tutor_payloads=[
         _open_payload(FIRST_QUESTION_COLLECT, steps=[
-            {"step": "等于 3", "value": "3"}, {"step": "再算脚数差", "value": "10"}]),
+            {"step": "3", "value": "3"}, {"step": "再算脚数差", "value": "10"}]),
         _tutor_payload(FIRST_QUESTION_COLLECT),
         _tutor_payload(FIRST_QUESTION_COLLECT),   # 重生成仍复读 → 揭示
     ])
@@ -344,64 +251,7 @@ def test_dropped_reveal_step_is_flagged_in_guard_events():
 
 # ---------- 输出面防复读终极不变量(任何兜底不得与上一轮学生可见文本同句) ----------
 
-def test_guard_fallback_repeat_backstop_reveals_ladder():
-    """泄露兜底复读:同句兜底将连续出现(复读探针实测修复前 8 连发)→ 阶梯推进。
 
-    首问可见文本恒为固定模板(start 覆盖),故 prev 由**上一轮学生可见文本**给出:
-    第 1 轮护栏兜底句达学生面,第 2 轮同句兜底 == prev → 输出面防复读背板接住。"""
-    # #318 人裁文案:snippet 含终答池数字(此处 4 = steps 末值兜底)时走
-    # 事实有界确认话姿,不再逐字回引
-    loop_text = "你已经说到了自己的结论。最后请你自己把完整思路和结论再说一遍。"
-    # (#149 ②)护栏答案基线统一走 _known_answer:本题 answer 空 → steps 末值 "10" 成基线,
-    # 泄露判定由 unverified 分支转为 grounded 分支(命中答案 + 断言线索才算泄露)。
-    leak = "结果是 10,不用再想了。"
-    gateway = FakeGateway(tutor_payloads=[
-        _open_payload(FIRST_QUESTION_COLLECT),
-        _tutor_payload(leak), _tutor_payload(leak),  # 第 1 轮:泄露 + 重生成仍泄露 → 兜底同句
-        # 第 2 轮:模型照旧泄露(1)→ 护栏重生成仍泄露(2)→ 复读自批评重生成仍泄露(3)
-        # → 背板揭示下一级阶梯(确定性,零模型)
-        _tutor_payload(leak), _tutor_payload(leak),
-        _tutor_payload(leak), _tutor_payload(leak),
-    ])
-    first = start({"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?说明思路。",
-                   "answer": "", "analysis": "", "knowledge_points": []},
-                  {"grade": "六年级"}, gateway=gateway)
-    looped = reply(first.session, "我还是觉得鸡有4只,兔有4只。", gateway=gateway)
-    turn = reply(first.session, "我还是觉得鸡有4只,兔有4只。", gateway=gateway)
-    assert looped.text == loop_text          # 第 1 轮:泄露原文被兜底句换下
-    assert turn.text == "我们从这里入手:先算全部按鸡的脚数。你接着算下一步。"
-    assert turn.text != loop_text           # 不再同句复读
-    assert turn.session.stuck is True
-    assert turn.ready_to_confirm is False
-    assert {"branch": "reveal", "hint_level": 1, "turn": 2} in turn.session.guard_events  # 背板路径同记
-
-
-def test_elicit_swap_repeat_backstop_reveals_ladder():
-    """代喂处置后复读:处置结果与上一轮学生可见文本同句(实测 8 连发)→ 阶梯推进。
-
-    #165 WS4 后处置不再整轮换模板:「脱敏」结果可能与 prev 撞句(上一轮本就是脱敏句),
-    输出面防复读背板必须仍然生效。首问可见文本恒为固定模板,故 prev 由第 1 轮的
-    脱敏句给出(第 2 轮脱敏结果与它同句)。"""
-    masked_prev = "这一步用这种方法就能看出来。"
-    hitting = "这一步用底乘高就能看出来。"
-    gateway = FakeGateway(tutor_payloads=[
-        _open_payload(FIRST_QUESTION_COLLECT),
-        _tutor_payload(hitting), _tutor_payload(hitting),  # 第 1 轮:重生成仍点名 → 脱敏句达学生面
-        _tutor_payload(hitting), _tutor_payload(hitting),  # 第 2 轮:脱敏结果 == prev → 背板推进
-    ])
-    first = start({"text": "一个三角形底是10厘米,高是6厘米,面积是多少?",
-                   "answer": "", "analysis": "", "knowledge_points": []},
-                  {"grade": "六年级"}, gateway=gateway)
-    masked = reply(first.session, "我还是觉得面积就是60平方厘米。", gateway=gateway)
-    turn = reply(first.session, "我还是觉得面积就是60平方厘米。", gateway=gateway)
-    assert masked.text == masked_prev       # 第 1 轮:点名被脱敏,脱敏句即下一轮 prev
-    assert turn.text != masked_prev         # 不再同句复读
-    assert turn.text.startswith(("我们从这里入手", "下一步是这样"))  # 阶梯推进
-    assert turn.session.stuck is True
-    assert {"branch": "reveal", "hint_level": 1, "turn": 2} in turn.session.guard_events  # 背板路径同记
-
-
-# ---------- 代喂命中的处置粒度(#152 follow-up / #165 WS4)+ 埋点 ----------
 
 def test_method_feed_hit_regenerates_and_records_event():
     """命中代喂 → **重生成保留本轮语义**(不整轮换复讲模板);埋点留痕原文/命中词/路径。"""

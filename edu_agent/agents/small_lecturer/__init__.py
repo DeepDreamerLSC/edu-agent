@@ -11,19 +11,20 @@ from .guardrails import (
 # kernel 段增补(#350):属性测试要直连的确定性私有件随包公开,同款先例见上
 # (02 §6 测试禁私有导入,零行为变更纯导出面)。
 from .kernel import (
+    NEEDS_REVIEW_TEXT,
     SAFE_FALLBACK_TEXT,
     TUTOR_TURN_SCHEMA,
     _STEP_LEADS,
+    PURE_BLOCK,
     _answer_leak_span,
     _reveal_stuck_hint,
-    _soften_step_text,
-    _student_signals_completion,
     _student_signals_stuck,
-    _student_signals_understanding,
     finish,
     reply,
+    set_ablation_arm,
     start,
 )
+from .ablation import set_phase2_off  # 二阶段 LOO 词汇表(评测/测试公开入口)
 # numeric 确定性纯函数随包公开(#350 属性测试直连;口径归属见 numeric.py 模块头):
 # _question_numbers/_spoken_numbers/_reply_numbers/_arithmetic_results/_usable_numbers/
 # _answer_numbers/_answer_focus_numbers/_drift_sources——纯函数族,零行为变更。
@@ -34,6 +35,7 @@ from .numeric import (
     _drift_sources,
     _question_numbers,
     _reply_numbers,
+    mask_numbers,
     _spoken_numbers,
     _usable_numbers,
 )
@@ -88,6 +90,8 @@ __all__ = [
     "Turn",
     "_STEP_LEADS",
     "_answer_focus_numbers",
+    "NEEDS_REVIEW_TEXT",
+    "PURE_BLOCK",
     "_answer_leak_span",
     "_answer_numbers",
     "_arithmetic_results",
@@ -95,12 +99,10 @@ __all__ = [
     "_question_numbers",
     "_reply_numbers",
     "_reveal_stuck_hint",
-    "_soften_step_text",
     "_spoken_numbers",
-    "_student_signals_completion",
     "_student_signals_stuck",
-    "_student_signals_understanding",
     "_usable_numbers",
+    "mask_numbers",
     "apply_tone_guardrail",
     "evaluate_student_visible_format",
     "evaluate_student_visible_question",
@@ -109,6 +111,7 @@ __all__ = [
     "grade_grounding",
     "opening_hint",
     "reply",
+    "set_ablation_arm", "set_phase2_off",
     "start",
     "style_directives",
     "summary_system_prompt",

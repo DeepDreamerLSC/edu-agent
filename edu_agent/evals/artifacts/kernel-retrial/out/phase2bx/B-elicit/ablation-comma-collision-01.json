@@ -1,0 +1,204 @@
+{
+  "case_id": "ablation-comma-collision-01",
+  "variant": "B-elicit",
+  "arm": "B",
+  "transcript": {
+    "question_id": "ablation-comma-collision-01",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "一半是 500……是要用 500 加什么吗?我想不出来。",
+        "tutor": "你刚才说‘是要用500加什么吗’，这想法挺有意思，你是怎么想到要加的呢？",
+        "state": "dialogue",
+        "elapsed_ms": 1705
+      },
+      {
+        "student": "还是不会,倒推到底怎么算,我又卡住了。",
+        "tutor": "这条回复包含题目终答,我不能直接给出。",
+        "state": "dialogue",
+        "elapsed_ms": 3659
+      },
+      {
+        "student": "哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!",
+        "tutor": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 8601,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          500.0
+        ],
+        "extracted": [
+          500.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          500.0
+        ],
+        "extracted": [
+          500.0,
+          1000.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 1,
+        "rule_ids": [
+          "grounded_answer_disclosure"
+        ],
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          500.0
+        ],
+        "extracted": [
+          2.0,
+          500.0
+        ],
+        "violation_sources": [
+          {
+            "number": 2.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 2,
+        "rule_ids": [
+          "grounded_answer_disclosure"
+        ],
+        "turn": 2
+      },
+      {
+        "branch": "elicit",
+        "hint_level": 0,
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_9f0b387a75"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        500.0
+      ],
+      "extracted": [
+        500.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        500.0
+      ],
+      "extracted": [
+        500.0,
+        1000.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 1,
+      "rule_ids": [
+        "grounded_answer_disclosure"
+      ],
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        500.0
+      ],
+      "extracted": [
+        2.0,
+        500.0
+      ],
+      "violation_sources": [
+        {
+          "number": 2.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 2,
+      "rule_ids": [
+        "grounded_answer_disclosure"
+      ],
+      "turn": 2
+    },
+    {
+      "branch": "elicit",
+      "hint_level": 0,
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 5,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "学生:还是不会,倒推到底怎么算,我又卡住了。小讲师:这条回复包含题目终答,我不能直接给出。",
+      "grade_fit": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "pacing": "小讲师:我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+      "summary_mastery": "对话在小讲师重复追问'你能说说目前想到的第一步吗?'后结束，未进行任何方法总结或掌握判断。",
+      "termination": "学生已明确给出正确终答'500×2=1000,这个数是 1,000!'，但小讲师未确认即强行继续追问，且对话在未完成教学闭环时终止。",
+      "math_integrity": "小讲师未陈述任何数学事实，仅拒绝泄露答案并引导学生。学生给出的'一半倒过来就是乘 2'及'500×2=1000'推理正确，小讲师未否定。",
+      "answer_leaked": "学生:哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 9
+}

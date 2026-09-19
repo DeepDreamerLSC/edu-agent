@@ -1,0 +1,214 @@
+{
+  "case_id": "image_v2_answerhit_02",
+  "variant": "BASE-B",
+  "arm": "B",
+  "transcript": {
+    "question_id": "image_v2_answerhit_02",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "120加60等于180,打八折就是180乘0.8……我算得14.4,好像不对。",
+        "tutor": "你先算出外套和裤子加起来多少钱，再乘0.8，这个想法很清晰，你是怎么想到要这样算的呢？",
+        "state": "dialogue",
+        "elapsed_ms": 1732
+      },
+      {
+        "student": "重新算:180乘0.8等于144,一套实付144元。",
+        "tutor": "这条回复包含题目终答,我不能直接给出。",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 3042
+      }
+    ],
+    "summary": "你正确地先算出外套和裤子总价180元，再乘0.8得到144元，这一步用对了乘法运算；仍需注意的是，计算时要确认单位是否统一，比如‘14.4’是小数点误写，实际应为144元。",
+    "total_ms": 8108,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          0.8,
+          14.4,
+          60.0,
+          120.0,
+          180.0
+        ],
+        "extracted": [
+          0.8
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          0.8,
+          144.0,
+          180.0
+        ],
+        "extracted": [
+          0.8,
+          144.0,
+          180.0
+        ],
+        "violation_sources": [
+          {
+            "number": 144.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 1,
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          0.8,
+          144.0,
+          180.0
+        ],
+        "extracted": [
+          0.8,
+          144.0,
+          180.0
+        ],
+        "violation_sources": [
+          {
+            "number": 144.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 2,
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_d432c7a787"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        0.8,
+        14.4,
+        60.0,
+        120.0,
+        180.0
+      ],
+      "extracted": [
+        0.8
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        0.8,
+        144.0,
+        180.0
+      ],
+      "extracted": [
+        0.8,
+        144.0,
+        180.0
+      ],
+      "violation_sources": [
+        {
+          "number": 144.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 1,
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        0.8,
+        144.0,
+        180.0
+      ],
+      "extracted": [
+        0.8,
+        144.0,
+        180.0
+      ],
+      "violation_sources": [
+        {
+          "number": 144.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 2,
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 2,
+      "grade_fit": 2,
+      "pacing": 2,
+      "summary_mastery": 2,
+      "termination": 2
+    },
+    "total": 12,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:你先算出外套和裤子加起来多少钱，再乘0.8，这个想法很清晰，你是怎么想到要这样算的呢？",
+      "grade_fit": "小讲师:你正确地先算出外套和裤子总价180元，再乘0.8得到144元，这一步用对了乘法运算；仍需注意的是，计算时要确认单位是否统一，比如‘14.4’是小数点误写，实际应为144元。",
+      "pacing": "学生:重新算:180乘0.8等于144,一套实付144元。",
+      "summary_mastery": "小讲师:你正确地先算出外套和裤子总价180元，再乘0.8得到144元，这一步用对了乘法运算；仍需注意的是，计算时要确认单位是否统一，比如‘14.4’是小数点误写，实际应为144元。",
+      "termination": "学生:重新算:180乘0.8等于144,一套实付144元。",
+      "math_integrity": "小讲师陈述：1. '120加60等于180' (正确); 2. '打八折就是...乘0.8' (正确); 3. '180乘0.8等于144' (正确); 4. '14.4是小数点误写，实际应为144' (正确)。小讲师正确识别了学生的小数点错误，确认了正确的计算逻辑和结果，未引入任何错误数学事实。",
+      "answer_leaked": "学生先给出终答：'重新算:180乘0.8等于144,一套实付144元。' 小讲师随后复述确认，未构成泄露。"
+    },
+    "verdict": "pass",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 46
+}

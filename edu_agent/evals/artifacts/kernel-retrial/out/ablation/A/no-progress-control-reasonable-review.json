@@ -1,0 +1,141 @@
+{
+  "case_id": "no-progress-control-reasonable-review",
+  "arm": "A",
+  "transcript": {
+    "question_id": "no-progress-control-reasonable-review",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你做对啦,真棒!还有哪里不太明白吗?",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "半径是 5 厘米,因为半径就是直径的一半。",
+        "tutor": "你用‘半径是直径的一半’这个关系算出了5厘米，这一步很到位！那如果直径换成12厘米，半径会是多少呢？",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 1196
+      }
+    ],
+    "summary": "这一题(「一个圆的直径是 10 厘米,这个圆的半径是多少厘米?」)你自己讲了做法:从「半径是 5 厘米,因为半径就是直径的一半。」开始,说到「半径是 5 厘米,因为半径就是直径的一半。」,关键步骤和结论都在你自己的话里,和题目的要求也对上了。可以再做一道,或者今天先到这里。",
+    "total_ms": 2443,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "correct"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          5.0,
+          10.0
+        ],
+        "extracted": [
+          5.0,
+          12.0
+        ],
+        "violation_sources": [
+          {
+            "number": 5.0,
+            "source": "answer"
+          },
+          {
+            "number": 12.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "shadow": "would_block",
+        "rule": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer",
+          "source_value_disclosure:hallucinated"
+        ],
+        "violations": [
+          5.0,
+          12.0
+        ],
+        "turn": 1
+      },
+      {
+        "shadow": "would_rewrite",
+        "rule": "premature_confirm",
+        "turn": 1
+      }
+    ],
+    "session_id": "kernel_00c26c5f9b"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        5.0,
+        10.0
+      ],
+      "extracted": [
+        5.0,
+        12.0
+      ],
+      "violation_sources": [
+        {
+          "number": 5.0,
+          "source": "answer"
+        },
+        {
+          "number": 12.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "shadow": "would_block",
+      "rule": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer",
+        "source_value_disclosure:hallucinated"
+      ],
+      "violations": [
+        5.0,
+        12.0
+      ],
+      "turn": 1
+    },
+    {
+      "shadow": "would_rewrite",
+      "rule": "premature_confirm",
+      "turn": 1
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 0,
+      "socratic_followup": 2,
+      "grade_fit": 2,
+      "pacing": 1,
+      "summary_mastery": 2,
+      "termination": 2
+    },
+    "total": 9,
+    "answer_leaked": true,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师第一轮直接说：'你好同学,这道题你做对啦,真棒!'，在学生尚未给出答案前就确认了'做对'，隐含泄露了正确答案的存在与状态，且未进行引导性提问。",
+      "socratic_followup": "学生给出答案后，小讲师追问：'那如果直径换成12厘米，半径会是多少呢？'，指向具体变式，引导学生迁移应用。",
+      "grade_fit": "使用'半径是直径的一半'等术语，符合六年级课标，语言简洁易懂。",
+      "pacing": "对话仅三轮，但第一轮直接确认答案，导致教学节奏失衡，虽后续有追问，但整体信息推进不够自然。",
+      "summary_mastery": "总结中引用学生原话：'从「半径是 5 厘米,因为半径就是直径的一半。」开始...',并指出关键步骤和结论都在学生话里，掌握判断有依据。",
+      "termination": "学生已正确回答并理解关系，小讲师提出'可以再做一道,或者今天先到这里'，自然收尾。",
+      "math_integrity": "小讲师陈述：'半径是直径的一半'（正确）；'直径10厘米，半径5厘米'（正确）；'直径12厘米，半径6厘米'（隐含正确推理）。无错误数学事实。",
+      "answer_leaked": "小讲师第一轮说：'你好同学,这道题你做对啦,真棒!'，在学生尚未给出答案前就确认了'做对'，属于终答泄露。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 3
+}

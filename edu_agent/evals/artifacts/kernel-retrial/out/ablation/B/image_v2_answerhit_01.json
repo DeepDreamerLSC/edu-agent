@@ -1,0 +1,217 @@
+{
+  "case_id": "image_v2_answerhit_01",
+  "arm": "B",
+  "transcript": {
+    "question_id": "image_v2_answerhit_01",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "12米剪掉3分之1,我用12乘3分之1……等于6米?",
+        "tutor": "你刚才说用12乘3分之1，能说说为什么这样算吗？比如这3分之1代表什么？",
+        "state": "dialogue",
+        "elapsed_ms": 1678
+      },
+      {
+        "student": "重新想:12除以3是每份4米,剪掉这样的1份,就是4米。",
+        "tutor": "这条回复包含题目终答,我不能直接给出。",
+        "state": "dialogue",
+        "elapsed_ms": 4168
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 9116,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          1.0,
+          12.0
+        ],
+        "extracted": [
+          1.0,
+          3.0,
+          12.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          4.0,
+          12.0
+        ],
+        "extracted": [
+          1.0,
+          3.0,
+          4.0,
+          12.0
+        ],
+        "violation_sources": [
+          {
+            "number": 4.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 1,
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          4.0,
+          12.0
+        ],
+        "extracted": [
+          1.0,
+          3.0,
+          4.0,
+          6.0,
+          12.0
+        ],
+        "violation_sources": [
+          {
+            "number": 4.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 2,
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_0c6c03ea4e"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        1.0,
+        12.0
+      ],
+      "extracted": [
+        1.0,
+        3.0,
+        12.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        4.0,
+        12.0
+      ],
+      "extracted": [
+        1.0,
+        3.0,
+        4.0,
+        12.0
+      ],
+      "violation_sources": [
+        {
+          "number": 4.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 1,
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        4.0,
+        12.0
+      ],
+      "extracted": [
+        1.0,
+        3.0,
+        4.0,
+        6.0,
+        12.0
+      ],
+      "violation_sources": [
+        {
+          "number": 4.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 2,
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 2,
+      "grade_fit": 2,
+      "pacing": 1,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 7,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:你刚才说用12乘3分之1，能说说为什么这样算吗？比如这3分之1代表什么？",
+      "grade_fit": "小讲师使用'每份'、'剪掉这样的1份'等符合六年级认知的表述，未出现超纲术语。",
+      "pacing": "小讲师在对话末尾突然插入'这条回复包含题目终答,我不能直接给出'及'这一题的学习证据还不够,我们继续'，导致对话节奏断裂，未自然推进教学。",
+      "summary_mastery": "对话在小讲师提示'我们继续'后直接结束，无任何实质方法总结，也未对学生表现进行掌握判断。",
+      "termination": "学生已给出正确终答'4米'，但小讲师未确认掌握即强行终止对话，且终止理由为'学习证据还不够'，与事实矛盾。",
+      "math_integrity": "小讲师未引入错误数学事实；学生推理'12除以3是每份4米'正确，小讲师未否定该正确推理。",
+      "answer_leaked": "学生先给出'等于6米?'(错误)，后给出'就是4米'(正确终答)，小讲师未在学生给出正确终答前泄露答案。"
+    },
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 45
+}

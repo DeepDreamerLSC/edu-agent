@@ -1,0 +1,962 @@
+{
+  "by_case": {
+    "ablation-comma-collision-01": {
+      "A": {
+        "m1_grounding": 0.288,
+        "m2_requestion": 0,
+        "m3_overcollect": 1,
+        "m4_answer_in_question": 1,
+        "m5_turns_to_closure": 0,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 3,
+          "would_rewrite": 0,
+          "would_reveal": 2,
+          "rate": 1.25
+        },
+        "final_state": "completed",
+        "judge_total": 12,
+        "tutor_turns": 4
+      },
+      "B": {
+        "m1_grounding": 0.29,
+        "m2_requestion": 0,
+        "m3_overcollect": 1,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 0,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 2,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.5
+        },
+        "final_state": "completed",
+        "judge_total": 12,
+        "tutor_turns": 4
+      },
+      "C": {
+        "m1_grounding": 0.26,
+        "m2_requestion": 0,
+        "m3_overcollect": 1,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 0,
+        "m6_interventions": {
+          "reveal": 1,
+          "regen": 1,
+          "leak_block": 1,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.75
+        },
+        "final_state": "completed",
+        "judge_total": 12,
+        "tutor_turns": 4
+      }
+    },
+    "image_v2_answerhit_01": {
+      "A": {
+        "m1_grounding": 0.309,
+        "m2_requestion": 0,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 1,
+        "m5_turns_to_closure": 1,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 1,
+          "would_rewrite": 1,
+          "would_reveal": 0,
+          "rate": 0.667
+        },
+        "final_state": "needs_review",
+        "judge_total": 5,
+        "tutor_turns": 3
+      },
+      "B": {
+        "m1_grounding": 0.172,
+        "m2_requestion": 0,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 1,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 1,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.333
+        },
+        "final_state": "needs_review",
+        "judge_total": 7,
+        "tutor_turns": 3
+      },
+      "C": {
+        "m1_grounding": 0.18,
+        "m2_requestion": 0,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 1,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.0
+        },
+        "final_state": "needs_review",
+        "judge_total": 5,
+        "tutor_turns": 3
+      }
+    },
+    "image_v2_answerhit_02": {
+      "A": {
+        "m1_grounding": 0.456,
+        "m2_requestion": 0,
+        "m3_overcollect": 1,
+        "m4_answer_in_question": 1,
+        "m5_turns_to_closure": 1,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 2,
+          "would_rewrite": 1,
+          "would_reveal": 0,
+          "rate": 1.0
+        },
+        "final_state": "completed",
+        "judge_total": 10,
+        "tutor_turns": 3
+      },
+      "B": {
+        "m1_grounding": 0.113,
+        "m2_requestion": 1,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 1,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 2,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.667
+        },
+        "final_state": "needs_review",
+        "judge_total": 3,
+        "tutor_turns": 3
+      },
+      "C": {
+        "m1_grounding": 0.049,
+        "m2_requestion": 0,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 1,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 1,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.333
+        },
+        "final_state": "needs_review",
+        "judge_total": 5,
+        "tutor_turns": 3
+      }
+    },
+    "image_v2_stuck_01": {
+      "A": {
+        "m1_grounding": 0.149,
+        "m2_requestion": 0,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 2,
+          "rate": 0.667
+        },
+        "final_state": "needs_review",
+        "judge_total": 6,
+        "tutor_turns": 3
+      },
+      "B": {
+        "m1_grounding": 0.149,
+        "m2_requestion": 0,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.0
+        },
+        "final_state": "needs_review",
+        "judge_total": 6,
+        "tutor_turns": 3
+      },
+      "C": {
+        "m1_grounding": 0.145,
+        "m2_requestion": 0,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 2,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.667
+        },
+        "final_state": "needs_review",
+        "judge_total": 2,
+        "tutor_turns": 3
+      }
+    },
+    "image_v2_stuck_02": {
+      "A": {
+        "m1_grounding": 0.15,
+        "m2_requestion": 1,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 1,
+          "would_reveal": 2,
+          "rate": 1.0
+        },
+        "final_state": "needs_review",
+        "judge_total": 3,
+        "tutor_turns": 3
+      },
+      "B": {
+        "m1_grounding": 0.15,
+        "m2_requestion": 1,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.0
+        },
+        "final_state": "needs_review",
+        "judge_total": 3,
+        "tutor_turns": 3
+      },
+      "C": {
+        "m1_grounding": 0.187,
+        "m2_requestion": 0,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 1,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.333
+        },
+        "final_state": "needs_review",
+        "judge_total": 5,
+        "tutor_turns": 3
+      }
+    },
+    "image_v2_understanding_02": {
+      "A": {
+        "m1_grounding": 0.204,
+        "m2_requestion": 2,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 1,
+          "would_reveal": 0,
+          "rate": 0.25
+        },
+        "final_state": "needs_review",
+        "judge_total": 5,
+        "tutor_turns": 4
+      },
+      "B": {
+        "m1_grounding": 0.204,
+        "m2_requestion": 2,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.0
+        },
+        "final_state": "needs_review",
+        "judge_total": 5,
+        "tutor_turns": 4
+      },
+      "C": {
+        "m1_grounding": 0.134,
+        "m2_requestion": 1,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.0
+        },
+        "final_state": "needs_review",
+        "judge_total": 5,
+        "tutor_turns": 4
+      }
+    },
+    "image_v2_understanding_04": {
+      "A": {
+        "m1_grounding": 0.289,
+        "m2_requestion": 0,
+        "m3_overcollect": 1,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 0,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 1,
+          "would_rewrite": 1,
+          "would_reveal": 0,
+          "rate": 0.5
+        },
+        "final_state": "completed",
+        "judge_total": 12,
+        "tutor_turns": 4
+      },
+      "B": {
+        "m1_grounding": 0.207,
+        "m2_requestion": 0,
+        "m3_overcollect": 1,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 0,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 1,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.25
+        },
+        "final_state": "completed",
+        "judge_total": 12,
+        "tutor_turns": 4
+      },
+      "C": {
+        "m1_grounding": 0.191,
+        "m2_requestion": 0,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 0,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.0
+        },
+        "final_state": "needs_review",
+        "judge_total": 7,
+        "tutor_turns": 4
+      }
+    },
+    "no-progress-control-reasonable-review": {
+      "A": {
+        "m1_grounding": 0.225,
+        "m2_requestion": 0,
+        "m3_overcollect": 1,
+        "m4_answer_in_question": 1,
+        "m5_turns_to_closure": 0,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 1,
+          "would_rewrite": 1,
+          "would_reveal": 0,
+          "rate": 1.0
+        },
+        "final_state": "completed",
+        "judge_total": 9,
+        "tutor_turns": 2
+      },
+      "B": {
+        "m1_grounding": 0.216,
+        "m2_requestion": 0,
+        "m3_overcollect": 1,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 0,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 1,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.5
+        },
+        "final_state": "completed",
+        "judge_total": 5,
+        "tutor_turns": 2
+      },
+      "C": {
+        "m1_grounding": 0.247,
+        "m2_requestion": 0,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 2,
+        "m6_interventions": {
+          "reveal": 2,
+          "regen": 1,
+          "leak_block": 3,
+          "soften": 1,
+          "pc": 3,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 2.25
+        },
+        "final_state": "needs_review",
+        "judge_total": 4,
+        "tutor_turns": 4
+      }
+    },
+    "no-progress-control-thin-reasoning": {
+      "A": {
+        "m1_grounding": 0.284,
+        "m2_requestion": 0,
+        "m3_overcollect": 1,
+        "m4_answer_in_question": 1,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 1,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.333
+        },
+        "final_state": "completed",
+        "judge_total": 9,
+        "tutor_turns": 3
+      },
+      "B": {
+        "m1_grounding": 0.249,
+        "m2_requestion": 0,
+        "m3_overcollect": 1,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 0,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 1,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.25
+        },
+        "final_state": "completed",
+        "judge_total": 9,
+        "tutor_turns": 4
+      },
+      "C": {
+        "m1_grounding": 0.275,
+        "m2_requestion": 0,
+        "m3_overcollect": 1,
+        "m4_answer_in_question": 0,
+        "m5_turns_to_closure": 0,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 1,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.25
+        },
+        "final_state": "completed",
+        "judge_total": 9,
+        "tutor_turns": 4
+      }
+    },
+    "no-progress-real-6a61aa32-replay": {
+      "A": {
+        "m1_grounding": 0.222,
+        "m2_requestion": 6,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 1,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 4,
+          "would_reveal": 0,
+          "rate": 0.4
+        },
+        "final_state": "needs_review",
+        "judge_total": 4,
+        "tutor_turns": 10
+      },
+      "B": {
+        "m1_grounding": 0.222,
+        "m2_requestion": 6,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 1,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.0
+        },
+        "final_state": "needs_review",
+        "judge_total": 4,
+        "tutor_turns": 10
+      },
+      "C": {
+        "m1_grounding": 0.226,
+        "m2_requestion": 2,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 4,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.0
+        },
+        "final_state": "needs_review",
+        "judge_total": 3,
+        "tutor_turns": 10
+      }
+    },
+    "no-progress-real-paraphrase-probe": {
+      "A": {
+        "m1_grounding": 0.237,
+        "m2_requestion": 6,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 2,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.0
+        },
+        "final_state": "needs_review",
+        "judge_total": 3,
+        "tutor_turns": 10
+      },
+      "B": {
+        "m1_grounding": 0.237,
+        "m2_requestion": 6,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 2,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.0
+        },
+        "final_state": "needs_review",
+        "judge_total": 3,
+        "tutor_turns": 10
+      },
+      "C": {
+        "m1_grounding": 0.237,
+        "m2_requestion": 6,
+        "m3_overcollect": 0,
+        "m4_answer_in_question": 2,
+        "m5_turns_to_closure": null,
+        "m6_interventions": {
+          "reveal": 0,
+          "regen": 0,
+          "leak_block": 0,
+          "soften": 0,
+          "pc": 0,
+          "arm_b_safety": 0,
+          "would_block": 0,
+          "would_rewrite": 0,
+          "would_reveal": 0,
+          "rate": 0.0
+        },
+        "final_state": "needs_review",
+        "judge_total": 3,
+        "tutor_turns": 10
+      }
+    }
+  },
+  "by_arm": {
+    "A": {
+      "m1_grounding": 0.256,
+      "m2_requestion": 1.364,
+      "m3_overcollect": 0.455,
+      "m4_answer_in_question": 0.727,
+      "m5_turns_to_closure": 0.4,
+      "intervention_rate_avg": 0.642,
+      "judge_total": 7.091,
+      "cases": 11
+    },
+    "B": {
+      "m1_grounding": 0.201,
+      "m2_requestion": 1.455,
+      "m3_overcollect": 0.364,
+      "m4_answer_in_question": 0.273,
+      "m5_turns_to_closure": 0.333,
+      "intervention_rate_avg": 0.227,
+      "judge_total": 6.273,
+      "cases": 11
+    },
+    "C": {
+      "m1_grounding": 0.194,
+      "m2_requestion": 0.818,
+      "m3_overcollect": 0.182,
+      "m4_answer_in_question": 0.545,
+      "m5_turns_to_closure": 0.667,
+      "intervention_rate_avg": 0.417,
+      "judge_total": 5.455,
+      "cases": 11
+    }
+  },
+  "m7_real_diff": [
+    {
+      "case_id": "ablation-comma-collision-01",
+      "rounds_differ": 3,
+      "diffs": [
+        {
+          "round": 1,
+          "A": "你想到‘一半是500’，那这个数是不是比500多？我们来想想，如果一个数的一半是500，那这个数就是500的2倍，就像你有1个苹果，分给两个人，每人分到半个，那",
+          "C": "我们从这里入手:这个数的一半是 500，说明这个数被分成了两份，每份是 500。你接着算下一步。"
+        },
+        {
+          "round": 2,
+          "A": "你刚才说‘倒推到底怎么算’，那我们来想：如果一半是500，那这个数就是500×2，就像你有500块糖，分给两个人，每人分到一半，那原来就有500×2块——你试试",
+          "C": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。"
+        },
+        {
+          "round": 3,
+          "A": "你刚才说‘一半倒过来就是乘2’，还算出500×2=1000，这个数就是1000，真棒！你用自己的方法讲清楚了这道题，现在自己完整说一遍结论吧。",
+          "C": "你刚才说‘一半倒过来就是乘 2’，这一步很关键，现在请你完整说一遍这个数是多少，不用再算，直接讲出来。"
+        }
+      ],
+      "pairs_for_review": true
+    },
+    {
+      "case_id": "image_v2_answerhit_01",
+      "rounds_differ": 1,
+      "diffs": [
+        {
+          "round": 2,
+          "A": "你刚才说12除以3是每份4米，剪掉这样的1份，这想法很聪明！但剪掉的是全长的3分之1，不是平均分成3份取1份，你能说说为什么这样算更符合题意吗？",
+          "C": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。"
+        }
+      ],
+      "pairs_for_review": true
+    },
+    {
+      "case_id": "image_v2_answerhit_02",
+      "rounds_differ": 2,
+      "diffs": [
+        {
+          "round": 1,
+          "A": "你先算出120加60等于180，再乘0.8得到14.4，这一步你是怎么想到的？",
+          "C": "你已经说到了自己的结论。最后请你自己把完整思路和结论再说一遍。"
+        },
+        {
+          "round": 2,
+          "A": "你先算出总价180元，再乘0.8得到144元，这个计算过程完全正确！",
+          "C": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。"
+        }
+      ],
+      "pairs_for_review": true
+    },
+    {
+      "case_id": "image_v2_stuck_01",
+      "rounds_differ": 2,
+      "diffs": [
+        {
+          "round": 1,
+          "A": "你现在的感受很正常，这题确实有点绕。不过我们先从图里那两段斜率说起——前段平缓说明水位上升慢，后段陡说明上升快，这背后藏着容器的形状秘密呢！你猜，哪一段对应容器",
+          "C": "我们从这里入手:注水速度恒定,水位变化快慢反映容器横截面积大小。你接着算下一步。"
+        },
+        {
+          "round": 2,
+          "A": "你刚才说水位没动，其实水一直在注，只是前段上升得慢——就像你用杯子装水，杯子宽的地方水位升得慢，对吧？那后段陡说明上升快，是不是杯子变窄了？",
+          "C": "下一步是这样:后段水位上升快→容器下部横截面积小。你接着算下一步。"
+        }
+      ],
+      "pairs_for_review": true
+    },
+    {
+      "case_id": "image_v2_stuck_02",
+      "rounds_differ": 1,
+      "diffs": [
+        {
+          "round": 2,
+          "A": "你刚才说3和4约分得到12分之3，这个想法很有趣，但纸条是4分米，不是3分米哦，我们得从4分米里剪下它的1/4，你打算怎么算呢？",
+          "C": "我们从这里入手:先看纸条总长是多少分米。你接着算下一步。"
+        }
+      ],
+      "pairs_for_review": true
+    },
+    {
+      "case_id": "image_v2_understanding_02",
+      "rounds_differ": 1,
+      "diffs": [
+        {
+          "round": 3,
+          "A": "你想到用减法比较相邻两周，这思路很棒！那我们来算算每一周比前一周具体增加了多少本，再比比看哪一周最多？",
+          "C": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。"
+        }
+      ],
+      "pairs_for_review": true
+    },
+    {
+      "case_id": "image_v2_understanding_04",
+      "rounds_differ": 1,
+      "diffs": [
+        {
+          "round": 3,
+          "A": "你刚才说直径是6厘米，半径是3厘米，这完全正确！因为半径确实是直径的一半，就像把6厘米平均分成两份，每份就是3厘米。",
+          "C": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。"
+        }
+      ],
+      "pairs_for_review": true
+    },
+    {
+      "case_id": "no-progress-control-reasonable-review",
+      "rounds_differ": 3,
+      "diffs": [
+        {
+          "round": 1,
+          "A": "你用‘半径是直径的一半’这个关系算出了5厘米，这一步很到位！那如果直径换成12厘米，半径会是多少呢？",
+          "C": "你刚才说半径是直径的一半，那如果直径是 10 厘米，你打算怎么算出一半呢？"
+        },
+        {
+          "round": 2,
+          "A": "<无>",
+          "C": "我们从这里入手:直径是半径的两倍。你接着算下一步。"
+        },
+        {
+          "round": 3,
+          "A": "<无>",
+          "C": "这一步我们直接看结果:10 ÷ 2 = 5。你先记住它,我们回头再讲一遍为什么。"
+        }
+      ],
+      "pairs_for_review": true
+    },
+    {
+      "case_id": "no-progress-control-thin-reasoning",
+      "rounds_differ": 3,
+      "diffs": [
+        {
+          "round": 1,
+          "A": "你算出鸡有 3 只、兔有 5 只，这答案对啦！不过我们得想想你是怎么知道的——比如你是不是用‘假设全是鸡’或者‘脚数差’来推算的？",
+          "C": "你已经说到了自己的结论。最后请你自己把完整思路和结论再说一遍。"
+        },
+        {
+          "round": 2,
+          "A": "你用假设法算得很清楚，先算全鸡时脚数是16只，比实际少10只，这差值能帮我们找到兔子数量，接下来你想怎么用这10只脚来算兔子呢？",
+          "C": "你刚才说假设全是鸡时脚数差10只，这一步很关键！那你知道每换一只鸡为兔，脚数会多出几只吗？"
+        },
+        {
+          "round": 3,
+          "A": "<无>",
+          "C": "你刚才说每只兔比鸡多2只脚，用10除以2得到兔的只数，再用总数8减去兔就是鸡的只数——这一步推理非常清晰！最后请你自己完整说一遍结论。"
+        }
+      ],
+      "pairs_for_review": true
+    },
+    {
+      "case_id": "no-progress-real-6a61aa32-replay",
+      "rounds_differ": 3,
+      "diffs": [
+        {
+          "round": 6,
+          "A": "你说到小羊在小马的西北方，这个方向感不错！但等边三角形三个顶点各住一只小动物，如果小马在东方，小羊在东北方，那小兔应该在哪个角？你再想想小羊和小马之间的距离是多",
+          "C": "你说到小羊在小马的西北方，这个方向感不错！那我们来算算小羊和小马之间的距离——等边三角形边长20m，它们住的是相邻顶点，距离就是20m，对吗？"
+        },
+        {
+          "round": 8,
+          "A": "你说到小羊在小马的西北方，这个方向感不错！但等边三角形三个顶点各住一只小动物，如果小马在东方，小羊在东北方，那小兔应该在哪个角？你再想想小羊和小马之间的距离是多",
+          "C": "你说到小羊在小马的西北方，这个方向感不错！那我们来算算小羊和小马之间的距离——等边三角形边长20m，它们住的是相邻顶点，距离就是20m，对吗？"
+        },
+        {
+          "round": 9,
+          "A": "你说到小马在小兔的东方，这个方向感不错！但等边三角形三个顶点各住一只小动物，如果小兔在原点，小马在东方，那小羊应该在哪个角？你再想想小羊和小马之间的距离是多少？",
+          "C": "你说到小羊在小马的西北方，距离是20m，这个方向和距离是对的！那小兔在小马的正西方，小羊在小兔的东北方，这三个点是不是正好组成一个等边三角形？你再想想小兔和小羊"
+        }
+      ],
+      "pairs_for_review": true
+    },
+    {
+      "case_id": "no-progress-real-paraphrase-probe",
+      "rounds_differ": 0,
+      "diffs": [],
+      "pairs_for_review": false
+    }
+  ]
+}
