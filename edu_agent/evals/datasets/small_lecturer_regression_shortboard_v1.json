@@ -183,7 +183,7 @@
     },
     {
       "id": "no-premature-confirm-before-student-answer",
-      "title": "学生未说终答时模型提前确认被判停闸拦下",
+      "title": "学生未说终答时模型提前确认直通(Thin Kernel 判停闸已删)",
       "status": "guarded",
       "source": {
         "issue": 149,
@@ -204,24 +204,14 @@
       "fake_model": [
         {
           "json": {
-            "acceptable": true,
-            "transcription": "",
             "reply": "这道题你怎么想?先说说看。",
-            "steps": [
-              {
-                "step": "先算又买来之后一共有多少本",
-                "value": "165"
-              },
-              {
-                "step": "再减去借出的",
-                "value": "127"
-              }
-            ]
+            "steps": [],
+            "ready_to_confirm": false,
+            "cited_numbers": []
           }
         },
         {
           "json": {
-            "reason": "收尾",
             "reply": "好,你已经完全明白了,这道题我们就到这里。",
             "ready_to_confirm": true,
             "cited_numbers": []
@@ -229,10 +219,7 @@
         },
         {
           "json": {
-            "reason": "继续引导",
-            "reply": "你说得对,借出要减掉。那先算又买来之后一共有多少本?",
-            "ready_to_confirm": false,
-            "cited_numbers": []
+            "summary": "你注意到借出表示数量减少——这道题到这里先收束,思路下次继续展开。"
           }
         }
       ],
@@ -242,14 +229,14 @@
       "expect": {
         "checks": [
           {
-            "name": "state_is_not",
+            "name": "state_is",
             "state": "ready_to_confirm",
-            "note": "学生未陈述终答,判停闸须拦下模型的提前确认(#149)"
+            "note": "Thin Kernel(#333 终裁):premature_confirm 闸已删(拆台者)——判停直通,质量归 Prompt/Model 面"
           },
           {
             "name": "finish_status",
-            "status": "needs_review",
-            "note": "真实覆盖 finish_status(判停闸拦截后落 needs_review)"
+            "status": "completed",
+            "note": "ready 达成即收束;判停质量风险由掩码面之外的黑盒判卷承担(锚:BASE-C 8案 judge 0胜4负)"
           }
         ]
       }
@@ -447,7 +434,7 @@
     },
     {
       "id": "half-wrong-step-no-confirm",
-      "title": "半懂说错→学生错步,模型抢确认+带终答,双重守护拦下(#178 短板 2 ③)",
+      "title": "半对步+终答引述被掩码护住,判停直通(Thin Kernel)",
       "status": "guarded",
       "source": {
         "issue": 178,
@@ -468,24 +455,14 @@
       "fake_model": [
         {
           "json": {
-            "acceptable": true,
-            "transcription": "",
-            "steps": [
-              {
-                "step": "先假设8只全是鸡，算出脚的总数",
-                "value": "16"
-              },
-              {
-                "step": "再算脚数差",
-                "value": "10"
-              }
-            ],
-            "reply": "我们先看题目里给了什么。"
+            "reply": "我们先看题目里给了什么。",
+            "steps": [],
+            "ready_to_confirm": false,
+            "cited_numbers": []
           }
         },
         {
           "json": {
-            "reason": "先引导学生自己想到下一步",
             "reply": "好,先假设全是鸡,脚会少算,继续算差。",
             "ready_to_confirm": false,
             "cited_numbers": []
@@ -493,26 +470,17 @@
         },
         {
           "json": {
-            "reason": "先引导学生自己想到下一步",
             "reply": "没错!差是8,所以兔有5只，鸡有3只。",
             "ready_to_confirm": true,
-            "cited_numbers": []
+            "cited_numbers": [
+              5,
+              3
+            ]
           }
         },
         {
           "json": {
-            "reason": "先引导学生自己想到下一步",
-            "reply": "差还差一点:26-16=10,每换一只多几只脚?",
-            "ready_to_confirm": false,
-            "cited_numbers": []
-          }
-        },
-        {
-          "json": {
-            "reason": "先引导学生自己想到下一步",
-            "reply": "回到脚数差:26比16多10,每换一只多几只脚?",
-            "ready_to_confirm": false,
-            "cited_numbers": []
+            "summary": "你按假设法把脚数差换算成了兔和鸡的数量——最后一步结论你自己说出来了。"
           }
         }
       ],
@@ -524,12 +492,12 @@
         "checks": [
           {
             "name": "text_excludes_answer_values",
-            "note": "#178 代喂面:守护须拦下整套解答里的终答数字(3/5)"
+            "note": "Thin Kernel 掩码:终答数字(3/5)→□ 不达学生面"
           },
           {
-            "name": "state_is_not",
+            "name": "state_is",
             "state": "ready_to_confirm",
-            "note": "#178 只猜一步/说错不构成掌握证据,不得进确认"
+            "note": "pc 闸已删;学生说了半对步,模型判停直通"
           }
         ]
       }

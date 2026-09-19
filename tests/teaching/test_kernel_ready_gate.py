@@ -29,18 +29,18 @@ CONTINUE_PAYLOAD = {"reply": "你说得对,借出要减掉。那先算又买来�
                     "ready_to_confirm": False, "cited_numbers": []}
 
 
-def test_gate_blocks_premature_confirm_and_rewrites():
-    """学生未陈述答案 → 判停被闸,状态回 dialogue,答案不进学生可见文本。"""
-    gateway = FakeGateway([OPEN_PAYLOAD, PREMATURE_PAYLOAD, CONTINUE_PAYLOAD])
+def test_premature_confirm_gate_removed_thin_semantics():
+    """Thin Kernel(#333 终裁):premature_confirm 闸已删(拆台者:judge+3/状态翻回/
+    介入率减半)——模型判停直通,不再重写;判停质量归 Prompt/Model 面。"""
+    gateway = FakeGateway([OPEN_PAYLOAD, PREMATURE_PAYLOAD])
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, STUDENT_NOT_YET, gateway=gateway)
-    assert turn.state == "dialogue"                # 不判停:复讲步/后续步骤还有机会
-    assert turn.ready_to_confirm is False
-    assert turn.text == CONTINUE_PAYLOAD["reply"]  # 原「收尾」被重写成继续引导
-    assert any(event.get("guard") == "premature_confirm"
-               for event in turn.session.guard_events)
-    # 处置 = 既有 refiner 路径(第二次 tutor 调用带重写指令),不是新增模板替换
-    assert len([r for r in gateway.requests if r["role"] == "tutor"]) == 3
+    assert turn.state == "ready_to_confirm"        # 判停直通(闸已删)
+    assert turn.ready_to_confirm is True
+    assert turn.text == PREMATURE_PAYLOAD["reply"]
+    assert not any(event.get("guard") == "premature_confirm"
+                   for event in turn.session.guard_events)
+    assert len([r for r in gateway.requests if r["role"] == "tutor"]) == 2  # 零重生成
 
 
 def test_gate_allows_confirm_when_student_stated_answer():
@@ -85,9 +85,10 @@ def test_shared_judge_core_order_insensitive_via_public_path():
     turn = start(question, learner, gateway=gateway)
     turn = reply(turn.session, "我先假设 8 只全是鸡。", gateway=gateway)
     assert turn.state == "dialogue"
+    gateway.tutor_queue.append({"reply": "对,你说出了结论。", "ready_to_confirm": True,
+                                "cited_numbers": []})
     turn = reply(turn.session, "兔5只,鸡3只。", gateway=gateway)  # 换序说出答案
-    assert turn.ready_to_confirm is False                          # 不判停:转确定性复讲
-    assert any(event.get("branch") == "elicit" for event in turn.session.guard_events)
+    assert turn.ready_to_confirm is True  # 陈述在案 → 模型判停直通(elicit 已删)
 
 
 def test_leak_guard_baseline_falls_back_to_steps_value():
@@ -138,10 +139,8 @@ def test_finish_completes_instead_of_needs_review_after_stated_answer():
     """验收:学生已陈述终答的末轮 → 会话正常收束 completed,不再落 needs_review。"""
     gateway = FakeGateway([
         CHICKEN_OPEN,
+        # Thin Kernel:引述终答(5/3)→ 确定性掩码(转述式确认,零重生成)
         CHICKEN_CONFIRM,
-        # VERDICT#6:CHICKEN_CONFIRM 引述终答(5/3)被拦 → 重生成为转述式确认
-        {"reply": "你算得完全对!验算和结论都齐了,这方法真棒!最后请你自己完整说一遍结论。",
-         "ready_to_confirm": True, "cited_numbers": [26]},
         {"summary": "你假设全是鸡,算出脚数差,再把兔子换出来——讲得很清楚。"},
     ])
     turn = start(dict(CHICKEN_QUESTION_EVAL), {"grade": "六年级"}, gateway=gateway)
@@ -151,12 +150,12 @@ def test_finish_completes_instead_of_needs_review_after_stated_answer():
     assert summary.status != "needs_review"
 
 
-def test_gate_still_blocks_when_student_only_restates_given_numbers():
-    """反向保护:只说题面数字(「一共有8只」)仍不算陈述答案 → 闸照旧拦下。"""
-    gateway = FakeGateway([CHICKEN_OPEN, CHICKEN_CONFIRM, CONTINUE_PAYLOAD])
+def test_given_number_restatement_no_kernel_intervention():
+    """Thin Kernel:只说题面数字 → 无确定性干预(闸已删),模型判停照走;
+    「题面数不算陈述」判据本身仍活在 numeric(_answer_focus_numbers),单元面钉。"""
+    gateway = FakeGateway([CHICKEN_OPEN, CHICKEN_CONFIRM])
     turn = start(dict(CHICKEN_QUESTION_EVAL), {"grade": "六年级"}, gateway=gateway)
     turn = reply(turn.session, "题目说一共 8 只、26 只脚。", gateway=gateway)
-    assert turn.state == "dialogue"
-    assert turn.ready_to_confirm is False
-    assert any(event.get("guard") == "premature_confirm"
-               for event in turn.session.guard_events)
+    # 学生未陈述终答 → 模型引述 5/3 被掩码护住(A 类);判停本身直通(pc 闸已删)
+    assert turn.text == "你算得完全对!□只兔和□只鸡,脚数正好是26,这方法真棒!"
+    assert not any("premature_confirm" in str(e) for e in turn.session.guard_events)

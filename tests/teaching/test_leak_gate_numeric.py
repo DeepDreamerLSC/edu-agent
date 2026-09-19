@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-from edu_agent.agents.small_lecturer import reply, start
+from edu_agent.agents.small_lecturer import PURE_BLOCK, reply, start
 
 from teachkit import FakeGateway
 
@@ -52,18 +52,18 @@ def test_answer_only_number_is_intercepted_and_repaired():
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
         _tutor("对,答案就是鸡 3 只、兔 5 只。"),
-        _tutor("不错,那这一步你打算先算哪一个?"),
     ])
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
 
-    assert turn.text == "不错,那这一步你打算先算哪一个?"  # 泄漏原文被重生成换下
+    # Thin Kernel 掩码:结构逐字保留,仅终答数值 → □;零模型零重生成
+    assert turn.text == "对,答案就是鸡 □ 只、兔 □ 只。"
     assert "3" not in turn.text and "5" not in turn.text
     repair = _repairs(turn.session.guard_events)[-1]
     assert repair["rule_ids"] == ["grounded_answer_disclosure",
                                   "source_value_disclosure:answer"]  # 逐字答案 + 数字归因
-    assert repair["regenerated"] is True           # 走了既有漏斗:重生成修好
-    assert turn.session.stuck is not True          # 修好 → 不置卡点(改动 3)
+    assert repair["regenerated"] is False and repair["mode"] == "masked"
+    assert turn.session.stuck is not True          # 掩码=干净恢复 → 不置卡点
     observed = _gate(turn.session.guard_events)[0]
     assert observed["gate"] == "blocked"           # 检测 ≠ 放行:同一份归因即门
     assert observed["violation_sources"] == [
@@ -81,16 +81,15 @@ def test_hallucinated_number_is_intercepted_like_issue_184():
         _open("先看题面给的 20m,你打算从哪里入手?", steps),
         # 复刻 #184 实弹:同一轮里「答案级」30°(北偏东30°)与「推理级」120°同时出现
         _tutor("每根夹角都是 120°,那用「北偏东30°」怎么描述呢?"),
-        _tutor("先定一个方向,你打算先看哪根?"),
     ])
     turn = start(question, dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
 
-    assert turn.text == "先定一个方向,你打算先看哪根?"
+    assert turn.text == "每根夹角都是 □°,那用「北偏东□°」怎么描述呢?"
     assert "120" not in turn.text                  # 幻觉中间值不达学生面
     assert "30" not in turn.text                   # 答案独有数字也不达学生面
     repair = _repairs(turn.session.guard_events)[-1]
-    assert repair["regenerated"] is True
+    assert repair["regenerated"] is False and repair["mode"] == "masked"
     assert sorted(repair["rule_ids"]) == [
         "source_value_disclosure:answer", "source_value_disclosure:hallucinated"]
     assert _gate(turn.session.guard_events)[0]["violation_sources"] == [
@@ -100,22 +99,22 @@ def test_hallucinated_number_is_intercepted_like_issue_184():
         {"number": 30.0, "source": "answer"}, {"number": 120.0, "source": "hallucinated"}]
 
 
-def test_violation_without_repair_falls_back_and_marks_stuck():
-    """④兜底才置 stuck:重生成仍越界 → 落兜底句,此时才是卡点(埋点 regenerated=False)。"""
+def test_unmaskable_violation_pure_blocks_and_marks_stuck():
+    """④纯 block 才置 stuck(Thin Kernel):带修饰形(前导零「05」)检得出、掩不掉
+    ——词边界护体(「05」的 5 被前导 0 挡住)→ round-2 纯 block,此时才是卡点。"""
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
-        _tutor("题目里一共 36 只脚,所以兔子很多。"),
-        _tutor("题目里一共 36 只脚,兔子就是 9 只。"),  # 重生成仍越界 → 兜底
-        _tutor("那我们先回到题目条件上,你打算先算哪一个?"),
+        _tutor("题目里一共 05 只脚,所以兔子很多。"),
     ])
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
 
-    assert "36" not in turn.text and "9" not in turn.text
+    assert turn.text == PURE_BLOCK
+    assert "3" not in turn.text and "5" not in turn.text
     repair = _repairs(turn.session.guard_events)[-1]
-    assert repair["regenerated"] is False          # 兜底句(修复失败)
-    assert turn.session.stuck is True              # 只有这条路径置卡点
-    assert "hallucinated" in repair["rule_ids"][0]
+    assert repair["regenerated"] is False and repair["mode"] == "blocked"
+    assert turn.session.stuck is True              # 只有纯 block 这条路径置卡点
+    assert "source_value_disclosure:answer" in repair["rule_ids"]
 
 
 # --------------------------------------------------------------------------- #
@@ -189,17 +188,17 @@ def test_final_answer_in_confirm_state_requires_paraphrase():
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
         _tutor("对,就是 5 只兔和 3 只鸡。你讲得很清楚。", ready=True),
-        _tutor("你的验算和结论都齐了,讲得很清楚。最后请你自己完整说一遍结论。", ready=True),
     ])
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "兔有10除以2等于5只,鸡有3只,验算26只脚。", gateway=gateway)
 
-    assert turn.text == "你的验算和结论都齐了,讲得很清楚。最后请你自己完整说一遍结论。"
+    # 掩码版转述式确认:ready 语义保持,终答数字 → □
+    assert turn.text == "对,就是 □ 只兔和 □ 只鸡。你讲得很清楚。"
     assert turn.state == "ready_to_confirm" and turn.ready_to_confirm is True
     assert turn.session.stuck is not True
     assert "3" not in turn.text and "5" not in turn.text
     repair = _repairs(turn.session.guard_events)[-1]
-    assert repair["regenerated"] is True  # 引述版被既有漏斗重生成为转述式
+    assert repair["regenerated"] is False and repair["mode"] == "masked"
     assert _gate(turn.session.guard_events)[0]["gate"] == "blocked"
 
 
@@ -242,45 +241,6 @@ def test_method_repair_in_confirm_state_paraphrases():
     assert turn.session.stuck is not True
     assert "假设法" not in turn.text  # 方法名不再出现(重生成版本)
     repair = _repairs(turn.session.guard_events)[-1]
-    assert repair["regenerated"] is True  # 终答引述(5/3)拦截,重生成为转述式
+    assert repair["regenerated"] is False and repair["mode"] == "masked"  # 终答先掩码
 
 
-def test_leak_fallback_does_not_restate_answer_value():
-    """VERDICT#6:泄露兜底回引不引述终答——学生原话含终答数字(5/3)时,
-    兜底句改转述锚点,终答不再从确定性路径回到学生面。"""
-    gateway = FakeGateway(tutor_payloads=[
-        _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
-        _tutor("对,答案就是鸡 3 只、兔 5 只。"),
-        _tutor("答案是鸡 3 只、兔 5 只,没错。"),  # 重生成仍引述 → 修不好落兜底
-    ])
-    turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
-    turn = reply(turn.session, "兔有10除以2等于5只,鸡有3只,验算26只脚。", gateway=gateway)
-
-    assert turn.text == "你已经说到了自己的结论。最后请你自己把完整思路和结论再说一遍。"
-    assert turn.session.stuck is True  # 修复失败落兜底的既有语义不变
-
-
-def test_leak_fallback_wording_never_overclaims():
-    """#318 人裁(修改后同意)三类行为钉:确定性文案断言不得超过条件可证事实。
-
-    分支条件只有「snippet 与终答池数字交集」——不证明结论正确/验算完整/
-    ready 态。B(只报终答无解释)、C(结论存疑/否定式提及)与 A(完整结论+
-    验算)走同一文案时,不得出现「验算」「讲得很清楚」类过强断言。
-    """
-    forbidden = ("验算都齐了", "讲得很清楚", "都齐了")
-    cases = (
-        "兔有10除以2等于5只,鸡有3只,验算26只脚。",   # A:完整 → 命中确认话姿分支
-        "答案是 5,不知道为什么。",                    # B:只报终答(带卡壳信号,另走路径)
-        "我觉得不是 5,也不会验算。",                  # C:否定式提及(同上)
-    )
-    for i, student_msg in enumerate(cases):
-        gateway = FakeGateway(tutor_payloads=[
-            _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
-            _tutor("对,答案就是鸡 3 只、兔 5 只。"),
-            _tutor("答案就是鸡 3 只、兔 5 只,没错。"),
-        ])
-        turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
-        turn = reply(turn.session, student_msg, gateway=gateway)
-        assert not any(word in turn.text for word in forbidden)  # 过强断言零出现
-        if i == 0:  # A 类才命中该分支(逐字钉)
-            assert turn.text == "你已经说到了自己的结论。最后请你自己把完整思路和结论再说一遍。"

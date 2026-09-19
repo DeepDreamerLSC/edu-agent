@@ -66,21 +66,24 @@ def _reveal_events(turn) -> list[dict]:
 # ---------- ① Q5 第二层四断言(PM 派单任务③) ----------
 
 
-def test_first_stuck_gives_no_numbers():
-    """首次 stuck(hint_level 0→1)只给动作化步骤,**不给任何数值锚**
-    (现状 soften 行为保持;V1 不放宽首次——本级 16 也不上学生面)。"""
+def test_first_stuck_gives_no_anchor_clause():
+    """首次 stuck(hint_level 0→1)不给**数值锚**(V1 不放宽首次):
+    Thin Kernel(#333)soften 收回已删——步文本中间结果(16)照示,锚子句
+    (「这一步先算,得到」)不出现,终答部件(3/5)不上学生面。"""
     turn = _drive(SEEDS["A_anchor_legal_intermediate_not_answer"], stuck_rounds=1)
-    for value in ("16", "10", "5"):
+    assert "得到" not in turn.text                      # 锚子句缺席
+    for value in ("3", "5"):                            # 终答部件(掩码面)
         assert value not in turn.text
     assert not _reveal_events(turn)[-1].get("anchor_numbers")
 
 
 def test_restuck_gives_current_level_non_answer_anchor():
-    """再次 stuck → 给**当前级非终答**锚(A 类:10 ∉ answer_pool{3,5};
-    只当前级,不扫全 steps——16 不出现,5=终答部件不出现)。"""
+    """再次 stuck → 给**当前级非终答**锚(A 类:10 ∉ answer_pool{3,5}):
+    Thin Kernel 中间结果(26-16)随步文本示出,锚只认当前级 value;
+    5=终答部件不出现(掩码面)。"""
     turn = _drive(SEEDS["A_anchor_legal_intermediate_not_answer"], stuck_rounds=2)
     assert "10" in turn.text
-    assert "16" not in turn.text and "5" not in turn.text
+    assert "5" not in turn.text
     assert _reveal_events(turn)[-1]["anchor_numbers"] == [10.0]  # Q6:additive 字段
 
 
@@ -93,11 +96,12 @@ def test_single_step_repeated_stuck_still_withholds():
 
 
 def test_step_value_overlapping_answer_part_still_withholds():
-    """step value 与 answer **部件**重叠仍不给(C 类多部件全保护,
-    understanding_04:answer_pool={6,3},两级 value 均重叠 → 整梯无锚)。"""
+    """step value 与 answer **部件**重叠仍不给锚(C 类多部件全保护,
+    understanding_04:answer_pool={6,3},两级 value 均重叠 → 整梯无锚);
+    Thin Kernel:终答部件 3 掩码(□),题面给定 6 照示。"""
     turn = _drive(SEEDS["M_multi_part_overlap_still_withheld"], stuck_rounds=2)
     assert not any(e.get("anchor_numbers") for e in _reveal_events(turn))
-    assert "3" not in turn.text and "6" not in turn.text
+    assert "3" not in turn.text
 
 
 # ---------- ② Q5 第一层边界对 C/D/F(七条件单面验证) ----------

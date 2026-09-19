@@ -77,27 +77,3 @@ def guard_early(guard: str | None, session: "LearnerSession | None",
     return None
 
 
-# B 臂最小安全 regen(协议 §1.3 硬约束「只拒绝不重教」):critique 仅要求去除终答,
-# 不注入教学话术;再命中 → 纯 block 安全句(非教学句)。
-_SAFETY_REGEN_CRITIQUE = (
-    "你的回复包含了题目的终答数值。请重新输出同一回复,仅去除终答数值,"
-    "不要新增任何教学内容。")
-PURE_BLOCK = "这条回复包含题目终答,我不能直接给出。"
-
-
-def arm_b_leak_funnel(regenerate, ctx, session: "LearnerSession | None",
-                      rule_ids: list[str], reply_text: str,
-                      ready_to_confirm: bool) -> str:
-    """B 臂 answer_leak 处置(协议 §1.3):block+至多一次最小安全 regen;再命中→
-    纯 block。与 C 漏斗差异:无教学化兜底句、无 stuck 语义、无同句短路。
-    regenerate 以 callable 注入(kernel._regenerate,免循环导入);其内建再判据:
-    返回非 None 即干净,None 即仍命中/失败 → round 2。埋点 round 1|2。"""
-    session.guard_events.append({"arm_b": "safety_regen", "round": 1,
-                                 "rule_ids": list(rule_ids)})
-    regenerated = regenerate(ctx, session, reply_text,
-                             _SAFETY_REGEN_CRITIQUE, ready_to_confirm)
-    if regenerated is not None:
-        return regenerated
-    session.guard_events.append({"arm_b": "safety_regen", "round": 2,
-                                 "rule_ids": list(rule_ids)})
-    return PURE_BLOCK

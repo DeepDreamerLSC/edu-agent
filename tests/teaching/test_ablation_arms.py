@@ -76,20 +76,6 @@ def test_arm_a_stuck_bypasses_to_model_with_would_reveal():
     assert any(e["shadow"] == "would_reveal" and e["rule"] == "stuck_hint" for e in shadows)
 
 
-def test_arm_a_elicit_bypass_records_would_rewrite():
-    """A 臂:understanding 分支旁路——模型接手,记 would_rewrite(elicit_restatement)。"""
-    set_ablation_arm("A")
-    gateway = FakeGateway(tutor_payloads=[
-        _open_payload("你打算怎么入手?"),
-        _tutor_payload("那你来说说第一步从哪里开始?"),
-    ])
-    session = _session(gateway)
-    turn = reply(session, "我明白了", gateway=gateway)
-    assert turn.text == "那你来说说第一步从哪里开始?"
-    shadows = [e for e in turn.session.guard_events if "shadow" in e]
-    assert any(e["shadow"] == "would_rewrite" and e["rule"] == "elicit_restatement"
-               for e in shadows)
-
 
 def test_arm_a_leak_shadow_records_would_block_and_passes_through():
     """A 臂:模型输出带终答 → answer_leak 只记 would_block,文本直通(不拦不改)。"""
@@ -121,36 +107,38 @@ def test_arm_b_deterministic_branches_off():
     assert not any("shadow" in e for e in turn2.session.guard_events)  # B 臂不记 shadow
 
 
-def test_arm_b_leak_still_blocked():
-    """B 臂:answer_leak=A类保留——泄漏处置照走(regen/兜底),学生面无终答。"""
+def test_arm_b_leak_masked_via_main_path():
+    """Thin Kernel(#333):B 臂泄漏 = 主路径掩码(专用漏斗已删,B 与 C 同一安全面)
+    ——结构保留数值→□,零模型零 regen,无 arm_b 专用埋点。"""
     set_ablation_arm("B")
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你打算怎么入手?"),
-        _tutor_payload("答案是鸡 3 只兔 5 只,你记一下。"),          # 泄漏 → 处置
-        _tutor_payload("你先说说全部按鸡算脚数是多少?"),            # 安全 regen 产物
+        _tutor_payload("答案是鸡 3 只兔 5 只,你记一下。"),
     ])
     session = _session(gateway)
     turn = reply(session, "先算哪个数?", gateway=gateway)
-    assert "鸡 3 只兔 5 只" not in turn.text         # thin 仍拦泄漏(安全面保留)
-    assert "鸡" in turn.text or "脚" in turn.text    # 替换文本在场
-    events = [e for e in turn.session.guard_events if "arm_b" in e]
-    assert [e["round"] for e in events] == [1]       # 协议 §1.3 埋点:regen 一次即净
+    assert turn.text == "答案是鸡 □ 只兔 □ 只,你记一下。"  # 确定性掩码
+    events = [e for e in turn.session.guard_events if e.get("mode")]
+    assert [e["mode"] for e in events] == ["masked"]
+    assert not any("arm_b" in e for e in turn.session.guard_events)  # 专用漏斗退役
 
 
-def test_arm_b_leak_second_hit_pure_block():
-    """B 臂:安全 regen 仍泄漏 → 纯 block(安全句,非教学句),记 round 1+2。"""
+def test_arm_b_unmaskable_leak_pure_blocks():
+    """Thin Kernel:B 臂不可掩形态(带修饰数字)→ 主路径纯 block(与 C 同一面),
+    只拒绝不重教,置卡点。"""
     set_ablation_arm("B")
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你打算怎么入手?"),
-        _tutor_payload("答案是鸡 3 只兔 5 只,你记一下。"),          # 泄漏 → 最小 regen
-        _tutor_payload("还是鸡 3 只兔 5 只,再记一遍。"),            # regen 仍泄漏
+        _tutor_payload("答案是鸡 3 只兔 05 只,你记一下。"),  # 05 前导零:检得出掩不掉
     ])
     session = _session(gateway)
     turn = reply(session, "先算哪个数?", gateway=gateway)
-    assert "鸡 3 只兔 5 只" not in turn.text
-    assert turn.text == "这条回复包含题目终答,我不能直接给出。"     # 纯 block:只拒绝不重教
-    events = [e for e in turn.session.guard_events if "arm_b" in e]
-    assert [e["round"] for e in events] == [1, 2]
+    assert "鸡 3 只兔 05 只" not in turn.text
+    assert turn.text == "这条回复包含题目终答,我不能直接给出。"  # 纯 block:只拒绝不重教
+    assert turn.session.stuck is True
+    events = [e for e in turn.session.guard_events if e.get("mode")]
+    assert [e["mode"] for e in events] == ["blocked"]
+
 
 
 def test_arm_a_feeds_method_shadow():

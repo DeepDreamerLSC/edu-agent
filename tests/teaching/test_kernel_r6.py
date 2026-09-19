@@ -172,7 +172,7 @@ def test_structured_summary_quotes_student_words_and_passes_guardrails(tmp_path)
 
 def test_stuck_mark_blocks_structured_path(tmp_path):
     """物理隔离:对话中出现护栏替换(卡点标记)→ 即使 answer_status=correct 也不走模板。"""
-    leak = tutor_json("答案是 x=6。")
+    leak = tutor_json("答案是 x=06。")  # 前导零:检得出掩不掉 → 纯 block(未解决)
     with kernel_env(tmp_path, [
         completion(open_json(_OPENING_TEXT["correct"])),
         completion(leak),                 # 泄露 → 护栏替换 → stuck 标记

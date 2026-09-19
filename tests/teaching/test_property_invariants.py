@@ -1,7 +1,7 @@
 """Hypothesis 属性测试:现有确定性不变量(#350;架构师裁定 c5724777246)。
 
-只测现状(deterministic pure-ish 逻辑):①`_soften_step_text` 三路径输出不漏
-答案数字;②答案集合归因(允许集里的答案数字只能来自题面);③数字表示等价类
+只测现状(deterministic pure-ish 逻辑):①`mask_numbers` 掩码输出不漏答案数字
+(Thin Kernel #333:soften 删,protective core 由掩码继承);②答案集合归因(允许集里的答案数字只能来自题面);③数字表示等价类
 (现有解析已支持的形态);④numeric 纯函数任意输入全且稳定;⑤`_reveal_stuck_hint`
 阶梯边界。**不预实现 V1 语义**——现状缺口记 FINDINGS(模块尾参数化回归+PR 说明),
 不硬造应然、不顺手修产品代码。
@@ -19,6 +19,7 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
 from edu_agent.agents.small_lecturer import (
+    NEEDS_REVIEW_TEXT,
     _STEP_LEADS,
     LearnerSession,
     _answer_focus_numbers,
@@ -28,8 +29,8 @@ from edu_agent.agents.small_lecturer import (
     _question_numbers,
     _reply_numbers,
     _reveal_stuck_hint,
-    _soften_step_text,
     _spoken_numbers,
+    mask_numbers,
 )
 
 CI_SETTINGS = settings(
@@ -73,18 +74,16 @@ def _make_session(text: str, answer: str, values: list[str],
     )
 
 
-# ── ① _soften_step_text:三路径输出(非 None 时)永不包含答案数字 ──
+# ── ① mask_numbers:掩码输出永不包含答案数字(Thin Kernel 掩码继承 soften 内核)──
 @CI_SETTINGS
 @given(numbers=ANSWER_SET, before=CONTEXT, after=CONTEXT, sep=SEPARATOR)
-def test_soften_output_never_contains_answer(numbers, before, after, sep):
-    """含答案数字的 step 文本(非算式路径)→ 改写输出要么整步弃用(None),
-    要么学生可见文本里检不出任何答案数字(cut 收回/mask 改「几」/无泄漏原文)。"""
+def test_mask_output_never_contains_answer(numbers, before, after, sep):
+    """含答案数字的 step 文本 → 掩码后学生可见文本里检不出任何答案数字;
+    掩码幂等(二次掩码同果);非答案数字逐字保留(结构保持 by construction)。"""
     text = sep.join([before, _num_forms(numbers), after])
-    out, path = _soften_step_text(text, frozenset(numbers))
-    assert isinstance(path, str)
-    if out is None:
-        return  # 裸数字形状读不成句 → 调用方弃用,学生不可见
-    assert _answer_leak_span(out, frozenset(numbers)) is None, (out, path)
+    out = mask_numbers(text, numbers)
+    assert _answer_leak_span(out, frozenset(numbers)) is None, out
+    assert mask_numbers(out, numbers) == out  # 幂等
 
 
 # ── ② 答案集合归因:允许集里的答案数字只能来自题面 ──
@@ -167,15 +166,19 @@ def test_reveal_boundaries_total_and_recorded(answer, n_steps, start_level):
     last = session.guard_events[-1]
     assert last.get("branch") == "reveal" and "hint_level" in last
     if not session.steps and answer:
-        assert "12" in out  # 空 steps + 有终答 → bottom-out 披露(设计内)
+        assert "12" not in out  # Thin Kernel:梯尽不披露终答(终答只在 finish)
 
 
 @given(n_steps=st.integers(min_value=1, max_value=4))
 @CI_SETTINGS
-def test_reveal_ladder_monotonic_bottom_out(n_steps):
-    """从 0 级起:恰好 n_steps 次阶梯推进(不重复),之后 bottom-out 披终答。"""
-    session = _make_session("题: 1", "答:42",
-                            [f"第{i}步算 {i + 2}" for i in range(n_steps)], [])
+def test_reveal_ladder_monotonic_exhaustion_no_disclosure(n_steps):
+    """从 0 级起:恰好 n_steps 次阶梯推进(不重复);梯尽 → NEEDS_REVIEW_TEXT,
+    终答不披露(Thin Kernel #333:终答唯一披露点=finish)。"""
+    session = LearnerSession(
+        question={"text": "题: 1", "answer": "答:42"}, learner={},
+        steps=[{"step": f"第{i}步算 {i + 2}", "value": str(i + 2)}
+               for i in range(n_steps)],
+        history=[])
     seen: list[str] = []
     for _ in range(n_steps):
         out = _reveal_stuck_hint(session)
@@ -183,25 +186,21 @@ def test_reveal_ladder_monotonic_bottom_out(n_steps):
         assert out not in seen  # 阶梯逐级,不重复
         seen.append(out)
     final = _reveal_stuck_hint(session)
-    assert "42" in final  # bottom-out:终答唯一披露点(设计内)
+    assert "42" not in final and final == NEEDS_REVIEW_TEXT
 
 
 # ── 发现的边界(定向探针固化;发现的边界=确定性回归,现状缺口记 FINDINGS)──
 @pytest.mark.parametrize("text,answer_set,expected", [
-    # FINDINGS-1:算式路径无分句边界 → 原样保留(「宁可直给,不出残句」设计取舍;
-    # 结果数字对学生可见——V1 收紧候选,现状如实锁)
-    ("先算 10 × 6 = 60", frozenset({60.0}), ("先算 10 × 6 = 60", "none")),
-    # 有边界 → cut 收回结果段(#165 设计行为)
-    ("先算底乘高，10 × 6 = 60", frozenset({60.0}), ("先算底乘高", "cut")),
-    # 序数形态:#185 取证口径(定位器刻意不剥「第N」)
-    ("第13次必形成规律", frozenset({13.0}), ("第几次必形成规律", "mask")),
-    # 导出值形态,有分句边界 → cut 收回(#185 设计行为)
-    ("转化为小数，得到 0.8", frozenset({0.8}), ("转化为小数", "cut")),
-    # 导出值形态,无边界 + 揭示框架词「得到」→ mask 读不成句 → 整步弃用(#185 复审 ②)
-    ("转化为小数得到 0.8", frozenset({0.8}), (None, "none")),
+    # Thin Kernel 掩码(#333):答案数字一律 □,不分句形/算式/序数——结构逐字保留
+    ("先算 10 × 6 = 60", frozenset({60.0}), "先算 10 × 6 = □"),
+    ("先算底乘高，10 × 6 = 60", frozenset({60.0}), "先算底乘高，10 × 6 = □"),
+    ("第13次必形成规律", frozenset({13.0}), "第□次必形成规律"),
+    ("转化为小数得到 0.8", frozenset({0.8}), "转化为小数得到 □"),
+    # 词边界:非答案数字部分命中不误伤(FINDINGS-4 千分位逗号仍切断解析,掩码面同)
+    ("2025 年 2025 字", frozenset({25.0}), "2025 年 2025 字"),
 ])
-def test_soften_directed_boundaries(text, answer_set, expected):
-    assert _soften_step_text(text, answer_set) == expected
+def test_mask_directed_boundaries(text, answer_set, expected):
+    assert mask_numbers(text, answer_set) == expected
 
 
 @pytest.mark.parametrize("text,expected", [
@@ -241,7 +240,7 @@ def test_reveal_negative_level_out_of_range_current_gaps():
 
 
 # FINDINGS 汇总(现状缺口,报 PM 不顺手修;V1 语义合并后另有补 property 单):
-# 1. _soften_step_text 算式路径无分句边界时原样保留结果数字(设计取舍「宁可直给」)
+# 1. (已删)soften 三路径 → Thin Kernel 掩码一等继承;千分位逗号切断面见 #4
 # 2. 百分号不换算值(50% → 50)
 # 3. 分数按两个数字,不解析为值
 # 4. 千分位逗号切断数字
