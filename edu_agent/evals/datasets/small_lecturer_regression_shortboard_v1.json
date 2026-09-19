@@ -803,6 +803,134 @@
           }
         ]
       }
+    },
+    {
+      "id": "probe-guard-question-guess-not-stated",
+      "title": "问句猜答边界:「是不是0.4?」≠ 已述,直 confirm 须拦(PM 追加令探针 1)",
+      "status": "guarded",
+      "source": {
+        "issue": 333,
+        "probe": "pm-addendum-c1",
+        "date": "2026-09-19"
+      },
+      "tags": [
+        "护栏",
+        "边界",
+        "探针",
+        "确定性"
+      ],
+      "question": {
+        "text": "一瓶水重2kg,求它的1/5是多少重。",
+        "answer": "0.4kg",
+        "analysis": "求一个数的几分之几。"
+      },
+      "answer_status": "correct",
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "reply": "开题。",
+            "steps": [
+              {
+                "step": "求它的1/5,就是用2kg乘以1/5",
+                "value": "2 × 1/5"
+              },
+              {
+                "step": "计算结果",
+                "value": "0.4 kg"
+              }
+            ]
+          }
+        },
+        {
+          "json": {
+            "reason": "直 confirm 问句猜答(须拦)",
+            "reply": "对,就是0.4千克,你猜对了。",
+            "ready_to_confirm": true,
+            "cited_numbers": []
+          }
+        }
+      ],
+      "student_turns": [
+        "答案是不是0.4千克呢?"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "text_excludes_values",
+            "values": [
+              0.4
+            ],
+            "note": "探针 1:问句猜答的数字不入学生池,导师直 confirm 引述终答=首次披露,掩码门照拦"
+          }
+        ]
+      }
+    },
+    {
+      "id": "probe-guard-analysis-answer-pollution",
+      "title": "解析含终答污染边界:analysis 写出的答案值禁入题给池(PM 追加令探针 2)",
+      "status": "guarded",
+      "source": {
+        "issue": 333,
+        "probe": "pm-addendum-c2",
+        "date": "2026-09-19"
+      },
+      "tags": [
+        "护栏",
+        "边界",
+        "探针",
+        "确定性"
+      ],
+      "question": {
+        "text": "解方程 3x+7=25,并说明每一步为什么这样做。",
+        "answer": "x=6",
+        "analysis": "两边同时减7得3x=18,再两边除以3得x=6。"
+      },
+      "answer_status": "incorrect",
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "reply": "开题。",
+            "steps": [
+              {
+                "step": "两边减7",
+                "value": "3x = 18"
+              },
+              {
+                "step": "两边除以3",
+                "value": "x = 6"
+              }
+            ]
+          }
+        },
+        {
+          "json": {
+            "reason": "引述解析写出的终答(须拦)",
+            "reply": "按解析两边减7再除以3,所以x=6,你自己验证一下。",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        }
+      ],
+      "student_turns": [
+        "然后呢?"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "text_excludes_values",
+            "values": [
+              6
+            ],
+            "note": "探针 2:题给池只收题面陈述+解析非终答值;解析文本写出的终答按值剥,不得经解析洗白"
+          }
+        ]
+      }
     }
   ]
 }

@@ -137,10 +137,11 @@ def test_final_answer_in_confirm_state_is_intercepted_not_stuck():
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "答案是 3 和 5 吗?", gateway=gateway)
     assert turn.session.stuck is not True
-    # guard-provenance-fix ①:学生消息已含 3/5(问句猜答也算「已述」)→ 导师
-    # 确认转述放行(豁免面);首次披露(学生未述)才掩码(见 dialogue 态例)
-    assert turn.text == "对,就是 3 只鸡和 5 只兔。"
-    assert _drift_event(turn)["violation_sources"] == []
+    # guard-provenance-fix 追加边界(PM 追加令探针 1):问句猜答 ≠ 已述——
+    # 「答案是3和5吗?」是疑问不是陈述,导师直 confirm 照旧掩码;豁免只认陈述式
+    assert turn.text == "对,就是 □ 只鸡和 □ 只兔。"
+    assert _drift_event(turn)["violation_sources"] == [
+        {"number": 3.0, "source": "answer"}, {"number": 5.0, "source": "answer"}]
 
 
 def test_hallucinated_number_is_intercepted_but_not_stuck():

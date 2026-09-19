@@ -355,3 +355,21 @@ def test_legit_ladder_terminal_value_kept():
 
     assert len(turn.session.steps) == 3
     assert not [e for e in turn.session.guard_events if e.get("branch") == "foreign_ladder_dropped"]
+
+
+def test_question_form_guess_not_stated_boundary():
+    """追加边界(PM 追加令探针 1):学生问句猜答「是不是0.4千克?」≠ 陈述已述
+    ——数字不入学生池,导师直 confirm 引述=首次披露,照旧掩码;对照:同数字
+    陈述式说出(「那就是0.4千克。」)→ 转述放行(上方翻转测试)。"""
+    question = {"text": "一瓶水重2kg,求它的1/5是多少重。", "answer": "0.4kg",
+                "analysis": "", "knowledge_points": []}
+    gateway = FakeGateway(tutor_payloads=[
+        _open("你先说说你的想法。", steps=[]),
+        _tutor("对,就是 0.4 千克,你猜对了。", ready=True),
+    ])
+    turn = start(dict(question), dict(LEARNER), gateway=gateway)
+    turn = reply(turn.session, "答案是不是0.4千克呢?", gateway=gateway)
+
+    assert turn.text == "对,就是 □ 千克,你猜对了。"
+    repair = _repairs(turn.session.guard_events)[-1]
+    assert repair["regenerated"] is False and repair["mode"] == "masked"

@@ -123,6 +123,15 @@ def _usable_numbers(text: str, answer: set[float]) -> set[float]:
     return numbers | (_arithmetic_results(text) - numbers - answer)
 
 
+def _declarative(text: str) -> bool:
+    """陈述式判定(guard-provenance-fix 追加边界,PM 追加令 2026-09-19):问句猜答
+    (「是不是0.4?」)≠ 已述——问句里的数字不入学生池,导师直 confirm 仍走掩码门。
+    判据=消息剥空白后不以 ?/? 结尾;混合消息(先陈述后问)整条按问句处理
+    (fail-closed:宁过掩不放过)。已知残留:无疑问标记的口语问句漏判(同
+    _CJK_NUMERALS「宁漏勿误」族,出现再收)。"""
+    return not str(text or "").rstrip().endswith(("?", "?"))
+
+
 def _drift_sources(session: LearnerSession,
                    student_message: str | None) -> tuple[set[float], set[float]]:
     """数字来源标签池(M2 闭环 #113/#34 + #157 评审末值边界;VERDICT#6 更新):允许集 =
@@ -131,6 +140,8 @@ def _drift_sources(session: LearnerSession,
     已述数字——含终答值——导师可复述/确认(confirm 命根:0.4kg 案学生连答四次
     被 □ 掩成死锁);首次披露仍禁(学生未述且题面/解析未给 → 照旧掩码门)。
     取代 #310 VERDICT#6 的「确认轮终答零例外」口径(A 类语义变更,差异入档)。
+    边界(PM 追加令):豁免只认**陈述式**已述——问句猜答(「是不是0.4?」)不算,
+    导师直 confirm 照旧拦截(_declarative)。
 
     终答数字按**值**从 steps 无条件允许集剥离(#157 评审:模型自报阶梯含末值=答案,
     整段照抄演算会 violations=[] 洗白——"自报进白名单"与 cited_numbers 同病);
@@ -150,9 +161,10 @@ def _drift_sources(session: LearnerSession,
         steps |= _usable_numbers(str(step.get("value") or ""), answer)
     student: set[float] = set()
     for message in session.history:
-        if message.get("role") == "user":
+        if message.get("role") == "user" and _declarative(str(message.get("content") or "")):
             student |= _usable_numbers(str(message.get("content") or ""), answer)
-    student |= _usable_numbers(str(student_message or ""), answer)
+    if _declarative(str(student_message or "")):
+        student |= _usable_numbers(str(student_message or ""), answer)
     allowed = face | (steps - answer) | student  # 学生池含终答(guard-provenance-fix ①)
     return allowed, answer
 
