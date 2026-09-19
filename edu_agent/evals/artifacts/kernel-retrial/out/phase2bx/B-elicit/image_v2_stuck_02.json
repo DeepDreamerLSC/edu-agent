@@ -1,0 +1,124 @@
+{
+  "case_id": "image_v2_stuck_02",
+  "variant": "B-elicit",
+  "arm": "B",
+  "transcript": {
+    "question_id": "image_v2_stuck_02",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "3乘4分之1这样的我会,这张图是先量再剪,我把3和4约分,得12分之3?",
+        "tutor": "你刚才说‘3和4约分’，是觉得剪下的长度和原长有关系吗？能说说你是怎么想到用约分的？",
+        "state": "dialogue",
+        "elapsed_ms": 1915
+      },
+      {
+        "student": "还是不会,越算越乱了。",
+        "tutor": "你刚才说‘3和4约分’，其实这道题是求4分米的1/4，不是3乘1/4，能说说你为什么把原长当成3分米吗？",
+        "state": "dialogue",
+        "elapsed_ms": 1767
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 6630,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          4.0
+        ],
+        "extracted": [
+          3.0,
+          4.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          1.0,
+          4.0
+        ],
+        "extracted": [
+          1.0,
+          3.0,
+          4.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_3106fababe"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        4.0
+      ],
+      "extracted": [
+        3.0,
+        4.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        1.0,
+        4.0
+      ],
+      "extracted": [
+        1.0,
+        3.0,
+        4.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 5,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:你刚才说‘3和4约分’，是觉得剪下的长度和原长有关系吗？能说说你是怎么想到用约分的？",
+      "grade_fit": "小讲师:你刚才说‘3和4约分’，其实这道题是求4分米的1/4，不是3乘1/4，能说说你为什么把原长当成3分米吗？",
+      "pacing": "小讲师连续两轮未等待学生回应即输出：'你刚才说‘3和4约分’，其实这道题是求4分米的1/4，不是3乘1/4，能说说你为什么把原长当成3分米吗？' 紧接着 '这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?'，属于一次性倾倒讲解且未给学生思考空间。",
+      "summary_mastery": "对话在小讲师提出'这一题的学习证据还不够'后直接结束，未进行任何实质性的方法总结，也未给出基于学生表现的掌握判断。",
+      "termination": "对话在小讲师指出学生'越算越乱'且未给出正确终答、未确认学生是否理解的情况下，以'学习证据还不够'为由直接终止，属于学生未掌握即终止。",
+      "math_integrity": "小讲师陈述：'这道题是求4分米的1/4'（正确，纠正学生误用3分米）；'不是3乘1/4'（正确，指出学生错误前提）。小讲师未引入错误数学事实，正确识别了学生将原长4分米误作3分米的错误。",
+      "answer_leaked": "小讲师全程未直接给出'1分米'这一终答，仅引导学生思考原长与分数的关系。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 4
+}
