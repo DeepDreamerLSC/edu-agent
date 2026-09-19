@@ -22,3 +22,6 @@ var/
 # 会话文件 store(M3 PR6 FileSessionStore)的运行时产物,本地状态不入库
 # (同 var/ 口径,04 §2.1)
 data/
+
+# 外部数据冻结原件(#368:license 兼容性核对人批后另行拉取,不入库)
+/external/
