@@ -148,6 +148,16 @@ def test_importer_fail_closed_on_unknown_from(tmp_path):
     assert not (tmp_path / "out.jsonl").exists()  # 宁缺毋滥:不过闸不落盘
 
 
+def test_importer_rejects_file_path_with_direction(tmp_path):
+    """传文件当首参 → 指路报错(#369 审 P3-1:目录语义易踩)。"""
+    single = tmp_path / "one.jsonl"
+    single.write_text("{}", encoding="utf-8")
+    with pytest.raises(ValueError, match="目录.*不是文件"):
+        import_socraticmath(single, tmp_path / "out.jsonl")
+    with pytest.raises(ValueError, match="external/socraticmath"):
+        import_socraticmath(single, tmp_path / "out.jsonl")  # 文案带正确示例路径
+
+
 def test_importer_cli_zero_traces(tmp_path):
     """真实 CLI 子进程:夹具 → jsonl,exit 0(零模型调用,纯数据面)。"""
     out = tmp_path / "socraticmath.jsonl"

@@ -20,7 +20,10 @@ SOURCE_REQUIRED_KEYS = ("dataset", "upstream_id", "license", "version")
 
 
 def external_fingerprint(record: dict) -> str:
-    """整条记录指纹(sha256):source + upstream_id + 内容面。
+    """外部证据指纹(sha256):source + upstream_id + 内容面。
+
+    与 scenario_corpus.scenario_fingerprint 的分工(#369 审 P3-3,防 grep 混淆):
+    那个是仓内 corpus 场景的切片指纹;本函数只对 external v1 record 负责——
 
     canonical 载荷 = source/problem/reference_dialogue/annotations(排序键,
     ensure_ascii=False);id/schema_version/fingerprint 是派生面不进指纹——
@@ -125,7 +128,11 @@ def validate_external_scenario(record: dict, *, base_dir: Path | str = ".",
 
 
 def load_normalized(path: Path | str, *, base_dir: Path | str = ".") -> list[dict]:
-    """读回 normalized jsonl 并逐条过闸(人工筛选消费口;首错即抛,带行号)。"""
+    """读回 normalized jsonl 并逐条过闸;首错即抛,带行号。
+
+    消费者 = #368 后半程的人工/slice 侧(本单先行建闸,暂无仓内调用方——
+    别做孤儿 API 超过一个里程碑,#369 审 P3-2)。
+    """
     records = []
     for line_no, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():

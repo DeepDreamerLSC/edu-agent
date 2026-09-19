@@ -68,9 +68,15 @@ def to_v1_record(raw: dict) -> dict:
 def import_socraticmath(input_dir: Path | str, output_path: Path | str) -> dict:
     """冻结原件目录(*.jsonl)→ normalized jsonl;逐条过闸(带原答保真锚)。
 
+    首参是**目录**(装 *.jsonl 原件的冻结目录),不是单个文件——传文件路径
+    会被明确指路(#369 审 P3-1,审查者亲踩)。
     任一条不过闸即中止不落盘(证据层宁缺毋滥);返回统计 {records, skipped_files}。
     """
-    sources = sorted(Path(input_dir).glob("*.jsonl"))
+    input_path = Path(input_dir)
+    if input_path.is_file():
+        raise ValueError(f"首参是冻结原件**目录**,不是文件:{input_path}"
+                         "(传包含 *.jsonl 的目录,如 external/socraticmath)")
+    sources = sorted(input_path.glob("*.jsonl"))
     if not sources:
         raise ValueError(f"{input_dir} 下没有 *.jsonl 原件(冻结原件目录待 license 人批后落)")
     records = []
@@ -95,7 +101,10 @@ def import_socraticmath(input_dir: Path | str, output_path: Path | str) -> dict:
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if len(argv) != 2:
-        print("用法:python -m edu_agent.evals.importers.socraticmath <原件目录> <输出.jsonl>",
+        print("用法:python -m edu_agent.evals.importers.socraticmath <原件目录> <输出.jsonl>\n"
+              "示例:python -m edu_agent.evals.importers.socraticmath external/socraticmath "
+              "edu_agent/evals/datasets/external_normalized/socraticmath.jsonl"
+              "  # 首参=目录(含 *.jsonl),非单个文件",
               file=sys.stderr)
         return 2
     try:
