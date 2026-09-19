@@ -106,7 +106,8 @@ def test_arm_a_leak_shadow_records_would_block_and_passes_through():
 
 
 def test_arm_b_deterministic_branches_off():
-    """B 臂:stuck/understanding 确定性分支全关——模型路径接手,无 shadow 事件。"""
+    """B 臂(phase2bx-elicit):确定性问句族加回——understanding 落 elicit 模板,
+    stuck 仍走模型路径(归 B-reveal_ladder 变体);无 shadow 事件。"""
     set_ablation_arm("B")
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你打算怎么入手?"),
@@ -115,9 +116,10 @@ def test_arm_b_deterministic_branches_off():
     ])
     session = _session(gateway)
     turn1 = reply(session, "我不会,想不出来", gateway=gateway)
-    assert turn1.text == "我们从脚数关系想想?"       # 模型直通
+    assert turn1.text == "我们从脚数关系想想?"       # stuck 未加回:模型直通
     turn2 = reply(session, "我明白了", gateway=gateway)
-    assert turn2.text == "那你讲讲思路?"
+    assert turn2.text.startswith("我们从头把思路串一遍")  # elicit 模板加回
+    assert any(e.get("branch") == "elicit" for e in turn2.session.guard_events)
     assert not any("shadow" in e for e in turn2.session.guard_events)  # B 臂不记 shadow
 
 
