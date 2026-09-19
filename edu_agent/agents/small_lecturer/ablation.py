@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from edu_agent.agents.small_lecturer.kernel import LearnerSession
 
 _STATE = {"arm": "C"}  # 容器变异免 global(suppression 预算)
+_OFF = {"off": frozenset()}  # 二阶段 LOO 关闭集(默认空=现 C;生产零改动)
 
 
 def set_ablation_arm(arm: str) -> None:
@@ -21,6 +22,21 @@ def set_ablation_arm(arm: str) -> None:
     if arm not in ("A", "B", "C"):
         raise ValueError(f"消融臂必须是 A/B/C,实际 {arm!r}")
     _STATE["arm"] = arm
+
+
+def set_phase2_off(names) -> None:
+    """二阶段 LOO 关闭集(仅评测 runner;协议 phase2-protocol-v1.md §2 词表)。"""
+    allowed = {"repeat_regen", "repeat_fallback", "reveal_ladder", "premature_confirm",
+               "confirm_rewrite", "soften_step", "bottomout_backboard"}
+    bad = set(names) - allowed
+    if bad:
+        raise ValueError(f"未知机制名 {sorted(bad)};词表={sorted(allowed)}")
+    _OFF["off"] = frozenset(names)
+
+
+def mech_off(name: str) -> bool:
+    """机制是否被二阶段关闭(C 臂门控点查询;A/B 臂不受 off 集影响)。"""
+    return name in _OFF["off"]
 
 
 def current_arm() -> str:

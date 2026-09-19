@@ -177,3 +177,72 @@ def test_arm_c_restore_after_ablation():
     calls = len(gateway.requests)
     reply(session, "我不会,想不出来", gateway=gateway)
     assert len(gateway.requests) == calls            # 回 C:确定性支持零模型
+
+
+# --- 二阶段 LOO 门控(phase2-protocol-v1.md §2;C 臂 + off 集,零模型) ---
+
+def test_phase2_off_fail_closed_unknown_mech():
+    from edu_agent.agents.small_lecturer.ablation import set_phase2_off
+    with pytest.raises(ValueError):
+        set_phase2_off(["bogus_mech"])
+
+
+def test_phase2_repeat_regen_off_passes_repeat_through():
+    """repeat_regen(+背板)关:复读不 regen 不兜底不背板,原文本直通(零 regen 调用)。"""
+    from edu_agent.agents.small_lecturer.ablation import set_phase2_off
+    set_ablation_arm("C")
+    set_phase2_off(["repeat_regen", "bottomout_backboard"])
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你打算怎么入手?"),
+        _tutor_payload("先算哪个数?"),
+        _tutor_payload("先算哪个数?"),  # 与上轮同文本 → 复读
+    ])
+    session = _session(gateway)
+    reply(session, "第一问", gateway=gateway)
+    calls = len(gateway.requests)
+    turn = reply(session, "再想想", gateway=gateway)
+    assert len(gateway.requests) == calls + 1     # 只有一次模型调用,无 regen
+    assert turn.text == "先算哪个数?"             # 原文直通(背板同关)
+    set_phase2_off([])
+
+
+def test_phase2_reveal_ladder_off_support_only():
+    """reveal_ladder 关:stuck 落 _SUPPORT_HINT(只问不揭示),记 reveal_off。"""
+    from edu_agent.agents.small_lecturer.ablation import set_phase2_off
+    set_ablation_arm("C")
+    set_phase2_off(["reveal_ladder"])
+    gateway = FakeGateway(tutor_payloads=[_open_payload("你打算怎么入手?")])
+    session = _session(gateway)
+    turn = reply(session, "我不会,想不出来", gateway=gateway)
+    assert "我们把这一步拆小" in turn.text          # _SUPPORT_HINT,无步内容
+    assert any(e.get("branch") == "reveal_off" for e in turn.session.guard_events)
+    set_phase2_off([])
+
+
+def test_phase2_premature_confirm_off_passes_ready():
+    """premature_confirm 关:模型 ready_to_confirm 直用,不重写(对照 C 臂闸下)。"""
+    from edu_agent.agents.small_lecturer.ablation import set_phase2_off
+    set_ablation_arm("C")
+    set_phase2_off(["premature_confirm"])
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你打算怎么入手?"),
+        _tutor_payload("那我们确认一下:鸡和兔一共是 8 只,对吗?", ready=True),
+    ])
+    session = _session(gateway)
+    turn = reply(session, "先算哪个数?", gateway=gateway)
+    assert turn.state == "ready_to_confirm"        # 闸不验,ready 直用
+    assert not any(e.get("guard") == "premature_confirm"
+                   for e in turn.session.guard_events)
+    set_phase2_off([])
+
+
+def test_phase2_off_reset_restores_c():
+    """off 集清空后 C 语义复原(测试隔离)。"""
+    from edu_agent.agents.small_lecturer.ablation import set_phase2_off
+    set_ablation_arm("C")
+    set_phase2_off(["reveal_ladder"])
+    set_phase2_off([])
+    gateway = FakeGateway(tutor_payloads=[_open_payload("你打算怎么入手?")])
+    session = _session(gateway)
+    turn = reply(session, "我不会,想不出来", gateway=gateway)
+    assert turn.session.guard_events[-1]["branch"] == "reveal"  # 阶梯照走

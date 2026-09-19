@@ -97,6 +97,7 @@ _SUPPORT_HINT = ("我们把这一步拆小:先不想整道题,你只看这一步
 # === 消融臂门控(伴生模块 ablation.py;C=生产默认不注入,#333 三臂协议) ===
 from .ablation import (arm_bypass as _arm_bypass, arm_b_leak_funnel as _arm_b_leak_funnel,
                        current_arm as _current_arm, guard_early as _ablation_guard_early,
+                       mech_off as _mech_off,  # 二阶段 LOO 门控查询(phase2 协议 §2)
                        set_ablation_arm as set_ablation_arm,  # 02 §6 白名单 re-export
                        shadow_event as _shadow_event)
 
@@ -300,28 +301,15 @@ def _cut_before(text: str, start: int) -> str | None:
 
 
 def _soften_step_text(step_text: str, answer_numbers: frozenset[float]) -> tuple[str | None, str]:
-    """阶梯揭示的**动作化**改写:把该步算好的结果收回去,只留动作与依据。
-    返回 (改写文本, 路径 tag):cut = 同分句边界收回;mask = 兜底改写「几」;
-    none = 未改写(无泄漏/无边界保留原文;mask 读不成句返回 (None, "none") →
-    调用方整步弃用)。文本产出不变,tag 仅供网级报数(#241 行 4)。
-
-    #165 WS4 第 2 条:卡壳路由从**揭示路径**修(#164 已回退词表检测,不再收紧检测)。
-    老行为把模型规划句原样交给学生,而规划句常写成「先算底乘高:10 × 6 = 60」——
-    等于把这一步的结果算给学生,学生只剩抄写(judge 侧读作过度直给、无推进)。
-
-    截断点 = 结果**之前**的最后一个**分句边界**(，,、:：;；)——整段丢掉带结果的
-    分句。实测(L 口径帧):按「截到算式起始」会切出残句(「8只鸡有。」「比假设多。」,
-    #148 §6.1 机械截断同款破损),故改为按分句边界切。**找不到边界就原样保留**
-    (宁可直给,不出残句);切出的动作段过短或只是序号(「第二步」)时同样保留原文。
-
-    #185 补洞(算式规则覆盖不到的两形态):step 文本自带终答的**序数形态**
-    (「第13次必形成…」)与**导出值形态**(「转化为小数,得到 0.8」)——判据 =
-    结论数字(`_answer_focus_numbers`:答案数字 − 题面数字;生产形态 steps 末值
-    兜底会把题面数混进答案集误伤,空集退回全集 fail-closed)。命中时优先走分句
-    边界收回;切不出合格动作段就把**全部**命中改写成「几」(复审 ①:只掩首处会
-    残留同句后文);裸数字形状读不成句 → **返回 None**,调用方走通用兜底——
-    不出残句也不漏终答(bottom-out 才是设计内的披露点,不变量锁着)。"""
+    """阶梯揭示的**动作化**改写:把该步算好的结果收回去,只留动作与依据(#165 WS4:
+    规划句原样给出=把结果算给学生)。返回 (改写文本, 路径 tag):cut = 按结果前最后
+    一个分句边界收回(宁可直给不出残句,#148 §6.1);mask = 全部命中改写「几」;
+    none = 未改写;裸数字读不成句返回 (None, "none") → 调用方整步弃用。#185 补洞:
+    序数/导出值形态判据=`_answer_focus_numbers`(答案−题面,空集退回全集 fail-closed);
+    tag 仅供网级报数(#241)。细节(#164/#148/#185 实测记录)见 git 史。"""
     text = str(step_text or "").strip()
+    if _mech_off("soften_step"):  # 二阶段 LOO:动作化关 → 步文本原文直出
+        return text, "off"
     match = _STEP_ARITHMETIC_RE.search(text)
     if match is not None:
         cut = _cut_before(text, match.start())
@@ -379,12 +367,17 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     ready 态附当前步中间值,首次 stuck 零数值。埋点:reveal/hint_level=阶梯消耗,
     弃用轮记 dropped,改写记 soften;bottom-out 按「这一步我们直接看结果:」前缀统计。"""
     re_stuck = session.hint_level > 0  # V1:首次 stuck=0 不给数值;再次 stuck 才有授权资格(推进前捕获)
+    if _mech_off("reveal_ladder"):  # 二阶段 LOO:阶梯整体关 → 只问不揭示
+        session.guard_events.append({"branch": "reveal_off", "mech": "reveal_ladder"})
+        return _SUPPORT_HINT
     step = _next_step(session)
     session.guard_events.append({"branch": "reveal", "hint_level": session.hint_level})
     if step is None:
         # 不变量(VERDICT#6 更新):终答文本只出现在 bottom-out(此处)/ finish 两条
         # 路径(锁在 tests/teaching/test_kernel_invariants.py);阶梯揭示只给步骤不给终答;
         # 确认/赞许轮转述式确认、不引述终答值(ready_to_confirm 不再入允许池)。
+        if _mech_off("bottomout_backboard"):  # 二阶段 LOO:梯尽不披露终答
+            return NEEDS_REVIEW_TEXT
         answer = str(session.question.get("answer") or "").strip()
         if not answer and session.steps:
             answer = str(session.steps[-1].get("value") or "").strip()
@@ -445,7 +438,7 @@ def _contextual_fallback(session: "LearnerSession | None", guard: str,
         # VERDICT#6(#310):回引不引述终答值——answer_leak 兜底若逐字引学生原话,
         # 会把刚拦下的终答从确定性路径放回学生面(gate-02/03 冒烟实测)。
         answer = _answer_numbers(session) if session is not None else set()
-        if answer and _reply_numbers(snippet):
+        if answer and _reply_numbers(snippet) and not _mech_off("confirm_rewrite"):
             # 确认话姿(非重定向,人裁 2026-09-17 #318 修改后同意):转述锚点只断言
             # 条件可证事实——「学生说到了结论」;不断言「验算齐/讲得清楚」(那需要
             # mastery/ready 态证明,本分支条件只有 answer 数字交集,证据不足)
@@ -805,8 +798,8 @@ def _gate_premature_confirm(session: LearnerSession, ctx: "_GuardContext", outpu
     if not (output.get("ready_to_confirm") and _answer_numbers(session)
             and not _student_stated_answer(session, student_message)):
         return safe_text
-    if _arm_bypass("would_rewrite", "premature_confirm", session):
-        return safe_text  # 消融 A/B 臂:闸检测照跑(A 记 shadow),处置旁路
+    if _arm_bypass("would_rewrite", "premature_confirm", session) or _mech_off("premature_confirm"):
+        return safe_text  # 消融 A/B 臂:闸检测照跑(A 记 shadow),处置旁路;二阶段 LOO 同旁路
     _record_event(session, "premature_confirm", [], str(output.get("reply") or ""),
                   regenerated=False)
     refined = _regenerate(ctx, session, safe_text, _PREMATURE_CONFIRM_CRITIQUE)
@@ -846,8 +839,12 @@ def _repeat_refine(ctx, session, safe_text: str, ready: bool) -> str:
         return safe_text
     if _current_arm() == "B":
         return safe_text
+    if _mech_off("repeat_regen"):
+        return safe_text
     refined = _regenerate(ctx, session, safe_text, _SELF_CRITIQUE, ready)
     if refined is None or _is_repeat(prev, refined):
+        if _mech_off("repeat_fallback"):
+            return safe_text  # 二阶段 LOO:复读兜底旁路(不揭示不置 stuck)
         refined = _reveal_stuck_hint(session)
         session.stuck = True
     return refined
@@ -932,7 +929,7 @@ def reply(session: LearnerSession, student_message: str, *,
     if prev and safe_text == prev:
         if _current_arm() == "A":
             _shadow_event(session, "would_reveal", "output_repeat_fallback")
-        elif _current_arm() == "C":
+        elif _current_arm() == "C" and not _mech_off("bottomout_backboard"):
             safe_text = _reveal_stuck_hint(session)
             output["reply"] = safe_text
             output["ready_to_confirm"] = False
