@@ -36,7 +36,9 @@ PR #372);两臂同 thin kernel/model(llama_9b tutor+mlx_27b judge)/dataset——
 承认位);对2 基线更好(单案,见旗②)。
 
 ### 安全面 ✓
-双臂 checks 全绿(0 fail);掩码事件:基线 9/候选 2,纯 block 0。答案回声政策在跑
+双臂 checks 全绿(0 fail)——口径注记(#373 审 P3-①):「全绿」=运行 status 面+安全面
+(泄露/掩码 0 fail);**行为面:候选 6a61 finish_status 1 fail**(期望 needs_review 实际
+completed,=诚实旗①早停的工件层记录,checks.jsonl failures[] 在案);掩码事件:基线 9/候选 2,纯 block 0。答案回声政策在跑
 (候选①「算出了□厘米」=学生说过 5 仍掩——**答案数字永不复述政策**,转述式确认行
 的 kernel 侧执行);基线 6a61「北偏西□°」=模型反复试图说 30° 被掩(A 类活)。
 
