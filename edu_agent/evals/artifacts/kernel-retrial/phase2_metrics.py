@@ -63,7 +63,7 @@ def main() -> None:
             rec = _load(OUT, v, cid)
             if rec is not None:
                 table[cid][v] = _row(rec, answers[cid])
-        p1 = _load(P1C, "C", cid)
+        p1 = _load(P1C.parent, "C", cid)  # P1C 已含尾段 C;root=ablation,key=C
         if p1 is not None:
             table[cid]["P1-C"] = _row(p1, answers[cid])
         # 噪声带 = |CREF − P1-C| 逐指标
