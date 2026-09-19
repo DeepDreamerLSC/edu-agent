@@ -161,9 +161,11 @@ def _synth_seed(rng: random.Random) -> tuple[dict, set[float]]:
     是否授权无关——锚无论何时出现都必须 ∩pool=∅ 且单数值)。"""
     qnums = rng.sample(range(2, 60), 2)
     pool = rng.sample([n for n in range(2, 99) if n not in qnums], rng.choice([1, 2]))
-    # 阶梯值只避题面数(可撞池):重叠面进样本,不变量须在重叠下仍成立(P4)
+    # 阶梯值避题面数、末级必触终答池(guard-provenance-fix ③ 门契约:模型阶梯
+    # 须达答案焦点;非末级可撞池,重叠面进样本,不变量须在重叠下仍成立 P4)
     ladder = [rng.choice([n for n in range(2, 99) if n not in qnums])
               for _ in range(rng.choice([1, 2, 3]))]
+    ladder[-1] = rng.choice(pool)
     steps = [{"step": f"第{i + 1}步:先处理这一项", "value": str(v)} for i, v in enumerate(ladder)]
     answer = "、".join(f"{n}只" for n in pool)
     seed = {"session": {"question": {"text": f"一共 {qnums[0]} 只和 {qnums[1]} 只,问各多少?",

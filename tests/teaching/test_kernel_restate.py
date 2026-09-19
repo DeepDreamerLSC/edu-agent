@@ -27,7 +27,8 @@ NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能�
 CHICKEN_QUESTION = {"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?说明思路。",
                     "answer": "鸡3只兔5只", "analysis": "", "knowledge_points": ["鸡兔同笼"]}
 CHICKEN_STEPS = [{"step": "先算全部按鸡的脚数", "value": "16"},
-                 {"step": "再算脚数差", "value": "10"}]
+                 {"step": "再算脚数差", "value": "10"},
+                 {"step": "兔的只数", "value": "5"}]  # 末级触答案焦点(guard-provenance-fix ③ 门契约)
 
 
 def _open_payload(reply_text: str, steps: list[dict] | None = None) -> dict:
@@ -159,7 +160,7 @@ def _reveal_after_repeat(step_text: str) -> str:
     """走公开路径逼出一次阶梯揭示:模型复读首问模板 → 重生成仍复读 → 兜底揭示下一级。"""
     repeated = FIRST_QUESTION_COLLECT
     gateway = FakeGateway(tutor_payloads=[
-        _open_payload(repeated, steps=[{"step": step_text, "value": "x"}]),
+        _open_payload(repeated, steps=[{"step": step_text, "value": "5"}]),  # 值触焦点过③门(x 无数字会整副被弃)
         _tutor_payload(repeated),
         _tutor_payload(repeated),   # 重生成仍复读 → 走揭示
     ])

@@ -29,6 +29,7 @@ from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 from .format_guard import evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
 from .numeric import (_ASCII_NUMBER, _answer_focus_numbers, _drift_sources,
+                      student_stated_answer,
                       _known_answer, _question_numbers, _reply_numbers, _spoken_numbers,
                       mask_numbers)
 from .prompting import (OPEN_SCHEMA, TUTOR_SUMMARY_SCHEMA, TUTOR_TURN_SCHEMA,
@@ -342,9 +343,13 @@ def _guard_check(ctx: "_GuardContext", text: str, session: "LearnerSession | Non
         # #149:答案基线统一走 _known_answer(answer 优先、steps 末值兜底);
         # ctx 未带基线(旧调用方)时退回 question["answer"],行为与改动前一致。
         answer_reference=ctx.answer_reference or str(ctx.question.get("answer") or ""),
-        active_subquestion_text=str(ctx.question.get("text") or ""),
         analysis_reference=str(ctx.question.get("analysis") or ""),
         student_evidence=list(ctx.student_evidence),
+        # guard-provenance-fix ① 值级注入(判据单源 #184):学生已陈述式说出
+        # 全部终答值 → 句级答案串门同豁免;无会话(旧调用方)不豁免,行为同前。
+        answer_values_stated_by_student=(
+            student_stated_answer(session, ctx.student_message)
+            if session is not None else False),
     )
     # 单一判据(仅模型回合):允许集口径见 `_drift_sources`;无会话时不判(fail-open)
     allowed, answer_pool = (_drift_sources(session, ctx.student_message)
@@ -485,12 +490,28 @@ def _open_user_message(learner: dict, question: dict) -> dict:
 
 def _store_steps(session: LearnerSession, steps: list[dict]) -> list[dict]:
     """solver 职责:确定性校验分步解(步骤非空、每步有 step/value,不调模型)并存进
-    session.steps(阶梯底稿 + 数字校验基准);不通过则弃。"""
+    session.steps(阶梯底稿 + 数字校验基准);不通过则弃。
+
+    外题阶梯门(guard-provenance-fix ③,2026-09-19):模型当场生成的阶梯若**任一
+    级值都不含答案焦点数字**,整副弃用——产线实录(6a61af03):open-solve 生成的
+    是他题阶梯(45°/30米/选项判定),reveal 忠实回放致「按第一个方向走30米」串题,
+    且阶梯值把 30/45 洗进允许集。判据取全级并集(不限终级):合法阶梯可能末级是
+    验算步,答案在中级触及;答案焦点 = _answer_focus_numbers(剔题面数字);焦点
+    取不到数字(文字答案/全在题面)→ fail-open 不判;未解出的部分阶梯同被弃
+    (fail-closed:不可信阶梯不回放)。弃用后 steps=[],reveal 走 NEEDS_REVIEW_TEXT
+    兜底(优于回放外题内容)。"""
     validated = [
         {"step": str(s.get("step") or "").strip(), "value": str(s.get("value") or "").strip()}
         for s in (steps or [])
         if isinstance(s, dict) and str(s.get("step") or "").strip() and str(s.get("value") or "").strip()
     ]
+    focus = _answer_focus_numbers(session)
+    reached = {n for s in validated for n in _question_numbers(str(s["value"]))}
+    if validated and focus and not (focus & reached):
+        session.guard_events.append({"branch": "foreign_ladder_dropped",
+                                     "terminal_value": validated[-1]["value"]})
+        session.steps = []
+        return []
     session.steps = validated
     return validated
 

@@ -90,6 +90,42 @@ def text_excludes_unauthorized_numbers(check: dict, case: dict, result: dict) ->
     return True, ""
 
 
+def text_contains_values(check: dict, case: dict, result: dict) -> tuple[bool, str]:
+    """声明值必须出现在至少一个 tutor 轮文本(guard-provenance-fix:正向断言)。
+
+    用途:复现案集的「豁免生效」钉——学生已述数字/题给已知数修复后,导师转述
+    不再被掩(0.4kg 确认回声、25km 题给引用);修复缺失时该值被 □ 掩 → 本 check
+    红。声明参数:check["values"] = 数字数组。"""
+    wanted = {float(v) for v in (check.get("values") or [])}
+    if not wanted:
+        return True, ""
+    seen: set[float] = set()
+    for _index, text in _tutor_turns(result):
+        seen |= _numbers(text)
+    missing = sorted(wanted - seen)
+    if missing:
+        return False, f"声明值未出现于任何 tutor 轮:" + ",".join(f"{v:g}" for v in missing)
+    return True, ""
+
+
+def text_excludes_values(check: dict, case: dict, result: dict) -> tuple[bool, str]:
+    """声明值不得出现在任何 tutor 轮文本(guard-provenance-fix:串题钉)。
+
+    用途:reveal 内容正确性——外题参数(30米/45°)不得经由任何路径(含阶梯
+    回放)出现在 tutor 文本。声明参数:check["values"] = 数字数组。"""
+    banned = {float(v) for v in (check.get("values") or [])}
+    if not banned:
+        return True, ""
+    violations = [
+        f"禁现值 {value:g} 出现在 turns[{index}]:「{text}」"
+        for index, text in _tutor_turns(result)
+        for value in sorted(banned & _numbers(text))
+    ]
+    if violations:
+        return False, ";".join(violations)
+    return True, ""
+
+
 def state_is(check: dict, case: dict, result: dict) -> tuple[bool, str]:
     """末轮 state 必须等于 check["state"](Thin Kernel:闸删后判停直通的正向钉)。"""
     expected = str(check.get("state") or "")
@@ -122,6 +158,8 @@ def finish_status(check: dict, case: dict, result: dict) -> tuple[bool, str]:
 REGISTRY: dict[str, CheckFn] = {
     "text_excludes_answer_values": text_excludes_answer_values,
     "text_excludes_unauthorized_numbers": text_excludes_unauthorized_numbers,
+    "text_contains_values": text_contains_values,
+    "text_excludes_values": text_excludes_values,
     "state_is": state_is,
     "state_is_not": state_is_not,
     "finish_status": finish_status,
