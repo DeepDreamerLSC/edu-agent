@@ -18,7 +18,9 @@ from teachkit import FakeGateway
 # 终答题面:answer 数字(3/5)既不在题面(8/26)也不在 step 值(16/10)里
 QUESTION = {"text": "鸡兔同笼,一共 8 只,26 只脚。鸡和兔各有多少只?",
             "answer": "鸡3只兔5只", "analysis": "", "knowledge_points": ["鸡兔同笼"]}
-STEPS = [{"step": "先算鸡脚", "value": "16"}, {"step": "再算兔脚", "value": "10"}]
+# 全解阶梯(guard-provenance-fix ③ 后口径:模型阶梯须触答案焦点,夹具同步全解)
+STEPS = [{"step": "先算鸡脚差", "value": "16"}, {"step": "再算兔脚差", "value": "10"},
+         {"step": "兔的只数", "value": "5"}]
 LEARNER = {"grade": "六年级", "name": "小明"}
 # 学生说过的中间值 4(题面/阶梯都没有)→ 「学生已说」这一来源的专门载体
 STUDENT_SAID = "我觉得鸡有4只。"
@@ -182,9 +184,10 @@ def test_student_arithmetic_results_pass_unchanged():
     assert len(gateway.requests) == 2
 
 
-def test_final_answer_in_confirm_state_requires_paraphrase():
-    """③-确认态终答(VERDICT#6 翻转):确认轮引述终答(5/3)→ 拦截重生成为转述式
-    确认——不引述终答数字,让学生自己复述结论;ready 语义保持。"""
+def test_final_answer_in_confirm_state_student_stated_echo_passes():
+    """③-确认态终答(guard-provenance-fix ① 翻转 VERDICT#6):学生已述终答
+    (5/3)→ 导师转述式确认**原样放行**——确认阶段命根(0.4kg 产线死锁修复);
+    ready 语义保持,零修复事件。"""
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
         _tutor("对,就是 5 只兔和 3 只鸡。你讲得很清楚。", ready=True),
@@ -192,10 +195,28 @@ def test_final_answer_in_confirm_state_requires_paraphrase():
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "兔有10除以2等于5只,鸡有3只,验算26只脚。", gateway=gateway)
 
-    # 掩码版转述式确认:ready 语义保持,终答数字 → □
-    assert turn.text == "对,就是 □ 只兔和 □ 只鸡。你讲得很清楚。"
+    # 学生已述豁免:转述式确认原样通过,终答数字可见
+    assert turn.text == "对,就是 5 只兔和 3 只鸡。你讲得很清楚。"
     assert turn.state == "ready_to_confirm" and turn.ready_to_confirm is True
     assert turn.session.stuck is not True
+    assert _repairs(turn.session.guard_events) == []
+    assert _gate(turn.session.guard_events)[-1]["gate"] == "observed"
+
+
+def test_final_answer_in_confirm_state_unstated_still_masked():
+    """③-确认态终答·首次披露对照(guard-provenance-fix ①):学生**未**述终答
+    (只说了中间值)→ 导师引述终答照旧掩码——豁免只覆盖「学生已述」,首次
+    披露禁令不动(掩码版转述式确认,ready 语义保持)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
+        _tutor("对,就是 5 只兔和 3 只鸡。你讲得很清楚。", ready=True),
+    ])
+    turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
+    turn = reply(turn.session, "嗯,我觉得思路是对的,然后呢?", gateway=gateway)
+
+    # 学生未述任何数字,终答 5/3 属首次披露 → 引述即掩
+    assert turn.text == "对,就是 □ 只兔和 □ 只鸡。你讲得很清楚。"
+    assert turn.state == "ready_to_confirm" and turn.ready_to_confirm is True
     assert "3" not in turn.text and "5" not in turn.text
     repair = _repairs(turn.session.guard_events)[-1]
     assert repair["regenerated"] is False and repair["mode"] == "masked"
@@ -240,7 +261,97 @@ def test_method_repair_in_confirm_state_paraphrases():
     assert turn.state == "ready_to_confirm" and turn.ready_to_confirm is True
     assert turn.session.stuck is not True
     assert "假设法" not in turn.text  # 方法名不再出现(重生成版本)
-    repair = _repairs(turn.session.guard_events)[-1]
-    assert repair["regenerated"] is False and repair["mode"] == "masked"  # 终答先掩码
+    # guard-provenance-fix ①:学生已述终答(5/3)→ 数值门零事件(转述合法);
+    # 方法词代喂修复独立在案(feeds_method),不再与终答掩码连坐
+    assert _repairs(turn.session.guard_events) == []
+    assert any(e.get("guard") == "feeds_method" for e in turn.session.guard_events)
 
 
+
+
+# --------------------------------------------------------------------------- #
+# guard-provenance-fix(2026-09-19 产线事故修单):②题给已知数入池 / ③外题阶梯门
+# --------------------------------------------------------------------------- #
+
+QUESTION_25KM = {
+    "text": "汽车的初始位置是(2,2),3小时后位置在(11,2)。在图中标出A、B,并求平均速度。",
+    "answer": "A(2,2),B(11,2);平均75千米/时;1小时后到(11,5)。",
+    "analysis": "每格25km,3小时走9格。",
+    "knowledge_points": [],
+}
+QUESTION_EQUATION = {
+    "text": "解方程 3x+7=25,并说明每一步为什么这样做。",
+    "answer": "x=6",
+    "analysis": "两边同时减7得3x=18,再两边除以3得x=6。",
+    "knowledge_points": ["简易方程"],
+}
+FOREIGN_LADDER = [
+    {"step": "先画出起点,然后按第一个方向走30米,标出第一个位置。", "value": "第一个位置在起点北偏西45°方向30米处。"},
+    {"step": "再从第一个位置按第二个方向走30米,标出最终位置。", "value": "最终位置在第一个位置西偏南45°方向30米处。"},
+    {"step": "观察最终位置相对于起点的方向,判断是哪个选项。", "value": "最终位置在起点的西南方向。"},
+]
+
+
+def test_analysis_given_numbers_pass_unchanged():
+    """②-题给已知数(产线 6a61af03):图题给定值只在图与解析里(题面文本无 25),
+    学生已数出 9 格 → 导师复述「每格代表25千米」原样放行(修复前被误判
+    hallucinated 掩成 □,题目无解)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open("你看到题目里的格子了吗?先说说你数出了几格。", steps=[]),
+        _tutor("你数对了9格,这说明汽车3小时走了9格,每格代表25千米,那速度怎么算呢?"),
+    ])
+    turn = start(dict(QUESTION_25KM), dict(LEARNER), gateway=gateway)
+    turn = reply(turn.session, "有9格", gateway=gateway)
+
+    assert turn.text == "你数对了9格,这说明汽车3小时走了9格,每格代表25千米,那速度怎么算呢?"
+    assert _repairs(turn.session.guard_events) == []
+
+
+def test_analysis_answer_value_not_whitelisted():
+    """②-边界:解析文本里写出的终答(「得x=6」的 6)按值剥出允许集——analysis
+    非学生可见面,不得经解析把终答洗白;学生未述 6 时导师引述照旧掩码。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open("我们来看这个方程,两边各是什么?", steps=[]),
+        _tutor("两边同时减7再除以3,所以x=6,你验证一下。"),
+    ])
+    turn = start(dict(QUESTION_EQUATION), dict(LEARNER), gateway=gateway)
+    turn = reply(turn.session, "嗯,我先试试。", gateway=gateway)
+
+    assert "x=6" not in turn.text and "6" not in turn.text.replace("26", "").replace("16", "")
+    assert _repairs(turn.session.guard_events)[-1]["mode"] == "masked"
+
+
+def test_foreign_ladder_dropped_and_reveal_falls_back():
+    """③-外题阶梯门(产线 6a61af03):open-solve 生成他题阶梯(45°/30米/选项
+    判定,终值不含任何答案焦点数字)→ 整副弃用;卡住轮 reveal 走兜底问句,
+    30/45 不出现在任何导师文本(修复前 reveal 回放「按第一个方向走30米」串题)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open("你先说说打算怎么找A和B的位置。", steps=[dict(s) for s in FOREIGN_LADDER]),
+    ])
+    turn = start(dict(QUESTION_25KM), dict(LEARNER), gateway=gateway)
+
+    assert turn.session.steps == []
+    dropped = [e for e in turn.session.guard_events if e.get("branch") == "foreign_ladder_dropped"]
+    assert dropped and "30" not in dropped[0]["terminal_value"] or dropped  # 事件在案
+
+    turn = reply(turn.session, "我不会", gateway=gateway)
+    assert "30" not in turn.text and "45" not in turn.text
+    assert turn.session.steps == []
+
+
+def test_legit_ladder_terminal_value_kept():
+    """③-对照:终值抵达答案焦点数字的阶梯照常保留(0.4kg 案合法阶梯
+    「计算2×1/5的结果」终值 0.4 = 答案焦点)——门只弃外题阶梯,不误伤。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open("你先说说打算怎么算。", steps=[
+            {"step": "先把水的总重量2kg看作单位1", "value": "2 kg"},
+            {"step": "求它的1/5,就是用2kg乘以1/5", "value": "2 × 1/5"},
+            {"step": "计算2×1/5的结果", "value": "0.4 kg"},
+        ]),
+    ])
+    question = {"text": "一瓶水重2kg,求它的1/5是多少重。", "answer": "0.4kg",
+                "analysis": "求一个数的几分之几。", "knowledge_points": []}
+    turn = start(question, dict(LEARNER), gateway=gateway)
+
+    assert len(turn.session.steps) == 3
+    assert not [e for e in turn.session.guard_events if e.get("branch") == "foreign_ladder_dropped"]

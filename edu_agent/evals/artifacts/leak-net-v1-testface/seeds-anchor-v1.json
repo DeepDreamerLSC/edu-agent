@@ -142,6 +142,10 @@
           {
             "step": "再算脚数差:26-16=10",
             "value": "10"
+          },
+          {
+            "step": "兔的只数",
+            "value": "5"
           }
         ],
         "steps_synthetic": true
@@ -177,6 +181,10 @@
           {
             "step": "再算脚数差:26-16=10",
             "value": "10"
+          },
+          {
+            "step": "兔的只数",
+            "value": "5"
           }
         ],
         "steps_synthetic": true

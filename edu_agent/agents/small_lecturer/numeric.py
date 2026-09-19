@@ -126,10 +126,11 @@ def _usable_numbers(text: str, answer: set[float]) -> set[float]:
 def _drift_sources(session: LearnerSession,
                    student_message: str | None) -> tuple[set[float], set[float]]:
     """数字来源标签池(M2 闭环 #113/#34 + #157 评审末值边界;VERDICT#6 更新):允许集 =
-    题面 ∪ (steps 值 − 终答数字) ∪ 学生历史数字。
-    ready_to_confirm 不再并入终答数字(#310 VERDICT#6,2026-09-17):确认/赞许轮
-    转述式确认,不引述终答值(#139/#149 泄露网零例外);终答文本只剩
-    bottom-out / finish 两条路径。
+    题面 ∪ 题库解析题给数 ∪ (steps 值 − 终答数字) ∪ 学生历史数字(含终答)。
+    学生已述豁免(guard-provenance-fix ①,2026-09-19 用户键 fix-forward):学生
+    已述数字——含终答值——导师可复述/确认(confirm 命根:0.4kg 案学生连答四次
+    被 □ 掩成死锁);首次披露仍禁(学生未述且题面/解析未给 → 照旧掩码门)。
+    取代 #310 VERDICT#6 的「确认轮终答零例外」口径(A 类语义变更,差异入档)。
 
     终答数字按**值**从 steps 无条件允许集剥离(#157 评审:模型自报阶梯含末值=答案,
     整段照抄演算会 violations=[] 洗白——"自报进白名单"与 cited_numbers 同病);
@@ -142,6 +143,8 @@ def _drift_sources(session: LearnerSession,
     #184 不误伤),终答数字处处剔除。"""
     answer = _answer_numbers(session)  # #156 统一判据底座:answer 优先,阶梯末级兜底
     face = _usable_numbers(str(session.question.get("text") or ""), answer)
+    # guard-provenance-fix ②:题库解析的题给数入池(按值剔终答;analysis 非学生可见面)
+    face |= _question_numbers(str(session.question.get("analysis") or "")) - answer
     steps: set[float] = set()
     for step in session.steps:
         steps |= _usable_numbers(str(step.get("value") or ""), answer)
@@ -150,7 +153,7 @@ def _drift_sources(session: LearnerSession,
         if message.get("role") == "user":
             student |= _usable_numbers(str(message.get("content") or ""), answer)
     student |= _usable_numbers(str(student_message or ""), answer)
-    allowed = face | (steps - answer) | (student - answer)
+    allowed = face | (steps - answer) | student  # 学生池含终答(guard-provenance-fix ①)
     return allowed, answer
 
 

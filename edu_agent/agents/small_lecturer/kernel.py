@@ -485,12 +485,28 @@ def _open_user_message(learner: dict, question: dict) -> dict:
 
 def _store_steps(session: LearnerSession, steps: list[dict]) -> list[dict]:
     """solver 职责:确定性校验分步解(步骤非空、每步有 step/value,不调模型)并存进
-    session.steps(阶梯底稿 + 数字校验基准);不通过则弃。"""
+    session.steps(阶梯底稿 + 数字校验基准);不通过则弃。
+
+    外题阶梯门(guard-provenance-fix ③,2026-09-19):模型当场生成的阶梯若**任一
+    级值都不含答案焦点数字**,整副弃用——产线实录(6a61af03):open-solve 生成的
+    是他题阶梯(45°/30米/选项判定),reveal 忠实回放致「按第一个方向走30米」串题,
+    且阶梯值把 30/45 洗进允许集。判据取全级并集(不限终级):合法阶梯可能末级是
+    验算步,答案在中级触及;答案焦点 = _answer_focus_numbers(剔题面数字);焦点
+    取不到数字(文字答案/全在题面)→ fail-open 不判;未解出的部分阶梯同被弃
+    (fail-closed:不可信阶梯不回放)。弃用后 steps=[],reveal 走 NEEDS_REVIEW_TEXT
+    兜底(优于回放外题内容)。"""
     validated = [
         {"step": str(s.get("step") or "").strip(), "value": str(s.get("value") or "").strip()}
         for s in (steps or [])
         if isinstance(s, dict) and str(s.get("step") or "").strip() and str(s.get("value") or "").strip()
     ]
+    focus = _answer_focus_numbers(session)
+    reached = {n for s in validated for n in _question_numbers(str(s["value"]))}
+    if validated and focus and not (focus & reached):
+        session.guard_events.append({"branch": "foreign_ladder_dropped",
+                                     "terminal_value": validated[-1]["value"]})
+        session.steps = []
+        return []
     session.steps = validated
     return validated
 

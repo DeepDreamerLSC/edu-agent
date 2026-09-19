@@ -501,6 +501,308 @@
           }
         ]
       }
+    },
+    {
+      "id": "repro-guard-student-echo-confirm",
+      "title": "学生已述答案被掩成确认死锁(0.4kg 案)",
+      "status": "guarded",
+      "source": {
+        "issue": 333,
+        "question_id": "6a61b319f0e25247f1ee3061",
+        "conv": "conv_04b1ecb0d9d3",
+        "date": "2026-09-19"
+      },
+      "tags": [
+        "护栏",
+        "确认",
+        "复现",
+        "确定性"
+      ],
+      "question": {
+        "text": "一瓶水重2kg,求它的1/5是多少重。",
+        "answer": "0.4kg",
+        "analysis": "求一个数的几分之几。"
+      },
+      "answer_status": "correct",
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "reply": "开题。",
+            "steps": [
+              {
+                "step": "先把水的总重量2kg看作单位1",
+                "value": "2 kg"
+              },
+              {
+                "step": "求它的1/5,就是用2kg乘以1/5",
+                "value": "2 × 1/5"
+              },
+              {
+                "step": "计算2×1/5的结果",
+                "value": "0.4 kg"
+              }
+            ]
+          }
+        },
+        {
+          "json": {
+            "reason": "问思路",
+            "reply": "你说到400克,能说说你是怎么从2kg算到400克的吗?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "推进",
+            "reply": "你用2000克除以5得到400克,这个换算和计算都没问题!那如果题目问的是1/5是多少千克呢?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "转述式确认(豁免面:学生已述 0.4)",
+            "reply": "你刚才说2kg等于2000克,除以5得400克,再换算成0.4kg,这三步都对!",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "确认收束",
+            "reply": "对,0.4千克就是这瓶水的1/5,你的换算完全正确。",
+            "ready_to_confirm": true,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "summary": "你把单位换算和分数乘法都讲清楚了,结论也自己说出来了,这道题完成。"
+          }
+        }
+      ],
+      "student_turns": [
+        "这道题我会,是400克",
+        "2千克就是2000克,然后除以5就是2000÷5得到了400。",
+        "那就是0.4千克。",
+        "是的,就是0.4千克。"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "text_contains_values",
+            "values": [
+              0.4
+            ],
+            "note": "guard-provenance-fix ①:学生已述终答,导师转述确认不得被掩(修复前 □kg 死锁)"
+          },
+          {
+            "name": "finish_status",
+            "status": "completed",
+            "note": "修复前确认环闭不上,会话滞留 ready_to_confirm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repro-guard-given-scale-reference",
+      "title": "题给已知数(图内比例尺 25km/格)被误判幻觉掩码(25km 案)",
+      "status": "guarded",
+      "source": {
+        "issue": 333,
+        "bank_id": "6a61af03",
+        "conv": "conv_23ee233fc399",
+        "date": "2026-09-19"
+      },
+      "tags": [
+        "护栏",
+        "题给数",
+        "复现",
+        "确定性"
+      ],
+      "question": {
+        "text": "汽车的初始位置是(2,2),3小时后位置在(11,2)。在图中标出A、B,并求平均速度;若速度不变,再向北行驶1小时后位置怎样表示。",
+        "answer": "A(2,2),B(11,2);平均75千米/时;1小时后到(11,5)。",
+        "analysis": "每格25km,3小时走9格。"
+      },
+      "answer_status": "incorrect",
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "reply": "开题。",
+            "steps": []
+          }
+        },
+        {
+          "json": {
+            "reason": "引导数格",
+            "reply": "你看到题目里说汽车从(2,2)走到(11,2),这中间的格子数你能数出来吗?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "引用题给比例尺(豁免面:analysis 题给数)",
+            "reply": "你数对了9格,这说明汽车3小时走了9格,每格代表25千米,那速度怎么算呢?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "推进",
+            "reply": "你说到速度是距离除以时间,这一步很对!那9格乘以每格25千米,再除以3小时,就能算出平均速度了。",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "确认收束(学生已述 75)",
+            "reply": "对,平均速度75千米/时,你把A、B的位置和速度都找出来了。",
+            "ready_to_confirm": true,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "summary": "你数格子、用比例尺换算再算速度,完整讲出了这道题的解法。"
+          }
+        }
+      ],
+      "student_turns": [
+        "这道题我不懂",
+        "有9格",
+        "速度就是距离除以时间",
+        "9乘25除以3等于75千米每小时,平均速度就是75"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "text_contains_values",
+            "values": [
+              25
+            ],
+            "note": "guard-provenance-fix ②:题库解析题给数入授权池(修复前 25 判 hallucinated 掩成 □千米,题目无解)"
+          },
+          {
+            "name": "finish_status",
+            "status": "completed",
+            "note": "修复前题给数引用恒被掩,学生无从计算"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repro-guard-reveal-foreign-ladder",
+      "title": "reveal 回放外题阶梯参数(30米/45° 串题案)",
+      "status": "guarded",
+      "source": {
+        "issue": 333,
+        "bank_id": "6a61af03",
+        "conv": "conv_23ee233fc399",
+        "date": "2026-09-19"
+      },
+      "tags": [
+        "护栏",
+        "reveal",
+        "串题",
+        "复现",
+        "确定性"
+      ],
+      "question": {
+        "text": "汽车的初始位置是(2,2),3小时后位置在(11,2)。在图中标出A、B,并求平均速度;若速度不变,再向北行驶1小时后位置怎样表示。",
+        "answer": "A(2,2),B(11,2);平均75千米/时;1小时后到(11,5)。",
+        "analysis": "每格25km,3小时走9格。"
+      },
+      "answer_status": "incorrect",
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "reply": "开题。",
+            "steps": [
+              {
+                "step": "先画出起点,然后按第一个方向走30米,标出第一个位置。",
+                "value": "第一个位置在起点北偏西45°方向30米处。"
+              },
+              {
+                "step": "再从第一个位置按第二个方向走30米,标出最终位置。",
+                "value": "最终位置在第一个位置西偏南45°方向30米处。"
+              },
+              {
+                "step": "观察最终位置相对于起点的方向,判断是哪个选项。",
+                "value": "最终位置在起点的西南方向。"
+              }
+            ]
+          }
+        },
+        {
+          "json": {
+            "reason": "引导",
+            "reply": "你先说说打算怎么找A和B的位置。",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "复读",
+            "reply": "你先说说打算怎么找A和B的位置。",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "复读二连",
+            "reply": "你先说说打算怎么找A和B的位置。",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "再引导",
+            "reply": "我们从题目给的条件入手,先看看3小时走了多远。",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        }
+      ],
+      "student_turns": [
+        "这道题我不懂",
+        "我不知道怎么标",
+        "还是不会",
+        "想不出"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "text_excludes_values",
+            "values": [
+              30,
+              45
+            ],
+            "note": "guard-provenance-fix ③:外题阶梯(任一级值不触答案焦点)整副弃用,reveal 不得回放其参数(修复前回放「按第一个方向走30米」串题)"
+          },
+          {
+            "name": "finish_status",
+            "status": "needs_review",
+            "note": "阶梯弃用后 fail-closed:reveal 走通用引导,会话按证据不足收束"
+          }
+        ]
+      }
     }
   ]
 }

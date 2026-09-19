@@ -95,15 +95,16 @@ def test_mask_output_never_contains_answer(numbers, before, after, sep):
     hist_txt=st.text(alphabet=_CJK + "，。0123456789×= ", min_size=0, max_size=20),
 )
 def test_drift_answer_numbers_only_from_question(q_nums, a_nums, step_txt, hist_txt):
-    """现状归因语义:allowed ∩ answer ⊆ 题面数字。steps/学生历史里的答案数字
-    一律剥出允许集(防「自报洗白」#157;ready_to_confirm 不入允许池 VERDICT#6,
-    允许集与确认态无关也在本断言覆盖内);算式结果同样剥(防「8-5=3」洗白)。"""
+    """归因语义(guard-provenance-fix ① 更新):allowed ∩ answer ⊆ 题面 ∪ 学生已述。
+    学生已述豁免:学生历史/本轮里出现的答案数字合法(confirm 转述命根);steps/
+    算式里的答案数字仍剥(防「自报洗白」#157);允许集与确认态无关也在本断言覆盖。"""
     qtext = "题:" + _num_forms(q_nums)
     answer = "答:" + _num_forms(a_nums)
     session = _make_session(qtext, answer, [step_txt, step_txt], [hist_txt])
     allowed, answer_pool = _drift_sources(session, hist_txt)
     assert answer_pool == _question_numbers(answer)
-    leaked = allowed & answer_pool - _question_numbers(qtext)
+    leaked = (allowed & answer_pool
+              - _question_numbers(qtext) - _question_numbers(hist_txt))
     assert not leaked, (leaked, qtext, answer, step_txt, hist_txt)
 
 
