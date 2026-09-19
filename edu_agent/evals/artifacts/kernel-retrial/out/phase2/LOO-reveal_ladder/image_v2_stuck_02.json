@@ -1,0 +1,113 @@
+{
+  "case_id": "image_v2_stuck_02",
+  "variant": "LOO-reveal_ladder",
+  "off": [
+    "reveal_ladder"
+  ],
+  "transcript": {
+    "question_id": "image_v2_stuck_02",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "3乘4分之1这样的我会,这张图是先量再剪,我把3和4约分,得12分之3?",
+        "tutor": "你刚才说3和4约分得到12分之3，这个想法很有趣，但纸条是4分米，不是3分米哦，我们得从4分米里剪下它的1/4，你打算怎么算呢？",
+        "state": "dialogue",
+        "elapsed_ms": 2402
+      },
+      {
+        "student": "还是不会,越算越乱了。",
+        "tutor": "我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 5576,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          1.0,
+          3.0,
+          4.0,
+          12.0
+        ],
+        "extracted": [
+          1.0,
+          3.0,
+          4.0,
+          12.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "reveal_off",
+        "mech": "reveal_ladder",
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_17fc28037d"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        1.0,
+        3.0,
+        4.0,
+        12.0
+      ],
+      "extracted": [
+        1.0,
+        3.0,
+        4.0,
+        12.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "reveal_off",
+      "mech": "reveal_ladder",
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 5,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,从它开始你觉得能先算出什么?想到多少说多少。",
+      "grade_fit": "小讲师:你刚才说3和4约分得到12分之3，这个想法很有趣，但纸条是4分米，不是3分米哦，我们得从4分米里剪下它的1/4，你打算怎么算呢？",
+      "pacing": "小讲师连续两轮未等待学生回应即输出提示：'我们把这一步拆小...' 和 '这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?'，导致信息倾倒且无实质推进。",
+      "summary_mastery": "对话中无实质总结，小讲师仅以'这一题的学习证据还不够'结束，未复述学生尝试或给出掌握判断。",
+      "termination": "学生在'还是不会,越算越乱了'后，小讲师未有效引导即终止对话，学生未掌握且未确认。",
+      "math_integrity": "小讲师指出'纸条是4分米，不是3分米'，纠正了学生将4误作3的错误；未引入错误数学事实。",
+      "answer_leaked": "小讲师全程未直接给出'1分米'这一终答，学生也未给出正确终答。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 37
+}

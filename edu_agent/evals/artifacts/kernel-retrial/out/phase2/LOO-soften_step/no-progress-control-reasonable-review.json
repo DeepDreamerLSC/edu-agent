@@ -1,0 +1,532 @@
+{
+  "case_id": "no-progress-control-reasonable-review",
+  "variant": "LOO-soften_step",
+  "off": [
+    "soften_step"
+  ],
+  "transcript": {
+    "question_id": "no-progress-control-reasonable-review",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你做对啦,真棒!还有哪里不太明白吗?",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "半径是 5 厘米,因为半径就是直径的一半。",
+        "tutor": "你刚才说半径是直径的一半，那如果直径是 10 厘米，你打算怎么算出一半呢？",
+        "state": "dialogue",
+        "elapsed_ms": 4228
+      },
+      {
+        "student": "依据是圆的半径定义:直径是过圆心的一条线段,被圆心平分成两段相等的半径,所以 10 的一半就是半径。",
+        "tutor": "我们从这里入手:直径是半径的两倍，所以半径等于直径除以2。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 4716
+      },
+      {
+        "student": "这道题我先看直径是 10 厘米,然后用半径等于直径除以 2,算出半径是 10 除以 2,得到结论。",
+        "tutor": "这一步我们直接看结果:10 ÷ 2 = 5。你先记住它,我们回头再讲一遍为什么。",
+        "state": "dialogue",
+        "elapsed_ms": 4643
+      }
+    ],
+    "summary": "这道题之前已经答对了,我们还需要听你把关键思路讲清楚。",
+    "total_ms": 15365,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "correct"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          5.0,
+          10.0
+        ],
+        "extracted": [
+          5.0,
+          12.0
+        ],
+        "violation_sources": [
+          {
+            "number": 5.0,
+            "source": "answer"
+          },
+          {
+            "number": 12.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          5.0,
+          10.0
+        ],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer",
+          "source_value_disclosure:hallucinated"
+        ],
+        "original": "你用‘半径是直径的一半’这个关系算出了5厘米，这一步很到位！那如果直径换成12厘米，半径会是多少呢？",
+        "regenerated": true,
+        "turn": 1
+      },
+      {
+        "guard": "premature_confirm",
+        "rule_ids": [],
+        "original": "你用‘半径是直径的一半’这个关系算出了5厘米，这一步很到位！那如果直径换成12厘米，半径会是多少呢？",
+        "regenerated": false,
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          5.0,
+          10.0
+        ],
+        "extracted": [
+          10.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          10.0
+        ],
+        "extracted": [
+          2.0,
+          10.0
+        ],
+        "violation_sources": [
+          {
+            "number": 2.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          10.0
+        ],
+        "extracted": [
+          2.0,
+          10.0
+        ],
+        "violation_sources": [
+          {
+            "number": 2.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "original": "你刚才说直径被圆心分成两段相等的半径，这很对！那现在我们来算一下，10 厘米除以 2 是多少？",
+        "regenerated": false,
+        "turn": 2
+      },
+      {
+        "guard": "premature_confirm",
+        "rule_ids": [],
+        "original": "你刚才说直径被圆心分成两段相等的半径，这很对！那现在我们来算一下，10 厘米除以 2 是多少？",
+        "regenerated": false,
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          10.0
+        ],
+        "extracted": [
+          2.0,
+          10.0
+        ],
+        "violation_sources": [
+          {
+            "number": 2.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 1,
+        "soften": "off",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          5.0,
+          10.0
+        ],
+        "extracted": [
+          2.0,
+          5.0,
+          10.0
+        ],
+        "violation_sources": [
+          {
+            "number": 2.0,
+            "source": "answer"
+          },
+          {
+            "number": 5.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 3
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          5.0,
+          10.0
+        ],
+        "extracted": [
+          2.0,
+          10.0
+        ],
+        "violation_sources": [
+          {
+            "number": 2.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 3
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "original": "你刚才说半径等于直径除以2，算出10除以2等于5，这个思路完全正确！那最后一步，你自己完整说一遍结论吧。",
+        "regenerated": false,
+        "turn": 3
+      },
+      {
+        "guard": "premature_confirm",
+        "rule_ids": [],
+        "original": "你刚才说半径等于直径除以2，算出10除以2等于5，这个思路完全正确！那最后一步，你自己完整说一遍结论吧。",
+        "regenerated": false,
+        "turn": 3
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          5.0,
+          10.0
+        ],
+        "extracted": [
+          2.0,
+          10.0
+        ],
+        "violation_sources": [
+          {
+            "number": 2.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 3
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 1,
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_a08ba09ec3"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        5.0,
+        10.0
+      ],
+      "extracted": [
+        5.0,
+        12.0
+      ],
+      "violation_sources": [
+        {
+          "number": 5.0,
+          "source": "answer"
+        },
+        {
+          "number": 12.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        5.0,
+        10.0
+      ],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer",
+        "source_value_disclosure:hallucinated"
+      ],
+      "original": "你用‘半径是直径的一半’这个关系算出了5厘米，这一步很到位！那如果直径换成12厘米，半径会是多少呢？",
+      "regenerated": true,
+      "turn": 1
+    },
+    {
+      "guard": "premature_confirm",
+      "rule_ids": [],
+      "original": "你用‘半径是直径的一半’这个关系算出了5厘米，这一步很到位！那如果直径换成12厘米，半径会是多少呢？",
+      "regenerated": false,
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        5.0,
+        10.0
+      ],
+      "extracted": [
+        10.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        10.0
+      ],
+      "extracted": [
+        2.0,
+        10.0
+      ],
+      "violation_sources": [
+        {
+          "number": 2.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        10.0
+      ],
+      "extracted": [
+        2.0,
+        10.0
+      ],
+      "violation_sources": [
+        {
+          "number": 2.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "original": "你刚才说直径被圆心分成两段相等的半径，这很对！那现在我们来算一下，10 厘米除以 2 是多少？",
+      "regenerated": false,
+      "turn": 2
+    },
+    {
+      "guard": "premature_confirm",
+      "rule_ids": [],
+      "original": "你刚才说直径被圆心分成两段相等的半径，这很对！那现在我们来算一下，10 厘米除以 2 是多少？",
+      "regenerated": false,
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        10.0
+      ],
+      "extracted": [
+        2.0,
+        10.0
+      ],
+      "violation_sources": [
+        {
+          "number": 2.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 1,
+      "soften": "off",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        5.0,
+        10.0
+      ],
+      "extracted": [
+        2.0,
+        5.0,
+        10.0
+      ],
+      "violation_sources": [
+        {
+          "number": 2.0,
+          "source": "answer"
+        },
+        {
+          "number": 5.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 3
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        5.0,
+        10.0
+      ],
+      "extracted": [
+        2.0,
+        10.0
+      ],
+      "violation_sources": [
+        {
+          "number": 2.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 3
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "original": "你刚才说半径等于直径除以2，算出10除以2等于5，这个思路完全正确！那最后一步，你自己完整说一遍结论吧。",
+      "regenerated": false,
+      "turn": 3
+    },
+    {
+      "guard": "premature_confirm",
+      "rule_ids": [],
+      "original": "你刚才说半径等于直径除以2，算出10除以2等于5，这个思路完全正确！那最后一步，你自己完整说一遍结论吧。",
+      "regenerated": false,
+      "turn": 3
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        5.0,
+        10.0
+      ],
+      "extracted": [
+        2.0,
+        10.0
+      ],
+      "violation_sources": [
+        {
+          "number": 2.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 3
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 1,
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 0,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 1
+    },
+    "total": 4,
+    "answer_leaked": true,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师第一轮直接说'你好同学,这道题你做对啦,真棒!',未进行引导即确认答案,且后续'10 ÷ 2 = 5'直接给出终答数值。",
+      "socratic_followup": "小讲师追问'你打算怎么算出一半呢？'指向具体步骤,但随后又直接给出'10 ÷ 2 = 5'并让学生'先记住',引导链断裂。",
+      "grade_fit": "术语'直径''半径''除以2'符合六年级课标,解释'被圆心平分成两段'清晰。",
+      "pacing": "小讲师在单轮中既给定义又给算式又给结果,且出现'你先记住它,我们回头再讲一遍为什么'的无效循环,信息倾倒且无实质推进。",
+      "summary_mastery": "对话无实质总结,小讲师仅重复'之前已经答对了',未引用学生本人的关键推理证据(如学生解释定义的过程)进行掌握判断。",
+      "termination": "对话在'还需要听你把关键思路讲清楚'处突兀结束,学生未完整复述思路,状态未明。",
+      "math_integrity": "小讲师陈述'直径是半径的两倍'(对),'半径等于直径除以2'(对),'10 ÷ 2 = 5'(对)。无实质性数学错误。",
+      "answer_leaked": "学生第一轮已给出'半径是 5 厘米',但小讲师在第二轮追问后直接给出'10 ÷ 2 = 5'的完整计算过程与数值,且未等待学生自行完成计算,属于在学生未独立展示计算过程前泄露终答数值。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 27
+}

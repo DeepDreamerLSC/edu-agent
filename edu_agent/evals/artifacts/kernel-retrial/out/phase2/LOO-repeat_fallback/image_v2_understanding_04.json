@@ -1,0 +1,123 @@
+{
+  "case_id": "image_v2_understanding_04",
+  "variant": "LOO-repeat_fallback",
+  "off": [
+    "repeat_fallback"
+  ],
+  "transcript": {
+    "question_id": "image_v2_understanding_04",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "图里那条线穿过圆心,两头都落在圆上,标着6厘米。",
+        "tutor": "你说到线段穿过圆心且两端在圆上，这说明它就是圆的直径，对吧？那你知道直径和半径之间有什么关系吗？",
+        "state": "dialogue",
+        "elapsed_ms": 1296
+      },
+      {
+        "student": "过圆心、两端在圆上的线段,名字我一时想不起来……",
+        "tutor": "你刚才说线段穿过圆心、两端在圆上，这确实是圆的直径，就像我们用尺子量圆桌子边缘到中心再回到另一边，那根尺子就是直径。那你知道直径和半径的关系吗？",
+        "state": "dialogue",
+        "elapsed_ms": 1592
+      },
+      {
+        "student": "没问题,这就是直径,半径是直径的一半,是3厘米。",
+        "tutor": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 5126,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          6.0
+        ],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          6.0
+        ],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "branch": "elicit",
+        "hint_level": 0,
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_aecb60fd1c"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        6.0
+      ],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        6.0
+      ],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "branch": "elicit",
+      "hint_level": 0,
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 2,
+      "grade_fit": 2,
+      "pacing": 1,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 7,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:你说到线段穿过圆心且两端在圆上，这说明它就是圆的直径，对吧？那你知道直径和半径之间有什么关系吗？",
+      "grade_fit": "小讲师:就像我们用尺子量圆桌子边缘到中心再回到另一边，那根尺子就是直径。",
+      "pacing": "小讲师:我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+      "summary_mastery": "对话中无实质总结，小讲师在对话末尾仅重复提问'你能说说目前想到的第一步吗?'，未对学生已给出的正确结论'半径是3厘米'进行确认或方法总结，也未给出掌握判断。",
+      "termination": "学生已明确给出正确答案'半径是3厘米'，小讲师未确认即终止对话，且以'学习证据还不够'为由强行继续，属于掌握后拖堂/终止不当。",
+      "math_integrity": "小讲师陈述：1.'线段穿过圆心且两端在圆上...是圆的直径'（正确）；2.'半径是直径的一半'（正确，学生复述）；3.'直径6厘米'（正确，学生复述）；4.'半径是3厘米'（正确，学生复述）。小讲师未引入错误数学事实，且正确引导了学生。",
+      "answer_leaked": "学生先给出终答:'没问题,这就是直径,半径是直径的一半,是3厘米。'小讲师未在学生给出前泄露答案。"
+    },
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 16
+}
