@@ -841,6 +841,7 @@ def _repeat_refine(ctx, session, safe_text: str, ready: bool) -> str:
         return safe_text
     if _mech_off("repeat_regen"):
         return safe_text
+    session.guard_events.append({"branch": "repeat_regen"})  # 裁②:复读重生成落点
     refined = _regenerate(ctx, session, safe_text, _SELF_CRITIQUE, ready)
     if refined is None or _is_repeat(prev, refined):
         if _mech_off("repeat_fallback"):

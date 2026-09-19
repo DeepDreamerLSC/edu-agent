@@ -46,6 +46,35 @@ def _load(root: Path, key: str, cid: str) -> dict | None:
     return json.loads(f.read_text(encoding="utf-8")) if f.exists() else None
 
 
+def _mech_verdict(v: str, table: dict, noise: dict) -> dict:
+    """单机制判读(预注册 §5:真消费者/拆台者/正贡献/无感,跑后不改)。"""
+    mech = v.removeprefix("LOO-")
+    earner_hits = [c for c in M2_EARNER_CASES
+                   if c in table and v in table[c] and "P1-C" in table[c]
+                   and (table[c][v]["m2"] - table[c]["P1-C"]["m2"]) >= M2_EARNER_THRESHOLD]
+    saboteur_hits = []
+    positive_hits = []  # 反向信号:关闭后 judge 降幅超带(该机制有正贡献)
+    for c in FLUENT_CASES + M2_EARNER_CASES:
+        if not (c in table and v in table[c] and "P1-C" in table[c]):
+            continue
+        dj = table[c][v]["judge"] - table[c]["P1-C"]["judge"]
+        band = (noise.get(c, {}).get("judge") or 0)
+        degraded = (table[c][v]["state"] == "needs_review"
+                    and table[c]["P1-C"]["state"] != "needs_review")
+        if dj > band and not degraded:
+            saboteur_hits.append(c)
+        if dj < -band:
+            positive_hits.append(c)
+    neutral = not earner_hits and not saboteur_hits and not positive_hits
+    return {"mech": mech, "earner_cases": earner_hits,
+            "saboteur_cases": saboteur_hits, "positive_cases": positive_hits,
+            "class": ("真消费者" if earner_hits and mech in EARNER_MECHS
+                      else "拆台者" if saboteur_hits and mech in SABOTEUR_MECHS
+                      else "正贡献确认" if positive_hits
+                      else "无感(带内)" if neutral and noise
+                      else "无感*" if neutral else "信号越类(呈 PM 裁)")}
+
+
 def main() -> None:
     from ablation_run import load_cases  # 同目录(脚本态 sys.path[0])
     cases = load_cases()
@@ -71,38 +100,7 @@ def main() -> None:
             noise[cid] = {m: abs(table[cid]["CREF"][m] - table[cid]["P1-C"][m])
                           for m in METRICS}
 
-    verdicts: dict[str, dict] = {}
-    for v in variants:
-        if v == "CREF":
-            continue
-        mech = v.removeprefix("LOO-")
-        # 真消费者线(预注册 §5):M2 主案/stuck 案 Δm2 ≥ +2(绝对阈值,跑后不改)
-        earner_hits = [c for c in M2_EARNER_CASES
-                       if c in table and v in table[c] and "P1-C" in table[c]
-                       and (table[c][v]["m2"] - table[c]["P1-C"]["m2"]) >= M2_EARNER_THRESHOLD]
-        # 拆台者线:流畅案 judge 回升 > 噪声带 且 state 无降级
-        saboteur_hits = []
-        positive_hits = []  # 反向信号:关闭后 judge 降幅超带(该机制有正贡献)
-        for c in FLUENT_CASES + M2_EARNER_CASES:
-            if not (c in table and v in table[c] and "P1-C" in table[c]):
-                continue
-            dj = table[c][v]["judge"] - table[c]["P1-C"]["judge"]
-            band = (noise.get(c, {}).get("judge") or 0)
-            degraded = (table[c][v]["state"] == "needs_review"
-                        and table[c]["P1-C"]["state"] != "needs_review")
-            if dj > band and not degraded:
-                saboteur_hits.append(c)
-            if dj < -band:
-                positive_hits.append(c)
-        neutral = not earner_hits and not saboteur_hits and not positive_hits
-        verdicts[v] = {"mech": mech,
-                       "earner_cases": earner_hits, "saboteur_cases": saboteur_hits,
-                       "positive_cases": positive_hits,
-                       "class": ("真消费者" if earner_hits and mech in EARNER_MECHS
-                                 else "拆台者" if saboteur_hits and mech in SABOTEUR_MECHS
-                                 else "正贡献确认" if positive_hits
-                                 else "无感(带内)" if neutral and noise
-                                 else "无感*" if neutral else "信号越类(呈 PM 裁)")}
+    verdicts = {v: _mech_verdict(v, table, noise) for v in variants if v != "CREF"}
 
     summary = {"by_case": table, "noise_band_CREF_vs_P1C": noise,
                "verdicts": verdicts,
