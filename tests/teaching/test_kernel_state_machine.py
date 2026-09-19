@@ -202,16 +202,16 @@ def test_reply_repairs_method_feed_and_keeps_open(tmp_path):
         assert "假设法" not in turn.text
 
 
-def test_reply_student_says_understood_triggers_elicit_without_model(tmp_path):
-    """学生说「都懂了」→ 确定性请学生讲思路(不调模型),不 confirm、不报答案。"""
-    with kernel_env(tmp_path, [completion(open_json("你先说说题目给了哪些条件?"))]) as (fake, gateway):
+def test_reply_student_says_understood_routes_to_model(tmp_path):
+    """Thin Kernel(#333 终裁):elicit 句族已删——「都懂了」走模型路径,由模型
+    自然承接(讲思路引导归 Prompt/Model 面),零确定性干预。"""
+    follow = tutor_json("很好,那你说说第一步从哪里开始?")
+    with kernel_env(tmp_path, [completion(open_json("你先说说题目给了哪些条件?")),
+                               completion(follow)]) as (fake, gateway):
         first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-        calls_before = len(fake.requests)  # start 那次
         turn = reply(first.session, "都懂了。", gateway=gateway)
-        assert turn.text == ("我们从头把思路串一遍——"
-                             "先说说你第一步算了什么、为什么这样算。")  # #179 问题 3:不说掌握只说动作
-        assert turn.ready_to_confirm is False  # 不关对话
-        assert len(fake.requests) == calls_before  # 「都懂了」这轮零模型调用
+        assert turn.text == json.loads(follow)["reply"]  # 模型直通
+        assert not any(e.get("branch") == "elicit" for e in turn.session.guard_events)
 
 
 def test_reply_stuck_reveals_next_step_with_varied_lead(tmp_path):

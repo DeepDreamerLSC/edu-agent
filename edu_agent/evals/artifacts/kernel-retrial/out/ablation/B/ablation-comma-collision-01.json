@@ -1,0 +1,268 @@
+{
+  "case_id": "ablation-comma-collision-01",
+  "arm": "B",
+  "transcript": {
+    "question_id": "ablation-comma-collision-01",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "一半是 500……是要用 500 加什么吗?我想不出来。",
+        "tutor": "你想到一半是 500，这很接近了！那这个数和 500 之间是什么关系呢？比如，如果一个数被分成两半，每半是 500，那整个数是不是等于这两半加起来？",
+        "state": "dialogue",
+        "elapsed_ms": 3901
+      },
+      {
+        "student": "还是不会,倒推到底怎么算,我又卡住了。",
+        "tutor": "你刚才说‘倒推到底怎么算’，这想法很棒！那我们来想：如果一半是 500，那另一个‘一半’也是 500，整个数就是这两个 500 加起来，对吗？",
+        "state": "dialogue",
+        "elapsed_ms": 1986
+      },
+      {
+        "student": "哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!",
+        "tutor": "你刚才说‘一半倒过来就是乘 2’，这想法很对！那我们来确认一下，500 乘 2 是多少？",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 3713
+      }
+    ],
+    "summary": "你通过‘一半倒过来就是乘 2’的思路，正确得出这个数是 1000，关键转折是意识到‘一半’和‘整体’的关系；仍需注意：下次遇到类似题，可以先画线段图或用等式 x÷2=500 来验证，避免只依赖‘倒推’直觉。",
+    "total_ms": 13470,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          500.0
+        ],
+        "extracted": [
+          1.0,
+          2.0,
+          500.0
+        ],
+        "violation_sources": [
+          {
+            "number": 1.0,
+            "source": "hallucinated"
+          },
+          {
+            "number": 2.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 1,
+        "rule_ids": [
+          "source_value_disclosure:hallucinated"
+        ],
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          500.0
+        ],
+        "extracted": [
+          500.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          500.0
+        ],
+        "extracted": [
+          500.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          500.0,
+          1000.0
+        ],
+        "extracted": [
+          2.0,
+          500.0,
+          1000.0
+        ],
+        "violation_sources": [
+          {
+            "number": 1000.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 3
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 1,
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "turn": 3
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          500.0,
+          1000.0
+        ],
+        "extracted": [
+          2.0,
+          500.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_152fed6e25"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        500.0
+      ],
+      "extracted": [
+        1.0,
+        2.0,
+        500.0
+      ],
+      "violation_sources": [
+        {
+          "number": 1.0,
+          "source": "hallucinated"
+        },
+        {
+          "number": 2.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 1,
+      "rule_ids": [
+        "source_value_disclosure:hallucinated"
+      ],
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        500.0
+      ],
+      "extracted": [
+        500.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        500.0
+      ],
+      "extracted": [
+        500.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        500.0,
+        1000.0
+      ],
+      "extracted": [
+        2.0,
+        500.0,
+        1000.0
+      ],
+      "violation_sources": [
+        {
+          "number": 1000.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 3
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 1,
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "turn": 3
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        500.0,
+        1000.0
+      ],
+      "extracted": [
+        2.0,
+        500.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 2,
+      "grade_fit": 2,
+      "pacing": 2,
+      "summary_mastery": 2,
+      "termination": 2
+    },
+    "total": 12,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:那这个数和 500 之间是什么关系呢？比如，如果一个数被分成两半，每半是 500，那整个数是不是等于这两半加起来？",
+      "grade_fit": "小讲师:那我们来想：如果一半是 500，那另一个‘一半’也是 500，整个数就是这两个 500 加起来，对吗？",
+      "pacing": "学生:还是不会,倒推到底怎么算,我又卡住了。小讲师:你刚才说‘倒推到底怎么算’，这想法很棒！那我们来想：如果一半是 500，那另一个‘一半’也是 500，整个数就是这两个 500 加起来，对吗？",
+      "summary_mastery": "学生:哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000! 小讲师:你通过‘一半倒过来就是乘 2’的思路，正确得出这个数是 1000，关键转折是意识到‘一半’和‘整体’的关系",
+      "termination": "学生:哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!",
+      "math_integrity": "小讲师陈述：1. '一半是 500，那另一个‘一半’也是 500，整个数就是这两个 500 加起来'（正确，500+500=1000）；2. '一半倒过来就是乘 2'（正确，500×2=1000）；3. '500 乘 2 是多少'（引导计算，未直接给错数）；4. 'x÷2=500'（正确方程）。所有数学事实正确，且正确确认了学生的推理。",
+      "answer_leaked": "学生先给出终答：'哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!'，小讲师随后确认，未泄露。"
+    },
+    "verdict": "pass",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 59
+}

@@ -1,0 +1,105 @@
+{
+  "case_id": "image_v2_answerhit_01",
+  "arm": "C",
+  "transcript": {
+    "question_id": "image_v2_answerhit_01",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "12米剪掉3分之1,我用12乘3分之1……等于6米?",
+        "tutor": "你刚才说用12乘3分之1，能说说为什么这样算吗？比如这3分之1代表什么？",
+        "state": "dialogue",
+        "elapsed_ms": 1697
+      },
+      {
+        "student": "重新想:12除以3是每份4米,剪掉这样的1份,就是4米。",
+        "tutor": "我们从头把思路串一遍——先说说你第一步算了什么、为什么这样算。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 4973,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          1.0,
+          12.0
+        ],
+        "extracted": [
+          1.0,
+          3.0,
+          12.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "elicit",
+        "hint_level": 0,
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_1da2f989b1"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        1.0,
+        12.0
+      ],
+      "extracted": [
+        1.0,
+        3.0,
+        12.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "elicit",
+      "hint_level": 0,
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 5,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:你刚才说用12乘3分之1，能说说为什么这样算吗？比如这3分之1代表什么？",
+      "grade_fit": "小讲师使用'3分之1代表什么'等符合六年级认知的引导语，未出现超纲术语。",
+      "pacing": "小讲师连续两轮未回应学生已给出的正确思路（'12除以3是每份4米,剪掉这样的1份,就是4米'），反而重复要求'从头把思路串一遍'和'说说目前想到的第一步'，导致原地打转且无实质推进。",
+      "summary_mastery": "对话在小讲师声称'学习证据还不够'时突然终止，未进行任何方法总结，也未对学生的正确推理（'12除以3是每份4米'）给予确认或掌握判断。",
+      "termination": "学生在第二轮已明确给出正确答案'4米'及正确推理，小讲师未确认即终止对话，属于学生已答对仍强行结束。",
+      "math_integrity": "小讲师未引入错误数学事实。学生推理'12除以3是每份4米'正确，小讲师虽未确认但未否定或教授错误内容。",
+      "answer_leaked": "学生先给出'等于6米?'（错误），后给出'就是4米'（正确终答）。小讲师全程未在学生给出正确终答前主动泄露答案。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 49
+}

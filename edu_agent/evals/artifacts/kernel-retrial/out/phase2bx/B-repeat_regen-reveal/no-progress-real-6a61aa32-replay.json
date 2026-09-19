@@ -1,0 +1,532 @@
+{
+  "case_id": "no-progress-real-6a61aa32-replay",
+  "variant": "B-repeat_regen-reveal",
+  "arm": "B",
+  "transcript": {
+    "question_id": "no-progress-real-6a61aa32-replay",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "三只小动物呈现了三角形的关系",
+        "tutor": "你说到三只小动物在三角形里，那如果站在一个顶点看另外两个顶点，它们分别在什么方向呢？比如小羊在左上角，小兔在右上角，从哪个角出发看它们的方向会是北偏西□°？",
+        "state": "dialogue",
+        "elapsed_ms": 1440
+      },
+      {
+        "student": "如果以小兔为原点，小马再小兔的东方，小羊在小兔的东北方",
+        "tutor": "你说到小马在小兔的东方、小羊在东北方，这很接近了！但等边三角形的每个角都是□°，如果从一个顶点看另外两个顶点，它们的方向应该是北偏西□°和北偏东□°，你猜猜为什么是□°？",
+        "state": "dialogue",
+        "elapsed_ms": 1806
+      },
+      {
+        "student": "小羊在小马的西北方",
+        "tutor": "你说到小羊在小马的西北方，这个方向感不错！但题目要求我们从每个顶点出发，用‘北偏西’‘北偏东’这样的方位描述另外两个动物，你试试从一个小动物的位置出发，看另外两个分别在什么方向？",
+        "state": "dialogue",
+        "elapsed_ms": 1621
+      },
+      {
+        "student": "小兔在小马的正西方",
+        "tutor": "你说到小兔在小马的正西方，这个方向判断很准！但题目要求我们从每个顶点出发，用‘北偏西’‘北偏东’描述另外两个动物，比如从‘小马’出发看‘小兔’和‘小羊’，你猜它们分别在什么方向？",
+        "state": "dialogue",
+        "elapsed_ms": 1862
+      },
+      {
+        "student": "小羊在小兔的东北方",
+        "tutor": "我们从这里入手:先确定等边三角形的三个顶点位置，想象它们在草地上形成一个正三角形。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 4041
+      },
+      {
+        "student": "小羊在小马的西北方",
+        "tutor": "你说到小羊在小马的西北方，这个方向感不错！但题目要求我们从每个顶点出发，用‘北偏西’‘北偏东’描述另外两个动物，比如从‘小马’出发看‘小兔’和‘小羊’，你猜它们分别在什么方向？",
+        "state": "dialogue",
+        "elapsed_ms": 1813
+      },
+      {
+        "student": "小羊在小兔的东北方",
+        "tutor": "下一步是这样:以其中一个顶点为观测点，确定另外两个顶点相对于它的方向和距离。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 3792
+      },
+      {
+        "student": "小羊在小马的西北方",
+        "tutor": "你说到小羊在小马的西北方，这个方向感不错！但题目要求我们从每个顶点出发，用‘北偏西’‘北偏东’描述另外两个动物，比如从‘小马’出发看‘小兔’和‘小羊’，你猜它们分别在什么方向？",
+        "state": "dialogue",
+        "elapsed_ms": 1788
+      },
+      {
+        "student": "小马再小兔的东方",
+        "tutor": "再往下看:根据方位角定义，从一个顶点看另一个顶点，可以描述为北偏东或北偏西等方向。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 3539
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 25032,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          30.0
+        ],
+        "violation_sources": [
+          {
+            "number": 30.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "arm_b": "safety_mask",
+        "round": 1,
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          20.0,
+          30.0
+        ],
+        "extracted": [
+          30.0,
+          60.0
+        ],
+        "violation_sources": [
+          {
+            "number": 30.0,
+            "source": "answer"
+          },
+          {
+            "number": 60.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "arm_b": "safety_mask",
+        "round": 1,
+        "rule_ids": [
+          "source_value_disclosure:answer",
+          "source_value_disclosure:hallucinated"
+        ],
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          20.0,
+          30.0
+        ],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 3
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 4
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 5
+      },
+      {
+        "branch": "repeat_regen",
+        "turn": 5
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          30.0,
+          60.0
+        ],
+        "violation_sources": [
+          {
+            "number": 30.0,
+            "source": "answer"
+          },
+          {
+            "number": 60.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 5
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 1,
+        "turn": 5
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 6
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 7
+      },
+      {
+        "branch": "repeat_regen",
+        "turn": 7
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          30.0,
+          60.0
+        ],
+        "violation_sources": [
+          {
+            "number": 30.0,
+            "source": "answer"
+          },
+          {
+            "number": 60.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 7
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 2,
+        "turn": 7
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 8
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 9
+      },
+      {
+        "branch": "repeat_regen",
+        "turn": 9
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          60.0
+        ],
+        "violation_sources": [
+          {
+            "number": 60.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 9
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 3,
+        "turn": 9
+      }
+    ],
+    "session_id": "kernel_c0d52c8fd6"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        30.0
+      ],
+      "violation_sources": [
+        {
+          "number": 30.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "arm_b": "safety_mask",
+      "round": 1,
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        20.0,
+        30.0
+      ],
+      "extracted": [
+        30.0,
+        60.0
+      ],
+      "violation_sources": [
+        {
+          "number": 30.0,
+          "source": "answer"
+        },
+        {
+          "number": 60.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "arm_b": "safety_mask",
+      "round": 1,
+      "rule_ids": [
+        "source_value_disclosure:answer",
+        "source_value_disclosure:hallucinated"
+      ],
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        20.0,
+        30.0
+      ],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 3
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 4
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 5
+    },
+    {
+      "branch": "repeat_regen",
+      "turn": 5
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        30.0,
+        60.0
+      ],
+      "violation_sources": [
+        {
+          "number": 30.0,
+          "source": "answer"
+        },
+        {
+          "number": 60.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 5
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 1,
+      "turn": 5
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 6
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 7
+    },
+    {
+      "branch": "repeat_regen",
+      "turn": 7
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        30.0,
+        60.0
+      ],
+      "violation_sources": [
+        {
+          "number": 30.0,
+          "source": "answer"
+        },
+        {
+          "number": 60.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 7
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 2,
+      "turn": 7
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 8
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 9
+    },
+    {
+      "branch": "repeat_regen",
+      "turn": 9
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        60.0
+      ],
+      "violation_sources": [
+        {
+          "number": 60.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 9
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 3,
+      "turn": 9
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 0,
+      "grade_fit": 1,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 3,
+    "answer_leaked": false,
+    "math_integrity": 1,
+    "evidence": {
+      "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:你说到小羊在小马的西北方，这个方向感不错！但题目要求我们从每个顶点出发，用‘北偏西’‘北偏东’描述另外两个动物，比如从‘小马’出发看‘小兔’和‘小羊’，你猜它们分别在什么方向？（对话中该追问重复出现4次，学生始终未理解，小讲师未更换引导策略）",
+      "grade_fit": "小讲师:等边三角形的每个角都是□°（使用填空形式引导，符合六年级认知，但后续引导未能有效衔接）",
+      "pacing": "小讲师:你说到小羊在小马的西北方，这个方向感不错！但题目要求我们从每个顶点出发...（连续多轮重复相同提示，学生回答未推进，小讲师未调整策略，导致原地打转）",
+      "summary_mastery": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?（对话在重复循环中结束，无任何实质方法总结，未引用学生正确步骤，掌握判断缺失）",
+      "termination": "小讲师:这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?（学生未掌握，小讲师未给出有效提示即终止对话，属于未掌握即终止）",
+      "math_integrity": "小讲师陈述：'等边三角形的每个角都是□°'（正确，未填具体数值但引导正确）；'小马在小兔的东方'（学生回答，小讲师未纠正其方位描述的不精确性，等边三角形顶点间方位需结合具体朝向，仅说东方不够严谨，但未构成严重数学错误）；小讲师未引入明显错误的数值或公式，但未能有效纠正学生反复出现的方位描述错误（如将北偏东30°简单说成东北方），属于漏过影响解题的数学错误。",
+      "answer_leaked": "未泄露，小讲师全程未直接给出'北偏西30°20m'等完整终答。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 14
+}

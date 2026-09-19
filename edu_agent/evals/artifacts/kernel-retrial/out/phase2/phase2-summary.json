@@ -1,0 +1,624 @@
+{
+  "by_case": {
+    "image_v2_stuck_02": {
+      "CREF": {
+        "m1": 0.187,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.333,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      },
+      "LOO-bottomout_backboard": {
+        "m1": 0.187,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.333,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      },
+      "LOO-confirm_rewrite": {
+        "m1": 0.187,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.333,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      },
+      "LOO-premature_confirm": {
+        "m1": 0.187,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.333,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      },
+      "LOO-repeat_fallback": {
+        "m1": 0.187,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.333,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      },
+      "LOO-repeat_regen": {
+        "m1": 0.187,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.333,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      },
+      "LOO-reveal_ladder": {
+        "m1": 0.173,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      },
+      "LOO-soften_step": {
+        "m1": 0.187,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.333,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      },
+      "P1-C": {
+        "m1": 0.187,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": null,
+        "rate": 0.333,
+        "state": "needs_review",
+        "judge": 5,
+        "turns": 3
+      }
+    },
+    "image_v2_understanding_04": {
+      "CREF": {
+        "m1": 0.191,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 7,
+        "turns": 4
+      },
+      "LOO-bottomout_backboard": {
+        "m1": 0.191,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 7,
+        "turns": 4
+      },
+      "LOO-confirm_rewrite": {
+        "m1": 0.191,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 7,
+        "turns": 4
+      },
+      "LOO-premature_confirm": {
+        "m1": 0.191,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 7,
+        "turns": 4
+      },
+      "LOO-repeat_fallback": {
+        "m1": 0.191,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 7,
+        "turns": 4
+      },
+      "LOO-repeat_regen": {
+        "m1": 0.191,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 7,
+        "turns": 4
+      },
+      "LOO-reveal_ladder": {
+        "m1": 0.191,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 7,
+        "turns": 4
+      },
+      "LOO-soften_step": {
+        "m1": 0.191,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 7,
+        "turns": 4
+      },
+      "P1-C": {
+        "m1": 0.191,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 7,
+        "turns": 4
+      }
+    },
+    "no-progress-control-reasonable-review": {
+      "CREF": {
+        "m1": 0.247,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 2,
+        "rate": 2.25,
+        "state": "needs_review",
+        "judge": 4,
+        "turns": 4
+      },
+      "LOO-bottomout_backboard": {
+        "m1": 0.205,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 2,
+        "rate": 2.25,
+        "state": "needs_review",
+        "judge": 1,
+        "turns": 4
+      },
+      "LOO-confirm_rewrite": {
+        "m1": 0.247,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 2,
+        "rate": 2.25,
+        "state": "needs_review",
+        "judge": 4,
+        "turns": 4
+      },
+      "LOO-premature_confirm": {
+        "m1": 0.25,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 1.0,
+        "state": "completed",
+        "judge": 7,
+        "turns": 2
+      },
+      "LOO-repeat_fallback": {
+        "m1": 0.247,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 2,
+        "rate": 2.25,
+        "state": "needs_review",
+        "judge": 4,
+        "turns": 4
+      },
+      "LOO-repeat_regen": {
+        "m1": 0.247,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 2,
+        "rate": 2.25,
+        "state": "needs_review",
+        "judge": 4,
+        "turns": 4
+      },
+      "LOO-reveal_ladder": {
+        "m1": 0.177,
+        "m2": 1,
+        "m3": 0,
+        "m4": 0,
+        "m5": 2,
+        "rate": 1.75,
+        "state": "needs_review",
+        "judge": 1,
+        "turns": 4
+      },
+      "LOO-soften_step": {
+        "m1": 0.251,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 2,
+        "rate": 2.25,
+        "state": "needs_review",
+        "judge": 4,
+        "turns": 4
+      },
+      "P1-C": {
+        "m1": 0.247,
+        "m2": 0,
+        "m3": 0,
+        "m4": 0,
+        "m5": 2,
+        "rate": 2.25,
+        "state": "needs_review",
+        "judge": 4,
+        "turns": 4
+      }
+    },
+    "no-progress-control-thin-reasoning": {
+      "CREF": {
+        "m1": 0.275,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.25,
+        "state": "completed",
+        "judge": 9,
+        "turns": 4
+      },
+      "LOO-bottomout_backboard": {
+        "m1": 0.275,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.25,
+        "state": "completed",
+        "judge": 9,
+        "turns": 4
+      },
+      "LOO-confirm_rewrite": {
+        "m1": 0.382,
+        "m2": 0,
+        "m3": 1,
+        "m4": 1,
+        "m5": 0,
+        "rate": 0.25,
+        "state": "completed",
+        "judge": 8,
+        "turns": 4
+      },
+      "LOO-premature_confirm": {
+        "m1": 0.275,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.25,
+        "state": "completed",
+        "judge": 9,
+        "turns": 4
+      },
+      "LOO-repeat_fallback": {
+        "m1": 0.275,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.25,
+        "state": "completed",
+        "judge": 9,
+        "turns": 4
+      },
+      "LOO-repeat_regen": {
+        "m1": 0.275,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.25,
+        "state": "completed",
+        "judge": 9,
+        "turns": 4
+      },
+      "LOO-reveal_ladder": {
+        "m1": 0.275,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.25,
+        "state": "completed",
+        "judge": 9,
+        "turns": 4
+      },
+      "LOO-soften_step": {
+        "m1": 0.275,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.25,
+        "state": "completed",
+        "judge": 9,
+        "turns": 4
+      },
+      "P1-C": {
+        "m1": 0.275,
+        "m2": 0,
+        "m3": 1,
+        "m4": 0,
+        "m5": 0,
+        "rate": 0.25,
+        "state": "completed",
+        "judge": 9,
+        "turns": 4
+      }
+    },
+    "no-progress-real-6a61aa32-replay": {
+      "CREF": {
+        "m1": 0.226,
+        "m2": 2,
+        "m3": 0,
+        "m4": 4,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 3,
+        "turns": 10
+      },
+      "LOO-bottomout_backboard": {
+        "m1": 0.226,
+        "m2": 2,
+        "m3": 0,
+        "m4": 4,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 3,
+        "turns": 10
+      },
+      "LOO-confirm_rewrite": {
+        "m1": 0.226,
+        "m2": 2,
+        "m3": 0,
+        "m4": 4,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 3,
+        "turns": 10
+      },
+      "LOO-premature_confirm": {
+        "m1": 0.226,
+        "m2": 2,
+        "m3": 0,
+        "m4": 4,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 3,
+        "turns": 10
+      },
+      "LOO-repeat_fallback": {
+        "m1": 0.226,
+        "m2": 2,
+        "m3": 0,
+        "m4": 4,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 3,
+        "turns": 10
+      },
+      "LOO-repeat_regen": {
+        "m1": 0.222,
+        "m2": 6,
+        "m3": 0,
+        "m4": 1,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 4,
+        "turns": 10
+      },
+      "LOO-reveal_ladder": {
+        "m1": 0.226,
+        "m2": 2,
+        "m3": 0,
+        "m4": 4,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 3,
+        "turns": 10
+      },
+      "LOO-soften_step": {
+        "m1": 0.226,
+        "m2": 2,
+        "m3": 0,
+        "m4": 4,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 3,
+        "turns": 10
+      },
+      "P1-C": {
+        "m1": 0.226,
+        "m2": 2,
+        "m3": 0,
+        "m4": 4,
+        "m5": null,
+        "rate": 0.0,
+        "state": "needs_review",
+        "judge": 3,
+        "turns": 10
+      }
+    }
+  },
+  "noise_band_CREF_vs_P1C": {
+    "image_v2_stuck_02": {
+      "m1": 0.0,
+      "m2": 0,
+      "m4": 0,
+      "rate": 0.0,
+      "judge": 0
+    },
+    "image_v2_understanding_04": {
+      "m1": 0.0,
+      "m2": 0,
+      "m4": 0,
+      "rate": 0.0,
+      "judge": 0
+    },
+    "no-progress-control-reasonable-review": {
+      "m1": 0.0,
+      "m2": 0,
+      "m4": 0,
+      "rate": 0.0,
+      "judge": 0
+    },
+    "no-progress-control-thin-reasoning": {
+      "m1": 0.0,
+      "m2": 0,
+      "m4": 0,
+      "rate": 0.0,
+      "judge": 0
+    },
+    "no-progress-real-6a61aa32-replay": {
+      "m1": 0.0,
+      "m2": 0,
+      "m4": 0,
+      "rate": 0.0,
+      "judge": 0
+    }
+  },
+  "verdicts": {
+    "LOO-bottomout_backboard": {
+      "mech": "bottomout_backboard",
+      "earner_cases": [],
+      "saboteur_cases": [],
+      "positive_cases": [
+        "no-progress-control-reasonable-review"
+      ],
+      "class": "正贡献确认"
+    },
+    "LOO-confirm_rewrite": {
+      "mech": "confirm_rewrite",
+      "earner_cases": [],
+      "saboteur_cases": [],
+      "positive_cases": [
+        "no-progress-control-thin-reasoning"
+      ],
+      "class": "正贡献确认"
+    },
+    "LOO-premature_confirm": {
+      "mech": "premature_confirm",
+      "earner_cases": [],
+      "saboteur_cases": [
+        "no-progress-control-reasonable-review"
+      ],
+      "positive_cases": [],
+      "class": "拆台者"
+    },
+    "LOO-repeat_fallback": {
+      "mech": "repeat_fallback",
+      "earner_cases": [],
+      "saboteur_cases": [],
+      "positive_cases": [],
+      "class": "无感(带内)"
+    },
+    "LOO-repeat_regen": {
+      "mech": "repeat_regen",
+      "earner_cases": [
+        "no-progress-real-6a61aa32-replay"
+      ],
+      "saboteur_cases": [
+        "no-progress-real-6a61aa32-replay"
+      ],
+      "positive_cases": [],
+      "class": "真消费者"
+    },
+    "LOO-reveal_ladder": {
+      "mech": "reveal_ladder",
+      "earner_cases": [],
+      "saboteur_cases": [],
+      "positive_cases": [
+        "no-progress-control-reasonable-review"
+      ],
+      "class": "正贡献确认"
+    },
+    "LOO-soften_step": {
+      "mech": "soften_step",
+      "earner_cases": [],
+      "saboteur_cases": [],
+      "positive_cases": [],
+      "class": "无感(带内)"
+    }
+  },
+  "lines": {
+    "m2_earner_threshold": 2,
+    "earner_mechs": [
+      "repeat_fallback",
+      "repeat_regen",
+      "reveal_ladder"
+    ],
+    "saboteur_mechs": [
+      "bottomout_backboard",
+      "confirm_rewrite",
+      "premature_confirm",
+      "soften_step"
+    ],
+    "noise_note": "带=|CREF−P1-C| 逐指标逐案(2026-09-19 phase2b 填实)"
+  }
+}

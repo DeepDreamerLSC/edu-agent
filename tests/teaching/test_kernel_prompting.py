@@ -118,23 +118,24 @@ def test_kernel_replaces_leaking_tutor_output(tmp_path):
         assert "x=6" in events[0]["original"]                     # 被拦原文在案
 
 
-def test_kernel_replaces_abusive_tone(tmp_path):
+def test_abusive_tone_passes_through_thin(tmp_path):
+    """Thin Kernel(#333):非 A 类(tone)原文直通——B 臂同款 thin 语义;
+    语气纪律归 Prompt/Model 面(系统提示已含),确定性改写机器已删。"""
     rude = tutor_json("这么简单的题你都不会?")
     with kernel_env(tmp_path, [completion(open_json("第一问?")), completion(rude)]) as (fake, gateway):
         first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-        # 「我不会」现路由确定性揭示(#157 评审卡壳修复)→ 语气护栏用中性话术走模型路径
         turn = reply(first.session, "这题好难。", gateway=gateway)
-        # 任务包2步2兜底句情境化:语气护栏命中,原文不达学生面,换接学生原话的引导句(非万能句)
-        assert turn.text == "先回到你刚说的「这题好难。」——你能从题目里再确认一个已知条件吗?"
+        assert turn.text == "这么简单的题你都不会?"  # 直通(处置删,检测在 _guard_check)
 
 
-def test_kernel_replaces_markdown_output_with_downgrade(tmp_path):
-    """格式护栏命中:Markdown 原文不达学生面,换下的是降级引导句(埋点记 rule_ids)。"""
+def test_markdown_format_passes_through_thin(tmp_path):
+    """Thin Kernel(#333):非 A 类(format)处置删 → 直通;首问可见文本恒为固定模板,
+    Markdown 原文本就不达首问面(多轮面直通,纪律归 Prompt/Model)。"""
     dirty = open_json("## 第一步\n先看 **3 和 7**。")
     with kernel_env(tmp_path, [completion(dirty)]) as (fake, gateway):
         turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
         assert turn.text == FIRST_QUESTION_COLLECT and "##" not in turn.text  # 首问恒为固定模板
-        assert [e["guard"] for e in turn.session.guard_events if e.get("guard")] == ["format"]
+        assert [e["guard"] for e in turn.session.guard_events if e.get("guard")] == []
 
 
 def test_clean_output_passes_through(tmp_path):
@@ -148,52 +149,20 @@ def test_clean_output_passes_through(tmp_path):
 
 
 def test_guarded_reply_context_matches_student_visible_text(tmp_path):
-    """护栏命中 → 修复重生成优先:重调 tutor 拿到干净回复,学生所见/记录是它而非泄露原文。"""
+    """Thin Kernel 掩码:泄露数值 → □,结构逐字保留;学生所见/记录即掩码文本,
+    下一轮模型上下文 = 学生实际所见(零重生成调用)。"""
     leak = tutor_json("答案是 x=6,就是这样。")
-    regen_clean = tutor_json("你刚才回到了条件本身,很好。")
     follow_clean = tutor_json("我们接着看,你能说出题目给的一个条件吗?")
     with kernel_env(tmp_path, [completion(open_json("第一问?")), completion(leak),
-                               completion(regen_clean), completion(follow_clean)]) as (fake, gateway):
+                               completion(follow_clean)]) as (fake, gateway):
         first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-        # 「不知道」现路由确定性揭示(#157 评审卡壳修复)→ 护栏链用中性话术走模型路径
         turn = reply(first.session, "我再看看。", gateway=gateway)
-        assert turn.text == "你刚才回到了条件本身,很好。"  # 泄露 → 重生成成功 → 用重生成文本
-        assert "x=6" not in turn.text
+        assert turn.text == "答案是 x=□,就是这样。"  # 泄露 → 确定性掩码
         follow = reply(first.session, "题目说 3x 加 7 等于 25。", gateway=gateway)
         assert follow.text == json.loads(follow_clean)["reply"]
         assistant_turns = [m["content"] for m in first.session.history if m["role"] == "assistant"]
-        # 泄露回复不达学生面:history 记的是重生成后的干净文本,下一轮模型上下文 = 学生实际所见
-        assert assistant_turns == ["你刚才回到了条件本身,很好。", json.loads(follow_clean)["reply"]]
+        assert assistant_turns == ["答案是 x=□,就是这样。", json.loads(follow_clean)["reply"]]
 
-
-def test_guard_critique_templates_pinned(tmp_path):
-    """#243 审查 P3:护栏重写模板外置后钉渲染——命中无违规数字走 HIT 模板、
-    违规数字走 NUMBERS 模板,字面钉死 gateway 实收的 critique 全文;
-    模板句或插值再动任何字,这里即红(声称不设防,断言才设防)。"""
-    rude = tutor_json("这么简单的题你都不会?")
-    regen = tutor_json("我们先回到题目,你读到了哪些条件?")
-    with kernel_env(tmp_path, [completion(open_json("第一问?")), completion(rude),
-                               completion(regen)]) as (fake, gateway):
-        first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-        reply(first.session, "这题好难。", gateway=gateway)      # 语气护栏命中(无违规数字)
-        critique = next(m["content"] for m in fake.requests[-1]["messages"]
-                        if m["content"].startswith("你上一条回复被教学护栏拦截"))
-        assert critique == (
-            "你上一条回复被教学护栏拦截(规则:tone_humiliation_or_sarcasm;命中内容:"
-            "「这么简单的题你都不会?」)。请重写这条回复,直接回应用户当前的问题;"
-            "不要重复被拦截的内容,不要提前给出答案或方法名。")
-    leak = tutor_json("答案是鸡3只、兔5只,就是这样。")           # 5 无合法来源 → 幻觉违规
-    regen2 = tutor_json("你刚才回到了条件本身,很好。")
-    with kernel_env(tmp_path, [completion(open_json("第一问?")), completion(leak),
-                               completion(regen2)]) as (fake, gateway):
-        first = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-        reply(first.session, "我再看看。", gateway=gateway)      # 数值披露门命中(违规数字)
-        critique = next(m["content"] for m in fake.requests[-1]["messages"]
-                        if m["content"].startswith("你上一条回复被教学护栏拦截"))
-        assert critique == (
-            "你上一条回复被教学护栏拦截(规则:source_value_disclosure:hallucinated;"
-            "未经学生验证就说出的数值:5)。请重写这条回复:不要说这些数值,也不要给出"
-            "答案数字或题面之外的中间结果——用学生已经说过的信息继续引导他往下算。")
 
 
 def test_repeat_self_refine_replaces_repeated_question(tmp_path):

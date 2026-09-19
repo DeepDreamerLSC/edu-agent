@@ -1,0 +1,132 @@
+{
+  "case_id": "image_v2_stuck_02",
+  "arm": "B",
+  "transcript": {
+    "question_id": "image_v2_stuck_02",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "3乘4分之1这样的我会,这张图是先量再剪,我把3和4约分,得12分之3?",
+        "tutor": "你刚才说3和4约分得到12分之3，这个想法很有趣，但纸条是4分米，不是3分米哦，我们得从4分米里剪下它的1/4，你打算怎么算呢？",
+        "state": "dialogue",
+        "elapsed_ms": 2380
+      },
+      {
+        "student": "还是不会,越算越乱了。",
+        "tutor": "你刚才说3和4约分得到12分之3，这个想法很有趣，但纸条是4分米，不是3分米哦，我们得从4分米里剪下它的1/4，你打算怎么算呢？",
+        "state": "dialogue",
+        "elapsed_ms": 2020
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 7538,
+    "learner": {
+      "grade": "六年级"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          1.0,
+          3.0,
+          4.0,
+          12.0
+        ],
+        "extracted": [
+          1.0,
+          3.0,
+          4.0,
+          12.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          1.0,
+          4.0
+        ],
+        "extracted": [
+          1.0,
+          3.0,
+          4.0,
+          12.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_201a82645b"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        1.0,
+        3.0,
+        4.0,
+        12.0
+      ],
+      "extracted": [
+        1.0,
+        3.0,
+        4.0,
+        12.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        1.0,
+        4.0
+      ],
+      "extracted": [
+        1.0,
+        3.0,
+        4.0,
+        12.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 0,
+      "grade_fit": 1,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 3,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,我看到你发的题啦,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "学生:还是不会,越算越乱了。小讲师:你刚才说3和4约分得到12分之3，这个想法很有趣，但纸条是4分米，不是3分米哦，我们得从4分米里剪下它的1/4，你打算怎么算呢？（重复上一轮回答，未针对学生'越算越乱'的情绪或具体卡点进行新引导）",
+      "grade_fit": "小讲师使用'约分'、'分米'等术语符合六年级水平，但未能有效化解学生'越算越乱'的困惑，引导策略略显生硬。",
+      "pacing": "小讲师连续两轮输出完全相同的回复（'你刚才说3和4约分...'），属于原地打转且无实质推进，随后又直接抛出'学习证据还不够'的结论，节奏混乱。",
+      "summary_mastery": "对话中无实质总结，小讲师仅以'这一题的学习证据还不够'结束，未复述学生尝试过程，未给出掌握判断，且学生从未给出正确终答。",
+      "termination": "学生在'还是不会,越算越乱了'后，小讲师未进行有效引导即终止对话，学生状态未明（未掌握）。",
+      "math_integrity": "小讲师指出'纸条是4分米，不是3分米'，纠正了学生将题目数据记错的错误，数学事实陈述正确，未引入错误规则。",
+      "answer_leaked": "小讲师全程未直接给出'1分米'这一终答，仅引导学生思考'怎么算'。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 18
+}

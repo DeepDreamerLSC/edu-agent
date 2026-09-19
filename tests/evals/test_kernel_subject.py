@@ -65,7 +65,7 @@ def test_run_case_content_failure_reraises(tmp_path):
     assert not isinstance(excinfo.value, EnvironmentFailure)
 
 
-# ---------- #178 条件对照帧:feed_answer 测量断点(P 口径默认零漂移) ----------
+# ---------- parity 口径(#333 方向修正单 2026-09-19 裁①,取代 #178 feed_answer 断点) ----------
 
 _QA = {"text": "鸡和兔一共有8只，共有26只脚。鸡和兔各有多少只？说明思路。",
        "answer": "鸡3只，兔5只"}
@@ -79,20 +79,23 @@ def _start_request_body(case: dict) -> str:
     return json.dumps(gateway.requests[0]["messages"], ensure_ascii=False)
 
 
-def test_p_caliber_kernel_never_sees_answer():
-    """#34 口径台账:默认(不喂)内核请求里不得出现参考答案——钉死默认零漂移。"""
-    assert "鸡3只" not in _start_request_body(
+def test_parity_kernel_sees_authoritative_answer():
+    """parity 裁①:对齐生产 resolve() 契约,question.answer 照进内核 start 入参。"""
+    assert "鸡3只" in _start_request_body(
         {"id": "x", "question": _QA, "grade": "六年级", "student_turns": []})
 
 
-def test_feed_answer_breakpoint_feeds_reference_answer():
-    """#178 断点边:仅显式 feed_answer=true 时参考答案进内核 start 入参。"""
-    assert "鸡3只" in _start_request_body(
-        {"id": "x", "question": _QA, "grade": "六年级", "student_turns": [],
-         "feed_answer": True})
-    # 裸字符串题无 answer 可喂:断点开启不炸,正常跑完(P 口径形态不受影响)
-    gateway = FakeGateway(tutor_payloads=[_OPEN_MIN])
-    result = KernelSubject(gateway).run_case({"id": "x", "question": "鸡和兔一共有8只。",
-                                              "grade": "", "student_turns": [],
-                                              "feed_answer": True})
-    assert result["final_state"] == "needs_review"
+def test_parity_reference_answer_fills_gap_and_analysis_from_steps():
+    """question 缺 answer 时由场景 reference_answer(value/steps)补,steps 拼 analysis。"""
+    body = _start_request_body({"id": "x", "question": {"text": "某数是500的两倍。"},
+                                "grade": "", "student_turns": [],
+                                "reference_answer": {"value": "1000",
+                                                     "steps": ["先算 500×2", "得 1000"]}})
+    assert "1000" in body
+
+
+def test_parity_answer_status_defaulted():
+    """answer_status 恒有:案缺省补 incorrect(生产 answer_correct 映射对齐)。"""
+    body = _start_request_body({"id": "x", "question": {"text": "鸡和兔一共有8只。"},
+                                "grade": "", "student_turns": []})
+    assert "incorrect" in body

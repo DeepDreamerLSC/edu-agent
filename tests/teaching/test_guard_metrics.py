@@ -25,9 +25,9 @@ def test_leak_hit_records_rule_and_original(tmp_path):
         assert event["guard"] == "answer_leak"
         assert "grounded_answer_disclosure" in event["rule_ids"]
         assert "x=6" in event["original"]  # 被替换原文在案(judge 可见)
-        # 任务包2步2 修复重生成优先:命中后重调 tutor 拿到干净回复(埋点 regenerated=True);
-        # 首问可见文本恒为固定模板(prompting.first_question_text)→ 重生成文本不达学生面。
-        assert event["regenerated"] is True
+        # Thin Kernel(#333):确定性数值掩码替代重生成(零模型);首问可见文本恒为
+        # 固定模板(prompting.first_question_text)→ 掩码文本不达学生面。
+        assert event["regenerated"] is False and event["mode"] == "masked"
         assert turn.text == FIRST_QUESTION_COLLECT
         assert "x=6" not in turn.text
 

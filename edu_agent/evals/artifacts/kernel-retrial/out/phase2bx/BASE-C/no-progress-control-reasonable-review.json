@@ -1,0 +1,142 @@
+{
+  "case_id": "no-progress-control-reasonable-review",
+  "variant": "BASE-C",
+  "arm": "C",
+  "transcript": {
+    "question_id": "no-progress-control-reasonable-review",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你做对啦,真棒!还有哪里不太明白吗?",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "半径是 5 厘米,因为半径就是直径的一半。",
+        "tutor": "你刚才说半径是直径的一半，这个关系很关键，那如果直径是 10 厘米，你打算怎么算出具体数值呢？",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 2941
+      }
+    ],
+    "summary": "这一题(「一个圆的直径是 10 厘米,这个圆的半径是多少厘米?」)你自己讲了做法:从「半径是 5 厘米,因为半径就是直径的一半。」开始,说到「半径是 5 厘米,因为半径就是直径的一半。」,关键步骤和结论都在你自己的话里,和题目的要求也对上了。可以再做一道,或者今天先到这里。",
+    "total_ms": 4662,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "correct"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          5.0,
+          10.0
+        ],
+        "extracted": [
+          5.0,
+          10.0
+        ],
+        "violation_sources": [
+          {
+            "number": 5.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          5.0,
+          10.0
+        ],
+        "extracted": [
+          10.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "original": "你刚才说半径是直径的一半，这个关系用得很准！那如果直径是10厘米，你再算一遍，确认一下结果是不是5厘米？",
+        "regenerated": true,
+        "turn": 1
+      }
+    ],
+    "session_id": "kernel_72cd63c44a"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        5.0,
+        10.0
+      ],
+      "extracted": [
+        5.0,
+        10.0
+      ],
+      "violation_sources": [
+        {
+          "number": 5.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        5.0,
+        10.0
+      ],
+      "extracted": [
+        10.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "original": "你刚才说半径是直径的一半，这个关系用得很准！那如果直径是10厘米，你再算一遍，确认一下结果是不是5厘米？",
+      "regenerated": true,
+      "turn": 1
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 0,
+      "socratic_followup": 1,
+      "grade_fit": 2,
+      "pacing": 0,
+      "summary_mastery": 1,
+      "termination": 1
+    },
+    "total": 5,
+    "answer_leaked": true,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师第一轮直接说：'你好同学,这道题你做对啦,真棒!'，在学生尚未给出答案前就确认了结果，属于直接泄露终答。",
+      "socratic_followup": "学生给出答案后，小讲师追问'那如果直径是 10 厘米，你打算怎么算出具体数值呢？'，但学生已在上一轮明确说出'半径是 5 厘米'，此追问显得多余且未针对新错误点，引导链断裂。",
+      "grade_fit": "对话中使用的'直径'、'半径'、'一半'等术语符合六年级课标，语言通俗。",
+      "pacing": "小讲师在确认学生已答对后，又进行了一次重复性的总结复述，且对话结构混乱（学生只答了一次，小讲师却连续两轮发言），信息量分配不合理，存在原地打转。",
+      "summary_mastery": "总结中复述了学生的原话'半径是 5 厘米,因为半径就是直径的一半'，并确认了关键步骤，但缺乏对学生掌握程度的深入判断（如是否理解为何是一半），仅停留在复述层面，且对话中未体现学生进一步的独立验证或解释。",
+      "termination": "学生已明确给出正确答案和理由，小讲师在总结后提出'可以再做一道,或者今天先到这里'，终止时机尚可，但整体流程因首问泄露和节奏问题导致终止状态不明（学生是否真的完全掌握存疑）。",
+      "math_integrity": "小讲师陈述的数学事实：1.'半径是直径的一半'（正确）；2.'直径是 10 厘米'（正确）；3.'半径是 5 厘米'（正确）。未引入错误数学事实。",
+      "answer_leaked": "小讲师第一轮发言：'你好同学,这道题你做对啦,真棒!'，在学生尚未给出答案前直接确认了'做对'，隐含泄露了正确答案（5厘米），构成终答泄露。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 38
+}

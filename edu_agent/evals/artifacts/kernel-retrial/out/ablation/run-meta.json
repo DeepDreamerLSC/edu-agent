@@ -1,0 +1,27 @@
+{
+  "total_calls": 200,
+  "calls_by_arm": {
+    "A": 63,
+    "B": 71,
+    "C": 66
+  },
+  "max_calls": 360,
+  "arms": [
+    "A",
+    "B",
+    "C"
+  ],
+  "cases": [
+    "no-progress-control-reasonable-review",
+    "no-progress-control-thin-reasoning",
+    "image_v2_stuck_01",
+    "image_v2_stuck_02",
+    "no-progress-real-6a61aa32-replay",
+    "no-progress-real-paraphrase-probe",
+    "image_v2_answerhit_01",
+    "image_v2_answerhit_02",
+    "ablation-comma-collision-01",
+    "image_v2_understanding_04",
+    "image_v2_understanding_02"
+  ]
+}

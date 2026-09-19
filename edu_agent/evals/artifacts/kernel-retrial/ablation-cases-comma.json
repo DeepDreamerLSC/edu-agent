@@ -1,0 +1,26 @@
+{
+ "schema_version": "small_lecturer_image_teaching/v1",
+ "scenarios": [
+  {
+   "id": "ablation-comma-collision-01",
+   "title": "千分位撞池案(answer「1,000」归一池 {1000},step value「1000」双重身份→anchor 禁)",
+   "bucket": "fraction_formula",
+   "visual_dependency": "none",
+   "grade": "六年级",
+   "question": {"text": "一个数的一半是 500,这个数是多少?", "answer": "1,000",
+                "analysis": "先算用一半倒推:500×2=1000。再写出带千分位的数:1,000。"},
+   "reference_answer": {"value": "500×2=1000,即 1,000", "steps": ["倒推:500×2=1000", "千分位写法:1,000"]},
+   "student_turns": [
+    "一半是 500……是要用 500 加什么吗?我想不出来。",
+    "还是不会,倒推到底怎么算,我又卡住了。",
+    "哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!"
+   ],
+   "misconception_seed": null,
+   "expected": "anchor_collision_refused",
+   "source": {"question_id": "ablation-comma-collision-01",
+              "provider": "kernel_retrial_ablation",
+              "lesson_name": "千分位",
+              "note": "#333 kernel-ablation slice:anchor collision——step value 1000 撞 answer『1,000』千分位归一池(#360 P2-① 收紧向量),C 臂二次卡壳 anchor 应正确拒绝(零锚);A/B 臂无 anchor 机制对照。冻结附录=本文件全文。"}
+  }
+ ]
+}

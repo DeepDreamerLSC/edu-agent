@@ -1,0 +1,226 @@
+{
+  "case_id": "ablation-comma-collision-01",
+  "variant": "BASE-B",
+  "arm": "B",
+  "transcript": {
+    "question_id": "ablation-comma-collision-01",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "一半是 500……是要用 500 加什么吗?我想不出来。",
+        "tutor": "你刚才说‘是要用500加什么吗’，这想法挺有意思，你是怎么想到要加的呢？",
+        "state": "dialogue",
+        "elapsed_ms": 1501
+      },
+      {
+        "student": "还是不会,倒推到底怎么算,我又卡住了。",
+        "tutor": "这条回复包含题目终答,我不能直接给出。",
+        "state": "dialogue",
+        "elapsed_ms": 3279
+      },
+      {
+        "student": "哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!",
+        "tutor": "你刚才说‘一半倒过来就是乘2，500×2=1000’，这一步完全对！你已经把倒推的思路讲清楚了，最后请你自己完整说一遍结论。",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 2120
+      }
+    ],
+    "summary": "你用‘一半倒推就是乘2’的思路正确解出了这道题，关键转折是理解‘一半’和‘整体’的关系；仍需注意的是，最后要完整说出‘这个数是1,000’才算完成。",
+    "total_ms": 10856,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          500.0
+        ],
+        "extracted": [
+          500.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          500.0
+        ],
+        "extracted": [
+          500.0,
+          1000.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 1,
+        "rule_ids": [
+          "grounded_answer_disclosure"
+        ],
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          500.0
+        ],
+        "extracted": [
+          2.0,
+          500.0
+        ],
+        "violation_sources": [
+          {
+            "number": 2.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "arm_b": "safety_regen",
+        "round": 2,
+        "rule_ids": [
+          "grounded_answer_disclosure"
+        ],
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          500.0,
+          1000.0
+        ],
+        "extracted": [
+          2.0,
+          500.0,
+          1000.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_11e40ba0d2"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        500.0
+      ],
+      "extracted": [
+        500.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        500.0
+      ],
+      "extracted": [
+        500.0,
+        1000.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 1,
+      "rule_ids": [
+        "grounded_answer_disclosure"
+      ],
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        500.0
+      ],
+      "extracted": [
+        2.0,
+        500.0
+      ],
+      "violation_sources": [
+        {
+          "number": 2.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "arm_b": "safety_regen",
+      "round": 2,
+      "rule_ids": [
+        "grounded_answer_disclosure"
+      ],
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        500.0,
+        1000.0
+      ],
+      "extracted": [
+        2.0,
+        500.0,
+        1000.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 2,
+      "grade_fit": 2,
+      "pacing": 2,
+      "summary_mastery": 2,
+      "termination": 2
+    },
+    "total": 12,
+    "answer_leaked": false,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师:你刚才说‘是要用500加什么吗’，这想法挺有意思，你是怎么想到要加的呢？",
+      "grade_fit": "小讲师:你刚才说‘一半倒过来就是乘2，500×2=1000’，这一步完全对！",
+      "pacing": "学生:还是不会,倒推到底怎么算,我又卡住了。小讲师:这条回复包含题目终答,我不能直接给出。",
+      "summary_mastery": "学生:哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000! 小讲师:你刚才说‘一半倒过来就是乘2，500×2=1000’，这一步完全对！你已经把倒推的思路讲清楚了...",
+      "termination": "学生:哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000! 小讲师:你刚才说‘一半倒过来就是乘2，500×2=1000’，这一步完全对！你已经把倒推的思路讲清楚了，最后请你自己完整说一遍结论。",
+      "math_integrity": "小讲师陈述：'一半倒过来就是乘2'（正确，对应500×2=1000）；'500×2=1000'（正确）；'这个数是1,000'（正确）。小讲师未引入任何错误数学事实，且正确确认了学生的推理与结论。",
+      "answer_leaked": "学生先给出终答：'哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!'，小讲师随后仅进行确认与引导，未在学生给出前泄露答案。"
+    },
+    "verdict": "pass",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 53
+}

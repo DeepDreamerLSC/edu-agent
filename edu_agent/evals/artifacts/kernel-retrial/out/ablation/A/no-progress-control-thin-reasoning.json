@@ -1,0 +1,159 @@
+{
+  "case_id": "no-progress-control-thin-reasoning",
+  "arm": "A",
+  "transcript": {
+    "question_id": "no-progress-control-thin-reasoning",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你做对啦,真棒!还有哪里不太明白吗?",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "鸡有 3 只,兔有 5 只。",
+        "tutor": "你算出鸡有 3 只、兔有 5 只，这答案对啦！不过我们得想想你是怎么知道的——比如你是不是用‘假设全是鸡’或者‘脚数差’来推算的？",
+        "state": "dialogue",
+        "elapsed_ms": 1520
+      },
+      {
+        "student": "我是用假设法想的:先假设笼子里全是鸡,那脚就有 8 乘 2 是 16 只,但实际有 26 只,多出了 10 只脚。",
+        "tutor": "你用假设法算得很清楚，先算全鸡时脚数是16只，比实际少10只，这差值能帮我们找到兔子数量，接下来你想怎么用这10只脚来算兔子呢？",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 1975
+      }
+    ],
+    "summary": "这一题(「笼子里有鸡和兔一共 8 只,数一数脚一共 26 只。鸡和兔各有几只?」)你自己讲了做法:从「鸡有 3 只,兔有 5 只。」开始,说到「我是用假设法想的:先假设笼子里全是鸡,那脚就有 8 乘 2 是 16 只,但实际有 26 只,多出了 10 只脚。」,关键步骤和结论都在你自己的话里,和题目的要求也对上了。可以再做一道,或者今天先到这里。",
+    "total_ms": 6593,
+    "learner": {
+      "grade": "五年级",
+      "answer_status": "correct"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [
+          3.0,
+          5.0
+        ],
+        "extracted": [
+          3.0,
+          5.0
+        ],
+        "violation_sources": [
+          {
+            "number": 3.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "shadow": "would_block",
+        "rule": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "violations": [
+          3.0
+        ],
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          8.0,
+          10.0,
+          16.0,
+          26.0
+        ],
+        "extracted": [
+          10.0,
+          16.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      }
+    ],
+    "session_id": "kernel_bd4b7a508e"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [
+        3.0,
+        5.0
+      ],
+      "extracted": [
+        3.0,
+        5.0
+      ],
+      "violation_sources": [
+        {
+          "number": 3.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "shadow": "would_block",
+      "rule": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "violations": [
+        3.0
+      ],
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        8.0,
+        10.0,
+        16.0,
+        26.0
+      ],
+      "extracted": [
+        10.0,
+        16.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 0,
+      "socratic_followup": 2,
+      "grade_fit": 2,
+      "pacing": 1,
+      "summary_mastery": 2,
+      "termination": 2
+    },
+    "total": 9,
+    "answer_leaked": true,
+    "math_integrity": 2,
+    "evidence": {
+      "first_question": "小讲师第一轮直接说：'你好同学,这道题你做对啦,真棒!'，在学生尚未给出任何答案前就确认了'做对'，隐含泄露了正确答案的存在，且未进行引导性提问。",
+      "socratic_followup": "学生解释假设法后，小讲师追问：'接下来你想怎么用这10只脚来算兔子呢？'，指向具体推理步骤，引导学生思考。",
+      "grade_fit": "使用'假设法'、'脚数差'等五年级课标术语，语言通俗，例子贴近生活。",
+      "pacing": "小讲师连续两轮发言（'你用假设法算得很清楚...'和'这一题你自己讲了做法...'），中间无学生回应，存在信息倾倒和节奏拖沓。",
+      "summary_mastery": "总结引用学生原话：'从「鸡有 3 只,兔有 5 只。」开始,说到「我是用假设法想的...」'，明确指向学生本人的关键学习证据，并给出掌握判断。",
+      "termination": "学生已完整阐述解题思路并确认答案，小讲师自然收尾：'可以再做一道,或者今天先到这里。'",
+      "math_integrity": "小讲师陈述：'8 乘 2 是 16 只'（正确），'比实际少 10 只'（26-16=10，正确），'多出了 10 只脚'（正确，指实际比假设多）。所有数学事实正确，未引入错误。",
+      "answer_leaked": "小讲师第一轮发言：'你好同学,这道题你做对啦,真棒!'，在学生尚未给出答案前就确认了'做对'，属于终答泄露。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 7
+}

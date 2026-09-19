@@ -1,0 +1,744 @@
+{
+  "case_id": "no-progress-real-6a61aa32-replay",
+  "variant": "BASE-C",
+  "arm": "C",
+  "transcript": {
+    "question_id": "no-progress-real-6a61aa32-replay",
+    "final_state": "needs_review",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "三只小动物呈现了三角形的关系",
+        "tutor": "你说到三只小动物在三角形的顶点上，那如果从一个顶点看另外两个顶点，它们的方向会有什么特点呢？",
+        "state": "dialogue",
+        "elapsed_ms": 3151
+      },
+      {
+        "student": "如果以小兔为原点，小马再小兔的东方，小羊在小兔的东北方",
+        "tutor": "你刚才说小马在小兔的东方，小羊在东北方，那如果三角形是等边的，从一个小动物看另外两个，它们的方向会不会有对称关系？比如，小兔看小马和小羊，这两个方向夹角是多少？",
+        "state": "dialogue",
+        "elapsed_ms": 3741
+      },
+      {
+        "student": "小羊在小马的西北方",
+        "tutor": "你说到小羊在小马的西北方，这个方向感不错，但咱们得想想，如果三角形是等边的，从每个顶点看另外两个点，它们的方向是不是对称的？比如从一个小动物看另外两个，夹角应该是多少度呢？",
+        "state": "dialogue",
+        "elapsed_ms": 1880
+      },
+      {
+        "student": "小兔在小马的正西方",
+        "tutor": "我们从这里入手:先确定等边三角形的三个顶点位置，想象它们在草地上形成一个正三角形。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 5299
+      },
+      {
+        "student": "小羊在小兔的东北方",
+        "tutor": "你刚才说小羊在小兔的东北方，那如果三角形是等边的，从一个小动物看另外两个，它们的方向夹角是不是一样？比如小兔看小马和小羊，这两个方向的夹角是多少度呢？",
+        "state": "dialogue",
+        "elapsed_ms": 3300
+      },
+      {
+        "student": "小羊在小马的西北方",
+        "tutor": "下一步是这样:以其中一个顶点为观测点，确定另外两个顶点相对于它的方向和距离。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 5042
+      },
+      {
+        "student": "小羊在小兔的东北方",
+        "tutor": "你说到小羊在小兔的东北方，这个方向感不错，但咱们得想想，从每个顶点看另外两个点，它们的方向是不是对称的？比如小兔看小马和小羊，这两个方向的夹角应该是多少度呢？",
+        "state": "dialogue",
+        "elapsed_ms": 1722
+      },
+      {
+        "student": "小羊在小马的西北方",
+        "tutor": "你刚才说小羊在小马的西北方，那如果三角形是等边的，从一个小动物看另外两个点，它们的方向是不是对称的？比如小兔看小马和小羊，这两个方向的夹角是不是一样？",
+        "state": "dialogue",
+        "elapsed_ms": 3397
+      },
+      {
+        "student": "小马再小兔的东方",
+        "tutor": "你刚才说小羊在小马的西北方，那从正三角形看，小马和小羊之间的夹角应该是多少度？",
+        "state": "dialogue",
+        "elapsed_ms": 5024
+      }
+    ],
+    "summary": "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?",
+    "total_ms": 36489,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          30.0
+        ],
+        "violation_sources": [
+          {
+            "number": 30.0,
+            "source": "answer"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 1
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer"
+        ],
+        "original": "你说到三只小动物在三角形里，那如果站在一个顶点看另外两个顶点，它们分别在什么方向呢？比如小羊在左上角，小兔在右上角，从哪个角出发看它们的方向会是北偏西30°？",
+        "regenerated": true,
+        "turn": 1
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          30.0,
+          60.0
+        ],
+        "violation_sources": [
+          {
+            "number": 30.0,
+            "source": "answer"
+          },
+          {
+            "number": 60.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 2
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer",
+          "source_value_disclosure:hallucinated"
+        ],
+        "original": "你说到小马在小兔的东方、小羊在东北方，这方向感不错，但等边三角形每个角都是60°，从一个顶点看另外两个顶点，方向应该更精确，比如北偏东30°，你试试从这个角度再想想？",
+        "regenerated": true,
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 3
+      },
+      {
+        "branch": "model",
+        "cited": [
+          60.0
+        ],
+        "extracted": [
+          60.0
+        ],
+        "violation_sources": [
+          {
+            "number": 60.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 4
+      },
+      {
+        "branch": "model",
+        "cited": [
+          60.0
+        ],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 4
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:hallucinated"
+        ],
+        "original": "你说到小兔在小马的正西方，这个方向是准确的，但咱们得想想，等边三角形每个角都是60度，从一个顶点看另外两个点，它们的方向夹角应该是多少？比如小兔看小马和小羊，这两个方向夹角是不是60度？",
+        "regenerated": true,
+        "turn": 4
+      },
+      {
+        "branch": "repeat_regen",
+        "turn": 4
+      },
+      {
+        "branch": "model",
+        "cited": [
+          60.0
+        ],
+        "extracted": [
+          60.0
+        ],
+        "violation_sources": [
+          {
+            "number": 60.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 4
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 1,
+        "turn": 4
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          60.0
+        ],
+        "violation_sources": [
+          {
+            "number": 60.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 5
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 5
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:hallucinated"
+        ],
+        "original": "你说到小羊在小兔的东北方，这个方向感不错，但咱们得想想，等边三角形每个角是60°，从一个顶点看另外两个点，它们的夹角应该是多少度呢？",
+        "regenerated": true,
+        "turn": 5
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          120.0
+        ],
+        "violation_sources": [
+          {
+            "number": 120.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 6
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 6
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:hallucinated"
+        ],
+        "original": "你说到小羊在小马的西北方，这个方向感不错，但咱们得想想，等边三角形每个顶点看另外两个点，夹角是不是都是120度？比如从一个小动物看另外两个，方向是不是对称分布？",
+        "regenerated": true,
+        "turn": 6
+      },
+      {
+        "branch": "repeat_regen",
+        "turn": 6
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          60.0
+        ],
+        "violation_sources": [
+          {
+            "number": 60.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 6
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 2,
+        "turn": 6
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 7
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          60.0
+        ],
+        "violation_sources": [
+          {
+            "number": 60.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 8
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 8
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:hallucinated"
+        ],
+        "original": "你说到小羊在小马的西北方，这个方向感不错，但咱们得想想，等边三角形每个顶点看另外两个点，夹角应该是多少度？比如从一个小动物看另外两个，它们的夹角是不是60度？",
+        "regenerated": true,
+        "turn": 8
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [
+          30.0,
+          120.0
+        ],
+        "violation_sources": [
+          {
+            "number": 30.0,
+            "source": "answer"
+          },
+          {
+            "number": 120.0,
+            "source": "hallucinated"
+          }
+        ],
+        "gate": "blocked",
+        "turn": 9
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 9
+      },
+      {
+        "guard": "answer_leak",
+        "rule_ids": [
+          "source_value_disclosure:answer",
+          "source_value_disclosure:hallucinated"
+        ],
+        "original": "你刚才说小羊在小兔的东北方，这个方向感不错，但咱们得想想，等边三角形每个顶点看另外两个点，它们的夹角是不是120度？比如从北边开始，小兔看小马和小羊，这两个方向分别应该是北偏东30°和北偏西30°，对吗？",
+        "regenerated": true,
+        "turn": 9
+      },
+      {
+        "branch": "repeat_regen",
+        "turn": 9
+      },
+      {
+        "branch": "model",
+        "cited": [],
+        "extracted": [],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 9
+      }
+    ],
+    "session_id": "kernel_9abaecb2f6"
+  },
+  "guard_events": [
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        30.0
+      ],
+      "violation_sources": [
+        {
+          "number": 30.0,
+          "source": "answer"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 1
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer"
+      ],
+      "original": "你说到三只小动物在三角形里，那如果站在一个顶点看另外两个顶点，它们分别在什么方向呢？比如小羊在左上角，小兔在右上角，从哪个角出发看它们的方向会是北偏西30°？",
+      "regenerated": true,
+      "turn": 1
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        30.0,
+        60.0
+      ],
+      "violation_sources": [
+        {
+          "number": 30.0,
+          "source": "answer"
+        },
+        {
+          "number": 60.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 2
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer",
+        "source_value_disclosure:hallucinated"
+      ],
+      "original": "你说到小马在小兔的东方、小羊在东北方，这方向感不错，但等边三角形每个角都是60°，从一个顶点看另外两个顶点，方向应该更精确，比如北偏东30°，你试试从这个角度再想想？",
+      "regenerated": true,
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 3
+    },
+    {
+      "branch": "model",
+      "cited": [
+        60.0
+      ],
+      "extracted": [
+        60.0
+      ],
+      "violation_sources": [
+        {
+          "number": 60.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 4
+    },
+    {
+      "branch": "model",
+      "cited": [
+        60.0
+      ],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 4
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:hallucinated"
+      ],
+      "original": "你说到小兔在小马的正西方，这个方向是准确的，但咱们得想想，等边三角形每个角都是60度，从一个顶点看另外两个点，它们的方向夹角应该是多少？比如小兔看小马和小羊，这两个方向夹角是不是60度？",
+      "regenerated": true,
+      "turn": 4
+    },
+    {
+      "branch": "repeat_regen",
+      "turn": 4
+    },
+    {
+      "branch": "model",
+      "cited": [
+        60.0
+      ],
+      "extracted": [
+        60.0
+      ],
+      "violation_sources": [
+        {
+          "number": 60.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 4
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 1,
+      "turn": 4
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        60.0
+      ],
+      "violation_sources": [
+        {
+          "number": 60.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 5
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 5
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:hallucinated"
+      ],
+      "original": "你说到小羊在小兔的东北方，这个方向感不错，但咱们得想想，等边三角形每个角是60°，从一个顶点看另外两个点，它们的夹角应该是多少度呢？",
+      "regenerated": true,
+      "turn": 5
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        120.0
+      ],
+      "violation_sources": [
+        {
+          "number": 120.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 6
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 6
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:hallucinated"
+      ],
+      "original": "你说到小羊在小马的西北方，这个方向感不错，但咱们得想想，等边三角形每个顶点看另外两个点，夹角是不是都是120度？比如从一个小动物看另外两个，方向是不是对称分布？",
+      "regenerated": true,
+      "turn": 6
+    },
+    {
+      "branch": "repeat_regen",
+      "turn": 6
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        60.0
+      ],
+      "violation_sources": [
+        {
+          "number": 60.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 6
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 2,
+      "turn": 6
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 7
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        60.0
+      ],
+      "violation_sources": [
+        {
+          "number": 60.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 8
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 8
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:hallucinated"
+      ],
+      "original": "你说到小羊在小马的西北方，这个方向感不错，但咱们得想想，等边三角形每个顶点看另外两个点，夹角应该是多少度？比如从一个小动物看另外两个，它们的夹角是不是60度？",
+      "regenerated": true,
+      "turn": 8
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [
+        30.0,
+        120.0
+      ],
+      "violation_sources": [
+        {
+          "number": 30.0,
+          "source": "answer"
+        },
+        {
+          "number": 120.0,
+          "source": "hallucinated"
+        }
+      ],
+      "gate": "blocked",
+      "turn": 9
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 9
+    },
+    {
+      "guard": "answer_leak",
+      "rule_ids": [
+        "source_value_disclosure:answer",
+        "source_value_disclosure:hallucinated"
+      ],
+      "original": "你刚才说小羊在小兔的东北方，这个方向感不错，但咱们得想想，等边三角形每个顶点看另外两个点，它们的夹角是不是120度？比如从北边开始，小兔看小马和小羊，这两个方向分别应该是北偏东30°和北偏西30°，对吗？",
+      "regenerated": true,
+      "turn": 9
+    },
+    {
+      "branch": "repeat_regen",
+      "turn": 9
+    },
+    {
+      "branch": "model",
+      "cited": [],
+      "extracted": [],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 9
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 0,
+      "grade_fit": 1,
+      "pacing": 0,
+      "summary_mastery": 0,
+      "termination": 0
+    },
+    "total": 3,
+    "answer_leaked": false,
+    "math_integrity": 0,
+    "evidence": {
+      "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "小讲师连续多轮重复相同引导语:'那如果三角形是等边的,从一个小动物看另外两个,它们的方向是不是对称的？比如小兔看小马和小羊,这两个方向的夹角是多少度呢？'，未针对学生具体错误(如'小马在小兔的东方'与等边三角形60度角的矛盾)进行针对性引导，导致学生反复回答错误方向。",
+      "grade_fit": "小讲师使用'原点'、'对称关系'等术语，虽六年级可接触，但未结合图形具体解释'北偏西30度'等方位角概念，且未纠正学生'东北方'等模糊表述，表达适配性一般。",
+      "pacing": "对话中连续5轮以上小讲师重复相同引导问题，学生反复给出错误答案(如'小羊在小马的西北方')，小讲师未调整策略或提供新提示，属于原地打转，无实质推进。",
+      "summary_mastery": "小讲师在对话末尾称'这一题的学习证据还不够'，但未总结任何学生实际掌握的方法或关键步骤，也未指出学生具体错误点，缺乏对学生实际表现的评估依据。",
+      "termination": "学生在多轮尝试后仍未给出正确答案，小讲师未进行有效引导或升级提示，直接以'学习证据不够'终止对话，属于学生未掌握即终止。",
+      "math_integrity": "小讲师未纠正学生'小马在小兔的东方'这一明显错误(等边三角形中相邻顶点夹角应为60度，非90度正东)，且未指出'东北方'等模糊表述与等边三角形方位角的矛盾，导致学生持续错误推理，属于未识别并引导关键数学错误。",
+      "answer_leaked": "小讲师全程未直接给出参考答案'北偏西30°20m'等完整终答，学生也未主动给出正确终答。"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 21
+}

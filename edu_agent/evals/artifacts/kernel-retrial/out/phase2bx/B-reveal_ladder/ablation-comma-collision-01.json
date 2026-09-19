@@ -1,0 +1,134 @@
+{
+  "case_id": "ablation-comma-collision-01",
+  "variant": "B-reveal_ladder",
+  "arm": "B",
+  "transcript": {
+    "question_id": "ablation-comma-collision-01",
+    "final_state": "completed",
+    "turns": [
+      {
+        "student": "",
+        "tutor": "你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+        "state": "first_question_ready",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "一半是 500……是要用 500 加什么吗?我想不出来。",
+        "tutor": "我们从这里入手:先算用一半倒推。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "还是不会,倒推到底怎么算,我又卡住了。",
+        "tutor": "下一步是这样:再写出带千分位的数。这一步先算,得到 0。你接着算下一步。",
+        "state": "dialogue",
+        "elapsed_ms": 0
+      },
+      {
+        "student": "哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!",
+        "tutor": "你刚才说‘一半倒过来就是乘2，500×2=1000’，这一步完全对！最后请你自己完整说一遍结论。",
+        "state": "ready_to_confirm",
+        "elapsed_ms": 1469
+      }
+    ],
+    "summary": "你用‘一半倒过来就是乘2’这个思路正确解出了这道题，关键转折是意识到500×2=1000，最后要记得完整说出‘这个数是1,000’才算完成。",
+    "total_ms": 4421,
+    "learner": {
+      "grade": "六年级",
+      "answer_status": "incorrect"
+    },
+    "guard_events": [
+      {
+        "branch": "reveal",
+        "hint_level": 1,
+        "soften": "cut",
+        "turn": 1
+      },
+      {
+        "branch": "reveal",
+        "hint_level": 2,
+        "soften": "cut",
+        "anchor_numbers": [
+          0.0
+        ],
+        "turn": 2
+      },
+      {
+        "branch": "model",
+        "cited": [
+          2.0,
+          500.0,
+          1000.0
+        ],
+        "extracted": [
+          2.0,
+          500.0,
+          1000.0
+        ],
+        "violation_sources": [],
+        "gate": "observed",
+        "turn": 3
+      }
+    ],
+    "session_id": "kernel_6868e1ce94"
+  },
+  "guard_events": [
+    {
+      "branch": "reveal",
+      "hint_level": 1,
+      "soften": "cut",
+      "turn": 1
+    },
+    {
+      "branch": "reveal",
+      "hint_level": 2,
+      "soften": "cut",
+      "anchor_numbers": [
+        0.0
+      ],
+      "turn": 2
+    },
+    {
+      "branch": "model",
+      "cited": [
+        2.0,
+        500.0,
+        1000.0
+      ],
+      "extracted": [
+        2.0,
+        500.0,
+        1000.0
+      ],
+      "violation_sources": [],
+      "gate": "observed",
+      "turn": 3
+    }
+  ],
+  "judge": {
+    "scores": {
+      "first_question": 2,
+      "socratic_followup": 0,
+      "grade_fit": 1,
+      "pacing": 0,
+      "summary_mastery": 1,
+      "termination": 2
+    },
+    "total": 6,
+    "answer_leaked": false,
+    "math_integrity": 0,
+    "evidence": {
+      "first_question": "小讲师:你好同学,这道题你的答案是什么呀?讲讲你的思路吧!",
+      "socratic_followup": "学生:还是不会,倒推到底怎么算,我又卡住了。小讲师:下一步是这样:再写出带千分位的数。这一步先算,得到 0。你接着算下一步。",
+      "grade_fit": "小讲师:下一步是这样:再写出带千分位的数。这一步先算,得到 0。",
+      "pacing": "小讲师:下一步是这样:再写出带千分位的数。这一步先算,得到 0。你接着算下一步。",
+      "summary_mastery": "小讲师:你用‘一半倒过来就是乘2’这个思路正确解出了这道题，关键转折是意识到500×2=1000，最后要记得完整说出‘这个数是1,000’才算完成。",
+      "termination": "学生:哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!",
+      "math_integrity": "小讲师陈述：'再写出带千分位的数。这一步先算,得到 0。'。该陈述在数学上错误：'写出带千分位的数'是格式步骤，并非计算步骤，且该步骤不会'得到 0'。小讲师将格式步骤描述为计算步骤并给出错误数值结果，属于引入错误的数学事实。",
+      "answer_leaked": "学生:哦!一半倒过来就是乘 2,500×2=1000,这个数是 1,000!"
+    },
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+  },
+  "calls_used": 4
+}
