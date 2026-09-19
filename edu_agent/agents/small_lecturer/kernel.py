@@ -859,7 +859,8 @@ def _deterministic_turn(session: LearnerSession, student_message: str,
             and not _arm_bypass("would_rewrite", "elicit_restatement", session)):
         return _ask_restatement(session, student_message)
     if (_student_signals_stuck(student_message)
-            and not _arm_bypass("would_reveal", "stuck_hint", session)):
+            and (_current_arm() == "B"  # phase2bx-reveal_ladder:B 臂加回卡住支持/揭示
+                 or not _arm_bypass("would_reveal", "stuck_hint", session))):
         hint = _stuck_hint(session)
         session.stuck = True
         return _commit_turn(session, student_message, hint, "dialogue")
