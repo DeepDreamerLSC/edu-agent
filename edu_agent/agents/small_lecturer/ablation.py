@@ -8,6 +8,7 @@ kernel.py 的伴生模块(02 §2 单文件预算:门控组件不进 kernel 本�
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -80,22 +81,48 @@ def guard_early(guard: str | None, session: "LearnerSession | None",
 # B 臂最小安全 regen(协议 §1.3 硬约束「只拒绝不重教」):critique 仅要求去除终答,
 # 不注入教学话术;再命中 → 纯 block 安全句(非教学句)。
 _SAFETY_REGEN_CRITIQUE = (
-    "你的回复包含了题目的终答数值。请重新输出同一回复,仅去除终答数值,"
-    "不要新增任何教学内容。")
+    "逐字保留原回复,仅将终答数值替换为□,不得改写其他任何词句。")
 PURE_BLOCK = "这条回复包含题目终答,我不能直接给出。"
 
 
-def arm_b_leak_funnel(regenerate, ctx, session: "LearnerSession | None",
-                      rule_ids: list[str], reply_text: str,
-                      ready_to_confirm: bool) -> str:
-    """B 臂 answer_leak 处置(协议 §1.3):block+至多一次最小安全 regen;再命中→
-    纯 block。与 C 漏斗差异:无教学化兜底句、无 stuck 语义、无同句短路。
-    regenerate 以 callable 注入(kernel._regenerate,免循环导入);其内建再判据:
-    返回非 None 即干净,None 即仍命中/失败 → round 2。埋点 round 1|2。"""
+def _number_forms(number: float) -> list[str]:
+    """数值 → 文本形态(整数/千分位/小数),掩码替换候选集。"""
+    if float(number).is_integer():
+        whole = str(int(number))
+        return [whole] + ([f"{int(number):,}"] if len(whole) > 3 else [])
+    return [str(number), f"{number:g}"]
+
+
+def _mask_violations(text: str, violations) -> str:
+    """确定性数值掩码(phase2bx 附录 A):违规数值→□;词边界防误伤(2025 里的
+    20 不动,3.0 里的 3 不动——留待 regen 兜底)。"""
+    for number in violations or ():
+        for form in _number_forms(float(number)):
+            text = re.sub(rf"(?<![\d.,]){re.escape(form)}(?![\d.,])", "□", text)
+    return text
+
+
+def arm_b_leak_funnel(ctx, session: "LearnerSession | None", rule_ids: list[str],
+                      reply_text: str, violations, ready_to_confirm: bool) -> str:
+    """B 臂 answer_leak 处置(phase2bx 附录 A 掩码版,联合变体安全面):round-1
+    确定性数值掩码;不过判据→regen(critique=逐字保留);再命中→纯 block。
+    check/regenerate 惰性导入 kernel(调用期无循环)。埋点 safety_mask/regen r1|2。"""
+    from edu_agent.agents.small_lecturer.kernel import _guard_check, _regenerate
+    session.guard_events.append({"arm_b": "safety_mask", "round": 1,
+                                 "rule_ids": list(rule_ids)})
+    event = session.guard_events[-1]  # 持引用:check 会追加自己的事件,[-1] 会漂移
+    masked = _mask_violations(reply_text, violations)
+    if masked != reply_text:
+        guard, _r, _n, _v = _guard_check(ctx, masked, session, ready_to_confirm)
+        if guard is None:
+            return masked
+        event["mode"] = "mask_failed"
+    else:
+        event["mode"] = "no_number_form"
     session.guard_events.append({"arm_b": "safety_regen", "round": 1,
                                  "rule_ids": list(rule_ids)})
-    regenerated = regenerate(ctx, session, reply_text,
-                             _SAFETY_REGEN_CRITIQUE, ready_to_confirm)
+    regenerated = _regenerate(ctx, session, reply_text,
+                              _SAFETY_REGEN_CRITIQUE, ready_to_confirm)
     if regenerated is not None:
         return regenerated
     session.guard_events.append({"arm_b": "safety_regen", "round": 2,

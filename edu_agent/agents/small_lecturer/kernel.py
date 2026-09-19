@@ -196,9 +196,8 @@ def _support_move(session: "LearnerSession") -> str:
 
 
 def _stuck_hint(session: "LearnerSession") -> str:
-    """卡住支持动作执行(#198:枚举 + 确定性选择,取代渐隐/揭示双分支)。guiding_focus →
-    拆小问句(只问不揭示、不含数字、不消耗阶梯;埋点 {branch: support, move},#169 起
-    随轮提交补 turn);telling → `_reveal_stuck_hint`(下一级/耗尽 bottom-out,口径同 #185)。"""
+    """卡住支持动作执行(#198):guiding_focus→拆小问句(埋点 support/move);
+    telling→`_reveal_stuck_hint`(下一级/耗尽 bottom-out,口径 #185)。"""
     if _support_move(session) == "guiding_focus":
         session.guard_events.append({"branch": "support", "move": "guiding_focus"})
         return _SUPPORT_HINT
@@ -568,8 +567,8 @@ def _guard_output(reply_text: str, session: "LearnerSession | None" = None,
                                                            ready_to_confirm)
     early = _ablation_guard_early(guard, session, rule_ids, violations, reply_text)
     if early is None and _current_arm() == "B" and guard == "answer_leak":
-        early = _arm_b_leak_funnel(_regenerate, ctx, session, rule_ids,
-                                   reply_text, ready_to_confirm)
+        early = _arm_b_leak_funnel(ctx, session, rule_ids, reply_text,
+                                   violations, ready_to_confirm)
     if early is not None:
         return early
     if guard is None:
@@ -733,16 +732,14 @@ def _commit_turn(session: LearnerSession, student_message: str, assistant_text: 
 
 
 def _ask_restatement(session: LearnerSession, student_message: str) -> Turn:
-    """确定性请学生从头复讲(理解信号/答案命中共用):零模型调用,不 confirm、不报答案,
-    埋点 {branch: elicit, hint_level}——一次会话至多一次(供答案命中触发防循环判定)。"""
+    """确定性请学生从头复讲(理解/答案命中共用):零模型;一次会话至多一次。"""
     session.guard_events.append({"branch": "elicit", "hint_level": session.hint_level})
     return _commit_turn(session, student_message, _ELICIT_TEMPLATE, "dialogue")
 
 
 def _ask_final_answer(session: LearnerSession, student_message: str) -> Turn:
-    """完成表达的确定性采集追问(#178 判停分析→PR-2):零模型调用,不 confirm、不判对错、
-    不预设掌握——把判停闸要的结论数字从学生嘴里采上来(闸无料可判 = 全库 0/32 ready 的
-    采集端成因)。埋点 {branch: answer_collect},一次会话至多一次(对齐 elicit 先例)。"""
+    """完成表达的确定性采集追问(#178):零模型,把判停闸要的结论数字从学生嘴里
+    采上来。埋点 {branch: answer_collect},一次会话至多一次(对齐 elicit 先例)。"""
     session.guard_events.append({"branch": "answer_collect"})
     return _commit_turn(session, student_message, ASK_FINAL_ANSWER, "dialogue")
 
@@ -837,8 +834,12 @@ def _repeat_refine(ctx, session, safe_text: str, ready: bool) -> str:
     if _current_arm() == "A":
         _shadow_event(session, "would_rewrite", "repeat_regen")
         return safe_text
-    if _current_arm() == "B":
-        return safe_text
+    if _current_arm() == "B":  # phase2bx-joint:repeat regen+reveal 兜底联合加回
+        session.guard_events.append({"branch": "repeat_regen"})
+        refined = _regenerate(ctx, session, safe_text, _SELF_CRITIQUE, ready)
+        if refined is None or _is_repeat(prev, refined):
+            refined, session.stuck = _reveal_stuck_hint(session), True
+        return refined
     if _mech_off("repeat_regen"):
         return safe_text
     session.guard_events.append({"branch": "repeat_regen"})  # 裁②:复读重生成落点
@@ -859,7 +860,8 @@ def _deterministic_turn(session: LearnerSession, student_message: str,
             and not _arm_bypass("would_rewrite", "elicit_restatement", session)):
         return _ask_restatement(session, student_message)
     if (_student_signals_stuck(student_message)
-            and not _arm_bypass("would_reveal", "stuck_hint", session)):
+            and (_current_arm() == "B"  # phase2bx-joint:B 臂加回卡住支持/揭示梯
+                 or not _arm_bypass("would_reveal", "stuck_hint", session))):
         hint = _stuck_hint(session)
         session.stuck = True
         return _commit_turn(session, student_message, hint, "dialogue")
