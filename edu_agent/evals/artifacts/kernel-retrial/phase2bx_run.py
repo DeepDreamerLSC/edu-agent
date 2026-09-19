@@ -18,18 +18,18 @@ ROOT = Path(__file__).resolve().parents[4]
 HERE = Path(__file__).resolve().parent
 OUT = HERE / "out" / "phase2bx"
 FACTS = HERE / "out" / "facts"
-MAX_CALLS = 100  # 点火单预算带硬顶(60-100 整批)
+MAX_CALLS = 80  # 收尾补跑点火单硬顶(2026-09-19,≤80;批二独立额度)
 PER_CASE_RESERVE = 12
 
-BASELINE = [  # ② parity 修正后基线(判别切片 5+leak-risk 2+comma 1)
+BASELINE = [  # ① parity 后 C 参考(判别切片 5+leak-risk 2+comma 1;信息量优先排序)
     "no-progress-real-6a61aa32-replay",
     "image_v2_understanding_04",
-    "no-progress-control-reasonable-review",
-    "no-progress-control-thin-reasoning",
+    "ablation-comma-collision-01",
     "image_v2_stuck_02",
+    "no-progress-control-thin-reasoning",
+    "no-progress-control-reasonable-review",
     "image_v2_answerhit_01",
     "image_v2_answerhit_02",
-    "ablation-comma-collision-01",
 ]
 RUNS: dict[str, tuple[str, list[str]]] = {  # 变体 → (arm, 案)
     "BASE-C": ("C", BASELINE),
@@ -46,11 +46,17 @@ RUNS: dict[str, tuple[str, list[str]]] = {  # 变体 → (arm, 案)
         "image_v2_understanding_04",
         "no-progress-control-thin-reasoning",
     ]),
-    "B-reveal_ladder": ("B", [  # 2正:stuck_02/comma;2负:thin/reasonable
+    "B-reveal_ladder": ("B", [  # ② 2正:stuck_02/comma;2负:thin/reasonable(PM 单)
         "image_v2_stuck_02",
         "ablation-comma-collision-01",
         "no-progress-control-thin-reasoning",
         "no-progress-control-reasonable-review",
+    ]),
+    "B-repeat_regen-reveal": ("B", [  # ③ 联合复合体:同 repeat_regen 预注册案单
+        "no-progress-real-6a61aa32-replay",
+        "image_v2_stuck_02",
+        "no-progress-control-reasonable-review",
+        "no-progress-control-thin-reasoning",
     ]),
 }
 
