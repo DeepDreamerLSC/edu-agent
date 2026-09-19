@@ -1,0 +1,4 @@
+{"case_id": "small_lecturer_no_progress_controls_v1_no-progress-control-reasonable-review", "status": "ok", "declared": true, "final_state": "completed", "failures": [], "advisories": []}
+{"case_id": "small_lecturer_no_progress_controls_v1_no-progress-control-thin-reasoning", "status": "ok", "declared": true, "final_state": "completed", "failures": [], "advisories": []}
+{"case_id": "small_lecturer_no_progress_controls_v1_no-progress-control-wrong-then-reguide", "status": "ok", "declared": true, "final_state": "completed", "failures": [], "advisories": []}
+{"case_id": "small_lecturer_no_progress_real_v1_no-progress-real-6a61aa32-replay", "status": "ok", "declared": true, "final_state": "needs_review", "failures": [], "advisories": []}
