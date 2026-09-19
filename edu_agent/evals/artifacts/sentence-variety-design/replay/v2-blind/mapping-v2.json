@@ -1,0 +1,22 @@
+{
+ "seed": 20260921,
+ "note": "靶②R2 暖度 v2 nr 盲评·臂→盲标随机映射(seed=20260921);盲审完成前不得启封;baseline=main@3b9009f 纯净 prompt 臂(v2-baseline),candidate=task/333-r2-prompt 暖度行臂(v2-candidate);两臂同 thin kernel/model/judge,prompt 面唯一变量",
+ "pairs": {
+  "pair-1": {
+   "baseline": "A",
+   "candidate": "B"
+  },
+  "pair-2": {
+   "baseline": "B",
+   "candidate": "A"
+  },
+  "pair-3": {
+   "baseline": "B",
+   "candidate": "A"
+  },
+  "pair-4": {
+   "baseline": "B",
+   "candidate": "A"
+  }
+ }
+}
