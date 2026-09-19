@@ -76,13 +76,14 @@ def main() -> None:
         if v == "CREF":
             continue
         mech = v.removeprefix("LOO-")
-        # 真消费者线:M2 主案/stuck 案 Δm2 ≥ +2(回到裸水平)
+        # 真消费者线(预注册 §5):M2 主案/stuck 案 Δm2 ≥ +2(绝对阈值,跑后不改)
         earner_hits = [c for c in M2_EARNER_CASES
                        if c in table and v in table[c] and "P1-C" in table[c]
                        and (table[c][v]["m2"] - table[c]["P1-C"]["m2"]) >= M2_EARNER_THRESHOLD]
         # 拆台者线:流畅案 judge 回升 > 噪声带 且 state 无降级
         saboteur_hits = []
-        for c in FLUENT_CASES:
+        positive_hits = []  # 反向信号:关闭后 judge 降幅超带(该机制有正贡献)
+        for c in FLUENT_CASES + M2_EARNER_CASES:
             if not (c in table and v in table[c] and "P1-C" in table[c]):
                 continue
             dj = table[c][v]["judge"] - table[c]["P1-C"]["judge"]
@@ -91,24 +92,34 @@ def main() -> None:
                         and table[c]["P1-C"]["state"] != "needs_review")
             if dj > band and not degraded:
                 saboteur_hits.append(c)
-        neutral = not earner_hits and not saboteur_hits
+            if dj < -band:
+                positive_hits.append(c)
+        neutral = not earner_hits and not saboteur_hits and not positive_hits
         verdicts[v] = {"mech": mech,
                        "earner_cases": earner_hits, "saboteur_cases": saboteur_hits,
+                       "positive_cases": positive_hits,
                        "class": ("真消费者" if earner_hits and mech in EARNER_MECHS
                                  else "拆台者" if saboteur_hits and mech in SABOTEUR_MECHS
-                                 else "无感" if neutral else "信号越类(呈 PM 裁)")}
+                                 else "正贡献确认" if positive_hits
+                                 else "无感(带内)" if neutral and noise
+                                 else "无感*" if neutral else "信号越类(呈 PM 裁)")}
 
     summary = {"by_case": table, "noise_band_CREF_vs_P1C": noise,
                "verdicts": verdicts,
                "lines": {"m2_earner_threshold": M2_EARNER_THRESHOLD,
                          "earner_mechs": sorted(EARNER_MECHS),
-                         "saboteur_mechs": sorted(SABOTEUR_MECHS)}}
+                         "saboteur_mechs": sorted(SABOTEUR_MECHS),
+                         "noise_note": "带=|CREF−P1-C| 逐指标逐案(2026-09-19 phase2b 填实)"}}
     (OUT / "phase2-summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
     print("phase2-summary.json 落盘;变体数:", len(variants))
     for v, verdict in verdicts.items():
         print(v, "->", verdict["class"],
-              "| earner:", verdict["earner_cases"], "| saboteur:", verdict["saboteur_cases"])
+              "| earner:", verdict["earner_cases"],
+              "| saboteur:", verdict["saboteur_cases"],
+              "| positive:", verdict["positive_cases"])
+    if noise:
+        print("噪声带(judge):", {c: n.get("judge") for c, n in noise.items()})
 
 
 if __name__ == "__main__":
