@@ -22,10 +22,11 @@ for round in $(seq 1 "$MAX_ROUNDS"); do
     page=1
     new_ids=()
     new_bodies=()
-    # 分页取全(>100 评论翻页)
+    # 分页取全(>100 评论翻页;判据=原始页条数,非过滤后条数)
     while true; do
       if [ -n "$ISSUE_WATCH_FIXTURE" ] && [ -f "$ISSUE_WATCH_FIXTURE/$is.page${page}.json" ]; then
-        # 测试模式:从 fixture 文件读(每页一个 JSON 数组)
+        # 测试模式:从 fixture 文件读(每页一个 JSON 数组);raw_n 同判据(原始页条数)
+        raw_n=$(python3 -c "import json; print(len(json.load(open('$ISSUE_WATCH_FIXTURE/$is.page${page}.json'))))" 2>/dev/null || echo 0)
         out=$(python3 -c "
 import json, sys
 data = json.load(open('$ISSUE_WATCH_FIXTURE/$is.page${page}.json'))
@@ -34,29 +35,31 @@ for c in data:
         body_escaped = json.dumps(c['body'])[1:-1]  # JSON 转义,换行变 \\n
         sys.stdout.write(str(c['id']) + '\t' + body_escaped + '\n')
 " 2>/dev/null) || out=""
-      elif ! out=$(gh api "repos/$REPO/issues/$is/comments?per_page=100&page=$page" \
-          --jq ".[] | select((.id|tonumber) > $last)" 2>/dev/null | \
-          python3 -c "
-import json, sys
-for line in sys.stdin:
-    c = json.loads(line)
-    body_escaped = json.dumps(c['body'])[1:-1]
-    sys.stdout.write(str(c['id']) + '\t' + body_escaped + '\n')
-" 2>/dev/null); then
+      elif ! raw=$(gh api "repos/$REPO/issues/$is/comments?per_page=100&page=$page" 2>/dev/null); then
         FAIL=$((FAIL+1))
         if [ "$FAIL" -ge 20 ]; then echo "issue#$is: gh 连续失败 $FAIL 轮,退出待查(auth/网络)"; exit 2; fi
         break
+      else
+        FAIL=0
+        # 翻页判据=原始页条数(非过滤后)——总评论>100 时第 1 页过滤后可为 0 条,
+        # 但新评论全在第 2+ 页(2026-09-19 #333 114 条盲区事故的根因)
+        raw_n=$(printf '%s' "$raw" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
+        out=$(printf '%s' "$raw" | python3 -c "
+import json, sys
+for c in json.load(sys.stdin):
+    if int(c['id']) > $last:
+        print(str(c['id']) + '\t' + json.dumps(c['body'])[1:-1])
+" 2>/dev/null)
       fi
-      FAIL=0
-      [ -z "$out" ] && break
-      # 累积本页新评论(TSV: id\tbody_escaped)
-      while IFS=$'\t' read -r cid body_escaped; do
-        new_ids+=("$cid")
-        new_bodies+=("$body_escaped")
-      done <<< "$out"
-      # 检查是否满页(需翻页)
-      count=$(echo "$out" | wc -l)
-      [ "$count" -lt 100 ] && break
+      # 累积本页新评论(TSV: id\tbody_escaped;空页跳过——空串经 <<< 仍产生一个空行)
+      if [ -n "$out" ]; then
+        while IFS=$'\t' read -r cid body_escaped; do
+          new_ids+=("$cid")
+          new_bodies+=("$body_escaped")
+        done <<< "$out"
+      fi
+      # 检查原始页是否满页(需翻页;按 raw_n 而非过滤条数)
+      [ "$raw_n" -lt 100 ] && break
       page=$((page+1))
     done
     # 全量有序输出(按 id 序,已保证)

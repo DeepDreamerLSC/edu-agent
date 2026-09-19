@@ -1,7 +1,7 @@
 #!/bin/bash
 # test-watch.sh — issue-watch.sh / d-state-watch.sh 验收测试(零 API,纯 fixture)
 # 跑法: bash docs/skills/dispatch-loop/test-watch.sh
-# 期望输出: 14 PASS(三模拟/to= 三态/分页/多行body×to=三态/d-state/gh垫片×2),0 FAIL
+# 期望输出: 16 PASS(三模拟/to= 三态/分页/盲区回归×2/多行body×to=三态/d-state/gh垫片×2),0 FAIL
 set -u
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCRIPT="$SCRIPT_DIR/issue-watch.sh"
@@ -80,6 +80,23 @@ count=$(echo "$out" | grep -c "^issue#400 新评论 c3[01]")
 [ "$count" -eq 117 ] && ok "分页取全 117 条(100+17)" || no "分页应 117 条(实际 $count)"
 grep -q "^400=3116$" "$STATE" && ok "分页游标推进到最大 id(3116)" || no "分页游标"
 
+# === 测试 3.6: 盲区回归(#333 2026-09-19 实锤:总评论>100,第 1 页全旧过滤后=0,新评论全在第 2 页) ===
+# 旧代码:第 1 页过滤 0 条 → break → 结构性聋;新代码:raw_n=100 满页 → 继续翻 → 第 2 页全抓
+python3 -c "
+import json
+p1 = [{'id': 3000+i, 'body': f'old-{i}'} for i in range(100)]  # 3000-3099 全 ≤ last
+p2 = [{'id': 3100+i, 'body': f'new-{i}'} for i in range(17)]   # 3100-3116 全 > last
+json.dump(p1, open('$FIX/410.page1.json', 'w'))
+json.dump(p2, open('$FIX/410.page2.json', 'w'))
+"
+echo "410=3099" > "$STATE"
+out=$(ISSUE_WATCH_FIXTURE="$FIX" ISSUE_WATCH_ROUNDS=1 bash "$SCRIPT" 410)
+count=$(echo "$out" | grep -c "^issue#410 新评论 c31")
+[ "$count" -eq 17 ] && ! echo "$out" | grep -q "old-" \
+  && ok "盲区回归:第 1 页过滤 0 条仍翻页,第 2 页 17 条全抓" \
+  || no "盲区回归应 17 条(实际 $count)"
+grep -q "^410=3116$" "$STATE" && ok "盲区回归游标推进到 3116" || no "盲区回归游标"
+
 # === 测试 3.5: 多行 body × to= 三态(P1-1 修复验证) ===
 # 3.5a: 多行 to=reviewer → 不唤醒(exit 1)
 cat > "$FIX/501.page1.json" <<'JSON'
@@ -139,17 +156,11 @@ rc=0; ISSUE_WATCH_FIXTURE=/nonexistent ISSUE_WATCH_ROUNDS=25 \
 # === 测试 7: gh 路径垫片 ② — 升序多页评论全量有序交付 ===
 cat > "$FAKEBIN/gh" <<'EOF'
 #!/bin/bash
-# 模拟 gh api 返回升序多页评论(JSON 格式,每行一个对象)
-# page=1: ids 100-199 (100 条)
-# page=2: ids 200-216 (17 条)
+# 模拟 gh api 返回原始 JSON 数组(单文档多行;page=1: ids 100-199 满页,page=2: ids 200-216)
 if [[ "$*" == *"&page=2"* ]]; then
-  for i in $(seq 200 216); do
-    printf '{"id": %s, "body": "page2-%s"}\n' "$i" "$i"
-  done
+  python3 -c "import json; print(json.dumps([{'id': i, 'body': f'page2-{i}'} for i in range(200, 217)]))"
 elif [[ "$*" == *"&page=1"* ]]; then
-  for i in $(seq 100 199); do
-    printf '{"id": %s, "body": "page1-%s"}\n' "$i" "$i"
-  done
+  python3 -c "import json; print(json.dumps([{'id': i, 'body': f'page1-{i}'} for i in range(100, 200)]))"
 fi
 EOF
 chmod +x "$FAKEBIN/gh"
