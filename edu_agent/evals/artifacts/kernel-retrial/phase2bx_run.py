@@ -84,7 +84,12 @@ def main() -> None:
     vw0 = gateway.writer.count
     for cid in case_ids:
         if batch_used + (gateway.writer.count - vw0) + PER_CASE_RESERVE > MAX_CALLS:
-            meta["total_calls"] = batch_used + gateway.writer.count - vw0
+            used = gateway.writer.count - vw0
+            meta["total_calls"] = batch_used + used
+            # 中止也记账(PM 验收①:部分完成的变体照写 variants{},免手工补账)
+            if used:
+                meta.setdefault("variants", {})[variant] = {
+                    "calls": used, "arm": arm, "partial": True}
             meta_p.write_text(json.dumps(meta, ensure_ascii=False, indent=2),
                               encoding="utf-8")
             print(f"[ABORT] 预算将越顶(批已用 {meta['total_calls']}+储备 "
