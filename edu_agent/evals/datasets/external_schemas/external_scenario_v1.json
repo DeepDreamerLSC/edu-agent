@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "edu_agent/evals/datasets/external_schemas/external_scenario_v1.json",
+  "title": "edu_agent_external_scenario/v1",
+  "description": "外部数据 canonical 层 v1(#368):数据是证据,scenario 才是实验。权威校验是 external_scenario.validate_external_scenario(Python 纯函数);本文件是机读契约镜像,两者由 tests/evals/test_external_scenario.py 钉一致。",
+  "type": "object",
+  "required": ["schema_version", "id", "source", "problem", "reference_dialogue", "annotations"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"const": "edu_agent_external_scenario/v1"},
+    "id": {"type": "string", "minLength": 1},
+    "fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256(source+upstream_id+内容面);有则必须与复算一致"},
+    "source": {
+      "type": "object",
+      "required": ["dataset", "upstream_id", "license", "version"],
+      "additionalProperties": true,
+      "properties": {
+        "dataset": {"type": "string", "minLength": 1},
+        "upstream_id": {"type": "string", "minLength": 1},
+        "license": {"type": "string", "minLength": 1, "description": "逐条带,不落库外注记"},
+        "version": {"type": "string", "minLength": 1},
+        "modified": {"type": "boolean", "description": " importer 是否改动内容;保真要求下默认 false"}
+      }
+    },
+    "problem": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "text": {"type": "string", "minLength": 1},
+        "answer": {"type": ["string", "null"], "description": "原样保真:不翻译/不改写/不去空白;validator 以 expected_answer 锚核对"},
+        "analysis": {"type": ["string", "null"]},
+        "image": {
+          "type": ["object", "null"],
+          "required": ["path", "sha256"],
+          "properties": {
+            "path": {"type": "string", "minLength": 1, "description": "相对运行根;引用即冻结+hash 校验"},
+            "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          }
+        },
+        "grade": {"type": ["string", "null"]},
+        "knowledge_tags": {"type": "array", "items": {"type": "string"}}
+      },
+      "required": ["text", "knowledge_tags"]
+    },
+    "reference_dialogue": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["role", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "role": {"enum": ["student", "tutor"]},
+          "text": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "无据字段留 null——不造数据;结构由 slice 层人工挑选时再定"
+    }
+  }
+}
