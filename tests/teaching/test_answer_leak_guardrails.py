@@ -16,29 +16,26 @@ from teachkit import tutor_env
 
 
 @pytest.mark.parametrize(
-    ("reply", "answer_reference", "active_subquestion_text"),
+    ("reply", "answer_reference"),
     [
-        ("所以这里是几排几号？", "（5，12）", "数对（12，5）表示几排几号？"),
+        ("所以这里是几排几号？", "（5，12）"),
         (
             "先找到单位1，再想想这里该乘还是除？",
             "24",
-            "求这批图书共有多少本。",
         ),
-        ("我们先看横坐标。它表示什么？", "5", "点C的横坐标是多少？"),
-        ("你刚才说第一项表示号，那么第二项表示什么？", "排", "数对第二项表示什么？"),
-        ("以谁为中心看西北？", "学校", "小明在学校的什么方向？"),
-        ("应表示什么关系？", "猫和老鼠路程之比", "写出猫和老鼠的路程关系。"),
+        ("我们先看横坐标。它表示什么？", "5"),
+        ("你刚才说第一项表示号，那么第二项表示什么？", "排"),
+        ("以谁为中心看西北？", "学校"),
+        ("应表示什么关系？", "猫和老鼠路程之比"),
     ],
 )
 def test_natural_socratic_questions_pass_unchanged(
     reply: str,
     answer_reference: str,
-    active_subquestion_text: str,
 ) -> None:
     evaluation = evaluate_student_visible_question(
         reply,
         answer_reference=answer_reference,
-        active_subquestion_text=active_subquestion_text,
     )
 
     assert evaluation.action == "ALLOW"
@@ -61,7 +58,6 @@ def test_only_grounded_answer_disclosures_require_fallback(
     evaluation = evaluate_student_visible_question(
         reply,
         answer_reference=answer_reference,
-        active_subquestion_text="当前小问",
     )
 
     assert evaluation.action == "FALLBACK"
@@ -78,7 +74,6 @@ def test_non_numeric_answer_shaped_text_outside_this_module() -> None:
     evaluation = evaluate_student_visible_question(
         "答案是B。你为什么这样选择？",
         answer_reference="",
-        active_subquestion_text="当前小问",
     )
 
     assert evaluation.action == "ALLOW"
@@ -91,7 +86,6 @@ def test_numeric_answer_shaped_text_outside_this_module() -> None:
     evaluation = evaluate_student_visible_question(
         "答案是12。你能说说为什么吗？",
         answer_reference="",
-        active_subquestion_text="计算3×4。",
     )
 
     assert evaluation.action == "ALLOW"
@@ -115,7 +109,6 @@ def test_unverified_text_answer_confirmation_outside_this_module(reply: str) -> 
     evaluation = evaluate_student_visible_question(
         reply,
         answer_reference="",
-        active_subquestion_text="请判断当前小问。",
     )
 
     assert evaluation.action == "ALLOW"
@@ -138,7 +131,6 @@ def test_answer_formation_questions_are_not_treated_as_answer_claims(
     evaluation = evaluate_student_visible_question(
         reply,
         answer_reference="",
-        active_subquestion_text="解方程3x+7=25。",
     )
 
     assert evaluation.action == "ALLOW"
@@ -148,7 +140,6 @@ def test_tutor_may_confirm_answer_candidate_already_said_by_student() -> None:
     evaluation = evaluate_student_visible_question(
         "你刚才说小聪在东南方向，对吗？",
         answer_reference="",
-        active_subquestion_text="小聪在小马的什么方向？",
         student_evidence=["我觉得小聪在东南方向。"],
     )
 
@@ -159,10 +150,6 @@ def test_unverified_tutor_may_repeat_a_value_the_student_already_stated() -> Non
     evaluation = evaluate_student_visible_question(
         "你说C岛是北偏东75°。接下来D岛在哪个方向？",
         answer_reference="",
-        active_subquestion_text=(
-            "以灯塔为观测点，C岛在灯塔北偏东75°方向；"
-            "D岛在灯塔南偏西40°方向。"
-        ),
         student_evidence=["C岛是北偏东75度"],
     )
 
@@ -177,10 +164,6 @@ def test_new_compound_direction_is_not_a_sentence_level_case() -> None:
     evaluation = evaluate_student_visible_question(
         "C岛方向确认了。D岛在灯塔南偏西多少度？",
         answer_reference="",
-        active_subquestion_text=(
-            "以灯塔为观测点，C岛在灯塔北偏东75°方向；"
-            "D岛在灯塔南偏西40°方向。"
-        ),
         student_evidence=["C岛是北偏东75度"],
     )
 
@@ -191,7 +174,6 @@ def test_unverified_tutor_may_point_to_a_known_condition_without_correcting() ->
     evaluation = evaluate_student_visible_question(
         "题目中给出了C岛的方向和角度。你先说说观察点是谁？",
         answer_reference="",
-        active_subquestion_text="以灯塔为观测点，C岛在灯塔北偏东75°方向。",
         student_evidence=[],
     )
 
@@ -215,7 +197,6 @@ def test_discourse_marker_plus_known_number_is_not_treated_as_answer_disclosure(
     evaluation = evaluate_student_visible_question(
         reply,
         answer_reference="24",
-        active_subquestion_text="求这批图书共有多少本。",
     )
 
     assert evaluation.action == "ALLOW"
@@ -228,7 +209,6 @@ def test_tutor_may_confirm_an_answer_the_student_already_stated() -> None:
     evaluation = evaluate_student_visible_question(
         reply,
         answer_reference="x=3",
-        active_subquestion_text="解方程。",
         student_evidence=["我算出x=3"],
     )
 
@@ -269,7 +249,6 @@ def test_multiple_questions_are_left_to_prompt_and_offline_review() -> None:
     evaluation = evaluate_student_visible_question(
         "你先找到了什么？接下来准备怎么算？",
         answer_reference="24",
-        active_subquestion_text="求总数。",
     )
 
     assert evaluation.action == "ALLOW"
@@ -280,7 +259,6 @@ def test_missing_primary_question_is_not_a_content_safety_failure() -> None:
     evaluation = evaluate_student_visible_question(
         "我们先回到当前小问。",
         answer_reference="24",
-        active_subquestion_text="求总数。",
     )
 
     assert evaluation.action == "ALLOW"
@@ -291,21 +269,21 @@ def test_missing_primary_question_is_not_a_content_safety_failure() -> None:
     # answer 完整短语出现在回复 → 拦截
     ("答案就是:鸡 3 只,兔 5 只。",
      {"answer_reference": "鸡 3 只,兔 5 只",
-      "active_subquestion_text": "鸡和兔一共 8 只,共有 26 只脚。"}, "FALLBACK"),
+}, "FALLBACK"),
     # 回复含"36 只脚"(answer 里的 3 是其子集) → 放行:数字子集不是泄露
     ("题目里一共 36 只脚,所以兔子很多。",
      {"answer_reference": "鸡 3 只,兔 5 只",
-      "active_subquestion_text": "鸡和兔一共 8 只,共有 26 只脚。"}, "ALLOW"),
+}, "ALLOW"),
     # analysis 关键结论句被逐字复述(紧凑连续窗口)+有序 cue → 拦截
     ("用等式两边先同时减去 7,得 3x=18,再同时除以 3,就得到答案了。",
      {"answer_reference": "",
       "analysis_reference": "等式两边先同时减去 7,得 3x=18,再同时除以 3。",
-      "active_subquestion_text": "鸡和兔一共 8 只,共有 26 只脚。"}, "FALLBACK"),
+}, "FALLBACK"),
     # 中间计算步骤(非关键结论句连续窗口)→ 放行
     ("先假设全是鸡:2×8=16 只脚,比 26 少 10。",
      {"answer_reference": "鸡 3 只,兔 5 只",
       "analysis_reference": "等式两边先同时减去 7,得 3x=18,再同时除以 3。",
-      "active_subquestion_text": "鸡和兔一共 8 只,共有 26 只脚。"}, "ALLOW"),
+}, "ALLOW"),
 ], ids=["full_answer_phrase_blocked", "digit_subset_allowed",
         "analysis_key_sentence_blocked", "intermediate_step_allowed"])
 def test_reference_disclosure_gating(reply, kwargs, action):
@@ -323,7 +301,7 @@ def test_guardrail_gates_model_output_over_fake_upstream(tmp_path):
             session_id="teach-leak-1",
         ))
         evaluation = evaluate_student_visible_question(
-            response.text, answer_reference="24", active_subquestion_text="求这批图书共有多少本。",
+            response.text, answer_reference="24",
         )
         assert evaluation.action == "FALLBACK"
         assert "grounded_answer_disclosure" in {item.finding for item in evaluation.findings}

@@ -20,7 +20,8 @@ from teachkit import FakeGateway
 # 隔离「终答」来源标签,不与题面/步骤数字混淆。
 ANSWERED_QUESTION = {"text": "鸡兔同笼,一共 8 只,26 只脚。鸡和兔各有多少只?",
                      "answer": "鸡3只兔5只", "analysis": "", "knowledge_points": ["鸡兔同笼"]}
-STEPS = [{"step": "先算鸡脚", "value": "16"}, {"step": "再算兔脚", "value": "10"}]
+STEPS = [{"step": "先算鸡脚", "value": "16"}, {"step": "再算兔脚", "value": "10"},
+         {"step": "兔的只数", "value": "5"}]  # 末级触答案焦点(guard-provenance-fix ③ 门契约)
 
 
 def _open(reply_text: str, steps: list[dict] | None = None) -> dict:
@@ -135,8 +136,9 @@ def test_final_answer_in_confirm_state_is_intercepted_not_stuck():
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "答案是 3 和 5 吗?", gateway=gateway)
-    assert turn.session.stuck is not True  # 掩码=干净恢复,不置卡点
-    # Thin Kernel 掩码:结构逐字保留,仅终答数值 → □(确认轮转述式确认语义不变)
+    assert turn.session.stuck is not True
+    # guard-provenance-fix 追加边界(PM 追加令探针 1):问句猜答 ≠ 已述——
+    # 「答案是3和5吗?」是疑问不是陈述,导师直 confirm 照旧掩码;豁免只认陈述式
     assert turn.text == "对,就是 □ 只鸡和 □ 只兔。"
     assert _drift_event(turn)["violation_sources"] == [
         {"number": 3.0, "source": "answer"}, {"number": 5.0, "source": "answer"}]
@@ -196,8 +198,9 @@ def test_selfreported_ladder_answer_not_whitelisted_but_intercepted():
 
 
 def test_last_step_value_not_answer_stays_legal():
-    # 修复按**值**而非按位置(steps[:-1])剥离:阶梯末级未必是答案(题库口径:
-    # 16/10 阶梯、答案 3/5)——诚实引用末级中间值(10)不误伤(#113 初衷)。
+    # 修复按**值**而非按位置(steps[:-1])剥离:阶梯各级未必是答案(题库口径:
+    # 16/10 中间级、答案 3/5)——诚实引用非答案级值(10)不误伤(#113 初衷;
+    # guard-provenance-fix ③ 后模型阶梯须触焦点,夹具末级补 5,断言仍钉 10)。
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "这一步得到 10。", "ready_to_confirm": False, "cited_numbers": [10]},
@@ -254,7 +257,9 @@ def test_final_answer_only_disclosed_via_finish_not_step_reveal():
     assert "鸡3只兔5只" not in reveal1.text  # 第一级阶梯只给步骤,不给终答
     reveal2 = reply(reveal1.session, "我不知道", gateway=gateway)
     assert "鸡3只兔5只" not in reveal2.text  # 第二级阶梯仍只给步骤
-    exhausted = reply(reveal2.session, "我猜不出来", gateway=gateway)
+    reveal3 = reply(reveal2.session, "我猜不出来", gateway=gateway)
+    assert "鸡3只兔5只" not in reveal3.text  # 第三级(答案级)步骤文本不带终答值
+    exhausted = reply(reveal3.session, "我还是不会", gateway=gateway)
     # 阶梯耗尽 → 通用引导,不披露终答(bottom-out 已删,句族入土)
     assert "鸡3只兔5只" not in exhausted.text
     assert exhausted.text == NEEDS_REVIEW_TEXT

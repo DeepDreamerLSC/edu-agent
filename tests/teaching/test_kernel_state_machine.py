@@ -300,7 +300,8 @@ def test_analysis_ladder_is_revealed_on_repeat_fallback(tmp_path):
 # ---------- #198 第一步:支持动作(枚举 + 确定性选择;#174 渐隐档折叠至此) ----------
 
 _FADE_STEPS = [{"step": "先算全部按鸡的脚数", "value": "16"},
-               {"step": "再算脚数差", "value": "10"}]
+               {"step": "再算脚数差", "value": "10"},
+               {"step": "兔的只数", "value": "5"}]  # 末级触答案焦点(guard-provenance-fix ③ 门契约)
 
 
 @contextmanager

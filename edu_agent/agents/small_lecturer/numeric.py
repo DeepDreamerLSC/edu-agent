@@ -123,13 +123,45 @@ def _usable_numbers(text: str, answer: set[float]) -> set[float]:
     return numbers | (_arithmetic_results(text) - numbers - answer)
 
 
+def _declarative(text: str) -> bool:
+    """陈述式判定(guard-provenance-fix 追加边界,PM 追加令 2026-09-19):问句猜答
+    (「是不是0.4?」)≠ 已述——问句里的数字不入学生池,导师直 confirm 仍走掩码门。
+    判据=消息剥空白后不以 ?/? 结尾;混合消息(先陈述后问)整条按问句处理
+    (fail-closed:宁过掩不放过)。已知残留:无疑问标记的口语问句漏判(同
+    _CJK_NUMERALS「宁漏勿误」族,出现再收)。"""
+    return not str(text or "").rstrip().endswith(("?", "?"))
+
+
+def student_stated_answer(session: LearnerSession,
+                          student_message: str | None) -> bool:
+    """值级「学生已述终答」判定(guard-provenance-fix ① 值级补全,PM 追加令 A/B
+    跑面揭出):guardrails 答案串门是**字符串粒度**(学生说「0.4千克」≠ 权威串
+    「0.4kg」→ 句级豁免漏放 → 学生刚说完答案还吃「不能直接给出」)。本判定把
+    内核值级归因注入句级门:终答数字**全体**在学生陈述式消息里(问句不算,
+    _declarative 同口径)→ 导师复述非首次披露。判据单源(#184):值级抽取只在
+    本模块,guardrails 纯参数消费。"""
+    answer = _answer_numbers(session)
+    if not answer:
+        return False
+    stated: set[float] = set()
+    for message in session.history:
+        if message.get("role") == "user" and _declarative(str(message.get("content") or "")):
+            stated |= _question_numbers(str(message.get("content") or ""))
+    if _declarative(str(student_message or "")):
+        stated |= _question_numbers(str(student_message or ""))
+    return answer <= stated
+
+
 def _drift_sources(session: LearnerSession,
                    student_message: str | None) -> tuple[set[float], set[float]]:
     """数字来源标签池(M2 闭环 #113/#34 + #157 评审末值边界;VERDICT#6 更新):允许集 =
-    题面 ∪ (steps 值 − 终答数字) ∪ 学生历史数字。
-    ready_to_confirm 不再并入终答数字(#310 VERDICT#6,2026-09-17):确认/赞许轮
-    转述式确认,不引述终答值(#139/#149 泄露网零例外);终答文本只剩
-    bottom-out / finish 两条路径。
+    题面 ∪ 题库解析题给数 ∪ (steps 值 − 终答数字) ∪ 学生历史数字(含终答)。
+    学生已述豁免(guard-provenance-fix ①,2026-09-19 用户键 fix-forward):学生
+    已述数字——含终答值——导师可复述/确认(confirm 命根:0.4kg 案学生连答四次
+    被 □ 掩成死锁);首次披露仍禁(学生未述且题面/解析未给 → 照旧掩码门)。
+    取代 #310 VERDICT#6 的「确认轮终答零例外」口径(A 类语义变更,差异入档)。
+    边界(PM 追加令):豁免只认**陈述式**已述——问句猜答(「是不是0.4?」)不算,
+    导师直 confirm 照旧拦截(_declarative)。
 
     终答数字按**值**从 steps 无条件允许集剥离(#157 评审:模型自报阶梯含末值=答案,
     整段照抄演算会 violations=[] 洗白——"自报进白名单"与 cited_numbers 同病);
@@ -142,15 +174,18 @@ def _drift_sources(session: LearnerSession,
     #184 不误伤),终答数字处处剔除。"""
     answer = _answer_numbers(session)  # #156 统一判据底座:answer 优先,阶梯末级兜底
     face = _usable_numbers(str(session.question.get("text") or ""), answer)
+    # guard-provenance-fix ②:题库解析的题给数入池(按值剔终答;analysis 非学生可见面)
+    face |= _question_numbers(str(session.question.get("analysis") or "")) - answer
     steps: set[float] = set()
     for step in session.steps:
         steps |= _usable_numbers(str(step.get("value") or ""), answer)
     student: set[float] = set()
     for message in session.history:
-        if message.get("role") == "user":
+        if message.get("role") == "user" and _declarative(str(message.get("content") or "")):
             student |= _usable_numbers(str(message.get("content") or ""), answer)
-    student |= _usable_numbers(str(student_message or ""), answer)
-    allowed = face | (steps - answer) | (student - answer)
+    if _declarative(str(student_message or "")):
+        student |= _usable_numbers(str(student_message or ""), answer)
+    allowed = face | (steps - answer) | student  # 学生池含终答(guard-provenance-fix ①)
     return allowed, answer
 
 
