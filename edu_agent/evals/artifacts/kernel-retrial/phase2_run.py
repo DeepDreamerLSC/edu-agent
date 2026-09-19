@@ -41,6 +41,7 @@ CASE_IDS = [  # 协议 §3 判别切片(PM 派单指定)
 
 def main() -> None:
     from edu_agent.agents.small_lecturer import kernel as K
+    from edu_agent.agents.small_lecturer.ablation import set_phase2_off
     from edu_agent.evals.corpus_round import transcript_messages
     from edu_agent.evals.judge import judge_transcript
     from edu_agent.evals.kernel_subject import KernelSubject
@@ -60,7 +61,7 @@ def main() -> None:
     calls_by_variant: dict[str, int] = {}
     for variant, off in VARIANTS.items():
         K.set_ablation_arm("C")
-        K.set_phase2_off(off)
+        set_phase2_off(off)
         (OUT / variant).mkdir(parents=True, exist_ok=True)
         vw0 = gateway.writer.count
         for cid in CASE_IDS:
@@ -68,7 +69,7 @@ def main() -> None:
             if used + PER_CASE_RESERVE > MAX_CALLS:
                 print(f"[ABORT] 预算将越顶(已用 {used}+储备 {PER_CASE_RESERVE} > "
                       f"{MAX_CALLS}),停跑于 {variant}/{cid}")
-                K.set_phase2_off(())
+                set_phase2_off(())
                 sys.exit(2)
             transcript = subject.run_case(cases[cid])
             guard_events = transcript.get("guard_events") or []
@@ -89,7 +90,7 @@ def main() -> None:
                   f"guard={len(guard_events)} calls={gateway.writer.count - vw0}",
                   flush=True)
         calls_by_variant[variant] = gateway.writer.count - vw0
-        K.set_phase2_off(())
+        set_phase2_off(())
     K.set_ablation_arm("C")
     total = gateway.writer.count - w0
     (OUT / "run-meta.json").write_text(json.dumps(
