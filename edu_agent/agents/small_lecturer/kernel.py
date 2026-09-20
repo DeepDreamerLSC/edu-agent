@@ -15,6 +15,12 @@ Turn.text,替换为确定性安全问句(M2 清单阶段 2,断言即规格)。M3
 段带参考答案/解析进教师侧 prompt(question.answer/analysis/knowledge_points
 由题源适配器填入),泄露护栏对照文本同步扩到 answer/analysis——教师侧看得见
 答案,学生侧永远看不到。
+
+#382 PR-C(trusted ladder 边界,事故 20260920 P0-3):session.steps 每步带
+provenance(analysis=题库解析确定性切片=trusted;model=模型生成分步解=untrusted
+planning artifact);deterministic reveal(`_reveal_stuck_hint`)只回放 trusted 阶梯,
+model 阶梯只做规划辅助(`_drift_sources` 允许集/steps 值兜底);无 trusted 阶梯 →
+safe guiding question(不硬编码题目话术)。模型生成内容≠权威事实。
 """
 
 from __future__ import annotations
@@ -86,6 +92,10 @@ def _masked_question(question: dict) -> dict:
 # 卡壳支持拆小问句(#198 确定性文本;提取为常量供 GEPA 双旋钮 seam 注入,行为零变化)
 _SUPPORT_HINT = ("我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,"
                 "从它开始你觉得能先算出什么?想到多少说多少。")
+# 无 trusted ladder 时的 safe guiding question(#382 PR-C,事故 20260920 裁定 P0-3:
+# 「无 trusted ladder → safe guiding question」)。只问不揭示、不含数字、不硬编码
+# 任何题目话术(禁令§11:不给700m/6⁄5/温度题写 case-specific 条件)。
+_UNTRUSTED_LADDER_HINT = "我们先回到题目本身:你能说说题目给出的条件里,哪一条和这一步有关吗?"
 
 # === 消融臂门控(伴生模块 ablation.py;C=生产默认不注入,#333 三臂协议) ===
 from .ablation import (arm_bypass as _arm_bypass,
@@ -139,7 +149,14 @@ def _student_signals_stuck(student_message: str) -> bool:
 # 轮 1「拆小」/轮 2「换数字」的 streak 触发源在检测器覆盖轮之后接入本选择函数
 # (#198 后续顺序:净减回血 → 检测器覆盖 → 轮 1)。
 def _support_move(session: "LearnerSession") -> str:
-    """卡住支持动作的**确定性选择函数**(#198;零模型、可复算、可进回归网)。"""
+    """卡住支持动作的**确定性选择函数**(#198;零模型、可复算、可进回归网)。
+
+    trusted ladder 边界(#382 PR-C):giving 判据只对 **trusted(analysis)阶梯**有意义
+    ——「上一学生轮把刚揭示的那一步自己做出来了」预设了揭示内容来自权威解析;
+    model 阶梯的 value 是规划件数字,拿它做掌握度判据会把幻觉值洗成教学信号。
+    无 trusted 阶梯时恒 telling(实际揭示由 `_reveal_stuck_hint` 的边界接管)。"""
+    if not _has_trusted_ladder(session):
+        return "telling"
     prev_student = session.history[-2]["content"] if len(session.history) >= 2 else ""
     numbers = (_question_numbers(str(session.steps[session.hint_level - 1].get("value") or ""))
                if 0 < session.hint_level <= len(session.steps) else set())
@@ -308,11 +325,20 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     (#333 终裁):步文本答案数字走掩码(soften 有用内核由掩码继承,非教学改写);
     梯尽不披露终答(终答只出现在 finish 一条路径)。泄露网 V1 窄授权不变:再次
     stuck 且非 ready 态附当前步中间值,首次 stuck 零数值。埋点:reveal/hint_level、
-    弃用轮记 dropped、授权轮记 anchor_numbers。"""
+    弃用轮记 dropped、授权轮记 anchor_numbers。
+
+    trusted ladder 边界(#382 PR-C,P0-3):**只回放 trusted(analysis)阶梯**——
+    model-generated ladder 是 untrusted planning artifact,不进 deterministic reveal
+    (产线事故 20260920:700m 温度题模型阶梯写 500m,reveal 原样回放=脚手架读图
+    错误)。无 trusted 阶梯 → `_UNTRUSTED_LADDER_HINT` safe guiding question,记
+    {branch: reveal_untrusted}(与 reveal_off 同款结构:可辨识、可度量)。"""
     re_stuck = session.hint_level > 0  # V1:首次 stuck=0 不给数值;再次 stuck 才有授权资格(推进前捕获)
     if _mech_off("reveal_ladder"):  # 二阶段 LOO:阶梯整体关 → 只问不揭示
         session.guard_events.append({"branch": "reveal_off", "mech": "reveal_ladder"})
         return _SUPPORT_HINT
+    if not _has_trusted_ladder(session):
+        session.guard_events.append({"branch": "reveal_untrusted"})
+        return _UNTRUSTED_LADDER_HINT
     step = _next_step(session)
     session.guard_events.append({"branch": "reveal", "hint_level": session.hint_level})
     if step is None:
@@ -554,9 +580,14 @@ def _store_steps(session: LearnerSession, steps: list[dict]) -> list[dict]:
     验算步,答案在中级触及;答案焦点 = _answer_focus_numbers(剔题面数字);焦点
     取不到数字(文字答案/全在题面)→ fail-open 不判;未解出的部分阶梯同被弃
     (fail-closed:不可信阶梯不回放)。弃用后 steps=[],reveal 走 NEEDS_REVIEW_TEXT
-    兜底(优于回放外题内容)。"""
+    兜底(优于回放外题内容)。
+
+    #382 PR-C:入库步带 `provenance="model"`(untrusted planning artifact 标记)
+    ——规划辅助(允许集/答案兜底)照旧,deterministic reveal 不消费(见
+    `_has_trusted_ladder`)。"""
     validated = [
-        {"step": str(s.get("step") or "").strip(), "value": str(s.get("value") or "").strip()}
+        {"step": str(s.get("step") or "").strip(), "value": str(s.get("value") or "").strip(),
+         "provenance": "model"}
         for s in (steps or [])
         if isinstance(s, dict) and str(s.get("step") or "").strip() and str(s.get("value") or "").strip()
     ]
@@ -600,6 +631,9 @@ def _analysis_steps(analysis: str) -> list[dict]:
 
     切片规则:按句末标点与序列词(先/再/然后/接着/最后/其次)切;丢弃过短片(≤3 字)
     与无数字片;至少 2 片才返回(否则调用方退回模型分步解)。
+
+    #382 PR-C:切片逐条带 `provenance="analysis"`(trusted 权威源标记,deterministic
+    reveal 只消费 trusted 阶梯)。
     """
     fragments = [_SLICE_TRIM_RE.sub("", f)
                  for f in _ANALYSIS_SPLIT_RE.split(str(analysis or ""))]
@@ -609,8 +643,17 @@ def _analysis_steps(analysis: str) -> list[dict]:
             continue
         value = _step_value(fragment)
         if value:
-            steps.append({"step": fragment, "value": value})
+            steps.append({"step": fragment, "value": value, "provenance": "analysis"})
     return steps if len(steps) >= 2 else []
+
+
+def _has_trusted_ladder(session: "LearnerSession") -> bool:
+    """deterministic reveal 的权威源闸(#382 PR-C,P0-3):阶梯里存在 provenance=analysis
+    的步(trusted = 题库 analysis 确定性切片)。model-generated ladder(untrusted
+    planning artifact)不满足此判据——reveal 不回放;其规划辅助用途(`_drift_sources`
+    允许集/steps 值兜底)照旧。产线事故 20260920(700m 温度题):该题 analysis 无
+    海拔数字 → 错误阶梯来自模型生成 → reveal 回放 500m = 脚手架读图错误。"""
+    return any(step.get("provenance") == "analysis" for step in session.steps)
 
 
 def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
@@ -671,7 +714,8 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
         session.question = {**session.question, "text": str(payload["transcription"])}
     _store_steps(session, payload.get("steps") or [])  # solver 职责:阶梯底稿 + 校验基准
     # #107 方案 A:题库解析存在时**既定分步**优先于模型当场生成的分步解(确定性切片、
-    # 零模型调用;切不出 ≥2 步时保持模型分步解不变)。
+    # 零模型调用;切不出 ≥2 步时保持模型分步解不变)。#382 PR-C:切片带
+    # provenance="analysis"——只有这副是 trusted ladder,deterministic reveal 只消费它。
     ladder = _analysis_steps(str(session.question.get("analysis") or ""))
     if ladder:
         session.steps = ladder

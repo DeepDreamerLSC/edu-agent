@@ -4,9 +4,11 @@
 repeated stuck 仍不给 / 部件重叠仍不给)+ ②Q5 第一层边界对 C/D/F(support 零锚 /
 ready_to_confirm 禁 / 答案不可判定 fail-closed)。种子 = 同目录 seeds-anchor-v1.json
 (A-D/M/F 七对);走**公开面驱动**(start/reply + FakeGateway,与 test_kernel_restate
-同款口径),steps 经 open payload 注入(种子里 steps 为合成 plan 步,已标注)。
-92/93 泄漏=0 硬门 = 既有套件(test_answer_leak_guardrails + test_kernel_invariants)
-保持全绿,merge blocker 口径见 docs/plan/07-leak-net-v1.md。
+同款口径),steps 经 open payload 注入(种子里 steps 为合成 plan 步,已标注);
+#382 PR-C 起 reveal 只消费 trusted(analysis)阶梯,故 `_drive` 同时由 steps 反解
+analysis 注入题面(切片与种子 steps 同文同值,断言面零改)。92/93 泄漏=0 硬门 =
+既有套件(test_answer_leak_guardrails + test_kernel_invariants)保持全绿,merge
+blocker 口径见 docs/plan/07-leak-net-v1.md。
 
 V1 授权面(裁定原文):终答数字永远 protected;中间步锚仅 deterministic reveal/telling
 路径 × 仅当前 next step 的 value × anchor=value数字−answer_pool 非空且 ∩answer_pool=∅
@@ -40,14 +42,17 @@ def _tutor_payload(reply_text: str, ready: bool = False) -> dict:
 
 
 def _drive(seed: dict, stuck_rounds: int, student_messages=None):
-    """种子 → 会话弧:open 注入合成 steps;每轮把上一轮学生可见文本喂给模型复读
-    (复读→重生成仍复读→兜底揭示下一级,同 test_kernel_restate 口径)。
-    第 1 次 reveal = 首次 stuck(hint_level 0→1);第 2 次起 = 再次 stuck。
+    """种子 → 会话弧:open 注入合成 steps(**model 阶梯,照常入库**)+ analysis
+    (由 steps 反解,#382 PR-C 起 reveal 只消费 analysis 切片);每轮把上一轮学生
+    可见文本喂给模型复读(复读→重生成仍复读→兜底揭示下一级,同 test_kernel_restate
+    口径)。第 1 次 reveal = 首次 stuck(hint_level 0→1);第 2 次起 = 再次 stuck。
     student_messages:分轮学生消息(缺省每轮同句卡壳话姿)。"""
     fx = seed["session"]
     gateway = FakeGateway(tutor_payloads=[_open_payload(FIRST_QUESTION_COLLECT, [dict(s) for s in fx["steps"]])])
     question = {"text": fx["question"]["text"], "answer": fx["question"]["answer"],
-                "analysis": "", "knowledge_points": []}
+                "analysis": (seed.get("analysis")
+                             or _analysis_from_steps(fx["steps"])),
+                "knowledge_points": []}
     first = start(question, dict(fx["learner"]), gateway=gateway)
     messages = ([student_messages] * stuck_rounds if isinstance(student_messages, str)
                 else list(student_messages or ["嗯,我看看,还是不会。"] * stuck_rounds))
@@ -106,6 +111,13 @@ def test_step_value_overlapping_answer_part_still_withholds():
 
 # ---------- ② Q5 第一层边界对 C/D/F(七条件单面验证) ----------
 
+# #382 PR-C:anchor 面钉 **trusted(analysis)阶梯**——V1 授权判据(value−answer_pool、
+# 当前级、再次 stuck)只对权威阶梯有意义;合成 plan 步仍照喂(模型阶梯入库不回归),
+# 但 reveal 只消费 analysis 切片。按种子 steps 文本反解成 analysis(每步一句),
+# 使切片与种子 steps 同文同值,断言面零改。
+def _analysis_from_steps(steps: list[dict]) -> str:
+    return "。".join(str(s.get("step") or "") for s in steps) + "。"
+
 
 def test_C_support_guiding_focus_gives_no_anchor():
     """C 非 telling 路径 → 零锚:学生上一轮复述了当前级数字(「脚数差是10」)→
@@ -128,7 +140,9 @@ def test_D_ready_state_demoted_by_stuck_anchor_resumes():
     fx = seed["session"]
     gateway = FakeGateway(tutor_payloads=[_open_payload(FIRST_QUESTION_COLLECT, [dict(s) for s in fx["steps"]])])
     question = {"text": fx["question"]["text"], "answer": fx["question"]["answer"],
-                "analysis": "", "knowledge_points": []}
+                "analysis": (seed.get("analysis")
+                             or _analysis_from_steps(fx["steps"])),
+                "knowledge_points": []}
     first = start(question, dict(fx["learner"]), gateway=gateway)
     # 轮1:学生自述答案 + 模型 ready → 合法确认态(test_kernel_restate 同款口径)
     gateway.tutor_queue.extend([_tutor_payload("我们把思路理清楚了。", ready=True)])
@@ -158,15 +172,17 @@ _ALLOWED_EVENT_KEYS = {"branch", "hint_level", "turn", "soften", "dropped", "anc
 
 def _synth_seed(rng: random.Random) -> tuple[dict, set[float]]:
     """随机合成 A 形种子:题面数/终答数/阶梯值,重叠与非重叠都造(不变量与
-    是否授权无关——锚无论何时出现都必须 ∩pool=∅ 且单数值)。"""
+    是否授权无关——锚无论何时出现都必须 ∩pool=∅ 且单数值)。#382 PR-C:step
+    文本带该步数值(analysis 切片可承载 value;「第N步」三字短片会被切片弃)。"""
     qnums = rng.sample(range(2, 60), 2)
     pool = rng.sample([n for n in range(2, 99) if n not in qnums], rng.choice([1, 2]))
     # 阶梯值避题面数、末级必触终答池(guard-provenance-fix ③ 门契约:模型阶梯
-    # 须达答案焦点;非末级可撞池,重叠面进样本,不变量须在重叠下仍成立 P4)
+    # 须达答案焦点;非末级可撞池,重叠面进样本,不变量须在重叠下仍成立 P4)。
+    # #382 PR-C:梯长 ≥2(analysis 切片 ≥2 片才成梯;单级形态由 B 种子钉)。
     ladder = [rng.choice([n for n in range(2, 99) if n not in qnums])
-              for _ in range(rng.choice([1, 2, 3]))]
+              for _ in range(rng.choice([2, 3]))]
     ladder[-1] = rng.choice(pool)
-    steps = [{"step": f"第{i + 1}步:先处理这一项", "value": str(v)} for i, v in enumerate(ladder)]
+    steps = [{"step": f"先把这一项算出结果 {v}", "value": str(v)} for v in ladder]
     answer = "、".join(f"{n}只" for n in pool)
     seed = {"session": {"question": {"text": f"一共 {qnums[0]} 只和 {qnums[1]} 只,问各多少?",
                                      "answer": answer},
@@ -210,24 +226,42 @@ def test_property_anchor_audit_single_field():
 
 
 def _class_seed(answer: str, ladder: list[str]) -> dict:
+    # #382 PR-C:显式给 analysis(等值类钉的 value 形态——「8组,余5人」「50%」
+    #「-5」——含切片分隔符/符号,不经 step 文本反解,保 value 原样入梯)。
     steps = [{"step": f"第{i + 1}步:先处理这一项", "value": v} for i, v in enumerate(ladder)]
-    return {"session": {"question": {"text": "仓库里有 12 箱和 9 箱,问合计与余量。", "answer": answer},
+    analysis = "。".join(f"先算这一步的结果是{v}" for v in ladder) + "。"
+    return {"session": {"question": {"text": "仓库里有 12 箱和 9 箱,问合计与余量。",
+                                     "answer": answer},
                         "learner": {"grade": "四年级", "answer_status": "incorrect"},
-                        "steps": steps}}
+                        "steps": steps},
+            "analysis": analysis}
 
 
 def test_gap_thousands_separator_normalized():
     """千分位(补):answer「1,000」归一池={1000},value「1000」撞池即禁——
-    不归一则池={1,0} 与 {1000} 交空 → 锚漏终答(本测试=漏 vector 的关死钉)。"""
+    不归一则池={1,0} 与 {1000} 交空 → 锚漏终答(本测试=漏 vector 的关死钉)。
+    #382 PR-C:analysis 切片取值即「1000」(纯数字),公开路径可复现。"""
     turn = _drive(_class_seed("共 1,000 千克", ["9", "1000"]), stuck_rounds=2)
     assert not any(e.get("anchor_numbers") for e in _reveal_events(turn))
 
 
 def test_gap_multi_number_value_fail_closed():
     """单数值门槛(补):多位值「8组,余5人」={8,5} 渲染「得到 8、5」破相 → 禁
-    (answer「35人」池={35} 本不撞,禁来自门槛非重叠)。"""
-    turn = _drive(_class_seed("共 35 人", ["9", "8组,余5人"]), stuck_rounds=2)
-    assert not any(e.get("anchor_numbers") for e in _reveal_events(turn))
+    (answer「35人」池={35} 本不撞,禁来自门槛非重叠)。#382 PR-C:analysis 切片
+    取值恒单数字段,多位值形态只经会话直构可造——保 `_current_step_anchor_numbers`
+    的单数值门槛钉(unit 面,同 test_property_invariants 直构口径)。"""
+    from edu_agent.agents.small_lecturer import LearnerSession, _reveal_stuck_hint
+
+    session = LearnerSession(
+        question={"text": "仓库里有 12 箱和 9 箱,问合计与余量。", "answer": "共 35 人"},
+        learner={"grade": "四年级", "answer_status": "incorrect"},
+        steps=[{"step": "先算这一项", "value": "9", "provenance": "analysis"},
+               {"step": "再算分组结果", "value": "8组,余5人", "provenance": "analysis"}])
+    for _ in range(2):  # 首次 stuck 揭第 1 级;再次 stuck 到多位值级
+        out = _reveal_stuck_hint(session)
+    assert isinstance(out, str)
+    assert not any(e.get("anchor_numbers") for e in session.guard_events
+                   if e.get("branch") == "reveal")
 
 
 def test_gap_percent_sign_conservative():

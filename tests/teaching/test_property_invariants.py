@@ -3,8 +3,9 @@
 只测现状(deterministic pure-ish 逻辑):①`mask_numbers` 掩码输出不漏答案数字
 (Thin Kernel #333:soften 删,protective core 由掩码继承);②答案集合归因(允许集里的答案数字只能来自题面);③数字表示等价类
 (现有解析已支持的形态);④numeric 纯函数任意输入全且稳定;⑤`_reveal_stuck_hint`
-阶梯边界。**不预实现 V1 语义**——现状缺口记 FINDINGS(模块尾参数化回归+PR 说明),
-不硬造应然、不顺手修产品代码。
+阶梯边界(#382 PR-C 起:reveal 面钉 trusted=analysis 阶梯;model 阶梯不进 reveal
+的边界同样 property 化)。**不预实现 V1 语义**——现状缺口记 FINDINGS(模块尾参数化
+回归+PR 说明),不硬造应然、不顺手修产品代码。
 
 设置纪律(CI 确定性,不慢化三道关卡):全部 property 共用 CI_SETTINGS
 (derandomize=True + max_examples=50 有界 + deadline=None 防 CI 限速抖动)。
@@ -21,6 +22,7 @@ from hypothesis import strategies as st
 from edu_agent.agents.small_lecturer import (
     NEEDS_REVIEW_TEXT,
     _STEP_LEADS,
+    _UNTRUSTED_LADDER_HINT,
     LearnerSession,
     _answer_focus_numbers,
     _answer_leak_span,
@@ -65,11 +67,14 @@ def _num_forms(numbers: set[float]) -> str:
 
 
 def _make_session(text: str, answer: str, values: list[str],
-                  history: list[str]) -> LearnerSession:
+                  history: list[str], provenance: str = "analysis") -> LearnerSession:
+    """#382 PR-C:reveal 的 property 面钉 **trusted(analysis)阶梯**——deterministic
+    reveal 只消费 provenance=analysis 的步;model 阶梯的边界由
+    test_trusted_ladder_boundary.py 专项钉(这里不混两套断言)。"""
     return LearnerSession(
         question={"text": text, "answer": answer},
         learner={},
-        steps=[{"step": "s", "value": v} for v in values],
+        steps=[{"step": "s", "value": v, "provenance": provenance} for v in values],
         history=[{"role": "user", "content": c} for c in history],
     )
 
@@ -146,7 +151,8 @@ def test_answer_focus_numbers_fail_closed(q_nums, extra):
         assert focus == _question_numbers(answer)  # fail-closed:空 → 原集
 
 
-# ── ⑤ _reveal_stuck_hint:阶梯边界(越界/空 steps/bottom-out)──
+# ── ⑤ _reveal_stuck_hint:阶梯边界(越界/空 steps/bottom-out;#382 PR-C 起钉
+#    trusted=analysis 阶梯;model 阶梯不进 reveal,由专项文件钉)──
 @CI_SETTINGS
 @given(
     answer=st.sampled_from(["答:12", ""]),
@@ -154,9 +160,11 @@ def test_answer_focus_numbers_fail_closed(q_nums, extra):
     start_level=st.integers(min_value=0, max_value=7),
 )
 def test_reveal_boundaries_total_and_recorded(answer, n_steps, start_level):
-    """调用方现状可达域(hint_level≥0)与空 steps 下不抛异常、恒返回 str、
-    每调记 {branch: reveal}。负值越界(空 steps→IndexError/非空→尾部重访)
-    是现状缺口 FINDINGS-7/8,由文末定向探针锁现状。"""
+    """调用方现状可达域(hint_level≥0)与空 steps 下不抛异常、恒返回 str、每调记
+    {branch: reveal}(非空 trusted 阶梯)或 {branch: reveal_untrusted}(空 steps,
+    #382 PR-C:无 trusted 阶梯 → safe guiding question)。负值越界(空 steps→
+    reveal_untrusted 早退/非空→尾部重访)是现状缺口 FINDINGS-7/8,由文末定向探针
+    锁现状。"""
     session = _make_session("题: 1", answer,
                             [f"{i + 1}0" for i in range(n_steps)], [])
     session.hint_level = start_level
@@ -165,7 +173,11 @@ def test_reveal_boundaries_total_and_recorded(answer, n_steps, start_level):
     assert isinstance(out, str)
     assert len(session.guard_events) == events_before + 1
     last = session.guard_events[-1]
-    assert last.get("branch") == "reveal" and "hint_level" in last
+    if session.steps:
+        assert last.get("branch") == "reveal" and "hint_level" in last
+    else:
+        assert last.get("branch") == "reveal_untrusted"  # 无 trusted 阶梯
+        assert "12" not in out  # safe question 零数值(终答只在 finish)
     if not session.steps and answer:
         assert "12" not in out  # Thin Kernel:梯尽不披露终答(终答只在 finish)
 
@@ -177,7 +189,8 @@ def test_reveal_ladder_monotonic_exhaustion_no_disclosure(n_steps):
     终答不披露(Thin Kernel #333:终答唯一披露点=finish)。"""
     session = LearnerSession(
         question={"text": "题: 1", "answer": "答:42"}, learner={},
-        steps=[{"step": f"第{i}步算 {i + 2}", "value": str(i + 2)}
+        steps=[{"step": f"第{i}步算 {i + 2}", "value": str(i + 2),
+                "provenance": "analysis"}
                for i in range(n_steps)],
         history=[])
     seen: list[str] = []
@@ -188,6 +201,27 @@ def test_reveal_ladder_monotonic_exhaustion_no_disclosure(n_steps):
         seen.append(out)
     final = _reveal_stuck_hint(session)
     assert "42" not in final and final == NEEDS_REVIEW_TEXT
+
+
+@CI_SETTINGS
+@given(n_steps=st.integers(min_value=0, max_value=4))
+def test_reveal_model_ladder_never_replayed(n_steps):
+    """#382 PR-C 权威源边界:provenance=model 的阶梯(任意长度)**不进** deterministic
+    reveal——恒返回 safe guiding question、记 reveal_untrusted、不消耗阶梯
+    (hint_level 不动,零数值上学生面)。"""
+    session = LearnerSession(
+        question={"text": "题: 8 和 26", "answer": "答:42"}, learner={},
+        steps=[{"step": f"第{i}步算 {i + 2}", "value": str(i + 2),
+                "provenance": "model"}
+               for i in range(n_steps)],
+        history=[])
+    session.hint_level = 0
+    out = _reveal_stuck_hint(session)
+    assert out == _UNTRUSTED_LADDER_HINT
+    assert session.hint_level == 0            # 未消耗阶梯
+    assert session.guard_events[-1]["branch"] == "reveal_untrusted"
+    for value in ("42", "2", "3", "4", "5"):
+        assert value not in out                # 零数值(题面 8/26 亦不在句中)
 
 
 # ── 发现的边界(定向探针固化;发现的边界=确定性回归,现状缺口记 FINDINGS)──
@@ -227,13 +261,14 @@ def test_spoken_composite_chinese_current_gap():
 
 
 def test_reveal_negative_level_out_of_range_current_gaps():
-    # FINDINGS-8:空 steps + 负 hint_level → _next_step 里 steps[-1] IndexError
-    # (现状缺口,锁现状;V1 修掉时本断言改向)
+    # #382 PR-C:空 steps(无 trusted 阶梯)→ reveal_untrusted 早退,不再触
+    # _next_step(FINDINGS-8 的 IndexError 面随权威源闸前移而不可达,锁新现状)
     empty = _make_session("题: 1", "答:12", [], [])
     empty.hint_level = -1
-    with pytest.raises(IndexError):
-        _reveal_stuck_hint(empty)
-    # FINDINGS-7:非空 steps + 负 hint_level → 从尾部索引重访(不崩,重访语义现状)
+    out = _reveal_stuck_hint(empty)
+    assert out == _UNTRUSTED_LADDER_HINT
+    assert empty.guard_events[-1]["branch"] == "reveal_untrusted"
+    # FINDINGS-7:非空 trusted steps + 负 hint_level → 从尾部索引重访(不崩,重访语义现状)
     filled = _make_session("题: 1", "答:12", ["第0步", "第1步"], [])
     filled.hint_level = -1
     out = _reveal_stuck_hint(filled)
@@ -248,5 +283,5 @@ def test_reveal_negative_level_out_of_range_current_gaps():
 # 5. 中文复合数字不解析(单字映射,宁漏勿误)
 # 6. 负号不在数字模式内,负数答案不可判定(学生说「-5」只见 5)
 # 7. _next_step 负 hint_level 从尾部索引重访 steps(调用方现状只用 0 起)
-# 8. _next_step 空 steps + 负 hint_level → steps[-1] IndexError(property 实测
-#    发现,调用方现状不可达;产品侧缺口报 PM)
+# 8. (已收敛)#382 PR-C 权威源闸前移:空 steps 走 reveal_untrusted 早退,
+#    不再进 _next_step(原 steps[-1] IndexError 面随之不可达)

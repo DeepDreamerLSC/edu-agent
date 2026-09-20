@@ -182,12 +182,14 @@ def test_text_opening_carries_no_digits_at_all(tmp_path):
 # ---------- 既有分支与调用面不受影响 ----------
 
 def test_model_call_still_made_and_steps_stored(tmp_path):
-    """首问文本固定 ≠ 不调模型:模型照常被调一次,steps 仍由 solver 校验入库。"""
+    """首问文本固定 ≠ 不调模型:模型照常被调一次,steps 仍由 solver 校验入库;
+    #382 PR-C:入库步带 provenance="model"(untrusted 标记,reveal 不消费——
+    GRID_QUESTION 的 analysis 无数字切不出阶梯,此处即无 trusted 阶梯的形态)。"""
     steps = [{"step": "先写排", "value": "12"}, {"step": "再写号", "value": "5"}]
     turn, fake = _opening(tmp_path, LEARNER, steps=steps)
     fake.stop()
     assert len(fake.requests) == 1                  # 统一 open 一次,照旧
-    assert turn.session.steps == steps              # 阶梯底稿仍采信模型产出
+    assert turn.session.steps == [dict(s, provenance="model") for s in steps]
     assert turn.text == FIRST_QUESTION_COLLECT      # 但可见文本是模板
 
 

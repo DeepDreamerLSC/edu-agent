@@ -41,11 +41,12 @@ def test_clean_output_records_nothing(tmp_path):
 
 def test_events_persist_through_file_store(tmp_path):
     """guard_events 随 FileSessionStore 落盘并可恢复(asdict 全字段自动带上)。"""
+    question = {"text": "解方程 3x+7=25。", "answer": "x=6",
+                "analysis": "两边同时减7得3x=18。再两边除以3得x=6。"}  # #382 PR-C:reveal 事件须由 trusted 阶梯承载
     with kernel_env(tmp_path, [completion(open_json("答案是 x=6。")),
                                completion(open_json("你从条件入手,一步步来。")),  # 重生成(open schema)
                                completion(tutor_json("再想想?"))]) as (fake, gateway):
-        first = start({"text": "解方程 3x+7=25。", "answer": "x=6"},
-                      {"grade": "五年级"}, gateway=gateway)
+        first = start(question, {"grade": "五年级"}, gateway=gateway)
         reply(first.session, "我不知道", gateway=gateway)
         from edu_agent.api import FileSessionStore
         store = FileSessionStore(tmp_path / "sessions")

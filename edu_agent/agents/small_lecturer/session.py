@@ -34,7 +34,10 @@ class LearnerSession:
     stuck: bool = False                # 卡点标记(R6;#382 P0-1 收口):学生本人明确 stuck 信号专属,
     #                                  # 系统侧异常(guard 降级/复读兜底等)只记 guard_events 不写此位
     steps: list[dict] = field(default_factory=list)   # 分步解(统一 open 求解):阶梯底稿 +
-    # 数字校验基准(引用值须 ⊆ steps 的 value),随 FileSessionStore asdict 持久化
+    # 数字校验基准(引用值须 ⊆ steps 的 value),随 FileSessionStore asdict 持久化。
+    # #382 PR-C:每步带 provenance(analysis=trusted 题库切片 / model=untrusted 规划件)
+    # ——deterministic reveal 只消费 analysis 步,随 asdict 全字段持久化(重启恢复后
+    # 边界不丢)。
     hint_level: int = 0                # 阶梯揭示进度:学生卡住时揭示 steps 的第几级(0 起)
     guard_events: list = field(default_factory=list)  # 护栏埋点(任务包1步1):命中的
     # 规则与被替换原文随会话落盘(FileSessionStore asdict 自动持久化),供兜底率度量
