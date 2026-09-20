@@ -28,8 +28,8 @@ from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 
 from .format_guard import evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
-from .numeric import (_ASCII_NUMBER, _answer_focus_numbers, _drift_sources,
-                      student_stated_answer,
+from .numeric import (_ASCII_NUMBER, _answer_focus_numbers, _declarative,
+                      _drift_sources, student_stated_answer,
                       _known_answer, _question_numbers, _reply_numbers, _spoken_numbers,
                       mask_numbers)
 from .prompting import (OPEN_SCHEMA, TUTOR_SUMMARY_SCHEMA, TUTOR_TURN_SCHEMA,
@@ -189,13 +189,61 @@ def _student_stated_answer(session: "LearnerSession", student_message: str) -> b
     return any(_hits_answer_numbers(session, text) for text in messages)
 
 
+def _is_final_statement(session: "LearnerSession", student_message: str) -> bool:
+    """闭环三修 ① 判据:**本轮学生消息即终述** = 陈述式(问句猜答不算,
+    numeric._declarative 同口径)∧ 单条命中答案焦点数字集(#149 判停闸同源
+    判据——跨轮各说一半不算)。历史曾述而本轮卡壳/附和 → 不收束(走支持/
+    模型路径;复读死环已由 ② 断,收束是快路径不是唯一出口)。"""
+    return _declarative(student_message) and _hits_answer_numbers(session, student_message)
+
+
+def _close_on_final_statement(session: LearnerSession, student_message: str,
+                              gateway: Gateway | None) -> Turn:
+    """闭环三修 ①(close-loop-fix,PM 2026-09-20):ready_to_confirm 且学生终述
+    在场 → 收束动作确定化——不待模型再出一轮,本回合直接走 finish 语义
+    (正确且无卡点 → 零调用模板;否则模型总结)。终答披露唯一披露点=finish
+    不变式不动(本路径即 finish);强化的是**到达 finish 的路径**。产线实录
+    (444a/2c85):此点模型无可靠收束 → 复读 → 复合复读 → reveal 重发阶梯 →
+    永不闭环(ready 态被揭示轮覆写成 dialogue,会话吊死)。
+
+    终述先入史(参与 _structured_summary 首末引语),再 finish,再补 assistant
+    轮 + 版本;不复用 _commit_turn(它再 append user 会双记;本路径零 guard
+    事件,无需 _stamp_turn)。"""
+    session.history.append({"role": "user", "content": student_message})
+    summary = finish(session, gateway=gateway)
+    session.history.append({"role": "assistant", "content": summary.text})
+    session.session_version += 1
+    return Turn(text=summary.text, session_version=session.session_version,
+                state="completed", ready_to_confirm=True, session=session)
+
+
 def _next_step(session: "LearnerSession") -> dict | None:
-    """阶梯逐级揭示:返回 steps 的下一级(推进 hint_level);揭示完毕返回 None。"""
-    if session.hint_level < len(session.steps):
+    """阶梯逐级揭示:返回 steps 的下一级(推进 hint_level);揭示完毕返回 None。
+
+    闭环三修 ③(close-loop-fix,PM 2026-09-20):跳过学生已完成的子目标——
+    该步 value 数字全体已出现在学生历史并集(跨消息;2c85 实录:{8,3,4} 与
+    {6} 分列两轮,单消息判定会漏)。判据 #174 渐隐档同源:数字集包含、顺序
+    不敏感、含中文数字。全跳过 → None(走 bottom-out,不重发)。反面教材
+    (2c85):reveal 重发「再算第二周」——该子目标学生早已算出,重发即复读
+    死环燃料。value 无数字 = 完成不可判 → 照发(fail-open)。"""
+    while session.hint_level < len(session.steps):
         step = session.steps[session.hint_level]
         session.hint_level += 1
-        return step
+        value_numbers = _question_numbers(str(step.get("value") or ""))
+        if not (value_numbers and _step_done_by_student(session, value_numbers)):
+            return step
+        session.guard_events.append({"branch": "reveal_step_skipped",
+                                     "hint_level": session.hint_level})
     return None
+
+
+def _step_done_by_student(session: "LearnerSession", value_numbers: set[float]) -> bool:
+    """③ 子目标完成判定:该步 value 数字全体已在学生历史(跨消息并集)。"""
+    spoken: set[float] = set()
+    for message in session.history:
+        if message.get("role") == "user":
+            spoken |= _spoken_numbers(str(message.get("content") or ""))
+    return value_numbers <= spoken
 
 
 # 阶梯揭示的多样开场(确定性,轮换)——避免「这一步我们先看」句句重复、显生硬。
@@ -662,12 +710,15 @@ def _repeat_refine(ctx, session, safe_text: str, ready: bool) -> str:
     prev = session.history[-1]["content"] if session.history else session.first_question
     if not (prev and _is_repeat(prev, safe_text)):
         return safe_text
-    if _current_arm() == "A":
-        _shadow_event(session, "would_rewrite", "repeat_regen")
-        return safe_text
-    if _current_arm() == "B":
-        return safe_text
-    if _mech_off("repeat_regen"):
+    if (session.state == "ready_to_confirm" or _current_arm() in ("A", "B")
+            or _mech_off("repeat_regen")):
+        # 同归早退,差异只在埋点:② confirm 阶段复读≠卡住(close-loop-fix,不重
+        # 生成不揭示,复读直达——产线实录 444a/2c85:ready 后复读→复合复读→
+        # reveal 重发阶梯→永不闭环);A 臂记 would_*;B 臂静默;机关关闭静默。
+        if session.state == "ready_to_confirm":
+            session.guard_events.append({"branch": "repeat_confirm_pass"})
+        elif _current_arm() == "A":
+            _shadow_event(session, "would_rewrite", "repeat_regen")
         return safe_text
     session.guard_events.append({"branch": "repeat_regen"})  # 裁②:复读重生成落点
     refined = _regenerate(ctx, session, safe_text, _SELF_CRITIQUE, ready)
@@ -700,6 +751,9 @@ def reply(session: LearnerSession, student_message: str, *,
     if expected_session_version is not None and expected_session_version != session.session_version:
         raise SessionVersionConflict(  # 不推进:旧版本不静默覆盖新一轮诊断(00 §5.2 约定 3)
             f"expected_session_version={expected_session_version} != 当前 {session.session_version}")
+    if (session.state == "ready_to_confirm"
+            and _is_final_statement(session, student_message)):
+        return _close_on_final_statement(session, student_message, gateway)
     turn = _deterministic_turn(session, student_message, gateway)
     if turn is not None:
         return turn
