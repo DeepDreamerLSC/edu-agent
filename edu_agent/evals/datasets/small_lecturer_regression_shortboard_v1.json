@@ -931,6 +931,254 @@
           }
         ]
       }
+    },
+    {
+      "id": "repro-close-loop-ball-bounce",
+      "title": "闭环死环(444a 球弹跳):终述后模型复读→reveal 重发→永不闭环",
+      "status": "guarded",
+      "source": {
+        "issue": 333,
+        "conv": "conv_444a1d37e907",
+        "kernel": "kernel_d8faf4cc1f",
+        "date": "2026-09-19"
+      },
+      "tags": [
+        "闭环",
+        "复现",
+        "确定性"
+      ],
+      "question": {
+        "text": "一个球从高处落下,它每次弹起的高度是下落高度的1/6。若该球从18m的高度落下,则第二次弹起的高度是( )m。",
+        "answer": "0.5m",
+        "analysis": "连续两次都乘1/6。"
+      },
+      "answer_status": "incorrect",
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "reply": "开题。",
+            "steps": [
+              {
+                "step": "第一次弹起的高度是下落高度的1/6,即18 × 1/6。",
+                "value": "3"
+              },
+              {
+                "step": "第二次弹起的高度是第一次弹起高度的1/6,即3 × 1/6。",
+                "value": "0.5"
+              }
+            ]
+          }
+        },
+        {
+          "json": {
+            "reason": "核 28 笔误",
+            "reply": "你刚才说要'28连续两次乘1/6',那你是怎么想到用28这个数的?是不是把18看成28了?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "推结果",
+            "reply": "你刚才说'18乘1/6乘1/6',这一步已经把两次弹起的计算关系说清楚了,接下来我们算一下结果是多少?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "换算(0.5 首披→掩,实录同形)",
+            "reply": "你刚才说'18乘1/6乘1/6'是对的,我们来算一下结果:18×1/6=3,再×1/6就是0.5,所以第二次弹起高度是0.5m,你写成0/5是笔误,对吧?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "确认(学生已述 0.5)",
+            "reply": "你刚才说'18乘1/6乘1/6'是对的,结果算出来是0.5m,这道题你已经讲清楚了,最后请你自己完整说一遍结论。",
+            "ready_to_confirm": true,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "双臂共载:A=终述后复读(死环燃料)/B=①收束的模型总结",
+            "reply": "你刚才说'18乘1/6乘1/6'是对的,结果算出来是0.5m,这道题你已经讲清楚了,最后请你自己完整说一遍结论。",
+            "ready_to_confirm": true,
+            "cited_numbers": [],
+            "summary": "你把两次弹起的计算和结果都讲清楚了,这道题完成。"
+          }
+        },
+        {
+          "json": {
+            "reason": "A 臂复读重生成(仍复读→reveal 重发第1级,历史死环)",
+            "reply": "你刚才说'18乘1/6乘1/6'是对的,结果算出来是0.5m,这道题你已经讲清楚了,最后请你自己完整说一遍结论。",
+            "ready_to_confirm": true,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "summary": "死臂收场:终述后 reveal 重发,ready 被覆写,仅靠 finish 模型总结收场。"
+          }
+        }
+      ],
+      "student_turns": [
+        "这道题我会算,要28连续两次乘1/6",
+        "哦对,是18乘1/6乘1/6",
+        "那就是0/5",
+        "哦对是0.5",
+        "所以小球从18米连续两次弹跳后弹起的高度是0.5m"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "state_is",
+            "state": "completed",
+            "note": "close-loop-fix ① 判别子:末轮(终述轮)必须已收束 completed。修复前该轮是 reveal 重发(ready 覆写+stuck 吊死,产线实录 444a 终态);runner 恒调 finish 会以模型总结收场,故 finish_status 只是 rider"
+          },
+          {
+            "name": "finish_status",
+            "status": "completed",
+            "note": "rider:总结最终存在(修复前经由死环后的模型总结,修复前经 ① 确定性收束)"
+          },
+          {
+            "name": "text_contains_values",
+            "values": [
+              0.5
+            ],
+            "note": "确认轮回声(学生已述终答,①豁免面)仍可见——收束不以掩码为代价"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repro-close-loop-cross-stitch",
+      "title": "闭环死环(2c85 十字绣):reveal 重发已完成子目标「再算第二周」",
+      "status": "guarded",
+      "source": {
+        "issue": 333,
+        "conv": "conv_2c8551ff8b52",
+        "kernel": "kernel_4dd9e2a86d",
+        "date": "2026-09-19"
+      },
+      "tags": [
+        "闭环",
+        "复现",
+        "确定性"
+      ],
+      "question": {
+        "text": "妈妈打算绣一幅面积为20dm²的\"十字绣\"。第一周绣了2/5,第二周绣的是第一周的3/4,妈妈第二周绣了( )dm²。",
+        "answer": "B.6dm²",
+        "analysis": "先求第一周,再按第一周的3/4求第二周。"
+      },
+      "answer_status": "incorrect",
+      "grade": "六年级",
+      "fake_model": [
+        {
+          "json": {
+            "acceptable": true,
+            "transcription": "",
+            "reply": "开题。",
+            "steps": [
+              {
+                "step": "先算第一周绣了多少平方分米",
+                "value": "20 × 2/5 = 8"
+              },
+              {
+                "step": "再算第二周是第一周的3/4,求第二周面积",
+                "value": "8 × 3/4 = 6"
+              }
+            ]
+          }
+        },
+        {
+          "json": {
+            "reason": "确认第一周",
+            "reply": "你算出第一周是8dm²,这一步我们再确认一下:20×2/5=8,对吗?那第二周是第一周的3/4,你打算怎么算第二周的面积呢?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "推结果",
+            "reply": "你算出第二周是8×3/4,这个思路对了!我们来算一下结果是多少?",
+            "ready_to_confirm": false,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "确认(学生已述 6)",
+            "reply": "你算得没错,第二周确实是6dm²,这一步你用对了乘法关系,现在自己完整说一遍结论吧!",
+            "ready_to_confirm": true,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "双臂共载:A=终述后回声复读/B=①收束的模型总结",
+            "reply": "你刚才说第二周是8×3/4=6,这一步算得对,而且自己也说出了答案,真棒!",
+            "ready_to_confirm": true,
+            "cited_numbers": [],
+            "summary": "你把第一周、第二周的算法和结果都讲清楚了,这道题完成。"
+          }
+        },
+        {
+          "json": {
+            "reason": "A 臂复读(同文本)",
+            "reply": "你刚才说第二周是8×3/4=6,这一步算得对,而且自己也说出了答案,真棒!",
+            "ready_to_confirm": true,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "reason": "A 臂复读重生成(仍复读→reveal 重发已完成第2级,历史死环)",
+            "reply": "你刚才说第二周是8×3/4=6,这一步算得对,而且自己也说出了答案,真棒!",
+            "ready_to_confirm": true,
+            "cited_numbers": []
+          }
+        },
+        {
+          "json": {
+            "summary": "死臂收场:reveal 重发已完成子目标「再算第二周」,仅靠 finish 模型总结收场。"
+          }
+        }
+      ],
+      "student_turns": [
+        "第一周绣了8dm",
+        "是的,那第二周就8乘3/4",
+        "是6",
+        "妈妈第二周绣了6dm",
+        "是的,我真棒"
+      ],
+      "expect": {
+        "checks": [
+          {
+            "name": "state_is",
+            "state": "completed",
+            "note": "close-loop-fix ① 判别子:末轮(终述轮)必须已收束 completed。修复前该轮后是 reveal 重发已完成第2级(2c85 反面教材「再算第二周」)"
+          },
+          {
+            "name": "finish_status",
+            "status": "completed",
+            "note": "rider:总结最终存在(修复前经由死环后的模型总结)"
+          },
+          {
+            "name": "text_contains_values",
+            "values": [
+              6
+            ],
+            "note": "确认轮回声(学生已述 6)仍可见"
+          }
+        ]
+      }
     }
   ]
 }

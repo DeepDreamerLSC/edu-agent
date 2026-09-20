@@ -107,20 +107,28 @@ def test_run_case_follows_branch_script():
     assert len(gateway.requests) == 3
 
 
-def test_steps_honor_ready_to_confirm_stop():
-    """判停语义对分支剧本同样成立:ready 后余下步骤不再发。"""
+def test_steps_honor_completed_stop_not_ready():
+    """close-loop-fix 语义:ready 后余下步骤**照发**(产线忠实——客户端 ready 后
+    继续发消息,444a/2c85 死环正是 ready 后续轮);completed 才断。"""
     case = {**STEPS_CASE, "steps": STEPS_CASE["steps"] + [
-        {"id": "extra", "branches": [_branch("correct", ["先"], "不应该被发出去。")]}]}
+        {"id": "extra", "branches": [
+            _branch("correct", ["做法"], "检验也讲清楚了。"),
+            _branch("fb", [], "我还在想。", fallback=True)]}]}
     gateway = FakeGateway(tutor_payloads=[
         {"acceptable": True, "transcription": "", "steps": [], "reply": "你打算先怎么做?"},
-        {"reason": "确认掌握", "reply": "很好,你已经说出了每一步的做法。", "ready_to_confirm": True,
+        {"reason": "确认掌握", "reply": "很好,你的思路已经把每一步的做法都说出来了。", "ready_to_confirm": True,
+         "cited_numbers": []},
+        {"reason": "ready 后续轮", "reply": "不错,每一步的做法都讲清楚了。", "ready_to_confirm": True,
+         "cited_numbers": []},
+        {"reason": "ready 后续轮2", "reply": "我们把做法和检验都讲清楚了。", "ready_to_confirm": True,
          "cited_numbers": []},
         {"summary": "学生解出 x=18。"},
     ])
     transcript = KernelSubject(gateway).run_case(case)
-    assert [t["student"] for t in transcript["turns"][1:]] == ["先把两边同时减去7。"]
+    assert [t["student"] for t in transcript["turns"][1:]] == [
+        "先把两边同时减去7。", "25减7等于18,x等于18。", "检验也讲清楚了。"]
     assert transcript["final_state"] == "completed"
-    assert len(gateway.requests) == 3  # start + 1 reply + finish,第三步没被消费
+    assert len(gateway.requests) == 5  # start + 3 reply + finish
 
 
 def _write_v2(tmp_path, scenarios):
