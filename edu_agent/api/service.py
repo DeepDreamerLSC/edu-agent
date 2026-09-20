@@ -522,7 +522,7 @@ class ConversationService:
             history.append({"role": "assistant", "content": reply_text})
             ready = bool(getattr(turn, "ready_to_confirm", False))
             conversation.session_version += 1
-            conversation.state = "ready_to_confirm" if ready else "dialogue"
+            self._apply_turn_state(conversation, turn, ready, reply_text)
             conversation.first_question = conversation.first_question or reply_text
             response = self._message_response(conversation, reply_text)  # 锁内快照(并发下不串轮)
             if cache_key:
@@ -606,6 +606,18 @@ class ConversationService:
         return envelope
 
     # ---------- 内部 ----------
+
+    def _apply_turn_state(self, conversation: Conversation, turn: object,
+                          ready: bool, reply_text: str) -> None:
+        """会话态随内核轮同步。闭环三修 ①(close-loop-fix):内核确定性收束轮
+        (turn.state=completed)→ 会话面同步 completed + summary(与 _confirm
+        完成分支同款;confirm 再调 = finish 幂等取回同一 summary)。"""
+        if str(getattr(turn, "state", "")) == "completed":
+            conversation.state = "completed"
+            if conversation.summary is None:
+                conversation.summary = {"status": "completed", "text": reply_text}
+            return
+        conversation.state = "ready_to_confirm" if ready else "dialogue"
 
     def _persist_session(self, conversation: Conversation) -> None:
         """上下文保留(M3 PR6):内核回合后把 LearnerSession 落盘;未注入即空操作。
