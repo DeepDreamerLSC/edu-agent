@@ -1,6 +1,12 @@
 """评测线入口(00 §4/§8.2):runner 骨架、晨间摘要、judge 评分器与老系统适配器雏形。"""
 
-from .checks import REGISTRY, UnknownCheck, possible_no_progress_cycle, run_check
+from .checks import (
+    REGISTRY,
+    UnknownCheck,
+    _tutor_turns,  # #382 PR-D:事故回归电池直连(trajectory 轮次口径钉;纯导出)
+    possible_no_progress_cycle,
+    run_check,
+)
 from .image_teaching import (
     load_scenarios,
     question_image_data_url,
@@ -97,6 +103,7 @@ __all__ = [
     "SCHEMA",
     "Subject",
     "UnknownCheck",
+    "_tutor_turns",
     "any_judge_model",
     "build_cases",
     "build_plan",
