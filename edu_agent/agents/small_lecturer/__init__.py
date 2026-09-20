@@ -18,6 +18,7 @@ from .kernel import (
     _UNTRUSTED_LADDER_HINT,
     PURE_BLOCK,
     _answer_leak_span,
+    _is_repeat,  # #382 PR-D:事故回归电池直连(复读判定口径钉;零行为变更纯导出)
     _reveal_stuck_hint,
     _student_signals_stuck,
     finish,
@@ -98,6 +99,7 @@ __all__ = [
     "_answer_numbers",
     "_arithmetic_results",
     "_drift_sources",
+    "_is_repeat",
     "_question_numbers",
     "_reply_numbers",
     "_reveal_stuck_hint",
