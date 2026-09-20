@@ -88,8 +88,9 @@ class KernelSubject:
                               "state": turn.state,
                               "elapsed_ms": int((time.monotonic() - t0) * 1000)})
                 tutor_text = turn.text
-                if turn.state == "ready_to_confirm":
-                    break  # 掌握证据充分,余下剧本轮次不再发(判停语义)
+                if turn.state == "completed":
+                    break  # 终态才断:ready 后客户端仍会发消息(产线实录 444a/2c85
+                    # ——close-loop-fix 复现的正是 ready 后续轮;剧本有轮就发)
             summary = finish(session, gateway=self.gateway)
             final_state = summary.status
             summary_text = summary.text
