@@ -231,6 +231,32 @@ def phase_refresh_and_messages(args: argparse.Namespace, ctx: dict, results: lis
     check(entry, status == 403, f"禁交键 answer 应 403(00 §5.2 约定 4),实际 {status}: {body}")
 
 
+def _auto_closure_face(args: argparse.Namespace, ctx: dict, envelope: dict,
+                       entry: dict, check, evidence: dict) -> None:
+    """close-loop ① 新面:复述钉=终述 → 本轮确定性收束(interaction 帧=全信封,
+    kind=result + confirmation.completed + result 携真实 summary——learning_summary
+    随信封达合作方);随后 confirm 撞终态闸 409(与重复 confirm 同形,合同内
+    终态信号);终态后再发 409(原 completed 分支同款)。"""
+    check(entry, envelope.get("kind") == "result",
+          f"自动收束轮 kind 应为 result,实际 {envelope.get('kind')}")
+    result = envelope.get("result") or {}
+    check(entry, result.get("status") == "completed" and result.get("text", "").strip(),
+          f"自动收束轮 result 应携真实 summary: {result}")
+    evidence["summary"] = result
+    token, cid, ssid = ctx["token"], ctx["cid"], ctx["ssid"]
+    status, _, body = _request(args.base_url, f"/api/conversations/{cid}/messages", token, {
+        "content": "", "input": {"skill_session_id": ssid,
+                                 "expected_session_version": ctx["version"],
+                                 "interaction_action": "confirm"}})
+    check(entry, status == 409 and (body.get("error") or {}).get("code") == "SKILL_SESSION_CONFLICT",
+          f"自动收束后 confirm 应 409 终态信号,实际 {status}: {body}")
+    evidence["confirm_status"] = "completed(auto-closure)"
+    status, _, body = _request(args.base_url, f"/api/conversations/{cid}/messages", token, {
+        "content": "终态后再发", "input": {"skill_session_id": ssid,
+                                           "expected_session_version": ctx["version"]}})
+    check(entry, status == 409, f"completed 终态后 messages 应 409,实际 {status}: {body}")
+
+
 def phase_sse_and_confirm(args: argparse.Namespace, ctx: dict, results: list, evidence: dict) -> None:
     """SSE happy 五型帧序 → confirm(复述钉到 completed;两分支各自续断言)。"""
 
@@ -269,11 +295,20 @@ def phase_sse_and_confirm(args: argparse.Namespace, ctx: dict, results: list, ev
     ctx["version"] = done.get("session_version")
     check(entry, (frames.get("status") or {}).get("session_version") == ctx["version"],
           "status 帧与 done 帧同源(response 构造后一次编码,版本一致)")
+    # close-loop-fix ① 新面:复述钉=终述,ready 会话在本轮确定性收束(interaction
+    # 帧=全信封);未自动收束则走原 confirm 流(真模型 ready 判定非确定,两分支
+    # 均合法)。
+    envelope = frames.get("interaction") or {}
+    auto_completed = bool((envelope.get("confirmation") or {}).get("completed"))
     entry["ms"] = round((time.monotonic() - t0) * 1000)
     evidence["sse_delta_text"] = delta_text
 
     entry = phase("confirm")
     t0 = time.monotonic()
+    if auto_completed:
+        _auto_closure_face(args, ctx, envelope, entry, check, evidence)
+        entry["ms"] = round((time.monotonic() - t0) * 1000)
+        return
     status, _, body = _request(args.base_url, f"/api/conversations/{cid}/messages", token, {
         "content": "", "input": {"skill_session_id": ssid, "expected_session_version": ctx["version"],
                                  "interaction_action": "confirm"}})

@@ -37,14 +37,17 @@ def test_run_case_drives_full_script(tmp_path):
         completion(open_json("题目要我们求什么?")),
         slow(completion(tutor_json("为什么两边都能减7?"))),
         slow(completion(tutor_json("很好,再同时除以3。", ready=True))),
+        slow(completion(tutor_json("检验也讲清楚了,这一题完成。", ready=True))),
         completion(json.dumps({"summary": "你用等式性质解出 x=6 并检验。"}, ensure_ascii=False)),
     ]) as (fake, gateway):
         transcript = KernelSubject(gateway).run_case(CASE)
         assert transcript["final_state"] == "completed"
         assert transcript["summary"] == "你用等式性质解出 x=6 并检验。"
-        assert [t["student"] for t in transcript["turns"]] == ["", "我想两边都减去7。", "再同时除以3。"]
-        # 判停:第三轮 ready 后余下剧本轮("检验通过了。")不再发
-        assert len(fake.requests) == 4 and transcript["turns"][-1]["state"] == "ready_to_confirm"
+        # close-loop-fix:ready 后剧本轮照发(产线忠实——客户端 ready 后继续发
+        # 消息,444a/2c85 死环正是 ready 后续轮);completed 才断。
+        assert [t["student"] for t in transcript["turns"]] == [
+            "", "我想两边都减去7。", "再同时除以3。", "检验通过了。"]
+        assert len(fake.requests) == 5
         # P1-5 回归:elapsed_ms 是真实耗时,不是 session_version 假数据(首问恒 0;
         # 回复轮 ≥ 注入延迟 5ms——session_version 假数据 1/2/3 过不了这条)
         assert transcript["turns"][0]["elapsed_ms"] == 0
