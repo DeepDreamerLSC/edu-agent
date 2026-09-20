@@ -79,20 +79,25 @@ def test_correct_and_unknown_status_never_elicit_on_answer_hit():
 
 
 def test_confirm_state_blocks_elicit():
-    """确认态不回复讲:答案陈述走模型路径,不再请复讲。
+    """确认态不回复讲:答案重述走确定性收束(闭环三修 ①),不再请复讲。
 
-    (#149 判停闸)确认态须**合法达成**:学生先自己说出答案数字集,模型才允许判停——
-    此前靠模型单方面 ready=True 建态的构造按新不变量改写(断言不变)。"""
+    (#149 判停闸)确认态须**合法达成**:学生先自己说出答案数字集,模型才允许判停。
+    close-loop-fix ①:确认态下本轮消息即终述(陈述式∧命中焦点)→ 直接走 finish
+    语义收束(444a 案:此点模型复读→reveal 重发→永不闭环);无终述的确认态轮
+    仍走模型路径(见下方 test_number_free / D 案降态路径)。"""
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你现在觉得鸡和兔各有多少只?"),
         _tutor_payload("我们把思路理清楚了。", ready=True),
-        _tutor_payload("我们再确认一遍。"),
+        {"summary": "你把鸡兔各自只数和验算都讲清楚了,这道题完成。"},
     ])
     session = _incorrect_session(gateway)
     confirmed = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
     assert confirmed.state == "ready_to_confirm"
     turn = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
-    assert turn.text != ELICIT and turn.session.guard_events[-1]["branch"] == "model"
+    assert turn.state == "completed"  # ①:终述即收束(产线 444a 死环修面)
+    assert turn.text == "你把鸡兔各自只数和验算都讲清楚了,这道题完成。"
+    assert turn.text != ELICIT
+    assert turn.session.finished
 
 
 def test_number_free_answer_never_elicits():
@@ -360,3 +365,96 @@ def test_area_formula_token_swapped():
     assert "面积公式" not in turn.text                # 学生未说 → 不落文本
     events = [e for e in turn.session.guard_events if e.get("guard") == "feeds_method"]
     assert events and sorted(events[-1]["rule_ids"]) == ["底乘高", "面积公式"]  # 词表序,非文本序
+
+
+# ---------- 闭环三修(close-loop-fix,PM 2026-09-20:444a/2c85 永不闭环) ----------
+
+def test_close_on_final_statement_zero_model_call():
+    """① 收束确定化:ready 态 + 本轮消息即终述 → 直接 finish 语义,零额外模型
+    调用(产线 444a:此点模型无可靠收束→复读→reveal 重发→死环)。correct 且
+    无卡点 → 零调用模板(summary 引学生原话)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你现在觉得鸡和兔各有多少只?"),
+        _tutor_payload("我们把思路理清楚了。", ready=True),
+    ])
+    session = _correct_session(gateway)
+    confirmed = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
+    assert confirmed.state == "ready_to_confirm"
+    calls_before = len(gateway.requests)
+    turn = reply(session, "所以鸡有3只,兔有5只,验算3乘2加5乘4等于26只脚。", gateway=gateway)
+    assert turn.state == "completed" and turn.session.finished
+    assert len(gateway.requests) == calls_before  # 零模型调用(零调用模板收束)
+    assert "3" in turn.text and "26" in turn.text  # 模板引学生原话(首末轮)
+
+
+def test_close_skipped_on_ack_and_question_form_and_dialogue():
+    """① 判据边界:附和(「是的,我真棒」)/问句猜答/非 ready 态 → 不收束,
+    走模型路径(收束是快路径不是唯一出口;复读死环由 ② 断)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你现在觉得鸡和兔各有多少只?"),
+        _tutor_payload("我们把思路理清楚了。", ready=True),
+        _tutor_payload("我们再确认一遍。"),
+        _tutor_payload("你想再试试吗?"),
+        _tutor_payload("我们继续。"),
+    ])
+    session = _incorrect_session(gateway)
+    confirmed = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
+    assert confirmed.state == "ready_to_confirm"
+    ack = reply(session, "是的,我真棒。", gateway=gateway)  # 附和:无焦点数字
+    assert ack.state != "completed" and not ack.session.finished
+    guess = reply(session, "答案是3只鸡和5只兔吗?", gateway=gateway)  # 问句≠终述
+    assert guess.state != "completed" and not guess.session.finished
+
+
+def test_repeat_in_confirm_stage_passes_through_without_reveal():
+    """② 状态感知:confirm 阶段模型复读 ≠ 卡住——不重生成、不触发 reveal,
+    复读直达学生面;埋点 repeat_confirm_pass(产线 444a/2c85 死环燃料即此链)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你现在觉得鸡和兔各有多少只?"),
+        _tutor_payload("我们把思路理清楚了。", ready=True),
+        _tutor_payload("我们把思路理清楚了。", ready=True),  # 复读上一句
+    ])
+    session = _incorrect_session(gateway)
+    confirmed = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
+    assert confirmed.state == "ready_to_confirm"
+    calls_before = len(gateway.requests)
+    turn = reply(session, "嗯,我看看。", gateway=gateway)
+    assert turn.text == "我们把思路理清楚了。"  # 复读原文直达
+    assert len(gateway.requests) == calls_before + 1  # 无重生成(单调用)
+    events = turn.session.guard_events
+    assert events[-1]["branch"] == "repeat_confirm_pass"  # turn 戳由提交统一打
+    assert not any(e.get("branch") == "reveal" for e in events)
+    assert turn.session.stuck is not True
+
+
+def _correct_session(gateway: FakeGateway, question: dict | None = None) -> object:
+    first = start(dict(question or CHICKEN_QUESTION),
+                  {"grade": "六年级", "answer_status": "correct"}, gateway=gateway)
+    return first.session
+
+
+def test_reveal_skips_completed_subgoal():
+    """③ 内容约束:reveal 不得重发已完成子目标(2c85 反面教材:「再算第二周」
+    ——该步 value 数字学生早已算出)。跨消息并集判定({8,3,4} 与 {6} 分列两轮)。"""
+    question = {"text": "妈妈打算绣一幅面积为20dm²的十字绣。第一周绣了2/5,第二周绣的是"
+                        "第一周的3/4,妈妈第二周绣了多少dm²?",
+                "answer": "6dm²", "analysis": "先求第一周,再按第一周的3/4求第二周。",
+                "knowledge_points": []}
+    steps = [{"step": "先算第一周绣了多少平方分米", "value": "20 × 2/5 = 8"},
+             {"step": "再算第二周是第一周的3/4,求第二周面积", "value": "8 × 3/4 = 6"},
+             {"step": "验算:6 加 8 是否等于两周进度", "value": "8 + 6 = 14"}]
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你先说说你的想法。", steps=[dict(s) for s in steps]),
+        _tutor_payload("我们先把第一周算出来。"),
+        _tutor_payload("好,第二周呢?"),
+        _tutor_payload("我们看下一步。"),
+    ])
+    session = _incorrect_session(gateway, question)
+    reply(session, "第一周是20乘2/5等于8。", gateway=gateway)   # 完成子目标1
+    reply(session, "第二周就8乘3/4。", gateway=gateway)         # 子目标2 数字齐(前半)
+    reply(session, "是6。", gateway=gateway)                    # 子目标2 数字齐(后半)
+    turn4 = reply(session, "还是不会。", gateway=gateway)        # 首次卡住 → 揭示
+    skips = [e for e in turn4.session.guard_events if e.get("branch") == "reveal_step_skipped"]
+    assert {e.get("hint_level") for e in skips} == {1, 2}  # 已完成的1/2级均被跳过
+    assert "验算" in turn4.text  # 直达第3级(唯一未完成子目标)
+    assert "第一周" not in turn4.text and "3/4" not in turn4.text  # 不重发已完成文本
