@@ -63,7 +63,8 @@ _CORPUS_ROUND_LAZY = ("DEFAULT_CORPUS", "build_cases", "build_plan", "caliber_se
 
 _EXTERNAL_LAZY = ("EXTERNAL_ROLES", "EXTERNAL_SCHEMA_VERSION", "external_fingerprint",
                   "load_normalized", "validate_external_scenario")
-_IMPORTER_LAZY = ("import_socraticmath", "to_v1_record")
+# to_v1_record 随真原件适配退役(旧签名不再成立),导出面换成 collect_records 公开别名。
+_IMPORTER_LAZY = ("collect_socraticmath_records", "import_socraticmath")
 
 
 def __getattr__(name: str):
@@ -75,6 +76,8 @@ def __getattr__(name: str):
         return getattr(external_scenario, name)
     if name in _IMPORTER_LAZY:
         from .importers import socraticmath
+        if name == "collect_socraticmath_records":
+            return socraticmath.collect_records
         return getattr(socraticmath, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
@@ -84,9 +87,9 @@ __all__ = [
     "DIMENSIONS",
     "EnvironmentFailure",
     "validate_external_scenario",
-    "to_v1_record",
     "external_fingerprint",
     "import_socraticmath",
+    "collect_socraticmath_records",
     "EXTERNAL_SCHEMA_VERSION",
     "EXTERNAL_ROLES",
     "EvalRunner",
