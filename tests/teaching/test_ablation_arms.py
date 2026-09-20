@@ -18,8 +18,12 @@ from edu_agent.agents.small_lecturer import reply, set_ablation_arm, start
 
 from teachkit import FakeGateway
 
+# #382 PR-C:卡壳/揭示面钉 trusted(analysis)阶梯;CHICKEN_STEPS 照喂不揭示。
 CHICKEN_QUESTION = {"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?说明思路。",
-                    "answer": "鸡3只兔5只", "analysis": "", "knowledge_points": ["鸡兔同笼"]}
+                    "answer": "鸡3只兔5只",
+                    "analysis": "先假设8只全是鸡,算出脚的总数8×2=16。再算实际脚数比"
+                                "假设多26-16=10只。最后10÷2=5只兔,鸡有8-5=3只。",
+                    "knowledge_points": ["鸡兔同笼"]}
 CHICKEN_STEPS = [{"step": "先算全部按鸡的脚数", "value": "16"},
                  {"step": "再算脚数差", "value": "10"}]
 

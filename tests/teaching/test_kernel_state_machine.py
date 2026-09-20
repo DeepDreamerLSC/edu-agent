@@ -27,6 +27,11 @@ from edu_agent.gateway import GatewayError
 from teachkit import kernel_env, open_json, tutor_json
 
 QUESTION_TEXT = {"text": "解方程 3x+7=25,并说明每一步为什么这样做。"}
+# #382 PR-C:reveal 只回放 trusted(analysis)阶梯——卡壳/支持动作的测试面给题面挂
+# analysis(与生产题库同源);模型 steps 仍照喂(证明入库与规划辅助不受边界影响)。
+QUESTION = {"text": "解方程 3x+7=25,并说明每一步为什么这样做。",
+            "answer": "x=6", "analysis": "两边同时减7得3x=18。再两边除以3得x=6。",
+            "knowledge_points": []}
 LEARNER = {"grade": "六年级"}
 
 
@@ -151,7 +156,8 @@ def test_kernel_consumes_validated_text_directly(tmp_path):
 
 
 def test_start_stores_steps_from_open_payload(tmp_path):
-    """统一 open 的 steps 经 solver 校验(非法过滤)存进 session.steps(阶梯底稿)。"""
+    """统一 open 的 steps 经 solver 校验(非法过滤)存进 session.steps,且逐条带
+    provenance="model"(#382 PR-C:untrusted planning artifact 标记,reveal 不消费)。"""
     with kernel_env(tmp_path, [completion(open_json(
         "你先说说题目给了哪些条件?",
         steps=[{"step": "两边减7", "value": "18"},
@@ -160,8 +166,10 @@ def test_start_stores_steps_from_open_payload(tmp_path):
                {"step": "得 x", "value": "6"}],
     ))]) as (fake, gateway):
         turn = start(QUESTION_TEXT, LEARNER, gateway=gateway)
-        assert turn.session.steps == [{"step": "两边减7", "value": "18"},
-                                      {"step": "得 x", "value": "6"}]
+        assert turn.session.steps == [{"step": "两边减7", "value": "18",
+                                       "provenance": "model"},
+                                      {"step": "得 x", "value": "6",
+                                       "provenance": "model"}]
 
 
 def test_reply_masks_method_names_in_teacher_prompt(tmp_path):
@@ -215,15 +223,16 @@ def test_reply_student_says_understood_routes_to_model(tmp_path):
 
 
 def test_reply_stuck_reveals_next_step_with_varied_lead(tmp_path):
-    """学生说「我不太会」→ 揭示下一级阶梯(确定性),开场用轮换模板避免固定前缀生硬。"""
+    """学生说「我不太会」→ 揭示下一级**trusted(analysis)阶梯**(确定性),开场用
+    轮换模板避免固定前缀生硬;模型 steps 照喂但不被 reveal 消费(#382 PR-C)。"""
     with kernel_env(tmp_path, [completion(open_json(
         "你先说说题目给了哪些条件?",
         steps=[{"step": "两边减7", "value": "18"}, {"step": "除以3", "value": "6"}],
     ))]) as (fake, gateway):
-        first = start({"text": "解方程 3x+7=25", "answer": "x=6"}, LEARNER, gateway=gateway)
+        first = start(QUESTION, LEARNER, gateway=gateway)
         calls_before = len(fake.requests)
         turn = reply(first.session, "我不太会。", gateway=gateway)
-        assert turn.text == "我们从这里入手:两边减7。你接着算下一步。"
+        assert turn.text == "我们从这里入手:两边同时减7得3x=18。你接着算下一步。"
         assert turn.ready_to_confirm is False  # 不关对话
         assert len(fake.requests) == calls_before  # 零模型调用
 
@@ -236,9 +245,9 @@ def test_reply_negative_huile_goes_stuck_not_understanding(tmp_path):
         "你先说说题目给了哪些条件?",
         steps=[{"step": "两边减7", "value": "18"}, {"step": "除以3", "value": "6"}],
     ))]) as (fake, gateway):
-        first = start({"text": "解方程 3x+7=25", "answer": "x=6"}, LEARNER, gateway=gateway)
+        first = start(QUESTION, LEARNER, gateway=gateway)
         turn = reply(first.session, "我不会了。", gateway=gateway)
-        assert turn.text == "我们从这里入手:两边减7。你接着算下一步。"  # 揭示阶梯,非请讲
+        assert turn.text == "我们从这里入手:两边同时减7得3x=18。你接着算下一步。"  # 揭示阶梯,非请讲
         assert turn.ready_to_confirm is False
         assert "讲讲你的思路" not in turn.text
 
@@ -258,27 +267,33 @@ def _start_with_question(tmp_path, question: dict, steps: list[dict]):
 
 
 def test_analysis_ladder_takes_priority_over_model_steps(tmp_path):
-    """题库带解析 → 阶梯来自**既定解析**(纯函数切片),不用模型当场生成的分步解。"""
+    """题库带解析 → 阶梯来自**既定解析**(纯函数切片),不用模型当场生成的分步解;
+    #382 PR-C:切片逐条带 provenance="analysis"(trusted 标记,reveal 只消费它)。"""
     question = {"text": "鸡和兔一共8只,26只脚,各多少?", "answer": "鸡3只兔5只",
                 "analysis": _ANALYSIS, "knowledge_points": ["鸡兔同笼"]}
     with _start_with_question(tmp_path, question, _MODEL_STEPS) as turn:
         steps = turn.session.steps
         assert len(steps) == 4 and all("模型自拟" not in s["step"] for s in steps)
         assert [s["value"] for s in steps] == ["16", "10", "2", "3"]
+        assert all(s["provenance"] == "analysis" for s in steps)
         assert steps[0]["step"].startswith("先假设8只全是鸡")
         # 末级 value 即终答兜底(_known_answer 同源)→ 解析的结论数字
         assert steps[-1]["value"] == "3"
 
 
 def test_model_steps_kept_when_analysis_missing_or_unsliceable(tmp_path):
-    """无解析 / 解析切不出 ≥2 步(纯叙述、无数字)→ 保持模型分步解不变(零回归)。"""
+    """无解析 / 解析切不出 ≥2 步(纯叙述、无数字)→ 保持模型分步解不变(零回归);
+    #382 PR-C:入库步带 provenance="model"(untrusted 标记,reveal 不消费——
+    专项钉见 test_trusted_ladder_boundary.py)。"""
     no_analysis = {"text": "鸡和兔一共8只,26只脚,各多少?", "answer": "", "analysis": "",
                    "knowledge_points": []}
     narrative = {"text": "看题目说说你的想法。", "answer": "",
                  "analysis": "先读题。再想想要求什么。最后说说你的结论。", "knowledge_points": []}
+    expected = [{"step": s["step"], "value": s["value"], "provenance": "model"}
+                for s in _MODEL_STEPS]
     for question in (no_analysis, narrative):
         with _start_with_question(tmp_path, question, _MODEL_STEPS) as turn:
-            assert turn.session.steps == _MODEL_STEPS
+            assert turn.session.steps == expected
 
 
 def test_analysis_ladder_is_revealed_on_repeat_fallback(tmp_path):
@@ -299,28 +314,34 @@ def test_analysis_ladder_is_revealed_on_repeat_fallback(tmp_path):
 
 # ---------- #198 第一步:支持动作(枚举 + 确定性选择;#174 渐隐档折叠至此) ----------
 
+# #382 PR-C:support 面钉 trusted(analysis)阶梯(giving 判据只对权威阶梯有意义);
+# 模型注入的 _FADE_STEPS 仍照喂(与 analysis 切片并存时后者整副优先)。
 _FADE_STEPS = [{"step": "先算全部按鸡的脚数", "value": "16"},
                {"step": "再算脚数差", "value": "10"},
                {"step": "兔的只数", "value": "5"}]  # 末级触答案焦点(guard-provenance-fix ③ 门契约)
+_FADE_ANALYSIS = ("先假设8只全是鸡,算出脚的总数8×2=16。再算实际脚数比假设多26-16=10只。"
+                  "最后每把一只鸡换成兔脚数多4-2=2只,10÷2=5只兔,鸡有8-5=3只。")
 
 
 @contextmanager
 def _stuck_session(tmp_path, extra_payloads: list | None = None):
-    """开一个带两级阶梯的会话(卡住/复读/命中等确定性路径不调模型)。"""
+    """开一个带两级**trusted(analysis)阶梯**的会话(卡住/复读/命中等确定性路径不调模型)。"""
     fakes = [completion(open_json("你现在算到哪一步了?", steps=_FADE_STEPS))]
     fakes.extend(extra_payloads or [])
     with kernel_env(tmp_path, fakes) as (fake, gateway):
-        turn = start({"text": "鸡兔同笼,共8只26脚", "answer": "鸡3只兔5只", "knowledge_points": []},
+        turn = start({"text": "鸡兔同笼,共8只26脚", "answer": "鸡3只兔5只",
+                      "analysis": _FADE_ANALYSIS, "knowledge_points": []},
                      {"grade": "六年级", "answer_status": "incorrect"}, gateway=gateway)
         yield fake, gateway, turn.session
 
 
 def test_support_ask_after_student_performs_revealed_step(tmp_path):
     """揭示一级 → 学生**自己做出来**(值出现在上一学生轮)→ 再卡住先问不揭示(guiding_focus);
-    再卡住升回揭示(telling)。#174 渐隐档折叠进 `_support_move` 后的同款行为。"""
+    再卡住升回揭示(telling)。#174 渐隐档折叠进 `_support_move` 后的同款行为。
+    #382 PR-C:阶梯 = analysis 切片(trusted),揭示文本随之取切片原文。"""
     with _stuck_session(tmp_path, [completion(tutor_json("对,继续往下想。"))]) as (fake, gateway, session):
         revealed = reply(session, "我不会做。", gateway=gateway)
-        assert "先算全部按鸡的脚数" in revealed.text and session.hint_level == 1
+        assert "先假设8只全是鸡" in revealed.text and session.hint_level == 1
         reply(session, "我算了一下,是不是 16 只脚?", gateway=gateway)
         faded = reply(session, "我不会了。", gateway=gateway)
         assert faded.text.startswith("我们把这一步拆小")           # 只问不揭示
@@ -328,7 +349,7 @@ def test_support_ask_after_student_performs_revealed_step(tmp_path):
         ask_events = [e for e in session.guard_events if e.get("branch") == "support"]
         assert ask_events and ask_events[0]["move"] == "guiding_focus"  # #169 起事件另带 turn 字段
         escalated = reply(session, "我不会做。", gateway=gateway)
-        assert "再算脚数差" in escalated.text and session.hint_level == 2   # 升回全支持
+        assert "再算实际脚数比假设多" in escalated.text and session.hint_level == 2   # 升回全支持
 
 
 def test_support_keeps_full_support_without_performance_signal(tmp_path):
@@ -349,5 +370,5 @@ def test_support_ask_requires_fresh_performance_signal(tmp_path):
         reply(session, "我算了一下,是不是 16 只脚?", gateway=gateway)  # 做出该步
         turn = reply(session, "我再想想别的。", gateway=gateway)  # 普通轮:掌握度证据过时
         stuck = reply(session, "我不会了。", gateway=gateway)
-        assert "再算脚数差" in stuck.text and session.hint_level == 2  # 直接揭示下一级,未发拆小问句
+        assert "再算实际脚数比假设多" in stuck.text and session.hint_level == 2  # 直接揭示下一级,未发拆小问句
         assert not any(event.get("branch") == "support" for event in session.guard_events)

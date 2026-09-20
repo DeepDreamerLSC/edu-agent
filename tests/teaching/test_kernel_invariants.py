@@ -18,8 +18,13 @@ from teachkit import FakeGateway
 
 # 终答题面:answer 数字(3/5)既不在题面(8/26)也不在 step 值(16/10)里,天然
 # 隔离「终答」来源标签,不与题面/步骤数字混淆。
+# #382 PR-C:卡壳/揭示面钉 trusted(analysis)阶梯(reveal 只消费 analysis 切片);
+# STEPS 仍由模型照常喂(证明模型阶梯入库/规划辅助不受边界影响)。
+_ANALYSIS = ("先假设8只全是鸡,算出鸡脚总数8×2=16。再算实际脚数比假设多26-16=10只。"
+             "最后10÷2=5只兔,鸡有8-5=3只。")
 ANSWERED_QUESTION = {"text": "鸡兔同笼,一共 8 只,26 只脚。鸡和兔各有多少只?",
-                     "answer": "鸡3只兔5只", "analysis": "", "knowledge_points": ["鸡兔同笼"]}
+                     "answer": "鸡3只兔5只", "analysis": _ANALYSIS,
+                     "knowledge_points": ["鸡兔同笼"]}
 STEPS = [{"step": "先算鸡脚", "value": "16"}, {"step": "再算兔脚", "value": "10"},
          {"step": "兔的只数", "value": "5"}]  # 末级触答案焦点(guard-provenance-fix ③ 门契约)
 

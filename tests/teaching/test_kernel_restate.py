@@ -24,8 +24,13 @@ ELICIT = ("我们从头把思路串一遍——"
 # 裸数字形状整步弃用后的通用兜底句(= kernel.NEEDS_REVIEW_TEXT,规格断言故硬编码)
 NEEDS_REVIEW_TEXT = "这一题的学习证据还不够,我们继续——你能说说目前想到的第一步吗?"
 # 鸡兔同笼:答案数字(3/5)不在题面(8/26)也不在步骤值(16/10)里,天然隔离
+# #382 PR-C:卡壳/复读/揭示面钉 trusted(analysis)阶梯(reveal 只消费 analysis 切片);
+# CHICKEN_STEPS 仍由模型照常喂(证明模型阶梯入库/规划辅助不受边界影响)。
+_CHICKEN_ANALYSIS = ("先假设8只全是鸡,算出脚的总数8×2=16。再算实际脚数比假设多26-16=10只。"
+                     "最后每把一只鸡换成兔脚数多4-2=2只,10÷2=5只兔,鸡有8-5=3只。")
 CHICKEN_QUESTION = {"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?说明思路。",
-                    "answer": "鸡3只兔5只", "analysis": "", "knowledge_points": ["鸡兔同笼"]}
+                    "answer": "鸡3只兔5只", "analysis": _CHICKEN_ANALYSIS,
+                    "knowledge_points": ["鸡兔同笼"]}
 CHICKEN_STEPS = [{"step": "先算全部按鸡的脚数", "value": "16"},
                  {"step": "再算脚数差", "value": "10"},
                  {"step": "兔的只数", "value": "5"}]  # 末级触答案焦点(guard-provenance-fix ③ 门契约)
@@ -103,7 +108,8 @@ def test_confirm_state_blocks_elicit():
 def test_number_free_answer_never_elicits():
     """无数字答案(纯文字)无法确定性判定 → 模型路径(现状行为,宁漏勿误)。"""
     question = {"text": "同一平面内两条直线的关系有哪几种?", "answer": "相交或平行",
-                "analysis": "", "knowledge_points": []}
+                "analysis": "同一平面内两条直线要么相交要么平行。",
+                "knowledge_points": []}
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你先说说你的想法。", steps=[]),
         _tutor_payload("我们再想想。"),
@@ -118,7 +124,8 @@ def test_number_free_answer_never_elicits():
 def test_repeat_fallback_advances_ladder():
     """复读自批评重生成仍复读 → 揭示下一级阶梯(新内容推进),不再同款问句兜底。
 
-    首问可见文本 = 固定模板(start 覆盖),故「复读首问」= 模型复读该模板原文(prev)。"""
+    首问可见文本 = 固定模板(start 覆盖),故「复读首问」= 模型复读该模板原文(prev)。
+    #382 PR-C:揭示的下一级 = analysis 切片(trusted 阶梯)。"""
     repeated = FIRST_QUESTION_COLLECT
     gateway = FakeGateway(tutor_payloads=[
         _open_payload(repeated),
@@ -127,7 +134,7 @@ def test_repeat_fallback_advances_ladder():
     ])
     first = start(dict(CHICKEN_QUESTION), {"grade": "六年级"}, gateway=gateway)
     turn1 = reply(first.session, "嗯,我看看。", gateway=gateway)
-    assert turn1.text == "我们从这里入手:先算全部按鸡的脚数。你接着算下一步。"
+    assert turn1.text == "我们从这里入手:先假设8只全是鸡,算出脚的总数8×2=16。你接着算下一步。"
     assert turn1.session.stuck is not True      # #382 P0-1:repeat→reveal 不置 stuck(系统≠学生)
     assert turn1.session.hint_level == 1
     # 埋点(#112 评审建议):复读降级路径的阶梯消耗同样记 reveal——此前只有卡壳分支记
@@ -139,11 +146,11 @@ def test_repeat_fallback_ladder_texts_differ_consecutively():
 
     第二轮(hint_level>0,#333 泄露网 V1 口径):当前级 value=10 与 answer_pool{3,5}
     无双重身份 → 授权,文本附当前步中间值(「这一步先算,得到 10」);
-    首轮(hint_level=0)不给数值,本级 16 不出现。(#382 后 stuck 语义与学生
-    卡壳信号绑定,此处只钉 hint_level 推进,两轮均不写 session.stuck。)"""
+    首轮(hint_level=0)不给数值,本级 16 不出现。(#382 PR-C:阶梯 = analysis 切片;
+    P0-1 后 stuck 语义与学生卡壳信号绑定,此处只钉 hint_level 推进,两轮均不写 session.stuck。)"""
     question_text = FIRST_QUESTION_COLLECT   # 首问固定模板 = 第一轮被复读的上一轮文本
-    lead1 = "我们从这里入手:先算全部按鸡的脚数。你接着算下一步。"
-    lead2 = "下一步是这样:再算脚数差。这一步先算,得到 10。你接着算下一步。"
+    lead1 = "我们从这里入手:先假设8只全是鸡,算出脚的总数8×2=16。你接着算下一步。"
+    lead2 = "下一步是这样:再算实际脚数比假设多26-16=10只。这一步先算,得到 10。你接着算下一步。"
     gateway = FakeGateway(tutor_payloads=[
         _open_payload(question_text),
         _tutor_payload(question_text), _tutor_payload(question_text),  # 第一轮:复读首问×2
@@ -154,7 +161,7 @@ def test_repeat_fallback_ladder_texts_differ_consecutively():
     turn2 = reply(turn1.session, "嗯,我看看。", gateway=gateway)
     assert turn1.text == lead1
     assert turn2.text == lead2
-    assert "16" not in turn2.text and "5" not in turn2.text  # 非当前级/终答部件不上学生面
+    assert "5" not in turn2.text  # 终答部件不上学生面(16 是当前步算式内中间值,照示)
     assert [e for e in turn2.session.guard_events if e.get("branch") == "reveal"][-1]["anchor_numbers"] == [10.0]
     assert turn2.text != turn1.text            # 每轮不同 → 复读循环消失
     assert turn2.session.hint_level == 2
@@ -162,15 +169,19 @@ def test_repeat_fallback_ladder_texts_differ_consecutively():
 
 # ---------- #165 WS4 第 2 条:揭示**动作化**(不再把该步算好的结果交给学生) ----------
 
+# #382 PR-C:动作化十二形态用**自造 analysis**驱动(每步一句 + 数字,确定性切片
+# 可控;尾句带数字保 ≥2 片切片成立);模型 steps 照喂但不被 reveal 消费。
 def _reveal_after_repeat(step_text: str) -> str:
     """走公开路径逼出一次阶梯揭示:模型复读首问模板 → 重生成仍复读 → 兜底揭示下一级。"""
     repeated = FIRST_QUESTION_COLLECT
+    analysis = f"{step_text}。最后把结果代回题目检验一遍得15。"
     gateway = FakeGateway(tutor_payloads=[
         _open_payload(repeated, steps=[{"step": step_text, "value": "5"}]),  # 值触焦点过③门(x 无数字会整副被弃)
         _tutor_payload(repeated),
         _tutor_payload(repeated),   # 重生成仍复读 → 走揭示
     ])
-    first = start(dict(CHICKEN_QUESTION), {"grade": "六年级"}, gateway=gateway)
+    first = start(dict(CHICKEN_QUESTION) | {"analysis": analysis},
+                  {"grade": "六年级"}, gateway=gateway)
     return reply(first.session, "嗯,我看看。", gateway=gateway).text
 
 
@@ -197,22 +208,22 @@ def _reveal_after_repeat(step_text: str) -> str:
     ("兔有5只", "我们从这里入手:兔有□只。你接着算下一步。", ("5",)),
     # 全命中改写(复审 ①):同句多处答案数字全掩
     ("兔有5只和3只", "我们从这里入手:兔有□只和□只。你接着算下一步。", ("5", "3")),
-    # 裸数字步(掩码后无汉字读不成句)→ 整步弃用走通用兜底
-    ("3", NEEDS_REVIEW_TEXT, ()),
     ("3 就是答案", "我们从这里入手:□ 就是答案。你接着算下一步。", ("3",)),
     ("3 为所求", "我们从这里入手:□ 为所求。你接着算下一步。", ("3",)),
     ("还是 3 只", "我们从这里入手:还是 □ 只。你接着算下一步。", ("3",)),
-    # 双句号回归(#198):step 自带句号 → 模板只补一个
-    ("先看题里给的记法规则。",
-     "我们从这里入手:先看题里给的记法规则。你接着算下一步。", ()),
+    # 双句号回归(#198):step 自带句号 → 模板只补一个(带数字入梯,#382 PR-C 切片要求)
+    ("先看题里给的记法规则,数出间隔是12。",
+     "我们从这里入手:先看题里给的记法规则,数出间隔是12。你接着算下一步。", ()),
 ], ids=["arithmetic_result_kept", "pure_expression_kept", "answer_masked_in_expr",
         "clause_boundary_kept", "no_boundary_kept", "no_arithmetic_kept",
         "ordinal_form_masked", "derived_value_masked", "answer_masked",
-        "multi_hit_masked", "bare_number_dropped", "disclosure_frame_masked",
+        "multi_hit_masked", "disclosure_frame_masked",
         "frame_word_after", "frame_word_before", "trailing_period_not_doubled"])
 def test_reveal_actionization(step_text, expected_reveal, forbidden):
-    """揭示句构造十二形态:该收回的收回、该保留的保留(前六 = #165 原用例,
-    中三 = #185 序数/导出值/无边界掩码,后三 = #185 复审 全命中/裸数字/框架词)。"""
+    """揭示句构造(#382 PR-C 起由自造 analysis 驱动,trusted 阶梯):该收回的收回、
+    该保留的保留(前六 = #165 原用例,中三 = #185 序数/导出值/无边界掩码,
+    后三 = #185 复审 框架词 + #198 双句号)。裸数字步整步弃用的 reveal 面
+    (#185「3」形态)改由 test_trusted_ladder_boundary.py 钉——切片侧已弃 ≤3 字片。"""
     text = _reveal_after_repeat(step_text)
     assert text == expected_reveal
     for token in forbidden:
@@ -220,11 +231,13 @@ def test_reveal_actionization(step_text, expected_reveal, forbidden):
 
 
 def test_reveal_keeps_question_numbers_when_answer_falls_back_to_steps_value():
-    """#185 复审 ③:生产形态(question.answer 缺失 → steps 末值 "8 - 5 = 3" 兜底,
+    """#185 复审 ③:生产形态(question.answer 缺失 → 阶梯末值 "8 - 5 = 3" 兜底,
     答案全集 {8,5,3} 混入题面给定的 8)不得把题面数字改掉——判据集用结论数字
-    (答案 − 题面,`_answer_focus_numbers`),题面数字照常放行。"""
+    (答案 − 题面,`_answer_focus_numbers`),题面数字照常放行。#382 PR-C:末值
+    由自造 analysis 的末级承载(trusted 阶梯),模型 steps 不再兜底进 reveal。"""
     question = {"text": CHICKEN_QUESTION["text"], "answer": "",
-                "analysis": "", "knowledge_points": ["鸡兔同笼"]}
+                "analysis": "假设8只全是鸡，算出脚的总数8×2=16。最后算鸡有8-5=3只。",
+                "knowledge_points": ["鸡兔同笼"]}
     gateway = FakeGateway(tutor_payloads=[
         _open_payload(FIRST_QUESTION_COLLECT, steps=[
             {"step": "假设8只全是鸡，算出脚的总数", "value": "8 - 5 = 3"}]),
@@ -233,7 +246,7 @@ def test_reveal_keeps_question_numbers_when_answer_falls_back_to_steps_value():
     ])
     first = start(dict(question), {"grade": "六年级"}, gateway=gateway)
     turn = reply(first.session, "嗯,我看看。", gateway=gateway)
-    assert turn.text == "我们从这里入手:假设8只全是鸡，算出脚的总数。你接着算下一步。"
+    assert turn.text == "我们从这里入手:假设8只全是鸡，算出脚的总数8×2=16。你接着算下一步。"
     assert "几" not in turn.text
 
 
@@ -241,14 +254,16 @@ def test_reveal_keeps_question_numbers_when_answer_falls_back_to_steps_value():
 def test_dropped_reveal_step_is_flagged_in_guard_events():
     """#185 复审三轮 P2:整步弃用的揭示轮在埋点里可辨识(dropped=True)——
     「阶梯消耗/是否过早烧 bottom-out」指标不把弃用轮计成正常推进;词表收放
-    按这份影子数据来(先量再收)。"""
+    按这份影子数据来(先量再收)。#382 PR-C:裸数字步由自造 analysis 首级承载
+    (「350 450」无汉字无算子 → 掩码后读不成句,整步弃用),模型 steps 不进 reveal。"""
     gateway = FakeGateway(tutor_payloads=[
         _open_payload(FIRST_QUESTION_COLLECT, steps=[
             {"step": "3", "value": "3"}, {"step": "再算脚数差", "value": "10"}]),
         _tutor_payload(FIRST_QUESTION_COLLECT),
         _tutor_payload(FIRST_QUESTION_COLLECT),   # 重生成仍复读 → 揭示
     ])
-    first = start(dict(CHICKEN_QUESTION), {"grade": "六年级"}, gateway=gateway)
+    first = start(dict(CHICKEN_QUESTION) | {"analysis": "350 450。再算实际脚数比假设多26-16=10只。"},
+                  {"grade": "六年级"}, gateway=gateway)
     turn = reply(first.session, "嗯,我看看。", gateway=gateway)
     assert turn.text == NEEDS_REVIEW_TEXT                      # 整步弃用 → 通用兜底
     assert turn.session.guard_events[-1]["branch"] == "reveal"
@@ -541,10 +556,14 @@ def _correct_session(gateway: FakeGateway, question: dict | None = None) -> obje
 
 def test_reveal_skips_completed_subgoal():
     """③ 内容约束:reveal 不得重发已完成子目标(2c85 反面教材:「再算第二周」
-    ——该步 value 数字学生早已算出)。跨消息并集判定({8,3,4} 与 {6} 分列两轮)。"""
+    ——该步 value 数字学生早已算出)。跨消息并集判定({8,3,4} 与 {6} 分列两轮)。
+    #382 PR-C:阶梯由 analysis 切片承载(trusted),模型 steps 只喂不揭示。"""
     question = {"text": "妈妈打算绣一幅面积为20dm²的十字绣。第一周绣了2/5,第二周绣的是"
                         "第一周的3/4,妈妈第二周绣了多少dm²?",
-                "answer": "6dm²", "analysis": "先求第一周,再按第一周的3/4求第二周。",
+                "answer": "6dm²",
+                "analysis": "先算第一周绣了20×2/5=8平方分米。再按第一周的3/4求第二周,"
+                            "算第二周面积8×3/4=6平方分米。最后验算:6加8等于两周进度,"
+                            "合计是14平方分米。",
                 "knowledge_points": []}
     steps = [{"step": "先算第一周绣了多少平方分米", "value": "20 × 2/5 = 8"},
              {"step": "再算第二周是第一周的3/4,求第二周面积", "value": "8 × 3/4 = 6"},
