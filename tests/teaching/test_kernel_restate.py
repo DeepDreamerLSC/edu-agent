@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from edu_agent.agents.small_lecturer import FIRST_QUESTION_COLLECT, reply, start
+from edu_agent.agents.small_lecturer import FIRST_QUESTION_COLLECT, finish, reply, start
 
 from teachkit import FakeGateway
 
@@ -426,6 +426,111 @@ def test_repeat_in_confirm_stage_passes_through_without_reveal():
     assert events[-1]["branch"] == "repeat_confirm_pass"  # turn 戳由提交统一打
     assert not any(e.get("branch") == "reveal" for e in events)
     assert turn.session.stuck is not True
+
+
+# ---------- #382 PR-B:收束失败原子性(P0-2,2026-09-20 产线实录) ----------
+
+from copy import deepcopy
+
+from edu_agent.gateway import FailureType, GatewayError
+
+
+class _ExplodingGateway(FakeGateway):
+    """按调用序号注入 GatewayError 的假 gateway(冒充某次 tutor 调用失败)。"""
+
+    def __init__(self, tutor_payloads, fail_indices: set[int]):
+        super().__init__(tutor_payloads)
+        self.fail_indices = fail_indices   # tutor 调用序号(0 起)命中即抛
+
+    def invoke(self, request):
+        if request.role != "vision" and len(self.requests) in self.fail_indices:
+            self.requests.append({"role": request.role, "messages": request.messages})
+            raise GatewayError(FailureType.UPSTREAM_5XX, "服务暂不可用")
+        return super().invoke(request)
+
+
+def _session_snapshot(session: object) -> dict:
+    """验收口径:history/state/summary/session_version/hint_level 逐字段。"""
+    return {
+        "history": deepcopy(session.history),
+        "state": session.state,
+        "summary": deepcopy(session.summary),
+        "session_version": session.session_version,
+        "hint_level": session.hint_level,
+    }
+
+
+FINAL_STATEMENT = "所以鸡有3只,兔有5只,验算3乘2加5乘4等于26只脚。"
+
+
+def _ready_incorrect_session(gateway: FakeGateway):
+    """开一个 ready_to_confirm 的 incorrect 会话(incorrect+stuck 语义:finish 走
+    模型总结,正好覆盖 GatewayError 注入位;同款会话上面的 ① 测试也在用)。"""
+    session = _incorrect_session(gateway)
+    confirmed = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
+    assert confirmed.state == "ready_to_confirm"
+    return session
+
+
+def test_close_on_gateway_error_rolls_back_session_fields():
+    """#382 P0-2 验收:收束路径 GatewayError → session 逐字段回到调用前状态,
+    异常原样冒泡(内核不吞、不包 retry)。产线实录:同句重发×2+GatewayError×2
+    ——半提交让 history 已变而 version 未变、assistant 未提交。"""
+    gateway = _ExplodingGateway(tutor_payloads=[
+        _open_payload("你现在觉得鸡和兔各有多少只?"),
+        _tutor_payload("我们把思路理清楚了。", ready=True),
+    ], fail_indices={2})  # 第3次调用=收束轮 finish 的模型总结,这一次失败
+    session = _ready_incorrect_session(gateway)
+    before = _session_snapshot(session)
+    with pytest.raises(GatewayError) as excinfo:
+        reply(session, FINAL_STATEMENT, gateway=gateway)
+    assert excinfo.value.failure.value == "upstream_5xx"
+    assert _session_snapshot(session) == before   # 逐字段一致(含 history 全量)
+
+
+def test_retry_same_message_after_gateway_error_no_duplicate_history():
+    """#382 P0-2 验收:GatewayError 后同消息重试 → 成功收束,history 零重复
+    (终述只记一次,不因失败重试双记;version 只 +1)。"""
+    gateway = _ExplodingGateway(tutor_payloads=[
+        _open_payload("你现在觉得鸡和兔各有多少只?"),
+        _tutor_payload("我们把思路理清楚了。", ready=True),
+        {"summary": "你自己讲清了鸡兔同笼的思路。"},  # 重试时 finish 的模型总结
+    ], fail_indices={2})  # 第3次调用(收束轮 finish)失败;重试的第4次成功
+    session = _ready_incorrect_session(gateway)
+    with pytest.raises(GatewayError):
+        reply(session, FINAL_STATEMENT, gateway=gateway)
+    turn = reply(session, FINAL_STATEMENT, gateway=gateway)  # 同句重发(用户视角)
+    assert turn.state == "completed" and session.finished
+    student_turns = [m["content"] for m in session.history if m["role"] == "user"]
+    assert student_turns.count(FINAL_STATEMENT) == 1   # 终述零重复
+    assert turn.session_version == session.session_version  # version 只 +1
+
+
+def test_close_on_other_exception_rolls_back_and_finish_paths_safe():
+    """#382 P0-2 验收:非 GatewayError 异常(如 json 解析错)同样回滚;且
+    needs_review / 零调用模板两条不调模型的 finish 路径不推进 Session 状态位
+    (零调用收束照常 completed,历史无半提交)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你现在觉得鸡和兔各有多少只?"),
+        _tutor_payload("我们把思路理清楚了。", ready=True),
+    ])
+    # 证据不足路径:非 ready 会话不触达 _close_on_final_statement,直接量 finish
+    session = _incorrect_session(gateway)
+    summary = finish(session, gateway=gateway)
+    assert summary.status == "needs_review"
+    assert session.state == "first_question_ready" and session.summary is None
+    # 零调用模板路径(correct 且无卡点):收束成功,history 各一条、version+1
+    ok_gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你现在觉得鸡和兔各有多少只?"),
+        _tutor_payload("我们把思路理清楚了。", ready=True),
+    ])
+    ok_session = _correct_session(ok_gateway)
+    confirmed = reply(ok_session, "兔有10除以2等于5只,鸡有3只。", gateway=ok_gateway)
+    assert confirmed.state == "ready_to_confirm"
+    turn = reply(ok_session, FINAL_STATEMENT, gateway=ok_gateway)
+    assert turn.state == "completed" and ok_session.finished
+    assert len(ok_session.history) == 4   # 两轮(user+assistant 各二),无半提交
+    assert ok_session.session_version == 3
 
 
 def _correct_session(gateway: FakeGateway, question: dict | None = None) -> object:
