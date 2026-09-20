@@ -128,7 +128,7 @@ def test_repeat_fallback_advances_ladder():
     first = start(dict(CHICKEN_QUESTION), {"grade": "六年级"}, gateway=gateway)
     turn1 = reply(first.session, "嗯,我看看。", gateway=gateway)
     assert turn1.text == "我们从这里入手:先算全部按鸡的脚数。你接着算下一步。"
-    assert turn1.session.stuck is True           # 复读打断 = 卡点标记(R6 同款)
+    assert turn1.session.stuck is not True      # #382 P0-1:repeat→reveal 不置 stuck(系统≠学生)
     assert turn1.session.hint_level == 1
     # 埋点(#112 评审建议):复读降级路径的阶梯消耗同样记 reveal——此前只有卡壳分支记
     assert {"branch": "reveal", "hint_level": 1, "turn": 1} in turn1.session.guard_events
@@ -137,9 +137,10 @@ def test_repeat_fallback_advances_ladder():
 def test_repeat_fallback_ladder_texts_differ_consecutively():
     """连续两轮复读兜底:内容逐级推进且互不相同(旧兜底同句复读即循环源头)。
 
-    第二轮 = 再次 stuck(#333 泄露网 V1):当前级 value=10 与 answer_pool{3,5}
+    第二轮(hint_level>0,#333 泄露网 V1 口径):当前级 value=10 与 answer_pool{3,5}
     无双重身份 → 授权,文本附当前步中间值(「这一步先算,得到 10」);
-    首轮(首次 stuck)不给数值,本级 16 不出现。"""
+    首轮(hint_level=0)不给数值,本级 16 不出现。(#382 后 stuck 语义与学生
+    卡壳信号绑定,此处只钉 hint_level 推进,两轮均不写 session.stuck。)"""
     question_text = FIRST_QUESTION_COLLECT   # 首问固定模板 = 第一轮被复读的上一轮文本
     lead1 = "我们从这里入手:先算全部按鸡的脚数。你接着算下一步。"
     lead2 = "下一步是这样:再算脚数差。这一步先算,得到 10。你接着算下一步。"

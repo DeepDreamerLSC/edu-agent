@@ -170,16 +170,26 @@ def test_structured_summary_quotes_student_words_and_passes_guardrails(tmp_path)
     assert tone.applied is False  # 语气护栏(三年级档,无年龄错配)
 
 
-def test_stuck_mark_blocks_structured_path(tmp_path):
-    """物理隔离:对话中出现护栏替换(卡点标记)→ 即使 answer_status=correct 也不走模板。"""
+def test_guard_blocked_not_stuck_finish_uses_zero_call_summary(tmp_path):
+    """#382 P0-1(stuck 语义收窄)后原 test_stuck_mark_blocks_structured_path 改道:
+    泄露纯 block(前导零检得出掩不掉)→ **不置 stuck**(系统状态≠学生状态,
+    guard_events 已记 blocked);该会话 finish 时学生未发出卡壳信号 → 零调用
+    模板通路条件达成,不调模型。"""
     leak = tutor_json("答案是 x=06。")  # 前导零:检得出掩不掉 → 纯 block(未解决)
     with kernel_env(tmp_path, [
         completion(open_json(_OPENING_TEXT["correct"])),
-        completion(leak),                 # 泄露 → 护栏替换 → stuck 标记
+        completion(leak),                 # 泄露 → 纯 block(系统侧降级)
+        completion(tutor_json("你自己把做法和检验都说清楚了。", ready=True)),
     ]) as (fake, gateway):
         first = start({"text": "解方程 3x+7=25。"}, {"grade": "五年级", "answer_status": "correct"},
                       gateway=gateway)
         reply(first.session, "我算出来了。", gateway=gateway)  # 学生未先给出 x=6 → tutor 报答案为泄露
-        assert first.session.stuck is True    # 卡点已标记(泄露未解决)
+        assert first.session.stuck is not True    # #382:guard 降级不写 stuck(只记 guard_events)
+        assert [e for e in first.session.guard_events if e.get("guard")][-1]["mode"] == "blocked"
+        reply(first.session, "两边同时减 7 得 18,再除以 3 得 x=6,代回检验成立。",
+              gateway=gateway)
+        assert first.session.state == "ready_to_confirm"
+        calls_before_finish = len(fake.requests)
         summary = finish(first.session, gateway=gateway)
-        assert summary.status == "needs_review"  # 有卡点不走模板(零经过该分支)
+        assert len(fake.requests) == calls_before_finish    # 无学生卡壳信号 → 零调用模板通路
+        assert summary.status == "completed"
