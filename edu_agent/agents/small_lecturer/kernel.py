@@ -208,9 +208,18 @@ def _close_on_final_statement(session: LearnerSession, student_message: str,
 
     终述先入史(参与 _structured_summary 首末引语),再 finish,再补 assistant
     轮 + 版本;不复用 _commit_turn(它再 append user 会双记;本路径零 guard
-    事件,无需 _stamp_turn)。"""
+    事件,无需 _stamp_turn)。
+
+    #382 PR-B 原子性(P0-2,2026-09-20):append → finish(可调 Gateway)之间
+    任何异常(GatewayError 等)不得半提交——回滚终述入史,session 恢复调用
+    前状态后原样 raise(调用方决定重试;同消息重试不重复 history)。最小修复,
+    不做 transaction framework。"""
     session.history.append({"role": "user", "content": student_message})
-    summary = finish(session, gateway=gateway)
+    try:
+        summary = finish(session, gateway=gateway)
+    except BaseException:
+        session.history.pop()   # 回滚终述入史:调用前状态逐字段一致
+        raise
     session.history.append({"role": "assistant", "content": summary.text})
     session.session_version += 1
     return Turn(text=summary.text, session_version=session.session_version,
