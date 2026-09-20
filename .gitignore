@@ -6,6 +6,8 @@ __pycache__/
 !evals/datasets/**/*.jsonl
 !edu_agent/evals/datasets/**/*.jsonl
 !edu_agent/evals/artifacts/**/*.jsonl
+# 测试夹具真原件形态目录(#368 适配:夹具须随仓走,CI 才能跑 importer e2e)
+!tests/fixtures/**/*.jsonl
 .DS_Store
 .ruff_cache/
 .pytest_cache/
