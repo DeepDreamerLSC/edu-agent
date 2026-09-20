@@ -31,7 +31,8 @@ class LearnerSession:
     history: list[dict] = field(default_factory=list)
     first_question: str | None = None
     summary: "Summary | None" = None   # completed 后不可变
-    stuck: bool = False                # 卡点标记(R6):对话中出现被护栏替换的输出等未解决质量问题
+    stuck: bool = False                # 卡点标记(R6;#382 P0-1 收口):学生本人明确 stuck 信号专属,
+    #                                  # 系统侧异常(guard 降级/复读兜底等)只记 guard_events 不写此位
     steps: list[dict] = field(default_factory=list)   # 分步解(统一 open 求解):阶梯底稿 +
     # 数字校验基准(引用值须 ⊆ steps 的 value),随 FileSessionStore asdict 持久化
     hint_level: int = 0                # 阶梯揭示进度:学生卡住时揭示 steps 的第几级(0 起)

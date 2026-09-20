@@ -430,16 +430,14 @@ def _guard_check(ctx: "_GuardContext", text: str, session: "LearnerSession | Non
 def _record_event(session: "LearnerSession | None", guard: str, rule_ids: list[str],
                   original: str, regenerated: bool, mode: str | None = None) -> None:
     """护栏埋点。`mode`(可选,additive)记处置路径:regenerated / masked / template
-    ——度量侧要区分「重生成修好」与「确定性脱敏」两类处置(#165 WS4 替换粒度)。"""
+    ——度量侧要区分「重生成修好」与「确定性脱敏」两类处置(#165 WS4 替换粒度)。
+    不写 session.stuck(#382 P0-1 裁定:系统侧降级 ≠ 学生卡住,只记 guard_events)。"""
     if session is not None:
         event = {"guard": guard, "rule_ids": rule_ids,
                  "original": original, "regenerated": regenerated}
         if mode is not None:
             event["mode"] = mode
         session.guard_events.append(event)
-        if not regenerated and mode != "masked":
-            session.stuck = True  # 硬降级 = 未解决的质量问题(卡点标记,R6);
-            # 掩码(#333 Thin Kernel)是干净确定性恢复,不是降级,不置卡点
 
 
 def _regenerate(ctx: "_GuardContext", session: "LearnerSession | None", reply_text: str,
@@ -726,7 +724,8 @@ def _repeat_refine(ctx, session, safe_text: str, ready: bool) -> str:
         if _mech_off("repeat_fallback"):
             return safe_text  # 二阶段 LOO:复读兜底旁路(不揭示不置 stuck)
         refined = _reveal_stuck_hint(session)
-        session.stuck = True
+        # PR-A(#382 P0-1 裁定):repeat→reveal 不置 stuck——Tutor 自己复读 ≠ 学生
+        # 卡住(系统状态≠学生状态);reveal 动作本身保留,只不再写 session.stuck。
     return refined
 
 
@@ -738,6 +737,9 @@ def _deterministic_turn(session: LearnerSession, student_message: str,
     if (_student_signals_stuck(student_message)
             and not _arm_bypass("would_reveal", "stuck_hint", session)):
         hint = _stuck_hint(session)
+        # PR-A(#382 P0-1 裁定):session.stuck 的唯一合法写入点 = 学生本人明确
+        # stuck 信号(本分支)。Tutor repeat / guard failure / regen / fallback /
+        # Gateway 一律不得写(系统状态≠学生状态)。
         session.stuck = True
         return _commit_turn(session, student_message, hint, "dialogue")
     return None
@@ -843,7 +845,9 @@ def finish(session: LearnerSession, *, gateway: Gateway | None = None) -> Summar
         return Summary(text=text, status="needs_review",
                        session_version=session.session_version)
     if session.learner.get("answer_status") == "correct" and not session.stuck:
-        # 零调用通路保留(原条件 + 已达确认态):完成由学生自己的讲述证据证实
+        # 零调用通路保留(原条件 + 已达确认态):完成由学生自己的讲述证据证实。
+        # #382 P0-1 后 stuck 语义收窄为「学生本人明确卡壳信号」——本闸随之收窄为
+        # 「学生本会话内未发出卡壳信号」;系统侧异常已不再置位,不进本条件。
         summary = Summary(text=_structured_summary(session), status="completed",
                           session_version=session.session_version)
         session.state = "completed"

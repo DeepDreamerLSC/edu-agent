@@ -125,7 +125,7 @@ def test_arm_b_leak_masked_via_main_path():
 
 def test_arm_b_unmaskable_leak_pure_blocks():
     """Thin Kernel:B 臂不可掩形态(带修饰数字)→ 主路径纯 block(与 C 同一面),
-    只拒绝不重教,置卡点。"""
+    只拒绝不重教;#382 P0-1:系统侧 block 不置 stuck(只记 guard_events)。"""
     set_ablation_arm("B")
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你打算怎么入手?"),
@@ -135,7 +135,7 @@ def test_arm_b_unmaskable_leak_pure_blocks():
     turn = reply(session, "先算哪个数?", gateway=gateway)
     assert "鸡 3 只兔 05 只" not in turn.text
     assert turn.text == "这条回复包含题目终答,我不能直接给出。"  # 纯 block:只拒绝不重教
-    assert turn.session.stuck is True
+    assert turn.session.stuck is not True       # #382:guard 硬降级 ≠ 学生卡住
     events = [e for e in turn.session.guard_events if e.get("mode")]
     assert [e["mode"] for e in events] == ["blocked"]
 

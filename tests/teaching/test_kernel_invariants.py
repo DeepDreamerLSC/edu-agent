@@ -31,6 +31,10 @@ def _open(reply_text: str, steps: list[dict] | None = None) -> dict:
     return payload
 
 
+def _tutor(reply_text: str, ready: bool = False) -> dict:
+    return {"reply": reply_text, "ready_to_confirm": ready, "cited_numbers": []}
+
+
 def _drift_event(turn) -> dict:
     """本轮模型路径的数字守卫埋点:优先返回**带违规归因**的那条(#184 起每轮至少一条:
     候选文本与重生成文本各判一次,只有前者可能带 violation_sources)。"""
@@ -263,3 +267,63 @@ def test_final_answer_only_disclosed_via_finish_not_step_reveal():
     # 阶梯耗尽 → 通用引导,不披露终答(bottom-out 已删,句族入土)
     assert "鸡3只兔5只" not in exhausted.text
     assert exhausted.text == NEEDS_REVIEW_TEXT
+
+
+# --------------------------------------------------------------------------- #
+# #382 P0-1(2026-09-20 架构师总裁定):session.stuck 语义所有权
+# 只允许「学生本人明确 stuck 信号」写入(_deterministic_turn 唯一写点);
+# Tutor repeat / guard failure / regen / fallback / Gateway 一律不得写
+# (系统状态≠学生状态,系统异常记 guard_events,不加新状态,减状态)。
+# --------------------------------------------------------------------------- #
+
+def test_student_stuck_signal_still_sets_stuck():
+    """回归①:学生本人明确 stuck 信号(「我不太会」)→ 仍置 stuck(合法路径保留)。
+
+    这是 session.stuck 的唯一合法写入路径(_deterministic_turn)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
+    ])
+    turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
+    assert turn.session.stuck is False               # 初始未置
+    turn = reply(turn.session, "我不太会", gateway=gateway)
+    assert turn.session.stuck is True                # 学生信号 → 置位
+    assert turn.session.guard_events[-1]["branch"] == "reveal"
+
+
+def test_tutor_repeat_fallback_reveal_does_not_set_stuck():
+    """回归②(#382 P0-1):Tutor 复读 → 重生成仍复读 → 兜底 reveal 阶梯,
+    **不置 stuck**——Tutor 自己复读 ≠ 学生卡住(系统状态≠学生状态)。
+
+    reveal 动作本身保留(照走阶梯、照记埋点),只是不再写 session.stuck。
+    (末级 value=5 触答案焦点,过 ③ 外题阶梯门:两步副整存,
+    reveal=「先算全部按鸡的脚数」级。)"""
+    from edu_agent.agents.small_lecturer import FIRST_QUESTION_COLLECT
+    repeated = FIRST_QUESTION_COLLECT   # 首问可见文本恒为固定模板:复读它 = 复读
+    reveal_steps = [{"step": "先算全部按鸡的脚数", "value": "16"},
+                    {"step": "再算脚数差", "value": "10"},
+                    {"step": "兔的只数", "value": "5"}]
+    gateway = FakeGateway(tutor_payloads=[
+        _open(repeated, steps=reveal_steps),  # 首问(模型原句被固定模板覆盖)
+        _tutor(repeated),                     # 模型复读首问模板 → 触发自批评重生成
+        _tutor(repeated),                     # 重生成仍复读 → 兜底揭示下一级阶梯
+    ])
+    turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
+    turn = reply(turn.session, "嗯,我看看。", gateway=gateway)
+    assert turn.session.hint_level == 1                          # reveal 动作照走
+    assert {"branch": "reveal", "hint_level": 1, "turn": 1} in turn.session.guard_events
+    assert turn.session.stuck is False                           # 但不写学生卡点状态
+
+
+def test_guard_hard_degrade_does_not_set_stuck():
+    """回归③(#382 P0-1):guard 纯 block(不可掩形态)硬降级 → **不置 stuck**,
+    系统异常只记 guard_events(mode=blocked)——guard 降级 ≠ 学生卡住。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
+        {"reply": "答案是 3 只鸡和 05 只兔。", "ready_to_confirm": False,
+         "cited_numbers": [3, 5]},   # 前导零 05:检得出掩不掉 → 纯 block
+    ])
+    turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
+    turn = reply(turn.session, "然后呢?", gateway=gateway)
+    assert turn.session.stuck is False
+    blocked = [e for e in turn.session.guard_events if e.get("mode")]  # 系统异常落在埋点
+    assert [e["mode"] for e in blocked] == ["blocked"]
