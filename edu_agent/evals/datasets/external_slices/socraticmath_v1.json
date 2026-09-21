@@ -1,0 +1,898 @@
+{
+  "schema": "edu_agent_external_slice/v1",
+  "slice_version": "socraticmath_v1",
+  "status_note": "候选案例层,须经理 v2 编译协议转为可执行 scenario 后方进 A/B(架构师裁定 2026-09-21)。架构师否决『学生轮机械顺序 replay』用法。",
+  "description": "SocraticMATH 行为面实验 slice(#368 下游·架构师执行序列步骤 7 Prompt/Model quality 实验原料):形态1=学生已答对但导师继续追问(700m 事故同款);形态2=学生纠正导师(700m 第 7 轮同款)。纯规则筛选,零模型调用;条目含上下文依赖度标注(弱依赖=自足断言可保留,强依赖=回指导师具体措辞需编译处理)。",
+  "generated_at": "2026-09-21T00:50:37+00:00",
+  "generator": "scripts/external_slice_select.py",
+  "entry_fields": [
+    "id(normalized 记录 id,回连键)",
+    "rule_version / match_path(筛选规则版本与命中路径)",
+    "hit_turn_index / hit_role(命中轮次索引与角色,0 起)",
+    "形态1 另有 tutor_question_turns_after(命中轮之后以？结尾的导师轮索引)",
+    "形态2 另有 tutor_claim_turn_index(被否定/纠正的导师轮索引)",
+    "evidence(命中证据短摘录,非整段)",
+    "context_dependency(weak_turn_ratio/strong_turn_indexes/layout:all_weak|front_truncatable|throughout;词法下界,弱占比为乐观估计)"
+  ],
+  "source": {
+    "path": "edu_agent/evals/datasets/external_normalized/socraticmath.jsonl",
+    "file_sha256": "00d24abbe0b5c8a3d4d7003257d80335b519c79b2511119f5a895cf04b908d0e",
+    "records": 6846,
+    "unique_record_fingerprints": 6846,
+    "schema_versions": [
+      "edu_agent_external_scenario/v1"
+    ],
+    "source_dataset": "SocraticMATH",
+    "source_version": "837da0b",
+    "license": "CC BY-NC 4.0",
+    "note": "normalized 全量证据层在 task/importer-socraticmath-adapt 分支入库(#368);本 slice 为其索引,消费时按 id 回连 reference_dialogue。"
+  },
+  "rules": {
+    "form1": {
+      "version": "form1/v2",
+      "name": "学生已答对但导师继续追问",
+      "text": "数值路径:answer 数值 token(阿拉伯/小数/分数归一、圈号映射)去重后≥2;单空题(空槽按槽组计,相邻槽仅隔连接符算同组;槽组≤1 且（N）枚举≤1);最早 i≥1 的 student 轮使 answer 去重 token 序列为其数值 token 序列的连续子序列(answer 含结构型括号即括号内含数字时,命中轮须同含);该轮之后≥1 个 tutor 以？/?结尾的轮。文本路径(数值 token<2):规范化 answer(保点保括号)≥2 字符,单空题,题面回声护栏(答案串不在题面),无知表达护栏,数值型答案要求 token 等价(防前缀巧合),断言框架护栏(应该|结果|等于|得到|所以|就是|是),后续问号轮同款。收紧阶梯:基础超集 224→单空+token≥10→17→连续子序列→14→+结构括号→8(数值路径);文本 59→四护栏→33;两路径合并按依赖度偏好排序取前 20。"
+    },
+    "form2": {
+      "version": "form2/v2",
+      "name": "学生纠正导师",
+      "text": "起始路径:student 轮以「不对」「错了」起始(「不是」系整系排除:5/5 抽检均为回答导师是非问句);i≥2(前置导师轮存在,对话严格交替);之后≥2 轮(对话未中断);无知表达护栏。中段路径:恰一次非回声 不对/错了(前一字非对/没;批量选项/多句扫描排除),轮内不含自纠族(我+≤12字+错族/道歉语/插语+错/等等…不对/有点不对/候选自我否定/被动叙事)与条件式用法,含纠正性理由(因为|应该|而是|题目|实际上|正确的是)。收紧阶梯:含否定标记+未中断 1,366→起始 36(混『不是很确定』)→排不确定性+缩标记 9;中段粗筛 136→门控+逐条通读 8。两路径合并按依赖度偏好排序取前 20。"
+    }
+  },
+  "selection_funnel": {
+    "normalized_records": 6846,
+    "form1": {
+      "answer_non_null": 3034,
+      "raw_hits": 45,
+      "final": 20,
+      "cap": 20
+    },
+    "form2": {
+      "raw_hits": 16,
+      "final": 16,
+      "cap": 20
+    }
+  },
+  "manual_review": {
+    "obligation": "每形态抽 3 条人工通读 reference_dialogue 确认形态成立(防规则误伤);实际执行:两形态终版条目已全部逐条通读,抽检 3 条为正式记录。",
+    "form1": {
+      "samples": [
+        {
+          "id": "socraticmath_train_4402",
+          "verdict": "成立(最强样本)",
+          "note": "学生第4轮已说出 x-21=35(与 answer 逐字一致),导师第5轮仍要求『变成方程的形式』继续追问,追问后学生反而在第6轮改错为 x-22=35——与 700m 事故(已答对仍被追问、追问诱发新错)同构。"
+        },
+        {
+          "id": "socraticmath_train_866",
+          "verdict": "成立",
+          "note": "学生第10轮给出完整比例 12:4=6:2(即 answer 本体),导师第11轮仍以问号轮追问(答案不唯一性),对话继续。"
+        },
+        {
+          "id": "socraticmath_train_1204",
+          "verdict": "成立",
+          "note": "学生第4轮已给出完整答案集 2、5、8,导师第5、7轮仍连续追问(5 的倍数特点),第9轮才收束确认答案。"
+        }
+      ],
+      "overall": "终版 20 条(数值路径 8 + 文本路径 12)全部逐条通读。强度分档:强=完整答案句/计算断言后仍有问号轮(4402 为最典型——答案后重问同一步且追问诱发学生新错;5221 为导师给出错误结果 27、学生答出正确答案 189 后导师仍连续质疑);中=术语答案句(2013 分数/5228 十七万/2591 易变形确认问句);弱=术语复现型(223/5032/5191/3565,答案词出现在知识复述中,导师问号轮为应用引导)——弱档仍满足『答案实质内容已给出+导师继续问号轮』操作定义,依赖度均为弱,编译风险低,供按需取用。复核中淘汰的误伤均固化为规则条款:多空题伪追问 7 例(116/719/1934/2412/3165/4780/val_549)、排序背诵巧合 2 例(866 第4轮/934)、运算结构不一致 1 例(2100)、题面回声(1094)、无知表达(4556,『不是很清楚』两修饰字致正则漏配后修正)、数字前缀巧合(4440/4461/4005)、数字成分误配(1606『24时计时法』)。"
+    },
+    "form2": {
+      "samples": [
+        {
+          "id": "socraticmath_train_675",
+          "verdict": "成立(强)",
+          "note": "导师第5轮断言『图上的1厘米代表实际的100厘米』(错,题目为 100 米),学生第6轮『不对,题目说的是1厘米表示100米,不是100厘米』明确纠正,导师第7轮接受——教科书式学生纠正导师。"
+        },
+        {
+          "id": "socraticmath_train_1827",
+          "verdict": "成立(强)",
+          "note": "导师第5轮把因数方向说反(『又能被48整除』),学生第6轮『不对,它应该是能被3整除,48能被它整除』纠正方向,导师第7轮认可。"
+        },
+        {
+          "id": "socraticmath_train_3998",
+          "verdict": "成立(弱形态,中段路径抽检代表)",
+          "note": "导师第5轮给出直径定义后问『题目中的说法正确吗』,学生第6轮『根据你的解释,题目中的说法好像不对』——学生以导师解释为据否定题目主张;注意该轮『根据你的解释』为强依赖标记,编译时须保真该上下文或弃选。"
+        }
+      ],
+      "overall": "终版 16 条(起始路径 8 + 中段路径 8)全部逐条通读。起始路径强度:强 5 条(675/1001/1827/4786/val_61,学生驳回导师自己的断言/解法/结论);中 1 条(3749,学生否定导师抛出的朴素解法);弱 2 条(1688/val_97,学生评判导师转述的题目/选项主张)。中段路径 8 条(2899/4275/val_495/3998/val_13/test_42/29/515)均为弱-中形态:学生评判导师转述或抛出的命题(题目主张/日记数据/题目人物的口算方法/选项),其中 val_495 学生正确指出题目口算分解符号错误(40+3 应为 40-3),3998 含强依赖标记『根据你的解释』编译须保真。中段粗筛 136 条被自纠族(『哎呀我错了』系)淹没,门控+逐条通读淘汰:5116(导师提示后自纠上轮计算)、3048/2617/3934/2229/5150/206(自纠/过程自检/候选自我否定)、test_6(『因数被弄错了』为题目叙事复述)、5295(学生误纠题目,纠正内容本身错误)、1099(等等引导的选项评判,连带排除)、2546/4063(批量选项/多句扫描,非单一纠正动作)、1389(混纠兼示弱)。另:『不是』系起始在本语料 5/5 抽检均为回答导师是非问句而非纠正,已整系排除(见规则)。"
+    }
+  },
+  "counts": {
+    "form1": 20,
+    "form2": 16
+  },
+  "slices": {
+    "form1_student_answered_tutor_keeps_asking": [
+      {
+        "id": "socraticmath_train_4402",
+        "rule_version": "form1/v2",
+        "match_path": "numeric_subsequence",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          5,
+          7,
+          9
+        ],
+        "evidence": {
+          "problem_answer": "x-21=35",
+          "student_turn_excerpt": "是不是就是x减去21然后等于35？",
+          "tutor_question_turn_excerpt": "那我们按照这个思路，试着变成方程的形式就是怎么样的呢？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 6,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_1204",
+        "rule_version": "form1/v2",
+        "match_path": "numeric_subsequence",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          5,
+          7
+        ],
+        "evidence": {
+          "problem_answer": "2、5、8",
+          "student_turn_excerpt": "那□只能是2或5或8，然后2+5+2 = 9、2+5+5 = 12、2+5+8 = 15，这三个数都能被3整除。",
+          "tutor_question_turn_excerpt": "不错！现在我们想到，这个数也要是5的倍数，那么关于5的倍数，你知道哪些特点呢？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 5,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_1313",
+        "rule_version": "form1/v2",
+        "match_path": "numeric_subsequence",
+        "hit_turn_index": 2,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          3
+        ],
+        "evidence": {
+          "problem_answer": "28+300÷5",
+          "student_turn_excerpt": "28+300÷5？",
+          "tutor_question_turn_excerpt": "没错就是这样。由于除法优先于加法，我们需要先计算300÷5，得到60，然后再将60和28进行加法运算，得到88。所以，这个综合算式就是28+300÷5。你理解了吗？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 3,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_4531",
+        "rule_version": "form1/v2",
+        "match_path": "numeric_subsequence",
+        "hit_turn_index": 2,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          3
+        ],
+        "evidence": {
+          "problem_answer": "6a+2b",
+          "student_turn_excerpt": "对于小涛家的情况，他上个月用了8立方米的水，所以前6立方米按照每立方米a元计算，之后两立方米按每立方米b元计算。所以总的水费就是6a+2b。",
+          "tutor_question_turn_excerpt": "很好！这正是我们需要求的。那么，带符号的这种包含字母的式子我们该怎么理解呢？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 3,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_3666",
+        "rule_version": "form1/v2",
+        "match_path": "numeric_subsequence",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          5
+        ],
+        "evidence": {
+          "problem_answer": "4：8=15：30（答案不唯一）",
+          "student_turn_excerpt": "是不是应该写成4：8=15：30？",
+          "tutor_question_turn_excerpt": "没错，就是这样。相等的两个乘积可以表示为两个比例相等，即4 : 8 = 15 : 30，这也是比例的一个基本性质。但是我们应该注意，比例的顺序是可以调整的，因为乘法具有交换率，所以…"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_4510",
+        "rule_version": "form1/v2",
+        "match_path": "numeric_subsequence",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          5
+        ],
+        "evidence": {
+          "problem_answer": "3.02元、2.91元、2.78元、2.65元、2.50元",
+          "student_turn_excerpt": "应该是3.02元＞2.91元＞2.78元＞2.65元＞2.50元。",
+          "tutor_question_turn_excerpt": "没错，恭喜你答对了！真的非常棒！所以，通过这个题目，我们更深入地了解了小数比较大小的规则，你还记得这个规则吗？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_4776",
+        "rule_version": "form1/v2",
+        "match_path": "numeric_subsequence",
+        "hit_turn_index": 6,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          7
+        ],
+        "evidence": {
+          "problem_answer": "12：10=6：5",
+          "student_turn_excerpt": "12：10和6：5都可以吧。",
+          "tutor_question_turn_excerpt": "完全正确，12除以10等于1.2，同样6除以5也等于1.2。那么按照比例的定义，我们可以写出这个比例为？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 5,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_866",
+        "rule_version": "form1/v2",
+        "match_path": "numeric_subsequence",
+        "hit_turn_index": 10,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          11
+        ],
+        "evidence": {
+          "problem_answer": "12：4=6：2，（答案不唯一）",
+          "student_turn_excerpt": "先是12除以4等于3，然后是6除以2也等于3，所以我觉得比例可以是12：4=6：2。",
+          "tutor_question_turn_excerpt": "非常好！这个就是你想找的比例。同时，你注意到了这个答案并不唯一吗？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 7,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_5221",
+        "rule_version": "form1/v2",
+        "match_path": "text_substring",
+        "hit_turn_index": 16,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          17,
+          19,
+          21,
+          23
+        ],
+        "evidence": {
+          "problem_answer": "189",
+          "student_turn_excerpt": "嗯，我知道的，我们把13041除以69，结果是189。",
+          "tutor_question_turn_excerpt": "这个你有些混淆了，我们将13041除以69，结果是多少呢？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 13,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_223",
+        "rule_version": "form1/v2",
+        "match_path": "text_substring",
+        "hit_turn_index": 2,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          3,
+          5
+        ],
+        "evidence": {
+          "problem_answer": "平行四边形",
+          "student_turn_excerpt": "长方形的对边相等，而且每个角都是直角，平行四边形的对边也相等，这些我都知道的。",
+          "tutor_question_turn_excerpt": "很好，那你有没有想过长方形相对角拉开后会变为什么形状呢？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_5032",
+        "rule_version": "form1/v2",
+        "match_path": "text_substring",
+        "hit_turn_index": 2,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          3,
+          5
+        ],
+        "evidence": {
+          "problem_answer": "两组对边分别平行",
+          "student_turn_excerpt": "平行四边形就是四条边形成的图形，有两组对边分别平行。",
+          "tutor_question_turn_excerpt": "嗯，这是正确的，但在描述平行四边形的时候，我们需要注意哪些特征呢？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_5191",
+        "rule_version": "form1/v2",
+        "match_path": "text_substring",
+        "hit_turn_index": 2,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          3,
+          5
+        ],
+        "evidence": {
+          "problem_answer": "面积",
+          "student_turn_excerpt": "面积就是某种形状的大小，我知道。",
+          "tutor_question_turn_excerpt": "非常好，然后你能否根据这个思路，尝试回答一下这个问题：物体表面的大小是物体的什么？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_val_412",
+        "rule_version": "form1/v2",
+        "match_path": "text_substring",
+        "hit_turn_index": 2,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          3,
+          5
+        ],
+        "evidence": {
+          "problem_answer": "34",
+          "student_turn_excerpt": "余数的取值范围应该是0到除数减1，也就是0到34。",
+          "tutor_question_turn_excerpt": "非常正确。那么我们再来看题目，这里把a除以35，得到的商是4，此时的余数是多少？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_2591",
+        "rule_version": "form1/v2",
+        "match_path": "text_substring",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          5,
+          7
+        ],
+        "evidence": {
+          "problem_answer": "易变形",
+          "student_turn_excerpt": "哦，原来是这样，那平行四边形的特性就是它易变形对吗？",
+          "tutor_question_turn_excerpt": "是的，你对其中的概念理解得很好，那你觉得答案是什么呢？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 5,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_5228",
+        "rule_version": "form1/v2",
+        "match_path": "text_substring",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          5,
+          7
+        ],
+        "evidence": {
+          "problem_answer": "十七万",
+          "student_turn_excerpt": "这个数应该读作十七万。",
+          "tutor_question_turn_excerpt": "很好，但是你注意到这个数后面是平方千米吗？它的全读法是怎样的呢？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 5,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_559",
+        "rule_version": "form1/v2",
+        "match_path": "text_substring",
+        "hit_turn_index": 6,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          7,
+          9
+        ],
+        "evidence": {
+          "problem_answer": "2.5",
+          "student_turn_excerpt": "那应该是2.5厘米。",
+          "tutor_question_turn_excerpt": "没错。那当我们用圆规画一个圆的时候，圆规两脚分开的距离应该是等于什么的呢？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 6,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_191",
+        "rule_version": "form1/v2",
+        "match_path": "text_substring",
+        "hit_turn_index": 2,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          3
+        ],
+        "evidence": {
+          "problem_answer": "172",
+          "student_turn_excerpt": "860除以5是172。",
+          "tutor_question_turn_excerpt": "非常正确，这个除法的结果就代表了你需要连续减5的次数，也就是172次。理解了吗？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 3,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_2013",
+        "rule_version": "form1/v2",
+        "match_path": "text_substring",
+        "hit_turn_index": 2,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          3
+        ],
+        "evidence": {
+          "problem_answer": "分数",
+          "student_turn_excerpt": "这应该用分数来表示。",
+          "tutor_question_turn_excerpt": "很棒，你的回答是正确的。当我们把一个整体平分成几份，我们通常用分数来表示其中的一份或几份。因此，无论我们是在照片中选取一部分，还是在计量单位中选择一部分，或者在一些物体中选择一部分…"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 3,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_3565",
+        "rule_version": "form1/v2",
+        "match_path": "text_substring",
+        "hit_turn_index": 2,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          3
+        ],
+        "evidence": {
+          "problem_answer": "100",
+          "student_turn_excerpt": "嗯，我知道1平方米等于100平方分米，1平方分米等于100平方厘米。",
+          "tutor_question_turn_excerpt": "非常好，那你试试看，这个正方形能分割成多少个边长是1厘米的小正方形？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_1559",
+        "rule_version": "form1/v2",
+        "match_path": "text_substring",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_question_turns_after": [
+          5
+        ],
+        "evidence": {
+          "problem_answer": "20",
+          "student_turn_excerpt": "我想想，4和5的公倍数应该有20，还有0。",
+          "tutor_question_turn_excerpt": "对的！非常好！倒数第二步我们已经找出了可能的答案，现在，请你根据题目设定，确定最终答案吧？"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 1.0,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [],
+          "layout": "all_weak",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      }
+    ],
+    "form2_student_corrects_tutor": [
+      {
+        "id": "socraticmath_train_1001",
+        "rule_version": "form2/v2",
+        "match_path": "marker_start",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 3,
+        "evidence": {
+          "tutor_turn_excerpt": "没错，很好。那么，我们来看这个问题。小数保留一位小数后得到的近似数是6.7，也就是说，原小数的十分位如果是大于等于5的数，其实它应该被四舍五入为.7吗？",
+          "student_turn_excerpt": "不对，应该被四舍五入为.8。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.833,
+          "student_turns_total": 6,
+          "strong_turn_indexes": [
+            4
+          ],
+          "layout": "front_truncatable",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_val_61",
+        "rule_version": "form2/v2",
+        "match_path": "marker_start",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 3,
+        "evidence": {
+          "tutor_turn_excerpt": "如果全都是大船，就需要10只，但题目已经告诉我们一共租了12只船，这说明还有小船，不是全都是大船。那么如果我们把多余的几只船都认为是小船的话，现在就有12-10=2只小船和10只大…",
+          "student_turn_excerpt": "不对，这样算下来一共会超过46人。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.833,
+          "student_turns_total": 6,
+          "strong_turn_indexes": [
+            4
+          ],
+          "layout": "front_truncatable",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_val_97",
+        "rule_version": "form2/v2",
+        "match_path": "marker_start",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 3,
+        "evidence": {
+          "tutor_turn_excerpt": "正确。那现在，让我们来看看选项A。x *x * 1 = 2x 这个式子对所有x值成立吗？",
+          "student_turn_excerpt": "不对，试了几个x值，我发现结果并非等于2x。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.8,
+          "student_turns_total": 5,
+          "strong_turn_indexes": [
+            4
+          ],
+          "layout": "front_truncatable",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_3749",
+        "rule_version": "form2/v2",
+        "match_path": "marker_start",
+        "hit_turn_index": 2,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 1,
+        "evidence": {
+          "tutor_turn_excerpt": "我们首先来把这个问题分解为两步。首先，我们看到这道题目涉及到了15盆花，它们之间相距2米。问题是要找出甬路的总长度。如果我们单纯的把15盆花的个数乘以每两盆花间的距离2米，正确吗？",
+          "student_turn_excerpt": "不对，因为这样算的话最后一盆花后面还多算了2米，所以应该要少算一次。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.75,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [
+            2
+          ],
+          "layout": "front_truncatable",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_1827",
+        "rule_version": "form2/v2",
+        "match_path": "marker_start",
+        "hit_turn_index": 6,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 5,
+        "evidence": {
+          "tutor_turn_excerpt": "对，那么问题中说这个数是3的倍数又是48的因数，那么这个数就一定能被3整除，同时又能被48整除，是这样吗？",
+          "student_turn_excerpt": "不对，它应该是能被3整除，48能被它整除。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.833,
+          "student_turns_total": 6,
+          "strong_turn_indexes": [
+            6
+          ],
+          "layout": "throughout",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_4786",
+        "rule_version": "form2/v2",
+        "match_path": "marker_start",
+        "hit_turn_index": 8,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 7,
+        "evidence": {
+          "tutor_turn_excerpt": "很好，现在我们发现12.251的百分位5是大于12.351的百分位3的，那根据我们小数大小的判断规则，我们是否能得出12.251大于12.351这个结论呢？",
+          "student_turn_excerpt": "不对，我搞错了。因为我们是从高位到低位，所以我们应该先比较高位。在这里，十分位都相等，但是12.251的百分位5，是小于12.351的百分位3的。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.833,
+          "student_turns_total": 6,
+          "strong_turn_indexes": [
+            8
+          ],
+          "layout": "throughout",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_675",
+        "rule_version": "form2/v2",
+        "match_path": "marker_start",
+        "hit_turn_index": 6,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 5,
+        "evidence": {
+          "tutor_turn_excerpt": "对的。因此，比例尺1:100在这个问题中，就是说图上的1厘米代表实际的100厘米。请问现在题目的表述你认为对吗？",
+          "student_turn_excerpt": "不对，题目说的是1厘米表示100米，不是100厘米。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.8,
+          "student_turns_total": 5,
+          "strong_turn_indexes": [
+            6
+          ],
+          "layout": "throughout",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_1688",
+        "rule_version": "form2/v2",
+        "match_path": "marker_start",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 3,
+        "evidence": {
+          "tutor_turn_excerpt": "非常正确。那么这个题目说“50是4的倍数”，你认为这个说法对么？",
+          "student_turn_excerpt": "不对，因为4乘以什么都不能等于50。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.75,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [
+            4
+          ],
+          "layout": "throughout",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_2899",
+        "rule_version": "form2/v2",
+        "match_path": "mid_turn_gated",
+        "hit_turn_index": 2,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 1,
+        "evidence": {
+          "tutor_turn_excerpt": "我们看一下这个问题，它可以分解成几个小问题来思考。将每个选项都分别进行分析。例如，选项A，\"一只热水瓶的容积为60毫升\"，你觉得这个说法合理吗？",
+          "student_turn_excerpt": "这个应该不对吧，热水瓶的容积应该远大于60毫升。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.8,
+          "student_turns_total": 5,
+          "strong_turn_indexes": [
+            2
+          ],
+          "layout": "front_truncatable",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_4275",
+        "rule_version": "form2/v2",
+        "match_path": "mid_turn_gated",
+        "hit_turn_index": 14,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 13,
+        "evidence": {
+          "tutor_turn_excerpt": "对的，所以日记中写的全年跑了549千米，对吗？",
+          "student_turn_excerpt": "这个应该是不对的，应该是547.5千米。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.917,
+          "student_turns_total": 12,
+          "strong_turn_indexes": [
+            14
+          ],
+          "layout": "throughout",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_val_495",
+        "rule_version": "form2/v2",
+        "match_path": "mid_turn_gated",
+        "hit_turn_index": 6,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 5,
+        "evidence": {
+          "tutor_turn_excerpt": "是的，但你注意看这个操作是不是存在什么问题？",
+          "student_turn_excerpt": "好像是问题，他算的70减30，8减5……这个应该不对，应该正好相反，是75减30得到45，然后45再减去8才对。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.833,
+          "student_turns_total": 6,
+          "strong_turn_indexes": [
+            6
+          ],
+          "layout": "throughout",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_3998",
+        "rule_version": "form2/v2",
+        "match_path": "mid_turn_gated",
+        "hit_turn_index": 6,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 5,
+        "evidence": {
+          "tutor_turn_excerpt": "没关系，我们一起学吧。圆的直径是一条线段，它的端点都在圆周上并且通过圆心。也就是说，每个直径都会将圆分为两个完全相同的部分。那么根据这个定义，题目中的说法正确吗？",
+          "student_turn_excerpt": "根据你的解释，题目中的说法好像不对。因为题目中只说了线段的两端在圆周上，并没有提到通过圆心。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.8,
+          "student_turns_total": 5,
+          "strong_turn_indexes": [
+            6
+          ],
+          "layout": "throughout",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_val_13",
+        "rule_version": "form2/v2",
+        "match_path": "mid_turn_gated",
+        "hit_turn_index": 6,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 5,
+        "evidence": {
+          "tutor_turn_excerpt": "是的，因为等式两边同时除以5，等式的数值不会改变。那么我们再看看选项C，它是对◇先进行除法，然后再乘以△和100×5比较，这样做对吗？",
+          "student_turn_excerpt": "这样做应该不对，没有同时对△和◇进行操作，所以不能保证等式的数值不变。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.8,
+          "student_turns_total": 5,
+          "strong_turn_indexes": [
+            6
+          ],
+          "layout": "throughout",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_test_42",
+        "rule_version": "form2/v2",
+        "match_path": "mid_turn_gated",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 3,
+        "evidence": {
+          "tutor_turn_excerpt": "说的很好！百分数是一种特殊的小数，用来表示整数的百分之某的数值。然后我们再看问题，问题是说0.54m可以写为54%，你觉得这个说法对么？",
+          "student_turn_excerpt": "我感觉这个说法不对，因为百分数后面不能带单位。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.75,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [
+            4
+          ],
+          "layout": "throughout",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_29",
+        "rule_version": "form2/v2",
+        "match_path": "mid_turn_gated",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 3,
+        "evidence": {
+          "tutor_turn_excerpt": "很好，那问题中是根据数的大小关系来判断0是正数，这个思路对吗？",
+          "student_turn_excerpt": "我想也不对吧，因为0大于负数，小于正数，所以0应该既不是正数也不是负数。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.75,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [
+            4
+          ],
+          "layout": "throughout",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      },
+      {
+        "id": "socraticmath_train_515",
+        "rule_version": "form2/v2",
+        "match_path": "mid_turn_gated",
+        "hit_turn_index": 4,
+        "hit_role": "student",
+        "tutor_claim_turn_index": 3,
+        "evidence": {
+          "tutor_turn_excerpt": "你的理解是正确的，那么你可以用这个知识点来判断题目的对错了。",
+          "student_turn_excerpt": "嗯，那就是1平方厘米等于0.01平方分米，所以题目判断错了，应该选A。"
+        },
+        "context_dependency": {
+          "weak_turn_ratio": 0.75,
+          "student_turns_total": 4,
+          "strong_turn_indexes": [
+            4
+          ],
+          "layout": "throughout",
+          "rule_note": "词法标记下界:指示词回指(如「这个应该不对」)无标记检不出"
+        }
+      }
+    ]
+  }
+}
