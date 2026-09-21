@@ -1,0 +1,2043 @@
+{
+ "schema": "edu_agent_external_slice_executable/v1",
+ "compiled_from": {
+  "slice_version": "socraticmath_v1",
+  "slice_file": "edu_agent/evals/datasets/external_slices/socraticmath_v1.json",
+  "slice_sha256": "aed356d4b63dec9b1cced1646498c232b543fd200386524a04a6a500c8ecf3a2",
+  "normalized_file": "edu_agent/evals/datasets/external_normalized/socraticmath.jsonl",
+  "normalized_sha256": "00d24abbe0b5c8a3d4d7003257d80335b519c79b2511119f5a895cf04b908d0e"
+ },
+ "compile_protocol": {
+  "version": "v1 正本 docs/evals/external-slice-compilation-protocol-v1.md(PR #396,main 7b386c8 已合;执行以仓内正本为准)",
+  "rules": {
+   "R1": "全弱依赖→线性 v1;学生轮原文照录,只许截断(轮级丢弃/句内剥强依赖开场白)不许改写,逐处记录",
+   "R2": "强依赖在中后段→截断稳定前缀并记录截断位(本批无适用:F1 全 all_weak;F2 强依赖轮=形态本体归 R3;唯一需中段切除的 5221 弃)",
+   "R3": "强依赖需保留→v2 分支:claim 分支特征=被回应 tutor 轮机械候选人工定稿 3-5 个(宁 specific 勿泛化、宁漏勿误),student_response=真实学生轮原文;恰一条 fallback,文本=同案例另一弱依赖真实轮(本批 9/9 如此,零新写文本)",
+   "R4": "弃案从严,逐条记录原因(见 dispositions)"
+  },
+  "invariants": [
+   "I1 学生文本⊆源 student 轮原文(截断记录)",
+   "I2 特征子串⊆被回应 tutor 轮原文",
+   "I3 每步恰一 fallback 且非兜底分支可达",
+   "I4 question 与源 problem.text 逐字一致"
+  ]
+ },
+ "fallback_semantics": "v2 每步恰一条 fallback:select_branch 按声明序取首个 assistant_contains_any 命中,全不命中走该步 fallback。纠错步 fallback 语义=导师未抛出可纠命题时学生以弱依赖真实轮续走解题主线(保对话不断、不空转);prefix/suffix步为单兜底分支=该形态下的线性照录。全部 fallback 文本均为源案例真实学生轮(部分剥回执开场白,见 compile 记录)。",
+ "compile_review": {
+  "obligation": "协议人工确认环节:R3 分支逐条回读原对话校准特征路由;每形态至少 3 条全通读编译结果。",
+  "feature_candidate_note": "机械候选以 5-8 个为目标;claim 轮本身为单短句时(val_495 全句 18 字/3998 长陈述句)实际可提取数少于此,以 feature_audit 实录为准,不以泛化 n-gram 凑数。定稿特征均为机械候选同跨度的更specific子串或错误签名变体(逐条过 I2 断言=claim 轮原文子串)。",
+  "form1_readback": [
+   "socraticmath_train_4402",
+   "socraticmath_train_2591",
+   "socraticmath_train_5228"
+  ],
+  "form2_readback": [
+   "socraticmath_train_1827",
+   "socraticmath_val_61",
+   "socraticmath_train_4275"
+  ],
+  "verdict": "形态1 抽读 3 条(4402/2591/5228):截断后学生轮自足、命中轮保真、追问链完整。形态2 抽读 3 条(1827/val_61/4275):claim 特征均为原句错误签名、命中即路由、漏配走 fallback 不断对话;4275 十一步全链回读通过。"
+ },
+ "dispositions": {
+  "socraticmath_train_4402": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_4402",
+   "detail": "线性 v1,5 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_1204": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_1204",
+   "detail": "线性 v1,4 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_1313": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4:两轮剧本(命中+纯回执),导师追问仅一次理解性确认,形态1 信号最薄(与 2013 同型)。"
+  },
+  "socraticmath_train_4531": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4:命中轮后仅一轮且需截断(『这种式子』指示词回指),编译面薄,规模取舍弃。"
+  },
+  "socraticmath_train_3666": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_3666",
+   "detail": "线性 v1,3 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_4510": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_4510",
+   "detail": "线性 v1,3 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_4776": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_4776",
+   "detail": "线性 v1,4 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_866": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_866",
+   "detail": "线性 v1,6 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_5221": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4(应归 R2 位):中段导师连环纠错与学生回错轮深度耦合,需 5 处句内截断+1 轮中段丢弃,截后学生轮序列呈无因连环修订,失真——宁少勿滥弃。"
+  },
+  "socraticmath_train_223": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_223",
+   "detail": "线性 v1,3 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_5032": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4:题面残缺(『叫平行四边形．』命名题主语在归一化中丢失),作被测 question 不可解,照录即注入坏题面。"
+  },
+  "socraticmath_train_5191": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_5191",
+   "detail": "线性 v1,3 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_val_412": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_val_412",
+   "detail": "线性 v1,3 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_2591": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_2591",
+   "detail": "线性 v1,4 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_5228": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_5228",
+   "detail": "线性 v1,4 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_559": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_559",
+   "detail": "线性 v1,5 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_191": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4:两轮剧本(命中+『我明白了』复述),形态1 信号薄,规模取舍弃(同型保 559)。"
+  },
+  "socraticmath_train_2013": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4:形态信号过薄——命中后导师仅一句收尾确认问(『理解了吗』),学生次轮为纯回执(『我明白了,谢谢老师』),无实质追问链。"
+  },
+  "socraticmath_train_3565": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_3565",
+   "detail": "线性 v1,3 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_1559": {
+   "form": "form1_student_answered_tutor_keeps_asking",
+   "rule": "R1",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_1559",
+   "detail": "线性 v1,3 学生轮(含截断记录见 compile)"
+  },
+  "socraticmath_train_1001": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R3",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_1001",
+   "detail": "分支 v2,纠错步 claim/fallback + 前后缀弱轮步"
+  },
+  "socraticmath_val_61": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R3",
+   "compiled": true,
+   "scenario_id": "socraticmath_val_61",
+   "detail": "分支 v2,纠错步 claim/fallback + 前后缀弱轮步"
+  },
+  "socraticmath_val_97": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4:命中轮为应答导师设问(评判选项 A 是否恒成立)而非纠正导师错误,形态2 语义弱(输入 manual_review 亦判弱),宁少勿滥弃。"
+  },
+  "socraticmath_train_3749": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4(应归 R3 位):纠错为首步无前缀,后继弱轮均为裸答(『应该是14乘以2』『等于28』)强上下文不可作 fallback,前步语义保持变体无前步可依——协议明文两者皆无降级 R4。"
+  },
+  "socraticmath_train_1827": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R3",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_1827",
+   "detail": "分支 v2,纠错步 claim/fallback + 前后缀弱轮步"
+  },
+  "socraticmath_train_4786": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4:源对话位值混乱——12.351 十分位/百分位数字多轮误标,纠错轮自身断言『百分位5是小于百分位3』为伪,前缀轮亦含伪断言,照录注入事实错误,截断不可修复。"
+  },
+  "socraticmath_train_675": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R3",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_675",
+   "detail": "分支 v2,纠错步 claim/fallback + 前后缀弱轮步"
+  },
+  "socraticmath_train_1688": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4:可编译但结构薄(1 前缀步+纠错步),路由特征依赖题面复述(『50是4的倍数』),规模上限取舍弃。"
+  },
+  "socraticmath_train_2899": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R3",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_2899",
+   "detail": "分支 v2,纠错步 claim/fallback + 前后缀弱轮步"
+  },
+  "socraticmath_train_4275": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R3",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_4275",
+   "detail": "分支 v2,纠错步 claim/fallback + 前后缀弱轮步"
+  },
+  "socraticmath_val_495": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R3",
+   "compiled": true,
+   "scenario_id": "socraticmath_val_495",
+   "detail": "分支 v2,纠错步 claim/fallback + 前后缀弱轮步"
+  },
+  "socraticmath_train_3998": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R3",
+   "compiled": true,
+   "scenario_id": "socraticmath_train_3998",
+   "detail": "分支 v2,纠错步 claim/fallback + 前后缀弱轮步"
+  },
+  "socraticmath_val_13": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R3",
+   "compiled": true,
+   "scenario_id": "socraticmath_val_13",
+   "detail": "分支 v2,纠错步 claim/fallback + 前后缀弱轮步"
+  },
+  "socraticmath_test_42": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4:可编译但结构最薄(1 前缀步+纠错步,fallback 为纯回执『对的,我明白了』),规模上限取舍弃,同档保留结构更丰富者。"
+  },
+  "socraticmath_train_29": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4:可编译但结构薄(1 前缀步+纠错步),与 1688/test_42 同型,规模上限取舍弃。"
+  },
+  "socraticmath_train_515": {
+   "form": "form2_student_corrects_tutor",
+   "rule": "R4",
+   "compiled": false,
+   "scenario_id": null,
+   "detail": "R4:命中轮为作答应用(『题目判断错了,应该选A』)非纠错,次轮与命中轮内容近重复,无差异化 fallback 可用;形态弱。"
+  }
+ },
+ "reconciliation": {
+  "total": 36,
+  "compiled": 23,
+  "of_which_with_truncation": 11,
+  "rejected": 13,
+  "note": "协议 §三.3 对账口径 36=编译+截断+弃:截断不独立占位(R1 句内截断 7 条、R3 回应/兜底/尾步截断 4 条,均记入 compile),R4 弃 13 条(含协议本义『强依赖不可靠路由』与 §四『宁少勿滥』两类,逐条见 dispositions)。"
+ },
+ "form_stats": {
+  "candidates": {
+   "form1": 20,
+   "form2": 16,
+   "total": 36
+  },
+  "compiled": {
+   "form1_linear_v1": 14,
+   "form2_branch_v2": 9,
+   "total": 23
+  },
+  "by_rule": {
+   "R1": 14,
+   "R2": 0,
+   "R3": 9,
+   "R4": 13
+  },
+  "by_form_rule": {
+   "form1_student_answered_tutor_keeps_asking": {
+    "R1": 14,
+    "R2": 0,
+    "R3": 0,
+    "R4": 6
+   },
+   "form2_student_corrects_tutor": {
+    "R1": 0,
+    "R2": 0,
+    "R3": 9,
+    "R4": 7
+   }
+  }
+ },
+ "scenarios": [
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_1204",
+   "title": "外部slice·2□5这个三位数，既是3的倍数也是5的倍数，□中",
+   "subject": "math",
+   "question": "2□5这个三位数，既是3的倍数也是5的倍数，□中可填______．",
+   "student_turns": [
+    "3的倍数是指数字各位数相加之和能被3整除的数。",
+    "那□只能是2或5或8，然后2+5+2 = 9、2+5+5 = 12、2+5+8 = 15，这三个数都能被3整除。",
+    "5的倍数的个位数要么是0，要么是5。",
+    "应该是2、5、8，老师。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_1204",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [],
+    "note": "全弱依赖线性照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_866",
+   "title": "外部slice·用12的因数写一个比值是3的比例．",
+   "subject": "math",
+   "question": "用12的因数写一个比值是3的比例．",
+   "student_turns": [
+    "因数就是可以整除一个数的数。",
+    "12的因数有：1，2，3，4，6和12。",
+    "比例是两个数的比值，且这两个比值相同的时候，我们就说这两个数之间有比例关系。",
+    "我可以先试试把12和其因数相除，看哪个结果等于3。",
+    "先是12除以4等于3，然后是6除以2也等于3，所以我觉得比例可以是12：4=6：2。",
+    "对，也可以是3：1=12：4。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_866",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8,
+     10,
+     12
+    ],
+    "truncations": [],
+    "note": "全弱依赖线性照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_4510",
+   "title": "外部slice·星期天，小丽同学调查了几家商店毛巾的价格，分别是",
+   "subject": "math",
+   "question": "星期天，小丽同学调查了几家商店毛巾的价格，分别是2.91元、2.65元、2.50元、3.02元、2.78元，请你把他们从贵到便宜排列出来：　　＞　　＞　　＞　　＞　　．",
+   "student_turns": [
+    "我知道，小数比较大小是从前往后，先比较整数部分，若整数部分相等，再比较小数部分。小数部分从十分位开始，列数后更靠前的数更大，如果前面列数分数相等，就比较后面的列数。",
+    "应该是3.02元＞2.91元＞2.78元＞2.65元＞2.50元。",
+    "记得，是先比较整数部分，如果整数部分相等就比较小数部分，小数部分从前往后比较大小。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_4510",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "note": "全弱依赖线性照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_4776",
+   "title": "外部slice·写出比值是1.2的两个比组成的比例是______",
+   "subject": "math",
+   "question": "写出比值是1.2的两个比组成的比例是_________。",
+   "student_turns": [
+    "比例是两个比的相等关系。",
+    "比如3:2=6:4，这是一个比例。",
+    "12：10和6：5都可以吧。",
+    "12：10=6：5。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_4776",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [],
+    "note": "全弱依赖线性照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_val_412",
+   "title": "外部slice·a÷35=4…□，当余数是____时，a最大．",
+   "subject": "math",
+   "question": "a÷35=4…□，当余数是____时，a最大．",
+   "student_turns": [
+    "余数的取值范围应该是0到除数减1，也就是0到34。",
+    "余数的具体值我不清楚，因为题目没有给出。",
+    "我猜余数取到最大值34的时候，a应该可以取到最大值。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_val_412",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "note": "全弱依赖线性照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_559",
+   "title": "外部slice·画一个直径5cm的圆，圆规两脚间张开的距离是__",
+   "subject": "math",
+   "question": "画一个直径5cm的圆，圆规两脚间张开的距离是____cm．",
+   "student_turns": [
+    "圆的直径是过圆心的直线段，连接圆的两边。而半径则是连结圆心与圆周上任一点的线段。",
+    "圆的直径等于半径的两倍。",
+    "那应该是2.5厘米。",
+    "是等于圆的半径。",
+    "应该是2.5厘米。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_559",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8,
+     10
+    ],
+    "truncations": [],
+    "note": "全弱依赖线性照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_1559",
+   "title": "外部slice·一个数比30小，它既是4的倍数，也是5的倍数，这",
+   "subject": "math",
+   "question": "一个数比30小，它既是4的倍数，也是5的倍数，这个数是____．",
+   "student_turns": [
+    "倍数就是一个数的整数倍，像2的倍数就有2,4,6,8...。公倍数是指两个或者两个以上的数的共同倍数，例如2和3的公倍数就有6,12,18...",
+    "我想想，4和5的公倍数应该有20，还有0。",
+    "因为题目说这个数比30小，那么0就不能是这个数，所以这个数应该是20。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_1559",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "note": "全弱依赖线性照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_4402",
+   "title": "外部slice·用方程表示下面的数量关系．超市有西瓜x吨，售出2",
+   "subject": "math",
+   "question": "用方程表示下面的数量关系．超市有西瓜x吨，售出21吨，还剩下35吨．方程：________________．",
+   "student_turns": [
+    "我知道方程就是变量之间的关系表达式，但我不太确定怎么把这个问题转化为方程。",
+    "是不是就是x减去21然后等于35？",
+    "应该就是x-22=35？",
+    "应该是x-21=35。",
+    "是不是就需要求解方程呢？将21加到等号的另一边就是x=35+21=56，所以超市开始有56吨西瓜。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_4402",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8,
+     10
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 8,
+      "cut_prefix": "哦哦，对不起老师是我不小心，"
+     }
+    ],
+    "note": "全弱依赖线性照录;截断=剥隐性强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_3666",
+   "title": "外部slice·把等式4×30=8×15改写成比例：______",
+   "subject": "math",
+   "question": "把等式4×30=8×15改写成比例：______．",
+   "student_turns": [
+    "等式是表达两个量相等的关系，比例则是表示两个比值相等的关系。",
+    "是不是应该写成4：8=15：30？",
+    "应该是30：15=8：4也可以吧？"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_3666",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "如果交换一下的话，"
+     }
+    ],
+    "note": "全弱依赖线性照录;截断=剥隐性强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_223",
+   "title": "外部slice·用4根木条做成一个活动的长方形框，用手拉它的一组",
+   "subject": "math",
+   "question": "用4根木条做成一个活动的长方形框，用手拉它的一组相对的角，这个长方形会变成一个　　形．",
+   "student_turns": [
+    "长方形的对边相等，而且每个角都是直角，平行四边形的对边也相等，这些我都知道的。",
+    "我觉得长方形相对角拉开后应该会变成正方形。",
+    "如果角度变化的话，应该会变成平行四边形。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_223",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "哎呀，我理解错了，"
+     }
+    ],
+    "note": "全弱依赖线性照录;截断=剥隐性强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_5191",
+   "title": "外部slice·物体表面的大小是物体的_______．",
+   "subject": "math",
+   "question": "物体表面的大小是物体的_______．",
+   "student_turns": [
+    "面积就是某种形状的大小，我知道。",
+    "嗯，物体表面的大小，那应该就是物体的体积吧。",
+    "物体表面的大小应该是物体的面积。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_5191",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "哦，我明白了，是我混淆了。"
+     }
+    ],
+    "note": "全弱依赖线性照录;截断=剥隐性强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_2591",
+   "title": "外部slice·平行四边形具有",
+   "subject": "math",
+   "question": "平行四边形具有　　的特性．",
+   "student_turns": [
+    "平行四边形是两组对边平行的四边形，平行四边形的某些属性我记得比较清楚，比如对角相等，对边相等，但是不稳定性这个我不太清楚。",
+    "那平行四边形的特性就是它易变形对吗？",
+    "那答案应该是平行四边形具有稳定性的特性。",
+    "平行四边形的特性是它易变形。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_2591",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 4,
+      "cut_prefix": "哦，原来是这样，"
+     },
+     {
+      "dialogue_index": 8,
+      "cut_prefix": "啊，对不起，我犯了个错，"
+     }
+    ],
+    "note": "全弱依赖线性照录;截断=剥隐性强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_5228",
+   "title": "外部slice·钓鱼岛及其附属岛屿自古以来就是我国的固有领土，它",
+   "subject": "math",
+   "question": "钓鱼岛及其附属岛屿自古以来就是我国的固有领土，它周围的海域面积约为170000平方千米，读作　　平方千米．",
+   "student_turns": [
+    "亿以内的数我应该算明白了，不过平方千米这个我不太了解。",
+    "这个数应该读作十七万。",
+    "那应该是读作十七万平方公里吗？",
+    "应该是读作十七万平方千米。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_5228",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 8,
+      "cut_prefix": "哦，我知道了，"
+     }
+    ],
+    "note": "全弱依赖线性照录;截断=剥隐性强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_3565",
+   "title": "外部slice·边长是1分米的正方形，能分割成____个边长是1",
+   "subject": "math",
+   "question": "边长是1分米的正方形，能分割成____个边长是1厘米的小正方形．",
+   "student_turns": [
+    "嗯，我知道1平方米等于100平方分米，1平方分米等于100平方厘米。",
+    "那应该就是1平方分米等于100平方厘米，所以能分割成50个边长是1厘米的小正方形。",
+    "应该是1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form1_student_answered_tutor_keeps_asking"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "form1_student_answered_tutor_keeps_asking",
+    "record_id": "socraticmath_train_3565",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "哦哦，犯了个错误，"
+     }
+    ],
+    "note": "全弱依赖线性照录;截断=剥隐性强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v2",
+   "id": "socraticmath_train_1827",
+   "title": "外部slice·一个数既是3的倍数又是48的因数，这个数可能是_",
+   "subject": "math",
+   "question": "一个数既是3的倍数又是48的因数，这个数可能是______．",
+   "max_turns": 4,
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form2_student_corrects_tutor"
+   ],
+   "steps": [
+    {
+     "id": "prefix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "一个数如果能被另一个数整除，那么这个数就是那个数的倍数。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "prefix_2",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "如果一个数a能被其他数b整除，那么b就是a的因数。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "correction",
+     "branches": [
+      {
+       "id": "claim_match",
+       "response_kind": "corrects_tutor",
+       "when": {
+        "assistant_contains_any": [
+         "被48整除",
+         "又能被48",
+         "同时又能被48整除"
+        ],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": false
+       },
+       "student_response": "不对，它应该是能被3整除，48能被它整除。",
+       "trajectory_tags": [
+        "真实回应"
+       ]
+      },
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "48的因数有1、2、3、4、6、8、12、16、24、48。",
+       "trajectory_tags": [
+        "降级回应"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "suffix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "3、6、12、24和48都能被3整除。",
+       "trajectory_tags": []
+      }
+     ]
+    }
+   ],
+   "compile": {
+    "rule": "R3",
+    "form": "form2_student_corrects_tutor",
+    "record_id": "socraticmath_train_1827",
+    "claim_turn_index": 5,
+    "correction_dialogue_index": 6,
+    "correction_cut_prefix": "",
+    "fallback_dialogue_index": 8,
+    "fallback_cut_prefix": "",
+    "dropped_turns": [],
+    "feature_audit": [
+     {
+      "dialogue_index": 5,
+      "claim_turn_text": "对，那么问题中说这个数是3的倍数又是48的因数，那么这个数就一定能被3整除，同时又能被48整除，是这样吗？",
+      "mechanical_candidates": [
+       "3的倍数又是48的因数，那么",
+       "中说这个数是3的倍数又是4",
+       "数就一定能被3整除，同时又",
+       "同时又能被48整除，是这样",
+       "又能被48整除，是这样吗"
+      ],
+      "chosen_features": [
+       "被48整除",
+       "又能被48",
+       "同时又能被48整除"
+      ]
+     }
+    ],
+    "step_cuts": {},
+    "note": "强形态:因数方向说反(『又能被48整除』),学生纠正为『48能被它整除』;三特征均为错误签名变体,正确教学(『48的因数』『能整除48』)不含之。"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v2",
+   "id": "socraticmath_val_61",
+   "title": "外部slice·46人去划船，共租12只船，刚好都坐满．大船每船",
+   "subject": "math",
+   "question": "46人去划船，共租12只船，刚好都坐满．大船每船坐5人，小船每船坐3人．租大船____只，小船____只．",
+   "max_turns": 3,
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form2_student_corrects_tutor"
+   ],
+   "steps": [
+    {
+     "id": "prefix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "需要一共46人除以5人，所以要10只大船。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "correction",
+     "branches": [
+      {
+       "id": "claim_match",
+       "response_kind": "corrects_tutor",
+       "when": {
+        "assistant_contains_any": [
+         "12-10=2",
+         "2只小船和10只大船",
+         "这样解对吗"
+        ],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": false
+       },
+       "student_response": "不对，这样算下来一共会超过46人。",
+       "trajectory_tags": [
+        "真实回应"
+       ]
+      },
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "应该是超出的人数除以大船和小船人数的差。",
+       "trajectory_tags": [
+        "降级回应"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "suffix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "超出的人数是12个船乘以每船5人减去46人等于14人，大船和小船人数的差是5减3等于2，所以应该增加14除以2等于7只小船。所以，大船应该是12减去7等于5只。",
+       "trajectory_tags": []
+      }
+     ]
+    }
+   ],
+   "compile": {
+    "rule": "R3",
+    "form": "form2_student_corrects_tutor",
+    "record_id": "socraticmath_val_61",
+    "claim_turn_index": 3,
+    "correction_dialogue_index": 4,
+    "correction_cut_prefix": "",
+    "fallback_dialogue_index": 8,
+    "fallback_cut_prefix": "",
+    "dropped_turns": [
+     {
+      "index": 6,
+      "reason": "裸答『应该坐在小船上。』强上下文(答特定问句),不可独立成步"
+     }
+    ],
+    "feature_audit": [
+     {
+      "dialogue_index": 3,
+      "claim_turn_text": "如果全都是大船，就需要10只，但题目已经告诉我们一共租了12只船，这说明还有小船，不是全都是大船。那么如果我们把多余的几只船都认为是小船的话，现在就有12-10=2只小船和10只大船。这样解对吗？",
+      "mechanical_candidates": [
+       "如果全都是大船，就需要10只，但题目已经告诉我们一共租了12只船，这说明还有小船，不是全都是大船",
+       "话，现在就有12-10=2只小船和10",
+       "大船，就需要10只，但题目已",
+       "在就有12-10=2只小船和",
+       "=2只小船和10只大船。这样",
+       "我们一共租了12只船，这说明",
+       "话，现在就有12-10=2只",
+       "12-10=2"
+      ],
+      "chosen_features": [
+       "12-10=2",
+       "2只小船和10只大船",
+       "这样解对吗"
+      ]
+     }
+    ],
+    "step_cuts": {},
+    "note": "强形态:10大船+2小船过渡解被学生以『超过46人』驳回;数字式特征 12-10=2 锐利。"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v2",
+   "id": "socraticmath_train_1001",
+   "title": "外部slice·把一个小数保留一位小数后得到的近似数是6.7．下",
+   "subject": "math",
+   "question": "把一个小数保留一位小数后得到的近似数是6.7．下面数中，（　　）不可能是这个小数的准确值．  A.6.71  B.6.739  C.6.755",
+   "max_turns": 4,
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form2_student_corrects_tutor"
+   ],
+   "steps": [
+    {
+     "id": "prefix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "我知道，四舍五入是一种约数方法，在保留小数点后一位时，如果需要舍去的那位小数点后的数大于等于5，那么前面的那位数就要进位，小于5的话就舍弃。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "correction",
+     "branches": [
+      {
+       "id": "claim_match",
+       "response_kind": "corrects_tutor",
+       "when": {
+        "assistant_contains_any": [
+         "四舍五入为.7",
+         "十分位如果是大于等于5"
+        ],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": false
+       },
+       "student_response": "不对，应该被四舍五入为.8。",
+       "trajectory_tags": [
+        "真实回应"
+       ]
+      },
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "6.71四舍五入后是6.7。",
+       "trajectory_tags": [
+        "降级回应"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "suffix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "6.739四舍五入后还是6.7。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "suffix_2",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "6.755四舍五入后应该是6.8。",
+       "trajectory_tags": []
+      }
+     ]
+    }
+   ],
+   "compile": {
+    "rule": "R3",
+    "form": "form2_student_corrects_tutor",
+    "record_id": "socraticmath_train_1001",
+    "claim_turn_index": 3,
+    "correction_dialogue_index": 4,
+    "correction_cut_prefix": "",
+    "fallback_dialogue_index": 6,
+    "fallback_cut_prefix": "",
+    "dropped_turns": [],
+    "feature_audit": [
+     {
+      "dialogue_index": 3,
+      "claim_turn_text": "没错，很好。那么，我们来看这个问题。小数保留一位小数后得到的近似数是6.7，也就是说，原小数的十分位如果是大于等于5的数，其实它应该被四舍五入为.7吗？",
+      "mechanical_candidates": [
+       "到的近似数是6.7，也就是说",
+       "果是大于等于5的数，其实它",
+       "的近似数是6.7，也就是说",
+       "它应该被四舍五入为.7吗",
+       "被四舍五入为.7吗？",
+       "6.7"
+      ],
+      "chosen_features": [
+       "四舍五入为.7",
+       "十分位如果是大于等于5"
+      ]
+     }
+    ],
+    "step_cuts": {},
+    "note": "强形态但仅 2 特征定稿:第 3 候选『其实它应该被四舍五入为』会把『四舍五入为6.8』的正确教学误路由至纠错(学生将驳正确句),按宁漏勿误弃用;两特征均为原句错误签名,漏配走 fallback 保对话不断。"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v2",
+   "id": "socraticmath_train_675",
+   "title": "外部slice·比例尺1：100说明图上的1厘米表示实际的距离1",
+   "subject": "math",
+   "question": "比例尺1：100说明图上的1厘米表示实际的距离100米．（判断对错）  A.×  B.√",
+   "max_turns": 3,
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form2_student_corrects_tutor"
+   ],
+   "steps": [
+    {
+     "id": "prefix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "比例尺是实际距离和图上距离的比例关系。  ",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "prefix_2",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "这个问题中的单位长度是厘米。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "correction",
+     "branches": [
+      {
+       "id": "claim_match",
+       "response_kind": "corrects_tutor",
+       "when": {
+        "assistant_contains_any": [
+         "代表实际的100厘米",
+         "题目的表述你认为对吗",
+         "1厘米代表实际的100厘米"
+        ],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": false
+       },
+       "student_response": "不对，题目说的是1厘米表示100米，不是100厘米。",
+       "trajectory_tags": [
+        "真实回应"
+       ]
+      },
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "答案是A。比例尺1：100说明图上的1厘米表示实际的距离100厘米，而不是100米。",
+       "trajectory_tags": [
+        "降级回应"
+       ]
+      }
+     ]
+    }
+   ],
+   "compile": {
+    "rule": "R3",
+    "form": "form2_student_corrects_tutor",
+    "record_id": "socraticmath_train_675",
+    "claim_turn_index": 5,
+    "correction_dialogue_index": 6,
+    "correction_cut_prefix": "",
+    "fallback_dialogue_index": 8,
+    "fallback_cut_prefix": "现在我知道了，",
+    "dropped_turns": [],
+    "feature_audit": [
+     {
+      "dialogue_index": 5,
+      "claim_turn_text": "对的。因此，比例尺1:100在这个问题中，就是说图上的1厘米代表实际的100厘米。请问现在题目的表述你认为对吗？",
+      "mechanical_candidates": [
+       "因此，比例尺1:100在这个问题中，就是说图上的1厘米代表实际的100厘米",
+       "米代表实际的100厘米。请问现",
+       "比例尺1:100在这个问题中",
+       "请问现在题目的表述你认为对吗",
+       "因此，比例尺1:100在这",
+       "就是说图上的1厘米代表实际",
+       "米代表实际的100厘米。请",
+       "比例尺1:100在这个问"
+      ],
+      "chosen_features": [
+       "代表实际的100厘米",
+       "题目的表述你认为对吗",
+       "1厘米代表实际的100厘米"
+      ]
+     }
+    ],
+    "step_cuts": {},
+    "note": "强形态:比例尺 1:100 单位口径(100 厘米 vs 题面 100 米),学生指出题面与导师口径不一致;fallback 取轮 8 截断(剥导师问句回执)。"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v2",
+   "id": "socraticmath_train_4275",
+   "title": "外部slice·淘气的日记中出现了几处数学错误，请找出来并改正．",
+   "subject": "math",
+   "question": "淘气的日记中出现了几处数学错误，请找出来并改正．2007年2月29日晴今天，全年级同学进行体检．我一称体重，才60千克，心里乐坏了！原来我的体重可高达70千克啊！去年我坚持每天跑1.5千米，全年共跑了549千米，现在体重下降了25%，腰围也减少了5分米．看来功夫不负有心人，我减肥成功啦！",
+   "max_turns": 10,
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form2_student_corrects_tutor"
+   ],
+   "steps": [
+    {
+     "id": "prefix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "是的，平年的2月份只有28天，闰年的2月份有29天。如果一个年份可以被4整除，那么它是闰年，否则是平年。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "prefix_2",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "2007不能被4整除，所以是平年。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "prefix_3",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "平年的2月份只有28天。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "prefix_4",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "有问题，因为2007年是平年，2月份没有29日。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "prefix_5",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "我会。可以把1.5千米乘以365，也就是1.5*365。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "prefix_6",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "结果是547.5千米。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "correction",
+     "branches": [
+      {
+       "id": "claim_match",
+       "response_kind": "corrects_tutor",
+       "when": {
+        "assistant_contains_any": [
+         "549千米",
+         "全年跑了549",
+         "写的全年跑了549千米"
+        ],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": false
+       },
+       "student_response": "这个应该是不对的，应该是547.5千米。",
+       "trajectory_tags": [
+        "真实回应"
+       ]
+      },
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "我知道，应该用减去的部分除以原来的数，然后乘以100%。",
+       "trajectory_tags": [
+        "降级回应"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "suffix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "应该是（70－60）/70*100%=约14.3%。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "suffix_2",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "不对，应该是14.3%。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "suffix_3",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "有问题，一个人正常的腰围大约在80厘米左右，所以他不能缩小50厘米，也就是5分米，应该是缩小了5厘米。",
+       "trajectory_tags": []
+      }
+     ]
+    }
+   ],
+   "compile": {
+    "rule": "R3",
+    "form": "form2_student_corrects_tutor",
+    "record_id": "socraticmath_train_4275",
+    "claim_turn_index": 13,
+    "correction_dialogue_index": 14,
+    "correction_cut_prefix": "",
+    "fallback_dialogue_index": 16,
+    "fallback_cut_prefix": "",
+    "dropped_turns": [],
+    "feature_audit": [
+     {
+      "dialogue_index": 13,
+      "claim_turn_text": "对的，所以日记中写的全年跑了549千米，对吗？",
+      "mechanical_candidates": [
+       "所以日记中写的全年跑了549千米，对吗",
+       "写的全年跑了549千米，对吗？",
+       "全年跑了549千米，对吗",
+       "549"
+      ],
+      "chosen_features": [
+       "549千米",
+       "全年跑了549",
+       "写的全年跑了549千米"
+      ]
+     }
+    ],
+    "step_cuts": {},
+    "note": "中段路径最长案:日记多错误串行排查,纠错对象为导师转述的 549 千米;特征锚定数字 549,题面复述亦命中(转述即路由语境,合形态语义)。"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v2",
+   "id": "socraticmath_train_3998",
+   "title": "外部slice·两端在圆周上的线段叫做圆的直径。（判断对错）",
+   "subject": "math",
+   "question": "两端在圆周上的线段叫做圆的直径。（判断对错）  A.√  B.×",
+   "max_turns": 3,
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form2_student_corrects_tutor"
+   ],
+   "steps": [
+    {
+     "id": "prefix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "圆的直径是圆心到圆周的两倍距离。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "prefix_2",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "对不起，老师，我不太确定直径的定义。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "correction",
+     "branches": [
+      {
+       "id": "claim_match",
+       "response_kind": "corrects_tutor",
+       "when": {
+        "assistant_contains_any": [
+         "题目中的说法正确吗",
+         "根据这个定义",
+         "端点都在圆周上并且通过圆心"
+        ],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": false
+       },
+       "student_response": "题目中的说法好像不对。因为题目中只说了线段的两端在圆周上，并没有提到通过圆心。",
+       "trajectory_tags": [
+        "真实回应"
+       ]
+      },
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "问题的答案是B。两端在圆周上的线段并不一定就是圆的直径，它必须通过圆心。",
+       "trajectory_tags": [
+        "降级回应"
+       ]
+      }
+     ]
+    }
+   ],
+   "compile": {
+    "rule": "R3",
+    "form": "form2_student_corrects_tutor",
+    "record_id": "socraticmath_train_3998",
+    "claim_turn_index": 5,
+    "correction_dialogue_index": 6,
+    "correction_cut_prefix": "根据你的解释，",
+    "fallback_dialogue_index": 8,
+    "fallback_cut_prefix": "是的，",
+    "dropped_turns": [],
+    "feature_audit": [
+     {
+      "dialogue_index": 5,
+      "claim_turn_text": "没关系，我们一起学吧。圆的直径是一条线段，它的端点都在圆周上并且通过圆心。也就是说，每个直径都会将圆分为两个完全相同的部分。那么根据这个定义，题目中的说法正确吗？",
+      "mechanical_candidates": [
+       "圆的直径是一条线段，它的端点都在圆周上并且通过圆心",
+       "每个直径都会将圆分为两个完全相同的部分",
+       "题目中的说法正确吗"
+      ],
+      "chosen_features": [
+       "题目中的说法正确吗",
+       "根据这个定义",
+       "端点都在圆周上并且通过圆心"
+      ]
+     }
+    ],
+    "step_cuts": {},
+    "note": "命中轮自带强依赖标记『根据你的解释』(输入 manual_review 预警),剥除后理由句自足(引题面原文);纠错对象为题面主张,导师给定义后问询即路由语境。"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v2",
+   "id": "socraticmath_train_2899",
+   "title": "外部slice·下面的三句话中，正确的是（",
+   "subject": "math",
+   "question": "下面的三句话中，正确的是（　　）  A.一只热水瓶的容积为60毫升  B.男生人数比女生人数多10%，那么女生人数比男生人数少10%  C.容器的体积与容积的意思不同",
+   "max_turns": 3,
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form2_student_corrects_tutor"
+   ],
+   "steps": [
+    {
+     "id": "correction",
+     "branches": [
+      {
+       "id": "claim_match",
+       "response_kind": "corrects_tutor",
+       "when": {
+        "assistant_contains_any": [
+         "热水瓶",
+         "容积为60毫升",
+         "60毫升"
+        ],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": false
+       },
+       "student_response": "这个应该不对吧，热水瓶的容积应该远大于60毫升。",
+       "trajectory_tags": [
+        "真实回应"
+       ]
+      },
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "我想了一下，男生人数比女生人数多10%，那么实际上，如果男生有10个，女生就有9个，所以女生人数比男生人数是少约11%，而非10%，所以答案B应该也不对。",
+       "trajectory_tags": [
+        "降级回应"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "suffix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "我觉得容器的体积和容积应该是一样的吧。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "suffix_2",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "虽然我们平时把它们当作一回事，但是在专业的角度它们还是有区别的。",
+       "trajectory_tags": []
+      }
+     ]
+    }
+   ],
+   "compile": {
+    "rule": "R3",
+    "form": "form2_student_corrects_tutor",
+    "record_id": "socraticmath_train_2899",
+    "claim_turn_index": 1,
+    "correction_dialogue_index": 2,
+    "correction_cut_prefix": "",
+    "fallback_dialogue_index": 4,
+    "fallback_cut_prefix": "",
+    "dropped_turns": [],
+    "feature_audit": [
+     {
+      "dialogue_index": 1,
+      "claim_turn_text": "我们看一下这个问题，它可以分解成几个小问题来思考。将每个选项都分别进行分析。例如，选项A，\"一只热水瓶的容积为60毫升\"，你觉得这个说法合理吗？",
+      "mechanical_candidates": [
+       "例如，选项A，\"一只热水瓶的容积为60毫升\"，你觉得这个说法合理吗",
+       "水瓶的容积为60毫升\"，你觉",
+       "将每个选项都分别进行分析",
+       "你觉得这个说法合理吗"
+      ],
+      "chosen_features": [
+       "热水瓶",
+       "容积为60毫升",
+       "60毫升"
+      ]
+     }
+    ],
+    "step_cuts": {
+     "suffix_2": {
+      "dialogue_index": 8,
+      "cut_prefix": "哦，我懂了，就是说"
+     }
+    },
+    "note": "纠错步为首步(候选无前缀):学生否掉选项 A 的 60 毫升;特征锚定热水瓶/60毫升,导师复述选项即命中。"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v2",
+   "id": "socraticmath_val_495",
+   "title": "外部slice·口算75-38时，可以这样想70-30=40、8",
+   "subject": "math",
+   "question": "口算75-38时，可以这样想70-30=40、8-5=3、40+3=43。（判断对错）  A.√  B.×",
+   "max_turns": 4,
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form2_student_corrects_tutor"
+   ],
+   "steps": [
+    {
+     "id": "prefix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "额，我知道就是可以先算十位再算个位吧？",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "prefix_2",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "题目是说先算70减30等于40，然后8减5等于3，最后40加3等于43。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "correction",
+     "branches": [
+      {
+       "id": "claim_match",
+       "response_kind": "corrects_tutor",
+       "when": {
+        "assistant_contains_any": [
+         "注意看这个操作",
+         "这个操作是不是"
+        ],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": false
+       },
+       "student_response": "好像是问题，他算的70减30，8减5……这个应该不对，应该正好相反，是75减30得到45，然后45再减去8才对。",
+       "trajectory_tags": [
+        "真实回应"
+       ]
+      },
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "我算一下，75减30是45，然后45减8是37。",
+       "trajectory_tags": [
+        "降级回应"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "suffix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "算法是错的，所以应该判断错。",
+       "trajectory_tags": []
+      }
+     ]
+    }
+   ],
+   "compile": {
+    "rule": "R3",
+    "form": "form2_student_corrects_tutor",
+    "record_id": "socraticmath_val_495",
+    "claim_turn_index": 5,
+    "correction_dialogue_index": 6,
+    "correction_cut_prefix": "",
+    "fallback_dialogue_index": 8,
+    "fallback_cut_prefix": "",
+    "dropped_turns": [],
+    "feature_audit": [
+     {
+      "dialogue_index": 5,
+      "claim_turn_text": "是的，但你注意看这个操作是不是存在什么问题？",
+      "mechanical_candidates": [
+       "但你注意看这个操作是不是存在什么问题",
+       "个操作是不是存在什么问题"
+      ],
+      "chosen_features": [
+       "注意看这个操作",
+       "这个操作是不是"
+      ]
+     }
+    ],
+    "step_cuts": {},
+    "note": "口算分解纠错(40+3 应先 75-30=45 再减 8);claim 轮本身措辞泛(『这个操作』),特征取其最长具体短语(弃『存在什么问题』通用问尾),误路由面限于本题语境,漏配走 fallback 由学生直接算出 37。"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v2",
+   "id": "socraticmath_val_13",
+   "title": "外部slice·根据△×◇=100，下列算式正确的是（",
+   "subject": "math",
+   "question": "根据△×◇=100，下列算式正确的是（　　）  A.（△÷2）×（◇÷2）=100  B.◇×△÷5=100÷5  C.◇÷5×△=100×5  D.△×2×◇×2=100",
+   "max_turns": 2,
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "form2_student_corrects_tutor"
+   ],
+   "steps": [
+    {
+     "id": "prefix_1",
+     "branches": [
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "如果先将△×◇算出来再除以5，得到的结果应该和100÷5一样。",
+       "trajectory_tags": []
+      }
+     ]
+    },
+    {
+     "id": "correction",
+     "branches": [
+      {
+       "id": "claim_match",
+       "response_kind": "corrects_tutor",
+       "when": {
+        "assistant_contains_any": [
+         "选项C",
+         "对◇先进行除法"
+        ],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": false
+       },
+       "student_response": "这样做应该不对，没有同时对△和◇进行操作，所以不能保证等式的数值不变。",
+       "trajectory_tags": [
+        "真实回应"
+       ]
+      },
+      {
+       "id": "fallback",
+       "response_kind": "correct",
+       "when": {
+        "assistant_contains_any": [],
+        "assistant_contains_all": [],
+        "interaction_states": [],
+        "fallback": true
+       },
+       "student_response": "等式两边应该要同时做同样的操作，才能保持等式的性质不变。",
+       "trajectory_tags": [
+        "降级回应"
+       ]
+      }
+     ]
+    }
+   ],
+   "compile": {
+    "rule": "R3",
+    "form": "form2_student_corrects_tutor",
+    "record_id": "socraticmath_val_13",
+    "claim_turn_index": 5,
+    "correction_dialogue_index": 6,
+    "correction_cut_prefix": "",
+    "fallback_dialogue_index": 8,
+    "fallback_cut_prefix": "能的，",
+    "dropped_turns": [
+     {
+      "index": 2,
+      "reason": "裸肯定回执『是的，可以的。』强上下文,不可独立成步"
+     }
+    ],
+    "feature_audit": [
+     {
+      "dialogue_index": 5,
+      "claim_turn_text": "是的，因为等式两边同时除以5，等式的数值不会改变。那么我们再看看选项C，它是对◇先进行除法，然后再乘以△和100×5比较，这样做对吗？",
+      "mechanical_candidates": [
+       "项C，它是对◇先进行除法，然后再乘以△和100×5比较，这样做对吗",
+       "因为等式两边同时除以5，等式的数值不会改变",
+       "后再乘以△和100×5比较，这样做",
+       "两边同时除以5，等式的数值",
+       "△和100×5比较，这样做",
+       "00×5比较，这样做对吗",
+       "100×5"
+      ],
+      "chosen_features": [
+       "选项C",
+       "对◇先进行除法"
+      ]
+     }
+    ],
+    "step_cuts": {},
+    "note": "等式性质纠错:选项 C 未同时对两边操作;特征锚定选项C与操作序(弃通用问尾『这样做对吗』——问选项B正确性亦含之,会把纠错误导至B,宁漏勿误);fallback 取轮 8 截断(剥『能的』回执)。"
+   }
+  }
+ ]
+}
