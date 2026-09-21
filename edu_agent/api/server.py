@@ -135,10 +135,20 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         if _NATIVE_TOKEN.match(self.path):
             return self.identity.native_token(self._read_body())
         if _LOGOUT.match(self.path):
-            # 老系统 LogoutResponse = {"ok": true}。token 为无状态 HMAC,不做吊销名单
-            # (最小实现,目标指示);按老文档返回成功即可,offline 后 token 过期即失效。
+            # 06 §2.1:登出 = 服务端作废——验签通过即吊销 jti(内存名单);
+            # 缺头/验签失败仍 200 {"ok": true}(幂等空操作,零破坏,#106)。
+            # EDU_AUTH_ENFORCE=0 熔断跳过验签 = 跳过吊销检查(联调语义,06 §4.3)。
+            self._revoke_token()
             return 200, {"ok": True}
         return None
+
+    def _revoke_token(self) -> None:
+        """logout 的吊销动作:读 Authorization → verify_token 通过则 revoke。"""
+        if os.environ.get("EDU_AUTH_ENFORCE", "1") == "0":
+            return  # 熔断语义与 _authorized 同款:跳过验签即跳过吊销
+        token = self.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+        if token:
+            self.identity.revoke(token)
 
     def _authorized(self) -> bool:
         """对话面鉴权闸(P1-1):真验签,HMAC 比签 + exp,失败 401。
