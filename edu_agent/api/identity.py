@@ -136,7 +136,9 @@ def demo_login(account: str, password: str, hmac_key: str,
 
 
 class IdentityService:
-    """单 native_app 的授权码与令牌签发;全内存,进程重启即失效(v1 语义)。"""
+    """单 native_app 的授权码与令牌签发;授权码/幂等记录全内存,进程重启即失效
+    (v1 语义)。唯一例外是 jti 吊销名单:注入 revocation_store(SqliteStore)
+    即落盘并跨重启——重启不复活已登出 token(06 §4.4)。"""
 
     def demo_login_body(self, body: dict) -> tuple[int, dict]:
         """HTTP 形态演示登录:{account, password} → 200 token / 401 USER_LOGIN_FAILED。
@@ -150,7 +152,8 @@ class IdentityService:
                              hmac_key=self.config["hmac_key"])
         return 200, payload
 
-    def __init__(self, config: dict | None = None) -> None:
+    def __init__(self, config: dict | None = None,
+                 revocation_store=None) -> None:
         env = os.environ
         self.config = config or {
             "native_app_id": env.get("IDENTITY_NATIVE_APP_ID", ""),
@@ -165,10 +168,15 @@ class IdentityService:
         self.codes: dict[str, dict] = {}
         self.idempotency: dict[str, tuple[str, dict]] = {}
         self._code_lock = threading.Lock()  # P1-3:授权码单次消费原子化(并发兑换竞态)
-        # jti 吊销名单(06 §2.1 第 2 条·纯内存档;存活期 = 剩余 TTL 的过期自动回收,
-        # 登出即作废是唯一写入口)。单进程语义与 IdentityService 既有形态同口径。
+        # jti 吊销名单(06 §2.1 第 2 条:内存 + SQLite 落盘)。内存 = 热路径唯一
+        # 查询面(每请求一次 set 成员判断);revocation_store 注入时启动全量加载,
+        # 吊销写序 = 先库后内存(库失败 → 整体失败,不假报 ok)。存活期 =
+        # 剩余 TTL 的过期自动回收,登出即作废是唯一写入口。
         self._revoked: dict[str, int] = {}  # jti -> exp(复用 token 的 exp 作回收时点)
         self._revoke_lock = threading.Lock()
+        self._store = revocation_store
+        if revocation_store is not None:  # 启动加载:落盘名单 → 内存(06 §2.1 第 2 条)
+            self._revoked.update(revocation_store.load_revoked(int(time.time())))
 
     def native_code(self, body: dict, headers: dict | Message,
                     now: int | None = None) -> tuple[int, dict]:
@@ -255,12 +263,14 @@ class IdentityService:
         }
 
     def revoke(self, token: str) -> bool:
-        """吊销一枚 access_token(06 §2.1 第 1 条):验签通过 → jti 入名单,返回 True。
+        """吊销一枚 access_token(06 §2.1 第 1/3 条):验签通过 → jti 入名单,返回 True。
 
         验签失败(过期/假签/格式不符/空钥)返回 False——已失效的 token
         无需吊销(过期由 verify_token 拦,假签本就进不了门)。jti 缺失的
         token(演示页 JS 变量残留的历史 token 等)返回 False:无法定位,
-        不动名单。内存 add 无失败路径:True 即已吊销。
+        不动名单。写序先库后内存(06 §2.1 第 3 条):库写失败即抛出
+        (logout 500)——宁可不吊销也不谎报成功;内存 add 无失败路径,
+        True 即已双面吊销。
         """
         if not self.verify_token(token):
             return False
@@ -268,10 +278,13 @@ class IdentityService:
         jti = payload.get("jti")
         if not jti:
             return False
+        exp = int(payload.get("exp") or 0) or int(time.time())
+        if self._store is not None:
+            self._store.revoke_token(str(jti), exp)  # 先库(失败即抛,整体不成功)
         with self._revoke_lock:
-            self._revoked[str(jti)] = int(payload.get("exp") or 0) or int(time.time())
+            self._revoked[str(jti)] = exp  # 后内存(无失败路径)
             now = int(time.time())
-            expired = [j for j, exp in self._revoked.items() if exp < now]
+            expired = [j for j, e in self._revoked.items() if e < now]
             for j in expired:
                 del self._revoked[j]
         return True

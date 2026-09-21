@@ -50,7 +50,7 @@ def build() -> ThreadingHTTPServer:
         store=db,
         image_resolver=files.data_url,
         sessions=db)
-    return build_server(service, IdentityService(), files=files, db=db,
+    return build_server(service, IdentityService(revocation_store=db), files=files, db=db,
                         host="127.0.0.1", port=port)
 
 

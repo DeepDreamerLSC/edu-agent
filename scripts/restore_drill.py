@@ -205,7 +205,7 @@ def _boot(db_path: Path, port: int) -> tuple[object, SqliteStore, str]:
     files = FileService(records_store=db)
     service = build_service(DrillStubKernel(), store=db, sessions=db,
                             image_resolver=files.data_url)
-    server = build_server(service, IdentityService(), files=files, db=db,
+    server = build_server(service, IdentityService(revocation_store=db), files=files, db=db,
                           host="127.0.0.1", port=port)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     return server, db, f"http://127.0.0.1:{server.server_address[1]}"
