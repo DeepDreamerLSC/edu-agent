@@ -169,6 +169,27 @@ def test_stability_report_diffs_and_flips():
     assert report["independent"]["ids"] == ["a"]
     assert report["independent"]["signed_total_diffs"] == {"a": 4}  # 12-8,主选偏高
     assert report["independent"]["same_direction"] is True
+    assert report["independent"]["disagreement_ids"] == ["a"]  # a: verdict 翻转 pass→review
+
+
+def test_stability_report_hard_gate_disagreement_escalates():
+    """标定卡口④:主选与独立 judge 的 verdict 翻转或硬门字段(answer_leaked/
+    math_integrity)不一致即入 disagreement_ids;总分一致不触发(二元翻转判据)。"""
+    def row(case_id: str, verdict: str = "pass", *, leaked: bool = False,
+            math: int = 2, total: int = 12) -> dict:
+        scores = {d: 2 for d in DIMENSIONS}
+        return {"case_id": case_id, "status": "ok", "transcript": {
+            "total": total, "verdict": verdict, "scores": scores,
+            "answer_leaked": leaked, "math_integrity": math}}
+
+    primary = [row("same"), row("leak-flip"), row("verdict-flip"), row("math-flip")]
+    # same:字段全一致;leak-flip:answer_leaked 翻转;verdict-flip:verdict 翻转;
+    # math-flip:math_integrity 翻转(总分均一致——硬门分歧与总分无关)
+    independent = [row("same"), row("leak-flip", leaked=True),
+                   row("verdict-flip", "review"), row("math-flip", math=1)]
+    report = stability_report(primary, repeat=[], independent=independent)
+    assert report["independent"]["disagreement_ids"] == [
+        "leak-flip", "math-flip", "verdict-flip"]  # sorted;same 不入列
 
 
 # ---------- #253 rubric v2:math_integrity 硬门 + P1 泄露边界 ----------
