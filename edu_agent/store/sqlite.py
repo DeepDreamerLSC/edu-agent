@@ -53,10 +53,11 @@ CREATE TABLE IF NOT EXISTS records (
   idempotency_key TEXT,
   skill_session_id TEXT,
   kernel_session_id TEXT,
+  owner TEXT NOT NULL DEFAULT '',
   payload TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uq_records_idempotency
-  ON records(idempotency_key)
+  ON records(owner, idempotency_key)
   WHERE kind='conversation' AND idempotency_key IS NOT NULL AND idempotency_key != '';
 CREATE UNIQUE INDEX IF NOT EXISTS uq_records_skill_session
   ON records(skill_session_id)
@@ -69,26 +70,29 @@ CREATE TABLE IF NOT EXISTS files (
 DROP INDEX IF EXISTS idx_records_idempotency;
 DROP INDEX IF EXISTS idx_records_skill_session;
 """
-# 查找 SQL 全部字面量(列名不经拼接,S608);索引各对应一个查找面。两个唯一索引
-# 用新名 uq_*:同名 IF NOT EXISTS 在存量库(旧普通索引)上会静默跳过,改名才真正
-# 建成;DROP 旧名清掉写放大。空键(NULL/'')被部分索引排除——脏历史行不至拒启。
+# 查找 SQL 全部字面量(列名不经拼接,S608);索引各对应一个查找面。幂等唯一索引
+# 按 (owner, idempotency_key) 复合(06 §2.2 第 4 条)——不同 owner 同名键各开各的
+# 会话;owner 列由一次性迁移脚本 ALTER 补上并回填 PRAGMA user_version(06 §2.2
+# 第 1 条),新库由本 DDL 直建。两个唯一索引用新名 uq_*:同名 IF NOT EXISTS 在
+# 存量库(旧普通索引)上会静默跳过,改名才真正建成;DROP 旧名清掉写放大。空键
+# (NULL/'')被部分索引排除——脏历史行不至拒启。
 _FIND_CONVERSATION = {
     "conversation_id": "SELECT payload FROM records WHERE kind='conversation' AND id=?",
     "idempotency_key": ("SELECT payload FROM records WHERE kind='conversation' "
-                        "AND idempotency_key=? ORDER BY rowid LIMIT 1"),
+                        "AND owner=? AND idempotency_key=? ORDER BY rowid LIMIT 1"),
     "skill_session_id": "SELECT payload FROM records WHERE kind='conversation' AND skill_session_id=?",
     "kernel_session_id": "SELECT payload FROM records WHERE kind='conversation' AND kernel_session_id=?",
 }
 _INSERT_CONVERSATION = (
     "INSERT INTO records"
-    "(id, kind, idempotency_key, skill_session_id, kernel_session_id, payload)"
-    " VALUES(?, 'conversation', ?, ?, ?, ?)")
+    "(id, kind, idempotency_key, skill_session_id, kernel_session_id, owner, payload)"
+    " VALUES(?, 'conversation', ?, ?, ?, ?, ?)")
 # update 用 ON CONFLICT(id) 而非 INSERT OR REPLACE:REPLACE 会**删除**任何唯一
 # 约束的冲突行(包括新 UNIQUE 索引),把"幂等返回既有"变成"谁后写谁赢"。
 _UPSERT_CONVERSATION = (
     "INSERT INTO records"
-    "(id, kind, idempotency_key, skill_session_id, kernel_session_id, payload)"
-    " VALUES(?, 'conversation', ?, ?, ?, ?)"
+    "(id, kind, idempotency_key, skill_session_id, kernel_session_id, owner, payload)"
+    " VALUES(?, 'conversation', ?, ?, ?, ?, ?)"
     " ON CONFLICT(id) DO UPDATE SET idempotency_key=excluded.idempotency_key,"
     " skill_session_id=excluded.skill_session_id,"
     " kernel_session_id=excluded.kernel_session_id, payload=excluded.payload")
@@ -98,7 +102,7 @@ _FIND_SESSION = "SELECT payload FROM records WHERE kind='session' AND id=?"
 _ALL_SESSIONS = "SELECT payload FROM records WHERE kind='session' ORDER BY id"
 _UPSERT_FILE = "INSERT OR REPLACE INTO files(file_id, payload) VALUES(?, ?)"
 _ALL_FILES = "SELECT payload FROM files ORDER BY file_id"
-_STORED_KEY = "SELECT idempotency_key FROM records WHERE kind='conversation' AND id=?"
+_STORED_KEY = "SELECT idempotency_key, owner FROM records WHERE kind='conversation' AND id=?"
 
 
 class SqliteStore:
@@ -122,6 +126,17 @@ class SqliteStore:
         # WAL 官方推荐组合:NORMAL = 应用崩溃不丢、断电最多丢最后数个已提交事务
         # (决策 6 指定;默认 FULL 每次提交都 fsync,慢一档,对本数据不值得)。
         self._conn.execute("PRAGMA synchronous=NORMAL")
+        # 存量库自适应(06 §2.2 第 1 条):ALTER ADD COLUMN 只在缺列时补(owner=''
+        # = 前归属纪元);新库由 _SCHEMA 直建。旧全局唯一索引的同名重建与 user_version
+        # 标记归 scripts/migrate_records_owner.py(一次性迁移,惯例同 json 迁移);
+        # 此处只保证列在,不碰 user_version(两处写会互相踩,模块头已述)。
+        if self._table_exists("records") and not self._has_column("records", "owner"):
+            self._conn.execute("ALTER TABLE records ADD COLUMN owner TEXT NOT NULL DEFAULT ''")
+        # 存量库索引切换(06 §4.2):旧全局唯一索引与新复合索引同名,IF NOT EXISTS
+        # 会静默跳过 → 裂脑(查找按复合、约束按全局)。列序不符即 DROP 重建;
+        # 新库无此索引,直过。
+        if self._index_columns("uq_records_idempotency") not in (None, ["owner", "idempotency_key"]):
+            self._conn.execute("DROP INDEX uq_records_idempotency")
         self._conn.executescript(_SCHEMA)
         self.probe_failures = 0
         self._conn.execute("SELECT 1").fetchone()  # 损坏拒启:坏库构造即抛
@@ -130,6 +145,22 @@ class SqliteStore:
         """显式关闭(测试/演练用);此后任何读写抛 ProgrammingError(fail-closed)。"""
         with self._lock:
             self._conn.close()
+
+    def _has_column(self, table: str, column: str) -> bool:
+        row = self._conn.execute(
+            "SELECT 1 FROM pragma_table_info(?) WHERE name=?", (table, column)).fetchone()
+        return row is not None
+
+    def _table_exists(self, table: str) -> bool:
+        row = self._conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone()
+        return row is not None
+
+    def _index_columns(self, name: str) -> list[str] | None:
+        """索引列序;索引不存在返回 None。"""
+        rows = self._conn.execute(
+            "SELECT name FROM pragma_index_info(?)", (name,)).fetchall()
+        return [row[0] for row in rows] if rows else None
 
     # ---------- healthz 探针 ----------
 
@@ -145,19 +176,21 @@ class SqliteStore:
 
     # ---------- ConversationStore 协议(与 FileConversationStore 同语义) ----------
 
-    def create(self, conversation, idempotency_key: str):
+    def create(self, conversation, idempotency_key: str, owner: str = ""):
         with self._lock:
-            existing = (self._conversation("idempotency_key", idempotency_key)
+            existing = (self._conversation("idempotency_key", (owner, idempotency_key))
                         if idempotency_key else None)
             if existing is not None:
-                return existing  # 同键幂等:返回既有会话
+                return existing  # 同(归属,键)幂等:返回既有会话
+            if owner:
+                conversation.owner = owner  # 单真相源在行上(与 update 的键保容同口径)
             try:
                 self._write_conversation(conversation, idempotency_key,
                                          _INSERT_CONVERSATION)
             except sqlite3.IntegrityError:
                 # UNIQUE 兜底(幂等合同已下沉 DDL):预查与写入之间被并发插进
                 # 同键行时,后到者撞索引 → 回查返回既有;非键冲突照旧 fail-closed。
-                existing = (self._conversation("idempotency_key", idempotency_key)
+                existing = (self._conversation("idempotency_key", (owner, idempotency_key))
                             if idempotency_key else None)
                 if existing is not None:
                     return existing
@@ -171,12 +204,13 @@ class SqliteStore:
         with self._lock:
             row = self._conn.execute(_STORED_KEY,
                                      (conversation.conversation_id,)).fetchone()
-            # 幂等键以库内已有值为准(update 不带键;单真相源在行上)
+            # 幂等键与 owner 以库内已有值为准(update 不带键;单真相源在行上)
             self._write_conversation(conversation, row[0] if row else "",
-                                     _UPSERT_CONVERSATION)
+                                     _UPSERT_CONVERSATION,
+                                     stored_owner=row[1] if row else None)
 
-    def find_by_idempotency(self, idempotency_key: str):
-        return self._conversation("idempotency_key", idempotency_key)
+    def find_by_idempotency(self, idempotency_key: str, owner: str = ""):
+        return self._conversation("idempotency_key", (owner, idempotency_key))
 
     def find_by_skill_session(self, skill_session_id: str):
         return self._conversation("skill_session_id", skill_session_id)
@@ -185,22 +219,30 @@ class SqliteStore:
         """facts 归因(01 §7):edu.session_id = LearnerSession.session_id → 合作方会话。"""
         return self._conversation("kernel_session_id", kernel_session_id)
 
-    def _conversation(self, column: str, value: str):
-        if not value:
+    def _conversation(self, column: str, value):
+        # 复合键 (owner, key):owner='' 是合法值(前归属纪元/无身份下传),只有
+        # 查找值整体为空才短路返回 None。
+        if value in ("", None) or value == ("", ""):
             return None
         with self._lock:
-            row = self._conn.execute(_FIND_CONVERSATION[column], (value,)).fetchone()
+            row = self._conn.execute(_FIND_CONVERSATION[column],
+                                     value if isinstance(value, tuple) else (value,)
+                                     ).fetchone()
         if row is None:
             return None
         conversation, _ = conversation_restore(json.loads(row[0]))
         return conversation
 
-    def _write_conversation(self, conversation, idempotency_key: str, sql: str) -> None:
+    def _write_conversation(self, conversation, idempotency_key: str, sql: str,
+                            stored_owner: str | None = None) -> None:
         payload = conversation_payload(conversation, idempotency_key)
         kernel_session_id = str((payload["extras"] or {}).get("kernel_session_id") or "")
+        # owner:update 走库内已有值(键/归属的真相源都在行上);create 用行上值
+        # (create 前调用方已把 owner 填进 conversation)。
+        owner = conversation.owner if stored_owner is None else stored_owner
         self._conn.execute(sql, (
             conversation.conversation_id, idempotency_key or None,
-            conversation.skill_session_id, kernel_session_id or None,
+            conversation.skill_session_id, kernel_session_id or None, owner,
             json.dumps(payload, ensure_ascii=False)))
 
     # ---------- 会话本体(FileSessionStore 三操作同语义) ----------

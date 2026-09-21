@@ -88,14 +88,22 @@ class ConversationService:
 
     # ---------- open(幂等键,同键同 Attempt) ----------
 
-    def create(self, body: dict) -> dict:
+    @staticmethod
+    def _owned(conversation: Conversation, owner: str) -> Conversation:
+        """归属闸(06 §2.2 第 3 条):会话 owner 非空且 ≠ 请求者 → 404(不回 403,
+        不向他人泄露会话存在性);owner='' = 前归属纪元/无身份下传(熔断),不限制。"""
+        if conversation.owner and conversation.owner != owner:
+            raise ApiError(404, None, "会话不存在")
+        return conversation
+
+    def create(self, body: dict, owner: str = "") -> dict:
         """会话入口(POST /api/conversations,统一 Open 字段子集,老系统文档 §5)。
 
         idempotency_key 必填(重试原样复用);external_question_id 走题源(未命中
         404 QUESTION_BANK_QUESTION_NOT_FOUND);question_text/question_image 为
         自由材料二选一(同传 422),题图空壳由内核 vision 处理;learner 只认
         白名单键(grade/answer_correct/knowledge_points,其余 422,#202)。
-        幂等重试返回同一 conversation_id。"""
+        幂等重试返回同一 conversation_id(按 (owner, key) 复合,06 §2.2 第 4 条)。"""
         idempotency_key = str(body.get("idempotency_key") or "")
         if not idempotency_key:
             raise ApiError(422, None, "idempotency_key 必填(重试原样复用)")
@@ -113,18 +121,18 @@ class ConversationService:
         if external_question_id:
             # 同题组合与统一 open 同款:题库文答为准,客户端题图合并
             payload = self.open(external_question_id, idempotency_key, learner,
-                                merge_image=str(image or ""))
+                                merge_image=str(image or ""), owner=owner)
         elif text or image:
             material = {"text": str(text)} if text else {"image": str(image)}
             if knowledge_points:
                 # 自由材料路径同统一 open:客户端知识点作追问锚点
                 material["knowledge_points"] = knowledge_points
             payload = self._open_material(material, learner, idempotency_key,
-                                          external_question_id)
+                                          external_question_id, owner=owner)
         else:
             raise ApiError(422, "PREPARED_QUESTION_SOURCE_MISSING",
                            "open 请求未提供任何题目来源(external_question_id/question_text/question_image)")
-        conversation = self.store.find_by_idempotency(idempotency_key)
+        conversation = self.store.find_by_idempotency(idempotency_key, owner=owner)
         return {
             "conversation_id": payload["conversation"]["conversation_id"],
             "skill_session_id": payload["skill_session_id"],
@@ -195,7 +203,7 @@ class ConversationService:
             learner["knowledge_points"] = knowledge_points
         return learner, answer_correct, knowledge_points
 
-    def open_unified(self, body: dict) -> dict:
+    def open_unified(self, body: dict, owner: str = "") -> dict:
         """统一 Open(§5):字段/长度/严格类型照老系统;组合规则:
         external_question_id+题图允许同传(同题组合);题库命中复用题干/答案/解析/
         知识点;未命中但有题图走 vision 转写;未命中无图 404
@@ -234,17 +242,17 @@ class ConversationService:
             try:
                 # 同题组合(§5):题库文答为准,客户端题图 file_id 合并进题面
                 payload = self.open(external_question_id, idempotency_key, learner,
-                                    merge_image=question_image)
+                                    merge_image=question_image, owner=owner)
                 bank_hit = True
             except ApiError as error:
                 # 未命中但有题图 → vision 转写路径;未命中无图 → 404 照合同
                 if error.code != "QUESTION_BANK_QUESTION_NOT_FOUND" or not material:
                     raise
                 payload = self._open_material(material, learner, idempotency_key,
-                                              external_question_id)
+                                              external_question_id, owner=owner)
         else:
-            payload = self._open_material(material, learner, idempotency_key, "")
-        conversation = self.store.find_by_idempotency(idempotency_key)
+            payload = self._open_material(material, learner, idempotency_key, "", owner=owner)
+        conversation = self.store.find_by_idempotency(idempotency_key, owner=owner)
         return {
             "external_question_id": external_question_id or None,
             "prepared_question_package_id": None,  # v1 题源(seed/snapshot)不带包 id
@@ -296,35 +304,38 @@ class ConversationService:
         return raw
 
     def open(self, question_id: str, idempotency_key: str, learner: dict,
-             *, merge_image: str = "") -> dict:
+             *, merge_image: str = "", owner: str = "") -> dict:
         if not idempotency_key:
             raise ApiError(422, None, "idempotency_key 必填(00 §5.2:请求只有 idempotency_key)")
-        existing = self.store.find_by_idempotency(idempotency_key)
+        existing = self.store.find_by_idempotency(idempotency_key, owner=owner)
         if existing is not None:
             if existing.question_id != question_id:
                 # 00 §5.2 约定 2:题目在会话内固定,不能中途换题
                 raise ApiError(409, "QUESTION_SOURCE_PINNED", "同一幂等键已固定另一道题,新建学习会话")
-            return self._open_response(existing)
+            return self._open_response(self._owned(existing, owner))
         try:
             question, learner, detail = self._resolved(question_id, learner, merge_image)
         except KeyError as error:
             # 题源 KeyError = 题库未命中(老系统文档错误码表)
             raise ApiError(404, "QUESTION_BANK_QUESTION_NOT_FOUND",
                            f"服务端题库没有该题目:{question_id}") from error
-        return self._start_conversation(question, learner, detail, question_id, idempotency_key)
+        return self._start_conversation(question, learner, detail, question_id,
+                                        idempotency_key, owner=owner)
 
     def _open_material(self, material: dict, learner: dict, idempotency_key: str,
-                       question_id: str) -> dict:
+                       question_id: str, owner: str = "") -> dict:
         """自由材料入口(question_text/question_image):不走题源,题图空壳由内核 vision 处理。"""
-        existing = self.store.find_by_idempotency(idempotency_key)
+        existing = self.store.find_by_idempotency(idempotency_key, owner=owner)
         if existing is not None:
             if existing.question_id != question_id:
                 raise ApiError(409, "QUESTION_SOURCE_PINNED", "同一幂等键已固定另一道题,新建学习会话")
-            return self._open_response(existing)
-        return self._start_conversation(material, learner, None, question_id, idempotency_key)
+            return self._open_response(self._owned(existing, owner))
+        return self._start_conversation(material, learner, None, question_id,
+                                        idempotency_key, owner=owner)
 
     def _start_conversation(self, question: dict, learner: dict, detail: dict | None,
-                            question_id: str, idempotency_key: str) -> dict:
+                            question_id: str, idempotency_key: str,
+                            owner: str = "") -> dict:
         image = question.get("image")
         if image and self.image_resolver:
             # file_id → data URL(内核 vision 的多模态输入)。解析器只在生产装配注入
@@ -355,8 +366,9 @@ class ConversationService:
             state=str(getattr(turn, "state", "first_question_ready")),  # P1-6:内核 fail-closed 的 failed 不再被掩盖
             first_question=str(getattr(turn, "text", "")),
             extras=extras,
+            owner=owner,  # 归属(06 §2.2):PKCE user_id / 演示 account
         )
-        conversation = self.store.create(conversation, idempotency_key)
+        conversation = self.store.create(conversation, idempotency_key, owner=owner)
         self._persist_session(conversation)
         return self._open_response(conversation)
 
@@ -403,10 +415,11 @@ class ConversationService:
 
     # ---------- refresh(返回首问与新 session_version;两形态同一语义) ----------
 
-    def refresh(self, skill_session_id: str) -> dict:
+    def refresh(self, skill_session_id: str, owner: str = "") -> dict:
         conversation = self.store.find_by_skill_session(skill_session_id)
         if conversation is None:
             raise ApiError(404, None, "skill_session 不存在")
+        self._owned(conversation, owner)  # 归属闸:他人会话 404(06 §2.2 第 3 条)
         # M3 全景 B3:interaction 信封 + assistant_message(首问就绪非空)+ agent_run
         # (恒 completed——同步架构,不建异步任务系统)
         return {
@@ -445,7 +458,7 @@ class ConversationService:
     _SEND_INPUT_ALLOWED = frozenset({"interaction_action", "skill_session_id",
                                      "expected_session_version", "student_response"})
 
-    def send(self, conversation_id: str, body: dict) -> dict:
+    def send(self, conversation_id: str, body: dict, owner: str = "") -> dict:
         _reject_unknown(body, self._SEND_ALLOWED)
         payload = body.get("input")
         if payload is None:
@@ -460,7 +473,7 @@ class ConversationService:
             if value is not None and (not isinstance(value, str)
                                       or not 1 <= len(value) <= 128):
                 raise ApiError(422, None, f"{key} 须为字符串且长度 1~128(省略请去键)")
-        conversation = self._conversation_or_404(conversation_id)
+        conversation = self._conversation_or_404(conversation_id, owner=owner)
         if conversation.state in ("completed", "failed"):  # P1-6:failed 终态同 completed 拒续
             raise ApiError(409, "SKILL_SESSION_CONFLICT", "会话已终态,重开需新幂等键")
         if body.get("skill_id") not in (None, SKILL_ID):
@@ -657,9 +670,9 @@ class ConversationService:
             "state": conversation.state,
         }
 
-    def status(self, conversation_id: str) -> dict:
+    def status(self, conversation_id: str, owner: str = "") -> dict:
         """会话状态视图(GET /api/conversations/{id},M3 最后代码 PR)。"""
-        conversation = self._conversation_or_404(conversation_id)
+        conversation = self._conversation_or_404(conversation_id, owner=owner)
         return {
             "conversation_id": conversation.conversation_id,
             "state": conversation.state,
@@ -669,8 +682,8 @@ class ConversationService:
             "turn_count": len(conversation.extras.get("history", [])),
         }
 
-    def _conversation_or_404(self, conversation_id: str) -> Conversation:
+    def _conversation_or_404(self, conversation_id: str, owner: str = "") -> Conversation:
         conversation = self.store.get(conversation_id)
         if conversation is None:
             raise ApiError(404, None, "会话不存在")
-        return conversation
+        return self._owned(conversation, owner)  # 归属闸:他人会话同 404(06 §2.2 第 3 条)

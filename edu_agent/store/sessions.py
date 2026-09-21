@@ -22,20 +22,27 @@ class Conversation:
     first_question: str | None = None
     summary: dict | None = None       # confirm 后写入,不可变(completed 终态)
     extras: dict = field(default_factory=dict)
+    owner: str = ""                   # 归属(06 §2.2):PKCE user_id / 演示 account;空 = 前归属纪元
 
 
 class MemoryConversationStore:
-    """线程安全的内存会话表;接口即未来持久化接口的最小面。"""
+    """线程安全的内存会话表;接口即未来持久化接口的最小面。
+
+    幂等键命名空间按 owner 复合(06 §2.2 第 4 条):(owner, idempotency_key)
+    → conversation——不同学生用同名键各开各的会话;owner='' 的存量口径同键
+    仍全局唯一(前归属纪元,设计稿 §2.2 第 5 条)。
+    """
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._by_conversation: dict[str, Conversation] = {}
-        self._by_idempotency: dict[str, str] = {}  # idempotency_key -> conversation_id
+        self._by_idempotency: dict[tuple[str, str], str] = {}  # (owner, key) -> conversation_id
         self._by_skill_session: dict[str, str] = {}  # skill_session_id -> conversation_id
 
-    def find_by_idempotency(self, idempotency_key: str) -> Conversation | None:
+    def find_by_idempotency(self, idempotency_key: str,
+                            owner: str = "") -> Conversation | None:
         with self._lock:
-            conversation_id = self._by_idempotency.get(idempotency_key)
+            conversation_id = self._by_idempotency.get((owner, idempotency_key))
             return self._by_conversation.get(conversation_id) if conversation_id else None
 
     def find_by_skill_session(self, skill_session_id: str) -> Conversation | None:
@@ -43,13 +50,14 @@ class MemoryConversationStore:
             conversation_id = self._by_skill_session.get(skill_session_id)
             return self._by_conversation.get(conversation_id) if conversation_id else None
 
-    def create(self, conversation: Conversation, idempotency_key: str) -> Conversation:
+    def create(self, conversation: Conversation, idempotency_key: str,
+               owner: str = "") -> Conversation:
         with self._lock:
-            existing = self._by_idempotency.get(idempotency_key)
+            existing = self._by_idempotency.get((owner, idempotency_key))
             if existing:
-                return self._by_conversation[existing]  # 同键幂等:返回既有会话
+                return self._by_conversation[existing]  # 同(归属,键)幂等:返回既有会话
             self._by_conversation[conversation.conversation_id] = conversation
-            self._by_idempotency[idempotency_key] = conversation.conversation_id
+            self._by_idempotency[(owner, idempotency_key)] = conversation.conversation_id
             self._by_skill_session[conversation.skill_session_id] = conversation.conversation_id
             return conversation
 

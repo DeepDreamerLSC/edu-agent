@@ -55,18 +55,25 @@ def conversation_restore(data: dict) -> tuple[Conversation, str]:
     """JSON dict → (Conversation, idempotency_key);坏数据抛异常由调用方隔离。"""
     conversation = Conversation(**{k: data[k] for k in (
         "conversation_id", "question_id", "attempt_id", "skill_session_id",
-        "session_version", "state", "first_question", "summary") if k in data})
+        "session_version", "state", "first_question", "summary", "owner") if k in data})
     conversation.extras = data.get("extras") or {}
     return conversation, str(data.get("idempotency_key") or "")
 
 
 class ConversationStore(Protocol):
-    """会话表最小面(Memory/File 两实现共用;service 只依赖这五个操作)。"""
+    """会话表最小面(Memory/File 两实现共用;service 只依赖这五个操作)。
 
-    def find_by_idempotency(self, idempotency_key: str) -> Conversation | None: ...
+    幂等键按 (owner, idempotency_key) 复合命名空间(06 §2.2 第 4 条):
+    不同 owner 同名键各开各的会话;owner='' 兜底 = 前归属纪元/无身份下传
+    (熔断)口径,存量行为不变。
+    """
+
+    def find_by_idempotency(self, idempotency_key: str,
+                            owner: str = "") -> Conversation | None: ...
     def find_by_skill_session(self, skill_session_id: str) -> Conversation | None: ...
     def find_by_kernel_session(self, kernel_session_id: str) -> Conversation | None: ...
-    def create(self, conversation: Conversation, idempotency_key: str) -> Conversation: ...
+    def create(self, conversation: Conversation, idempotency_key: str,
+               owner: str = "") -> Conversation: ...
     def get(self, conversation_id: str) -> Conversation | None: ...
     def update(self, conversation: Conversation) -> None: ...
 
@@ -78,9 +85,9 @@ class FileConversationStore:
         self.root = Path(root)
         self._lock = threading.Lock()
         self._by_conversation: dict[str, Conversation] = {}
-        self._by_idempotency: dict[str, str] = {}
+        self._by_idempotency: dict[tuple[str, str], str] = {}  # (owner, key) -> conversation_id
         self._by_skill_session: dict[str, str] = {}
-        self._idempotency_of: dict[str, str] = {}  # conversation_id -> idempotency_key
+        self._idempotency_of: dict[str, tuple[str, str]] = {}  # conversation_id -> (owner, key)
         self._by_kernel_session: dict[str, str] = {}  # 内核 session_id -> conversation_id
         self._scan()
 
@@ -99,7 +106,10 @@ class FileConversationStore:
                 continue
             self._index(conversation, idempotency_key)
 
-    def _index(self, conversation: Conversation, idempotency_key: str) -> None:
+    def _index(self, conversation: Conversation, idempotency_key: str,
+               owner: str = "") -> None:
+        if owner:
+            conversation.owner = owner  # 单真相源在行上(与 _STORED_KEY 的幂等键同口径)
         self._by_conversation[conversation.conversation_id] = conversation
         self._by_skill_session[conversation.skill_session_id] = conversation.conversation_id
         kernel_session_id = str((conversation.extras or {}).get("kernel_session_id") or "")
@@ -107,8 +117,9 @@ class FileConversationStore:
             # 01 §7 分组键归因:facts 的 edu.session_id 即内核 session_id,由此回到合作方会话
             self._by_kernel_session[kernel_session_id] = conversation.conversation_id
         if idempotency_key:
-            self._by_idempotency[idempotency_key] = conversation.conversation_id
-            self._idempotency_of[conversation.conversation_id] = idempotency_key
+            self._by_idempotency[(conversation.owner, idempotency_key)] = conversation.conversation_id
+            self._idempotency_of[conversation.conversation_id] = (conversation.owner,
+                                                                  idempotency_key)
 
     # ---------- 落盘 ----------
 
@@ -121,14 +132,15 @@ class FileConversationStore:
         os.replace(tmp, path)
 
     def _payload(self, conversation: Conversation) -> dict:
-        return conversation_payload(conversation,
-                                    self._idempotency_of.get(conversation.conversation_id, ""))
+        owner_key = self._idempotency_of.get(conversation.conversation_id, ("", ""))
+        return conversation_payload(conversation, owner_key[1])
 
     # ---------- 会话表最小面(与 MemoryConversationStore 同语义) ----------
 
-    def find_by_idempotency(self, idempotency_key: str) -> Conversation | None:
+    def find_by_idempotency(self, idempotency_key: str,
+                            owner: str = "") -> Conversation | None:
         with self._lock:
-            conversation_id = self._by_idempotency.get(idempotency_key)
+            conversation_id = self._by_idempotency.get((owner, idempotency_key))
             return self._by_conversation.get(conversation_id) if conversation_id else None
 
     def find_by_skill_session(self, skill_session_id: str) -> Conversation | None:
@@ -142,12 +154,13 @@ class FileConversationStore:
             conversation_id = self._by_kernel_session.get(kernel_session_id)
             return self._by_conversation.get(conversation_id) if conversation_id else None
 
-    def create(self, conversation: Conversation, idempotency_key: str) -> Conversation:
+    def create(self, conversation: Conversation, idempotency_key: str,
+               owner: str = "") -> Conversation:
         with self._lock:
-            existing = self._by_idempotency.get(idempotency_key)
+            existing = self._by_idempotency.get((owner, idempotency_key))
             if existing:
-                return self._by_conversation[existing]  # 同键幂等:返回既有会话
-            self._index(conversation, idempotency_key)
+                return self._by_conversation[existing]  # 同(归属,键)幂等:返回既有会话
+            self._index(conversation, idempotency_key, owner)
             self._write(conversation)
             return conversation
 
