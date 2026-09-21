@@ -276,14 +276,6 @@ class IdentityService:
                 del self._revoked[j]
         return True
 
-    def _decode_payload(self, token: str) -> dict:
-        """验签已过的 token → payload dict;坏 JSON 返回空 dict(revoke 兜底用)。"""
-        body = token.partition(".")[0][len("edu_native_"):]
-        try:
-            return json.loads(_b64url_decode(body))
-        except (ValueError, json.JSONDecodeError):
-            return {}
-
     def verify_token(self, token: str) -> bool:
         """P1-1:验签访问令牌(HMAC 比签 + exp 检查 + jti 吊销),复用 _constant_time_equals。
 
@@ -298,9 +290,8 @@ class IdentityService:
         expected = _b64url(hmac.new(key.encode(), body.encode(), hashlib.sha256).digest())
         if not _constant_time_equals(expected, signature):
             return False
-        try:
-            payload = json.loads(_b64url_decode(body))
-        except (ValueError, json.JSONDecodeError):
+        payload = self._decode_payload(token)
+        if not payload:
             return False
         exp = payload.get("exp")
         if exp is not None and int(exp) < int(time.time()):
@@ -309,6 +300,24 @@ class IdentityService:
         if jti and str(jti) in self._revoked:  # 登出即作废(06 §2.1)
             return False
         return True
+
+    def identity_payload(self, token: str) -> dict | None:
+        """验签 + 吊销检查通过 → 返回 payload dict;否则 None(06 §2.2 身份下传)。
+
+        payload 即「谁在请求」的单一事实源:user_id(PKCE 通道)或 account(演示
+        通道)作会话 owner;verify_token 的布尔面 = 本方法非 None。签名/exp/吊销
+        三关全过才下传身份——owner 过滤不能比验签闸更宽松。
+        """
+        return self._decode_payload(token) if self.verify_token(token) else None
+
+    @staticmethod
+    def _decode_payload(token: str) -> dict:
+        """token → payload dict(不验签,调用方已过闸);坏 JSON 返回空 dict。"""
+        body = token.partition(".")[0][len("edu_native_"):]
+        try:
+            return json.loads(_b64url_decode(body))
+        except (ValueError, json.JSONDecodeError):
+            return {}
 
 
 def _epoch(now: int | None) -> int:

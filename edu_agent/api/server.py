@@ -125,6 +125,7 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
     identity: IdentityService     # 同上(build_server 注入)
     files: FileService            # 同上(/api/files/** 三步上传)
     db: object | None = None      # 同上(SqliteStore;healthz 的 SELECT 1 探针,未注入不加键)
+    owner: str = ""               # 当前请求者(06 §2.2 身份下传;鉴权闸后由 payload 填)
 
     def _identity_post(self) -> tuple[int, dict] | None:
         """身份与登录端点自带鉴权(API Key / 授权码+PKCE / 演示账密);非身份路径返回 None。"""
@@ -150,17 +151,27 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         if token:
             self.identity.revoke(token)
 
-    def _authorized(self) -> bool:
-        """对话面鉴权闸(P1-1):真验签,HMAC 比签 + exp,失败 401。
+    def _authorized(self) -> dict | None:
+        """对话面鉴权闸(P1-1):真验签,HMAC 比签 + exp,失败 401(→ None)。
 
-        EDU_AUTH_ENFORCE=0 熔断跳过验签(联调应急,决策 7);默认强制。
+        通过 → 返回验签后的 payload dict(06 §2.2 身份下传:user_id/account 作
+        会话 owner);失败/缺头 → None。EDU_AUTH_ENFORCE=0 熔断跳过验签
+        (联调应急,决策 7;默认强制)——无身份可下传,owner 置空串
+        (= 前归属纪元口径,不限制访问)。
         """
         token = self.headers.get("Authorization", "").removeprefix("Bearer ").strip()
         if not token:
-            return False
+            return None
         if os.environ.get("EDU_AUTH_ENFORCE", "1") == "0":
-            return True
-        return self.identity.verify_token(token)
+            return {}
+        return self.identity.identity_payload(token)
+
+    @staticmethod
+    def _owner_of(payload: dict | None) -> str:
+        """payload → 会话 owner(06 §2.2):PKCE 通道 user_id,演示通道 account。"""
+        if not payload:
+            return ""
+        return str(payload.get("user_id") or payload.get("account") or "")
 
     def _dispatch(self) -> None:
         self.path = self.path.partition("?")[0]  # 剥 query string(审查 P2:regex $ 锚定不剥 ? 全 404)
@@ -168,9 +179,11 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         if identity is not None:
             self._json(identity[1], identity[0])
             return
-        if not self._authorized():
+        payload = self._authorized()
+        if payload is None:
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
+        self.owner = self._owner_of(payload)  # 身份下传(06 §2.2):后续路由经 self.owner 带 owner
         unified_open = _OPEN_UNIFIED.match(self.path)
         per_question_open = _OPEN.match(self.path)
         if self.command == "POST" and (unified_open or per_question_open):
@@ -192,13 +205,13 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
             return True
         refresh = _REFRESH_PQ.match(self.path) or _REFRESH_CONV.match(self.path)
         if refresh and self.command == "POST":
-            self._json(self.service.refresh(refresh["skill_session_id"]))
+            self._json(self.service.refresh(refresh["skill_session_id"], owner=self.owner))
             return True
         match = _MESSAGES.match(self.path)
         if match and self.command == "POST":
             body = self._read_body()
             self._reject_forbidden_fields(body)
-            self._json(self.service.send(match["conversation_id"], body))
+            self._json(self.service.send(match["conversation_id"], body, owner=self.owner))
             return True
         match = _MESSAGES_STREAM.match(self.path)
         if match and self.command == "POST":
@@ -226,9 +239,11 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         if match is None:
             self._error(ApiError(404, None, "路径不在合作方合同内"))
             return
-        if not self._authorized():
+        payload = self._authorized()
+        if payload is None:
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
+        self.owner = self._owner_of(payload)  # 身份下传(06 §2.2;files 面最小面不动归属)
         length = self._content_length()
         payload = self.rfile.read(length)
         self._json(self.files.store_content(match["file_id"], payload))
@@ -239,7 +254,7 @@ class PartnerApiHandler(BaseHTTPRequestHandler):
         body = self._read_body()
         self._reject_forbidden_fields(body)  # 请求类错误在开流前以 JSON 错误返回
         try:
-            response = self.service.send(conversation_id, body)
+            response = self.service.send(conversation_id, body, owner=self.owner)
         except ApiError as error:
             if error.status_code >= 500:
                 payload = sse_error_frames(error)
@@ -381,12 +396,14 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
             return
         if self._serve_docs() or self._serve_static():
             return
-        if not self._authorized():
+        payload = self._authorized()
+        if payload is None:
             self._error(ApiError(401, None, "登录令牌无效或已过期"))
             return
+        self.owner = self._owner_of(payload)  # 身份下传(06 §2.2)
         match = _GET.match(self.path)
         if match:
-            self._json(self.service.status(match["conversation_id"]))
+            self._json(self.service.status(match["conversation_id"], owner=self.owner))
             return
         if self._files_get():
             return
@@ -420,7 +437,7 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
         """POST /api/prepared-questions/open(§5 统一 Open);403 拦截照 00 §5.2 约定 4。"""
         body = self._read_body()
         self._reject_forbidden_fields(body)
-        self._json(self.service.open_unified(body))
+        self._json(self.service.open_unified(body, owner=self.owner))
 
     def _open_prepared_question(self, question_id: str) -> None:
         """POST /api/prepared-questions/{id}/open(#55 既有入口,App 主路径,00 §5.2 约定 1-2)。
@@ -435,14 +452,15 @@ refresh 取首问 → messages 多轮 → confirm 总结。凭据经对接群单
             raise ApiError(422, None, "idempotency_key 必填(00 §5.2:请求只有 idempotency_key)")
         learner, _, _ = ConversationService.open_request_learner(
             body, frozenset({"idempotency_key"}) | ConversationService._OPEN_LEARNER_FIELDS)
-        self._json(self.service.open(question_id, str(body["idempotency_key"]), learner))
+        self._json(self.service.open(question_id, str(body["idempotency_key"]), learner,
+                                     owner=self.owner))
 
     def _create_conversation(self) -> None:
         """POST /api/conversations:统一 Open 字段子集(external_question_id/
         question_text/question_image,service 内校验与组合规则);403 拦截照 00 §5.2 约定 4。"""
         body = self._read_body()
         self._reject_forbidden_fields(body)
-        self._json(self.service.create(body), status=201)
+        self._json(self.service.create(body, owner=self.owner), status=201)
 
 
     def _reject_forbidden_fields(self, body: dict) -> None:
