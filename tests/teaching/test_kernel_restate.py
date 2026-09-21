@@ -580,31 +580,53 @@ def test_close_on_other_exception_rolls_back_and_finish_paths_safe():
 
 
 def test_finish_malformed_summary_payload_keyerror_pins_current_contract():
-    """#388 件2(审查者 P3③):Gateway 返回畸形 payload(缺 summary 键)→ finish()
-    KeyError 裸崩——内核不吞、不包 retry(§11 禁令,本测只钉现状供契约面追溯)。
+    """#388 件2 → 架构师裁定 2026-09-21(PR-0)改钉新契约:Gateway 返回畸形
+    payload(缺 summary 键)→ finish() KeyError 裸崩(内核不吞、不包 retry,§11
+    禁令),且**零半提交**——先构造完整 Summary 再写 state,取键的 KeyError 落在
+    任何写态之前。
 
-    现状钉版(实证 2026-09-21,不改产品行为):_close_on_final_statement 的回滚
-    接住终述入史(history/version/summary/hint_level 逐字段回调用前);但 finish
-    先置 state="completed" 再取 output["summary"] → KeyError 时 state 已半提交,
-    会话就此 finished 而 summary 仍 None(重试将 TerminalStateError)。若后续裁定
-    修置态次序,本测红即契约变更信号——届时按新契约改断言,不静默。"""
+    旧契约(2026-09-21 #397 钉版)为 state 先置 completed 后取键 → KeyError 时
+    state=completed 而 summary=None,会话就此 finished,重试撞 TerminalStateError。
+    裁定后本测改钉新契约:state 未动、summary 未落,同输入重试可正常走完。"""
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你现在觉得鸡和兔各有多少只?"),
         _tutor_payload("我们把思路理清楚了。", ready=True),
         {"no_summary": True},   # 收束轮 finish 的模型总结:缺 summary 键(畸形 payload)
+        {"summary": "你自己讲清了鸡兔同笼的思路。"},   # 重试的第4次调用:合法总结
     ])
     session = _ready_incorrect_session(gateway)
     before = _session_snapshot(session)
     with pytest.raises(KeyError) as excinfo:
         reply(session, FINAL_STATEMENT, gateway=gateway)
     assert str(excinfo.value) == "'summary'"       # KeyError 原样冒泡(不包不吞)
-    after = _session_snapshot(session)
-    assert after["history"] == before["history"]   # 终述入史被回滚
-    assert after["summary"] is None                # summary 未落
-    assert after["session_version"] == before["session_version"]   # 版本未推进
-    assert after["hint_level"] == before["hint_level"]
-    assert session.state == "completed"            # 现状:state 半提交(置态先于取键)
-    assert session.finished                        # 会话就此终态(summary 缺席)
+    assert _session_snapshot(session) == before    # 逐字段一致:history 回滚、state 未动
+    assert session.state == "ready_to_confirm"     # 新契约:置态先于取键的旧序已废
+    assert session.summary is None and not session.finished
+    turn = reply(session, FINAL_STATEMENT, gateway=gateway)   # 同输入重试
+    assert turn.state == "completed" and session.finished      # 不撞 TerminalStateError
+    assert session.summary is not None
+    assert session.summary.text == "你自己讲清了鸡兔同笼的思路。"
+
+
+@pytest.mark.parametrize("payload,exc", [
+    ([], TypeError),    # output 非 dict:json 合法但下标取键即 TypeError
+    ({}, KeyError),     # 全空 dict:summary 键缺席的最彻底变体(多字段全缺)
+])
+def test_finish_malformed_payload_variants_atomic(payload, exc):
+    """畸形 payload 失败原子性变体(PR-0 裁定面补钉):output 非 dict / 全空
+    dict——构造 Summary 期的任何异常(KeyError/TypeError)都发生在写态之前,
+    session 逐字段回调用前(与缺键路径同一不变量,按实际可注入面取证)。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你现在觉得鸡和兔各有多少只?"),
+        _tutor_payload("我们把思路理清楚了。", ready=True),
+        payload,   # 收束轮 finish 的模型总结:畸形 payload
+    ])
+    session = _ready_incorrect_session(gateway)
+    before = _session_snapshot(session)
+    with pytest.raises(exc):
+        reply(session, FINAL_STATEMENT, gateway=gateway)
+    assert _session_snapshot(session) == before    # 零半提交:state/summary/history 全回调用前
+    assert session.state == "ready_to_confirm" and not session.finished
 
 
 def _correct_session(gateway: FakeGateway, question: dict | None = None) -> object:
