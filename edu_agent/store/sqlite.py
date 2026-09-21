@@ -11,6 +11,9 @@
   id=conversation_id)共表;索引列即会话表的查找面(idempotency_key /
   skill_session_id / kernel_session_id),payload 是既有 JSON 形状的 blob。
 - ``files``:file_id 主键 + payload(FileRecord 字段的 JSON)。
+- ``revoked_jti``:登出吊销名单(jti 主键 + exp;06 §2.1 第 2 条)——
+  identity 启动全量加载进内存,热路径不碰库;exp = 被吊销 token 的原 exp,
+  写时顺手清过期,名单最长寿命 = token 剩余 TTL,不积累。
 
 取舍(写在代码里,便于审查):
 - **幂等合同下沉 DDL(决策 6)**:idempotency_key / skill_session_id 上
@@ -38,6 +41,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import threading
+import time
 from dataclasses import asdict
 from pathlib import Path
 
@@ -67,9 +71,16 @@ CREATE TABLE IF NOT EXISTS files (
   file_id TEXT PRIMARY KEY,
   payload TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS revoked_jti (
+  jti TEXT PRIMARY KEY,
+  exp INTEGER NOT NULL
+);
 DROP INDEX IF EXISTS idx_records_idempotency;
 DROP INDEX IF EXISTS idx_records_skill_session;
 """
+_REVOKE_INSERT = "INSERT OR REPLACE INTO revoked_jti(jti, exp) VALUES(?, ?)"
+_REVOKE_DELETE_EXPIRED = "DELETE FROM revoked_jti WHERE exp < ?"
+_REVOKE_LOAD = "SELECT jti, exp FROM revoked_jti WHERE exp >= ?"
 # 查找 SQL 全部字面量(列名不经拼接,S608);索引各对应一个查找面。幂等唯一索引
 # 按 (owner, idempotency_key) 复合(06 §2.2 第 4 条)——不同 owner 同名键各开各的
 # 会话;owner 列由一次性迁移脚本 ALTER 补上并回填 PRAGMA user_version(06 §2.2
@@ -280,3 +291,24 @@ class SqliteStore:
         with self._lock:
             rows = self._conn.execute(_ALL_FILES).fetchall()
         return [json.loads(text) for (text,) in rows]
+
+    # ---------- 吊销名单(revoked_jti 表;IdentityService 注入用,不 import api) ----------
+
+    def revoke_token(self, jti: str, exp: int) -> None:
+        """吊销一枚 jti,并顺手清理已过期条目(06 §2.1 第 6 条:写时清,不积累)。
+
+        INSERT OR REPLACE:同一 jti 再次登出幂等(不撞主键)。任何 sqlite3.Error
+        原样抛出(fail-closed,与写路径同口径)——identity 吊销序先库后内存,
+        库写失败即登出整体失败,绝不假报 ok。
+        """
+        now = int(time.time())
+        with self._lock:
+            self._conn.execute(_REVOKE_INSERT, (jti, exp))
+            self._conn.execute(_REVOKE_DELETE_EXPIRED, (now,))
+
+    def load_revoked(self, now: int) -> dict[str, int]:
+        """启动全量加载:jti -> exp(已过期条目不在返回面)。06 §2.1 第 2 条:
+        热路径每请求只碰 identity 内存,不碰 SQLite。"""
+        with self._lock:
+            rows = self._conn.execute(_REVOKE_LOAD, (now,)).fetchall()
+        return {jti: exp for jti, exp in rows}

@@ -543,6 +543,11 @@ def build_server(service: ConversationService, identity: IdentityService | None 
                  files: FileService | None = None,
                  host: str = "127.0.0.1", port: int = 0,
                  db=None) -> ThreadingHTTPServer:
+    # db 注入且调用方未自带 identity 时,身份服务挂上吊销落盘(06 §2.1 第 2 条:
+    # 内存 + SQLite;启动从库全量加载,重启不复活已登出 token,§4.4)。
+    # 显式传入的 identity 优先(测试自带配置;无参构造 + db 由启动器装配)。
+    if identity is None and db is not None:
+        identity = IdentityService(revocation_store=db)
     handler = type("BoundPartnerApiHandler", (PartnerApiHandler,),
                    {"service": service, "identity": identity or IdentityService(),
                     "files": files or FileService(), "db": db})
