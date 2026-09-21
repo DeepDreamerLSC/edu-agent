@@ -210,6 +210,15 @@ def stability_report(primary: list[dict], repeat: list[dict], independent: list[
     diffs = [abs(p[c]["total"] - r[c]["total"]) for c in paired]
     sampled = sorted(set(p) & set(i))
     signed = [p[c]["total"] - i[c]["total"] for c in sampled]
+    # 分歧升级(标定卡口④):主选 vs 独立 judge 的 verdict 翻转或硬门字段不一致即入列
+    # ——二元翻转判据,不发明总分阈值;下场人审优先抽样。硬门字段 get 双侧
+    # 缺值即不一致(fail-closed:缺值不等于相等)。
+    hard_fields = ("answer_leaked", "math_integrity")
+    disagreement_ids = [
+        c for c in sampled
+        if p[c]["verdict"] != i[c]["verdict"]
+        or any(p[c].get(f) != i[c].get(f) for f in hard_fields)
+    ]
     return {
         "double": {
             "cases": len(paired),
@@ -227,6 +236,8 @@ def stability_report(primary: list[dict], repeat: list[dict], independent: list[
             "signed_total_diffs": {c: p[c]["total"] - i[c]["total"] for c in sampled},
             "mean_signed_diff": round(sum(signed) / len(signed), 2) if signed else None,
             "same_direction": bool(signed) and (all(d > 0 for d in signed) or all(d < 0 for d in signed)),
+            # 分歧升级名单(标定卡口):verdict 翻转或硬门字段不一致的案,下场人审优先抽样
+            "disagreement_ids": disagreement_ids,
         },
     }
 
@@ -243,6 +254,7 @@ def stability_markdown(report: dict, judge_model: str | None) -> str:
         f"- 独立评分(DeepSeek): 抽样 {indep['sampled']} case,"
         f"带符号平均分差(主选−独立) {indep['mean_signed_diff']},"
         f"全部同向 {indep['same_direction']}",
+        f"- 分歧升级名单(人审优先抽样): {json.dumps(indep['disagreement_ids'], ensure_ascii=False)}"
         "",
         "系统性偏向的判定与切回(judge.primary→deepseek_chat)留人批,不自行切回(#32)。",
     ]
