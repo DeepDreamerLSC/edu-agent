@@ -113,6 +113,8 @@ def demo_login(account: str, password: str, hmac_key: str,
     演示用途,非合作方 PKCE 通道。失败语义照 #74 错误表:401 USER_LOGIN_FAILED。
     签名密钥 hmac_key 走 IDENTITY_TOKEN_HMAC_KEY(专职密钥),不得用演示密码
     充当(审查 P2:低熵密钥反模式+换密码作废 token)。
+    payload 带 jti(06 §2.1 第 4 条):演示 token 与 PKCE token 同为
+    「凭 jti 吊销」的注销面,缺 jti 即无法登出。
     """
     expected_account = os.environ.get("DEMO_ACCOUNT", DEMO_ACCOUNT_DEFAULT)
     expected_password = os.environ.get("DEMO_PASSWORD", "")
@@ -123,7 +125,8 @@ def demo_login(account: str, password: str, hmac_key: str,
         raise IdentityError(401, "USER_LOGIN_FAILED", "账号或密码不正确")
     issued = now if now is not None else int(time.time())
     token = _hmac_token({"account": expected_account, "role": "student",
-                         "exp": issued + DEMO_LOGIN_TTL_S}, hmac_key)
+                         "exp": issued + DEMO_LOGIN_TTL_S,
+                         "jti": uuid.uuid4().hex}, hmac_key)
     return {"access_token": token, "token_type": "bearer",
             "expires_in": DEMO_LOGIN_TTL_S,
             "expires_at": datetime.fromtimestamp(issued + DEMO_LOGIN_TTL_S,
@@ -162,6 +165,10 @@ class IdentityService:
         self.codes: dict[str, dict] = {}
         self.idempotency: dict[str, tuple[str, dict]] = {}
         self._code_lock = threading.Lock()  # P1-3:授权码单次消费原子化(并发兑换竞态)
+        # jti 吊销名单(06 §2.1 第 2 条·纯内存档;存活期 = 剩余 TTL 的过期自动回收,
+        # 登出即作废是唯一写入口)。单进程语义与 IdentityService 既有形态同口径。
+        self._revoked: dict[str, int] = {}  # jti -> exp(复用 token 的 exp 作回收时点)
+        self._revoke_lock = threading.Lock()
 
     def native_code(self, body: dict, headers: dict | Message,
                     now: int | None = None) -> tuple[int, dict]:
@@ -247,10 +254,41 @@ class IdentityService:
                      "tenant_id": student["tenant_id"]},
         }
 
-    def verify_token(self, token: str) -> bool:
-        """P1-1:验签访问令牌(HMAC 比签 + exp 检查),复用 _constant_time_equals。
+    def revoke(self, token: str) -> bool:
+        """吊销一枚 access_token(06 §2.1 第 1 条):验签通过 → jti 入名单,返回 True。
 
-        空 HMAC 密钥 fail-closed(与签发侧同口径);格式不符/签名不符/已过期均 False。
+        验签失败(过期/假签/格式不符/空钥)返回 False——已失效的 token
+        无需吊销(过期由 verify_token 拦,假签本就进不了门)。jti 缺失的
+        token(演示页 JS 变量残留的历史 token 等)返回 False:无法定位,
+        不动名单。内存 add 无失败路径:True 即已吊销。
+        """
+        if not self.verify_token(token):
+            return False
+        payload = self._decode_payload(token)
+        jti = payload.get("jti")
+        if not jti:
+            return False
+        with self._revoke_lock:
+            self._revoked[str(jti)] = int(payload.get("exp") or 0) or int(time.time())
+            now = int(time.time())
+            expired = [j for j, exp in self._revoked.items() if exp < now]
+            for j in expired:
+                del self._revoked[j]
+        return True
+
+    def _decode_payload(self, token: str) -> dict:
+        """验签已过的 token → payload dict;坏 JSON 返回空 dict(revoke 兜底用)。"""
+        body = token.partition(".")[0][len("edu_native_"):]
+        try:
+            return json.loads(_b64url_decode(body))
+        except (ValueError, json.JSONDecodeError):
+            return {}
+
+    def verify_token(self, token: str) -> bool:
+        """P1-1:验签访问令牌(HMAC 比签 + exp 检查 + jti 吊销),复用 _constant_time_equals。
+
+        空 HMAC 密钥 fail-closed(与签发侧同口径);格式不符/签名不符/已过期/
+        已吊销(jti 命中名单,06 §2.1 第 1 条)均 False。
         """
         key = self.config["hmac_key"]
         if not key or not token.startswith("edu_native_") or "." not in token:
@@ -265,7 +303,12 @@ class IdentityService:
         except (ValueError, json.JSONDecodeError):
             return False
         exp = payload.get("exp")
-        return not (exp is not None and int(exp) < int(time.time()))
+        if exp is not None and int(exp) < int(time.time()):
+            return False
+        jti = payload.get("jti")
+        if jti and str(jti) in self._revoked:  # 登出即作废(06 §2.1)
+            return False
+        return True
 
 
 def _epoch(now: int | None) -> int:

@@ -11,8 +11,10 @@
    messages / messages-stream)都要 403。2026-09-12 前的两个缺口:①`verified` 漏在名单外
    (**且会透传进 learner → 模型 prompt**,不只是被忽略);②**两条学生轮路由完全没有闸**。
 2. SSE **错误路径**:开流后内核故障 → `start(conversation_running=false)` + `error` 帧;
-3. **logout 无状态语义**:登出后同一 token 仍有效——把"无状态 HMAC 不吊销"这个**已知取舍**
-   写成测试,防止后人当 bug 改掉(文件头注释与实现都是这个口径)。
+3. **logout 吊销语义**:登出即作废当前 token(jti 吊销名单,设计稿 #347 人批后
+   由「无状态不吊销的已知取舍」翻转,#106 真登出);覆盖验收:登出后旧 token 401、
+   未登出 token 不受牵连、双次登出均 200、无 token 登出 200(见 test_logout_revokes_token
+   与 test_files_api 的 logout 族)。
 4. **#202 具名白名单**:403 黑名单挡不住改名/嵌套(`mastery`/`student_profile`/
    `knowledge_points[].verified`/`input{}` 嵌套,实测全 200 且进 prompt)⇒ learner
    构造层改**只认清单内键、其余 422**(open 三入口 + 学生轮),并钉住"清单内不误伤"。
@@ -29,7 +31,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from auth_testing import TEST_TOKEN
+from auth_testing import TEST_TOKEN, signed_token
 from edu_agent.api import ConversationService
 from partner_api import (ScriptedKernel, StubSummary, StubTurn, get, open_session,
                          parse_sse, post, serving)
@@ -141,18 +143,24 @@ def test_stream_emits_error_frame_when_kernel_fails():
         assert error["message"]  # 对学生可见的友好文案
 
 
-# ---------- 3. logout 无状态语义(已知取舍,写死防误改) ----------
+# ---------- 3. logout 吊销语义(06 设计稿 §2.1;#106 真登出) ----------
 
-def test_logout_does_not_revoke_token():
-    """登出后同一 token **仍然有效**(无状态 HMAC 不吊销名单,老系统口径的最小实现)。
+def test_logout_revokes_token():
+    """登出后同一 token **立即作废**(jti 吊销名单,#106 / 设计稿 #347)。
 
-    断言方式:登出后打一个**不存在**的会话 → 期望 404(已过鉴权闸)而非 401。
-    ⇒ 若有人把"登出即失效"当 bug 修,这条会红,逼他先改契约与文件头注释。
+    断言方式:登出后打一个**不存在**的会话 → 期望 401(吊销命中,验签闸拦下)
+    而非 404;另一枚未登出的 token 不受牵连(按 jti 精确吊销,不是全局踢线)。
+    历史:2026-09-21 前此处钉的是反向语义(无状态不吊销的已知取舍)——设计稿
+    #347 人批后翻转,合同义务(partner-sso.md §7.1 共享设备换人)落地。
     """
     with served(ScriptedKernel(["先看条件。"])) as base:
         assert post(base, "/api/auth/logout", {}, status=200).json() == {"ok": True}
-        assert get(base, "/api/conversations/conv_after_logout", token=TEST_TOKEN).status_code == 404
-        # R6(审查):登出既不放行也不提权——假 token 仍被闸拦(401)
+        assert get(base, "/api/conversations/conv_after_logout",
+                   token=TEST_TOKEN).status_code == 401
+        # 未登出的另一枚 token 不受牵连(jti 精确吊销)
+        assert get(base, "/api/conversations/conv_after_logout",
+                   token=signed_token(jti="test-jti-other")).status_code == 404
+        # 假 token 仍被闸拦(401)——登出既不放行也不提权
         assert get(base, "/api/conversations/conv_after_logout", token="whatever").status_code == 401
 
 

@@ -2,10 +2,10 @@
 
 密钥在模块导入即写入环境变量(IdentityService 在 build_server 时读 env),故所有
 经 build_server 起的服务器都用同一 test 密钥,签发的 token 可验签通过。
-TEST_TOKEN 无 exp(永不过期),供合同回放类测试稳定复现。
+TEST_TOKEN 带 jti 与未来 exp(永不过期,合同回放类测试稳定复现)。
 
 谁在用:tests/contracts 的 test_auth_enforcement / test_files_api / test_identity_http /
-test_server_hardening / test_launcher_smoke。
+test_server_hardening / test_launcher_smoke / test_contract_gates。
 """
 
 from __future__ import annotations
@@ -25,8 +25,13 @@ def _b64url(data: bytes) -> str:
 
 
 def signed_token(key: str = TEST_HMAC_KEY, **claims) -> str:
-    """签发与 _hmac_token 同格式的 edu_native_<body>.<sig> 令牌。"""
-    payload = {"account": "student1", "role": "student", **claims}
+    """签发与 _hmac_token 同格式的 edu_native_<body>.<sig> 令牌。
+
+    缺省带 jti(06 §2.1:凭 jti 吊销)与未来 exp;可用 claims 覆盖。jti 固定
+    "test-jti":token 是否被吊销只由吊销面测试显式驱动,其余测试互不影响。
+    """
+    payload = {"account": "student1", "role": "student",
+               "exp": 4102444800, "jti": "test-jti", **claims}
     body = _b64url(json.dumps(payload, separators=(",", ":")).encode())
     signature = _b64url(hmac.new(key.encode(), body.encode(), hashlib.sha256).digest())
     return f"edu_native_{body}.{signature}"
