@@ -97,13 +97,6 @@ _SUPPORT_HINT = ("我们把这一步拆小:先不想整道题,你只看这一步
 # 任何题目话术(禁令§11:不给700m/6⁄5/温度题写 case-specific 条件)。
 _UNTRUSTED_LADDER_HINT = "我们先回到题目本身:你能说说题目给出的条件里,哪一条和这一步有关吗?"
 
-# === 消融臂门控(伴生模块 ablation.py;C=生产默认不注入,#333 三臂协议) ===
-from .ablation import (arm_bypass as _arm_bypass,
-                       current_arm as _current_arm, guard_early as _ablation_guard_early,
-                       mech_off as _mech_off,  # 二阶段 LOO 门控查询(phase2 协议 §2)
-                       set_ablation_arm as set_ablation_arm,  # 02 §6 白名单 re-export
-                       shadow_event as _shadow_event)
-
 
 def _feeds_method_hits(text: str, student_evidence: tuple[str, ...] = ()) -> list[str]:
     """tutor 输出里点名的方法词中,学生尚未自己说出的那部分(代喂命中,埋点用)。
@@ -331,11 +324,9 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     model-generated ladder 是 untrusted planning artifact,不进 deterministic reveal
     (产线事故 20260920:700m 温度题模型阶梯写 500m,reveal 原样回放=脚手架读图
     错误)。无 trusted 阶梯 → `_UNTRUSTED_LADDER_HINT` safe guiding question,记
-    {branch: reveal_untrusted}(与 reveal_off 同款结构:可辨识、可度量)。"""
+    {branch: reveal_untrusted}(可辨识、可度量;#382 PR-E:reveal_off 旁路门随
+    消融开关删除)。"""
     re_stuck = session.hint_level > 0  # V1:首次 stuck=0 不给数值;再次 stuck 才有授权资格(推进前捕获)
-    if _mech_off("reveal_ladder"):  # 二阶段 LOO:阶梯整体关 → 只问不揭示
-        session.guard_events.append({"branch": "reveal_off", "mech": "reveal_ladder"})
-        return _SUPPORT_HINT
     if not _has_trusted_ladder(session):
         session.guard_events.append({"branch": "reveal_untrusted"})
         return _UNTRUSTED_LADDER_HINT
@@ -506,9 +497,6 @@ def _guard_output(reply_text: str, session: "LearnerSession | None" = None,
         return reply_text
     guard, rule_ids, normalized, violations = _guard_check(ctx, reply_text, session,
                                                            ready_to_confirm)
-    early = _ablation_guard_early(guard, session, rule_ids, violations, reply_text)
-    if early is not None:
-        return early
     if guard is None:
         return normalized
     if guard != "answer_leak":
@@ -757,25 +745,23 @@ def _repair_feeds_method(ctx: "_GuardContext", session: LearnerSession, text: st
 
 
 def _repeat_refine(ctx, session, safe_text: str, ready: bool) -> str:
-    """复读自批评的消融臂分发:C 臂照原逻辑(_regenerate+兜底);A/B 臂旁路。"""
+    """复读处理(#333 phase2 终裁:repeat regen+reveal 兜底=联合复合体 KEEP——
+    Δm2=-5 超线;单独加回全判死,不拆开)。confirm 阶段复读直达(不重生成
+    不揭示);否则一次自批评重生成,仍未破 → `_reveal_stuck_hint` 兜底。
+
+    #382 PR-E:消融臂分发(A/B 旁路、phase2 LOO 开关)随 ablation.py 运行时
+    依赖清零一并删除——复合体收窄为无条件产品路径,不留 feature switch。"""
     prev = session.history[-1]["content"] if session.history else session.first_question
     if not (prev and _is_repeat(prev, safe_text)):
         return safe_text
-    if (session.state == "ready_to_confirm" or _current_arm() in ("A", "B")
-            or _mech_off("repeat_regen")):
-        # 同归早退,差异只在埋点:② confirm 阶段复读≠卡住(close-loop-fix,不重
-        # 生成不揭示,复读直达——产线实录 444a/2c85:ready 后复读→复合复读→
-        # reveal 重发阶梯→永不闭环);A 臂记 would_*;B 臂静默;机关关闭静默。
-        if session.state == "ready_to_confirm":
-            session.guard_events.append({"branch": "repeat_confirm_pass"})
-        elif _current_arm() == "A":
-            _shadow_event(session, "would_rewrite", "repeat_regen")
+    if session.state == "ready_to_confirm":
+        # ② confirm 阶段复读≠卡住(close-loop-fix,不重生成不揭示,复读直达——
+        # 产线实录 444a/2c85:ready 后复读→复合复读→reveal 重发阶梯→永不闭环)。
+        session.guard_events.append({"branch": "repeat_confirm_pass"})
         return safe_text
     session.guard_events.append({"branch": "repeat_regen"})  # 裁②:复读重生成落点
     refined = _regenerate(ctx, session, safe_text, _SELF_CRITIQUE, ready)
     if refined is None or _is_repeat(prev, refined):
-        if _mech_off("repeat_fallback"):
-            return safe_text  # 二阶段 LOO:复读兜底旁路(不揭示不置 stuck)
         refined = _reveal_stuck_hint(session)
         # PR-A(#382 P0-1 裁定):repeat→reveal 不置 stuck——Tutor 自己复读 ≠ 学生
         # 卡住(系统状态≠学生状态);reveal 动作本身保留,只不再写 session.stuck。
@@ -785,10 +771,8 @@ def _repeat_refine(ctx, session, safe_text: str, ready: bool) -> str:
 def _deterministic_turn(session: LearnerSession, student_message: str,
                         gateway: Gateway | None = None) -> Turn | None:
     """reply 的确定性分支(Thin Kernel #333 终裁:elicit 句族×3 已删,仅剩卡住
-    支持——复合体组件;消融门控照旧:A 记 would_*,B 静默旁路,C 照旧)。
-    None=无命中走模型路径。"""
-    if (_student_signals_stuck(student_message)
-            and not _arm_bypass("would_reveal", "stuck_hint", session)):
+    支持——复合体组件,无条件产品路径)。None=无命中走模型路径。"""
+    if _student_signals_stuck(student_message):
         hint = _stuck_hint(session)
         # PR-A(#382 P0-1 裁定):session.stuck 的唯一合法写入点 = 学生本人明确
         # stuck 信号(本分支)。Tutor repeat / guard failure / regen / fallback /
@@ -839,11 +823,8 @@ def reply(session: LearnerSession, student_message: str, *,
                         ) + (student_message,)))
     safe_text = _guard_output(output["reply"], session, ctx,
                               bool(output["ready_to_confirm"]))
-    prev = session.history[-1]["content"] if session.history else session.first_question
     safe_text = _repeat_refine(ctx, session, safe_text, bool(output["ready_to_confirm"]))
     method_hits = _feeds_method_hits(safe_text, ctx.student_evidence)
-    if method_hits and _arm_bypass("would_rewrite", "feeds_method", session):
-        method_hits = []
     if method_hits:
         repaired, mode = _repair_feeds_method(ctx, session, safe_text, method_hits,
                                                bool(output["ready_to_confirm"]))

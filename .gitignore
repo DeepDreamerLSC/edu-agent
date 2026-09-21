@@ -6,6 +6,8 @@ __pycache__/
 !evals/datasets/**/*.jsonl
 !edu_agent/evals/datasets/**/*.jsonl
 !edu_agent/evals/artifacts/**/*.jsonl
+# 测试夹具真原件形态目录(#368 适配:夹具须随仓走,CI 才能跑 importer e2e)
+!tests/fixtures/**/*.jsonl
 .DS_Store
 .ruff_cache/
 .pytest_cache/
@@ -25,3 +27,6 @@ data/
 
 # 外部数据冻结原件(#368:license 兼容性核对人批后另行拉取,不入库)
 /external/
+# zcode 运行时配置(会话级,含钩子路径;存档工作流 .zcode/workflows/ 需进 git,故排除法)
+.zcode/*
+!.zcode/workflows/

@@ -36,6 +36,13 @@ gh pr view <N> --json state,mergeable,statusCheckRollup   # 在途 PR 的 CI
 gh issue view <N> --json state,title                      # 关键 issue
 ```
 
+执行面小表追加核验(2026-09-20):
+```bash
+# git 心跳:各角色 worktree 的活动元数据(不读内容)
+for wt in /tmp/wt-*; do git -C $wt log --oneline -1; git -C $wt status --porcelain | wc -l; done
+# 工作流在跑的:GetWorkflowRun 快照(若为本会话的 run)
+```
+
 规则:
 - **无出处不改状态**;核验结果与图不符 → 以 gh 为准更新;
 - 数据截至日期(header .sub 里)同步刷新;
@@ -58,9 +65,18 @@ gh issue view <N> --json state,title                      # 关键 issue
    - 每个 stage = 标题 + 完成% + 进度条 + 计数行(`3✓+1⏳(PR审查中)`)
      + items(状态点 + 事项 + 溯源号 `<small>#xxx</small>`);
    - **「▸现在」标记(`.now`)全图只钉一处** = 当前焦点/阻塞点;
-4. 详表区:判据关键路径 `.flow`(step 芯片+箭头)/ 对比表(table)/
+4. **执行面小表(2026-09-20 增,详表区首位)**:多角色/多会话的「谁在干什么」——
+   - 表头:角色(roster 角色名) | 在飞(正在做,一事一行) | 通道(常驻会话/工作流 lane/钩子接力) | 状态依据;
+   - **数据源(两层,均不违反监视禁令——只读声明与 git 元数据,不读会话内容)**:
+     ①**已完成/已认领**=GitHub 回执与评论(`dev=` 字段+认领声明,gh 核验);
+     ②**正在做**=git 元数据心跳(各角色 worktree 的 `git status` 脏文件数/分支领先提交数/最近活动时间)+ 工作流 run 的 GetWorkflowRun 快照;
+   - **口径红线**:「正在做」只来自角色自报(认领评论)或 git 元数据推断(注「推断」);
+     无认领+无心跳的活动**不得虚构状态**,标 ○ 未开始;
+   - 角色归属:工作流 lane 按 `dev=角色名` 回执聚合到 roster 角色(临时执行体≠记忆体,
+     追溯靠 dev= 字段一根线);
+5. 详表区:判据关键路径 `.flow`(step 芯片+箭头)/ 对比表(table)/
    旁线卡 `.mini` / 钥匙清单(`ol` + `.kbd` 序号键);
-5. **footer**:溯源(issue 号 · PR 号 · PM id · 数据截至)。
+6. **footer**:溯源(issue 号 · PR 号 · PM id · 数据截至)。
 
 CSS tokens、类名、配色全部照抄 template.html,不改样式只改内容。
 

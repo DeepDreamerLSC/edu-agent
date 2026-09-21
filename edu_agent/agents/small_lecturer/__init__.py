@@ -23,10 +23,8 @@ from .kernel import (
     _student_signals_stuck,
     finish,
     reply,
-    set_ablation_arm,
     start,
 )
-from .ablation import set_phase2_off  # 二阶段 LOO 词汇表(评测/测试公开入口)
 # numeric 确定性纯函数随包公开(#350 属性测试直连;口径归属见 numeric.py 模块头):
 # _question_numbers/_spoken_numbers/_reply_numbers/_arithmetic_results/_usable_numbers/
 # _answer_numbers/_answer_focus_numbers/_drift_sources——纯函数族,零行为变更。
@@ -115,7 +113,6 @@ __all__ = [
     "grade_grounding",
     "opening_hint",
     "reply",
-    "set_ablation_arm", "set_phase2_off",
     "start",
     "style_directives",
     "summary_system_prompt",
