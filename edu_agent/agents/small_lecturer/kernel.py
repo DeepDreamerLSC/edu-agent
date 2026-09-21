@@ -896,7 +896,12 @@ def finish(session: LearnerSession, *, gateway: Gateway | None = None) -> Summar
              "任务": "生成学习总结"})}],
         TUTOR_SUMMARY_SCHEMA, session,
     ).text)
+    # 架构师裁定 2026-09-21(PR-0):先构造完整 Summary(缺 summary 键的 KeyError
+    # 在此发生,任何写态之前)→ 全部成功才一次性写 state+summary。调用失败≠允许
+    # 半提交(旧序 state 先落,畸形 payload 时 state=completed 而 summary=None,
+    # 重试撞 TerminalStateError)。成功路径终值与返回对象不变。
+    summary = Summary(text=output["summary"], status="completed",
+                      session_version=session.session_version)
     session.state = "completed"
-    session.summary = Summary(text=output["summary"], status="completed",
-                              session_version=session.session_version)
+    session.summary = summary
     return session.summary
