@@ -464,6 +464,23 @@ class _ExplodingGateway(FakeGateway):
         return super().invoke(request)
 
 
+class _GarbledGateway(FakeGateway):
+    """按调用序号返回非法 JSON 文本的假 gateway(finish 内 json.loads 当场崩——
+    非 GatewayError 的真实注入面;#388 件1:原第三测名承诺「json 解析错」却未注入)。"""
+
+    def __init__(self, tutor_payloads, garble_indices: set[int]):
+        super().__init__(tutor_payloads)
+        self.garble_indices = garble_indices   # tutor 调用序号(0 起)命中即返回非法 JSON
+
+    def invoke(self, request):
+        if request.role != "vision" and len(self.requests) in self.garble_indices:
+            self.requests.append({"role": request.role, "messages": request.messages})
+            response = type("R", (), {})()
+            response.text = "{'summary': 截断"   # 单引号 + 截断:json.loads 必抛
+            return response
+        return super().invoke(request)
+
+
 def _session_snapshot(session: object) -> dict:
     """验收口径:history/state/summary/session_version/hint_level 逐字段。"""
     return {
@@ -524,7 +541,21 @@ def test_retry_same_message_after_gateway_error_no_duplicate_history():
 def test_close_on_other_exception_rolls_back_and_finish_paths_safe():
     """#382 P0-2 验收:非 GatewayError 异常(如 json 解析错)同样回滚;且
     needs_review / 零调用模板两条不调模型的 finish 路径不推进 Session 状态位
-    (零调用收束照常 completed,历史无半提交)。"""
+    (零调用收束照常 completed,历史无半提交)。
+
+    #388 件1(审查者 P3①):真注入——收束轮 finish 的模型总结返回非法 JSON →
+    json.loads 抛 JSONDecodeError(ValueError 子类,非 GatewayError),同样逐字段回滚、
+    原样冒泡(注入位在 finish 置态之前,回滚面与 GatewayError 测同口径)。"""
+    garbled = _GarbledGateway(tutor_payloads=[
+        _open_payload("你现在觉得鸡和兔各有多少只?"),
+        _tutor_payload("我们把思路理清楚了。", ready=True),
+    ], garble_indices={2})  # 第3次调用=收束轮 finish 的模型总结,这次返回非法 JSON
+    garbled_session = _ready_incorrect_session(garbled)
+    garbled_before = _session_snapshot(garbled_session)
+    with pytest.raises(ValueError) as excinfo:
+        reply(garbled_session, FINAL_STATEMENT, gateway=garbled)
+    assert not isinstance(excinfo.value, GatewayError)   # 非 GatewayError(json 解析错)
+    assert _session_snapshot(garbled_session) == garbled_before  # 逐字段回滚
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你现在觉得鸡和兔各有多少只?"),
         _tutor_payload("我们把思路理清楚了。", ready=True),
@@ -546,6 +577,34 @@ def test_close_on_other_exception_rolls_back_and_finish_paths_safe():
     assert turn.state == "completed" and ok_session.finished
     assert len(ok_session.history) == 4   # 两轮(user+assistant 各二),无半提交
     assert ok_session.session_version == 3
+
+
+def test_finish_malformed_summary_payload_keyerror_pins_current_contract():
+    """#388 件2(审查者 P3③):Gateway 返回畸形 payload(缺 summary 键)→ finish()
+    KeyError 裸崩——内核不吞、不包 retry(§11 禁令,本测只钉现状供契约面追溯)。
+
+    现状钉版(实证 2026-09-21,不改产品行为):_close_on_final_statement 的回滚
+    接住终述入史(history/version/summary/hint_level 逐字段回调用前);但 finish
+    先置 state="completed" 再取 output["summary"] → KeyError 时 state 已半提交,
+    会话就此 finished 而 summary 仍 None(重试将 TerminalStateError)。若后续裁定
+    修置态次序,本测红即契约变更信号——届时按新契约改断言,不静默。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你现在觉得鸡和兔各有多少只?"),
+        _tutor_payload("我们把思路理清楚了。", ready=True),
+        {"no_summary": True},   # 收束轮 finish 的模型总结:缺 summary 键(畸形 payload)
+    ])
+    session = _ready_incorrect_session(gateway)
+    before = _session_snapshot(session)
+    with pytest.raises(KeyError) as excinfo:
+        reply(session, FINAL_STATEMENT, gateway=gateway)
+    assert str(excinfo.value) == "'summary'"       # KeyError 原样冒泡(不包不吞)
+    after = _session_snapshot(session)
+    assert after["history"] == before["history"]   # 终述入史被回滚
+    assert after["summary"] is None                # summary 未落
+    assert after["session_version"] == before["session_version"]   # 版本未推进
+    assert after["hint_level"] == before["hint_level"]
+    assert session.state == "completed"            # 现状:state 半提交(置态先于取键)
+    assert session.finished                        # 会话就此终态(summary 缺席)
 
 
 def _correct_session(gateway: FakeGateway, question: dict | None = None) -> object:
