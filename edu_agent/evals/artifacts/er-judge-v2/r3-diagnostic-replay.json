@@ -1,0 +1,562 @@
+{
+ "r3_diagnostic_replay": {
+  "baseline": {
+   "incident-700m-replay": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 1,
+    "v2_np": 1,
+    "v2_denominator": 5,
+    "domain": "repro-equivalent",
+    "v2_er_turns": [
+     5
+    ],
+    "v2_np_turns": [
+     4
+    ]
+   },
+   "repro-close-loop-ball-bounce": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 2,
+    "domain": "repro-equivalent",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "repro-close-loop-cross-stitch": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 2,
+    "v2_denominator": 3,
+    "domain": "repro-equivalent",
+    "v2_er_turns": [],
+    "v2_np_turns": [
+     4,
+     5
+    ]
+   },
+   "socraticmath_train_1001": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "non-numeric-answer",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_1204": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 3,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_1559": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 2,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_1827": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "excluded:form2_student_corrects_tutor",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_223": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 3,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_2591": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 1,
+    "v2_denominator": 3,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": [
+     4
+    ]
+   },
+   "socraticmath_train_2899": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "non-numeric-answer",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_3565": {
+    "v1_lex_hits": [
+     1
+    ],
+    "v1_count": 1,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 1,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_3666": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 2,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_3998": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 1,
+    "domain": "non-numeric-answer",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_4275": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "excluded:form2_student_corrects_tutor",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_4402": {
+    "v1_lex_hits": [
+     4
+    ],
+    "v1_count": 1,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 2,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_4510": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 1,
+    "v2_denominator": 2,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": [
+     3
+    ]
+   },
+   "socraticmath_train_4776": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 1,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_5191": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 3,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_5228": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 1,
+    "v2_denominator": 3,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": [
+     4
+    ]
+   },
+   "socraticmath_train_559": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 1,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_675": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 1,
+    "v2_np": 0,
+    "v2_denominator": 1,
+    "domain": "non-numeric-answer",
+    "v2_er_turns": [
+     3
+    ],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_866": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 1,
+    "v2_denominator": 2,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": [
+     6
+    ]
+   },
+   "socraticmath_val_13": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "non-numeric-answer",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_val_412": {
+    "v1_lex_hits": [
+     2
+    ],
+    "v1_count": 1,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 3,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_val_495": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "non-numeric-answer",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_val_61": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "excluded:form2_student_corrects_tutor",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   }
+  },
+  "candidate": {
+   "incident-700m-replay": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 5,
+    "domain": "repro-equivalent",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "repro-close-loop-ball-bounce": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 1,
+    "domain": "repro-equivalent",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "repro-close-loop-cross-stitch": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 1,
+    "domain": "repro-equivalent",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_1001": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "non-numeric-answer",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_1204": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 3,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_1559": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 2,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_1827": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "excluded:form2_student_corrects_tutor",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_223": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 1,
+    "v2_denominator": 3,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": [
+     3
+    ]
+   },
+   "socraticmath_train_2591": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 1,
+    "v2_denominator": 3,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": [
+     4
+    ]
+   },
+   "socraticmath_train_2899": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "non-numeric-answer",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_3565": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 1,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_3666": {
+    "v1_lex_hits": [
+     2
+    ],
+    "v1_count": 1,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 2,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_3998": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 1,
+    "domain": "non-numeric-answer",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_4275": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "excluded:form2_student_corrects_tutor",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_4402": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 2,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_4510": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 2,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_4776": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 1,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_5191": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 3,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_5228": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 3,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_559": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 1,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_675": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 1,
+    "domain": "non-numeric-answer",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_train_866": {
+    "v1_lex_hits": [
+     3
+    ],
+    "v1_count": 1,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 2,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_val_13": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "non-numeric-answer",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_val_412": {
+    "v1_lex_hits": [
+     2
+    ],
+    "v1_count": 1,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 3,
+    "domain": "form1_student_answered_tutor_keeps_asking",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_val_495": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "non-numeric-answer",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   },
+   "socraticmath_val_61": {
+    "v1_lex_hits": [],
+    "v1_count": 0,
+    "v2_er": 0,
+    "v2_np": 0,
+    "v2_denominator": 0,
+    "domain": "excluded:form2_student_corrects_tutor",
+    "v2_er_turns": [],
+    "v2_np_turns": []
+   }
+  }
+ },
+ "note": "诊断性 replay:r3 FAIL 结论不变,不重算不翻案;只报告旧尺子(v1 词面)与新尺子(v2)差异。"
+}
