@@ -342,9 +342,9 @@ def main() -> None:
     parser.add_argument("command", choices=["drill", "dev", "replay", "holdout", "sample"])
     parser.add_argument(
         "--runs-root",
-        # 正式工件落点(P3-nano,审查 #411):r3/ablation 轨迹的归档在 er-judge-v2 验收
-        # JSON 内;传 /tmp/wt-step7-ab 仅当复跑时原树仍在。默认指向仓内可复现路径。
-        default=Path(__file__).resolve().parent,
+        # r3/ablation 工件树(/tmp/wt-step7-ab)不在仓——见 REPORT.md 数据源节(P3-nano 修法一:
+        # 回退 #412 错改,保留 /tmp 依赖+归档落点注记,审查 5755351702)
+        default="/tmp/wt-step7-ab",
         type=Path,
     )
     parser.add_argument("--out", type=Path, default=None)

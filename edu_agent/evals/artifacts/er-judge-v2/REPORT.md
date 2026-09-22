@@ -88,3 +88,15 @@ python3 edu_agent/evals/artifacts/er-judge-v2/calibrate.py replay --out r3-diagn
 ```
 
 仓内护栏:`tests/evals/test_er_judge_v2.py`(七点回归电池,真实案文最小复现)。
+
+
+## 数据源与归档落点(P3-nano 修法一,#412 审查 5755351702)
+
+`calibrate.py` 各子命令消费的数据源不在本目录,在 **r3/ablation 运行时工件树 `/tmp/wt-step7-ab/`**:
+- `runs/candidate/cases.jsonl`、`runs/{baseline,candidate}/results/*.json`(r3 双臂 26 案轨迹)
+- `runs/ablation-*/results/*.json`(五臂 ablation 8 案)
+- `edu_agent/evals/datasets/external_slices/socraticmath_executable_v1.json`(经由 runs_root 相对路径)
+
+该 /tmp 树为临时工件:树在时可逐字节重产(#411 审查亲验);树失后需重放跑面(r3 工程链在
+calibration-private/step7-* 档案可复现)。**仓内不归档原始轨迹**(生产数据隔离+体积纪律);
+判分器正本(er_judge_v2.py)与 gold labels 入仓即可复用——未来新跑面传 --runs-root 指向新树。
