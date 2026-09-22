@@ -340,7 +340,13 @@ def _emit(payload: dict, out: Path | None, text: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["drill", "dev", "replay", "holdout", "sample"])
-    parser.add_argument("--runs-root", default="/tmp/wt-step7-ab", type=Path)
+    parser.add_argument(
+        "--runs-root",
+        # 正式工件落点(P3-nano,审查 #411):r3/ablation 轨迹的归档在 er-judge-v2 验收
+        # JSON 内;传 /tmp/wt-step7-ab 仅当复跑时原树仍在。默认指向仓内可复现路径。
+        default=Path(__file__).resolve().parent,
+        type=Path,
+    )
     parser.add_argument("--out", type=Path, default=None)
     args = parser.parse_args()
     if args.command == "drill":
