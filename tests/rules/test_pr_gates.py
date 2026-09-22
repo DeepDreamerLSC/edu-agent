@@ -1,4 +1,5 @@
-"""04 §3.1 PR 元数据门纯逻辑测试:分支年龄、触碰顶层包、large-pr 阈值、structural 主门。"""
+"""04 §3.1 PR 元数据门纯逻辑测试:分支年龄、触碰顶层包、large-pr 阈值、structural 主门、
+calibration 卡口(#405 ②)。"""
 
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -7,6 +8,7 @@ import scripts.pr_gates as pr_gates
 
 NOW = datetime(2026, 9, 6, 12, 0, tzinfo=timezone.utc)
 APPROVAL = "structural-approval: 2026-09-06 人批,依据 issue #4 指派"
+CALIBRATION = "calibration: 一致率 48/52, 翻转 2 [rescore 工件链接]"
 
 
 class StubApi:
@@ -171,3 +173,55 @@ def test_stacked_branch_cannot_smuggle_structural_change():
     failures = pr_gates.structural_gate(api, 1, files, "无批准行")
     assert failures and "configs/models.yaml" in failures[0]
     assert api.added == ["structural"]
+
+
+# ---------- calibration 卡口(#405 ②:rubric 是量具,改 rubric = 换尺子) ----------
+
+
+def test_rubric_touch_without_calibration_line_fails():
+    """① 触 rubrics/ + 描述缺 calibration 行 → pr-gates 失败并打 calibration 标签(红灯)。"""
+    api = StubApi()
+    files = [
+        {"filename": "edu_agent/evals/rubrics/small_lecturer_v3_2.yaml", "additions": 3, "deletions": 1}
+    ]
+    failures = pr_gates.calibration_gate(api, 1, files, "调了判据阈值,没有标定数据")
+    assert failures and "calibration:" in failures[0]
+    assert "edu_agent/evals/rubrics/small_lecturer_v3_2.yaml" in failures[0]
+    assert api.added == ["calibration"]
+
+
+def test_rubric_touch_with_calibration_line_passes_but_stays_labelled():
+    """② 有 calibration 行 → 绿;标签仍保留(换过尺子要亮到合并时刻,同 structural 02 §7)。"""
+    api = StubApi()
+    files = [{"filename": "edu_agent/evals/rubrics/new_rubric_v4.yaml", "additions": 5, "deletions": 0}]
+    assert pr_gates.calibration_gate(api, 1, files, f"说明\n{CALIBRATION}\n") == []
+    assert api.added == ["calibration"]
+
+
+def test_non_rubric_pr_not_affected():
+    """③ 不触 rubrics/ 的 PR 零影响:无 calibration 行也绿,不打标签。"""
+    api = StubApi()
+    files = [
+        {"filename": "edu_agent/evals/judge.py", "additions": 10, "deletions": 0},
+        {"filename": "edu_agent/evals/datasets/golden/calibration_golden_v2.jsonl", "additions": 1, "deletions": 0},
+    ]
+    assert pr_gates.calibration_gate(api, 1, files, "") == []
+    assert api.added == []
+
+
+def test_rubric_path_pattern():
+    """只认 edu_agent/evals/rubrics/ 目录:evals 其他文件与同名非目录文件都不算。"""
+    assert pr_gates.path_is_rubric("edu_agent/evals/rubrics/small_lecturer_v3_2.yaml") is True
+    assert pr_gates.path_is_rubric("edu_agent/evals/rubrics/sub/x.yaml") is True  # 前缀递归
+    assert pr_gates.path_is_rubric("edu_agent/evals/judge.py") is False  # evals 其余不算
+    assert pr_gates.path_is_rubric("edu_agent/evals/rubrics.py") is False  # 同名文件不算
+    assert pr_gates.path_is_rubric("tests/evals/rubrics/x.yaml") is False  # 只认仓库内该目录
+
+
+def test_calibration_line_must_start_the_line():
+    """calibration 行必须独占一行;行中被提及不算(同 structural-approval 格式,不放松)。"""
+    api = StubApi()
+    files = [{"filename": "edu_agent/evals/rubrics/small_lecturer_v3_2.yaml", "additions": 1, "deletions": 0}]
+    body = "评审备注:请补 calibration: 一致率 48/52, 翻转 2"
+    assert pr_gates.calibration_gate(api, 1, files, body) != []
+    assert pr_gates.calibration_gate(api, 1, files, f"  {CALIBRATION}") == []  # 行首空白容忍
