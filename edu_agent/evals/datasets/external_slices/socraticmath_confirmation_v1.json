@@ -1,0 +1,1248 @@
+{
+ "schema": "edu_agent_external_slice_executable/v1",
+ "slice_version": "socraticmath_confirmation_v1",
+ "status_note": "confirmation 预注册(#412 prereg §三)编译件:三 slice 带 slice 标注字段(compile.slice/trajectory_tags);R1 线性 v1,零 LLM 改写,真人 tutor 轮不进剧本。跑面建议:positive/type866 进 ER 判分域(form=FORM1 同形或 form=None repro-equivalent);negative 面以「final_state=completed 而 judge said 全程未置位」为 premature 信号(val_13 型防线)。",
+ "prereg": {
+  "doc": "docs/evals/confirmation-bnew-prereg-v1.md(#412 已合)",
+  "section": "§三 样本集(选择条件只看源面,不看任何臂输出)",
+  "protocol": "docs/evals/external-slice-compilation-protocol-v1.md(#398 制度沿用)"
+ },
+ "compiled_from": {
+  "slice_version": "socraticmath_confirmation_v1",
+  "normalized_file": "edu_agent/evals/datasets/external_normalized/socraticmath.jsonl",
+  "normalized_sha256": "00d24abbe0b5c8a3d4d7003257d80335b519c79b2511119f5a895cf04b908d0e",
+  "records": 6846,
+  "excluded_r3_used": [
+   "socraticmath_train_1001",
+   "socraticmath_train_1204",
+   "socraticmath_train_1559",
+   "socraticmath_train_1827",
+   "socraticmath_train_223",
+   "socraticmath_train_2591",
+   "socraticmath_train_2899",
+   "socraticmath_train_3565",
+   "socraticmath_train_3666",
+   "socraticmath_train_3998",
+   "socraticmath_train_4275",
+   "socraticmath_train_4402",
+   "socraticmath_train_4510",
+   "socraticmath_train_4776",
+   "socraticmath_train_5191",
+   "socraticmath_train_5228",
+   "socraticmath_train_559",
+   "socraticmath_train_675",
+   "socraticmath_train_866",
+   "socraticmath_val_13",
+   "socraticmath_val_412",
+   "socraticmath_val_495",
+   "socraticmath_val_61"
+  ],
+  "excluded_r3_used_count": 23,
+  "excluded_r3_used_source": "socraticmath_executable_v1.json scenarios(23 案,prereg §三排除条款;I7 零重叠断言)"
+ },
+ "selection_discipline": "防 p-hack 红线:选择条件只看源题面与学生话语(problem.text/answer + reference_dialogue),不看任何臂输出;逐案判定依据(哪一轮、什么特征)见 selection_evidence——只引源对话内容。",
+ "compile_protocol": {
+  "rules": {
+   "R1": "全弱依赖→线性 v1;学生轮原文照录,仅允许截断(剥回执/强依赖开场白)与轮级丢弃,逐处记录",
+   "R2": "本批无适用(无强依赖中后段截断案)",
+   "R3": "本批无适用(24/24 全 R1 线性;无分支剧本,无路由面)",
+   "R4": "本批无弃案(池探阶段淘汰者未入 SELECTION,排除理由分类记录于 selection_funnel,非编译期弃案)"
+  },
+  "invariants": [
+   "I1 学生文本⊆源 student 轮原文(截断记录)",
+   "I4 question 与源 problem.text 逐字一致",
+   "I5 positive/type866:ER judge v2 said 恰在判定终答轮置位",
+   "I6 negative:said 全剧本永不置位且答案原值不入剧本轮",
+   "I7 与 r3 已用 23 案零重叠"
+  ]
+ },
+ "selection_funnel": {
+  "positive": {
+   "pool": "normalized 6846 − r3 已用 23;r3 form1/v2 严格断言语料(数值连续子序列/文本整串+四护栏/字母断言)+单空题约束",
+   "raw_hits_rank2_after1": 38,
+   "excluded_by": {
+    "judge_said_never": "终答以「X等于Y」关系形态给出,ER judge v2 剥换算段把终答值一并剥掉,said 永不置位(2194/3578/1514/test_54/test_103/1267/1799)——正向门分母为 0",
+    "judge_said_early": "方法轮(比例/定义复述/候选枚举/关系陈述)提前触发 said,与真实终答轮错位(2710/3067/val_147/4955)",
+    "guess_or_question_form": "终答以疑问试探形态出现(「是不是叫做周长」「是不是…0.1076平方千米?」),非显式陈述(4401/635)",
+    "source_contamination": "源导师连环纠错与学生回错轮深度耦合(5221,r3 弃案理由沿用)"
+   },
+   "final": 16,
+   "band": "12-16"
+  },
+  "negative": {
+   "pool": "同上;judge 语义全对话零断言 + 答案原值不出现在任何学生轮(防 judge 盲区源真值错位)+ 学生轮含数值/方法",
+   "raw_candidates": 292,
+   "read_manual": "~100 条逐条通读(数值+导师报答案/判定+报答案/比较链/多空/无结论形态五路扫描全覆盖)",
+   "excluded_by": {
+    "student_stated_conclusion": "学生以文字/数值说出结论内容(判定类案几乎全数:3556/3823/5358/923/2106/2279/1730/4782/1528/3693/4180/752/625/652/3003/3082/3719/4357/val_369/test_36/test_41/1253/1504/2624/2908/928/val_494/4767 等)——学生话语本身构成结论",
+    "wrong_answer_form": "学生已给出(错误)终答(49/5/m=5/1331/2040 中间量系),错答形态非止步形态(val_276/val_497/test_228/val_313/1579)",
+    "notation_assembly_only": "结论内容已由学生逐位/定性给出,剩余仅记号拼装(1256/1097/3278/4793)",
+    "source_contamination": "对话与题面错位/源导师确认错答/题面残缺(4304/4886/1449/1293/test_46/test_662/900/test_310/520)"
+   },
+   "final": 6,
+   "band": "8-12",
+   "note": "低于 prereg 区间,如实报数:语料对话绝大多数以学生报出终答/结论收尾,真实止步案稀缺;判定类、比较链类、多空类三类形态系统性不产止步案(排除类逐条有据,宁少勿滥)。"
+  },
+  "type866": {
+   "pool": "同上;positive 形态 + 答案不唯一标注/写一个式题面/等价表示空间",
+   "raw_candidates": "答案不唯一 6 + 或备选 6 + 写一个式题面 12 + 导师延伸探针 1 + 学生自予备选 5(并集去重)",
+   "excluded_by": {
+    "judge_relation_enum_blind": "answer_keys 关系骨架/枚举剥除使 said 永不置位(5346「8:1,16:2」/3966/5123/val_549 多段关系;3668/2990/val_148 枚举段;4474/5001 换算段)——与 866 本案(12:4=6:2 恰为答案原串)不同形",
+    "false_marker": "延伸标记误中(「其他题目/知识点」「另一个内项」等非答案延伸:1285/2754/4340/4627/2341/966)"
+   },
+   "final": 2,
+   "band": "3-5",
+   "note": "低于 prereg 区间,如实报数:866 形态(学生答案恰与答案键主形态逐字一致+答案不唯一)在余量池中仅 5234/4827 两案通过 judge 对齐闸。"
+  }
+ },
+ "judge_alignment_note": "ER judge v2(裁令④)为冻结判分器;其 answer_keys 对关系型答案要求原串可见、对枚举/换算段有剥除——故编译期以 said_index 对齐闸(I5/I6)保证:positive/type866 的判定终答轮恰是运行时 said 置位轮(分母成立),negative 的剧本轮上 said 永不置位(premature 信号不漏)。",
+ "compile_review": {
+  "obligation": "初稿人工=编译执行代理:~100 条候选逐条通读;每 slice 抽 2 条编译结果全通读(见 readback)。",
+  "readback": {
+   "confirmation_positive_student_final_answer": [
+    "socraticmath_train_2960",
+    "socraticmath_train_3138"
+   ],
+   "confirmation_negative_student_stops_short": [
+    "socraticmath_train_2791",
+    "socraticmath_train_5181"
+   ],
+   "confirmation_type866_answer_complete_extensible": [
+    "socraticmath_train_5234",
+    "socraticmath_train_4827"
+   ]
+  },
+  "verdict": "positive 抽读 2 条(2960/3138):截断后学生轮自足、终答轮保真、追问/摇摆链完整。negative 抽读 2 条(2791/5181):剧本轮止步形态成立、无答案泄露、丢弃轮理由属实。type866 抽读 2 条(5234/4827):合法终答轮保真、延伸空间在源导师轮可证。"
+ },
+ "counts": {
+  "positive": 16,
+  "negative": 6,
+  "type866": 2,
+  "total": 24
+ },
+ "selection_evidence": {
+  "socraticmath_train_2322": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 4,
+   "basis": "t4「应该是74减去6再减去16，结果是52」——终答句含完整推导与答案值;t5 源导师假挑战(「计算结果有些问题」),t6 学生复算得同值(截回执开场白)。"
+  },
+  "socraticmath_train_4814": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 4,
+   "basis": "t4「14乘以2，就是28平方分米」——终答句;t5 源导师假挑战(「你确认你的计算没有问题吗」),t6 学生复算持同值。"
+  },
+  "socraticmath_val_190": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 4,
+   "basis": "t4「…所以答案是21」——终答句;t5 源导师假挑战(十位算法误指),t6 学生复算持同值(截回执开场白)。"
+  },
+  "socraticmath_val_58": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 4,
+   "basis": "t4「…四舍五入后，就是20立方分米」——终答句(保留整数口径已给);t5 源导师假挑战,t6 学生复算(20.096→20)持同值(截回执开场白)。"
+  },
+  "socraticmath_train_4188": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 6,
+   "basis": "t6「800公顷再加上26公顷就是826公顷」——终答句;t7 源导师假挑战(「并没有计算出正确的结果」),t8 学生坚持,t9 导师致歉确认。"
+  },
+  "socraticmath_train_898": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 4,
+   "basis": "t4「去年总共就用了x乘以4，所以应该是4x吨」——代数终答句;t5 源导师假挑战(「是不是应该是x乘以3」),t6 学生持答(截回执开场白)。"
+  },
+  "socraticmath_train_515": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 4,
+   "basis": "t4「所以题目判断错了，应该选A」——选项字母终答(r3 form2 弃案,非 23 已用);t5 源导师挑战,t6 学生重复同答(截回执开场白)。"
+  },
+  "socraticmath_train_2960": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 4,
+   "basis": "t4「应该是对的，应该选B」——选项字母终答;t5 源导师追问,t6 学生改口错答 A,t8 又回正 B——追问诱发摇摆(4402 同款,截 t8 回执开场白)。"
+  },
+  "socraticmath_train_4813": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 4,
+   "basis": "t4「1*18、2*9、3*6就是3种方案」——计数终答(枚举即答案,3 可见);t5 源导师假挑战(「漏掉了一种情况」),t6 学生改错为 4 种——假挑战诱发错答(截回执开场白)。"
+  },
+  "socraticmath_train_1961": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 6,
+   "basis": "t6「让我计算一下...结果是41」——终答句;t7 源导师答后重问(「2788是68的多少倍呢」),t8 学生复述「是41倍」。"
+  },
+  "socraticmath_train_2196": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 6,
+   "basis": "t6「那应该是104除以4，结果是26厘米」——终答句;t7 源导师答后重问同量(三条棱之和是多少),t8 学生复述。"
+  },
+  "socraticmath_train_3695": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 4,
+   "basis": "t4「9乘以4，再加上5。结果应该是41」——终答句;t5 源导师确认,t6 学生致谢——干净收束面(无源追问)。"
+  },
+  "socraticmath_train_930": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 4,
+   "basis": "t4「我算了一下，结果应该是49」——终答句;t5 源导师确认收束,t6 学生致谢——干净收束面。"
+  },
+  "socraticmath_val_142": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 4,
+   "basis": "t4「应该是7200页」——估算终答句;t6 学生谈估算误差体会(实质收尾轮,无追问链)。"
+  },
+  "socraticmath_test_592": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 4,
+   "basis": "t4「因为1平方千米等于100公顷,所以…所以我选B」——选项字母终答;t5 源导师答后叮嘱,t6 学生求确认(截回执开场白)。"
+  },
+  "socraticmath_train_3138": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 6,
+   "basis": "t6「我觉得应该是的，所以我选A」——选项字母终答(截强依赖开场白「根据你的解释」,断言句自足);t7 源导师挑战,t8 学生持答「我还是选A」(t4 纯回执轮丢弃)。"
+  },
+  "socraticmath_train_2791": {
+   "slice": "confirmation_negative_student_stops_short",
+   "hit_turn_index": null,
+   "basis": "止步于分解乘法部分积:t6「等于56」t8「等于112」t10「等于1120」,总和(1176)与「四位数」位数判断终未给出;源导师 t11 代算,t13 报选项 B。"
+  },
+  "socraticmath_train_2857": {
+   "slice": "confirmation_negative_student_stops_short",
+   "hit_turn_index": null,
+   "basis": "止步于逐位猜数:t2 A=5、t4 B=1(错,t5 导师纠 0)、t6 C=6、t8 D=6、t10 E=6/F=7、t12 G=1;完整号码(5066671)拼装终未给出;源导师 t13 拼出 0731-5066671。"
+  },
+  "socraticmath_train_372": {
+   "slice": "confirmation_negative_student_stops_short",
+   "hit_turn_index": null,
+   "basis": "止步于公式关系:t4/t6 表面积增量=2πr²,t8 h 口径答错(2 米,应为全长),t10 只言「用r的值和h算出来就可以」,t12 单位换算;数值计算终未执行,全对话无人报出 100。"
+  },
+  "socraticmath_train_5181": {
+   "slice": "confirmation_negative_student_stops_short",
+   "hit_turn_index": null,
+   "basis": "止步于表达式:t4 总路程 3600 千米、t6 总时间 450 分钟(均正确),t8 只述「3600千米除以…总时间450分钟」;最终除法(=8)终未执行,源导师 t9 报 8。"
+  },
+  "socraticmath_train_5106": {
+   "slice": "confirmation_negative_student_stops_short",
+   "hit_turn_index": null,
+   "basis": "止步于逐位除法中段:t6 算到借位与「次位是0」(商 80…,截回执开场白);商末位与「中间有几个0」的判断终未完成;源导师 t7 代完成并报「只有一个0」。"
+  },
+  "socraticmath_train_3490": {
+   "slice": "confirmation_negative_student_stops_short",
+   "hit_turn_index": null,
+   "basis": "止步于数位分析:t4 判整数部分 6/首位 7 但第二位分析含混(「可能是0或者更大的数,但是不能超过5」),t6 只选出第三位取 4;原数 6.704 终未拼出,源导师 t7 报出。"
+  },
+  "socraticmath_train_5234": {
+   "slice": "confirmation_type866_answer_complete_extensible",
+   "hit_turn_index": 10,
+   "basis": "t10 学生解出一支「4：9=x：18…x=8」——合法终答(题面歧义两解之一,judge 数值可见);延伸空间=另一支(40.5,哪个圆是 18 未定),源导师 t11 补全两支「8或40.5」——全面性延伸同款。"
+  },
+  "socraticmath_train_4827": {
+   "slice": "confirmation_type866_answer_complete_extensible",
+   "hit_turn_index": 6,
+   "basis": "t6 学生给出合法方程「160÷x = 20」(judge 关系骨架可见,截回执开场白);延伸空间=等价方程其他列法(160÷8=x、x÷8=20、8x=160),题目明言「列出一个」即任一合法——另一种表示延伸同款。"
+  }
+ },
+ "scenarios": [
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_2322",
+   "title": "confirmation·两个数的差是74，如果减数增加6，被减数减少16",
+   "subject": "math",
+   "question": "两个数的差是74，如果减数增加6，被减数减少16，差是____．",
+   "student_turns": [
+    "差是被减数减去减数得到的，这个我明白。两位数减两位数的口算，那就是直接相减吧？",
+    "差应该会变小吧，因为减数变大，被减数变小，应该是74减去6再减去16，结果是52。",
+    "应该是74减去6再减去16，结果是52。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_2322",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "啊，我算错了。"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "52",
+    "selection": {
+     "hit_turn_index": 4,
+     "basis": "t4「应该是74减去6再减去16，结果是52」——终答句含完整推导与答案值;t5 源导师假挑战(「计算结果有些问题」),t6 学生复算得同值(截回执开场白)。"
+    },
+    "note": "线性 v1 原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_4814",
+   "title": "confirmation·两个完全一样的三角形拼成一个平行四边形．已知每个",
+   "subject": "math",
+   "question": "两个完全一样的三角形拼成一个平行四边形．已知每个三角形的面积是14平方分米，拼成的平行四边形的面积是____平方分米．",
+   "student_turns": [
+    "三角形的面积是底乘高的一半，平行四边形的面积是底乘高，这些我都知道的。",
+    "每个三角形的面积是14平方分米，所以平行四边形的面积就是14乘以2，就是28平方分米。",
+    "我再算一遍，14乘以2等于28，没错，平行四边形的面积就是28平方分米。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_4814",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "28",
+    "selection": {
+     "hit_turn_index": 4,
+     "basis": "t4「14乘以2，就是28平方分米」——终答句;t5 源导师假挑战(「你确认你的计算没有问题吗」),t6 学生复算持同值。"
+    },
+    "note": "线性 v1 原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_val_190",
+   "title": "confirmation·36减去15等于____。",
+   "subject": "math",
+   "question": "36减去15等于____。",
+   "student_turns": [
+    "嗯，我知道。我的方法是先减个位，如果个位不够减就要借位，然后再减十位。",
+    "所以这个题目就是36减去15，个位数是6减去5等于1，十位数是3减去1等于2，所以答案是21。",
+    "十位数应该是3减去1等于2，所以答案是21。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_val_190",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "对不起，我算错了，"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "21",
+    "selection": {
+     "hit_turn_index": 4,
+     "basis": "t4「…所以答案是21」——终答句;t5 源导师假挑战(十位算法误指),t6 学生复算持同值(截回执开场白)。"
+    },
+    "note": "线性 v1 原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_val_58",
+   "title": "confirmation·一根长4m的圆柱形木料截成4段，表面积增加301",
+   "subject": "math",
+   "question": "一根长4m的圆柱形木料截成4段，表面积增加301.44cm2，则这根木料的体积是____dm3．（结果保留整数）",
+   "student_turns": [
+    "嗯，我知道分米与米的换算，还知道四舍五入和小数的四则运算。但对于圆柱体的体积计算和平方分米与平方厘米、平方米的换算我不是很清楚。",
+    "首先，4米转化为分米是40分米。然后，301.44平方厘米转化为平方分米是3.0144平方分米。3.0144除以6再乘以40等于20.0784立方分米。四舍五入后，就是20立方分米。",
+    "应该是3.0144除以6后再乘以40，等于20.096立方分米，四舍五入后应该为20立方分米。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_val_58",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "抱歉，我算错了。"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "20",
+    "selection": {
+     "hit_turn_index": 4,
+     "basis": "t4「…四舍五入后，就是20立方分米」——终答句(保留整数口径已给);t5 源导师假挑战,t6 学生复算(20.096→20)持同值(截回执开场白)。"
+    },
+    "note": "线性 v1 原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_4188",
+   "title": "confirmation·8平方千米26公顷=____公顷",
+   "subject": "math",
+   "question": "8平方千米26公顷=____公顷",
+   "student_turns": [
+    "1平方千米是100公顷，这个我记得。",
+    "8平方千米就是800公顷。",
+    "800公顷再加上26公顷就是826公顷。",
+    "我再看看，800公顷再加上26公顷，结果应该是826公顷啊。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_4188",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "826",
+    "selection": {
+     "hit_turn_index": 6,
+     "basis": "t6「800公顷再加上26公顷就是826公顷」——终答句;t7 源导师假挑战(「并没有计算出正确的结果」),t8 学生坚持,t9 导师致歉确认。"
+    },
+    "note": "线性 v1 原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_898",
+   "title": "confirmation·小刚家去年每个季度平均用水x吨，小刚家去年共用水",
+   "subject": "math",
+   "question": "小刚家去年每个季度平均用水x吨，小刚家去年共用水____吨．",
+   "student_turns": [
+    "一年有四个季度，然后数学符号表示我也会。",
+    "去年每个季度用水x吨，那么去年总共就用了x乘以4，所以应该是4x吨。",
+    "一年有四个季度，所以应该是x乘以4才对。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_898",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "哦，对不起，我搞错了，"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "4x",
+    "selection": {
+     "hit_turn_index": 4,
+     "basis": "t4「去年总共就用了x乘以4，所以应该是4x吨」——代数终答句;t5 源导师假挑战(「是不是应该是x乘以3」),t6 学生持答(截回执开场白)。"
+    },
+    "note": "线性 v1 原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_515",
+   "title": "confirmation·1平方厘米=100平方分米．",
+   "subject": "math",
+   "question": "1平方厘米=100平方分米．　　．（判断对错）  A.×  B.√",
+   "student_turns": [
+    "1平方厘米是0.01平方米，那1平方厘米应该是0.01平方分米吧。",
+    "嗯，那就是1平方厘米等于0.01平方分米，所以题目判断错了，应该选A。",
+    "1平方厘米应该等于0.01平方分米，所以题目判断错了，应该选A!"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_515",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "啊，我错了，"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "A",
+    "selection": {
+     "hit_turn_index": 4,
+     "basis": "t4「所以题目判断错了，应该选A」——选项字母终答(r3 form2 弃案,非 23 已用);t5 源导师挑战,t6 学生重复同答(截回执开场白)。"
+    },
+    "note": "线性 v1 原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_2960",
+   "title": "confirmation·轴对称图形的两个对称点到对称轴的距离相等。（判断",
+   "subject": "math",
+   "question": "轴对称图形的两个对称点到对称轴的距离相等。（判断对错）  A.×  B.√",
+   "student_turns": [
+    "我记得轴对称图形就是沿着某条线对折能完全重合的图形，对称轴就是那条可以对折的线，但是，对称点到对称轴的距离相同这个我不是很明白。",
+    "我大概理解了，这样解释的话，题目就应该是对的，应该选B.",
+    "最后的答案应该是A，轴对称图形的两个对称点到对称轴的距离不相等。",
+    "应该是选B，轴对称图形的两个对称点到对称轴的距离相等。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_2960",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 8,
+      "cut_prefix": "啊！对对对，我说错了，"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "B",
+    "selection": {
+     "hit_turn_index": 4,
+     "basis": "t4「应该是对的，应该选B」——选项字母终答;t5 源导师追问,t6 学生改口错答 A,t8 又回正 B——追问诱发摇摆(4402 同款,截 t8 回执开场白)。"
+    },
+    "note": "线性 v1 原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_4813",
+   "title": "confirmation·18个相同的正方形，一共可以拼成____种不同的",
+   "subject": "math",
+   "question": "18个相同的正方形，一共可以拼成____种不同的长方形．",
+   "student_turns": [
+    "正方形的四条边都一样长，长方形是两边一长一短，两短边长度相等，两长边长度也相等。",
+    "嗯，以我的理解，18是2、3的倍数，所以1*18、2*9、3*6就是3种方案。",
+    "18也可以是18*1啊，所以应该是1*18、2*9、3*6和18*1，总共有四种方案！"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_4813",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "噢！我想起来了，"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "3",
+    "selection": {
+     "hit_turn_index": 4,
+     "basis": "t4「1*18、2*9、3*6就是3种方案」——计数终答(枚举即答案,3 可见);t5 源导师假挑战(「漏掉了一种情况」),t6 学生改错为 4 种——假挑战诱发错答(截回执开场白)。"
+    },
+    "note": "线性 v1 原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_1961",
+   "title": "confirmation·2788是68的____倍．",
+   "subject": "math",
+   "question": "2788是68的____倍．",
+   "student_turns": [
+    "是将较大的数除以较小的数吧。",
+    "就是将2788除以68。",
+    "让我计算一下...结果是41。",
+    "是41倍。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_1961",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "41",
+    "selection": {
+     "hit_turn_index": 6,
+     "basis": "t6「让我计算一下...结果是41」——终答句;t7 源导师答后重问(「2788是68的多少倍呢」),t8 学生复述「是41倍」。"
+    },
+    "note": "线性 v1 原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_2196",
+   "title": "confirmation·一个长方体的棱长总和是104厘米，那么这个长方体",
+   "subject": "math",
+   "question": "一个长方体的棱长总和是104厘米，那么这个长方体相交于一个顶点的三条棱的长度之和是____厘米。",
+   "student_turns": [
+    "长方体是一个有六个矩形面的三维图形，它有12条棱。",
+    "一个长方体包含4条长边，4条宽边，4条高边。",
+    "那应该是104除以4，结果是26厘米。",
+    "那应该就是26厘米。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_2196",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "26.",
+    "selection": {
+     "hit_turn_index": 6,
+     "basis": "t6「那应该是104除以4，结果是26厘米」——终答句;t7 源导师答后重问同量(三条棱之和是多少),t8 学生复述。"
+    },
+    "note": "线性 v1 原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_3695",
+   "title": "confirmation·五年级一班同学植树9棵，六年级同学植树的棵数比五",
+   "subject": "math",
+   "question": "五年级一班同学植树9棵，六年级同学植树的棵数比五年级一班的4倍还多5棵，六年级同学植树____棵．",
+   "student_turns": [
+    "这个表述意思是六年级同学植的树的数量是五年级同学植的树的数量的4倍，再加上5棵树吧。",
+    "我试试。五年级一班同学植的树的数量是9，然后我把9乘以4，再加上5。结果应该是41。",
+    "我理解了，谢谢您老师。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_3695",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "41",
+    "selection": {
+     "hit_turn_index": 4,
+     "basis": "t4「9乘以4，再加上5。结果应该是41」——终答句;t5 源导师确认,t6 学生致谢——干净收束面(无源追问)。"
+    },
+    "note": "线性 v1 原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_930",
+   "title": "confirmation·体育课上，在操场上跑步的有9人，跳绳的有18人，",
+   "subject": "math",
+   "question": "体育课上，在操场上跑步的有9人，跳绳的有18人，打羽毛球的有22人，操场上一共有____人。",
+   "student_turns": [
+    "嗯，应该就是9加18再加22。",
+    "我算了一下，结果应该是49。",
+    "明白了，谢谢老师。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_930",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "49",
+    "selection": {
+     "hit_turn_index": 4,
+     "basis": "t4「我算了一下，结果应该是49」——终答句;t5 源导师确认收束,t6 学生致谢——干净收束面。"
+    },
+    "note": "线性 v1 原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_val_142",
+   "title": "confirmation·《新版小学生字典》有592页，估计一下，12本这",
+   "subject": "math",
+   "question": "《新版小学生字典》有592页，估计一下，12本这样的字典大约有_______页。",
+   "student_turns": [
+    "应该是600。",
+    "应该是7200页。",
+    "我发现虽然我们估算的数值和真实的数值有一定误差，但通过这种方式可以让我们快速得出结果。并且，当我们处理大量或者是复杂的数据时，这种方法尤其有效。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_val_142",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "7200",
+    "selection": {
+     "hit_turn_index": 4,
+     "basis": "t4「应该是7200页」——估算终答句;t6 学生谈估算误差体会(实质收尾轮,无追问链)。"
+    },
+    "note": "线性 v1 原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_test_592",
+   "title": "confirmation·公顷和平方千米这两个面积单位之间的进率是100。",
+   "subject": "math",
+   "question": "公顷和平方千米这两个面积单位之间的进率是100。（判断对错）  A.×  B.√",
+   "student_turns": [
+    "挺懂得，1平方千米等于100公顷，进率是单位间的进步倍数。",
+    "因为1平方千米等于100公顷，所以我觉得题目的说法是对的，所以我选B。",
+    "所以这个题的答案确实是B对吗？"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_test_592",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "好的，老师，我明白了。"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "B",
+    "selection": {
+     "hit_turn_index": 4,
+     "basis": "t4「因为1平方千米等于100公顷,所以…所以我选B」——选项字母终答;t5 源导师答后叮嘱,t6 学生求确认(截回执开场白)。"
+    },
+    "note": "线性 v1 原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_3138",
+   "title": "confirmation·阳台上晾衣服用的伸缩架是利用了平行四边形易变形的",
+   "subject": "math",
+   "question": "阳台上晾衣服用的伸缩架是利用了平行四边形易变形的特性．________  A.√  B.×",
+   "student_turns": [
+    "平行四边形的对边相等，对角平分这些我知道，但是没有听说过平行四边形易变形的特性。",
+    "我觉得应该是的，所以我选A。",
+    "不是吗？我再看看，嗯……铁丝围成的平行四边形是可以变形的，没错，我还是选A．"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_3138",
+    "student_turn_dialogue_indexes": [
+     2,
+     6,
+     8
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "之前我没注意过，但根据你的解释，"
+     }
+    ],
+    "dropped_turns": [
+     {
+      "index": 4,
+      "reason": "源导师讲解特性后的纯回执(「噢,原来是这样,我明白了」),不可独立成步"
+     }
+    ],
+    "answer": "A",
+    "selection": {
+     "hit_turn_index": 6,
+     "basis": "t6「我觉得应该是的，所以我选A」——选项字母终答(截强依赖开场白「根据你的解释」,断言句自足);t7 源导师挑战,t8 学生持答「我还是选A」(t4 纯回执轮丢弃)。"
+    },
+    "note": "线性 v1 原文照录;截断=剥回执/强依赖开场白;轮级丢弃见 dropped_turns"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_2791",
+   "title": "confirmation·56×21的积是四位数．",
+   "subject": "math",
+   "question": "56×21的积是四位数．　　（判断对错）  A.×  B.√",
+   "student_turns": [
+    "明白，就是需要我直接做乘法计算。",
+    "抱歉，我没有计算器，不能立刻给出答案。",
+    "等于56。",
+    "等于112。",
+    "等于1120。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_negative_student_stops_short"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_negative_student_stops_short",
+    "slice": "confirmation_negative_student_stops_short",
+    "record_id": "socraticmath_train_2791",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8,
+     10
+    ],
+    "truncations": [],
+    "dropped_turns": [
+     {
+      "index": 12,
+      "reason": "源导师 t11 报出结论后的纯回执(「明白了,谢谢老师的解析」),不可独立成步"
+     }
+    ],
+    "answer": "B",
+    "selection": {
+     "hit_turn_index": null,
+     "basis": "止步于分解乘法部分积:t6「等于56」t8「等于112」t10「等于1120」,总和(1176)与「四位数」位数判断终未给出;源导师 t11 代算,t13 报选项 B。"
+    },
+    "note": "线性 v1 原文照录;轮级丢弃见 dropped_turns"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_2857",
+   "title": "confirmation·猜电话号码0731-ABCDEFG提示：A--是",
+   "subject": "math",
+   "question": "猜电话号码0731-ABCDEFG提示：A--是5的最小倍数B--是最小的自然数C--是6的最大因数D--有因数2和3E--它的所有因数是1，2，3，6F--它的所有因数是1，7G--它既不是质数也不是合数这个电话号码就是：0731-____．",
+   "student_turns": [
+    "5的最小倍数是5。",
+    "最小的自然数是1。",
+    "是6。",
+    "6也有因数2和3。",
+    "E的所有因数是1，2，3，6，那E应该是6；F的所有因数是1，7，那F应该是7。",
+    "既不是质数也不是合数的那应该是1。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_negative_student_stops_short"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_negative_student_stops_short",
+    "slice": "confirmation_negative_student_stops_short",
+    "record_id": "socraticmath_train_2857",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8,
+     10,
+     12
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "5066671",
+    "selection": {
+     "hit_turn_index": null,
+     "basis": "止步于逐位猜数:t2 A=5、t4 B=1(错,t5 导师纠 0)、t6 C=6、t8 D=6、t10 E=6/F=7、t12 G=1;完整号码(5066671)拼装终未给出;源导师 t13 拼出 0731-5066671。"
+    },
+    "note": "线性 v1 原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_372",
+   "title": "confirmation·把4米长的圆柱形木棒锯成两段，表面积增加了5平方",
+   "subject": "math",
+   "question": "把4米长的圆柱形木棒锯成两段，表面积增加了5平方分米，原来木棒的体积是____立方分米．",
+   "student_turns": [
+    "圆柱体的体积等于底面积乘以高。",
+    "是两个圆面积2πr^2+侧面积2πrh。",
+    "增加了两个底面的面积，也就是2*π*r^2。",
+    "那么h就是原来的长度的一半，就是2米。",
+    "那么体积就是π*r^2*h，我用r的值和h算出来就可以了。",
+    "2米=20分米"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_negative_student_stops_short"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_negative_student_stops_short",
+    "slice": "confirmation_negative_student_stops_short",
+    "record_id": "socraticmath_train_372",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8,
+     10,
+     12
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 8,
+      "cut_prefix": "是的，我明白了。"
+     },
+     {
+      "dialogue_index": 10,
+      "cut_prefix": "是的，"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "100",
+    "selection": {
+     "hit_turn_index": null,
+     "basis": "止步于公式关系:t4/t6 表面积增量=2πr²,t8 h 口径答错(2 米,应为全长),t10 只言「用r的值和h算出来就可以」,t12 单位换算;数值计算终未执行,全对话无人报出 100。"
+    },
+    "note": "线性 v1 原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_5181",
+   "title": "confirmation·甲乙两地相距1800千米，一架飞以机每分钟9千米",
+   "subject": "math",
+   "question": "甲乙两地相距1800千米，一架飞以机每分钟9千米的速度飞往乙地，飞回时的速度是每分钟7.2千米，飞机的平均速度是每分钟____千米．",
+   "student_turns": [
+    "速度是路程除以时间。",
+    "飞机的总路程是1800千米*2，等于3600千米。",
+    "总时间是飞机飞去的时间和飞回的时间相加，应该是1800千米除以9千米每分钟加上1800千米除以7.2千米每分钟，一共450分钟。",
+    "飞机的平均速度是3600千米除以我刚算出来的总时间450分钟。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_negative_student_stops_short"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_negative_student_stops_short",
+    "slice": "confirmation_negative_student_stops_short",
+    "record_id": "socraticmath_train_5181",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "8",
+    "selection": {
+     "hit_turn_index": null,
+     "basis": "止步于表达式:t4 总路程 3600 千米、t6 总时间 450 分钟(均正确),t8 只述「3600千米除以…总时间450分钟」;最终除法(=8)终未执行,源导师 t9 报 8。"
+    },
+    "note": "线性 v1 原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_5106",
+   "title": "confirmation·4005÷5的商的中间有____个0．",
+   "subject": "math",
+   "question": "4005÷5的商的中间有____个0．",
+   "student_turns": [
+    "我们应该按最高位开始，每一位和除数比较，然后借位，逐位向下除。",
+    "除法运算是反复做减法。",
+    "一开始4分给5，不够减，应该借位，变成40。40分给5恰好是8，所以次位是0."
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_negative_student_stops_short"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_negative_student_stops_short",
+    "slice": "confirmation_negative_student_stops_short",
+    "record_id": "socraticmath_train_5106",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "对的，"
+     }
+    ],
+    "dropped_turns": [
+     {
+      "index": 8,
+      "reason": "源导师 t7 代完成后的纯回执(「我明白了,只要注意…」),不可独立成步"
+     }
+    ],
+    "answer": "1",
+    "selection": {
+     "hit_turn_index": null,
+     "basis": "止步于逐位除法中段:t6 算到借位与「次位是0」(商 80…,截回执开场白);商末位与「中间有几个0」的判断终未完成;源导师 t7 代完成并报「只有一个0」。"
+    },
+    "note": "线性 v1 原文照录;截断=剥回执/强依赖开场白;轮级丢弃见 dropped_turns"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_3490",
+   "title": "confirmation·一个三位小数，“四舍五入”取近似数后是6.70，",
+   "subject": "math",
+   "question": "一个三位小数，“四舍五入”取近似数后是6.70，那么，原数最大可以是____．",
+   "student_turns": [
+    "记得，一般是看待取舍的数的后一位，如果后一位是0、1、2、3、4就舍去，如果是5、6、7、8、9就进位。",
+    "这意味着原数的整数部分是6，小数部分的第一位是7，第二位可能是0或者更大的数，但是不能超过5。",
+    "如果我们想让原数最大，我们应该选择接近但是不大于5的数字，所以应该是4。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_negative_student_stops_short"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_negative_student_stops_short",
+    "slice": "confirmation_negative_student_stops_short",
+    "record_id": "socraticmath_train_3490",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "6.704",
+    "selection": {
+     "hit_turn_index": null,
+     "basis": "止步于数位分析:t4 判整数部分 6/首位 7 但第二位分析含混(「可能是0或者更大的数,但是不能超过5」),t6 只选出第三位取 4;原数 6.704 终未拼出,源导师 t7 报出。"
+    },
+    "note": "线性 v1 原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_5234",
+   "title": "confirmation·甲乙两圆的周长比是2：3，其中一个圆的面积是18",
+   "subject": "math",
+   "question": "甲乙两圆的周长比是2：3，其中一个圆的面积是18，另一个圆的面积是____.（请用整数或小数填写）",
+   "student_turns": [
+    "嗯，一个圆的周长等于两倍的半径乘以π。",
+    "喔，根据周长和半径的关系，甲乙两圆的半径比也是2：3。",
+    "圆的面积是π乘以半径的平方。",
+    "根据面积的公式，两个圆的面积之比应该是半径的平方的比，也就是4：9。",
+    "好的，如果另一个圆的面积比18小，那么我们设它的面积为x。根据面积的比例，我们可以得到4：9=x：18，解这个方程我们可以得到x=8。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_type866_answer_complete_extensible"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_type866_answer_complete_extensible",
+    "slice": "confirmation_type866_answer_complete_extensible",
+    "record_id": "socraticmath_train_5234",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8,
+     10
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "8或40.5",
+    "selection": {
+     "hit_turn_index": 10,
+     "basis": "t10 学生解出一支「4：9=x：18…x=8」——合法终答(题面歧义两解之一,judge 数值可见);延伸空间=另一支(40.5,哪个圆是 18 未定),源导师 t11 补全两支「8或40.5」——全面性延伸同款。"
+    },
+    "note": "线性 v1 原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_4827",
+   "title": "confirmation·根据160÷8=20列出一个含有未知数x的方程是",
+   "subject": "math",
+   "question": "根据160÷8=20列出一个含有未知数x的方程是____．",
+   "student_turns": [
+    "我知道如果要列方程，就要把一边的数设为未知数，然后写出等式形式，这样可以吗？",
+    "我的方程是20÷x = 8。",
+    "那就是160÷x = 20。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_type866_answer_complete_extensible"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_type866_answer_complete_extensible",
+    "slice": "confirmation_type866_answer_complete_extensible",
+    "record_id": "socraticmath_train_4827",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 4,
+      "cut_prefix": "好的，"
+     },
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "哦，我明白了，"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "160÷x=20",
+    "selection": {
+     "hit_turn_index": 6,
+     "basis": "t6 学生给出合法方程「160÷x = 20」(judge 关系骨架可见,截回执开场白);延伸空间=等价方程其他列法(160÷8=x、x÷8=20、8x=160),题目明言「列出一个」即任一合法——另一种表示延伸同款。"
+    },
+    "note": "线性 v1 原文照录;截断=剥回执/强依赖开场白"
+   }
+  }
+ ]
+}
