@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""PR 元数据门(04 §3.1):分支年龄、PR 触碰顶层包数、large-pr 软标签、structural 主门。
+"""PR 元数据门(04 §3.1):分支年龄、PR 触碰顶层包数、large-pr 软标签、structural 主门、
+calibration 卡口(#405 ②)。
 
 只在有 PR 上下文(GITHUB_TOKEN/GH_TOKEN + PR 号 + GITHUB_REPOSITORY)时执行,本地跳过。
 分支年龄检查对"引入本检查的 PR"自豁免(04 §3.1:M0 第一个 PR 豁免;判断方式为
 base 分支上不存在 scripts/pr_gates.py)。structural 主门(02 §7,issue #4):触碰
 四类结构路径或新增六包名单外的顶层包 → 打 structural 标签,描述缺
-`structural-approval:` 一行即 pr-gates 失败。只依赖标准库,经 GitHub REST API 读写。
+`structural-approval:` 一行即 pr-gates 失败。calibration 卡口(#405 ②)与
+structural-approval 同款机制:rubric 是量具(改 rubric = 换尺子),触碰
+edu_agent/evals/rubrics/ → 打 calibration 标签,描述缺 `calibration:` 一行
+(金标集一致率 + verdict 翻转数,人工跑 rescore 附工件,PR CI 不调真模型 02 §6)
+即 pr-gates 失败。只依赖标准库,经 GitHub REST API 读写。
 """
 
 from __future__ import annotations
@@ -27,7 +32,14 @@ STALE_LABEL = "stale-branch"
 LARGE_LABEL = "large-pr"
 STRUCTURAL_LABEL = "structural"
 APPROVAL_PREFIX = "structural-approval:"
-LABEL_COLORS = {STALE_LABEL: "b60205", LARGE_LABEL: "fbca04", STRUCTURAL_LABEL: "5319e7"}
+CALIBRATION_LABEL = "calibration"
+CALIBRATION_PREFIX = "calibration:"
+LABEL_COLORS = {
+    STALE_LABEL: "b60205",
+    LARGE_LABEL: "fbca04",
+    STRUCTURAL_LABEL: "5319e7",
+    CALIBRATION_LABEL: "0e8a16",
+}
 
 # 四类结构路径(issue #22 方案 A 通配制):目录以前缀匹配,文件在仓库根精确匹配;
 # scripts/ 下全部 *.py 通配(执行机制整体,点名制会漏新脚本——#14 的 github_api.py
@@ -49,6 +61,9 @@ STRUCTURAL_PATHS = (
 PLANNED_TOP_LEVEL_PACKAGES = frozenset(
     {"gateway", "evals", "agents", "contracts", "api", "store"}  # 02 §2
 )
+# rubric 是量具,改 rubric = 换尺子(#405 ②):目录前缀匹配。金标集在
+# edu_agent/evals/datasets/golden/ 是卡口的检查对象(#404 已入仓),不在此触发路径内。
+RUBRICS_PATH = "edu_agent/evals/rubrics/"
 
 
 # ---------- 纯逻辑(供 tests/rules 单测) ----------
@@ -117,6 +132,16 @@ def has_structural_approval(body: str) -> bool:
     return any(line.lstrip().startswith(APPROVAL_PREFIX) for line in body.splitlines())
 
 
+def path_is_rubric(name: str) -> bool:
+    """触碰 rubric 量具:edu_agent/evals/rubrics/ 目录前缀匹配(#405 ②)。"""
+    return name.startswith(RUBRICS_PATH)
+
+
+def has_calibration_line(body: str) -> bool:
+    """描述里有一行以 calibration: 开头(金标集一致率 + verdict 翻转数,格式自由,#405 ②)。"""
+    return any(line.lstrip().startswith(CALIBRATION_PREFIX) for line in body.splitlines())
+
+
 def parse_iso(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
 
@@ -126,7 +151,7 @@ def parse_iso(value: str) -> datetime:
 # REST 封装统一在 scripts/github_api.py(SSRF 边界只实现这一份,别处漂移即错)。
 
 
-# ---------- 四道门 ----------
+# ---------- 五道门 ----------
 
 
 def branch_age_gate(api: GithubApi, number: int, commits: list, base_sha: str) -> list[str]:
@@ -198,6 +223,24 @@ def structural_gate(api, number: int, files: list, body: str) -> list[str]:
     ]
 
 
+def calibration_gate(api, number: int, files: list, body: str) -> list[str]:
+    """rubric PR 卡口(#405 ②,与 structural-approval 同款机制,见模块 docstring):
+    标签亮到合并时刻,有 calibration 行也保留(换过尺子要持续可见)。"""
+    touched = [entry["filename"] for entry in files if path_is_rubric(entry["filename"])]
+    if not touched:
+        api.remove_label(number, CALIBRATION_LABEL)
+        print("PR-GATE-OK calibration: 未触碰 rubrics/")
+        return []
+    api.add_label(number, CALIBRATION_LABEL, LABEL_COLORS[CALIBRATION_LABEL])
+    if has_calibration_line(body):
+        print(f"PR-GATE-OK calibration: 触碰 {touched};描述含 {CALIBRATION_PREFIX} 行")
+        return []
+    return [
+        f"calibration: 触碰 {touched},rubric 是量具,描述缺 {CALIBRATION_PREFIX} 行"
+        "(金标集一致率 + verdict 翻转数)即失败(#405 ②,已打标签)"
+    ]
+
+
 def run_pr_gates(api: GithubApi, number: int) -> list[str]:
     pr = api.get(f"pulls/{number}")
     if not isinstance(pr, dict):
@@ -208,6 +251,7 @@ def run_pr_gates(api: GithubApi, number: int) -> list[str]:
     failures = branch_age_gate(api, number, commits, base_sha)
     failures += packages_gate(api, number, files)
     failures += structural_gate(api, number, files, pr.get("body") or "")
+    failures += calibration_gate(api, number, files, pr.get("body") or "")
     large_pr_gate(api, number, pr.get("additions", 0))
     return failures
 
