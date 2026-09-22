@@ -340,7 +340,13 @@ def _emit(payload: dict, out: Path | None, text: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["drill", "dev", "replay", "holdout", "sample"])
-    parser.add_argument("--runs-root", default="/tmp/wt-step7-ab", type=Path)
+    parser.add_argument(
+        "--runs-root",
+        # r3/ablation 工件树(/tmp/wt-step7-ab)不在仓——见 REPORT.md 数据源节(P3-nano 修法一:
+        # 回退 #412 错改,保留 /tmp 依赖+归档落点注记,审查 5755351702)
+        default="/tmp/wt-step7-ab",
+        type=Path,
+    )
     parser.add_argument("--out", type=Path, default=None)
     args = parser.parse_args()
     if args.command == "drill":
