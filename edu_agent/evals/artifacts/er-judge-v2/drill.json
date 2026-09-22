@@ -1,0 +1,810 @@
+{
+ "drill_four_cases": {
+  "socraticmath_train_3565": {
+   "r3-baseline": {
+    "v1_hits": [
+     1
+    ],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 1
+    },
+    "denominator_turns": [
+     {
+      "turn": 1,
+      "v1_lex_hit": true,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "嗯，我知道1平方米等于100平方分米，1平方分米等于100平方厘米。",
+      "tutor": "你刚才说1平方分米等于100平方厘米，那如果把大正方形按面积分成小正方形，是不是每个小正方形的面积是1平方厘米？你能说说怎么从面积换算得到小正方形的个数吗？"
+     },
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形。",
+      "tutor": "你刚才说1平方分米等于100平方厘米，而且能分割成100个小正方形，这个思路完全对！最后请你自己完整说一遍结论，看看能不能让别人听懂这道题怎么做。"
+     }
+    ]
+   },
+   "r3-candidate": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 1
+    },
+    "denominator_turns": [
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形。",
+      "tutor": "你刚才说1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形，这个推理完全正确！那如果换一种方式，比如按边长来数，你还能算出同样的结果吗？"
+     }
+    ]
+   },
+   "ablation-baseline": {
+    "v1_hits": [
+     1
+    ],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 1
+    },
+    "denominator_turns": [
+     {
+      "turn": 1,
+      "v1_lex_hit": true,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "嗯，我知道1平方米等于100平方分米，1平方分米等于100平方厘米。",
+      "tutor": "你刚才说1平方分米等于100平方厘米，那如果把大正方形按面积分成小正方形，是不是每个小正方形的面积是1平方厘米？你能说说怎么从面积换算得到小正方形的个数吗？"
+     },
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形。",
+      "tutor": "你刚才说1平方分米等于100平方厘米，而且能分割成100个小正方形，这个思路完全对！最后请你自己完整说一遍结论，看看能不能让别人听懂这道题怎么做。"
+     }
+    ]
+   },
+   "ablation-a-only": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 1
+    },
+    "denominator_turns": [
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形。",
+      "tutor": "你刚才说1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形，这个推理完全正确！那我们再确认一下，边长1分米的正方形里，每边能放多少个1厘米的小正方形呢？"
+     }
+    ]
+   },
+   "ablation-b-old": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 1
+    },
+    "denominator_turns": [
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形。",
+      "tutor": "你刚才说1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形——这个推理完全正确！那如果换一种方式，比如从边长角度去想，大正方形边长是1分米，小正方形边长是1厘"
+     }
+    ]
+   },
+   "ablation-b-new": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 1
+    },
+    "denominator_turns": [
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形。",
+      "tutor": "你刚才说1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形，这个推理完全正确！那我们再确认一下，边长1分米的正方形在长度方向上能分成多少段1厘米的小段呢？"
+     }
+    ]
+   },
+   "ablation-ab-old": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 1
+    },
+    "denominator_turns": [
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形。",
+      "tutor": "你刚才说1平方分米等于100平方厘米，所以能分割成100个边长是1厘米的小正方形，这个推理完全正确！那如果换一种方式，比如按边长来数，你还能算出同样的结果吗？"
+     }
+    ]
+   }
+  },
+  "socraticmath_train_4402": {
+   "r3-baseline": {
+    "v1_hits": [
+     4
+    ],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 4,
+      "v1_lex_hit": true,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是x-21=35。",
+      "tutor": "你刚才说x-21=35，这确实是对的，因为西瓜总重量减去售出的21吨，就等于剩下的35吨。那我们来一起检查一下，这个方程里每个数字代表什么？"
+     },
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是就需要求解方程呢？将21加到等号的另一边就是x=35+21=56，所以超市开始有56吨西瓜。",
+      "tutor": "你正确地将题目转化为方程x-21=35，并通过加21到等号两边求出x=56，验证了超市原有西瓜总量。下一步要注意：在列方程时，确保每个数字与题意中的实际数量一一对应，避免因数字错误"
+     }
+    ]
+   },
+   "r3-candidate": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 4,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是x-21=35。",
+      "tutor": "你刚才说x-21=35，这个方程确实正确地表达了西瓜总重量减去售出的21吨等于剩下的35吨，很棒！那我们来想想，如果题目问的是售出多少吨，你会怎么列方程呢？"
+     },
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是就需要求解方程呢？将21加到等号的另一边就是x=35+21=56，所以超市开始有56吨西瓜。",
+      "tutor": "你正确列出了方程x-21=35，并通过加法求解得出x=56，说明你掌握了用方程表示数量关系和求解的基本方法。仍需注意：在列方程时，要严格对应题中给出的数字，比如售出21吨，不能写成"
+     }
+    ]
+   },
+   "ablation-baseline": {
+    "v1_hits": [
+     4
+    ],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 4,
+      "v1_lex_hit": true,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是x-21=35。",
+      "tutor": "你刚才说x-21=35，这确实是对的，因为西瓜总重量减去售出的21吨，就等于剩下的35吨。那我们来一起检查一下，这个方程里每个数字代表什么？"
+     },
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是就需要求解方程呢？将21加到等号的另一边就是x=35+21=56，所以超市开始有56吨西瓜。",
+      "tutor": "你正确地将题目转化为方程x-21=35，并通过加21到等号两边求出x=56，验证了超市原有西瓜总量。下一步要注意：在列方程时，确保每个数字与题意中的实际数量一一对应，避免因数字错误"
+     }
+    ]
+   },
+   "ablation-a-only": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 4,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是x-21=35。",
+      "tutor": "你刚才说x-21=35，这个方程完全正确，它准确表达了‘总量减去售出量等于剩下量’这个关系，真棒！下一步我们来验证一下这个方程是否成立，你打算怎么算？"
+     },
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是就需要求解方程呢？将21加到等号的另一边就是x=35+21=56，所以超市开始有56吨西瓜。",
+      "tutor": "你正确识别了‘总量减去售出量等于剩下量’这个关系，并准确写出方程x-21=35，还成功求解出x=56，说明你掌握了用方程表示数量关系的方法。下一步要注意：在解方程时，等号两边同时加"
+     }
+    ]
+   },
+   "ablation-b-old": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 1,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 4,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": true,
+      "student": "应该是x-21=35。",
+      "tutor": "你刚才说x-21=35，这个方程已经正确表达了‘总量减去售出等于剩余’的关系！那我们再想想，这个方程里x代表的是什么？"
+     },
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是就需要求解方程呢？将21加到等号的另一边就是x=35+21=56，所以超市开始有56吨西瓜。",
+      "tutor": "你正确识别了‘总量减去售出等于剩余’的数量关系，并准确写出方程x-21=35。下一步要注意的是，解方程时需将21加到等号右边，得到x=56，表示超市原有西瓜56吨。"
+     }
+    ]
+   },
+   "ablation-b-new": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 4,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是x-21=35。",
+      "tutor": "你刚才说x-21=35，这个式子确实把西瓜总重量减去售出的21吨等于剩下的35吨表达清楚了，那我们来检查一下这个等式两边是不是都符合题目的意思？"
+     },
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是就需要求解方程呢？将21加到等号的另一边就是x=35+21=56，所以超市开始有56吨西瓜。",
+      "tutor": "你正确地用x-21=35表达了西瓜总重量减去售出量等于剩余量的关系，关键转折是意识到x代表初始总重量，下一步要注意的是解方程时两边同时加21，得到x=56，这验证了初始重量的合理性"
+     }
+    ]
+   },
+   "ablation-ab-old": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 4,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是x-21=35。",
+      "tutor": "你刚才说x-21=35，这个方程确实正确地表达了西瓜总重量减去售出的21吨等于剩下的35吨，很棒！那我们来想想，如果题目问的是售出多少吨，你会怎么列方程呢？"
+     },
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是就需要求解方程呢？将21加到等号的另一边就是x=35+21=56，所以超市开始有56吨西瓜。",
+      "tutor": "你正确列出了方程x-21=35，并通过加法求解得出x=56，说明你掌握了用方程表示数量关系和求解的基本方法。仍需注意：在列方程时，要严格对应题中给出的数字，比如售出21吨，不能写成"
+     }
+    ]
+   }
+  },
+  "socraticmath_train_3666": {
+   "r3-baseline": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 2,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是应该写成4：8=15：30？",
+      "tutor": "你写成4：8=15：30是对的，这一步把等式两边的因数配对成了两个比，很聪明！那我们再确认一下，为什么这样改写能保持等式成立呢？"
+     },
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是30：15=8：4也可以吧？",
+      "tutor": "你正确地将等式4×30=8×15改写成比例4：8=15：30，这一步是通过配对因数形成两个比实现的，很聪明！同时你注意到30：15=8：4也是成立的，说明你理解比例的双向性。仍需注"
+     }
+    ]
+   },
+   "r3-candidate": {
+    "v1_hits": [
+     2
+    ],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 2,
+      "v1_lex_hit": true,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是应该写成4：8=15：30？",
+      "tutor": "你写成4：8=15：30是对的，因为比例里外项积等于内项积，和原等式4×30=8×15是一样的，那你是怎么想到把30和15放在比例右边的呢？"
+     },
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是30：15=8：4也可以吧？",
+      "tutor": "你刚才说30：15=8：4，这个比例也对，因为两边交叉相乘还是8×15=4×30，和原等式一致，那你觉得这两种写法有什么不同吗？"
+     }
+    ]
+   },
+   "ablation-baseline": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 2,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是应该写成4：8=15：30？",
+      "tutor": "你写成4：8=15：30是对的，这一步把等式两边的因数配对成了两个比，很聪明！那我们再确认一下，为什么这样改写能保持等式成立呢？"
+     },
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是30：15=8：4也可以吧？",
+      "tutor": "你正确地将等式4×30=8×15改写成比例4：8=15：30，这一步是通过配对因数形成两个比实现的，很聪明！同时你注意到30：15=8：4也是成立的，说明你理解比例的双向性。仍需注"
+     }
+    ]
+   },
+   "ablation-a-only": {
+    "v1_hits": [
+     3
+    ],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 2,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是应该写成4：8=15：30？",
+      "tutor": "你想到4：8=15：30这个比例，说明你抓住了比例的基本性质，那你能说说为什么这样改写能保持等式成立吗？"
+     },
+     {
+      "turn": 3,
+      "v1_lex_hit": true,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是30：15=8：4也可以吧？",
+      "tutor": "你想到30：15=8：4这个比例，说明你理解比例可以换顺序，那我们来验证一下：左边30÷15=□，右边8÷4=□，比值相等，所以这个比例是对的！你还能想到其他写法吗？"
+     }
+    ]
+   },
+   "ablation-b-old": {
+    "v1_hits": [
+     2
+    ],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 2,
+      "v1_lex_hit": true,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是应该写成4：8=15：30？",
+      "tutor": "你这个写法是对的，因为4×30确实等于8×15，改写成比例后两边的积还是相等的，那我们再确认一下比例的顺序是不是也符合原等式？"
+     },
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是30：15=8：4也可以吧？",
+      "tutor": "你正确地将等式4×30=8×15改写为比例4：8=15：30，也意识到比例顺序可以调整，比如30：15=8：4，这说明你理解了比例的基本性质——两边的积相等。仍需注意的是，比例的书"
+     }
+    ]
+   },
+   "ablation-b-new": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 2,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是应该写成4：8=15：30？",
+      "tutor": "你想到写成4：8=15：30，这一步很对！比例就是把乘积式两边拆成比值，那我们来验证一下这个比例是否成立吧？"
+     },
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是30：15=8：4也可以吧？",
+      "tutor": "你正确地将等式4×30=8×15改写为比例4：8=15：30，也意识到比例可以有不同形式，比如30：15=8：4，这说明你理解了比例的双向性。仍需注意的是，改写比例时要确保两边的比"
+     }
+    ]
+   },
+   "ablation-ab-old": {
+    "v1_hits": [
+     2
+    ],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 2,
+      "v1_lex_hit": true,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "是不是应该写成4：8=15：30？",
+      "tutor": "你写成4：8=15：30是对的，因为比例里外项积等于内项积，和原等式4×30=8×15是一样的，那你是怎么想到把30和15放在比例右边的呢？"
+     },
+     {
+      "turn": 3,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "应该是30：15=8：4也可以吧？",
+      "tutor": "你刚才说30：15=8：4，这个比例也对，因为两边交叉相乘还是8×15=4×30，和原等式一致，那你觉得这两种写法有什么不同吗？"
+     }
+    ]
+   }
+  },
+  "socraticmath_train_866": {
+   "r3-baseline": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 1,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "先是12除以4等于3，然后是6除以2也等于3，所以我觉得比例可以是12：4=6：2。",
+      "tutor": "你刚才说12：4=6：2，这一步很到位！因为两边比值都是3，所以比例成立，那我们再确认一下，你是不是已经把所有可能的因数组合都检查过了？"
+     },
+     {
+      "turn": 6,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": true,
+      "student": "对，也可以是3：1=12：4。",
+      "tutor": "你刚才说12：4=6：2和3：1=12：4，这说明你已经找到了比值是3的比例，而且思路很清晰！那我们再确认一下，你是不是已经把所有可能的因数组合都检查过了？"
+     }
+    ]
+   },
+   "r3-candidate": {
+    "v1_hits": [
+     3
+    ],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 3,
+      "v1_lex_hit": true,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "比例是两个数的比值，且这两个比值相同的时候，我们就说这两个数之间有比例关系。",
+      "tutor": "你刚才说比例是两个数的比值，而且比值要相同，这很对！那我们选12和4，怎么算它们的比值是不是3呢？"
+     },
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "先是12除以4等于3，然后是6除以2也等于3，所以我觉得比例可以是12：4=6：2。",
+      "tutor": "你刚才说12：4=6：2这个比例的比值都是3，这一步完全对！那如果换一组数，比如3和1，它们的比值也是3，你还能写出另一个比例吗？"
+     },
+     {
+      "turn": 6,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "对，也可以是3：1=12：4。",
+      "tutor": "你刚才说3：1=12：4这个比例也成立，这说明你已经理解了比值是3的含义，而且能灵活换组数，真棒！那如果题目只要求写一个比例，你最想推荐哪一个？"
+     }
+    ]
+   },
+   "ablation-baseline": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 1,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "先是12除以4等于3，然后是6除以2也等于3，所以我觉得比例可以是12：4=6：2。",
+      "tutor": "你刚才说12：4=6：2，这一步很到位！因为两边比值都是3，所以比例成立，那我们再确认一下，你是不是已经把所有可能的因数组合都检查过了？"
+     },
+     {
+      "turn": 6,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": true,
+      "student": "对，也可以是3：1=12：4。",
+      "tutor": "你刚才说12：4=6：2和3：1=12：4，这说明你已经找到了比值是3的比例，而且思路很清晰！那我们再确认一下，你是不是已经把所有可能的因数组合都检查过了？"
+     }
+    ]
+   },
+   "ablation-a-only": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "先是12除以4等于3，然后是6除以2也等于3，所以我觉得比例可以是12：4=6：2。",
+      "tutor": "你刚才说12除以4等于3，6除以2也等于3，所以比例是12：4=6：2，这一步你已经把比例的结构说清楚了，那最后请你完整说一遍这个比例是怎么来的。"
+     },
+     {
+      "turn": 6,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "对，也可以是3：1=12：4。",
+      "tutor": "你刚才说3：1=12：4，这和12：4=6：2其实是同一个比例的不同写法，你已经掌握了用因数构造比值是3的比例的方法，最后请你完整说一遍这个比例是怎么来的。"
+     }
+    ]
+   },
+   "ablation-b-old": {
+    "v1_hits": [
+     3,
+     4
+    ],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 3,
+      "v1_lex_hit": true,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "比例是两个数的比值，且这两个比值相同的时候，我们就说这两个数之间有比例关系。",
+      "tutor": "你刚才说比例是两个数的比值，而且这两个比值要相同，这很对！那如果12除以某个因数等于3，这个因数应该是多少呢？"
+     },
+     {
+      "turn": 4,
+      "v1_lex_hit": true,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "我可以先试试把12和其因数相除，看哪个结果等于3。",
+      "tutor": "你想到用12除以因数找比值为3，这一步很聪明！那如果12除以某个因数等于3，这个因数应该是多少呢？"
+     },
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "先是12除以4等于3，然后是6除以2也等于3，所以我觉得比例可以是12：4=6：2。",
+      "tutor": "你用12除以4等于3、6除以2等于3来构造比例12：4=6：2，这一步完全对！你已经找到了让比值为3的因数组合，现在我们来确认一下这个比例是否符合题目要求。"
+     },
+     {
+      "turn": 6,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "对，也可以是3：1=12：4。",
+      "tutor": "你刚才说3：1=12：4，这个比例的比值确实是3，而且两个数都是12的因数，完全符合题目要求！那我们再想想，还有没有其他因数组合也能让比值是3呢？"
+     }
+    ]
+   },
+   "ablation-b-new": {
+    "v1_hits": [],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "先是12除以4等于3，然后是6除以2也等于3，所以我觉得比例可以是12：4=6：2。",
+      "tutor": "你刚才说12：4=3，6：2=3，所以比例是12：4=6：2，这组因数组合和比值关系都对，而且你用自己的方法找到了答案，真棒！"
+     },
+     {
+      "turn": 6,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "对，也可以是3：1=12：4。",
+      "tutor": "你刚才说3：1=12：4，这组因数的比值也是3，和12：4=6：2一样，你已经找到了多个符合条件的比例，真棒！"
+     }
+    ]
+   },
+   "ablation-ab-old": {
+    "v1_hits": [
+     3
+    ],
+    "v2": {
+     "er_family": 0,
+     "no_progress_family": 0,
+     "denominator": 2
+    },
+    "denominator_turns": [
+     {
+      "turn": 3,
+      "v1_lex_hit": true,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "比例是两个数的比值，且这两个比值相同的时候，我们就说这两个数之间有比例关系。",
+      "tutor": "你刚才说比例是两个数的比值，而且比值要相同，这很对！那我们选12和4，怎么算它们的比值是不是3呢？"
+     },
+     {
+      "turn": 5,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "先是12除以4等于3，然后是6除以2也等于3，所以我觉得比例可以是12：4=6：2。",
+      "tutor": "你刚才说12：4=6：2这个比例的比值都是3，这一步完全对！那如果换一组数，比如3和1，它们的比值也是3，你还能写出另一个比例吗？"
+     },
+     {
+      "turn": 6,
+      "v1_lex_hit": false,
+      "v2_er": false,
+      "v2_er_reason": null,
+      "v2_no_progress": false,
+      "student": "对，也可以是3：1=12：4。",
+      "tutor": "你刚才说3：1=12：4这个比例也成立，这说明你已经理解了比值是3的含义，而且能灵活换组数，真棒！那如果题目只要求写一个比例，你最想推荐哪一个？"
+     }
+    ]
+   }
+  }
+ }
+}

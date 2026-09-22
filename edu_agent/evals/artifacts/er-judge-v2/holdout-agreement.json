@@ -1,0 +1,223 @@
+{
+ "holdout": {
+  "samples": [
+   {
+    "case_id": "incident-700m-replay",
+    "arm": "baseline",
+    "turn": 1,
+    "label": "legal",
+    "rationale": "学生 t1 给出终答 A处=25.8;said 成立。导师问『怎么从海拔700米推算出下降6/5℃』=首次要求推导依据(2591-b-t2 同形),合法深化。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你刚才说A处是25.8℃，能说说你是怎么从海拔700米推算出下降6/5℃的吗？"
+   },
+   {
+    "case_id": "incident-700m-replay",
+    "arm": "baseline",
+    "turn": 3,
+    "label": "legal",
+    "rationale": "第二次问推导,但带实质脚手架增量(把 700÷100=□×3/5 的方法结构首次给出),增量推进非纯重复。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你刚才说700米气温降了6/5℃，这个数字是怎么来的？是把700÷100=□，再乘以3/5算出来的吗？"
+   },
+   {
+    "case_id": "incident-700m-replay",
+    "arm": "baseline",
+    "turn": 4,
+    "label": "np",
+    "rationale": "导师 t4 整轮近逐字重放 t2(『你打算怎么用每升高100米下降3/5℃算出A处的气温呢』逐字重复);学生已给海拔读数,导师无增量重推同一问句。",
+    "judge": "np",
+    "match": true,
+    "tutor": "你刚才说A在700米、B在1000米，这个海拔判断很清晰！那接下来，你打算怎么用‘每升高100米下降3/5℃’算出A处的气温呢？"
+   },
+   {
+    "case_id": "incident-700m-replay",
+    "arm": "baseline",
+    "turn": 5,
+    "label": "np",
+    "rationale": "学生 t5 已给算法(27-6/5=25.8);导师口头承认(数字很准)后称『还没说清楚』再要求同一推导(第 3 次,t1/t3 已问)——口头承认+无增量重复推进=死循环形态(该案 needs_review 复现本征)。",
+    "judge": "er",
+    "match": false,
+    "tutor": "你刚才说A处气温是25.8℃，是从700米推算的——这个结果数字很准！但你还没说清楚‘每升高100米下降3/5℃’怎么用在700米上，能再讲讲你是怎么算出下降6/5℃的吗？"
+   },
+   {
+    "case_id": "incident-700m-replay",
+    "arm": "candidate",
+    "turn": 2,
+    "label": "legal",
+    "rationale": "首次脚手架问(700 米里有几个 100 米),合法。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你刚才说A处海拔是700米，那如果每升高100米气温降3/5℃，700米里有多少个100米呢？我们来数一数。"
+   },
+   {
+    "case_id": "incident-700m-replay",
+    "arm": "candidate",
+    "turn": 4,
+    "label": "np",
+    "rationale": "同一数数脚手架问第 3 次(t2/t3/t4:几个100米/□个100米),增量仅为措辞具体化;学生三轮未接、案 needs_review,窗内无实质推进(边界案:若按单轮增量观可标 legal,按窗口无推进观标 np,取后者与 866 两遍问先例一致)。",
+    "judge": "legal",
+    "match": false,
+    "tutor": "你刚才说A在700米、B在1000米，这很关键！那我们来算算A处气温：700米里有□个100米，每个100米降3/5℃，一共降多少度？"
+   },
+   {
+    "case_id": "socraticmath_val_412",
+    "arm": "baseline",
+    "turn": 2,
+    "label": "legal",
+    "rationale": "学生 t2 未作答(『不清楚』);导师重问 a 的计算但首次写出公式 a=35×4+34(实质脚手架增量),且 a 非本题终答(终答=余数34,学生 t1 已给且未被重问)。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你刚才说余数最大是34，那我们代入公式 a = 35×4 + 34，这一步算出来是多少？"
+   },
+   {
+    "case_id": "socraticmath_val_412",
+    "arm": "candidate",
+    "turn": 2,
+    "label": "legal",
+    "rationale": "同上,公式脚手架增量(除数×商+余数 展开)。v1 在此两轮词面命中(reask 是多少)为人审未定谳的并列案,本标注判合法。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你刚才说余数最大是34，那我们代入公式 a = 除数×商 + 余数，也就是 a = 35×4 + 34，你来算算这个结果是多少？"
+   },
+   {
+    "case_id": "socraticmath_train_223",
+    "arm": "baseline",
+    "turn": 1,
+    "label": "legal",
+    "rationale": "学生未给终答(平行四边形未出现),不在分母;导师问边角机制=合法引导。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你刚才说知道长方形和平行四边形对边相等，那当你拉它的一组角时，为什么边长不变但角会变呢？"
+   },
+   {
+    "case_id": "socraticmath_train_223",
+    "arm": "baseline",
+    "turn": 3,
+    "label": "legal",
+    "rationale": "学生 t3 给出终答平行四边形;导师承认(很接近)+问『为什么排除了正方形』=新子问题首次问,合法深化。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你刚才说角度变化后会变成平行四边形，这很接近正确答案了！因为拉长方形时边长不变、角变，而平行四边形正是这样定义的，我们再确认一下你为什么排除了正方形？"
+   },
+   {
+    "case_id": "socraticmath_train_223",
+    "arm": "candidate",
+    "turn": 2,
+    "label": "legal",
+    "rationale": "学生 t2 答错(正方形);导师纠错解释+对比问=纠错语境,合法。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你刚才说拉角后会变成正方形，但正方形是角还是直角的，而拉角后角会变，对边还是相等，但角不再是直角，所以它不是正方形，而是平行四边形。你想想，拉角时边长没变，但角变了，这和正方形有什"
+   },
+   {
+    "case_id": "socraticmath_train_223",
+    "arm": "candidate",
+    "turn": 3,
+    "label": "legal",
+    "rationale": "学生 t3 给出终答;导师承认(已经对了)+问『这和长方形有什么不同』=新对比对象(原长方形)首次问,合法延伸(866-t5 首问同形)。",
+    "judge": "np",
+    "match": false,
+    "tutor": "你刚才说角度变化后会变成平行四边形，这已经对了！边长没变、角变了，这和正方形不一样，因为正方形角必须是直角。你再想想，拉角时边长不变，角变，这和长方形有什么不同？"
+   },
+   {
+    "case_id": "socraticmath_train_4510",
+    "arm": "baseline",
+    "turn": 3,
+    "label": "np",
+    "rationale": "学生 t2 已给完整排序(终答);导师 t2 问『你为什么觉得2.78元比2.65元大』,t3 对同一问句逐字重问(仅 检查一下→再确认一下 之差,无增量)。",
+    "judge": "np",
+    "match": true,
+    "tutor": "你刚才说的排序完全正确，3.02元最大、2.50元最小，这说明你已经掌握了小数比较的规则，接下来我们再确认一下，你为什么觉得2.78元比2.65元大？"
+   },
+   {
+    "case_id": "socraticmath_train_5228",
+    "arm": "baseline",
+    "turn": 4,
+    "label": "np",
+    "rationale": "导师 t4 整轮近逐字重放 t3(承认读法+单位说明+铅笔类比+『17 代表什么』问句重问,仅增『在万级上』定位词);学生已两次给出读法,无实质增量(边界案:定位词属弱脚手架,取整轮自重复观标 np)。",
+    "judge": "np",
+    "match": true,
+    "tutor": "你刚才说‘十七万平方千米’，这个读法完全正确！单位‘平方千米’只是说明面积大小，不影响数字‘170000’的读法，就像你买一盒十二支装的铅笔，你说‘十二支’而不是‘一盒’一样。那你"
+   },
+   {
+    "case_id": "socraticmath_train_1204",
+    "arm": "baseline",
+    "turn": 2,
+    "label": "legal",
+    "rationale": "学生 t2 给出终答候选(2/5/8)并验证 3 整除性;导师转问 5 的倍数特点=未覆盖的新子题,首次问,合法。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你刚才验证了2+5+2=9、2+5+5=12、2+5+8=15都能被3整除，这一步很对！但5的倍数有什么特点呢？比如□、□、□这些数，它们个位数有什么共同点？"
+   },
+   {
+    "case_id": "socraticmath_train_1204",
+    "arm": "baseline",
+    "turn": 4,
+    "label": "legal",
+    "rationale": "导师总结承认+指出 □ 位数位错误(新内容),陈述句收束,合法。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你正确识别了3的倍数需各位和能被3整除，也验证了2+5+2=9、2+5+5=12、2+5+8=15都能被3整除。同时你准确指出5的倍数个位是0或5，而题目中个位是5，所以满足5的倍"
+   },
+   {
+    "case_id": "socraticmath_train_1204",
+    "arm": "candidate",
+    "turn": 3,
+    "label": "legal",
+    "rationale": "『最后一步,你能不能自己完整说一遍,□中能填哪些数』=收束复述指令(3565-b-t3 同形,B-new 目标行为),非把已给信息当未知。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你刚才说5的倍数个位是5，这没错，而且你验证了2+5+2=9、2+5+5=12、2+5+8=15都能被3整除，说明这些数既是3的倍数也是5的倍数，那最后一步，你能不能自己完整说一遍"
+   },
+   {
+    "case_id": "socraticmath_train_1559",
+    "arm": "baseline",
+    "turn": 2,
+    "label": "legal",
+    "rationale": "学生 t2 给终答 20 并提出 0;导师处理 0 的新疑点+核验 20=首轮新内容,合法。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你提到20是4和5的公倍数，这个想法很棒！那0呢？题目说‘比30小’，0虽然满足大小，但通常倍数在小学阶段指正数，我们再看看20是不是符合所有条件？"
+   },
+   {
+    "case_id": "socraticmath_train_1559",
+    "arm": "candidate",
+    "turn": 2,
+    "label": "legal",
+    "rationale": "同形:0 的处理首次问(『0是不是也符合』问的是学生自提的候选 0,非终答 20),合法。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你刚才说20是4和5的公倍数，而且它比30小，这一步很对！那0呢？0虽然也是公倍数，但题目说‘比30小’，0是不是也符合？我们再想想，题目有没有隐含‘正数’的意思？"
+   },
+   {
+    "case_id": "socraticmath_train_3998",
+    "arm": "candidate",
+    "turn": 3,
+    "label": "legal",
+    "rationale": "学生 t3 给终答 B+理由;导师承认(完全正确)+问不过圆心的弦与直径之别=新对象首次问,合法延伸。",
+    "judge": "legal",
+    "match": true,
+    "tutor": "你刚才说两端在圆周上的线段不一定是直径，因为它必须通过圆心，这个判断完全正确！那我们再想想，如果一条线段两端在圆周上但没过圆心，它和直径有什么不同呢？"
+   }
+  ],
+  "agreement": {
+   "turn": {
+    "match": 17,
+    "total": 20,
+    "rate": 0.85
+   },
+   "er": {
+    "match": 0,
+    "total": 0,
+    "rate": null
+   },
+   "np": {
+    "match": 3,
+    "total": 5,
+    "rate": 0.6
+   }
+  }
+ }
+}

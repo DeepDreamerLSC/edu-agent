@@ -1,0 +1,105 @@
+{
+  "provenance": "开发集 gold labels:10 曝光盘案 × r3 双臂,逐轮期望标签。来源=人审定谳(step7-triage-human-review-20260922.md,10 案全,盲审 A/B 按引文映射回臂)+ ablation-report.md §5.1-§5.3 逐轮证据。标签口径:er=把已给目标信息当未知;np=无增量重复推进;legal=合法深化/纠错/收束推进。turns 只列分母轮(said 已成立后的导师回应轮)。",
+  "trajectories": {
+    "repro-close-loop-cross-stitch|baseline": {
+      "er_family": 0, "no_progress_family": 2,
+      "turns": {"3": "legal", "4": "np", "5": "np"},
+      "note": "人审定谳(盲 B 侧):反复要求重证『8 怎么来』,学生再给 6dm 仍被拉回——典型死循环非谨慎;t4 逐字重复 t2 的『先确认第一周的8dm是不是从20dm²的2/5算出来的』,t5 逐字重复 t3 的『哪一条和这一步有关吗』。v1 不评(repro 无 form 标注)。"
+    },
+    "repro-close-loop-cross-stitch|candidate": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {"3": "legal"},
+      "note": "人审定谳(盲 A 侧):承认并正常收束,t3 承认+写出 6dm² 收束指令。"
+    },
+    "socraticmath_train_2591|baseline": {
+      "er_family": 0, "no_progress_family": 1,
+      "turns": {"2": "legal", "3": "legal", "4": "np"},
+      "note": "人审定谳(盲 A 侧):正确答案(易变形,t2 起 said)后第三次追问同一解释不收束;t4 逐字重复 t2 问句;t2 首问/t3 纠错语境(学生答错『稳定性』)为合法。"
+    },
+    "socraticmath_train_2591|candidate": {
+      "er_family": 0, "no_progress_family": 1,
+      "turns": {"2": "legal", "3": "legal", "4": "np"},
+      "note": "人审定谳(盲 B 侧):承认+伸缩门+总结,明显优于循环但『仍稍多问』——t4 逐字重复 t3 的延伸问句『你还能想到生活中哪个东西也是这样吗』,记 no-progress(轻度)。"
+    },
+    "socraticmath_train_675|baseline": {
+      "er_family": 1, "no_progress_family": 0,
+      "turns": {"3": "er"},
+      "note": "人审定谳(盲 B 侧):学生完整说出『A,1cm 对应 100cm 不是 100m』后,导师口头承认(这没错)仍重问『100厘米和100米一样吗』=把学生刚说过的当未知,随后 needs_review——真 ER/closure 病灶最纯样本。v1 全案不可见(答案 A 无 ASCII 数字+form2 双屏障,报告 §5.3.1)。"
+    },
+    "socraticmath_train_675|candidate": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {"3": "legal"},
+      "note": "人审定谳(盲 A 侧):『这个判断完全正确!』明确认可+推进(问哪里出错了),收束完成。"
+    },
+    "socraticmath_val_13|baseline": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {},
+      "note": "人审定谳(盲 A 侧):学生只说原则、未明确选 B,继续引导合理——不在分母(答案 B 从未被学生主张)。"
+    },
+    "socraticmath_val_13|candidate": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {},
+      "note": "人审定谳(盲 B 侧):premature completion+guard 异常(summary 自泄完整判断)——非 ER 面,不在分母。"
+    },
+    "socraticmath_train_3565|baseline": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {"3": "legal"},
+      "note": "人审定谳:基本 same,无强 ER。v1 t1 误咬(换算事实污染分母+『是不是』指向新对象小正方形面积);t2 学生答错 50 导师纠错合法;t3 承认+请完整复述=收束推进。"
+    },
+    "socraticmath_train_3565|candidate": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {"3": "legal"},
+      "note": "人审定谳:深化方向不同(换边长法 vs 复述),无 ER。"
+    },
+    "socraticmath_train_4402|baseline": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {"4": "legal"},
+      "note": "人审定谳:『都不像真 ER』。v1 t4 误咬(『检查一下数字含义』=问验证族,宾语是新侧面;t2 学生词形提案 x减去21然后等于35 不构成 said,纠错语境合法)。"
+    },
+    "socraticmath_train_4402|candidate": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {"4": "legal"},
+      "note": "人审定谳(盲 B 侧):岔题问『如果问售出多少』=新侧面假设题,合法深化。"
+    },
+    "socraticmath_train_3666|baseline": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {"2": "legal", "3": "legal"},
+      "note": "人审定谳(盲 A 侧):逐个承认两个正确比例并问差别。t2『为什么这样改写能保持等式成立』=问理由族。"
+    },
+    "socraticmath_train_3666|candidate": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {"2": "legal", "3": "legal"},
+      "note": "人审定谳:机器判 ER regression 不认。v1 t2 误咬(『怎么想到』问理由+承认『是对的』漏否决);t3『有什么不同吗』问差异非 whether-同命题。"
+    },
+    "socraticmath_train_866|baseline": {
+      "er_family": 0, "no_progress_family": 1,
+      "turns": {"5": "legal", "6": "np"},
+      "note": "人审定谳(盲 A 侧):12:4=6:2(t5 起 said)后两遍问『你是不是已经把所有可能的因数组合都检查过了』=真重复,属 no-progress/unnecessary extension 而非典型 ER;t5 首问记 legal,t6 逐字重复记 np。v1 双漏(『成立』偶然 ACK 否决+学生新例子 3:1=12:4 的 stray 否决)。"
+    },
+    "socraticmath_train_866|candidate": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {"5": "legal", "6": "legal"},
+      "note": "人审定谳(盲 B 侧):承认后换深化是优点。v1 t3 误咬(said 被因数枚举污染+『怎么算比值是不是3』指向新计算);t5/t6 承认+换组数/收束问句合法。"
+    },
+    "repro-close-loop-ball-bounce|baseline": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {"4": "legal", "5": "legal"},
+      "note": "人审定谳:基本 same;A 让学生完整说出 0.5m 合法(t4 承认+陈述答案,t5 纠 0/5 写法)。t2/t3 学生未落 0.5(0/5 非 0.5)不在分母。"
+    },
+    "repro-close-loop-ball-bounce|candidate": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {"4": "legal"},
+      "note": "人审定谳(盲 B 侧):在 0.5 后即总结(premature-ish 收束面,非 ER)。"
+    },
+    "socraticmath_train_4275|baseline": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {},
+      "note": "答案 None(改错题无单一终答)→不在 ER 适用域;人审焦点是 guard 误触与 grounding(t8/t9 逐字自重复归 grounding 面,r3 已计)。"
+    },
+    "socraticmath_train_4275|candidate": {
+      "er_family": 0, "no_progress_family": 0,
+      "turns": {},
+      "note": "同上;B 侧『代做』(替学生跳做 1.5×365)是 grounding 病灶非 ER。"
+    }
+  }
+}
