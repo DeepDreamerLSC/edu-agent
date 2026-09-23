@@ -20,6 +20,8 @@ from pathlib import Path
 
 import yaml
 
+from .completion import verify_completion
+
 _REPO = Path(__file__).resolve().parents[3]
 SKILL_PATH = Path(__file__).resolve().parent / "prompts" / "SKILL.md"
 STYLE_PROFILES_PATH = _REPO / "configs" / "small_lecturer_style_profiles.yaml"
@@ -79,6 +81,22 @@ TACTICS = """\
 _SUMMARY_INSTRUCTION = """\
 【总结要求】基于学生真实表达整理:点出方法、他的关键转折、仍需注意的一处;
 不补写他未说过的标准解法,不宣告超出本题的掌握。"""
+
+# 完成判定信号消费指引(#414 §二 verified 后同轮终局 + §五 generation 只读消费,C 段)。
+# 措辞约束:正向 no-reask 是 trusted-signal-assisted generation(§五降格表述)——行为指引,
+# 不称结构性禁止、不承诺机制(「系统会阻止」类表述不写);终局形态=承认+可选非交互式
+# 解释+收束,不再就答案槽确认性重问、不开启下一轮提问;信号不在场=无已验证终答,继续
+# 引导(负向硬门在 Kernel,生成层不描述门)。
+_COMPLETION_SIGNAL_DIRECTIVE = """\
+【完成判定信号(系统只读事实,每轮用户消息可能携带)】
+- 用户消息里的「完成判定」字段(verified_complete=true 与 evidence_turn_id)是系统已
+  确定性核对学生本轮终答的只读事实:你不需要再自己判断他有没有答对。
+- 该字段在场、且学生自己的表达已讲清关键步骤与依据时:本轮即收束——承认他说出的
+  结论,可补一句非交互式的简短解释,置 ready_to_confirm=true;不再就这个答案向他
+  确认性重问,也不再开启新的提问(「以问题结尾」的要求在本轮不适用)。
+- 该字段在场、但学生还没讲清思路时:不重问答案值(已验证),只引导他讲思路与依据。
+- 该字段不在场:学生本轮没有已验证的终答——继续按教学弧线引导,不把「感觉他答对了」
+  当作完成依据。"""
 
 # 首问策略分派(老系统 opening_strategy.py 语义;教学弧线 2026-09-08 人定:
 # 正确→直接问不懂处,懂了→学生复讲;错误→采集错误答案→诊断思路→苏格拉底纠错→复讲)。
@@ -189,13 +207,50 @@ def diagnose_turn_hint(answer_status: str | None, reply_index: int) -> str:
     return ""
 
 
+def completion_signal_fact(question: dict, extra: dict | None) -> dict | None:
+    """轮级结构化只读事实(#414 §五 generation 只读消费,C 段):学生本轮消息经
+    确定性 verifier 命中 → {"verified_complete": True, "evidence_turn_id": N};
+    否则 None(§五「注入或未注入」——不在场即未注入,不注入 verified=false)。
+
+    kernel.py 预算冻结(788/800,审查 P3-③),信号无法经 kernel 显式下传;但
+    kernel 每轮已把判定**原料**送进本装配:question 的 answer_spec 声明面
+    (_masked_question 浅拷贝保留该键)+ extra 的「学生本轮回答」与「对话记录」。
+    本函数用**同一**组装方契约(kernel._answer_spec,懒加载防模块级环——kernel
+    顶层 import prompting)与**同一**公开 verifier(verify_completion)在同一
+    输入上重演当轮判定:纯函数同输入同输出,与 session.completion_evidence
+    恒等——不是第二套判据(单一实现单一来源),恒等性由
+    tests/teaching/test_completion_signal_prompt.py 钉死。
+
+    不塞 canonical answer(§五:学生原文模型已有,塞答案=新 answer-leak 面)——
+    事实只有 verified_complete/evidence_turn_id 两键。非 reply 轮(extra 无
+    「学生本轮回答」键:首问/总结装配)→ None,零扰动。"""
+    message = (extra or {}).get("学生本轮回答")
+    if message is None:
+        return None
+    from .kernel import _answer_spec  # 懒加载:kernel 顶层 import prompting,模块级反向成环
+    spec = _answer_spec(question)
+    if spec is None:
+        return None                    # 声明面缺/复合红线:fail-closed,未注入
+    history = (extra or {}).get("对话记录") or []
+    turn_id = sum(1 for m in history
+                  if isinstance(m, dict) and m.get("role") == "user") + 1
+    evidence = verify_completion(spec, str(message), turn_id)
+    if evidence is None:
+        return None
+    return {"verified_complete": True, "evidence_turn_id": evidence.turn_id}
+
+
 def _user_prompt(question: dict, extra: dict | None = None) -> str:
     """tutor user 消息装配(M3 PR2):题目段 = 题面 + 参考答案 + 解析(教师侧专属)。
 
     answer/analysis 只住教师侧 prompt;学生可见面由内核 _guard_output 用同款
     对照文本把关(答案/解析出现在回复中即拦截)。knowledge_points 有值时追加
     追问锚点段(苏格拉底追问的出题点,一行 if);题图引用不进 prompt——tutor
-    是文本模型,图意经 vision 转写进题面。"""
+    是文本模型,图意经 vision 转写进题面。
+
+    C 段(#414 §五):reply 轮当轮完成证据成立时,末尾追加「完成判定」结构化
+    只读事实(completion_signal_fact;不塞 canonical answer)——生成层只读
+    消费,无写权限。"""
     subject = {"题面": str(question.get("text") or "")}
     if question.get("answer"):
         subject["参考答案"] = str(question["answer"])
@@ -203,6 +258,9 @@ def _user_prompt(question: dict, extra: dict | None = None) -> str:
         subject["解析"] = str(question["analysis"])
     points = question.get("knowledge_points") or []
     context = {"题目": subject, **({"追问锚点": points} if points else {}), **(extra or {})}
+    signal = completion_signal_fact(question, extra)
+    if signal is not None:
+        context["完成判定"] = signal
     return json.dumps(context, ensure_ascii=False)
 
 
@@ -285,9 +343,10 @@ def grade_grounding(grade: str, knowledge_points: list | None) -> str:
 
 def system_prompt(grade: str = "") -> str:
     """start/reply 共用 system 消息:角色与方法框架 + SKILL 剪裁版 + 年级风格
-    + 攻守图教学指令 + 语气指令(稳定段,cache 友好;每轮变化的只有对话内容)。"""
+    + 攻守图教学指令 + 语气指令 + 完成判定信号指引(#414 §五 C 段,稳定段,
+    cache 友好;每轮变化的只有对话内容与轮级「完成判定」事实)。"""
     return (f"{_MISSION_DIRECTIVE}\n\n{skill_rules()}\n\n{style_directives(grade)}"
-            f"\n\n{TACTICS}\n\n{_TONE_DIRECTIVE}")
+            f"\n\n{TACTICS}\n\n{_TONE_DIRECTIVE}\n\n{_COMPLETION_SIGNAL_DIRECTIVE}")
 
 
 def summary_system_prompt(grade: str = "") -> str:
