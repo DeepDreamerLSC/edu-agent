@@ -17,6 +17,19 @@ from edu_agent.contracts import skill_interaction_schema
 from partner_api import VISION_OK, text_response
 
 
+class _SpecQuestionSource:
+    """Gate B 段(#414 §四)改据:completed 需当轮 CompletionEvidence——测试本地
+    题源带 answer_spec 声明面(**现网题库 answer 均为纯字符串、无此声明面**,
+    缺口清单留人审,不由 answer 字面猜类型);学生轮「得到 x=6」经 equation_form
+    窄面命中即当轮证据,confirm→completed 的信封链路断言语义不变。"""
+
+    def resolve(self, question_id: str) -> dict:
+        return {"text": "解方程 3x+7=25。", "answer": "x=6",
+                "answer_spec": {"answer_type": "equation_form"},
+                "analysis": "两边同时减 7。", "knowledge_points": ["简易方程"],
+                "grade": "五年级", "image": None}
+
+
 class FakeGateway:
     """确定性假 gateway:vision 三字段 / tutor 回合 JSON / 总结 JSON。"""
 
@@ -143,14 +156,15 @@ def test_live_flow_envelope_fills_from_kernel_session():
 
     P1-6 后 confirm 两路都走 kernel.finish,completed 后内核 attempt 同步进
     completed(切片 result 的 attempt_state 与响应面 state 一致)。"""
-    service = build_service(SmallLecturerKernel(FakeGateway(ready_at_call=2)))
+    service = build_service(SmallLecturerKernel(FakeGateway(ready_at_call=2)),
+                            source=_SpecQuestionSource())
     opened = service.open("q-1", "idem-env-1", learner={})
     conversation = service._conversation_or_404(opened["conversation"]["conversation_id"])
     first = service.interaction_envelope(conversation)
     assert first["state"] == "first_question_ready"
     assert first["attempt_state"] == {"state": "collecting_inputs"}
     service.send(conversation.conversation_id, {
-        "content": "两边同时减 7。",
+        "content": "两边同时减 7,得到 x=6。",   # Gate B 段:终答在场,当轮证据成立
         "input": {"skill_session_id": opened["skill_session_id"],
                   "expected_session_version": opened["session_version"]}})
     ready = service.interaction_envelope(conversation)

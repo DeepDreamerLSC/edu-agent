@@ -16,11 +16,15 @@ from edu_agent.evals import EnvironmentFailure, KernelSubject
 
 from teachkit import FakeGateway, kernel_env, open_json, tutor_json
 
+# Gate B 段(#414 §四)改据:completed 需当轮 CompletionEvidence——题面带 answer_spec
+# 声明面(**测试本地**;现网题库无此面,缺口留人审),学生末轮「x=6,检验通过了。」
+# 经 equation_form 窄面命中即当轮证据;剧本结构与轮数不变。
 CASE = {
     "id": "stability_equation_subtract",
-    "question": "解方程 3x+7=25,并说明每一步为什么这样做。",
+    "question": {"text": "解方程 3x+7=25,并说明每一步为什么这样做。",
+                 "answer": "x=6", "answer_spec": {"answer_type": "equation_form"}},
     "grade": "五年级",
-    "student_turns": ["我想两边都减去7。", "再同时除以3。", "检验通过了。"],
+    "student_turns": ["我想两边都减去7。", "再同时除以3。", "x=6,检验通过了。"],
 }
 
 
@@ -37,8 +41,10 @@ def test_run_case_drives_full_script(tmp_path):
         completion(open_json("题目要我们求什么?")),
         slow(completion(tutor_json("为什么两边都能减7?"))),
         slow(completion(tutor_json("很好,再同时除以3。", ready=True))),
-        slow(completion(tutor_json("检验也讲清楚了,这一题完成。", ready=True))),
-        completion(json.dumps({"summary": "你用等式性质解出 x=6 并检验。"}, ensure_ascii=False)),
+        # Gate B 段(#414 §四)改据:t3 学生终述「x=6」→ close 路径在轮内直接走
+        # finish(不再有 t3 的 reply 模型轮),此处即收束 finish 消费的 summary。
+        slow(completion(json.dumps({"summary": "你用等式性质解出 x=6 并检验。"},
+                                   ensure_ascii=False))),
     ]) as (fake, gateway):
         transcript = KernelSubject(gateway).run_case(CASE)
         assert transcript["final_state"] == "completed"
@@ -46,8 +52,9 @@ def test_run_case_drives_full_script(tmp_path):
         # close-loop-fix:ready 后剧本轮照发(产线忠实——客户端 ready 后继续发
         # 消息,444a/2c85 死环正是 ready 后续轮);completed 才断。
         assert [t["student"] for t in transcript["turns"]] == [
-            "", "我想两边都减去7。", "再同时除以3。", "检验通过了。"]
-        assert len(fake.requests) == 5
+            "", "我想两边都减去7。", "再同时除以3。", "x=6,检验通过了。"]
+        # open + 2 reply + 收束 finish(t3 走 close 路径,finish 模型总结即第 4 调用)
+        assert len(fake.requests) == 4
         # P1-5 回归:elapsed_ms 是真实耗时,不是 session_version 假数据(首问恒 0;
         # 回复轮 ≥ 注入延迟 5ms——session_version 假数据 1/2/3 过不了这条)
         assert transcript["turns"][0]["elapsed_ms"] == 0
