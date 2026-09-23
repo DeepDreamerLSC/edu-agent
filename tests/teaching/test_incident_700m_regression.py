@@ -183,11 +183,18 @@ def test_student_own_stuck_signal_still_marks_stuck():
 
 
 def test_gateway_error_on_close_leaves_session_untouched():
-    """事故尾部冻结:ready 态 + 学生终述 → 收束路径 finish() 调 Gateway 抛错 →
-    本轮 Session 必须保持调用前状态(history/state/summary/session_version/
-    hint_level 逐字段一致)。红灯证据:基底 `_close_on_final_statement` 先
-    append 学生消息再 finish(kernel.py L212),GatewayError 冒泡后 history
-    已多一条半提交(2026-09-20 基底实测红)。"""
+    """事故尾部冻结(原始形态,700m 题=三槽复合答案):ready 态 + 学生终述 →
+    收束路径 finish() 调 Gateway 抛错 → 本轮 Session 必须保持调用前状态
+    (history/state/summary/session_version/hint_level 逐字段一致)。红灯证据:
+    基底 `_close_on_final_statement` 先 append 学生消息再 finish(kernel.py
+    L212),GatewayError 冒泡后 history 已多一条半提交(2026-09-20 基底实测红)。
+
+    Gate B 段(#414 §四)改据:completed 迁移需当轮 CompletionEvidence,700m 题
+    answer 为三槽复合(A/B/山顶三值,§三红线:多槽整体不判定)→ 无 evidence →
+    finish 在 **Gateway 调用之前**被门拒(确定性,零模型调用),爆炸位不再触达:
+    原子性回归的机制面(GatewayError 回滚)由 test_kernel_restate.py 同款测试
+    以 eligible 门题(answer_spec 声明面)承接;本测改钉事故题的新契约——
+    收束被门拒、session 保持 ready_to_confirm、零 Gateway 消耗、埋点在案。"""
     final_statement = "所以A处是25.8度，B处24度，山顶22.8度，都算出来了。"
     gateway = ExplodingGateway(
         tutor_payloads=[
@@ -195,26 +202,31 @@ def test_gateway_error_on_close_leaves_session_untouched():
             # 第二次 tutor 调用:模型判 ready(收束前置态)
             _tutor_payload("你把三处气温都说出来了。", ready=True),
         ],
-        explode_remaining=0,  # 剧本耗尽:收束 finish 的 Gateway 调用 → GatewayError
+        explode_remaining=0,  # 剧本耗尽:若无门,收束 finish 的 Gateway 调用会抛错
     )
     first = start(dict(QUESTION_700M), {"grade": GRADE}, gateway=gateway)
     session = first.session
     confirmed = reply(session, STUDENT_CORRECTS_TUTOR, gateway=gateway)
     assert confirmed.state == "ready_to_confirm"
-    before = (list(session.history), session.state, session.summary,
-              session.session_version, session.hint_level)
-    with pytest.raises(GatewayError):
-        reply(session, final_statement, gateway=gateway)
-    after = (list(session.history), session.state, session.summary,
-             session.session_version, session.hint_level)
-    assert before == after, (
-        f"GatewayError 后 Session 半提交:调用前 {before} vs 调用后 {after}(P0-2)")
+    requests_before = len(gateway.requests)
+    turn = reply(session, final_statement, gateway=gateway)   # 不再抛 GatewayError
+    assert turn.state == "ready_to_confirm" and not session.finished
+    assert session.state == "ready_to_confirm" and session.summary is None
+    assert len(gateway.requests) == requests_before           # 门先于 Gateway(零消耗)
+    assert any(event.get("branch") == "completion_gate_rejected"
+               for event in session.guard_events)
 
 
 def test_user_resend_after_gateway_error_no_duplicate_history():
-    """事故尾部直接冻结:同一句重发两次(GatewayError×2 后)不得重复 history
-    ——半提交的 history 里躺着未回应的学生消息,重试再 append 一条即双记
-    (事故实录:同句在 App 界面出现两次)。"""
+    """事故尾部直接冻结(原始形态):同一句重发不得重复 history——半提交的
+    history 里躺着未回应的学生消息,重试再 append 一条即双记(事故实录:同句
+    在 App 界面出现两次)。
+
+    Gate B 段(#414 §四)改据:700m 题=三槽复合 → 无当轮 evidence → 收束被门
+    拒于 Gateway 之前,重发不再撞 GatewayError(见上测改据);本测改钉事故题的
+    新契约——每次重发是**完整提交的干净轮**(user+assistant 成对、version+1,
+    无半提交),零 Gateway 消耗,门埋点逐轮在案。GatewayError 半提交回滚的原
+    机制面由 test_kernel_restate.py 以 eligible 门题承接。"""
     final_statement = "所以A处是25.8度，B处24度，山顶22.8度，都算出来了。"
     gateway = ExplodingGateway(
         tutor_payloads=[
@@ -226,16 +238,20 @@ def test_user_resend_after_gateway_error_no_duplicate_history():
     first = start(dict(QUESTION_700M), {"grade": GRADE}, gateway=gateway)
     session = first.session
     reply(session, STUDENT_CORRECTS_TUTOR, gateway=gateway)
-    user_turns_before = [m for m in session.history if m["role"] == "user"]
-    count_before = sum(1 for m in user_turns_before if m["content"] == final_statement)
-    for _ in range(2):  # 事故实录:同句重发 ×2,每次都撞 GatewayError
-        with pytest.raises(GatewayError):
-            reply(session, final_statement, gateway=gateway)
-    user_turns_after = [m for m in session.history if m["role"] == "user"]
-    count_after = sum(1 for m in user_turns_after if m["content"] == final_statement)
-    assert count_after == count_before, (
-        f"同句重试后 history 重复记录该消息({count_before}→{count_after}):"
-        "调用失败的轮次不得提交 history(P0-2)")
+    requests_before = len(gateway.requests)
+    version_before = session.session_version
+    for _ in range(2):  # 事故实录形态:同句重发 ×2(现被门确定性拒,零 Gateway)
+        turn = reply(session, final_statement, gateway=gateway)
+        assert turn.state == "ready_to_confirm"
+    user_contents = [m["content"] for m in session.history if m["role"] == "user"]
+    assistant_count = sum(1 for m in session.history if m["role"] == "assistant")
+    # 每次重发一条 user 必配一条 assistant(成对完整提交,无半提交双记)
+    assert user_contents.count(final_statement) == 2
+    assert assistant_count == len(user_contents)
+    assert session.session_version == version_before + 2
+    assert len(gateway.requests) == requests_before           # 门先于 Gateway
+    assert sum(1 for event in session.guard_events
+               if event.get("branch") == "completion_gate_rejected") == 2
 
 
 # =========================================================================== #

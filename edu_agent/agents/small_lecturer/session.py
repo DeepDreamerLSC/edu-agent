@@ -11,6 +11,8 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 
+from .completion import CompletionEvidence
+
 
 class SessionVersionConflict(Exception):
     """03 §4 Conflict:调用方携带的 expected_session_version 过期(内核不推进,
@@ -39,6 +41,12 @@ class LearnerSession:
     # ——deterministic reveal 只消费 analysis 步,随 asdict 全字段持久化(重启恢复后
     # 边界不丢)。
     hint_level: int = 0                # 阶梯揭示进度:学生卡住时揭示 steps 的第几级(0 起)
+    completion_evidence: CompletionEvidence | None = None  # 当轮完成证据(#414 §二/§四,
+    #                                  # B 段):turn-scoped/ephemeral——只对最新学生轮有效,
+    #                                  # 每轮 reply() 重新生产覆盖(无命中即覆写 None,跨轮
+    #                                  # 不复用);completed 迁移的必要授权(非充分)。
+    #                                  # None=无证据:无 answer_spec 声明面的题(fail-closed)
+    #                                  # 或本轮学生消息未命中六窄面。随 asdict 持久化。
     guard_events: list = field(default_factory=list)  # 护栏埋点(任务包1步1):命中的
     # 规则与被替换原文随会话落盘(FileSessionStore asdict 自动持久化),供兜底率度量
     session_id: str = field(default_factory=lambda: f"kernel_{uuid.uuid4().hex[:10]}")

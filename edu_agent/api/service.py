@@ -393,6 +393,10 @@ class ConversationService:
                     "answer": resolved["answer"],
                     "analysis": resolved["analysis"],
                     "knowledge_points": resolved["knowledge_points"]}
+        # Gate B 段(#414 §三):answer_spec 声明面透传(题库有才在场,零行为
+        # 变化)——kernel._answer_spec 组装 CompletionEvidence 判定规格。
+        if isinstance(resolved.get("answer_spec"), dict):
+            question["answer_spec"] = resolved["answer_spec"]
         provenance = resolved.get("answer_correct_provenance")
         if provenance:
             learner = {"answer_correct_provenance": provenance, **learner}

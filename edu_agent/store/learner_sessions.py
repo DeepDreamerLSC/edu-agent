@@ -17,6 +17,7 @@ import os
 from dataclasses import asdict, fields
 from pathlib import Path
 
+from edu_agent.agents.small_lecturer.completion import CompletionEvidence, EvidenceProvenance
 from edu_agent.agents.small_lecturer.session import LearnerSession, Summary
 
 
@@ -65,5 +66,15 @@ def restore_session(data: dict) -> LearnerSession:
     data = dict(data)
     if data.get("summary") is not None:
         data["summary"] = Summary(**data["summary"])
+    if data.get("completion_evidence") is not None:
+        # Gate B 段(#414):asdict 落盘的 CompletionEvidence(含嵌套 provenance)
+        # 重建为类型化对象——跨进程 confirm(reply 落盘 → 重启 → finish 取回)不丢
+        # 当轮证据。JSON 往返 tuple→list,provenance.normalization 还原为 tuple
+        # (evidence 相等性/不可变性语义不因落盘漂移)。
+        evidence = dict(data["completion_evidence"])
+        provenance = dict(evidence["provenance"])
+        provenance["normalization"] = tuple(provenance.get("normalization") or ())
+        evidence["provenance"] = EvidenceProvenance(**provenance)
+        data["completion_evidence"] = CompletionEvidence(**evidence)
     known = {field.name for field in fields(LearnerSession)}
     return LearnerSession(**{key: value for key, value in data.items() if key in known})

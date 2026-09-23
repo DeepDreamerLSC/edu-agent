@@ -1,7 +1,7 @@
 """小讲师(00 §1):内核三函数(M2,00 §5.1)+ 护栏代码与提示词资产(#45)。"""
 
 # completion(Gate A 段)确定性面随包公开(同 #350 先例:02 §6 测试禁私有
-# 导入,零行为变更纯导出面;A 段零接线,现有模块零 import)。
+# 导入,零行为变更纯导出面;B 段起 kernel 接线消费,verifier 规格本体不动)。
 from .completion import (
     ANSWER_TYPES,
     AnswerSpec,
@@ -27,7 +27,9 @@ from .kernel import (
     _UNTRUSTED_LADDER_HINT,
     PURE_BLOCK,
     _answer_leak_span,
-    _is_repeat,  # #382 PR-D:事故回归电池直连(复读判定口径钉;零行为变更纯导出)
+    _answer_spec,  # Gate B 段:组装方契约 fail-closed 面测试直连(零行为变更纯导出)
+    _completion_authorized,  # Gate B 段:turn-scoped 门判据测试直连(同上)
+    _is_repeat,  # #382 PR-D:事故回归电池直连(复读判定口径钉;零行为变化纯导出)
     _reveal_stuck_hint,
     _student_signals_stuck,
     finish,
@@ -104,6 +106,8 @@ __all__ = [
     "_STEP_LEADS",
     "_UNTRUSTED_LADDER_HINT",
     "_answer_focus_numbers",
+    "_answer_spec",
+    "_completion_authorized",
     "NEEDS_REVIEW_TEXT",
     "PURE_BLOCK",
     "_answer_leak_span",

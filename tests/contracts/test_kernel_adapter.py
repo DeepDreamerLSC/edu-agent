@@ -133,6 +133,19 @@ class SequencedGateway:
         return text_response(json.dumps(self.replies.pop(0), ensure_ascii=False))
 
 
+class _SpecSnapshotSource(SnapshotQuestionSource):
+    """Gate B 段(#414 §四)改据:completed 需当轮 CompletionEvidence——快照题外
+    包一层**测试本地** answer_spec 声明面(现网题库 answer 均为纯字符串、无此
+    声明面,缺口清单留人审;e2e 链路验证由测试注入声明面,题库 schema 增面后
+    由题源透传自然达成)。"""
+
+    def resolve(self, question_id: str) -> dict:
+        resolved = super().resolve(question_id)
+        if question_id == "equation_subtract":
+            resolved["answer_spec"] = {"answer_type": "equation_form"}
+        return resolved
+
+
 def test_open_message_finish_e2e_real_kernel_with_bank_image():
     """A 线验收:open → message → finish 端到端(真内核 + 快照题库真题图)。
 
@@ -151,7 +164,7 @@ def test_open_message_finish_e2e_real_kernel_with_bank_image():
     ])
     service = build_service(
         SmallLecturerKernel(gateway),
-        source=SnapshotQuestionSource(),
+        source=_SpecSnapshotSource(),
         image_resolver=lambda fid: f"data:image/png;base64,{fid}",
     )
     # 与 server.py 同款装配:请求体 → open_request_learner → service.open
@@ -159,7 +172,9 @@ def test_open_message_finish_e2e_real_kernel_with_bank_image():
         {"idempotency_key": "e2e-img-1"},
         frozenset({"idempotency_key"}) | ConversationService._OPEN_LEARNER_FIELDS)
     assert echoed is None and learner == {"answer_status": "incorrect"}  # A 线:省略按做错
-    opened = service.open("chicken_rabbit", "e2e-img-1", learner)
+    # Gate B 段:equation_subtract(带图、单槽方程答案,eligible);鸡兔复合题
+    # (多槽,§三红线:整体不判定)结构上不可能有 evidence,confirm 会被门拒。
+    opened = service.open("equation_subtract", "e2e-img-1", learner)
     assert opened["first_question_ready"] is True
     conversation = service._conversation_or_404(opened["conversation"]["conversation_id"])
     kernel_session = conversation.extras["kernel_session"]
@@ -170,12 +185,12 @@ def test_open_message_finish_e2e_real_kernel_with_bank_image():
     assert all("data:image" not in str(m) for m in first_call.messages)
     # 题库命中:参考答案/解析进教师侧题面;知识点作追问锚点
     user_prompt = first_call.messages[1]["content"]
-    assert "鸡3只，兔5只" in user_prompt and "鸡兔同笼" in user_prompt
+    assert "x=6" in user_prompt and "简易方程" in user_prompt
     # A 线:assumed_incorrect → 首问带 incorrect 弧线提示
     assert OPENING_HINT_INCORRECT in user_prompt
     # message:学生首轮给出与终答一致的答案 → 模型判停 → ready_to_confirm
     turn = service.send(conversation.conversation_id, {
-        "content": "我算出鸡有3只,兔有5只。",
+        "content": "我算出 x=6,并检验了。",
         "input": {"skill_session_id": opened["skill_session_id"],
                   "expected_session_version": opened["session_version"]}})
     assert turn["skill_interaction"]["state"] == "ready_to_confirm"

@@ -136,15 +136,25 @@ def test_gate_allows_confirm_when_student_stated_conclusion_numbers():
 
 
 def test_finish_completes_instead_of_needs_review_after_stated_answer():
-    """验收:学生已陈述终答的末轮 → 会话正常收束 completed,不再落 needs_review。"""
+    """验收:学生已陈述终答的末轮 → 会话正常收束 completed,不再落 needs_review。
+
+    Gate B 段(#414 §四)改据:completed 需当轮 CompletionEvidence——鸡兔复合题
+    (多槽,§三红线:整体不判定)结构上不可能有证据,收束验收改用 eligible 题
+    (本文件 127 本图书馆题 + answer_spec 声明面,测试本地;现网题库无此面),
+    学生末轮「答案是 127 本」为声明式 claim 形态(A-段白名单)。复合题被门拒的
+    新行为由 tests/teaching/test_kernel_transition_gate.py ①-c 钉(负向三案
+    2791/5106/3490 的结构承接),本测保留正向锚语义不变。"""
+    question = {**QUESTION, "answer_spec": {"answer_type": "numeric_with_unit"}}
     gateway = FakeGateway([
-        CHICKEN_OPEN,
-        # Thin Kernel:引述终答(5/3)→ 确定性掩码(转述式确认,零重生成)
-        CHICKEN_CONFIRM,
-        {"summary": "你假设全是鸡,算出脚数差,再把兔子换出来——讲得很清楚。"},
+        OPEN_PAYLOAD,
+        {"reply": "对,就是 127 本。你讲得很清楚。", "ready_to_confirm": True,
+         "cited_numbers": [127]},
+        {"summary": "你先算又买来后一共有多少本,再减去借出的——讲得很清楚。"},
     ])
-    turn = start(dict(CHICKEN_QUESTION_EVAL), {"grade": "六年级"}, gateway=gateway)
-    turn = reply(turn.session, CHICKEN_STATED, gateway=gateway)
+    turn = start(question, dict(LEARNER), gateway=gateway)
+    turn = reply(turn.session, "先算 120 加 45 等于 165,再减 38,答案是 127 本。",
+                 gateway=gateway)
+    assert turn.session.completion_evidence is not None   # 当轮证据在场面
     summary = finish(turn.session, gateway=gateway)
     assert summary.status == "completed"
     assert summary.status != "needs_review"
