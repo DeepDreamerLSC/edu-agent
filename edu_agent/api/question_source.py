@@ -6,7 +6,8 @@
   后的真实题面;快照口径=基线/评测题目集冻结,实时直读升级路径见 #34 工具冲突记录)。
 
 resolve 返回字段:{text, answer, analysis, image, knowledge_points, grade,
-answer_correct_provenance}。
+answer_correct_provenance};answer_spec 声明面在场时透传(partner bank 经
+scripts/compile_answer_spec.py 编译,裁令⑥;seed/snapshot 无此面,不传)。
 语义澄清(审查 P1,#34/PR67 §8.5):learner.answer_status 是**正确性**字段
 (correct/incorrect/unanswered,由 answer_correct 映射填);题源只填**出处**
 answer_correct_provenance(如 partner_question_bank,查无则不填=缺省)。
@@ -45,7 +46,7 @@ def question_source(source: str | None = None):
 def normalize(payload: dict, question_id: str) -> dict:
     """适配器统一输出面:内核与 api 层只认这些键(answer_status 不由题源填)。"""
     image = payload.get("question_image")
-    return {
+    normalized = {
         "text": str(payload.get("stem") or ""),
         "answer": str(payload.get("answer") or ""),
         "analysis": str(payload.get("original_analysis") or ""),
@@ -54,6 +55,11 @@ def normalize(payload: dict, question_id: str) -> dict:
         "grade": str(payload.get("grade") or ""),
         "answer_correct_provenance": ANSWER_CORRECT_PROVENANCE,
     }
+    # answer_spec 声明面在场才透传(PR #422 缺口②:kernel._answer_spec 只认
+    # 显式声明面;不在场不传,seed/snapshot 题源零行为变化)。
+    if isinstance(payload.get("answer_spec"), dict):
+        normalized["answer_spec"] = payload["answer_spec"]
+    return normalized
 
 
 class SeedQuestionSource:
