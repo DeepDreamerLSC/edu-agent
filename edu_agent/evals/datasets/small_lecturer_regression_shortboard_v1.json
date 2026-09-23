@@ -235,8 +235,8 @@
           },
           {
             "name": "finish_status",
-            "status": "completed",
-            "note": "ready 达成即收束;判停质量风险由掩码面之外的黑盒判卷承担(锚:BASE-C 8案 judge 0胜4负)"
+            "status": "needs_review",
+            "note": "Gate B 段(#414 §四):学生全程未落终答,无当轮 evidence → completed 被硬门拒(2791/5106/3490 同型负向;#333 判停直通的风险面自此由结构门承接,判停质量归 Prompt/Model 面的口径不变)"
           }
         ]
       }
@@ -602,8 +602,8 @@
           },
           {
             "name": "finish_status",
-            "status": "completed",
-            "note": "修复前确认环闭不上,会话滞留 ready_to_confirm"
+            "status": "needs_review",
+            "note": "Gate B 段(#414 §四):completed 迁移需当轮 trusted CompletionEvidence——本题无 answer_spec 声明面(现网题库 schema 缺口,留人审)→ 无 evidence → fail-closed 拒,session 保持 ready_to_confirm;学生末轮「就是0.4千克」非 claim 白名单形态(A-段 §三可认证句法;#416 boundary gold 校准面)。题库 schema 增面+边界校准后按声明类型复估"
           }
         ]
       }
@@ -695,8 +695,8 @@
           },
           {
             "name": "finish_status",
-            "status": "completed",
-            "note": "修复前题给数引用恒被掩,学生无从计算"
+            "status": "needs_review",
+            "note": "Gate B 段(#414 §四):completed 迁移需当轮 trusted CompletionEvidence——本题无 answer_spec 声明面(现网题库 schema 缺口,留人审)→ 无 evidence → fail-closed 拒,session 保持 ready_to_confirm;本题 answer 为多槽复合(A/B/速度/坐标,§三红线:整体不判定,复合逐槽=第二版)→ 声明面落地后仍 needs_review 直至 v2"
           }
         ]
       }
@@ -1038,13 +1038,13 @@
         "checks": [
           {
             "name": "state_is",
-            "state": "completed",
-            "note": "close-loop-fix ① 判别子:末轮(终述轮)必须已收束 completed。修复前该轮是 reveal 重发(ready 覆写+stuck 吊死,产线实录 444a 终态);runner 恒调 finish 会以模型总结收场,故 finish_status 只是 rider"
+            "state": "ready_to_confirm",
+            "note": "Gate B 段(#414 §四):444a 形态收束被 completion 硬门拦——学生终答句「…的高度是0.5m」非 claim 白名单形态(值出现≠claim,A-段 §三),无当轮evidence → 拒,末轮保持 ready_to_confirm。close-loop 保护的完整恢复依赖题库 answer_spec 声明面(人批)+#416 claim 边界校准;复合题为 v2"
           },
           {
             "name": "finish_status",
-            "status": "completed",
-            "note": "rider:总结最终存在(修复前经由死环后的模型总结,修复前经 ① 确定性收束)"
+            "status": "needs_review",
+            "note": "同上:无 evidence → needs_review(#414 §四 fail-closed;原 rider 语义随 ① 翻转)"
           },
           {
             "name": "text_contains_values",
@@ -1162,13 +1162,13 @@
         "checks": [
           {
             "name": "state_is",
-            "state": "completed",
-            "note": "close-loop-fix ① 判别子:末轮(终述轮)必须已收束 completed。修复前该轮后是 reveal 重发已完成第2级(2c85 反面教材「再算第二周」)"
+            "state": "ready_to_confirm",
+            "note": "Gate B 段(#414 §四):2c85 形态收束被 completion 硬门拦——末轮「是的,我真棒」无当轮答案声明(stale),且 answer 为复合(B 字母+6dm²,§三红线)→ 无 evidence→ 拒,末轮保持 ready_to_confirm。close-loop 保护的完整恢复依赖题库声明面(人批)+#416 边界校准;复合题为 v2"
           },
           {
             "name": "finish_status",
-            "status": "completed",
-            "note": "rider:总结最终存在(修复前经由死环后的模型总结)"
+            "status": "needs_review",
+            "note": "同上:无 evidence → needs_review(#414 §四 fail-closed;原 rider 语义随 ① 翻转)"
           },
           {
             "name": "text_contains_values",

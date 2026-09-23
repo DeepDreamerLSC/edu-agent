@@ -35,6 +35,16 @@ _OPENING_TEXT = {
 }
 
 
+# Gate B 段(#414 §四)改据:completed 迁移需当轮 CompletionEvidence——下列题面带
+# answer_spec 声明面(**测试本地**;现网题库 answer 均为纯字符串、无此声明面,
+# 缺口清单留人审,不由 answer 字面猜类型)。方程题学生轮的「x=6」经 equation_form
+# 窄面命中;图书馆题学生末轮「答案是127本」为声明式 claim 形态(A-段白名单)。
+_EQUATION_Q = {"text": "解方程 3x+7=25。", "answer": "x=6",
+               "answer_spec": {"answer_type": "equation_form"}}
+_LIBRARY_Q = {"text": "图书馆原有120本书,又买来45本,借出38本,现在有多少本?",
+              "answer": "127本", "answer_spec": {"answer_type": "numeric_with_unit"}}
+
+
 # ---------- B 端:首问策略分派 ----------
 
 def test_opening_hint_dispatch_by_answer_status(tmp_path):
@@ -81,7 +91,7 @@ def test_structured_summary_on_correct_with_ready_state(tmp_path):
         completion(tutor_json("你自己把做法和检验都说清楚了。", ready=True)),
         completion(json.dumps({"summary": "不该被生成"})),  # 零调用通路不得触达模型(毒饵)
     ]) as (fake, gateway):
-        first = start({"text": "解方程 3x+7=25。"}, {"grade": "五年级", "answer_status": "correct"},
+        first = start(_EQUATION_Q, {"grade": "五年级", "answer_status": "correct"},
                       gateway=gateway)
         reply(first.session, "我想两边都减去7,得到 x=6,代回检验成立。", gateway=gateway)
         assert first.session.state == "ready_to_confirm"   # 完成前提 = 先达确认态
@@ -137,7 +147,7 @@ def test_finish_correct_ready_but_stuck_uses_model_summary(tmp_path):
         completion(tutor_json("你自己把两边减 7、再除以 3 讲清楚了。", ready=True)),
         completion(json.dumps({"summary": "模型总结:你把两步思路都讲清楚了。"}, ensure_ascii=False)),
     ]) as (fake, gateway):
-        first = start({"text": "解方程 3x+7=25。"}, {"grade": "五年级", "answer_status": "correct"},
+        first = start(_EQUATION_Q, {"grade": "五年级", "answer_status": "correct"},
                       gateway=gateway)
         reply(first.session, "我不会,这道题太难了。", gateway=gateway)  # 卡壳 → 揭示 → stuck
         assert first.session.stuck is True
@@ -156,10 +166,11 @@ def test_structured_summary_quotes_student_words_and_passes_guardrails(tmp_path)
         completion(tutor_json("你说说先算的是什么?")),          # 首轮:引导(不复读首问)
         completion(tutor_json("你把两步都说清楚了。", ready=True)),  # 末轮:确认收束
     ]) as (fake, gateway):
-        turn = start({"text": "图书馆原有120本书,又买来45本,借出38本,现在有多少本?"},
+        turn = start(_LIBRARY_Q,
                      {"grade": "三年级", "answer_status": "correct"}, gateway=gateway)
         reply(turn.session, "先算120加45等于165本。", gateway=gateway)
-        reply(turn.session, "再算165减38等于127本,所以现在有127本。", gateway=gateway)
+        # Gate B 段改据:末轮答案须经 claim 白名单(「等于127本」非声明式)
+        reply(turn.session, "再算165减38,答案是127本。", gateway=gateway)
         summary = finish(turn.session, gateway=gateway)
         assert "「先算120加45等于165本。」" in summary.text or "165" in summary.text  # 引用学生原话
     fmt = evaluate_student_visible_format(summary.text)
@@ -181,7 +192,7 @@ def test_guard_blocked_not_stuck_finish_uses_zero_call_summary(tmp_path):
         completion(leak),                 # 泄露 → 纯 block(系统侧降级)
         completion(tutor_json("你自己把做法和检验都说清楚了。", ready=True)),
     ]) as (fake, gateway):
-        first = start({"text": "解方程 3x+7=25。"}, {"grade": "五年级", "answer_status": "correct"},
+        first = start(_EQUATION_Q, {"grade": "五年级", "answer_status": "correct"},
                       gateway=gateway)
         reply(first.session, "我算出来了。", gateway=gateway)  # 学生未先给出 x=6 → tutor 报答案为泄露
         assert first.session.stuck is not True    # #382:guard 降级不写 stuck(只记 guard_events)
