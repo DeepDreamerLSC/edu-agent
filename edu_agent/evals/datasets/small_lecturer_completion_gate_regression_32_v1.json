@@ -10,7 +10,7 @@
  "source_files": {
   "edu_agent/evals/datasets/external_slices/socraticmath_confirmation_v1.json": "6d1a02c7564bd375bcd32e77bba5442fd09056f91db5f550c0fc9c14d9ec2b0a",
   "edu_agent/evals/datasets/external_slices/socraticmath_executable_v1.json": "04b7bfc58c0d643cda83918010357ae3cad89509863a5761cfe3c516bb868f3d",
-  "edu_agent/evals/datasets/small_lecturer_regression_shortboard_v1.json": "ce874e28f43ac1e93cda9ea790f6d4d70b2d0bc6050d43aa6be7e0f9d0b5dea1"
+  "edu_agent/evals/datasets/small_lecturer_regression_shortboard_v1.json": "2c291c1c95c8df70e8659b6210289822fb632ee81d27cef2901411028d6d90b3"
  },
  "anti_contamination": {
   "note": "本 corpus 是行为回归面(重放已曝光案),不需要未曝光;曝光史逐案记录于 source.origin_lists。",
@@ -2153,13 +2153,13 @@
      "checks": [
       {
        "name": "state_is",
-       "state": "completed",
-       "note": "close-loop-fix ① 判别子:末轮(终述轮)必须已收束 completed。修复前该轮后是 reveal 重发已完成第2级(2c85 反面教材「再算第二周」)"
+       "state": "ready_to_confirm",
+       "note": "Gate B 段(#414 §四):2c85 形态收束被 completion 硬门拦——末轮「是的,我真棒」无当轮答案声明(stale),且 answer 为复合(B 字母+6dm²,§三红线)→ 无 evidence→ 拒,末轮保持 ready_to_confirm。close-loop 保护的完整恢复依赖题库声明面(人批)+#416 边界校准;复合题为 v2"
       },
       {
        "name": "finish_status",
-       "status": "completed",
-       "note": "rider:总结最终存在(修复前经由死环后的模型总结)"
+       "status": "needs_review",
+       "note": "同上:无 evidence → needs_review(#414 §四 fail-closed;原 rider 语义随 ① 翻转)"
       },
       {
        "name": "text_contains_values",
