@@ -73,9 +73,13 @@ def _branch(bid, any_keys, response, fallback=False, kind="correct"):
             "student_response": response, "trajectory_tags": []}
 
 
+# Gate B 段(#414 §四)改据:completed 需当轮 CompletionEvidence——题面带 answer_spec
+# 声明面(**测试本地**;现网题库无此面,缺口留人审);终答轮「x=18,检验也讲清楚
+# 了。」经 equation_form 窄面命中即当轮证据。
 STEPS_CASE = {
     "id": "equation_addition_complete_reasoning",
-    "question": "解方程x+7=25，并说明每一步的依据。",
+    "question": {"text": "解方程x+7=25，并说明每一步的依据。",
+                 "answer": "x=18", "answer_spec": {"answer_type": "equation_form"}},
     "grade": "",
     "steps": [
         {"id": "first_response", "branches": [
@@ -83,7 +87,7 @@ STEPS_CASE = {
             _branch("correct_clarify", [], "没听懂,再说一遍好吗?", fallback=True, kind="request_hint"),
         ]},
         {"id": "follow_up", "branches": [
-            _branch("correct", ["先", "思路"], "25减7等于18,x等于18。"),
+            _branch("correct", ["先", "思路"], "我先算25减7,下一步再想。"),
             _branch("correct_clarify", [], "我不明白你问的是哪一步。", fallback=True, kind="request_hint"),
         ]},
     ],
@@ -112,7 +116,7 @@ def test_steps_honor_completed_stop_not_ready():
     继续发消息,444a/2c85 死环正是 ready 后续轮);completed 才断。"""
     case = {**STEPS_CASE, "steps": STEPS_CASE["steps"] + [
         {"id": "extra", "branches": [
-            _branch("correct", ["做法"], "检验也讲清楚了。"),
+            _branch("correct", ["做法"], "x=18,检验也讲清楚了。"),
             _branch("fb", [], "我还在想。", fallback=True)]}]}
     gateway = FakeGateway(tutor_payloads=[
         {"acceptable": True, "transcription": "", "steps": [], "reply": "你打算先怎么做?"},
@@ -120,15 +124,16 @@ def test_steps_honor_completed_stop_not_ready():
          "cited_numbers": []},
         {"reason": "ready 后续轮", "reply": "不错,每一步的做法都讲清楚了。", "ready_to_confirm": True,
          "cited_numbers": []},
-        {"reason": "ready 后续轮2", "reply": "我们把做法和检验都讲清楚了。", "ready_to_confirm": True,
-         "cited_numbers": []},
+        # Gate B 段:末轮终述「x=18」→ close 路径,finish 模型总结即第 4 次调用
         {"summary": "学生解出 x=18。"},
     ])
     transcript = KernelSubject(gateway).run_case(case)
     assert [t["student"] for t in transcript["turns"][1:]] == [
-        "先把两边同时减去7。", "25减7等于18,x等于18。", "检验也讲清楚了。"]
+        "先把两边同时减去7。", "我先算25减7,下一步再想。", "x=18,检验也讲清楚了。"]
     assert transcript["final_state"] == "completed"
-    assert len(gateway.requests) == 5  # start + 3 reply + finish
+    # Gate B 段:末轮终述「x=18」→ close 路径,finish 模型总结在轮内消费
+    # (start + 2 reply + 收束 finish,ready 后两轮剧本照发的语义不变)
+    assert len(gateway.requests) == 4
 
 
 def _write_v2(tmp_path, scenarios):
