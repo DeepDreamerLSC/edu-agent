@@ -5,7 +5,7 @@
 
 ## 一、核心不变量(一句话)
 
-> **session 迁移到 completed 当且仅当存在一条 trusted CompletionEvidence;Tutor 文本、summary、guard fallback、任何模型输出都不能创造这个事实——它只能来源于学生本轮消息经确定性 verifier 判定。**
+> **任何成功的 completed 迁移都必须由 trusted CompletionEvidence 授权;无 evidence 时 fail-closed。Evidence 不自行触发状态迁移——它是必要授权条件,不是"出现即完成"的充分条件。** Tutor 文本、summary、guard fallback、任何模型输出都不能创造这个事实——它只能来源于学生本轮消息经确定性 verifier 判定。
 
 与既有不变量的同源性:trusted ladder(P0-3)治"reveal 消费什么",本件治"completed 由什么授权"——同一治理原则:**provenance 先于模型觉得它应该成立**。
 
@@ -51,6 +51,14 @@ class CompletionEvidence:
 | equation_form | 方程算式 4% | 符号归一(**×/·→独立乘法 token \`*\`,绝不与变量 x 合并**——ASCII x 在本题域是变量,合并=灾难性等价;＝→==)后字符串等价(sympy 第二版) |
 | ratio_or_expression | 比例/表达式 | 同上归一族 |
 | short_text_exact | 短文本 39% | **normalized whole-answer exact/显式 alias match**:仅无语义归一(Unicode/全半角/空白/标点)+题库显式 alias;**不做编辑距离、不做裸 substring**("不是易变形"不得因包含"易变形"命中) |
+
+**Precision-first claim matching(三审 P0-②,verifier 的输入语法收窄)**:
+
+value_match(答案值出现)≠ claim(学生提交该答案)。"不是 6,我觉得是 5"/"A 不对,应该是 B"/"是不是 0.5?我还不确定"——**正确值出现但学生未声明它为自己的答案,不得发 CompletionEvidence**。第一版不造通用 answer_commitment engine(那会重新长成语义分类器),只把确定性 verifier 的**可接受输入语法收窄**:
+
+- **可认证形态**(白名单):裸答案("6")/裸答案+单位("25.8度")/少量明确声明式("答案是 6","所以是 0.5m","应该是 x-21=35")——声明式模板是**有限枚举的句法模式**,不是语义理解;
+- **不可认证形态**(一律不发 evidence,宁 needs_review):否定句/疑问句(含"是不是"探问)/不确定表达("还不确定","可能")/多候选/纠正语境(明确说"刚才的不对")/复杂自由文本——**无法确定性判定时保守拒绝**;
+- 此边界在 Phase A boundary gold 里钉住(负例即上述形态)。
 
 **明确不覆盖(第一版)**:多空/复合 33%——**整体 needs_review,任何局部槽命中不得构造 CompletionEvidence**(未来若需部分进度,另建 ProgressEvidence,不偷"半完成态");开放式题(无可靠 verifier)——**宁可 needs_review,不让 8B 猜完成态**(终裁原话)。~67% 为 **answer-key 形态可判上限(eligibility upper bound)**,非运行时完成覆盖率。实测口径:263 题形态普查(短文本 104/复合 89/纯数值 45/选择 13/方程 12;互斥分类规则=数值含单位>选择字母>判断>方程算式>短文本≤12字>复合;普查脚本随 A 段 PR 入 tests/ 或 scripts/ 留 fingerprint)。**Phase A verifier 接 Kernel 前须独立 boundary gold 集**(各窄面正/负边界案,与 32 案 regression corpus 分立)。
 
@@ -130,3 +138,9 @@ verified_complete = exists(CompletionEvidence):  # generation 只读
 
 **P0**:①iff→必要授权+fail-closed,非全局充分,不是状态跳转器(§一);②turn-scoped 与深化冲突→**verified 后同轮终局**,跨轮深化=sticky 机制第一版明确不做(§二);③正向门降格=trusted-signal-assisted generation 须 holdout 验证,非结构性禁止;负向才是 Kernel 硬门(§五不对称保证)。
 **P1**:①"已给出并验证答案 X"残留删除,只留结构化事实(§五);②true_false 类型来自 schema 非题面猜(§三);③67% 附实测口径(263 分母/互斥规则/脚本 fingerprint)+Phase A 独立 boundary gold(§三)。
+
+## 三审修订对照(2026-09-23,v3→v3.1,马尾辫自审后 2 blocking)
+
+- **P0-①正文 iff 真修**:前版修订对照表已记但正文 replace 未命中(「一条」二字失配)——审查者抓的正文与对照表自相矛盾即此;现 §一 已改为「必要授权+fail-closed+不自行触发迁移」;
+- **P0-② precision-first claim matching**:§三 新增专节——value_match≠claim;可认证形态白名单(裸答案/答案+单位/有限枚举声明式模板)/不可认证保守拒绝(否定/疑问/不确定/多候选/纠正语境);不造 commitment engine;boundary gold 钉边界;
+- 其余 P1(problem_id digest/schema 来源/census 映射/标点白名单/验收组件归因)按三审降级为实现建议或 A 段事项,不阻塞设计件。
