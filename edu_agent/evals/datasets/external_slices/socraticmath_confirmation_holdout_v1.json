@@ -1,0 +1,1193 @@
+{
+ "schema": "edu_agent_external_slice_executable/v1",
+ "slice_version": "socraticmath_confirmation_holdout_v1",
+ "status_note": "fresh confirmation holdout(终裁执行链⑦燃料,#414 设计 v3.1 §六.3:32 案 regression 重放全绿后才点火):baseline 系统 vs baseline+Gate 的 fresh confirmation 新案。反污染铁律:与任何先前曝光/调优用案零重叠(I7' 断言);判分器=ER judge v2 冻结语义;正向门=unnecessary re-ask/closure,反向硬门=premature completion 不增加且负向 completed 目标 0。负向含确定性截断变换案(origin=transform,可分层判读);866 型 0 案如实报数。",
+ "design": {
+  "doc": "docs/evals/trusted-completion-gate-design-v3.md",
+  "section": "§六.3 fresh holdout(终裁执行链⑦)",
+  "prereg_form": "docs/evals/confirmation-bnew-prereg-v1.md(形态沿用,#412);编译协议 #398 沿用"
+ },
+ "compiled_from": {
+  "slice_version": "socraticmath_confirmation_holdout_v1",
+  "normalized_file": "edu_agent/evals/datasets/external_normalized/socraticmath.jsonl",
+  "normalized_sha256": "00d24abbe0b5c8a3d4d7003257d80335b519c79b2511119f5a895cf04b908d0e",
+  "records": 6846,
+  "excluded_r3_used": [
+   "socraticmath_train_1001",
+   "socraticmath_train_1204",
+   "socraticmath_train_1559",
+   "socraticmath_train_1827",
+   "socraticmath_train_223",
+   "socraticmath_train_2591",
+   "socraticmath_train_2899",
+   "socraticmath_train_3565",
+   "socraticmath_train_3666",
+   "socraticmath_train_3998",
+   "socraticmath_train_4275",
+   "socraticmath_train_4402",
+   "socraticmath_train_4510",
+   "socraticmath_train_4776",
+   "socraticmath_train_5191",
+   "socraticmath_train_5228",
+   "socraticmath_train_559",
+   "socraticmath_train_675",
+   "socraticmath_train_866",
+   "socraticmath_val_13",
+   "socraticmath_val_412",
+   "socraticmath_val_495",
+   "socraticmath_val_61"
+  ],
+  "excluded_r3_used_count": 23,
+  "excluded_confirm_24": [
+   "socraticmath_test_592",
+   "socraticmath_train_1961",
+   "socraticmath_train_2196",
+   "socraticmath_train_2322",
+   "socraticmath_train_2791",
+   "socraticmath_train_2857",
+   "socraticmath_train_2960",
+   "socraticmath_train_3138",
+   "socraticmath_train_3490",
+   "socraticmath_train_3695",
+   "socraticmath_train_372",
+   "socraticmath_train_4188",
+   "socraticmath_train_4813",
+   "socraticmath_train_4814",
+   "socraticmath_train_4827",
+   "socraticmath_train_5106",
+   "socraticmath_train_515",
+   "socraticmath_train_5181",
+   "socraticmath_train_5234",
+   "socraticmath_train_898",
+   "socraticmath_train_930",
+   "socraticmath_val_142",
+   "socraticmath_val_190",
+   "socraticmath_val_58"
+  ],
+  "excluded_confirm_24_count": 24,
+  "excluded_repro_cases": [
+   "repro-close-loop-cross-stitch",
+   "repro-close-loop-ball-bounce",
+   "incident-700m-replay"
+  ],
+  "exclusion_note": "排除宇宙=r2/r3 双臂 26 案(23 语料案+repro 3,含 ablation 五臂 8/DEV10 人审 10/ER-judge holdout 16 子集)+confirm 双臂批次 24 案(含负向三案);boundary gold=A 段单测合成案,零语料案 ID,无交集(核验);#398 v1 候选索引与 #413 池探的读档案(未编译未跑)按先例(#413 I7 仅排已用案)不视为曝光,逐案 prior_read_record 字段透明登记。"
+ },
+ "selection_discipline": "防 p-hack 红线:选择条件只看源题面与学生话语(problem.text/answer + reference_dialogue),不看任何臂输出;逐案判定依据见 selection_evidence;确定性变换(负向不足部分)=未曝光正向形态源案在终答轮前的机械截断,逐处记录 cut_before,I6 闸机械复验——非 LLM 改写。",
+ "compile_protocol": {
+  "rules": {
+   "R1": "全弱依赖→线性照录;学生轮原文照录,仅允许截断(剥回执/强依赖开场白)与轮级丢弃,逐处记录",
+   "R1+T": "R1 + 确定性截断变换:在源终答轮(cut_before,经 judge said 校验)前截断,变换记录入 compile.transform",
+   "R2/R3": "本批无适用(全线性,无分支剧本)",
+   "R4": "本批编译期无弃案(池探淘汰者未入 SELECTION,排除理由分类记录于 selection_funnel)"
+  },
+  "invariants": [
+   "I1 学生文本⊆源 student 轮原文(截断记录)",
+   "I4 question 与源 problem.text 逐字一致",
+   "I5 positive:ER judge v2 said 恰在判定终答轮置位",
+   "I6 negative:said 全剧本永不置位且答案原值不入剧本轮(变换案另验 cut_before 轮确为源终答轮)",
+   "I7' 与全部曝光名单零重叠(r3 23+confirm 24+repro 3;DEV10/ER-judge holdout 16 为子集核验)"
+  ]
+ },
+ "selection_funnel": {
+  "positive": {
+   "pool": "normalized 6846 − 曝光排除 47(r3 已用 23 + confirm 24)= 6799",
+   "scan": "form1 数值/文本路径(external_slice_select 规则)+ 字母断言路径(单字母答案+题面选项+said):第一轮 27 raw(其中 12 为 #413 已结构排除:said_never 7/said_early 3/guess_form 1/源污染 1),字母宽松补扫 58 raw(其中 5 为 #413 池探读档:1285/2754/4340/4627/4955)",
+   "read_manual": "新鲜候选 30 条逐条通读(第一轮 15 + 字母 15);排除:1313(终答疑问形态「28+300÷5?」)、1648(said 双置位错位,144 为中间量)、1910(said 轮 t8 与首断言 t4 错位)、5025(源导师连环翻案污染)、5032(题面残缺)、811/637/4229/2834(错答形态/记号拼装/等价形态已给,负向筛余)、18/2875/val_305(薄形态,留作负向变换源评估后未用)",
+   "final": 16,
+   "band": "16(对齐 #413 配比)",
+   "form_mix": "数值/文本/代数 8(191/2013/2301/2804/4248/4531/5362/4616)+ 字母断言 8(271/1548/1960/4609/5063/test_88/862/3114)——字母占比高于 #413(4/16):余量池强形态(终答后源导师假挑战再持答)已被 #413 优先收割,数值/文本面以干净收束+纠错摇摆为主,如实记录"
+  },
+  "negative": {
+   "pool": "同上;单空题 + judge 全对话零断言 + 答案原值不入任何学生轮(t0 题面复述轮豁免)+ 学生轮含数值/方法",
+   "scan": "确定性预筛 619 raw;导师报答案路径 20(未读 6 逐条通读)、全对话无答案路径(未读聚焦数值 6 条通读+文本 17 条通读)、t0 豁免补扫 2 条通读——共 31 条新鲜候选逐条通读",
+   "read_manual": "排除分类:多空/比较链逐组完成(54/78/136/392/436/1571/1883/3432/3977旧/4130/5317/5400/test_368/test_435 等)、语义等价结论已给(1881「剩下的需要修建的路的长度」/2210「垂直线段应该更短」/3214「题目的答案是正确的」/4055「有一个0」等)、错答形态(637「22个」/811 t12「等于4.62平方厘米」——全文通读纠正了截断误读/3378 t6 认同题干)、记号拼装(4229 两位逐位已定/5207 符号未填/2834 等价比 8:10 已给)、源污染(1213 导师确认错答 81,题库 17/2069 确认错答 5,题库 8/2586 导师报 70 亿,题库 7 亿/4334 确认错答 4602,题库 4603/test_202 对话 999 与题库 9999 冲突)、薄形态(379 学生仅概念复述+附和,3096 前身评估后录用)",
+   "final": 6,
+   "band": "6(对齐 #413 配比 6)",
+   "origin_mix": "自然止步 2(838/3096)+ 确定性截断变换 4(2869/5220/3797/test_241,取自本批正向筛余的未曝光源案,终答轮前按记录轮位机械截断,I6 闸机械复验)",
+   "note": "低于 prereg 区间 8-12 的自然止步供给(2 案)——#413「池穷尽」结论在新鲜池同样成立:判定类学生均以文字下结论、比较链/多空案逐组完成、数值路径聚焦池全数源污染(导师确认错答/题库答案冲突 6 案为新鲜发现);不足部分以确定性变换补足并逐案标记,判读时可分层(自然 vs 变换),方法差异留人审。"
+  },
+  "type866": {
+   "pool": "同上;答案不唯一/或备选/写一个式/等价表示形态标记扫描",
+   "read_manual": "全数排除:或-枚举答案(Gate 多候选红线+judge 枚举段盲区,2990/5001/val_148)、多空拼装(17/573/579/1549/5260 等)、「其中一个」类伪标记(16/2341/5284 等)",
+   "final": 0,
+   "band": "2(对齐 #413 实得 2/3-5)",
+   "note": "如实报数 0:余量池中 866 形态(学生答案恰与答案键主形态逐字一致+答案不唯一)已被 #413 收割殆尽,余量为 judge 盲区类与或-形态,无可编译案。"
+  }
+ },
+ "exposure_check": {
+  "r3_26(r2/r3 双臂)": "pass(23 语料案 I7' 断言;repro 3 案非语料池)",
+  "ablation 五臂 8 案": "pass(⊂ r3 26)",
+  "人审 10 案(DEV10)": "pass(⊂ r3 26)",
+  "confirm 24 案(#413)": "pass(I7' 断言)",
+  "负向三案(2791/5106/3490)": "pass(⊂ confirm 24)",
+  "boundary gold(A 段)": "pass(单测合成案,零语料案 ID,与本池无交集)",
+  "ER judge v2 holdout 16": "pass(⊂ r3 26)",
+  "prior_reads": "3 案(191/2013/4531)曾入 #398 v1 候选索引(读档未编译未跑)——逐案 prior_read_record 登记;读档≠曝光,先例 #413 I7 仅排已用案"
+ },
+ "compile_review": {
+  "obligation": "初稿人工=编译执行代理:负向五路 31 条新鲜候选逐条通读,正向 30 条新鲜候选逐条通读(811 全文通读纠正截断误读,曾误判为止步实为错答形态);每 slice 抽 2 条编译结果全通读(见 readback)。",
+  "readback": {
+   "confirmation_positive_student_final_answer": [
+    "socraticmath_train_4248",
+    "socraticmath_train_271"
+   ],
+   "confirmation_negative_student_stops_short": [
+    "socraticmath_train_838",
+    "socraticmath_test_241"
+   ]
+  },
+  "verdict": "positive 抽读 2 条(4248/271):截断后学生轮自足、终答轮保真、纠错/摇摆链完整。negative 抽读 2 条(838/test_241):838 止步形态成立、区间分析之误如实保留;test_241 变换截点确在源终答轮前、I6 复验通过、无答案泄露。"
+ },
+ "counts": {
+  "positive": 16,
+  "negative": 6,
+  "type866": 0,
+  "total": 22,
+  "negative_natural": 2,
+  "negative_transform": 4
+ },
+ "selection_evidence": {
+  "socraticmath_train_191": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 2,
+   "basis": "t2「860除以5是172。」——终答句(除法直给);t3 源导师确认,t4 学生方法回执——干净收束面。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_2013": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 2,
+   "basis": "t2「这应该用分数来表示。」——术语终答句;t3 源导师确认,t4 致谢——干净收束面。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_2301": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 8,
+   "basis": "t2 拆分(500×4 与 1+2+3)、t4 部分和 2000、t6 部分和 6,t8「结果应该是2006。」——终答句;t9 确认,t10 回执。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_2804": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 8,
+   "basis": "t6 中间和 218 元,t8「那么，总共是353元。」——终答句;t10 方法总结轮(实质收尾)。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_4248": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 10,
+   "basis": "t4 错式 x+36=24→t6 正式 x+24=36→t8 错答 11→t10(截回执)「36减24应该是12。」——终答句(纠错链);t12 致谢。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_4531": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 2,
+   "basis": "t2「所以总的水费就是6a+2b。」——代数终答句(分段计费完整推导);t4 代数表达理解延伸轮。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_5362": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 6,
+   "basis": "t4 代入「20乘13加4减6」,t6「我算一下…得到258。」——终答句(含中间量 260);t8 回执。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_4616": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 8,
+   "basis": "t2 面积公式、t6 分量(4r²/πr²)、t8「比是4：π。」——终答句(判定轮=judge said 轮 t8;扫描初命中 t6 为分量误中,已弃)。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_271": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 6,
+   "basis": "t4 推理正确(1208≠20)但选错字母 A,t5 源导师指出判断口径,t6(截回执)「应该选B，意思是题目判断错了。」——字母终答(摇摆/纠错形态,2960 同款)。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_1548": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 8,
+   "basis": "t2/t4 方程与不等式概念、t6 判定 3x+1＞2 非等式,t8「答案是A，这是一个不等式，不是方程。」——字母终答(概念 buildup)。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_1960": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 8,
+   "basis": "t6 前后项不可互换(含 3比4 例),t8「不正确，所以答案是B。」——字母终答。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_4609": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 8,
+   "basis": "t6 错选 A(偶数+1 不一定奇数),t7 源导师质疑,t8(截回执)「所以答案应该是选B，题目的说法是正确的。」——字母终答(摇摆形态)。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_5063": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 6,
+   "basis": "t4 轴对称对折推理,t6「应该是A，等腰梯形是轴对称图形。」——字母终答;干净收束面。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_test_88": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 6,
+   "basis": "t4 错答(1000 平方米),t5 源导师纠单位乘法,t6(截回执)「那这个题的答案应该是A，不对。」——字母终答(纠错形态)。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_862": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 6,
+   "basis": "t2/t4 试商推理(余数=除数→商+1 恰尽),t6「我觉得答案应该是B，题目说法正确。」——字母终答。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_3114": {
+   "slice": "confirmation_positive_student_final_answer",
+   "hit_turn_index": 6,
+   "basis": "t4 公顷↔平方米进率 10000(反例),t6「…所以它应该是错的，就选B。」——字母终答(概念修正链)。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_838": {
+   "slice": "confirmation_negative_student_stops_short",
+   "hit_turn_index": null,
+   "basis": "止步于区间分析:t2 四舍五入规则,t4 区间判断(「2.75到2.79…都是2.8,2.85以后…2.9」——且漏 2.80-2.84 段,分析有误),最大两位小数终未给出;源导师 t5 报 2.84。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_3096": {
+   "slice": "confirmation_negative_student_stops_short",
+   "hit_turn_index": null,
+   "basis": "止步于方法探问:t2 比的定义,t4 方法假设(「然后相乘就可以得到…吗?」),连比换算(统一乙数 6:10=10:5)终未执行;源导师 t5 代算。",
+   "origin": "fresh_scan"
+  },
+  "socraticmath_train_2869": {
+   "slice": "confirmation_negative_student_stops_short",
+   "hit_turn_index": null,
+   "basis": "止步于方法:t2 比的定义,t4 不知比例性,t6「比的后项应该也乘以4」(方法已立),换算与加法未执行。",
+   "origin": "transform"
+  },
+  "socraticmath_train_5220": {
+   "slice": "confirmation_negative_student_stops_short",
+   "hit_turn_index": null,
+   "basis": "止步于算式:t2 除法规则,t4「需要执行（420-12）÷24」(算式已列),除法未执行。",
+   "origin": "transform"
+  },
+  "socraticmath_train_3797": {
+   "slice": "confirmation_negative_student_stops_short",
+   "hit_turn_index": null,
+   "basis": "止步于天数核算:t2 大小月口诀,t4 上/下半年天数初算(182/183,有误),t6 修正(181或182/184),「天数都比…少」的判断终未下。",
+   "origin": "transform"
+  },
+  "socraticmath_test_241": {
+   "slice": "confirmation_negative_student_stops_short",
+   "hit_turn_index": null,
+   "basis": "止步于验证计算:t2(截回执)分配律理解,t4「43乘以20就是860，860再减去43，就得到817」(验证已算),等式真伪判断与选项终未下。",
+   "origin": "transform"
+  }
+ },
+ "scenarios": [
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_191",
+   "title": "holdout·从860里面连续减5，减____次结果才能是0。",
+   "subject": "math",
+   "question": "从860里面连续减5，减____次结果才能是0。",
+   "student_turns": [
+    "860除以5是172。",
+    "我明白了，就是将连减转化为除法运算。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_191",
+    "student_turn_dialogue_indexes": [
+     2,
+     4
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "172",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 2,
+     "basis": "t2「860除以5是172。」——终答句(除法直给);t3 源导师确认,t4 学生方法回执——干净收束面。"
+    },
+    "note": "线性原文照录",
+    "prior_read_record": "#398 v1 索引读档(form1 池探,未编译未跑)"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_2013",
+   "title": "holdout·一个物体、一个计量单位或是一些物体等都可以看作一",
+   "subject": "math",
+   "question": "一个物体、一个计量单位或是一些物体等都可以看作一个整体，把这个整体平均分成若干份，这样的一份或几份都可以用　　来表示．",
+   "student_turns": [
+    "这应该用分数来表示。",
+    "我明白了，谢谢老师！"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_2013",
+    "student_turn_dialogue_indexes": [
+     2,
+     4
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "分数",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 2,
+     "basis": "t2「这应该用分数来表示。」——术语终答句;t3 源导师确认,t4 致谢——干净收束面。"
+    },
+    "note": "线性原文照录",
+    "prior_read_record": "#398 v1 索引读档(form1 池探,未编译未跑)"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_2301",
+   "title": "holdout·计算：500+501+502+503=____．",
+   "subject": "math",
+   "question": "计算：500+501+502+503=____．",
+   "student_turns": [
+    "这个，可以拆成500+500+500+500和1+2+3。",
+    "加起来应该是2000。",
+    "1+2+3等于6。",
+    "结果应该是2006。",
+    "是的，我明白了。谢谢老师。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_2301",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8,
+     10
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "2006",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 8,
+     "basis": "t2 拆分(500×4 与 1+2+3)、t4 部分和 2000、t6 部分和 6,t8「结果应该是2006。」——终答句;t9 确认,t10 回执。"
+    },
+    "note": "线性原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_2804",
+   "title": "holdout·学校体育室采购器材，篮球一个120元，足球-个9",
+   "subject": "math",
+   "question": "学校体育室采购器材，篮球一个120元，足球-个98元，排球一个135元，三种球各买一个，共需____元．",
+   "student_turns": [
+    "我应该把篮球、足球和排球的价格分别相加。",
+    "篮球是120元，足球是98元，排球是135元。",
+    "篮球和足球的价格合在一起是218元。",
+    "那么，总共是353元。",
+    "我需要做的就是把每一种球的价格相加，得到的结果就是他们的总价格。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_2804",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8,
+     10
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "353",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 8,
+     "basis": "t6 中间和 218 元,t8「那么，总共是353元。」——终答句;t10 方法总结轮(实质收尾)。"
+    },
+    "note": "线性原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_4248",
+   "title": "holdout·某小学原有数学教师24名，由于教育需要，便又招聘",
+   "subject": "math",
+   "question": "某小学原有数学教师24名，由于教育需要，便又招聘了一批数学教师，此时共有数学教师36名，请问招聘了多少名数学教师？（列方程解答）",
+   "student_turns": [
+    "应该就是根据题目信息把未知数设为x，然后写出等式，再把x单独解出来就行了吧。",
+    "等式应该是x+36=24。",
+    "哦哦，那应该是x+24=36。",
+    "x应该等于36-24，结果是11。",
+    "36减24应该是12。",
+    "理解了，谢谢老师。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_4248",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8,
+     10,
+     12
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 10,
+      "cut_prefix": "对不起老师，我算错了，"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "12名",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 10,
+     "basis": "t4 错式 x+36=24→t6 正式 x+24=36→t8 错答 11→t10(截回执)「36减24应该是12。」——终答句(纠错链);t12 致谢。"
+    },
+    "note": "线性原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_4531",
+   "title": "holdout·为鼓励居民节约用水，某市规定，每户每月用水不超过",
+   "subject": "math",
+   "question": "为鼓励居民节约用水，某市规定，每户每月用水不超过6m3按每立方米a元收费，超过6m3的部分按每立方米b元收费．小涛家上月用水8m3，他家应交水费(____）元．",
+   "student_turns": [
+    "对于小涛家的情况，他上个月用了8立方米的水，所以前6立方米按照每立方米a元计算，之后两立方米按每立方米b元计算。所以总的水费就是6a+2b。",
+    "这种式子是一种代数表达方式，字母代表未知的数，等到知道数的确切值的时候，就可以替换掉字母，得到结果。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_4531",
+    "student_turn_dialogue_indexes": [
+     2,
+     4
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "6a+2b",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 2,
+     "basis": "t2「所以总的水费就是6a+2b。」——代数终答句(分段计费完整推导);t4 代数表达理解延伸轮。"
+    },
+    "note": "线性原文照录",
+    "prior_read_record": "#398 v1 索引读档(form1 池探,未编译未跑)"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_5362",
+   "title": "holdout·艾迪需要破译冰箱的密码才能吃到零食，冰箱上写着：",
+   "subject": "math",
+   "question": "艾迪需要破译冰箱的密码才能吃到零食，冰箱上写着：“密码是ab+c-d的计算结果，其中a=20，b=13，c=4，d=6”．那么，冰箱的密码是____．",
+   "student_turns": [
+    "含字母的式子就是一个式子中既有数字又有字母，字母在这里是未知数的代表。",
+    "那就是20乘13加4减6，对吗？",
+    "我算一下，先算乘法，得到的是260，然后加4减6，得到258。",
+    "会的，我已经明白了。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_5362",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "258",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 6,
+     "basis": "t4 代入「20乘13加4减6」,t6「我算一下…得到258。」——终答句(含中间量 260);t8 回执。"
+    },
+    "note": "线性原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_4616",
+   "title": "holdout·在正方形里剪一个最大的圆，则正方形的面积与圆的面",
+   "subject": "math",
+   "question": "在正方形里剪一个最大的圆，则正方形的面积与圆的面积的比是____．",
+   "student_turns": [
+    "圆的面积公式是πr^2，正方形面积公式是a^2，r是半径，a是边长。",
+    "不太清楚，是什么关系呢？",
+    "那就是正方形的面积是4r^2，圆的面积是πr^2。",
+    "比是4：π。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_4616",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "4：π",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 8,
+     "basis": "t2 面积公式、t6 分量(4r²/πr²)、t8「比是4：π。」——终答句(判定轮=judge said 轮 t8;扫描初命中 t6 为分量误中,已弃)。"
+    },
+    "note": "线性原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_271",
+   "title": "holdout·12平方分米+8平方厘米=20平方厘米。（判断对",
+   "subject": "math",
+   "question": "12平方分米+8平方厘米=20平方厘米。（判断对错）  A.√  B.×",
+   "student_turns": [
+    "平方厘米和平方分米是面积单位，一平方分米等于一百平方厘米。",
+    "首先，12平方分米应该是1200平方厘米，然后加上8平方厘米，是1208平方厘米，不是20平方厘米。所以，答案应该是A。",
+    "应该选B，意思是题目判断错了。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_271",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "哦，我明白了，我判断错了，"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "B",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 6,
+     "basis": "t4 推理正确(1208≠20)但选错字母 A,t5 源导师指出判断口径,t6(截回执)「应该选B，意思是题目判断错了。」——字母终答(摇摆/纠错形态,2960 同款)。"
+    },
+    "note": "线性原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_1548",
+   "title": "holdout·3x+1＞2是方程．",
+   "subject": "math",
+   "question": "3x+1＞2是方程．　　．（判断对错）  A.×  B.√",
+   "student_turns": [
+    "方程是形如等式的，等号左边和等号右边的东西相等。",
+    "不等式表现的是不等关系，它有大于、小于、大于等于和小于等于这四种表达方式。",
+    "不是，它是一个不等式。",
+    "答案是A，这是一个不等式，不是方程。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_1548",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "A",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 8,
+     "basis": "t2/t4 方程与不等式概念、t6 判定 3x+1＞2 非等式,t8「答案是A，这是一个不等式，不是方程。」——字母终答(概念 buildup)。"
+    },
+    "note": "线性原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_1960",
+   "title": "holdout·比的前项和后项可以交换位置.",
+   "subject": "math",
+   "question": "比的前项和后项可以交换位置.  A.√  B.×",
+   "student_turns": [
+    "比就是两个相同类型数量之间的对比关系。",
+    "比是由前项和后项构成的。",
+    "不能互换。因为前项和后项在比的含义中起着不同的作用，比如说3比4，是说前面的数量是后面数量的3/4。",
+    "不正确，所以答案是B。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_1960",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "B",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 8,
+     "basis": "t6 前后项不可互换(含 3比4 例),t8「不正确，所以答案是B。」——字母终答。"
+    },
+    "note": "线性原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_4609",
+   "title": "holdout·任何一个偶数加上1一定是一个奇数。（判断对错）",
+   "subject": "math",
+   "question": "任何一个偶数加上1一定是一个奇数。（判断对错）  A.×  B.√",
+   "student_turns": [
+    "偶数是指能被2整除的整数，奇数是指不能被2整除的整数，我知道这两个概念，老师。",
+    "一个偶数加上1应该变成奇数。",
+    "我觉得答案应该是A，一个偶数加上1不一定是奇数。",
+    "偶数表示为2n，一个偶数加上1就变成了2n+1，也就是一个奇数。所以答案应该是选B，题目的说法是正确的。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_4609",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6,
+     8
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 8,
+      "cut_prefix": "哦，对不起，老师，我犯错了。"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "B",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 8,
+     "basis": "t6 错选 A(偶数+1 不一定奇数),t7 源导师质疑,t8(截回执)「所以答案应该是选B，题目的说法是正确的。」——字母终答(摇摆形态)。"
+    },
+    "note": "线性原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_5063",
+   "title": "holdout·等腰梯形是对称图形．",
+   "subject": "math",
+   "question": "等腰梯形是对称图形．　　．（判断对错）  A.√  B.×",
+   "student_turns": [
+    "轴对称图形我知道，就是沿一个轴对折，两边能够完全重合。等腰梯形就是上下两个平行边的一对角是等大的梯形。",
+    "应该是轴对称的，因为如果把等腰梯形沿着上下平行边连线的中点垂直对折，左右两边应该可以完全重合。",
+    "应该是A，等腰梯形是轴对称图形。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_5063",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "A",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 6,
+     "basis": "t4 轴对称对折推理,t6「应该是A，等腰梯形是轴对称图形。」——字母终答;干净收束面。"
+    },
+    "note": "线性原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_test_88",
+   "title": "holdout·1平方千米就是一千平方米",
+   "subject": "math",
+   "question": "1平方千米就是一千平方米　　（判断对错）  A.×  B.√",
+   "student_turns": [
+    "平方千米和平方米的换算我还不是很清楚。",
+    "1平方千米应该是1000平方米吧。",
+    "1平方千米应该是1000000平方米，那这个题的答案应该是A，不对。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_test_88",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 6,
+      "cut_prefix": "噢！我明白了，"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "A",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 6,
+     "basis": "t4 错答(1000 平方米),t5 源导师纠单位乘法,t6(截回执)「那这个题的答案应该是A，不对。」——字母终答(纠错形态)。"
+    },
+    "note": "线性原文照录;截断=剥回执/强依赖开场白"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_862",
+   "title": "holdout·试商时，如果余数和除数相等，说明商小了．如果把商",
+   "subject": "math",
+   "question": "试商时，如果余数和除数相等，说明商小了．如果把商调大1，则刚好没有余数．　　．（判断对错）  A.×  B.√",
+   "student_turns": [
+    "对，因为如果余数和除数相等，那就说明我们还可以再除一次，所以商应该需要调大1。",
+    "我们已经知道余数等于除数了，那就说明在这一步试商的时候，如果商增加1，我们可以进行一次完整的除法运算，所以应该就没有余数了。",
+    "我觉得答案应该是B，题目说法正确。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_862",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "B",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 6,
+     "basis": "t2/t4 试商推理(余数=除数→商+1 恰尽),t6「我觉得答案应该是B，题目说法正确。」——字母终答。"
+    },
+    "note": "线性原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_3114",
+   "title": "holdout·每相邻两个面积单位之间的进率是100，两个体积单",
+   "subject": "math",
+   "question": "每相邻两个面积单位之间的进率是100，两个体积单位之间进率是1000。（判断对错）  A.√  B.×",
+   "student_turns": [
+    "面积单位之间的进率是100，体积单位之间的进率是1000，是这个意思吗？",
+    "公顷和平方米之间的进率是10000。",
+    "题目问题意思是每相邻两个面积单位之间的进率是100，我原来以为是对的，但是现在知道公顷和平方米之间的进率是10000，所以它应该是错的，就选B。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_positive_student_final_answer"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_positive_student_final_answer",
+    "slice": "confirmation_positive_student_final_answer",
+    "record_id": "socraticmath_train_3114",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "B",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": 6,
+     "basis": "t4 公顷↔平方米进率 10000(反例),t6「…所以它应该是错的，就选B。」——字母终答(概念修正链)。"
+    },
+    "note": "线性原文照录"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_838",
+   "title": "holdout·一个两位小数，四舍五入保留一位小数的近似值是2.",
+   "subject": "math",
+   "question": "一个两位小数，四舍五入保留一位小数的近似值是2.8．这个两位小数最大是____．",
+   "student_turns": [
+    "四舍五入是一种精确度控制方法，如果要保留的那一位后面一位小于5就舍去，大于等于5就进位。",
+    "因为2.75到2.79四舍五入后都是2.8，2.85以后四舍五入就是2.9了。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_negative_student_stops_short"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_negative_student_stops_short",
+    "slice": "confirmation_negative_student_stops_short",
+    "record_id": "socraticmath_train_838",
+    "student_turn_dialogue_indexes": [
+     2,
+     4
+    ],
+    "truncations": [],
+    "dropped_turns": [
+     {
+      "index": 6,
+      "reason": "源导师 t5 报出 2.84 后的纯回执(「我明白了,谢谢老师」),不可独立成步"
+     }
+    ],
+    "answer": "2.84",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": null,
+     "basis": "止步于区间分析:t2 四舍五入规则,t4 区间判断(「2.75到2.79…都是2.8,2.85以后…2.9」——且漏 2.80-2.84 段,分析有误),最大两位小数终未给出;源导师 t5 报 2.84。"
+    },
+    "note": "线性原文照录;轮级丢弃见 dropped_turns"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_3096",
+   "title": "holdout·已知甲数与乙数的比是3：5，乙数与丙数之比是2：",
+   "subject": "math",
+   "question": "已知甲数与乙数的比是3：5，乙数与丙数之比是2：1，求甲、乙、丙三个数的比是____．",
+   "student_turns": [
+    "比是两数之间的关系，用冒号表示，前者是被比数，后者是比数。",
+    "首先应该找出甲数和乙数的比，然后再找出乙数和丙数的比，然后相乘就可以得到甲数、乙数和丙数的比了吗？"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_negative_student_stops_short"
+   ],
+   "compile": {
+    "rule": "R1",
+    "form": "confirmation_negative_student_stops_short",
+    "slice": "confirmation_negative_student_stops_short",
+    "record_id": "socraticmath_train_3096",
+    "student_turn_dialogue_indexes": [
+     2,
+     4
+    ],
+    "truncations": [],
+    "dropped_turns": [
+     {
+      "index": 6,
+      "reason": "源导师 t5 代算后的纯回执(「哦,我明白了…谢谢老师」),不可独立成步"
+     }
+    ],
+    "answer": "6：10：5",
+    "origin": "fresh_scan",
+    "selection": {
+     "hit_turn_index": null,
+     "basis": "止步于方法探问:t2 比的定义,t4 方法假设(「然后相乘就可以得到…吗?」),连比换算(统一乙数 6:10=10:5)终未执行;源导师 t5 代算。"
+    },
+    "note": "线性原文照录;轮级丢弃见 dropped_turns"
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_2869",
+   "title": "holdout·在3：8中，比的前项加上9，要使比值不变，比的后",
+   "subject": "math",
+   "question": "在3：8中，比的前项加上9，要使比值不变，比的后项应加上____．",
+   "student_turns": [
+    "比就是两个相同种类的数的商，也叫做比值。",
+    "我不是很清楚比的基本性质中的“比例性”指的是什么意思。",
+    "按照比例性的原理，比的后项应该也乘以4。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_negative_student_stops_short"
+   ],
+   "compile": {
+    "rule": "R1+T",
+    "form": "confirmation_negative_student_stops_short",
+    "slice": "confirmation_negative_student_stops_short",
+    "record_id": "socraticmath_train_2869",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "24",
+    "origin": "transform",
+    "selection": {
+     "hit_turn_index": null,
+     "basis": "止步于方法:t2 比的定义,t4 不知比例性,t6「比的后项应该也乘以4」(方法已立),换算与加法未执行。"
+    },
+    "note": "线性原文照录;确定性截断变换见 transform",
+    "transform": {
+     "kind": "cut_before_assertion",
+     "cut_before": 8,
+     "source_hit_turn": 8,
+     "note": "源 t8 为终答轮(「后项从8变为了32，那就应该加上24」);截断后止步于方法(后项应乘以4),换算(8×4=32)与加量(24)未执行——5181 同款形态"
+    }
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_5220",
+   "title": "holdout·420÷____=24…12．",
+   "subject": "math",
+   "question": "420÷____=24…12．",
+   "student_turns": [
+    "我知道除法的运算规则是，除数乘以商，再加余数等于被除数。但我不明白应该如何利用这个规则来解这个题目。",
+    "根据除法规则，需要执行（420-12）÷24，就可以得到正确的答案。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_negative_student_stops_short"
+   ],
+   "compile": {
+    "rule": "R1+T",
+    "form": "confirmation_negative_student_stops_short",
+    "slice": "confirmation_negative_student_stops_short",
+    "record_id": "socraticmath_train_5220",
+    "student_turn_dialogue_indexes": [
+     2,
+     4
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "17",
+    "origin": "transform",
+    "selection": {
+     "hit_turn_index": null,
+     "basis": "止步于算式:t2 除法规则,t4「需要执行（420-12）÷24」(算式已列),除法未执行。"
+    },
+    "note": "线性原文照录;确定性截断变换见 transform",
+    "transform": {
+     "kind": "cut_before_assertion",
+     "cut_before": 6,
+     "source_hit_turn": 6,
+     "note": "源 t6 为终答轮(「我算的结果是17。」);截断后止步于算式((420-12)÷24 已列),除法未执行——5181 同款形态"
+    }
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_train_3797",
+   "title": "holdout·每年的上半年的天数都比下半年的天数少。（判断对错",
+   "subject": "math",
+   "question": "每年的上半年的天数都比下半年的天数少。（判断对错）  A.×  B.√",
+   "student_turns": [
+    "我知道一年有365天，或者366天如果是闰年的话。一年有12个月，每个月的天数不同。我记得有那么一句话，叫做“大月满三十，小月二十九，二月平常二十八，逢四碰一六就多一天。”",
+    "嗯，上半年应该就是1，2，3，4，5，6这六个月，下半年就是7，8，9，10，11，12这六个月。让我算一下……嗯……上半年有182天，下半年有183天。",
+    "哦，对，我把4月和6月都算作31天了，其实应该是30天。那么上半年应该是181天或者182天，下半年是184天。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_negative_student_stops_short"
+   ],
+   "compile": {
+    "rule": "R1+T",
+    "form": "confirmation_negative_student_stops_short",
+    "slice": "confirmation_negative_student_stops_short",
+    "record_id": "socraticmath_train_3797",
+    "student_turn_dialogue_indexes": [
+     2,
+     4,
+     6
+    ],
+    "truncations": [],
+    "dropped_turns": [],
+    "answer": "B",
+    "origin": "transform",
+    "selection": {
+     "hit_turn_index": null,
+     "basis": "止步于天数核算:t2 大小月口诀,t4 上/下半年天数初算(182/183,有误),t6 修正(181或182/184),「天数都比…少」的判断终未下。"
+    },
+    "note": "线性原文照录;确定性截断变换见 transform",
+    "transform": {
+     "kind": "cut_before_assertion",
+     "cut_before": 8,
+     "source_hit_turn": 8,
+     "note": "源 t8 为终答轮(「…所以答案应该是B，正确。」);截断后止步于天数核算,判断未下"
+    }
+   }
+  },
+  {
+   "schema_version": "small_lecturer_dialogue_scenario/v1",
+   "id": "socraticmath_test_241",
+   "title": "holdout·19个43连续相加，结果是43×20-43=81",
+   "subject": "math",
+   "question": "19个43连续相加，结果是43×20-43=817　　．（判断对错）  A.×  B.√",
+   "student_turns": [
+    "这里的43乘以20减43，感觉像是把20个43中的一个43减掉，就成了19个43的累加。",
+    "43乘以20就是860，860再减去43，就得到817。"
+   ],
+   "expect": {
+    "ready_to_record": true
+   },
+   "trajectory_tags": [
+    "confirmation_negative_student_stops_short"
+   ],
+   "compile": {
+    "rule": "R1+T",
+    "form": "confirmation_negative_student_stops_short",
+    "slice": "confirmation_negative_student_stops_short",
+    "record_id": "socraticmath_test_241",
+    "student_turn_dialogue_indexes": [
+     2,
+     4
+    ],
+    "truncations": [
+     {
+      "dialogue_index": 2,
+      "cut_prefix": "是的，"
+     }
+    ],
+    "dropped_turns": [],
+    "answer": "B",
+    "origin": "transform",
+    "selection": {
+     "hit_turn_index": null,
+     "basis": "止步于验证计算:t2(截回执)分配律理解,t4「43乘以20就是860，860再减去43，就得到817」(验证已算),等式真伪判断与选项终未下。"
+    },
+    "note": "线性原文照录;截断=剥回执/强依赖开场白;确定性截断变换见 transform",
+    "transform": {
+     "kind": "cut_before_assertion",
+     "cut_before": 6,
+     "source_hit_turn": 6,
+     "note": "源 t6 为终答轮(「所以选项应该是B.」);截断后止步于验证计算,判断与选项未下"
+    }
+   }
+  }
+ ]
+}
