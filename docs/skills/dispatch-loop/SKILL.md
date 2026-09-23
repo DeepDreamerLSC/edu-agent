@@ -52,6 +52,13 @@ description: >
 5. **留痕**:①任务 issue 落派单记录;②派单原文存 `calibration-private/dispatch-ledger/`(命名 `YYYYMMDD-<目标>-<slug>.txt`),manifest.tsv 记 sha256——**#265 教训:派单原文必须可核**;
 6. **挂看门狗**:`bash` 工具 `run_in_background` 跑 `issue-watch.sh`——**退出码 0 = 有 to=pm 新评论,task-notification 自动唤醒 PM**(勿用 nohup/&,会被 shell 回收:2026-09-20 实测)。
 
+### 派发前检查(2026-09-24 固化)
+
+- **scripts/ 结构前置**:派单任务书凡涉 `scripts/*.py`(新增或改动),点火前必须先呈用户结构批准——CI 的 packages/structural 门只认 PR 描述的 `structural-approval:` 行,而该行的依据只能来自用户明示批准(PM 任务指令不构成批准;两次实战失误的固化)。注意「流程人批」与「CI 路径门」是两个概念:`contracts/` 等不在 CI 结构路径内的 schema 变更仍属章程人批件;
+- **回执 CI 双任务纪律**:开发者回执报「CI 绿」必须 pr-gates 与 checks 两个任务各自亲验并列结论(实战先例:只看 checks 报双绿而 pr-gates 首跑即红,导致拆分返工);
+- **叠链 PR 合并纪律**:base 指向另一 PR 分支的叠链 PR,合并时不用 `--delete-branch`(删 base 分支会被 GitHub 关闭下游 PR 而非 retarget);BEHIND 阻塞用服务端 merges API 同步分支,不用 `--admin` 绕门;
+- **模型路由矩阵**:判断密集件(预注册/路线级分析)用 `5.3$max`;常规开发/审查/分析/跑批执行用 `5.3$high`;机械对账/确定性执行用 `5.3$low`;简单小件(脚本/文档)用 `Flash$high`;**max 不得作为默认档**。
+
 ### 循环内路由
 
 | 消息 | 接收者 | PM 立即介入 |
