@@ -1,5 +1,14 @@
 """小讲师(00 §1):内核三函数(M2,00 §5.1)+ 护栏代码与提示词资产(#45)。"""
 
+# completion(Gate A 段)确定性面随包公开(同 #350 先例:02 §6 测试禁私有
+# 导入,零行为变更纯导出面;A 段零接线,现有模块零 import)。
+from .completion import (
+    ANSWER_TYPES,
+    AnswerSpec,
+    CompletionEvidence,
+    EvidenceProvenance,
+    verify_completion,
+)
 from .format_guard import FormatGuardResult, evaluate_student_visible_format
 from .guardrails import (
     StudentVisibleGuardrailEvaluation,
@@ -67,6 +76,10 @@ from .session import (
 from .tone_guardrails import ToneGuardrailResult, apply_tone_guardrail
 
 __all__ = [
+    "ANSWER_TYPES",
+    "AnswerSpec",
+    "CompletionEvidence",
+    "EvidenceProvenance",
     "FIRST_QUESTION_COLLECT",
     "FIRST_QUESTION_COLLECT_IMAGE",
     "FIRST_QUESTION_CORRECT",
@@ -117,4 +130,5 @@ __all__ = [
     "style_directives",
     "summary_system_prompt",
     "system_prompt",
+    "verify_completion",
 ]
