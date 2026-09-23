@@ -44,6 +44,10 @@ class KernelSubject:
         answer = raw.get("answer") or reference.get("value")
         if answer:
             payload["answer"] = str(answer)
+        # Gate B 段(#414 §三):answer_spec 声明面透传(有才传,零行为变化)
+        # ——题库 schema 增面后评测案即可携带,组装契约在 kernel._answer_spec。
+        if isinstance(raw.get("answer_spec"), dict):
+            payload["answer_spec"] = raw["answer_spec"]
         analysis = raw.get("analysis") or ";".join(
             str(s) for s in reference.get("steps") or [])
         if analysis:

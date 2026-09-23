@@ -26,7 +26,11 @@ from edu_agent.gateway import GatewayError
 
 from teachkit import kernel_env, open_json, tutor_json
 
-QUESTION_TEXT = {"text": "解方程 3x+7=25,并说明每一步为什么这样做。"}
+# Gate B 段(#414 §四)改据:completed 迁移需当轮 CompletionEvidence——题面带
+# answer_spec 声明面(测试本地;现网题库无此面,缺口留人审),学生轮「x=6」经
+# equation_form 窄面命中即证据,完成断言语义不变。
+QUESTION_TEXT = {"text": "解方程 3x+7=25,并说明每一步为什么这样做。",
+                 "answer": "x=6", "answer_spec": {"answer_type": "equation_form"}}
 # #382 PR-C:reveal 只回放 trusted(analysis)阶梯——卡壳/支持动作的测试面给题面挂
 # analysis(与生产题库同源);模型 steps 仍照喂(证明入库与规划辅助不受边界影响)。
 QUESTION = {"text": "解方程 3x+7=25,并说明每一步为什么这样做。",

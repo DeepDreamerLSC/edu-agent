@@ -95,10 +95,10 @@ def test_confirm_state_blocks_elicit():
         _tutor_payload("我们把思路理清楚了。", ready=True),
         {"summary": "你把鸡兔各自只数和验算都讲清楚了,这道题完成。"},
     ])
-    session = _incorrect_session(gateway)
-    confirmed = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
+    session = _incorrect_session(gateway, GATE_QUESTION)
+    confirmed = reply(session, GATE_READY_TURN, gateway=gateway)
     assert confirmed.state == "ready_to_confirm"
-    turn = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
+    turn = reply(session, GATE_FINAL_STATEMENT, gateway=gateway)
     assert turn.state == "completed"  # ①:终述即收束(产线 444a 死环修面)
     assert turn.text == "你把鸡兔各自只数和验算都讲清楚了,这道题完成。"
     assert turn.text != ELICIT
@@ -393,14 +393,14 @@ def test_close_on_final_statement_zero_model_call():
         _open_payload("你现在觉得鸡和兔各有多少只?"),
         _tutor_payload("我们把思路理清楚了。", ready=True),
     ])
-    session = _correct_session(gateway)
-    confirmed = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
+    session = _correct_session(gateway, GATE_QUESTION)
+    confirmed = reply(session, GATE_READY_TURN, gateway=gateway)
     assert confirmed.state == "ready_to_confirm"
     calls_before = len(gateway.requests)
-    turn = reply(session, "所以鸡有3只,兔有5只,验算3乘2加5乘4等于26只脚。", gateway=gateway)
+    turn = reply(session, GATE_FINAL_STATEMENT, gateway=gateway)
     assert turn.state == "completed" and turn.session.finished
     assert len(gateway.requests) == calls_before  # 零模型调用(零调用模板收束)
-    assert "3" in turn.text and "26" in turn.text  # 模板引学生原话(首末轮)
+    assert "18" in turn.text and "0.5" in turn.text  # 模板引学生原话(首末轮)
 
 
 def test_close_skipped_on_ack_and_question_form_and_dialogue():
@@ -492,14 +492,30 @@ def _session_snapshot(session: object) -> dict:
     }
 
 
+# Gate B 段(#414 §四)改据:completed 迁移需当轮 CompletionEvidence——鸡兔复合题
+# (多槽,§三红线:整体不判定)结构上不可能有证据,下方收束/原子性(P0-2)回归
+# 改用带 answer_spec 声明面的 eligible 题(**测试本地**;现网题库 answer 均为纯
+# 字符串、无此声明面,缺口留人审)。回归语义不变:close 机制(终述→finish 语义)
+# 与 GatewayError/畸形 payload 回滚不变量与题目无关;终述句「所以答案是0.5m」为
+# 声明式 claim 形态(A-段白名单),当轮即证据。复合题被门拒的新行为由
+# tests/teaching/test_kernel_transition_gate.py ①-c 钉。
+GATE_QUESTION = {"text": "一个球从高处落下,每次弹起的高度是下落高度的1/6。"
+                         "该球从18m的高度落下,第二次弹起的高度是多少米?",
+                 "answer": "0.5m", "answer_spec": {"answer_type": "numeric_with_unit"},
+                 "analysis": "", "knowledge_points": []}
+GATE_READY_TURN = "18除以6再除以6,我算出来了。"
+GATE_FINAL_STATEMENT = "所以答案是0.5m"
+
 FINAL_STATEMENT = "所以鸡有3只,兔有5只,验算3乘2加5乘4等于26只脚。"
 
 
-def _ready_incorrect_session(gateway: FakeGateway):
+def _ready_incorrect_session(gateway: FakeGateway, question: dict | None = None,
+                              ready_turn: str = "兔有10除以2等于5只,鸡有3只。"):
     """开一个 ready_to_confirm 的 incorrect 会话(incorrect+stuck 语义:finish 走
-    模型总结,正好覆盖 GatewayError 注入位;同款会话上面的 ① 测试也在用)。"""
-    session = _incorrect_session(gateway)
-    confirmed = reply(session, "兔有10除以2等于5只,鸡有3只。", gateway=gateway)
+    模型总结,正好覆盖 GatewayError 注入位;同款会话上面的 ① 测试也在用)。
+    Gate B 段:收束/原子性回归传 GATE_QUESTION(eligible,当轮可产证据)。"""
+    session = _incorrect_session(gateway, question)
+    confirmed = reply(session, ready_turn, gateway=gateway)
     assert confirmed.state == "ready_to_confirm"
     return session
 
@@ -512,10 +528,10 @@ def test_close_on_gateway_error_rolls_back_session_fields():
         _open_payload("你现在觉得鸡和兔各有多少只?"),
         _tutor_payload("我们把思路理清楚了。", ready=True),
     ], fail_indices={2})  # 第3次调用=收束轮 finish 的模型总结,这一次失败
-    session = _ready_incorrect_session(gateway)
+    session = _ready_incorrect_session(gateway, GATE_QUESTION, GATE_READY_TURN)
     before = _session_snapshot(session)
     with pytest.raises(GatewayError) as excinfo:
-        reply(session, FINAL_STATEMENT, gateway=gateway)
+        reply(session, GATE_FINAL_STATEMENT, gateway=gateway)
     assert excinfo.value.failure.value == "upstream_5xx"
     assert _session_snapshot(session) == before   # 逐字段一致(含 history 全量)
 
@@ -528,13 +544,13 @@ def test_retry_same_message_after_gateway_error_no_duplicate_history():
         _tutor_payload("我们把思路理清楚了。", ready=True),
         {"summary": "你自己讲清了鸡兔同笼的思路。"},  # 重试时 finish 的模型总结
     ], fail_indices={2})  # 第3次调用(收束轮 finish)失败;重试的第4次成功
-    session = _ready_incorrect_session(gateway)
+    session = _ready_incorrect_session(gateway, GATE_QUESTION, GATE_READY_TURN)
     with pytest.raises(GatewayError):
-        reply(session, FINAL_STATEMENT, gateway=gateway)
-    turn = reply(session, FINAL_STATEMENT, gateway=gateway)  # 同句重发(用户视角)
+        reply(session, GATE_FINAL_STATEMENT, gateway=gateway)
+    turn = reply(session, GATE_FINAL_STATEMENT, gateway=gateway)  # 同句重发(用户视角)
     assert turn.state == "completed" and session.finished
     student_turns = [m["content"] for m in session.history if m["role"] == "user"]
-    assert student_turns.count(FINAL_STATEMENT) == 1   # 终述零重复
+    assert student_turns.count(GATE_FINAL_STATEMENT) == 1   # 终述零重复
     assert turn.session_version == session.session_version  # version 只 +1
 
 
@@ -550,10 +566,10 @@ def test_close_on_other_exception_rolls_back_and_finish_paths_safe():
         _open_payload("你现在觉得鸡和兔各有多少只?"),
         _tutor_payload("我们把思路理清楚了。", ready=True),
     ], garble_indices={2})  # 第3次调用=收束轮 finish 的模型总结,这次返回非法 JSON
-    garbled_session = _ready_incorrect_session(garbled)
+    garbled_session = _ready_incorrect_session(garbled, GATE_QUESTION, GATE_READY_TURN)
     garbled_before = _session_snapshot(garbled_session)
     with pytest.raises(ValueError) as excinfo:
-        reply(garbled_session, FINAL_STATEMENT, gateway=garbled)
+        reply(garbled_session, GATE_FINAL_STATEMENT, gateway=garbled)
     assert not isinstance(excinfo.value, GatewayError)   # 非 GatewayError(json 解析错)
     assert _session_snapshot(garbled_session) == garbled_before  # 逐字段回滚
     gateway = FakeGateway(tutor_payloads=[
@@ -570,10 +586,10 @@ def test_close_on_other_exception_rolls_back_and_finish_paths_safe():
         _open_payload("你现在觉得鸡和兔各有多少只?"),
         _tutor_payload("我们把思路理清楚了。", ready=True),
     ])
-    ok_session = _correct_session(ok_gateway)
-    confirmed = reply(ok_session, "兔有10除以2等于5只,鸡有3只。", gateway=ok_gateway)
+    ok_session = _correct_session(ok_gateway, GATE_QUESTION)
+    confirmed = reply(ok_session, GATE_READY_TURN, gateway=ok_gateway)
     assert confirmed.state == "ready_to_confirm"
-    turn = reply(ok_session, FINAL_STATEMENT, gateway=ok_gateway)
+    turn = reply(ok_session, GATE_FINAL_STATEMENT, gateway=ok_gateway)
     assert turn.state == "completed" and ok_session.finished
     assert len(ok_session.history) == 4   # 两轮(user+assistant 各二),无半提交
     assert ok_session.session_version == 3
@@ -594,15 +610,15 @@ def test_finish_malformed_summary_payload_keyerror_pins_current_contract():
         {"no_summary": True},   # 收束轮 finish 的模型总结:缺 summary 键(畸形 payload)
         {"summary": "你自己讲清了鸡兔同笼的思路。"},   # 重试的第4次调用:合法总结
     ])
-    session = _ready_incorrect_session(gateway)
+    session = _ready_incorrect_session(gateway, GATE_QUESTION, GATE_READY_TURN)
     before = _session_snapshot(session)
     with pytest.raises(KeyError) as excinfo:
-        reply(session, FINAL_STATEMENT, gateway=gateway)
+        reply(session, GATE_FINAL_STATEMENT, gateway=gateway)
     assert str(excinfo.value) == "'summary'"       # KeyError 原样冒泡(不包不吞)
     assert _session_snapshot(session) == before    # 逐字段一致:history 回滚、state 未动
     assert session.state == "ready_to_confirm"     # 新契约:置态先于取键的旧序已废
     assert session.summary is None and not session.finished
-    turn = reply(session, FINAL_STATEMENT, gateway=gateway)   # 同输入重试
+    turn = reply(session, GATE_FINAL_STATEMENT, gateway=gateway)   # 同输入重试
     assert turn.state == "completed" and session.finished      # 不撞 TerminalStateError
     assert session.summary is not None
     assert session.summary.text == "你自己讲清了鸡兔同笼的思路。"
@@ -621,10 +637,10 @@ def test_finish_malformed_payload_variants_atomic(payload, exc):
         _tutor_payload("我们把思路理清楚了。", ready=True),
         payload,   # 收束轮 finish 的模型总结:畸形 payload
     ])
-    session = _ready_incorrect_session(gateway)
+    session = _ready_incorrect_session(gateway, GATE_QUESTION, GATE_READY_TURN)
     before = _session_snapshot(session)
     with pytest.raises(exc):
-        reply(session, FINAL_STATEMENT, gateway=gateway)
+        reply(session, GATE_FINAL_STATEMENT, gateway=gateway)
     assert _session_snapshot(session) == before    # 零半提交:state/summary/history 全回调用前
     assert session.state == "ready_to_confirm" and not session.finished
 

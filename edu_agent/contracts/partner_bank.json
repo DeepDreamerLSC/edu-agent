@@ -76,6 +76,12 @@
    "question_id": "6a61acc7",
    "stem": "小雅先向北偏西45°方向走30m，又向西偏南45°方向走30m，她现在所在的位置在起点的（ ）方向上。A.正北 B.正西 C.西北 D.西南",
    "answer": "B. 正西",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B. 正西",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "两次位移的南北分量抵消，西向分量相加。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -130,6 +136,12 @@
    "question_id": "6a61afaa",
    "stem": "一瓶水重2kg，求它的1/5是多少重。",
    "answer": "0.4kg",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "0.4kg",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "整体乘分数。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -139,6 +151,12 @@
    "question_id": "6a61b319",
    "stem": "一瓶水重2kg，求它的1/5是多少重。",
    "answer": "0.4kg",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "0.4kg",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "求一个数的几分之几。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -184,6 +202,12 @@
    "question_id": "6a61b65d",
    "stem": "若a、b都是非零自然数，a×(b/16)<a，a×(b/14)>a，则b的值为（ ）。A.14 B.15 C.16 D.17",
    "answer": "B. 15",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B. 15",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "把不等式转化为14<b<16。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -202,6 +226,12 @@
    "question_id": "6a61b67e",
    "stem": "小智一家体检，全家体重之和180kg；爸爸体重是全家的一半；小智体重又是爸爸体重的7/18。小智体重占全家体重之和的几分之几？",
    "answer": "7/36",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "7/36",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "连乘分率：全家的1/2再取7/18。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -220,6 +250,12 @@
    "question_id": "6a61ba43",
    "stem": "两根同样长的绳子，乐乐在第一根上剪下2/5m，皮皮剪下第二根的2/5。谁剪下的部分长？请给出结论并说明理由。",
    "answer": "无法确定",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "无法确定",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "一个是具体长度，一个是占整体的分率，缺少绳子的总长。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -265,6 +301,12 @@
    "question_id": "6a61bd8d",
    "stem": "算式8.2×（ ）+0.7×（ ）。从①1.8、②0.7、③7.2、④8.7中选择合适的数，使本题可以用乘法分配律进行简便运算。计算最简便的是（ ）。",
    "answer": "D，结果7。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "D，结果7。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "提取公因数0.7。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -301,6 +343,12 @@
    "question_id": "6a61c351",
    "stem": "小连在计算13/18×(□+36)时，把算式看成了13/18×□+36，这个结果比正确的多了（ ）。A.10 B.20 C.24 D.36",
    "answer": "A.10",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "A.10",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "利用乘法分配律比较误算与正确算式，差为10。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -337,6 +385,12 @@
    "question_id": "6a62bc56",
    "stem": "妈妈打算绣一幅面积为20dm²的“十字绣”。第一周绣了2/5，第二周绣的是第一周的3/4，妈妈第二周绣了（ ）dm²。A.3/4 B.6 C.8 D.15",
    "answer": "B.6dm²",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B.6dm²",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求第一周，再按第一周的3/4求第二周。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -346,6 +400,12 @@
    "question_id": "6a62bda2",
    "stem": "妈妈打算织一条长1.4m的围巾，第一周织了这条围巾的2/5，第二周织了这条围巾的3/7，两周一共织了（ ）m长的围巾。",
    "answer": "1.16m",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "1.16m",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求两周共占全长的29/35，再乘围巾总长。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -355,6 +415,12 @@
    "question_id": "6a62bdae",
    "stem": "一个球从高处落下，它每次弹起的高度是下落高度的1/6。若该球从18m的高度落下，则第二次弹起的高度是（ ）m。",
    "answer": "0.5m",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "0.5m",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "连续两次都乘1/6。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -364,6 +430,12 @@
    "question_id": "6a62bdb9",
    "stem": "以下图形可以表示1/4×1/4的有（ ）个。A.1 B.2 C.3 D.4",
    "answer": "B. 2个",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B. 2个",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "能表示1/4×1/4的图，结果部分应占整体的1/16；4幅图中只有第2、3幅符合。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -382,6 +454,12 @@
    "question_id": "6a62bdbf",
    "stem": "a和b在直线上的位置如图所示，若a×b=t，则下列描述中正确的是（ ）。A.a<b<t B.a<t<b C.t<a<b D.t<b<a",
    "answer": "C.t<a<b",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "C.t<a<b",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先由数轴判断a、b都在0和1之间，再利用真分数乘法大小规律。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -400,6 +478,12 @@
    "question_id": "6a62c34b",
    "stem": "国庆70周年阅兵……总规模约1.5万人次，受阅部队数量如图所示，徒步方队15个，装备方队32个，空中梯队比装备方队少5/8。参加此次阅兵的空中梯队有多少个？",
    "answer": "12个",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "12个",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "按“比32少5/8”计算。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -409,6 +493,12 @@
    "question_id": "6a62c353",
    "stem": "爷爷奶奶通过“微信运动”每天记录步行的步数。某天上午爷爷的步数是奶奶的8/9，此时奶奶走了2700步，爷爷比奶奶少走多少步？（先将线段图补充完整，再解答）",
    "answer": "300步",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "300步",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先按8/9求爷爷的步数，再作差。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -436,6 +526,18 @@
    "question_id": "6a62ca00",
    "stem": "下面四幅图中，若a和b表示不同的数，则（ ）中a与b互为倒数。A.三角形面积为1m²，底a米、高b米；B.总长度为1m，分成a米和b米；C.长方形面积为1m²，长a米、宽b米；D.长方体体积为1m³，长a米、宽b米、高c米。",
    "answer": "C",
+   "answer_spec": {
+    "answer_type": "choice_letter",
+    "ground_truth": "C",
+    "aliases": [],
+    "unit_optional": false,
+    "letter_choices": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   },
    "original_analysis": "互为倒数要求ab=1。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -445,6 +547,12 @@
    "question_id": "6a62ca09",
    "stem": "一个自然数与它的倒数之差是21又21/22，这个自然数是多少？",
    "answer": "22",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "22",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "代入检验可知22满足条件。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -454,6 +562,12 @@
    "question_id": "6a62ca0e",
    "stem": "五个连续奇数的和的倒数是1/45，这五个奇数中最大的是几？",
    "answer": "13",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "13",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先由倒数求和，再利用连续奇数平均数等于中间数。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -508,6 +622,12 @@
    "question_id": "6a62cb51",
    "stem": "小马虎在计算一个数除以5时，错把除以5看成了乘5，计算结果是3/4。这道算式正确的结果应该是多少？",
    "answer": "3/100",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "3/100",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先由误算结果求原数，再按正确运算除以5。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -517,6 +637,18 @@
    "question_id": "6a62cc86",
    "stem": "一个数除以分数所得的商（ ）这个数。A.大于 B.小于 C.等于 D.以上都有可能",
    "answer": "D",
+   "answer_spec": {
+    "answer_type": "choice_letter",
+    "ground_truth": "D",
+    "aliases": [],
+    "unit_optional": false,
+    "letter_choices": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   },
    "original_analysis": "除数不同，商与被除数的大小关系不同。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -526,6 +658,12 @@
    "question_id": "6a62cc88",
    "stem": "一块布长5m，每1/2m剪一段，每剪一次需要10秒，剪完这段布需要（ ）秒。A.100 B.90 C.80 D.20",
    "answer": "B.90秒",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B.90秒",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求段数，再用“段数减1”求剪的次数。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -580,6 +718,12 @@
    "question_id": "6a62ce18",
    "stem": "一块梯形草坪的面积是7/24平方米，上底是3/8米，高是3/4米，这块梯形草坪的下底长多少米？",
    "answer": "29/72米。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "29/72米。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "利用梯形面积公式反求下底。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -589,6 +733,12 @@
    "question_id": "6a62ce25",
    "stem": "规定a×b=(a+1/3)÷(b×1/2)，则17/18×14/9=____。",
    "answer": "23/14。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "23/14。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先按题中定义代换，再计算分数除法。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -607,6 +757,12 @@
    "question_id": "6a62cef1",
    "stem": "一批布，只制作校服上衣刚好可制作70件，只制作校服裤子刚好可制作90条。若用这批布制作成套的校服，则最多可以制作( )套。",
    "answer": "39套。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "39套。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先算1套校服所占的布料份数，再用总量1去除。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -616,6 +772,12 @@
    "question_id": "6a62cefd",
    "stem": "一条路长360km，若甲队单独修，则12天修完；若乙队单独修，则18天修完。若两队合作，9天能修完吗？关于这个问题，三位同学想到了不同的解法。A.小丽、小梅和小强的解法都正确 B.只有小丽和小梅的解法正确 C.只有小梅和小强的解法正确 D.只有小丽和小强的解法正确。",
    "answer": "A。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "A。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "两种精确算法都得7.2天，小强的不等式判断也足以说明9天能修完。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -625,6 +787,12 @@
    "question_id": "6a62cf0a",
    "stem": "某水库有甲、乙两个泄洪口，接到泄洪任务后，若同时打开两个泄洪口，则2个小时完成任务；若只打开甲泄洪口，则5个小时完成任务。那么只打开乙泄洪口，多少小时可以完成任务？",
    "answer": "10/3小时。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "10/3小时。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "合作效率减去甲的效率得到乙的效率。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -634,6 +802,12 @@
    "question_id": "6a62d098",
    "stem": "一段公路，甲队每天能修全长的1/15，乙队每天能修全长的1/10。现在先由甲队单独修5天，剩下的由甲、乙两队共同修，还要几天修完？",
    "answer": "4天。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "4天。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先算剩余工作量，再除以合作效率。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -643,6 +817,12 @@
    "question_id": "6a62f491",
    "stem": "某企业营业额增加了11%，记作+11%；则-13%表示( )。",
    "answer": "营业额减少了13%。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "营业额减少了13%。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "负百分数表示相对于原量减少。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -652,6 +832,12 @@
    "question_id": "6a62f492",
    "stem": "如果河水的警戒水位记为0m，低于警戒水位0.16m记作-0.16m，那么高于警戒水位0.02m应记作( )。",
    "answer": "'+0.02m。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "'+0.02m。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "警戒水位以上取正。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -679,6 +865,12 @@
    "question_id": "6a62f495",
    "stem": "“天姥连天向天横，势拔五岳掩赤城，天台四万八千丈，对此欲倒东南倾”这是大诗人李白歌颂了位于绍兴天姥山的横空之势。优优一家过年时回到了天姥山的老家，爸爸告诉优优，可以用山顶温度与山脚温度的差值来推测山的最高海拔，请你帮优优算一算天姥山的最高海拔大约是多少米？（海拔每升高100m，温度大约会下降0.6℃；山顶温度是-2.6℃，山脚温度是28.8℃。）",
    "answer": "约5233米。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "约5233米。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "用温差除以每100米的降温量，再乘100。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -697,6 +889,12 @@
    "question_id": "6a62f66a",
    "stem": "画圆时，圆规两脚间的距离是10cm，那么这个圆的直径是( )cm。",
    "answer": "20厘米。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "20厘米。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "直径=2×半径。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -706,6 +904,12 @@
    "question_id": "6a62f66f",
    "stem": "把一张圆形纸片至少对折( )次就能找到圆心。",
    "answer": "2次。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "2次。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "利用两条折痕的交点确定圆心。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -715,6 +919,12 @@
    "question_id": "6a62f683",
    "stem": "井盖平面轮廓采用圆形的一个原因是圆形井盖怎么放都不会掉进井里，而且能恰好盖住井口。这是应用了圆特征中的( )。A.圆心确定圆的位置 B.半径决定圆的大小 C.同一圆内所有直径都相等 D.圆是曲边图形",
    "answer": "C。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "C。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "圆形井盖无论怎样转动，任一方向的宽度都是直径；同一圆内所有直径都相等，因此不会掉入圆形井口。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -724,6 +934,12 @@
    "question_id": "6a62f765",
    "stem": "下面涂色部分中的角是圆心角的是( )。",
    "answer": "D。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "D。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "根据圆心角定义判断。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -733,6 +949,12 @@
    "question_id": "6a62f767",
    "stem": "扇形的大小( )。A.只与圆心角的大小有关 B.只与半径的长短有关 C.与半径的长短无关 D.与圆心角的大小、半径的长短都有关系",
    "answer": "D。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "D。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "扇形由半径和圆心角共同决定。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -742,6 +964,12 @@
    "question_id": "6a62f769",
    "stem": "用相同的圆画图，依据前四幅图的规律，可以知道图n的涂色部分面积是( )个圆的面积。A.n/4 B.n/2 C.n D.3/2n",
    "answer": "B，即n/2个圆的面积。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B，即n/2个圆的面积。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "由前四图得到面积序列1/2，1，3/2，2，按等差规律推广。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -751,6 +979,12 @@
    "question_id": "6a62fc94",
    "stem": "如图，从点A到点B有两条路线，哪条路线近一些？为什么？",
    "answer": "两条路线一样长",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "两条路线一样长",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "半圆弧长只与直径有关，总直径相同则总弧长相同。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -796,6 +1030,12 @@
    "question_id": "6a630a33",
    "stem": "圆环的大圆半径和小圆半径同时扩大到原来的2倍，圆环的面积扩大到原来的（ ）倍。",
    "answer": "4倍",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "4倍",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "面积表达式中半径平方同时乘4，因此圆环面积乘4。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -823,6 +1063,12 @@
    "question_id": "6a63117a",
    "stem": "如图是一个半圆，半圆中的△ABC是一个直角三角形，AC:BC:AB=3:4:5，已知AC长6 cm，求空白部分的面积。",
    "answer": "15.25 cm²",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "15.25 cm²",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "利用直角三角形斜边所对半圆直径。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -832,6 +1078,12 @@
    "question_id": "6a631186",
    "stem": "如图，大、小两个正方形的边长分别是大、小两个圆的半径，涂色部分的面积是10 cm²。求圆环的面积。",
    "answer": "31.4 cm²",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "31.4 cm²",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "涂色正方形面积差与圆环的半径平方差相同，圆环面积是其3.14倍。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -841,6 +1093,12 @@
    "question_id": "6a631196",
    "stem": "如图是一个半圆，半圆中的△ABC是一个直角三角形，AC:BC:AB=3:4:5。已知AC长6 cm，求空白部分的面积。",
    "answer": "15.25 cm²",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "15.25 cm²",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先由3:4:5求出边长，再用半圆面积减三角形面积。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -850,6 +1108,12 @@
    "question_id": "6a6311cb",
    "stem": "如图，四个圆的半径都是3 cm，圆心分别在四边形的四个顶点上，则涂色部分的面积是（ ）cm²。",
    "answer": "28.26 cm²",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "28.26 cm²",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "四个扇形圆心角和为360°，面积和等于一个半径3 cm的整圆面积。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -868,6 +1132,12 @@
    "question_id": "6a631283",
    "stem": "如图，从点A到点B沿外侧大圆的周长走比较近，还是沿内侧小圆的周长走比较近？A.沿外侧大圆周长 B.沿内侧小圆周长 C.一样近 D.无法确定",
    "answer": "C.一样近",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "C.一样近",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "两种路径都是若干半圆弧，半圆弧总长度只由直径总和决定，而两边直径总和相同。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -895,6 +1165,12 @@
    "question_id": "6a631798",
    "stem": "一条蚕丝被连袋子共重5.2千克，袋子重0.2千克。被子里填充的“100%双宫桑蚕丝”占整条被子质量的90%。这条被子中的“100%双宫桑蚕丝”共有多少千克？",
    "answer": "4.5千克",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "4.5千克",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先去掉袋子质量，再求90%。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -904,6 +1180,12 @@
    "question_id": "6a6317bb",
    "stem": "24K表示足金，12K表示含金量50%。一件质量40克的首饰中，金的含量约有30克，这件首饰的含金量用什么表示比较合理？A.12K B.18K C.20K D.24K",
    "answer": "B.18K",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B.18K",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求含金率75%，再按24K对应100%换算。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -940,6 +1222,12 @@
    "question_id": "6a631840",
    "stem": "店铺促销：在原价基础上先打八折，再返还给顾客售价5%的现金红包。活动期间买这套锅具相当于打（ ）折。A.四折 B.七五折 C.七六折 D.九五折",
    "answer": "C.七六折",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "C.七六折",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "八折后再返现售价的5%，实际支付占原价76%。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -949,6 +1237,12 @@
    "question_id": "6a631843",
    "stem": "书店暑假期间所有的书打八折销售，持有会员卡可以再打七五折。用会员卡买这本书比不用会员卡节省了8.5元。这本书原价是多少元？",
    "answer": "42.5元",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "42.5元",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "普通价与会员价相差原价的20%。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -976,6 +1270,12 @@
    "question_id": "6a631898",
    "stem": "商场全部商品先打八折，数码店又推出三种结算方式：现金支付八五折；微信支付每实付500元返100元；支付宝支付随机减免50~200元。爸爸买原价1000元的数码相机，使用支付宝随机减免104元。这次购物选用的结算方式最划算吗？",
    "answer": "不是，现金支付更划算",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "不是，现金支付更划算",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "统一先算八折后的800元，再比较三种结算方式。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -994,6 +1294,12 @@
    "question_id": "6a631a53",
    "stem": "利率表示单位时间内（ ）的比率。A.利息与存期 B.本金与利息 C.利息与本金 D.本息和与本金",
    "answer": "C.利息与本金",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "C.利息与本金",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "按利率定义直接判断。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1003,6 +1309,12 @@
    "question_id": "6a631a57",
    "stem": "林老师的定期储蓄存单：本金50000元，存期三年，年利率2.75%。到期时一共可以取回多少钱？",
    "answer": "54125元",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "54125元",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "本息和=本金+本金×年利率×年数。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1021,6 +1333,12 @@
    "question_id": "6a631a6b",
    "stem": "商场周年庆，所有商品一律打八五折。周铭叔叔分12个月付款买原价6000元的电冰箱，手续费为电冰箱现价的5%。平均每个月需还款多少元？",
    "answer": "446.25元",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "446.25元",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求现价，再加手续费，最后平均分12个月。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1057,6 +1375,12 @@
    "question_id": "6a631d3e",
    "stem": "录入同样一份稿件，优优的工作效率比奇奇高百分之几？（百分号前保留一位小数）图中：奇奇“我用了50分钟”，优优“我用时是奇奇的60%”。",
    "answer": "66.7%",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "66.7%",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先由“60%”求出优优用30分钟，再比较两人的单位时间完成量。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1066,6 +1390,12 @@
    "question_id": "6a631d51",
    "stem": "一部流传很广的唐诗选收录了311首唐诗。在这本唐诗选中，七言律诗有50首，七言绝句比七言律诗少44%，七言绝句又比乐府诗少9/23。乐府诗有多少首？（画线段图并解答）",
    "answer": "46首",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "46首",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先由50首求出七言绝句28首，再根据“少9/23”反推乐府诗。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1075,6 +1405,12 @@
    "question_id": "6a631d6d",
    "stem": "旅游旺季到了，某快餐店第二周每份套餐比第一周涨价5%，第三周每份套餐比第二周涨价5%，第三周比第一周每份套餐涨价( )%。",
    "answer": "10.25%",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "10.25%",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "连续两次涨5%，应乘1.05再乘1.05。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1084,6 +1420,12 @@
    "question_id": "6a631d7f",
    "stem": "某品牌空气净化器降价6%促销，元旦期间在此基础上再降价5%。元旦期间购买该品牌空气净化器，相当于降价百分之几？",
    "answer": "10.7%",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "10.7%",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "连续降价要连乘剩余百分率0.94和0.95。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1093,6 +1435,12 @@
    "question_id": "6a631d94",
    "stem": "有一种电视机，三个超市先后两次降价。甲超市：第一次降价7%，第二次降价9%；乙超市：每次都降价8%；丙超市：第一次降价13%，第二次降价3%。现在这种电视机哪家超市的售价最便宜？（可以假设原来每台售价为a元）",
    "answer": "丙超市最便宜。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "丙超市最便宜。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "把原价设为a，分别乘两次剩余百分率后比较。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1120,6 +1468,12 @@
    "question_id": "6a631dcf",
    "stem": "毛毛今年12岁，身高140cm，体重50kg。参照以下标准，他属于( )。图中体重分类标准：标准体重(kg)=(身高cm-80)×70%；超重：超过标准体重10%~20%；轻度肥胖：超过标准体重20%~30%；中度肥胖：超过标准体重30%~50%；重度肥胖：超过标准体重50%以上。",
    "answer": "超重",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "超重",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先算标准体重42kg，再比较实际体重比标准多19.0%。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1129,6 +1483,12 @@
    "question_id": "6a631dd9",
    "stem": "在体质健康测试中，小明的跳绳成绩是每分钟120下，比规定达标成绩多1/5，小华的成绩比规定达标成绩少10%。小华每分钟跳多少下？",
    "answer": "90下",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "90下",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先由小明的成绩反推达标线100下，再求少10%的结果。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1138,6 +1498,12 @@
    "question_id": "6a631e4b",
    "stem": "两袋大米，从甲袋取出1/5，从乙袋取出60%，这时甲袋与乙袋剩下的大米质量比是1:1。已知甲袋原有大米50kg，乙袋原有大米( )kg。",
    "answer": "100kg",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "100kg",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求甲袋剩40kg，再由“剩下的比是1:1”得到乙袋也剩40kg，反推原有100kg。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1147,6 +1513,12 @@
    "question_id": "6a631e51",
    "stem": "把a%(a≠0)的“%”去掉，这个数就比原来增加了49.5，这个数原来是( )%。",
    "answer": "50%",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "50%",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "把a%转化为a/100，列出去掉百分号前后的差。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1156,6 +1528,12 @@
    "question_id": "6a631e57",
    "stem": "右图显示中国自主研发的“复兴号”动车与原来“和谐号”动车的运行速度相比，速度加快了( )%。（保留一位小数）图中“和谐号”为260km/h，“复兴号”为350km/h。",
    "answer": "34.6%",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "34.6%",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求速度差90，再除以原来速度260。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1165,6 +1543,12 @@
    "question_id": "6a631e69",
    "stem": "食品质量部门分两次抽检某品牌同一批次的大米，第一次抽检100袋，合格率为95%；第二次抽检25袋，全部合格。两次抽检的总合格率是( )。",
    "answer": "96%",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "96%",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先分别算合格袋数，再用总合格数除以总抽检数。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1174,6 +1558,12 @@
    "question_id": "6a631e6f",
    "stem": "一盒钢笔10支共120元，铅笔的单价是钢笔单价的20%，小强买了2盒钢笔和15支铅笔，付给售货员300元。铅笔的单价是多少？解答这个问题需要用到的信息是( )。选项：A.120元，20%；B.10支，120元，20%；C.120元，20%，2盒；D.10支，120元，2盒，300元。",
    "answer": "B，铅笔单价2.4元。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B，铅笔单价2.4元。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "求铅笔单价只需先算钢笔单价，再乘20%。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1183,6 +1573,12 @@
    "question_id": "6a631e72",
    "stem": "甲商品与乙商品原价相同，甲商品先涨价10%，再降价10%出售；乙商品先降价10%，再涨价10%出售。甲商品与乙商品的现价相比，( )。选项：A.甲商品价格高一些；B.乙商品价格高一些；C.两种商品价格相等；D.无法确定。",
    "answer": "C，两种商品价格相等。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "C，两种商品价格相等。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "两种商品都乘了同样的两个因数1.1和0.9，结果相同。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1201,6 +1597,12 @@
    "question_id": "6a631e95",
    "stem": "一件商品按成本价提高30%后出售。后因季节原因，又以80%出售，售价为104元。现在这种商品卖出一件是赔还是赚？赔或赚多少元？",
    "answer": "赚4元",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "赚4元",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "由“提价30%后再八折”得实际售价是成本价的1.04倍。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1246,6 +1648,12 @@
    "question_id": "6a6320a2",
    "stem": "将4种不同颜色的卡片各5张放入1个盒子里，从中至少抽出( )张，才能保证一定有2张同种颜色的卡片。",
    "answer": "5张",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "5张",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "最坏情况下先各抽1张不同颜色，第5张必重复。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1255,6 +1663,12 @@
    "question_id": "6a6320c2",
    "stem": "从1~10这10个自然数中，至少要取出( )个不同的数，才能保证其中一定有一个数是偶数。",
    "answer": "6个",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "6个",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先把5个奇数都取完，第6个必是偶数。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1264,6 +1678,12 @@
    "question_id": "6a6320ca",
    "stem": "小明玩掷骰子游戏，要保证掷出的骰子点数一定有三次相同，他至少要掷几次？",
    "answer": "13次",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "13次",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "6种点数每种最多先出现2次，第13次必形成“三次相同”。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1273,6 +1693,12 @@
    "question_id": "6a6320dd",
    "stem": "有52名同学每人各答21道题，规定答对1道题得3分，不答得0分，答错扣1分。至少有多少名同学的成绩相同？",
    "answer": "1名。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "1名。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "可取分数共有85种，52人不足以保证出现同分。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1309,6 +1735,12 @@
    "question_id": "6a63212b",
    "stem": "某地8月的天气有晴、阴、小雨、多云四种情况，至少有( )天是同一种天气。选项：A.7 B.8 C.9 D.10。",
    "answer": "B，8天。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B，8天。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "31天放入4类天气，用31÷4向上取整。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1327,6 +1759,12 @@
    "question_id": "6a63213a",
    "stem": "优优将48枝花，每3枝扎成一束，插进下面的花瓶内，总有1个花瓶内至少插进多少束花？图中有3个花瓶。",
    "answer": "6束花",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "6束花",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先把48枝花化成16束，再按3个花瓶应用鸽巢原理。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1336,6 +1774,12 @@
    "question_id": "6a632140",
    "stem": "希望小学有36人乘车外出春游，最多乘几辆车能保证至少有一辆车上的人数不少于8人？",
    "answer": "5辆",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "5辆",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "反证：若每辆最多7人，5辆最多35人，装不下36人。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1345,6 +1789,12 @@
    "question_id": "6a695431",
    "stem": "一个圆的直径是4 cm，它的周长是（ ）cm。",
    "answer": "12.56 cm",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "12.56 cm",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "用圆周长公式 C=πd。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1354,6 +1804,12 @@
    "question_id": "6a695433",
    "stem": "一辆行驶中的小轿车的前轮压坏了一个苹果，在路上留下了几个印记（如图）。苹果与第一个印记之间的距离大约是2 m，则车轮的周长是（ ）。",
    "answer": "2 m",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "2 m",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "由相邻同类着地点之间的距离近似等于车轮滚动一周的路程。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1363,6 +1819,12 @@
    "question_id": "6a695436",
    "stem": "如果大圆直径是小圆半径的6倍，那么大圆周长是小圆周长的（ ）倍。",
    "answer": "3倍",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "3倍",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "统一写成半径后比较周长。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1372,6 +1834,12 @@
    "question_id": "6a695449",
    "stem": "如图是一个圆形池塘，老鼠在圆心O处，猫在岸上点A处。现在老鼠沿着半径向点B逃跑，同时，猫从点A沿着箭头方向追。已知猫的速度是5米/秒，老鼠的速度是1.5米/秒，则谁会先到达点B？（ ）A.老鼠 B.猫 C.一起到达 D.无法判断",
    "answer": "B.猫",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B.猫",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "比较时间：猫走半圆弧，老鼠走半径。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1381,6 +1849,12 @@
    "question_id": "6a69544d",
    "stem": "一款农用手推车的轮子直径为35 cm，要滚过一段54.95 m长的路，车轮要滚动（ ）周。",
    "answer": "50周",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "50周",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "总路程÷轮周长。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1390,6 +1864,12 @@
    "question_id": "6a69544f",
    "stem": "一个等边三角形的周长与一个半径为6 cm的圆的周长相等，这个等边三角形的边长是（ ）cm。",
    "answer": "12.56 cm",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "12.56 cm",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求圆周长，再平均分成3边。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1399,6 +1879,12 @@
    "question_id": "6a69546a",
    "stem": "李叔叔打算建一个半圆形的鱼池（设计图纸如下），实地测量后发现还比鱼池的直径增加4 m。现在这个鱼池的周长是多少米？",
    "answer": "30.84 m",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "30.84 m",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "半圆周长=一半圆周+直径。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1408,6 +1894,12 @@
    "question_id": "6a69546e",
    "stem": "李叔叔和张叔叔分别用尼龙绳将4个完全相同的饮料罐捆在一起，这些饮料罐的圆形底面直径是8 cm，谁的捆扎方法更节省尼龙绳？（打结部分长度相同）",
    "answer": "张叔叔更节省尼龙绳",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "张叔叔更节省尼龙绳",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "比较包住4个圆的外轮廓周长。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1435,6 +1927,18 @@
    "question_id": "6a6955a9",
    "stem": "联系生活实际与所学知识，下面说法正确的是（ ）。A.我家上一周用水2%t B.一件衣服降价了120% C.生产102个产品，全部合格，合格率是102% D.2020年2月份，某药店口罩销量增长了353%",
    "answer": "D",
+   "answer_spec": {
+    "answer_type": "choice_letter",
+    "ground_truth": "D",
+    "aliases": [],
+    "unit_optional": false,
+    "letter_choices": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   },
    "original_analysis": "逐项判断：A单位错，B和C不合常理，D可能成立。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1444,6 +1948,18 @@
    "question_id": "6a6955b3",
    "stem": "某位篮球运动员最近5场比赛的投篮命中率分别是62.5%、63.2%、58.9%、61.3%、61.9%。关于这位运动员下一场比赛的投篮命中率，下面说法中错误的是（ ）。A.可能在60%左右 B.可能达到70% C.可能低于58.9% D.一定大于50%",
    "answer": "D",
+   "answer_spec": {
+    "answer_type": "choice_letter",
+    "ground_truth": "D",
+    "aliases": [],
+    "unit_optional": false,
+    "letter_choices": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   },
    "original_analysis": "预测下一场只能说“可能”，不能说“一定”。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1453,6 +1969,12 @@
    "question_id": "6a6955b8",
    "stem": "六(2)班某次数学直播课已观看人数36人，未观看人数4人，求这节直播课的出勤率。",
    "answer": "90%",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "90%",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "出勤率=已观看人数÷总人数。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1462,6 +1984,12 @@
    "question_id": "6a6955bb",
    "stem": "一个数添上百分号，这个数就减小了29.7。这个数是多少？",
    "answer": "30",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "30",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "设原数为x，利用添上百分号后变为原来的1/100列方程。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1480,6 +2008,12 @@
    "question_id": "6a695663",
    "stem": "新闻中说“到2025年全国普惠性幼儿园将覆盖八成五的适龄幼儿”。“八成五”的含义是什么？",
    "answer": "覆盖适龄幼儿的85%",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "覆盖适龄幼儿的85%",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "把“八成五”换成85%。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1489,6 +2023,12 @@
    "question_id": "6a695670",
    "stem": "某景区2022年总收入比2021年降低了二成，2023年总收入比2022年增长了二成。该景区2023年总收入与2021年相比怎样？A.增长了 B.降低了 C.不变 D.无法确定",
    "answer": "B.降低了",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B.降低了",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先降20%再增20%，结果是原来的96%。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1498,6 +2038,12 @@
    "question_id": "6a695672",
    "stem": "某种饮料在不同月份的销售情况如下表。8月份销售1000万瓶，9月份比上月增长二成五。9月份销售多少万瓶？",
    "answer": "1250万瓶",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "1250万瓶",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "8月1000万瓶，增长25%得到1250万瓶。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1516,6 +2062,12 @@
    "question_id": "6a69569b",
    "stem": "某品牌学习机按进价提高五成定价，后又打八折促销，促销后每台仍可获利500元。求每台学习机的进价。",
    "answer": "2500元",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "2500元",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "设进价为x，按“提价五成再打八折仍赚500元”列方程。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1543,6 +2095,12 @@
    "question_id": "6a695766",
    "stem": "一套化妆品需缴纳消费税60元，消费税占售价的15%，且消费税包含在售价中。求这套化妆品的售价。",
    "answer": "400元",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "400元",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "售价中包含消费税，直接用税额÷税率。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1552,6 +2110,12 @@
    "question_id": "6a695769",
    "stem": "某饭店10月份缴纳的增值税是0.9万元，11月份比10月份多缴纳10%。如果按应纳税部分的3%缴纳增值税，那么这家饭店11月份营业额中应纳税部分是多少万元？",
    "answer": "33万元",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "33万元",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求11月税额0.99万元，再除以3%。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1561,6 +2125,12 @@
    "question_id": "6a695780",
    "stem": "根据规定，个人年综合所得超过60000元的部分为应纳税所得额，下面是部分征税标准。2023年李叔叔共缴纳个人所得税1480元，他的年综合所得为多少元？表中：不超过36000元的部分税率3%，超过36000元至144000元的部分税率10%，超过144000元至300000元的部分税率20%。",
    "answer": "100000元",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "100000元",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先用3%档算出1080元，再用剩余400元反推第二档应纳税所得额4000元，总应纳税所得额40000元，加上起征额60000元得100000元。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1588,6 +2158,12 @@
    "question_id": "6a695a01",
    "stem": "如右图，将这些圆片的3/4涂上蓝色，那么需要涂（ ）个圆片。",
    "answer": "9个",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "9个",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "总数12个，取其3/4。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1615,6 +2191,12 @@
    "question_id": "6a695adb",
    "stem": "爸爸和小红两人分吃一个西瓜，爸爸吃了这个西瓜的2/3，小红吃了2/3千克。谁吃得多？下列说法正确的是（ ）。",
    "answer": "D. 无法比较",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "D. 无法比较",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "单位不统一且缺少西瓜总质量。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1624,6 +2206,12 @@
    "question_id": "6a695b4f",
    "stem": "图中斜线部分占整张纸的几分之几？列式：（ ）×（ ）=（ ）。",
    "answer": "3/4×1/3=1/4",
+   "answer_spec": {
+    "answer_type": "equation_form",
+    "ground_truth": "3/4×1/3=1/4",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先取整体的3/4，再取其中的1/3。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1678,6 +2266,12 @@
    "question_id": "6a696046",
    "stem": "某品牌的一款女包原价是1200元。注册普通会员可按原价的49/50购买；再花100元办理“金卡”成为超级会员，可按普通会员价格的6/7购买。办理“金卡”并购买这款女包，一共需要多少元？",
    "answer": "1108元",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "1108元",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先算普通会员价，再按6/7求超级会员价，最后加100元办卡费。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1705,6 +2299,12 @@
    "question_id": "6a6963b1",
    "stem": "2025年4月份，某地晴天天数占这个月的1/3，雨天天数比晴天少3/5，阴天天数比雨天多1/2，其余是多云天气。这个月共有几天多云天气？",
    "answer": "10天",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "10天",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "依次求晴天、雨天、阴天，再用总天数减去已知天气天数。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1723,6 +2323,12 @@
    "question_id": "6a699b3a",
    "stem": "奥运会纪念币……小明说“我有60枚奥运会纪念币”。小丽说“把你的1/6给我之后，我的奥运会纪念币数量就是你的4/5。”小丽原来有多少枚奥运会纪念币？",
    "answer": "30枚",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "30枚",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求转移后的两人数，再倒推小丽原有枚数。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1750,6 +2356,12 @@
    "question_id": "6a699c05",
    "stem": "一本杂志各栏目所占页面的比例如图所示，这本杂志共有206页，其中新闻版约占（ ）页。A.10 B.25 C.75 D.100",
    "answer": "C.75页",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "C.75页",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先由扇形图估出新闻约占3/8，再与选项比较，最接近的是75页。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1759,6 +2371,18 @@
    "question_id": "6a699c32",
    "stem": "下面算式中，和0.375×1又4/5计算结果相同的是（ ）。A.3/8×9/5 B.3/8+3/8×9/5 C.3/8×1×4/5 D.0.375×1×0.8",
    "answer": "A",
+   "answer_spec": {
+    "answer_type": "choice_letter",
+    "ground_truth": "A",
+    "aliases": [],
+    "unit_optional": false,
+    "letter_choices": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   },
    "original_analysis": "把小数和带分数都化成分数。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1768,6 +2392,12 @@
    "question_id": "6a699c53",
    "stem": "教科书的重复使用可以有效地节约资源，1本教科书每年重复使用一次，可以节约1/5kg纸张。实验小学共有学生3600人，如果有7/12的学生每人每年重复使用1本教科书，那么一年可以节约纸张多少千克？",
    "answer": "420千克",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "420千克",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求参与重复使用的人数，再乘每人节约量。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1777,6 +2407,12 @@
    "question_id": "6a699c84",
    "stem": "玻璃瓶的容量为350mL。第一个瓶子装了1/2的水，之后的每一个瓶子内的水都比上一个瓶子多1/10。那么第二个瓶子应该装多少毫升的水？",
    "answer": "210mL",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "210mL",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求半瓶水175mL，再按图示每次增加整瓶容量的1/10，即增加35mL。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1822,6 +2458,12 @@
    "question_id": "6a69af44",
    "stem": "“太阳升起东山头，鸭子嘎嘎走出窝。一半鸭子坡下走，一半的一半水中游，窝内还剩十八只。”根据这首歌谣可知，一共有( )只鸭子。",
    "answer": "72只。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "72只。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "把三部分鸭子数量相加等于总数。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1840,6 +2482,12 @@
    "question_id": "6a69af57",
    "stem": "有两张大小相同的长方形纸条按图①放置，现在将这两张长方形纸条分别向左、右方向平移至图②所示的位置，则每张长方形纸条的长是( )cm。",
    "answer": "56厘米。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "56厘米。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "由平移后相对位置看出总长等于1个整长加半个整长。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1849,6 +2497,12 @@
    "question_id": "6a69af5a",
    "stem": "若a、b、c都大于0，且a×6/7=b÷2/3=c÷2，则下面排列正确的是( )。A.a>b>c B.c>b>a C.a>c>b D.c>a>b",
    "answer": "D。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "D。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "设三个式子都等于同一个数k，再分别表示a、b、c。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1858,6 +2512,12 @@
    "question_id": "6a69af5c",
    "stem": "甲数和乙数都大于0，且甲÷乙>甲，则在下面直线上表示乙数位置的可能是点( )。A.A B.B C.C D.D",
    "answer": "A。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "A。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "把不等式转化成0<乙<1。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1867,6 +2527,12 @@
    "question_id": "6a69af5e",
    "stem": "火箭的任务是把卫星运载到一定的高度，并以预定的方向和速度把卫星弹射出去，这个过程称作“星箭分离”，“星箭分离”的发射速度一定要等于或者大于环绕速度7.9千米/秒。假设短时间内火箭速度不变。当( )时，可以进行“星箭分离”。A.火箭在12/5秒内移动了18千米 B.火箭在2秒内移动了15千米 C.火箭在1/2秒内移动了3.8千米 D.火箭在7/22秒内移动了2.8千米",
    "answer": "D。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "D。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "逐项计算速度并与7.9千米/秒比较。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1876,6 +2542,12 @@
    "question_id": "6a69af60",
    "stem": "一辆汽车从A城开往B城，已经行驶了全程的5/8，还剩下144km。A、B两城相距多少千米？下面列式正确的是( )。①144÷(8-5)×8 ②144÷(1-5/8) ③设：A、B两城相距x km，x-5/8x=144。④144÷(8-5)×5。A.①② B.①②③ C.②③④ D.①②③④",
    "answer": "B。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "判断每个式子所表示的是全程还是已行路程。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1894,6 +2566,12 @@
    "question_id": "6a69af81",
    "stem": "两张纸部分重叠放在桌面上(如下图所示)，重叠部分(涂色部分)的面积是9/4cm²，占长方形纸的面积的3/20，占三角形纸的面积的3/14。这两张纸盖住的桌面面积是多少平方厘米？",
    "answer": "93/4平方厘米。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "93/4平方厘米。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先由重叠部分反求两张纸的面积，再用容斥求并。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1903,6 +2581,12 @@
    "question_id": "6a69af9c",
    "stem": "一本故事书，小华从第一页开始看，第一天看了总页数的1/4多3页，第二天看了余下的1/3少4页，还剩122页没有看。这本故事书一共有多少页？（提示：先画图分析）",
    "answer": "240页。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "240页。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "按两天读书情况列出剩余页数方程。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1912,6 +2596,12 @@
    "question_id": "6a69afa9",
    "stem": "一项工程，甲队单独做需要20天完成，乙队单独做需要12天完成。这项工程先由甲队做了若干天，然后由乙队接着做完，从开始到结束一共用了14天，甲队单独做了几天呢？",
    "answer": "5天。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "5天。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "根据“甲完成部分+乙完成部分=1”列方程。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1948,6 +2638,12 @@
    "question_id": "6a69e0e8",
    "stem": "如图，从一个长方形上剪下一个最大的正方形后，剩余部分刚好还可以剪出两个半径为3cm的圆。求原来长方形的周长。",
    "answer": "60厘米。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "60厘米。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "由两个圆确定剩余长方形尺寸，再反推出原长方形长宽。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1957,6 +2653,12 @@
    "question_id": "6a69e11a",
    "stem": "如图，若AB=16dm，则三角形AOB的面积是多少平方分米？",
    "answer": "64平方分米。",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "64平方分米。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先由270°求出直角，再用弦长求半径，最后算直角三角形面积。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1984,6 +2686,12 @@
    "question_id": "6a69e1a3",
    "stem": "两个连在一起的皮带轮，大轮的直径为0.54米，小轮的半径为0.09米，大轮转30周，小轮要转多少周？",
    "answer": "90周",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "90周",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "皮带通过的长度相同，转数与周长成反比。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -1993,6 +2701,12 @@
    "question_id": "6a69e1af",
    "stem": "公园的广场上有一个周长是37.68 m的圆形花坛，进行扩建后，花坛的周长比原来增加了12.56 m。扩建后的花坛半径比原来的花坛半径长多少米？",
    "answer": "2 m",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "2 m",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "ΔC=2πΔr。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2002,6 +2716,12 @@
    "question_id": "6a69e20a",
    "stem": "把一个圆按图平均分切，并拼成近似的长方形。近似的长方形的周长比圆的周长长12 cm，圆的面积是（ ）cm²。",
    "answer": "113.04 cm²",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "113.04 cm²",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "近似长方形周长比圆周长多出的部分是两条宽，即2r。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2011,6 +2731,12 @@
    "question_id": "6a69e21c",
    "stem": "如图，已知圆的周长是12.56 cm，圆的面积正好等于长方形的面积。求涂色部分的面积。",
    "answer": "9.42 cm²",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "9.42 cm²",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先由周长求半径，再用长方形面积等于圆面积减去1/4圆。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2020,6 +2746,12 @@
    "question_id": "6a69e22e",
    "stem": "刘大爷用15.7 m长的篱笆靠墙围了一个半圆形的鸡圈。这个鸡圈的面积是多少平方米？",
    "answer": "39.25 m²",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "39.25 m²",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先由半圆弧长求半径，再求半圆面积。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2029,6 +2761,12 @@
    "question_id": "6a69e26a",
    "stem": "在学习圆的面积时，小明、小刚、小强都把一个圆16等分，通过切割并拼组，转化成其他图形，推导出了圆的面积公式。他们三个推导出的圆的面积公式最后是同一个吗？请说明理由。",
    "answer": "相同，都是S=πr²",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "相同，都是S=πr²",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "转化图形不同，但底和高对应的量相同。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2056,6 +2794,12 @@
    "question_id": "6a69e365",
    "stem": "图中小圆的面积是30平方厘米，则大圆的面积是多少平方厘米？",
    "answer": "60 cm²",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "60 cm²",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "通过中间正方形建立大小圆半径关系。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2065,6 +2809,12 @@
    "question_id": "6a69e3b8",
    "stem": "下面四个正方形的边长都相等，涂色部分面积的大小关系是（ ）。A.③>②>①>④ B.①>②>③>④ C.①=②=③=④ D.无法比较",
    "answer": "C.①=②=③=④",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "C.①=②=③=④",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "都可以化成“同一个正方形面积减去同样大小的圆面积”。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2083,6 +2833,12 @@
    "question_id": "6a69e437",
    "stem": "图中小圆的面积是30平方厘米，则大圆的面积是多少平方厘米？",
    "answer": "60 cm²",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "60 cm²",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "同一正方形的外接圆面积是内切圆面积的2倍。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2101,6 +2857,12 @@
    "question_id": "6a69e4a6",
    "stem": "如图，四个圆的半径都是3 cm，圆心分别在四边形的四个顶点上，则涂色部分的面积是（ ）cm²。A.18.84 B.28.26 C.25.12 D.30.86",
    "answer": "B.28.26",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B.28.26",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "4个四分之一圆面积之和。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2110,6 +2872,12 @@
    "question_id": "6a69e4bf",
    "stem": "某快餐店有直径是6寸、8寸、12寸的三款厚度大致相同的比萨供顾客选择。小章和小陶去吃比萨，点了一份12寸的。服务员客气地说：“很抱歉，12寸的卖完了。”同时，端来了一份8寸的和一份6寸的来抵换。对此，小章和小陶有不同观点。小章说：“可以，8+6=14(寸)，还多了2寸。”小陶说：“不行，拿一份8寸的加两份6寸的，那才差不多。”你同意谁的观点？",
    "answer": "同意小陶",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "同意小陶",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "比萨应比较面积，不能直接比较直径相加。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2128,6 +2896,12 @@
    "question_id": "6a69e501",
    "stem": "上右图为一个滑轮装置，滑轮的半径是10 cm，当滑轮的一个半径从OA的位置绕轴心O顺时针旋转到OB的位置时（半径OA、OB在一条直线上），重物移动了（ ）cm。",
    "answer": "31.4 cm",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "31.4 cm",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "转半周，绳子通过长度等于半个圆周。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2137,6 +2911,12 @@
    "question_id": "6a69e55c",
    "stem": "下左图是一堆摆放成近似梯形的钢管，李叔叔打算用钢丝将这15根直径都是10 cm的钢管都捆在一起。他估计需要捆绑3圈才能绑结实，那么至少需要（ ）cm钢丝。",
    "answer": "454.2 cm",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "454.2 cm",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "钢丝一圈长度等于圆心凸包周长加一个半径5 cm的整圆周长。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2155,6 +2935,12 @@
    "question_id": "6a69e596",
    "stem": "上右图为一个滑轮装置，滑轮的半径是10 cm，当滑轮的一个半径从OA的位置绕轴心O顺时针转到OB的位置时（半径OA、OB在一条直线上），重物移动了（ ）cm。",
    "answer": "31.4 cm",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "31.4 cm",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "半径转过180°，绳子移动半个圆周长。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2164,6 +2950,12 @@
    "question_id": "6a69e5a3",
    "stem": "温泉会馆有两个圆形温泉池：甲池半径20米，可容纳200人；乙池半径12米，可容纳120人。比较两个温泉池的拥挤程度，选择正确选项。A.甲池更拥挤 B.乙池更拥挤 C.一样拥挤 D.无法确定",
    "answer": "B.乙池更拥挤",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B.乙池更拥挤",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "比较人数与圆面积的比值，乙池单位面积容纳人数更多。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2173,6 +2965,12 @@
    "question_id": "6a69e621",
    "stem": "学校操场跑道由一个长方形的两条长边和两个半圆组成，长方形长60米，宽40米。求跑道一周长度。",
    "answer": "245.6米",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "245.6米",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "两条直道加上一个整圆的周长。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2182,6 +2980,12 @@
    "question_id": "6a69e62b",
    "stem": "200米跑道示意图中，每条跑道宽1.25米。相邻两条跑道中，外侧跑道的运动员应在内侧跑道运动员前面多少米处起跑？",
    "answer": "7.85米",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "7.85米",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "相邻跑道整圈长度差等于半径差1.25米形成的整圆周长差。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2209,6 +3013,12 @@
    "question_id": "6a69e6c8",
    "stem": "毛毛看一本故事书，第一天看了总页数的40%，如果再看14页，那么正好看了这本书的一半。这本书一共有多少页？",
    "answer": "140页",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "140页",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "14页对应全书的10%。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2218,6 +3028,12 @@
    "question_id": "6a69e6d4",
    "stem": "印刷用纸中A4纸是A3纸的一半，A5纸是A4纸的一半。照这样，A5纸的大小是A2纸的（ ）。A.6.25% B.12.5% C.25% D.50%",
    "answer": "B.12.5%",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B.12.5%",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "连续减半3次得到1/8。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2236,6 +3052,12 @@
    "question_id": "6a69e78b",
    "stem": "一套排图现在商场搞促销活动，降价9元后售价36元。现价比原价降低了( )%。",
    "answer": "20%",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "20%",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "先求原价45元，再用降价9元除以原价。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2254,6 +3076,12 @@
    "question_id": "6a69e7ba",
    "stem": "一种水果罐头去年12月加价25%销售，今年3月“买三送一”促销。如果要解决“今年3月一次购买，得到4瓶这种罐头，价格相当于去年11月的百分之几”这个问题，下面( )方法是正确的。图中方法选项A、B、C、D。",
    "answer": "B，93.75%。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "B，93.75%。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "买三送一相当于4瓶只付3瓶，加价25%后再乘3/4。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2263,6 +3091,12 @@
    "question_id": "6a69e7c5",
    "stem": "小明在写作业时遇到了这样一道题目：一套图书在“双11”活动当天降价了20%，在“双11”后又涨价了20%。他在计算“双11”前后的价格变化幅度时，列式为：20%-(1-20%)×20%=4%。请结合他的线段图，判断他的方法是否正确，并说明理由。",
    "answer": "正确，现价比原价低4%。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "正确，现价比原价低4%。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "涨价20%是以降价后的价钱为单位“1”，所以不能直接和原来的20%抵消。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2272,6 +3106,12 @@
    "question_id": "6a69e81c",
    "stem": "张老师使用笔记本电脑时突然听到电量不足的提示声，并看到了右图的提示。照这样计算，它从充满电到现在工作了( )分钟。图中显示还剩6%，剩余24分钟。",
    "answer": "376分钟",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "376分钟",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "由6%对应24分钟求出满电400分钟，再减去剩余时间。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2290,6 +3130,12 @@
    "question_id": "6a69e85f",
    "stem": "某公司以每吨500元的价格收购了100吨药材，决定加工后再出售，相关信息如下表。注：①出品率指加工后所得药产品的质量占原药材质量的百分之几；②加工后的废品不产生效益。精加工了5天后，受市场影响，必须尽快将这批药材加工完毕，该公司决定改为粗加工。表中：粗加工每天14吨、出品率80%、售价1000元/吨；精加工每天6吨、出品率60%、售价3000元/吨。按上述加工方案，该公司可获得多少利润？",
    "answer": "60000元",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "60000元",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "精加工5天处理30吨，余下70吨粗加工；分别算出成品收入后减去收购总成本。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2308,6 +3154,12 @@
    "question_id": "6a69e89d",
    "stem": "如图，一个长方体水箱里有一个上部开口的圆柱形容器，它的底部与长方体容器连接在一起，打开水管往水箱里注水。下面几幅图中，( )能准确地描述水的高度与时间的变化关系。选项A、B、C、D为不同折线图。",
    "answer": "D。",
+   "answer_spec": {
+    "answer_type": "short_text_exact",
+    "ground_truth": "D。",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "水先在圆柱外部上升；到圆柱口后先灌满内部，外部水位短暂停留；内外水面齐平后继续上升，所以图像是上升—水平—上升。",
    "grade": "六年级",
    "knowledge_points": [],
@@ -2329,6 +3181,12 @@
    "question_id": "equation_subtract",
    "stem": "解方程 3x+7=25，并说明每一步为什么这样做。",
    "answer": "x=6",
+   "answer_spec": {
+    "answer_type": "equation_form",
+    "ground_truth": "x=6",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "",
    "grade": "六年级",
    "knowledge_points": [
@@ -2341,6 +3199,12 @@
    "question_id": "fraction_addition",
    "stem": "计算四分之三加八分之一，并说明为什么要这样算。",
    "answer": "7/8",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "7/8",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "",
    "grade": "六年级",
    "knowledge_points": [
@@ -2353,6 +3217,12 @@
    "question_id": "library_books",
    "stem": "图书馆原有120本故事书，又买来45本，借出38本，现在有多少本？",
    "answer": "127本",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "127本",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "",
    "grade": "六年级",
    "knowledge_points": [
@@ -2364,6 +3234,12 @@
    "question_id": "pr163-capacity-minimal-question-v1",
    "stem": "一盒铅笔有12支，3盒一共有多少支铅笔？",
    "answer": "36支",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "36支",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "每盒12支，共3盒，用12乘3得到36支。",
    "grade": "六年级",
    "knowledge_points": [
@@ -2376,6 +3252,12 @@
    "question_id": "triangle_area",
    "stem": "一个三角形底是10厘米，高是6厘米，面积是多少？为什么要除以2？",
    "answer": "30平方厘米",
+   "answer_spec": {
+    "answer_type": "numeric_with_unit",
+    "ground_truth": "30平方厘米",
+    "aliases": [],
+    "unit_optional": false
+   },
    "original_analysis": "",
    "grade": "六年级",
    "knowledge_points": [
