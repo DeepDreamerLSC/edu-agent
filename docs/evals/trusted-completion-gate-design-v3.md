@@ -1,6 +1,6 @@
-# Trusted Completion Gate 设计件 v1:CompletionEvidence 最小不变量(执行链②,纯设计不写代码)
+# Trusted Completion Gate 设计件 v3:CompletionEvidence 最小不变量(执行链②,纯设计不写代码)
 
-状态:草案待审(2026-09-23,PM 拟;呈用户+架构师)。依据:步骤7 结案终裁执行链②③④⑤⑥。
+状态:v3(2026-09-23,二审 3P0+3P1 修订毕)。v1 草案→v2 一审 7 项→v3 二审 6 项。
 前置已闭:步骤7 Prompt hypothesis 关闭(#382 终裁);负向三案(2791/5106/3490)已实证不变量必要。
 
 ## 一、核心不变量(一句话)
@@ -35,7 +35,9 @@ class CompletionEvidence:
 
 **不可构造面(设计红线)**:LLM 输出无构造权;summary 无构造权;guard 事件无构造权;教师转述的学生话无构造权(必须本人在本轮)。
 
-**Evidence 生命周期(v1 显式设计选择)**:**turn-scoped / ephemeral**——evidence 只对当前 student turn 生成、当轮消费、跨轮不复用(上一轮已验证的答案在下一轮确认时不构成证据,该轮需重新命中)。保守口径,显式非隐含。
+**Evidence 生命周期(v1 显式设计选择)**:**turn-scoped / ephemeral**——evidence 只对当前 student turn 生成、跨轮不复用。
+
+**verified 后同轮终局(防"答过还得再答"——二审 P0-2)**:一旦本轮 evidence 成立,该 student turn 内完成终局(承认+可选非交互式解释+finish);**不再开启下一轮提问**——否则学生不重复终答时 Gate 又无证据,重造"已答过还得再答"。跨轮深化若未来需要=evidence 转为 problem-scoped sticky+invalidate/reset 机制,**第一版明确不做**(防机制偷偷长出)。
 
 ## 三、确定性窄面(领域层,小学数学第一批)
 
@@ -45,12 +47,12 @@ class CompletionEvidence:
 |---|---|---|
 | numeric_with_unit | 纯数值 17% | 数值抽取+等价类归一(千分位/分数/小数/百分号——**等价类资产独立抽取为领域侧 normalizer/spec,产品层零 import eval/judge 依赖;评测亦不用与产品完全相同的 verifier 验产品,防 common-mode false green**)。**单位省略仅当题目 schema 显式声明 optional;同义单位须维度安全的确定性转换,无默认容差** |
 | choice_letter | 选择 4% | 字母精确匹配(题面选项字母表为合法集) |
-| true_false | 判断(题面含"判断"字样) | 对/错/√/× 映射 |
+| true_false | 判断(类型来自 **answer schema/spec** 声明,非题面文字猜) | 对/错/√/× 映射 |
 | equation_form | 方程算式 4% | 符号归一(**×/·→独立乘法 token \`*\`,绝不与变量 x 合并**——ASCII x 在本题域是变量,合并=灾难性等价;＝→==)后字符串等价(sympy 第二版) |
 | ratio_or_expression | 比例/表达式 | 同上归一族 |
 | short_text_exact | 短文本 39% | **normalized whole-answer exact/显式 alias match**:仅无语义归一(Unicode/全半角/空白/标点)+题库显式 alias;**不做编辑距离、不做裸 substring**("不是易变形"不得因包含"易变形"命中) |
 
-**明确不覆盖(第一版)**:多空/复合 33%——**整体 needs_review,任何局部槽命中不得构造 CompletionEvidence**(未来若需部分进度,另建 ProgressEvidence,不偷"半完成态");开放式题(无可靠 verifier)——**宁可 needs_review,不让 8B 猜完成态**(终裁原话)。~67% 为 **answer-key 形态可判上限(eligibility upper bound)**,非运行时完成覆盖率。
+**明确不覆盖(第一版)**:多空/复合 33%——**整体 needs_review,任何局部槽命中不得构造 CompletionEvidence**(未来若需部分进度,另建 ProgressEvidence,不偷"半完成态");开放式题(无可靠 verifier)——**宁可 needs_review,不让 8B 猜完成态**(终裁原话)。~67% 为 **answer-key 形态可判上限(eligibility upper bound)**,非运行时完成覆盖率。实测口径:263 题形态普查(短文本 104/复合 89/纯数值 45/选择 13/方程 12;互斥分类规则=数值含单位>选择字母>判断>方程算式>短文本≤12字>复合;普查脚本随 A 段 PR 入 tests/ 或 scripts/ 留 fingerprint)。**Phase A verifier 接 Kernel 前须独立 boundary gold 集**(各窄面正/负边界案,与 32 案 regression corpus 分立)。
 
 ## 四、Kernel 消费契约(transition authority)
 
@@ -71,13 +73,16 @@ state == "ready_to_confirm" 时:
 
 ```
 verified_complete = exists(CompletionEvidence):  # generation 只读
-    if True:  Tutor 可承认/简短深化/收束——**不得再把目标答案槽位当未知询问**
-              (确认性重问"是不是52?"被结构性禁止——答案槽已 verified,再问=重问已给内容)
+    if True:  Tutor 同轮终局(见 §二 verified 后终局)——期望形态是不再就答案槽询问
     if False: Tutor 不得 terminal close(硬门在 Kernel,但 prompt 侧给同一信号)
 ```
 
+**两向的不对称保证(二审 P0-3 降格表述)**:
+- **负向(premature completion)= Kernel 结构硬门**(无 evidence 迁移被拒——确定性,模型不可绕);
+- **正向(no-reask)= trusted-signal-assisted generation**——把"是否完成"的判别拿出模型,但"拿到 true 后不再确认性重问"**仍是模型行为,模型理论上可不听**;效果须 fresh holdout 验证,**不称结构性禁止**(除非未来做 verified-close 不可提问分支——第一版不做)。
+
 - 这解决 confirmation 正向门的"承认后确认性重问":不是再给 prompt 加"别确认"的词,而是**把 verified 状态作为轮级结构化只读事实注入**(如 `verified_complete=true, evidence_turn_id=N`)——**不把 canonical answer X 额外塞给模型**(模型已有学生原文,塞答案=引入新 answer-leak 面);模型不再需要自己判"学生给没给终答"(它判不稳的那个任务被移走了),只需消费一个已验证的布尔;
-- prompt 变化面:极小(一处条件注入"学生已给出并验证答案 X"或未注入)——这与终裁"不追词"不冲突:这不是用词去教模型判状态,是把判状态的**结果**给它。
+- prompt 变化面:极小(轮级注入 `verified_complete=true, evidence_turn_id=N` 结构化事实或未注入——**不塞 canonical answer**,学生原文模型已有)——这与终裁"不追词"不冲突:这不是用词去教模型判状态,是把判状态的**结果**给它。
 
 ## 六、验收设计(fresh confirmation 前置)
 
@@ -120,3 +125,8 @@ verified_complete = exists(CompletionEvidence):  # generation 只读
 ⑤summary 表述改"不具 transition authority";文本代说由 answer_leak/summary policy 独立守门独立测试,功劳不归 Gate(§四);
 ⑥等价类资产独立抽取为领域 normalizer/spec,产品零 import eval/judge;评测不用与产品同 verifier 验产品防 common-mode false green(§三);
 ⑦Evidence 生命周期钉死:turn-scoped/ephemeral,显式设计选择(§二)。
+
+## 二审 6 项修订对照(2026-09-23,v2→v3)
+
+**P0**:①iff→必要授权+fail-closed,非全局充分,不是状态跳转器(§一);②turn-scoped 与深化冲突→**verified 后同轮终局**,跨轮深化=sticky 机制第一版明确不做(§二);③正向门降格=trusted-signal-assisted generation 须 holdout 验证,非结构性禁止;负向才是 Kernel 硬门(§五不对称保证)。
+**P1**:①"已给出并验证答案 X"残留删除,只留结构化事实(§五);②true_false 类型来自 schema 非题面猜(§三);③67% 附实测口径(263 分母/互斥规则/脚本 fingerprint)+Phase A 独立 boundary gold(§三)。
