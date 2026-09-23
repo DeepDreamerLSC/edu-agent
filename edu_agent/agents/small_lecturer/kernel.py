@@ -21,6 +21,16 @@ provenance(analysis=题库解析确定性切片=trusted;model=模型生成分步
 planning artifact);deterministic reveal(`_reveal_stuck_hint`)只回放 trusted 阶梯,
 model 阶梯只做规划辅助(`_drift_sources` 允许集/steps 值兜底);无 trusted 阶梯 →
 safe guiding question(不硬编码题目话术)。模型生成内容≠权威事实。
+
+Trusted Completion Gate B 段(#414 设计件 v3.1 §四/§五,#382 终裁执行链③):
+completed 迁移的**必要授权**=当轮 trusted CompletionEvidence——学生轮消息到达时
+`_record_completion_evidence` 经六窄面确定性 verifier 生产(A 段 completion.py,
+AnswerSpec 由题库 answer 数据的 answer_spec 声明面组装,缺声明面即无法组装
+fail-closed,不私造推断);`finish()` 的 completed 迁移过 `_completion_authorized`
+硬门(无 evidence/跨轮 stale → 拒,session 保持 ready_to_confirm,needs_review
+文案,埋点 completion_gate_rejected)。Evidence 是必要授权**非充分条件**:ready_to_confirm
+/correct/stuck 等既有迁移条件照旧(§一),门不是状态跳转器;生成层不知道门的存在
+(§四),§五 正向 no-reask 是 C 段的 trusted-signal-assisted generation,本段不做。
 """
 
 from __future__ import annotations
@@ -32,6 +42,7 @@ from dataclasses import dataclass, field
 
 from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 
+from .completion import ANSWER_TYPES, AnswerSpec, verify_completion
 from .format_guard import evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
 from .numeric import (_ASCII_NUMBER, _answer_focus_numbers, _declarative,
@@ -207,6 +218,70 @@ def _is_final_statement(session: "LearnerSession", student_message: str) -> bool
     return _declarative(student_message) and _hits_answer_numbers(session, student_message)
 
 
+def _answer_spec(question: dict) -> AnswerSpec | None:
+    """题库 answer 数据 → AnswerSpec 组装(B 段组装方契约,设计 §三 P1-①)。
+
+    schema 来源 = question["answer_spec"] **显式声明面**(answer_type 必须是六窄面
+    之一;ground_truth 缺省回退 question["answer"];aliases/unit_optional/
+    letter_choices 同名可选)。缺声明面/类型不在六窄面/ground_truth 空 → None
+    (fail-closed):无法组装 spec 即无 evidence,无 evidence 即不得 completed——
+    **不从 answer 字面形态猜类型**(§三 true_false 口径:类型来自 schema 声明,
+    非题面/答案文字猜;letter_choices 也无法从题面猜)。现网题库(partner 263/
+    snapshot/seed/外部 6846)answer 均为纯字符串、无声明面:如实报告缺口留人审
+    (题库 schema 增面属四类结构改动),不私造 schema 改动、不做推导兜底。"""
+    declared = question.get("answer_spec")
+    if not isinstance(declared, dict):
+        return None
+    answer_type = str(declared.get("answer_type") or "")
+    if answer_type not in ANSWER_TYPES:
+        return None                       # 复合/开放/未知类型:整体 needs_review(§三红线)
+    ground_truth = str(declared.get("ground_truth")
+                       or question.get("answer") or "")
+    if not ground_truth.strip():
+        return None
+    return AnswerSpec(
+        answer_type=answer_type,
+        ground_truth=ground_truth,
+        aliases=tuple(str(alias) for alias in declared.get("aliases") or ()),
+        unit_optional=bool(declared.get("unit_optional", False)),
+        letter_choices=tuple(str(choice) for choice in declared.get("letter_choices") or ()),
+    )
+
+
+def _student_turn_id(session: "LearnerSession") -> int:
+    """当前学生轮号(1 起,按 history 内 user 消息计)。生产时消息未入史 → +1;
+    消费时(finish)消息已入史 → 原值。两口径在各自时点算出同一轮号。"""
+    return sum(1 for message in session.history if message.get("role") == "user")
+
+
+def _record_completion_evidence(session: LearnerSession, student_message: str) -> None:
+    """学生轮消息到达 → 当轮 CompletionEvidence 生产(设计 §二/§四,§七 seam:
+    判定在 completion 纯边界,写权限留 kernel——本函数是唯一写点)。
+
+    turn-scoped/ephemeral:每轮 reply() 重新生产并**覆盖**(无命中覆写 None)
+    ——上一轮证据不进本轮,跨轮 stale 由 `_completion_authorized` 的轮号比对
+    再兜一层。无 answer_spec 声明面 → 恒 None(fail-closed)。生产先于一切分支
+    (含 `_close_on_final_statement`:同轮 finish 消费刚生产的证据)。"""
+    spec = _answer_spec(session.question)
+    session.completion_evidence = (
+        verify_completion(spec, student_message, _student_turn_id(session) + 1)
+        if spec is not None else None)
+
+
+def _completion_authorized(session: LearnerSession) -> bool:
+    """completed 迁移硬门(设计 §四 transition authority):当轮 trusted
+    CompletionEvidence 在场才授权。evidence.turn_id 必须等于最新学生轮号——
+    跨轮 stale 证据不授权(§二 turn-scoped)。
+
+    **必要授权非充分条件**(§一):本函数只判证据面,不判 ready_to_confirm/
+    correct/stuck——既有迁移条件在 finish() 照旧,门不是「有 evidence 就完成」
+    的状态跳转器。fail-closed:无声明面/未命中/轮号不符一律 False,确定性、
+    模型不可绕(summary/tutor 文本无构造权,§二不可构造面)。"""
+    evidence = session.completion_evidence
+    return (evidence is not None
+            and evidence.turn_id == _student_turn_id(session))
+
+
 def _close_on_final_statement(session: LearnerSession, student_message: str,
                               gateway: Gateway | None) -> Turn:
     """闭环三修 ①(close-loop-fix,PM 2026-09-20):ready_to_confirm 且学生终述
@@ -223,7 +298,11 @@ def _close_on_final_statement(session: LearnerSession, student_message: str,
     #382 PR-B 原子性(P0-2,2026-09-20):append → finish(可调 Gateway)之间
     任何异常(GatewayError 等)不得半提交——回滚终述入史,session 恢复调用
     前状态后原样 raise(调用方决定重试;同消息重试不重复 history)。最小修复,
-    不做 transaction framework。"""
+    不做 transaction framework。
+
+    Gate B 段(#414 §四):finish 现在可能被 completion 硬门拒(无当轮 evidence
+    → needs_review,session 保持 ready_to_confirm)——Turn 状态随 summary 实况,
+    不得谎报 completed;被拒路径即「教师继续引导」(生成层不知道门的存在)。"""
     session.history.append({"role": "user", "content": student_message})
     try:
         summary = finish(session, gateway=gateway)
@@ -233,7 +312,8 @@ def _close_on_final_statement(session: LearnerSession, student_message: str,
     session.history.append({"role": "assistant", "content": summary.text})
     session.session_version += 1
     return Turn(text=summary.text, session_version=session.session_version,
-                state="completed", ready_to_confirm=True, session=session)
+                state="completed" if summary.status == "completed" else "ready_to_confirm",
+                ready_to_confirm=True, session=session)
 
 
 def _next_step(session: "LearnerSession") -> dict | None:
@@ -790,6 +870,9 @@ def reply(session: LearnerSession, student_message: str, *,
     if expected_session_version is not None and expected_session_version != session.session_version:
         raise SessionVersionConflict(  # 不推进:旧版本不静默覆盖新一轮诊断(00 §5.2 约定 3)
             f"expected_session_version={expected_session_version} != 当前 {session.session_version}")
+    # Gate B 段(#414 §二):学生轮消息到达即生产当轮 evidence——先于一切分支
+    # (含终述收束:同轮 finish 消费);每轮覆盖,无命中覆写 None(turn-scoped)。
+    _record_completion_evidence(session, student_message)
     if (session.state == "ready_to_confirm"
             and _is_final_statement(session, student_message)):
         return _close_on_final_statement(session, student_message, gateway)
@@ -865,7 +948,12 @@ def finish(session: LearnerSession, *, gateway: Gateway | None = None) -> Summar
     且无卡点 → 零调用模板;否则模型总结,零调用路径保留)。教学定义(判卷口径,
     用户裁逐字):学生自己的表达已包含关键步骤、关键依据和结论,足以让听者理解
     这道题怎么做;没有尚未解决的关键错误或遗漏。教师说过、学生只答「对」「懂了」
-    不算学生自己讲出。"""
+    不算学生自己讲出。
+
+    Gate B 段(#414 §四):已达 ready_to_confirm 后,completed 迁移再过
+    `_completion_authorized` 硬门——无**当轮** trusted CompletionEvidence 即拒
+    (needs_review,session 保持 ready_to_confirm;evidence 是必要授权非充分,
+    下方 correct/stuck 条件照旧)。"""
     if session.finished:
         if session.state == "completed" and session.summary is not None:
             return session.summary  # completed 终态:finish 幂等返回同一 Summary
@@ -877,6 +965,17 @@ def finish(session: LearnerSession, *, gateway: Gateway | None = None) -> Summar
         text = (FINISH_EVIDENCE_TEXT
                 if session.learner.get("answer_status") == "correct" else NEEDS_REVIEW_TEXT)
         return Summary(text=text, status="needs_review",
+                       session_version=session.session_version)
+    if not _completion_authorized(session):
+        # Gate B 段硬门(#414 §四):无当轮 trusted CompletionEvidence 的 completed
+        # 迁移被拒——fail-closed、确定性、模型不可绕(summary/tutor 文本无构造权,
+        # §二不可构造面)。session 保持 ready_to_confirm(教师可继续引导——生成层
+        # 不知道门的存在),不调模型、不写 summary;埋点带轮号供度量(负向案
+        # completed 消失的归因信号)。Evidence 是必要授权非充分:ready/correct/stuck
+        # 等既有条件在下方照旧(§一),本门不是「有 evidence 就完成」。
+        session.guard_events.append({"branch": "completion_gate_rejected",
+                                     "turn": _student_turn_id(session)})
+        return Summary(text=NEEDS_REVIEW_TEXT, status="needs_review",
                        session_version=session.session_version)
     if session.learner.get("answer_status") == "correct" and not session.stuck:
         # 零调用通路保留(原条件 + 已达确认态):完成由学生自己的讲述证据证实。
