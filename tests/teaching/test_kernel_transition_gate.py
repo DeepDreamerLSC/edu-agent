@@ -30,6 +30,7 @@ from edu_agent.agents.small_lecturer import (
     reply,
     start,
 )
+from edu_agent.store import FileSessionStore
 
 from teachkit import FakeGateway
 
@@ -326,3 +327,23 @@ def test_answer_spec_assembly_is_fail_closed():
     assert spec.ground_truth == "25.8度"          # 缺省回退 question["answer"]
     assert spec.aliases == () and spec.unit_optional is False
     assert _answer_spec(dict(CHOICE_Q)).letter_choices == ("A", "B", "C", "D")
+
+
+# ---------- 持久化往返(api 层跨进程 confirm 链路) ----------
+
+def test_evidence_survives_store_roundtrip(tmp_path):
+    """store 往返:reply 产证据落盘 → load 回类型化 CompletionEvidence →
+    finish completed(service._rehydrate 后门不失效:重启后的 confirm 仍由
+    当轮证据授权)。"""
+    store = FileSessionStore(tmp_path)
+    gateway = FakeGateway([_open("这道题要我们求什么?"),
+                           _tutor("我们把思路理清楚了。", ready=True)])
+    session = start(dict(TEMPERATURE_Q),
+                    {"grade": "六年级", "answer_status": "correct"},
+                    gateway=gateway).session
+    reply(session, "25.8度", gateway=gateway)
+    store.save(session)
+    loaded = store.load(session.session_id)
+    assert isinstance(loaded.completion_evidence, CompletionEvidence)
+    assert loaded.completion_evidence == session.completion_evidence
+    assert finish(loaded, gateway=gateway).status == "completed"
