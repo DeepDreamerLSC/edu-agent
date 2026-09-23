@@ -19,11 +19,14 @@ fail-closed 姿态贯穿:问句猜答(疑问标记/语气词)不构成证据(与
 claim(学生提交该答案)——不确定表达(可能/还不确定/大概/也许)与候选间
 「或/还是/要么」多候选消息级整条不判;命中前否定窗(不/没/非/未)六窄面
 通用;numeric 仅认裸答案/裸答案+单位/声明式模板(答案是/所以是/应该是/
-算出是)内的数字为 claim,不全文扫数;非 numeric 五面另有命中前猜测词窗
-(我猜/估计)与候选连接窗(和/与,后须紧跟同面候选)——#415 复审
-P2-R1/R2 的有限枚举收窄,「和」不做消息级(「3和5相加,答案是8」类
-误伤面),两窗都是命中紧邻判定,先猜后述(「我先猜8。后来算出是26只」)
-照常命中**;命中后紧跟自我否定(「…不对」「…错了」)不构成证据;
+算出是)内的数字为 claim,不全文扫数;命中前猜测词窗(我猜/估计)六窄面
+通用,紧邻收尾之外另有声明模板交叠短距窗(#420:「我猜答案是X」的「是」
+隔开猜测词与命中段,查模板之前剥标点末 2 字;正镜像「我先猜8。后来算出
+是26只」的「猜」距模板 3 字,照常放行);候选连接窗(和/与/跟/及/同,
+后须紧跟同面候选;跟/及/同 #420 并入同义连接词族)——#415 复审 P2-R1/R2
++#420 的有限枚举收窄,「和」不做消息级(「3和5相加,答案是8」类误伤
+面),先猜后述照常命中;choice 多候选计数含合法集外字母(「B,E」枚举
+一环,#420 P3)**;命中后紧跟自我否定(「…不对」「…错了」)不构成证据;
 单位省略仅当题面 schema 显式 optional(审查修正③),同义单位仅维度安全
 换算、无默认容差。
 """
@@ -73,26 +76,38 @@ _UNCERTAIN_MARKERS = ("可能", "不确定", "大概", "也许")
 # 关联词,无「和」类误伤面,#415 复审 P2-R2 并入消息级 marker)。
 _ALTERNATIVE_MARKERS = ("或", "还是", "要么")
 
-# 猜测词(v3.1 §三不确定表达族的有限枚举扩展,#415 复审 P2-R1):非 numeric
-# 五窄面的命中前紧邻窗——「我猜是B」「估计是对」「我猜是x-21=35」「我猜是
-# 易变形」。不进消息级(「我先猜8。后来算出是26只」的后继真声明必须放行),
-# 也不进 numeric(claim 白名单已挡「我猜是8」,且声明式模板都收于「是」、
-# 与本窗前缀终点互斥——机制不重复)。答案原文含「猜」不受影响:窗口只看
-# 命中之前的紧邻前缀,裸答案「猜灯谜」照常命中(过度拒绝面≈零)。
+# 猜测词(v3.1 §三不确定表达族的有限枚举扩展,#415 复审 P2-R1):六窄面的
+# 命中前判定——「我猜是B」「估计是对」「我猜是x-21=35」「我猜是易变形」。
+# 不进消息级(「我先猜8。后来算出是26只」的后继真声明必须放行)。numeric
+# 的紧邻窗恒不触发(claim 前缀为空或收于模板,模板尾字 案/以/出 与猜测词
+# 收尾互斥),经下方交叠窗(#420)生效;答案原文含「猜」不受影响:窗口只
+# 看命中之前的前缀,裸答案/声明模板后接「猜灯谜」照常命中(过度拒绝≈零)。
 _GUESS_MARKERS = ("猜", "猜是", "估计", "估计是")
 
-# 候选连接词 和/与(#415 复审 P2-R2):「B和D」「x-21=35和x+21=35」「对和错」。
-# 「和」不可做消息级 marker(常用字,「3和5相加,答案是8」误伤面巨大),
-# 收窄为命中两侧紧邻窗:前剥空白标点后以 和/与 收尾,或后剥空白标点后以
-# 和/与+同面候选起头(follower 防介词/分句「和」误伤:「答案是6。和同桌的
-# 一样」照常命中)。choice 走存活字母计数(更宽,「B,D」也拒);short_text
-# 结构性免疫(左边界只认句首/是/为 + 整答收尾);numeric 前侧恒不触发
-# (claim 前缀为空或收于模板「…是」),仅后侧生效(邻接「6和7」另由
-# 单位吞噬意外挡住,本窗补标点分隔形态「答案是6。和7」)。
-_JOIN_MARKERS = ("和", "与")
-_JOIN_AFTER_NUMERIC = re.compile(r"[-\d]")            # 和后另一数字 token 起头
-_JOIN_AFTER_SYMBOLIC = re.compile(r"[0-9A-Za-z(-]")   # 和后算式段起头
-_JOIN_AFTER_TRUE_FALSE = re.compile(r"[对错没正√✓×✗✘]")  # 和后极性词起头
+# 猜测词×声明模板交叠短距窗(#420 六面缝):claim 模板的「是」把猜测词与
+# 命中段隔开(「我猜答案是X」),紧邻窗扫不到——命中前缀收于声明式模板时,
+# 改查模板之前(同剥空白标点)末 2 字内是否出现猜测词。距离上界 2 = 正镜像
+# 边界:「我先猜8。后来算出是26只」的「猜」距模板 3 字(「8后来」=自带
+# 宾语+时序词),必须放行——窗口再宽即误伤先猜后述。停顿标点(「我猜一下,
+# 答案是X」)剥除后同窗覆盖;「的」插入(「我猜的答案是X」)距 1,亦收。
+_GUESS_HEDGE = re.compile(r"(?:猜|估计).{0,2}$")
+
+# 候选连接词 和/与/跟/及/同(#415 复审 P2-R2;跟/及/同 #420 并入——同义
+# 候选连接词族,「对跟错」「x-21=35跟x+21=35」原在非 choice 面仍穿):
+# 「B和D」「x-21=35和x+21=35」「对和错」。不可做消息级 marker(「和」
+# 常用字,「3和5相加,答案是8」误伤面巨大),收窄为命中两侧紧邻窗:前剥
+# 空白标点后以连接词收尾,或后剥空白标点后以 连接词+同面候选 起头
+# (follower 防介词/分句误伤:「答案是6。跟同桌的一样」的「跟」后是
+# 「同桌」非候选;「对及格」「我同意,答案是6」的 及/同 在词内不落窗尾,
+# 照常命中)。choice 走存活字母计数(更宽,「B,D」「B,E」也拒,#420 P3
+# 计数含合法集外字母);short_text 结构性免疫(左边界只认句首/是/为 +
+# 整答收尾);numeric 前侧恒不触发(claim 前缀为空或收于模板「…是」),
+# 仅后侧生效(邻接「6和7」另由单位吞噬意外挡住,本窗补标点分隔形态
+# 「答案是6。和7」「26只,跟27只」)。
+_JOIN_MARKERS = ("和", "与", "跟", "及", "同")
+_JOIN_AFTER_NUMERIC = re.compile(r"[-\d]")            # 连接词后另一数字 token 起头
+_JOIN_AFTER_SYMBOLIC = re.compile(r"[0-9A-Za-z(-]")   # 连接词后算式段起头
+_JOIN_AFTER_TRUE_FALSE = re.compile(r"[对错没正√✓×✗✘]")  # 连接词后极性词起头
 
 # 命中段之后的自我否定/犹疑(剥掉紧邻标点空白后起算):「x-21=35不对」。
 _RETRACT_AFTER = ("不对", "不成立", "错了", "错的", "不是", "并不")
@@ -217,10 +232,17 @@ def _retracted(message: str, end: int) -> bool:
 
 
 def _guessed(message: str, start: int) -> bool:
-    """命中前猜测词窗(五非 numeric 窄面,P2-R1):命中起位之前剥空白标点
-    后以猜测词收尾——该命中是「我猜是/估计是」猜测陈述的一部分,不算提交;
+    """命中前猜测词窗(P2-R1,六窄面):命中起位之前剥空白标点后以猜测词
+    收尾(「我猜是B」),或收于声明式模板且模板之前末 2 字内有猜测词
+    (#420 交叠缝:「我猜答案是B」——模板的「是」隔开猜测词与命中段);
     逐命中判定(与 _negated 同为窗口而非消息级),后继命中不受影响。"""
-    return _prefix_key(message, start).endswith(_GUESS_MARKERS)
+    prefix = _prefix_key(message, start)
+    if prefix.endswith(_GUESS_MARKERS):
+        return True
+    for template in _CLAIM_TEMPLATES:
+        if prefix.endswith(template):
+            return bool(_GUESS_HEDGE.search(prefix[: len(prefix) - len(template)]))
+    return False
 
 
 def _joined(message: str, start: int, end: int,
@@ -277,8 +299,10 @@ def _verify_numeric_with_unit(spec: AnswerSpec, message: str) -> tuple[str, tupl
 
     precision-first(v3.1 §三):仅 claim token 参与判定——消息起头的裸
     答案/裸答案+单位,或声明式模板之后的数字;不全文扫数(「我先猜8。
-    后来算出是26只」里「猜」的 8 不算提交)。claim token 若被 和/与 连接
-    到另一数字(「答案是6。和7」,P2-R2)也是候选枚举一环,非终答。"""
+    后来算出是26只」里「猜」的 8 不算提交)。claim token 的声明模板之前
+    短距内有猜测词(「我猜答案是26只」,#420 交叠缝)也是猜测陈述,非
+    提交;被 和/与/跟/及/同 连接到另一数字(「答案是6。和7」,P2-R2)
+    也是候选枚举一环,非终答。"""
     truth = _single_number(spec.ground_truth)
     if truth is None:
         return None
@@ -286,6 +310,8 @@ def _verify_numeric_with_unit(spec: AnswerSpec, message: str) -> tuple[str, tupl
     for span, start, end, value, unit, tags in number_tokens(message):
         if value is None or not _is_claim(message, start):
             continue                      # 非 claim token(「猜8」):值对也不判
+        if _guessed(message, start):
+            continue                      # 「我猜答案是8」(#420):猜测非提交
         if _joined(message, start, end, _JOIN_AFTER_NUMERIC):
             continue                      # 候选连接(「答案是6。和7」):枚举非终答
         if not _unit_value_match(
@@ -301,10 +327,12 @@ def _verify_choice_letter(spec: AnswerSpec, message: str) -> tuple[str, tuple[st
     """选项字母窄面:字母精确匹配(大小写敏感),合法集=题面选项字母表。
 
     letter_choices 必须非空(B 段组装方契约):空=合法集缺失,调度 None
-    fail-closed,不静默跳过合法集校验。多候选(#415 复审 P2-R2):消息内
-    ≥2 个未被否定/未撤回的不同选项字母(「B和D」「B,D」「要么B要么D」)
-    =未落终答,整面不判;「不选B,选A」「A不对,是B」的否定/撤回字母
-    不计,修正后终选照常命中。命中前猜测词窗(P2-R1):「我猜是B」非提交。"""
+    fail-closed,不静默跳过合法集校验。多候选(#415 复审 P2-R2+#420 P3):
+    消息内 ≥2 个未被否定/未撤回的不同字母(「B和D」「B,D」「要么B要么D」;
+    合法集外字母同属枚举一环,「B,E」也拒——两字母并列即未落终答,与
+    E 是否在题面选项内无关)=未落终答,整面不判;「不选B,选A」「A不对,
+    是B」的否定/撤回字母不计,修正后终选照常命中。命中前猜测词窗
+    (P2-R1+#420):「我猜是B」「我猜答案是B」非提交。"""
     letters = [a for a in halfwidth(spec.ground_truth) if a.isascii() and a.isalpha()]
     if len(letters) != 1:
         return None                       # 非单字母答案:不属本窄面(fail-closed)
@@ -314,10 +342,10 @@ def _verify_choice_letter(spec: AnswerSpec, message: str) -> tuple[str, tuple[st
     hits = [(m.group(1), m.start(), m.end(),
              not _negated(message, m.start()) and not _retracted(message, m.end()))
             for m in _LETTER_RE.finditer(halfwidth(message))]
-    surviving = {letter for letter, _s, _e, alive in hits
-                 if alive and letter in spec.letter_choices}
+    surviving = {letter for letter, _s, _e, alive in hits if alive}
     if len(surviving) >= 2:
-        return None                       # 多候选:≥2 个存活候选字母,未落终答
+        return None                       # 多候选:≥2 个存活字母(不限合法集,
+                                         # 「B,E」枚举一环同拒,#420 P3)未落终答
     for letter, start, end, alive in hits:
         if letter != truth_letter or not alive or _guessed(message, start):
             continue                      # 非答案字母/已否定撤回/猜测(大小写敏感)
@@ -433,8 +461,10 @@ def verify_completion(spec: AnswerSpec, student_message: str | None,
     多候选(候选间 或/还是/要么)一律 None(fail-closed,B 段 Kernel 据此
     拒 completed 迁移)。B 段接线前本函数无调用方;#416 缺口闭环**有意
     收窄**判定行为:非 numeric 五面的猜测词(我猜/估计)与 和/与 连接
-    多候选改判 None(P2-R1/R2),正例边界见 tests/teaching/
-    test_completion_boundary_gold.py。"""
+    多候选改判 None(P2-R1/R2);#420 再收窄:猜测词×声明模板交叠
+    (「我猜答案是X」)六面改判 None(猜测词窗经交叠短距窗扩至 numeric),
+    候选连接词并入 跟/及/同,choice 多候选计数含合法集外字母(「B,E」),
+    正例边界见 tests/teaching/test_completion_boundary_gold.py。"""
     if spec.answer_type not in _VERIFIERS:
         return None                       # 复合/开放/未知窄面:整体 needs_review
     message = str(student_message or "")
