@@ -1,11 +1,15 @@
-"""Trusted Completion Gate A 段(#414 设计件 v2 §二/§三,零行为变化自证)。
+"""Trusted Completion Gate A 段(#414 设计件 v3.1 §一/§二/§三,零行为变化自证)。
 
 断言即规格——六窄面确定性 verifier + CompletionEvidence 类型化事实 + 复合题
-红线,全部经公开面 verify_completion 驱动(02 §6:测试只导入公开入口):
+红线 + precision-first claim matching(v3.1 §三:value_match≠claim,不确定/
+否定/多候选/猜测语境不发 evidence),全部经公开面 verify_completion 驱动
+(02 §6:测试只导入公开入口):
   · 六窄面各带正/负案:numeric_with_unit(等价类归一/单位维度安全/省略仅
     schema 授权)、choice_letter、true_false、equation_form(×/·→`*` 绝不
     与变量 x 合并)、ratio_or_expression、short_text_exact(whole-answer
     exact/显式 alias,无编辑距离无裸 substring);
+  · precision-first:审查 P1-2 实测违规案值逐字钉死(不确定表达六窄面、
+    命中前否定、或/还是多候选、猜非声明、标点三变体、两处意外安全);
   · 复合题红线:多空/复合任何局部槽命中不得构造 CompletionEvidence;
   · 不可构造面:source 恒 student/verdict 恒 matched/answer_type 限六窄面
     (构造期即炸);turn-scoped:turn_id 记本轮,证据随轮重生成。
@@ -107,8 +111,13 @@ def test_numeric_cross_family_and_counter_units_rejected():
 
 
 def test_numeric_picks_matching_token_among_many():
-    """消息里多个数字 token:逐 token 判定,命中 span 是答案那个(审计凭证)。"""
-    evidence = _verify("numeric_with_unit", "26只", "先算出8,再算出26只,检查过了")
+    """多 token 消息里只有**声明 token**可命中(改据 v3.1 §三:原案
+    「先算出8,再算出26只」的「算出」不在声明式模板白名单,全文扫数已收窄;
+    案值取审查 P1-2 猜测语境例)。正负镜像:「我先猜8。后来算出是26只」
+    ——truth=8 时「猜8」不算提交(None),truth=26只 时声明 token 命中,
+    span 是它(审计凭证)。"""
+    assert _verify("numeric_with_unit", "8", "我先猜8。后来算出是26只") is None
+    evidence = _verify("numeric_with_unit", "26只", "我先猜8。后来算出是26只")
     assert evidence is not None
     assert evidence.provenance.matched_span == "26只"
 
@@ -247,6 +256,89 @@ def test_short_text_inner_punctuation_and_question_form():
     assert evidence is not None
     assert evidence.provenance.normalization == ("剥空白标点",)
     assert _verify("short_text_exact", "易变形", "易变形吗") is None
+
+
+# ---------- precision-first claim matching(v3.1 §三,审查 P1-2)----------
+
+
+def test_uncertainty_markers_reject_all_six_faces():
+    """不确定表达(消息级 fail-closed;审查实测六窄面全穿,案值逐字):
+    「可能 是 6」「可能是6。」「还不确定,我觉得是6」「可能是B」
+    「可能是x-21=35」「可能是3/4」「可能是易变形」「答案可能是易变形」
+    「可能是对」「对,不过我不确定」——正确值出现但学生未落定,整条不判
+    (宁 needs_review 不发 evidence)。"""
+    assert _verify("numeric_with_unit", "6", "可能 是 6") is None
+    assert _verify("numeric_with_unit", "6", "可能是6。") is None
+    assert _verify("numeric_with_unit", "6", "还不确定,我觉得是6") is None
+    letters = {"letter_choices": ("A", "B", "C", "D")}
+    assert _verify("choice_letter", "B", "可能是B", **letters) is None
+    assert _verify("equation_form", "x-21=35", "可能是x-21=35") is None
+    assert _verify("ratio_or_expression", "3/4", "可能是3/4") is None
+    assert _verify("short_text_exact", "易变形", "可能是易变形") is None
+    assert _verify("short_text_exact", "易变形", "答案可能是易变形") is None
+    assert _verify("true_false", "对", "可能是对") is None
+    assert _verify("true_false", "对", "对,不过我不确定") is None
+
+
+def test_pre_hit_negation_rejects_all_faces():
+    """命中前否定窗(short_text 口径推广到全部六窄面;审查实测 4/6 面穿,
+    案值逐字):「不是B」「我不选B」「不选B,选A」「不是x-21=35」——span
+    恰是被否定的答案本身时不得发 evidence(「不是易变形」「不是6。我觉得
+    是5」分别在 short_text 节与标点变体案)。"""
+    letters = {"letter_choices": ("A", "B", "C", "D")}
+    assert _verify("choice_letter", "B", "不是B", **letters) is None
+    assert _verify("choice_letter", "B", "我不选B", **letters) is None
+    assert _verify("choice_letter", "B", "不选B,选A", **letters) is None
+    assert _verify("equation_form", "x-21=35", "不是x-21=35") is None
+    assert _verify("true_false", "对", "不是对") is None
+
+
+def test_numeric_negation_punctuation_variants_all_rejected():
+    """v3.1 §三 canonical 例句「不是6,我觉得是5」三标点变体各一条:
+    逗号/句号/顿号都 None——原逗号变体的 None 是千分位分组吃掉「6,」致
+    token 弃值的意外(审查:句号/顿号即穿),现由否定窗+claim 白名单真守卫。"""
+    assert _verify("numeric_with_unit", "6", "不是6,我觉得是5") is None
+    assert _verify("numeric_with_unit", "6", "不是6。我觉得是5") is None
+    assert _verify("numeric_with_unit", "6", "不是6、我觉得是5") is None
+
+
+def test_alternative_candidates_rejected():
+    """多候选(候选间 或/还是 形态;审查实测,案值逐字):「B或D」「选B
+    还是D」「6 还是 7」「x-21=35 还是 x+21=35」——未在候选间落终答,
+    整条不判。"""
+    letters = {"letter_choices": ("A", "B", "C", "D")}
+    assert _verify("choice_letter", "B", "B或D", **letters) is None
+    assert _verify("choice_letter", "B", "选B还是D", **letters) is None
+    assert _verify("numeric_with_unit", "7", "6 还是 7") is None
+    assert _verify("equation_form", "x-21=35", "x-21=35 还是 x+21=35") is None
+
+
+def test_numeric_accidental_safety_now_real_guards():
+    """两处「意外安全」改真守卫(审查 P1-2 实测):「6 还不确定」原是
+    「还不确定」被当 4 字单位吸收,现由不确定 marker 挡;「我算了6,都不对」
+    是审查点名的同类逗号意外,一并钉死(句号变体由 claim 白名单挡)。"""
+    assert _verify("numeric_with_unit", "6", "6 还不确定") is None
+    assert _verify("numeric_with_unit", "6", "我算了6,都不对") is None
+
+
+def test_equation_hit_span_strips_trailing_space():
+    """equation 命中 span 剥尾随空白(审查 P3):matched_span 是审计凭证,
+    「x-21=35 谢谢老师」命中 span 是 'x-21=35' 而非 'x-21=35 '。"""
+    evidence = _verify("equation_form", "x-21=35", "x-21=35 谢谢老师")
+    assert evidence is not None
+    assert evidence.provenance.matched_span == "x-21=35"
+
+
+def test_choice_letter_requires_nonempty_letter_choices():
+    """choice_letter 组装方契约(审查 P3,B 段):letter_choices 必须非空
+    ——空=题面选项字母表缺失,调度 None fail-closed,不静默跳过合法集校验。"""
+    assert _verify("choice_letter", "B", "选B") is None
+
+
+def test_question_marker_shi_duoshao_covered_by_duoshao():
+    """「是多少」marker 删除(审查 P3,ponytail delete)后的等价钉死:
+    「25.8度是多少」仍由「多少」子串拦截——删后无测试红,冗余属实。"""
+    assert _verify("numeric_with_unit", "25.8度", "25.8度是多少") is None
 
 
 # ---------- 复合题红线(设计 §三审查修正②)----------

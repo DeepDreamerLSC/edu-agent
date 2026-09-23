@@ -1,10 +1,12 @@
-"""Trusted Completion Gate A 段(#414 设计件 v2 §二/§三,零行为变化)。
+"""Trusted Completion Gate A 段(#414 设计件 v3.1 §一/§二/§三,零行为变化)。
 
-CompletionEvidence = 类型化完成事实:**session 迁移到 completed 当且仅当存在
-一条 trusted CompletionEvidence;它只能来源于学生本轮消息经确定性 verifier
-判定**——LLM 输出/summary/guard 事件/教师转述的学生话都无构造权(设计 §二
-不可构造面)。A 段只交付数据结构与六窄面判定函数,**不接 Kernel、不接
-generation、不改任何现有模块行为**(§九:B/C 段另开 PR)。
+CompletionEvidence = 类型化完成事实:**任何成功的 completed 迁移都必须由
+一条 trusted CompletionEvidence 授权,无 evidence 时 fail-closed;Evidence
+不自行触发状态迁移——它是必要授权条件,不是「出现即完成」的充分条件**
+(v3.1 §一核心不变量,iff 口径已删)。它只能来源于学生本轮消息经确定性
+verifier 判定——LLM 输出/summary/guard 事件/教师转述的学生话都无构造权
+(设计 §二不可构造面)。A 段只交付数据结构与六窄面判定函数,**不接
+Kernel、不接 generation、不改任何现有模块行为**(§九:B/C 段另开 PR)。
 
 复合题红线(§三审查修正②):多空/复合题**整体不判定**——answer_type 不在
 六窄面(如 composite/open)调度即 None;numeric/short_text 的 ground_truth
@@ -13,8 +15,13 @@ evidence,未来部分进度另建 ProgressEvidence,不偷「半完成态」)。
 
 fail-closed 姿态贯穿:问句猜答(疑问标记/语气词)不构成证据(与 numeric
 ._declarative 同口径:问句里的数字不算已述,混合消息整条按问句处理);
-命中后紧跟自我否定(「…不对」「…错了」)不构成证据;单位省略仅当题面
-schema 显式 optional(审查修正③),同义单位仅维度安全换算、无默认容差。
+**precision-first claim matching(v3.1 §三):value_match(答案值出现)≠
+claim(学生提交该答案)——不确定表达(可能/还不确定/大概/也许)与候选间
+「或/还是」多候选消息级整条不判;命中前否定窗(不/没/非/未)六窄面通用;
+numeric 仅认裸答案/裸答案+单位/声明式模板(答案是/所以是/应该是/算出是)
+内的数字为 claim,不全文扫数**;命中后紧跟自我否定(「…不对」「…错了」)
+不构成证据;单位省略仅当题面 schema 显式 optional(审查修正③),同义单位
+仅维度安全换算、无默认容差。
 """
 
 from __future__ import annotations
@@ -48,11 +55,27 @@ ANSWER_TYPES = (
 # 问句/犹疑标记(消息级 fail-closed):「是不是25.8度?」「25.8度对吗」「对吧」
 # 都不构成证据。口径对齐 numeric._declarative(问句猜答≠已述)+ ER judge
 # 的疑问尾词族(吗/呢/什么/多少/哪/怎么/为什么),另收 吧/对不对/是不是。
-_QUESTION_MARKERS = ("?", "吗", "呢", "吧", "对不对", "是不是", "是多少",
+# (「是多少」已删:子串被「多少」覆盖,ponytail delete。)
+_QUESTION_MARKERS = ("?", "吗", "呢", "吧", "对不对", "是不是",
                      "多少", "什么", "怎么", "为什么", "哪")
+
+# 不确定表达(v3.1 §三不可认证形态,消息级 fail-closed,六窄面前置):
+# 「可能 是 6」「可能是B」「对,不过我不确定」——正确值出现但学生未落定,
+# 整条不判(宁 needs_review)。有限枚举 marker,不是语义理解。
+_UNCERTAIN_MARKERS = ("可能", "不确定", "大概", "也许")
+
+# 多候选连接(候选间 或/还是 形态,消息级 fail-closed):「B或D」「6 还是 7」
+# 「x-21=35 还是 x+21=35」——未在候选间落终答,整条不判。
+_ALTERNATIVE_MARKERS = ("或", "还是")
 
 # 命中段之后的自我否定/犹疑(剥掉紧邻标点空白后起算):「x-21=35不对」。
 _RETRACT_AFTER = ("不对", "不成立", "错了", "错的", "不是", "并不")
+
+# 声明式模板(v3.1 §三可认证白名单,有限枚举的句法模式):numeric 的数字
+# token 仅在裸答案(消息起头)或这些模板之后才算 claim——「答案是6」
+# 「所以是0.5m」「应该是x-21=35」「算出是26只」;「我先猜8」的 8 不是
+# claim(「猜」不在白名单,不全文扫数)。
+_CLAIM_TEMPLATES = ("答案是", "所以是", "应该是", "算出是")
 
 _TRUE_RE = re.compile(r"(?<![不没非])对(?![不起吗吧呢])|正确|没错|√|✓|对的|对了")
 _FALSE_RE = re.compile(r"不对|不正确|错误|错了|错的|✗|✘|×|(?<![不没])错")
@@ -67,7 +90,8 @@ class AnswerSpec:
     None)。aliases 是**题库显式**声明的同义答案(short_text_exact 专用,
     不扩病例短语表,终裁红线)。unit_optional 是题面 schema 对单位省略的
     显式授权(默认 False:单位不可省)。letter_choices 是题面选项字母表
-    (choice_letter 的合法集)。"""
+    (choice_letter 的合法集,必须非空——空=组装方违约,调度 None
+    fail-closed;B 段组装方契约)。"""
 
     answer_type: str
     ground_truth: str
@@ -120,6 +144,41 @@ def _is_question(message: str) -> bool:
     return mapped.endswith("?") or any(m in mapped for m in _QUESTION_MARKERS)
 
 
+def _is_uncertain(message: str) -> bool:
+    """不确定表达判定(消息级 fail-closed,六窄面前置):「可能是6」
+    「6 还不确定」——正确值出现但学生未落定,整条不判(v3.1 §三)。"""
+    return any(m in message for m in _UNCERTAIN_MARKERS)
+
+
+def _is_alternatives(message: str) -> bool:
+    """多候选判定(消息级 fail-closed,候选间 或/还是 形态):「B或D」
+    「6 还是 7」——未在候选间落终答,整条不判(v3.1 §三)。"""
+    return any(m in message for m in _ALTERNATIVE_MARKERS)
+
+
+def _prefix_key(message: str, start: int) -> str:
+    """命中起位之前(剥空白标点)的键串:否定窗/claim 判定的共用前缀。"""
+    key, _ = text_key(str(message)[:start])
+    return key
+
+
+def _negated(message: str, start: int) -> bool:
+    """命中前否定窗(六窄面通用,short_text 原口径推广):命中起位之前
+    剥空白标点的末 2 字含 不/没/非/未——「不是B」「我不选B」「不是x-21=35」
+    「不是6。我觉得是5」整条不判(v3.1 §三否定句不可认证)。"""
+    prefix = _prefix_key(message, start)
+    return any(n in prefix[-2:] for n in "不没非未")
+
+
+def _is_claim(message: str, start: int) -> bool:
+    """数字 token 是否学生的答案声明(v3.1 §三白名单):token 之前剥空白
+    标点为空=裸答案/裸答案+单位(消息以答案起头),或以声明式模板
+    (答案是/所以是/应该是/算出是)收尾——此外的数字出现不算提交。"""
+    prefix = _prefix_key(message, start)
+    return (not prefix
+            or any(prefix.endswith(t) for t in _CLAIM_TEMPLATES))
+
+
 def _retracted(message: str, end: int) -> bool:
     """命中段止位之后紧跟自我否定(剥标点空白后):「25.8度,不对」。"""
     tail = re.sub(r"^[\s,，。、;；:：!！?？]+", "", str(message)[end:])
@@ -164,34 +223,43 @@ def _numeric_tags(span: str, truth_span: str, tags: list[str],
 
 def _verify_numeric_with_unit(spec: AnswerSpec, message: str) -> tuple[str, tuple[str, ...]] | None:
     """数值+单位窄面:数字等价类归一(千分位/分数/小数/百分号,零容差)+
-    单位判定(相等,或同族维度安全换算;省略仅 schema 显式 optional)。"""
+    单位判定(相等,或同族维度安全换算;省略仅 schema 显式 optional)。
+
+    precision-first(v3.1 §三):仅 claim token 参与判定——消息起头的裸
+    答案/裸答案+单位,或声明式模板之后的数字;不全文扫数(「我先猜8。
+    后来算出是26只」里「猜」的 8 不算提交)。"""
     truth = _single_number(spec.ground_truth)
     if truth is None:
         return None
     truth_span, truth_value, truth_unit = truth
-    for span, _start, end, value, unit, tags in number_tokens(message):
-        if value is None or not _unit_value_match(
+    for span, start, end, value, unit, tags in number_tokens(message):
+        if value is None or not _is_claim(message, start):
+            continue                      # 非 claim token(「猜8」):值对也不判
+        if not _unit_value_match(
                 truth_unit, truth_value, spec.unit_optional, value, unit):
             continue
-        if _retracted(message, end):
-            continue                      # 「25.8度,不对」:自我否定不构成证据
+        if _negated(message, start) or _retracted(message, end):
+            continue                      # 命中前否定/命中后自我否定:不构成证据
         return span, _numeric_tags(span, truth_span, tags, unit, truth_unit)
     return None
 
 
 def _verify_choice_letter(spec: AnswerSpec, message: str) -> tuple[str, tuple[str, ...]] | None:
-    """选项字母窄面:字母精确匹配(大小写敏感),合法集=题面选项字母表。"""
+    """选项字母窄面:字母精确匹配(大小写敏感),合法集=题面选项字母表。
+
+    letter_choices 必须非空(B 段组装方契约):空=合法集缺失,调度 None
+    fail-closed,不静默跳过合法集校验。"""
     letters = [a for a in halfwidth(spec.ground_truth) if a.isascii() and a.isalpha()]
     if len(letters) != 1:
         return None                       # 非单字母答案:不属本窄面(fail-closed)
     truth_letter = letters[0]
-    if spec.letter_choices and truth_letter not in spec.letter_choices:
-        return None                       # 答案字母不在题面选项字母表内
+    if not spec.letter_choices or truth_letter not in spec.letter_choices:
+        return None                       # 合法集缺失/答案字母不在题面选项字母表内
     for match in _LETTER_RE.finditer(halfwidth(message)):
         if match.group(1) != truth_letter:
             continue                      # 大小写敏感:小写不是精确匹配
-        if _retracted(message, match.end()):
-            continue
+        if _negated(message, match.start()) or _retracted(message, match.end()):
+            continue                      # 「不是B」「我不选B」:命中前否定不判
         span = message[match.start():match.end()]
         tags = ("全半角",) if any(0xFF01 <= ord(c) <= 0xFF5E for c in span) else ()
         return span, tags
@@ -208,15 +276,16 @@ def _true_false_value(text: str) -> bool | None:
 
 
 def _verify_true_false(spec: AnswerSpec, message: str) -> tuple[str, tuple[str, ...]] | None:
-    """判断窄面(题面含「判断」字样):对/错/√/× 映射,否定形先判。"""
+    """判断窄面(类型来自 answer schema/spec 声明,非题面文字猜——v3.1
+    二审 P1-②口径):对/错/√/× 映射,否定形先判。"""
     truth = _true_false_value(spec.ground_truth)
     if truth is None:
         return None
     matched = _FALSE_RE.search(message) if not truth else _TRUE_RE.search(message)
     if matched is None:
         return None
-    if _retracted(message, matched.end()):
-        return None
+    if _negated(message, matched.start()) or _retracted(message, matched.end()):
+        return None                       # 「不是对」:命中前否定不构成证据
     return matched.group(0), ()
 
 
@@ -224,15 +293,17 @@ def _verify_symbolic(spec: AnswerSpec, message: str) -> tuple[str, tuple[str, ..
     """equation_form / ratio_or_expression 共用:符号归一后整段字符串等价。
 
     ×/·→`*`(独立乘法 token,绝不与变量 x 合并);=/＝→==;÷→/;剥空白。
-    「3×4=12」与「3x4=12」**不相等**——x 是变量不是乘号(审查修正①)。"""
+    「3×4=12」与「3x4=12」**不相等**——x 是变量不是乘号(审查修正①)。
+    命中 span 剥尾随空白(matched_span 是审计凭证,不得带 'x-21=35 ' 尾巴)。"""
     truth_key = symbol_key(spec.ground_truth)
     if not truth_key:
         return None
-    for span, _start, end in equation_candidates(message):
+    for span, start, end in equation_candidates(message):
         if symbol_key(span) != truth_key:
             continue
-        if _retracted(message, end):
-            continue                      # 「x-21=35不对,应该是…」:已撤回
+        if _negated(message, start) or _retracted(message, end):
+            continue                      # 命中前否定/「x-21=35不对」已撤回
+        span = span.rstrip()              # 剥尾随空白(候选段含空白字符)
         tags = () if symbol_key(span) == span else ("符号归一",)
         return span, tags
     return None
@@ -242,9 +313,9 @@ def _verify_short_text_exact(spec: AnswerSpec, message: str) -> tuple[str, tuple
     """短文本窄面:normalized **whole-answer** exact / 题库显式 alias。
 
     仅无语义归一(全半角/空白/标点);命中必须是消息末段的完整答案断言
-    (居中出现=裸 substring,不判);命中前 2 字窗口含 不/没/非/未 = 否定
-    (「不是易变形」不得因包含「易变形」命中,审查修正④)。ground_truth
-    含 ≥2 数字 token = 多槽复合,整体不判定(红线)。"""
+    (居中出现=裸 substring,不判);命中前否定窗(不/没/非/未,六窄面
+    通用 _negated——「不是易变形」不得因包含「易变形」命中,审查修正④)。
+    ground_truth 含 ≥2 数字 token = 多槽复合,整体不判定(红线)。"""
     if len([t for t in number_tokens(spec.ground_truth) if t[3] is not None]) >= 2:
         return None
     key_message, spans = text_key(message)
@@ -258,10 +329,10 @@ def _verify_short_text_exact(spec: AnswerSpec, message: str) -> tuple[str, tuple
         boundary = key_message[start - 1] if start else ""
         if boundary and boundary not in "是为":
             continue
-        # 否定窗口:命中前 2 字含 不/没/非/未(「不是易变形」「并非易变形」)。
-        if any(n in key_message[max(0, start - 2):start] for n in "不没非未"):
-            continue
         begin, last = spans[start][0], spans[-1][1]
+        # 否定窗口:命中前 2 字(剥空白标点)含 不/没/非/未(「不是易变形」)。
+        if _negated(message, begin):
+            continue
         span = str(message)[begin:last]
         tags: list[str] = []
         if any(0xFF01 <= ord(c) <= 0xFF5E for c in span):
@@ -288,12 +359,15 @@ def verify_completion(spec: AnswerSpec, student_message: str | None,
 
     turn-scoped:只判 student_message(本轮学生原文)——上一轮的证据不进
     本轮,跨轮不复用(§二);turn_id 标记证据归属轮。复合/开放/未知
-    answer_type、空消息、问句猜答一律 None(fail-closed,B 段 Kernel 据此
-    拒 completed 迁移)。A 段零接线:本函数无调用方,行为变化为零。"""
+    answer_type、空消息、问句猜答、不确定表达(可能/还不确定/大概/也许)、
+    多候选(候选间 或/还是)一律 None(fail-closed,B 段 Kernel 据此拒
+    completed 迁移)。A 段零接线:本函数无调用方,行为变化为零。"""
     if spec.answer_type not in _VERIFIERS:
         return None                       # 复合/开放/未知窄面:整体 needs_review
     message = str(student_message or "")
-    if not message.strip() or not spec.ground_truth.strip() or _is_question(message):
+    if (not message.strip() or not spec.ground_truth.strip()
+            or _is_question(message) or _is_uncertain(message)
+            or _is_alternatives(message)):
         return None
     hit = _VERIFIERS[spec.answer_type](spec, message)
     if hit is None:
