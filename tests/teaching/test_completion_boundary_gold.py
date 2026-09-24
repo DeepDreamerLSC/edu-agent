@@ -145,6 +145,8 @@ _CASES = [
     # #420 P3-3:「B,E」合法集外字母并入候选计数(收紧 choice 合法集约束)
     ("neg-choice-outofset-pair", "choice_letter", "B", "B,E", False, _ABCD),
     ("neg-either-choice", "choice_letter", "B", "要么B要么D", False, _ABCD),
+    # 注记修正(#434 审查 P3-2):「6和7」系钉的实际承载=_joined 邻接连接
+    # 检测,非 C-3b 单位串连接字检查(后者的独有防线见 neg-numeric-unit-join)
     ("neg-join-numeric", "numeric_with_unit", "6", "6和7", False, {}),
     ("neg-join-numeric-declarative", "numeric_with_unit", "6", "答案是6和7", False, {}),
     ("neg-join-numeric-period", "numeric_with_unit", "6", "答案是6。和7", False, {}),
@@ -167,9 +169,11 @@ _CASES = [
 
     # ---------- #416 claim 边界校准(2026-09-24 人裁「按建议」;提案 ----------
     # /root/calibration-private/gate-claim-calibration-proposal-20260924.md。
-    # 新模板共同前置:命中 token 须为消息末数字 token(3797 枚举形态对抗);
-    # 动词类模板(得到/得到了/就是)+算式直给形否定窗加宽至 3 字;既有四模板
-    # 语义与否定窗不动(pos/negation 系列不回归)。
+    # 新模板共同前置:命中 token 须为消息末数字 token(其独有对抗面=空格
+    # 枚举 neg-join-jiushi-space-enumeration;3797 逗号原形的首承载是逗号
+    # 吞 token 而非本前置,见该钉注);动词类模板(得到/得到了/就是)+算式
+    # 直给形否定窗加宽至 3 字;既有四模板语义与否定窗不动(pos/negation
+    # 系列不回归)。
 
     # B-1「结果是」(收):3 字名词尾框,句法位置与「答案是」同构
     ("pos-numeric-declarative-jieguoshi", "numeric_with_unit", "41", "结果是41", True, {}),
@@ -198,9 +202,19 @@ _CASES = [
 
     # B-5「就是」(条件收:末 token+3 字否定窗双捆绑)
     ("pos-numeric-declarative-jiushi", "numeric_with_unit", "28", "就是28平方分米", True, {}),
-    # 3797 枚举形态(末 token 钉):「就是7，8，9…」的枚举员不得被「就是」收为 claim
+    # 3797 枚举形态:「就是7，8，9…」的枚举员不得被「就是」收为 claim。
+    # 注记修正(#434 审查 P3-2):本钉首承载=逗号吞 token(「7，8，…」落成
+    # 千分位残组,value=None 被 continue),拔末 token 约束本钉不翻;前置
+    # 条件注:修 C-6(逗号千分位误杀)会拆掉本钉与 neg-arith-midvalue 的
+    # 首承载,届时末 token 约束成唯一防线——其独立钉
+    # neg-join-jiushi-space-enumeration(见下)不得先于 C-6 拔除
     ("neg-join-jiushi-enumeration", "numeric_with_unit", "7",
      "下半年就是7，8，9，10，11，12这六个月", False, {}),
+    # 末 token 约束 load-bearing 钉(#434 审查 P2-1/矩阵②):同上枚举的
+    # 空格形态,数字 token 彼此独立(逗号吞 token 防线不存在),拔末 token
+    # 约束即翻 matched——把翻面钉进 gold
+    ("neg-join-jiushi-space-enumeration", "numeric_with_unit", "7",
+     "下半年就是7 8 9 10 11 12这六个月", False, {}),
     # 加宽否定窗 load-bearing 钉:「答案不就是6」的「不」紧贴模板前,
     # 2 字窗(末 2 字=「就是」)看不见——拔掉 3 字窗即穿透
     ("neg-negation-jiushi-widewin", "numeric_with_unit", "6", "答案不就是6", False, {}),
@@ -209,6 +223,9 @@ _CASES = [
     # 起点前扫;运算词间不允许夹汉字名词=3565 特性;「等于」单独不收)
     ("pos-arith-direct", "numeric_with_unit", "172", "860除以5是172", True, {}),
     ("neg-guess-arith-direct", "numeric_with_unit", "172", "我猜860除以5是172", False, {}),
+    # 中间值拒收;注记修正(#434 审查 P2-2/P3-2,与 3797 钉同面):本钉首
+    # 承载=逗号吞 token(「12,」value=None),拔末 token 约束本钉不翻,
+    # 修 C-6 前置条件见 neg-join-jiushi-enumeration 注
     ("neg-arith-midvalue", "numeric_with_unit", "12",
      "3乘4是12,再用12除以6是2,所以最后答案是3", False, {}),
     ("neg-arith-noun-between", "numeric_with_unit", "100",
@@ -219,8 +236,14 @@ _CASES = [
     ("neg-ratio-pi-approx", "ratio_or_expression", "4：π", "比是4:3.14", False, {}),
 
     # C-3b 单位剥除(限 truth 无单位+已识别单位前缀 startswith+单位串无
-    # 和/与/跟/及/同/或;neg-join-numeric×2 是防线)+维度表体积族/平方分米补
+    # 和/与/跟/及/同/或)+维度表体积族/平方分米补。注记修正(#434 审查
+    # P3-2):neg-join-numeric×2(「6和7」形态)实际由 _joined 承载,非
+    # 本处单位串连接字检查;该检查的独有防线=连接字落进单位捕获串(下钉)
     ("pos-numeric-unit-family-volume", "numeric_with_unit", "8立方米", "8000立方分米", True, {}),
+    # 连接字检测 load-bearing 钉(#434 审查 P2-1/矩阵④):「6米和7」的
+    # 「和」被贪婪捕获吞进单位串,_joined 邻接面看不见;拔 _strippable_unit
+    # 的连接字检查即翻 matched——把翻面钉进 gold
+    ("neg-numeric-unit-join", "numeric_with_unit", "6", "6米和7", False, {}),
 
     # C-3a 计数单位省略(spec 组装侧授权 unit_optional;verifier 零改动)
     ("pos-numeric-counting-unit-omitted", "numeric_with_unit", "12名",
