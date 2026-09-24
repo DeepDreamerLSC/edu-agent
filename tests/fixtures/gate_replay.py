@@ -200,5 +200,8 @@ def gate_question(scenario: dict, spec: dict | None) -> dict:
             "ground_truth": spec.get("ground_truth"),
             **({"letter_choices": list(spec["letter_choices"])}
                if spec.get("letter_choices") else {}),
+            # 题库显式 alias(逐案人批例外,2591):透传给 kernel._answer_spec
+            # 组装面——corpus 登记面与重放注入面同源,防探针/重放口径漂移
+            **({"aliases": list(spec["aliases"])} if spec.get("aliases") else {}),
         }
     return question
