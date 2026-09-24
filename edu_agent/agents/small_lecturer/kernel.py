@@ -967,6 +967,10 @@ def finish(session: LearnerSession, *, gateway: Gateway | None = None) -> Summar
         # 证据不足(00 §5.1):不调模型、不写 summary,确定性引导文案。
         # correct 档专项文案:答对过但还没自己讲出思路(不写「今天没完整展开」
         # ——学生可能还想继续);其余档沿 NEEDS_REVIEW_TEXT。
+        # 纯观测埋点(用户裁 2026-09-24 ①:observation 非 promotion gate):
+        # 与下方 completion_gate_rejected 对称,不进任何判定/口径。
+        session.guard_events.append({"branch": "state_gate_rejected",
+                                     "state": session.state, "turn": _student_turn_id(session)})
         text = (FINISH_EVIDENCE_TEXT
                 if session.learner.get("answer_status") == "correct" else NEEDS_REVIEW_TEXT)
         return Summary(text=text, status="needs_review",

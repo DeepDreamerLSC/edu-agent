@@ -221,6 +221,27 @@ def test_evidence_alone_does_not_complete_without_ready_state():
     assert not _gate_rejections(session)     # 未达 ready:既有路径拒绝,非门拒绝
 
 
+def test_finish_state_gate_rejection_records_event():
+    """state 门拒埋点(用户裁 2026-09-24 ①:observation 非 promotion gate):
+    state≠ready_to_confirm 的 finish 走既有 needs_review——落 state_gate_rejected
+    埋点(state 值+轮号),与 completion_gate_rejected 对称且可区分;纯观测,
+    不进任何判定/PASS 口径。"""
+    gateway = FakeGateway([_open("这道题要我们求什么?"),
+                           _tutor("我们先看已知条件。", ready=False)])
+    session = start(dict(TEMPERATURE_Q), {"grade": "六年级"}, gateway=gateway).session
+    turn = reply(session, "我先想想。", gateway=gateway)
+    assert turn.state == "dialogue"
+    requests_before = len(gateway.requests)
+    summary = finish(session, gateway=gateway)
+    assert summary.status == "needs_review" and not session.finished
+    assert session.state == "dialogue"
+    assert len(gateway.requests) == requests_before   # 拒绝先于任何模型调用
+    assert [event for event in session.guard_events
+            if event.get("branch") == "state_gate_rejected"] == [
+        {"branch": "state_gate_rejected", "state": "dialogue", "turn": 1}]
+    assert not _gate_rejections(session)   # state 门与 completion 门两拒可分诊
+
+
 # ---------- ④ turn-scoped:stale evidence 不授权 ----------
 
 def test_stale_turn_evidence_does_not_authorize():

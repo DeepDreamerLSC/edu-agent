@@ -10,12 +10,29 @@ from __future__ import annotations
 
 import time
 
-from edu_agent.agents.small_lecturer import TerminalStateError, finish, reply, start
+from edu_agent.agents.small_lecturer import (
+    LearnerSession,
+    TerminalStateError,
+    finish,
+    reply,
+    start,
+)
 from edu_agent.gateway import ENV_FAILURES, Gateway, GatewayError
 
 from .image_teaching import question_image_data_url
 from .runner import EnvironmentFailure
 from .scenario_corpus import select_branch
+
+
+def _same_turn_would_complete(state: str, session: LearnerSession) -> bool:
+    """same_turn_ready_and_evidence_would_complete 探针(用户裁 2026-09-24 ②,
+    diagnostic-only):本轮 state 已达 ready_to_confirm 且当轮 trusted
+    CompletionEvidence 在场——「ready+evidence 同轮」形态标记,分诊 4531 型消耗
+    是「消费时机差一拍」还是别的问题。纯观测:只进 transcript turns,不进任何
+    状态机/判定/PASS 口径;「ready+evidence 同轮即 finish」不是产品行为,
+    production confirmation 语义不改。零 kernel.py 改动:从 turn state +
+    session.verified_signal(C 段只读视图)推导。"""
+    return state == "ready_to_confirm" and session.verified_signal is not None
 
 
 class KernelSubject:
@@ -72,7 +89,9 @@ class KernelSubject:
             first = start(question, learner, gateway=self.gateway)
             session = first.session
             turns.append({"student": "", "tutor": first.text,
-                          "state": first.state, "elapsed_ms": 0})
+                          "state": first.state, "elapsed_ms": 0,
+                          "same_turn_ready_and_evidence_would_complete":
+                              _same_turn_would_complete(first.state, session)})
             # 学生消息两种取法共用一个循环体:线性剧本(student_turns 固定序列)
             # 或 v2 分支剧本(steps——每轮按导师上一句选分支,#178 跟随器)。
             tutor_text = first.text
@@ -90,7 +109,9 @@ class KernelSubject:
                 turn = reply(session, student_message, gateway=self.gateway)
                 turns.append({"student": student_message, "tutor": turn.text,
                               "state": turn.state,
-                              "elapsed_ms": int((time.monotonic() - t0) * 1000)})
+                              "elapsed_ms": int((time.monotonic() - t0) * 1000),
+                              "same_turn_ready_and_evidence_would_complete":
+                                  _same_turn_would_complete(turn.state, session)})
                 tutor_text = turn.text
                 if turn.state == "completed":
                     break  # 终态才断:ready 后客户端仍会发消息(产线实录 444a/2c85
