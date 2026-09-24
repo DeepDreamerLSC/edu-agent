@@ -67,6 +67,58 @@ def test_run_case_environment_failure_is_retryable(tmp_path):
             KernelSubject(gateway).run_case(CASE)
 
 
+# ---------- same_turn_ready_and_evidence_would_complete 探针(用户裁 2026-09-24 ②) ----------
+
+# 4531 形态(holdout socraticmath_train_4531 的忠实摘录):t1 代数终答句
+# (完整推导收尾「6a+2b」,ratio_or_expression 窄面当轮 evidence)+ t2 代数
+# 表达理解延伸轮(无答案)。answer_spec = 测试本地声明面(组装契约
+# kernel._answer_spec;现网题库无此面)。
+CASE_4531 = {
+    "id": "socraticmath_train_4531",
+    "question": {"text": "为鼓励居民节约用水，某市规定，每户每月用水不超过6m3按每"
+                         "立方米a元收费，超过6m3的部分按每立方米b元收费．小涛家上月"
+                         "用水8m3，他家应交水费(____）元．",
+                 "answer": "6a+2b",
+                 "answer_spec": {"answer_type": "ratio_or_expression"}},
+    "grade": "六年级",
+    "student_turns": [
+        "对于小涛家的情况，他上个月用了8立方米的水，所以前6立方米按照每立方米a元"
+        "计算，之后两立方米按每立方米b元计算。所以总的水费就是6a+2b。",
+        "这种式子是一种代数表达方式，字母代表未知的数，等到知道数的确切值的时候，"
+        "就可以替换掉字母，得到结果。",
+    ],
+}
+
+
+def test_probe_flags_4531_form_same_turn_ready_and_evidence(tmp_path):
+    """探针(用户裁 2026-09-24 ②,diagnostic-only):4531 型消耗形态——t1 学生
+    终答句与导师 ready 判定同轮(evidence 当轮在场)→ 探针 True;t2 延伸轮
+    evidence 覆写 None → False。纯观测:final_state 语义不变(剧本尽头 finish
+    被 completion 门拒 → needs_review,消费时机差一拍形态原样呈现),探针
+    不进任何 PASS 判定。"""
+    with kernel_env(tmp_path, [
+        completion(open_json("这道题要我们求什么?")),
+        completion(tutor_json("很好，你把分段计费的道理讲完整了。", ready=True)),
+        completion(tutor_json("对的，字母换成具体数值就能算出结果。", ready=True)),
+    ]) as (fake, gateway):
+        transcript = KernelSubject(gateway).run_case(CASE_4531)
+    # t0 首问:无学生消息、未达 ready → False
+    assert transcript["turns"][0]["same_turn_ready_and_evidence_would_complete"] is False
+    # t1:state=ready_to_confirm 且当轮 evidence 在 → True(4531 形态标记)
+    assert transcript["turns"][1]["state"] == "ready_to_confirm"
+    assert transcript["turns"][1]["same_turn_ready_and_evidence_would_complete"] is True
+    # t2:延伸轮,evidence 覆写 None → False
+    assert transcript["turns"][2]["state"] == "ready_to_confirm"
+    assert transcript["turns"][2]["same_turn_ready_and_evidence_would_complete"] is False
+    # 纯观测零行为:final_state 仍是 needs_review(production 语义不改)
+    assert transcript["final_state"] == "needs_review"
+    # 分诊信号:t1 配对在场但未同轮消费 → 尽头 finish 被 completion 门拒
+    # (guard_events 另含每模型轮的数字守卫观测事件,只按分支过滤断言)
+    assert [event for event in transcript["guard_events"]
+            if event.get("branch") == "completion_gate_rejected"] == [
+        {"branch": "completion_gate_rejected", "turn": 2}]
+
+
 def test_run_case_content_failure_reraises(tmp_path):
     # 非 JSON → 修复重试一次后 schema_violation(内容类)
     with kernel_env(tmp_path, [completion("我不会"), completion("还是不会")]) as (fake, gateway):

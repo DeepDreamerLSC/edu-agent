@@ -74,7 +74,10 @@ def test_kernel_subject_transcript_carries_events(tmp_path):
             "reference_answer": "x=6",
             # 「我不会」已路由确定性揭示(#157 评审卡壳修复),此处测模型路径埋点 → 用中性话术
             "student_turns": ["我试试", "我想想"]})
-        assert len(transcript["guard_events"]) == 3  # 泄露 + 两轮模型数字守卫埋点
+        assert len(transcript["guard_events"]) == 4  # 泄露 + 两轮模型数字守卫埋点
+        #                                              + finish state 门拒观测(裁 2026-09-24 ①)
         assert transcript["guard_events"][0]["guard"] == "answer_leak"
         assert transcript["guard_events"][1]["branch"] == "model"
         assert transcript["guard_events"][2]["branch"] == "model"
+        assert transcript["guard_events"][3] == {"branch": "state_gate_rejected",
+                                                 "state": "dialogue", "turn": 2}
