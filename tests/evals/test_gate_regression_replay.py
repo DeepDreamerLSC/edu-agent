@@ -7,16 +7,20 @@ pass/divergence+归因,已知 divergence 在下方 REGISTERED_DIVERGENCES 显式
 绿 = 实测 divergence 集**恰等于**登记集(多一个=新回归,少一个=校准落地须重新
 登记——两个方向都红,防静默重释),不靠改期望。
 
-实测口径(2026-09-22,C 段跑面;2026-09-24 #416 claim 边界校准后重登记):
-- **27 案 PASS**:20 正向案 completed(Gate 正确放行;四锚 2322/2960/3695/
-  3138 全部实测放行——2322「结果是52」经 B-1 恢复)+ 7 负向案 needs_review
-  (completed 消失,硬断言);
-- **5 案 DIVERGENCE**(校准前 13,重登记 13→5):与 corpus 再生成后的
-  5 张力旗案**精确一致**——复合红线(5234)、复合+单位+stale(十字绣)、
-  short_text 左边界(2591,alias 面恢复)、语义悬崖(3565,B-3 名词间
-  不匹配是特性)、疑问形态(3666)——全部为设计内保守拒判或留审项,
-  非 Gate 行为回归;8 案(2322/4814/val_58/4188/4813/1961/2196/val_142)
-  经 #416 校准(B-1/B-5/C-3b/维度表)实测恢复 completed;
+实测口径(2026-09-22,C 段跑面;2026-09-24 #416 claim 边界校准后重登记;
+2026-09-24 2591 alias 入库后再重登记 5→4):
+- **28 案 PASS**:21 正向案 completed(Gate 正确放行;四锚 2322/2960/3695/
+  3138 全部实测放行——2322「结果是52」经 B-1 恢复;2591 终句「平行四边形的
+  特性是它易变形。」经题库显式 alias 声明面恢复,gt_ref 仍为「易变形」)
+  + 7 负向案 needs_review(completed 消失,硬断言);
+- **4 案 DIVERGENCE**(校准前 13,#416 重登记 13→5,alias 入库后 5→4):与
+  corpus 再生成后的 4 张力旗案**精确一致**——复合红线(5234)、复合+单位+stale
+  (十字绣)、语义悬崖(3565,B-3 名词间不匹配是特性)、疑问形态(3666)——
+  全部为设计内保守拒判或留审项,非 Gate 行为回归;8 案(2322/4814/val_58/
+  4188/4813/1961/2196/val_142)经 #416 校准(B-1/B-5/C-3b/维度表)、2591 经
+  alias 入库(2026-09-24 用户双重批准,语义裁决 gold-adjudication-c25c46c51-
+  2591-20260924.md §B;仅 alias/等价形态不得推广,回指绑定本题)实测恢复
+  completed;
 - **675/val_13 分支案**:逐路径枚举——675 证据路径(correction/fallback
   「答案是A。」)completed=正向不劣化;纠错路径(claim_match,否定语境非
   claim)needs_review=结构拒判;val_13 两路径均 needs_review=假收束消失。
@@ -41,10 +45,14 @@ ANCHOR_FOUR = ("socraticmath_train_2322", "socraticmath_train_2960",
                "socraticmath_train_3695", "socraticmath_train_3138")
 
 # 已知 divergence 显式登记(2026-09-24 #416 claim 边界校准人裁「按建议」后
-# **重登记 13→5**;标签来源:corpus 再生成后的 5 张力旗案,与提案 E-2 表一致)。
+# **重登记 13→5**;标签来源:corpus 再生成后的张力旗案,与提案 E-2 表一致)。
 # 校准前 13 案中的 8 案(2322/4814/val_58/4188/4813/1961/2196/val_142)经
 # B-1/B-5/C-3b/维度表补实测恢复 completed,登记移除;**期望面(completed)
 # 全程未动**——重登记是「实测消失→显式确认」的防静默重释动作,非改期望。
+# 2026-09-24 再重登记 **5→4**:2591 出列——题库显式 alias「它易变形」入库
+# (用户双重批准,语义裁决 gold-adjudication-c25c46c51-2591-20260924.md §B;
+# 仅 alias/等价形态,不得推广为通用规则,回指绑定本题)后 evidence 面恢复,
+# 实测 completed 与期望一致;verifier 零改动,期望面未动。
 REGISTERED_DIVERGENCES = {
     "socraticmath_train_3565":
         "语义悬崖:终答 100 由「等于100/分割成100」携带,B-3 算式直给形"
@@ -56,9 +64,6 @@ REGISTERED_DIVERGENCES = {
         "白名单外+单位形态+stale:「是6」无单位、「6dm」单位与键 6dm² 不同族、"
         "末轮「是的,我真棒」无当轮答案;完整 answer「B.6dm²」另属复合(corpus"
         " 短板注记:复合+stale;B-6 名词+是 不收,恢复等复合 v2)",
-    "socraticmath_train_2591":
-        "short_text 左边界:「它易变形」的左边界字「它」∉{是,为},whole-answer"
-        " 左边界拒判(恢复走题库显式 alias 声明面,verifier 不动,留人批)",
     "socraticmath_train_3666":
         "疑问形态:「应该是30:15=8:4也可以吧?」问句标记(吧/?)消息级"
         " fail-closed(「吧」语气是否算断言属问句口径重裁,留人审)",
@@ -143,16 +148,17 @@ def test_anchor_four_gate_behavior():
 
 
 def test_constructible_cases_all_pass_through_gate():
-    """20/32 可构造案(探针 evidence 登记非空)全部实测 completed——Gate
+    """21/32 可构造案(探针 evidence 登记非空)全部实测 completed——Gate
     正向放行面(§六.1 completed 不劣化):evidence 轮+ready 剧本 → 同轮终局
     (§二;摇摆案 2960 先行拒绝埋点后于回正轮授权,同属放行)。#416 校准
     前为 12 案;8 案张力解锁(2322/4814/val_58/4188/4813/1961/2196/
-    val_142)后为 20,登记面变化即红,防静默重释。"""
+    val_142)后为 20;2591 经题库显式 alias「它易变形」入库(2026-09-24
+    用户双重批准,verifier 零改动)后为 21,登记面变化即红,防静默重释。"""
     by_id = {c["id"]: c for c in _load()["cases"]}
     constructible = {c["id"] for c in by_id.values()
                      if c["gate_a_probe"].get("evidence_turns")
                      or c["gate_a_probe"].get("any_evidence")}
-    assert len(constructible) == 20, f"可构造案登记面变化:{sorted(constructible)}"
+    assert len(constructible) == 21, f"可构造案登记面变化:{sorted(constructible)}"
     for cid, outs in _replay_all().items():
         if cid in constructible:
             outcome = _case_outcome(by_id[cid], outs)
