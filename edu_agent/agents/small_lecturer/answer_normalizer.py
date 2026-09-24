@@ -130,8 +130,15 @@ UNIT_FAMILIES: dict[str, dict[str, Fraction]] = {
              "dm": Fraction(1, 10), "厘米": Fraction(1, 100), "cm": Fraction(1, 100),
              "毫米": Fraction(1, 1000), "mm": Fraction(1, 1000),
              "千米": Fraction(1000), "km": Fraction(1000), "公里": Fraction(1000)},
-    "面积": {"平方米": Fraction(1), "平方厘米": Fraction(1, 10000),
+    # #416 C-3b 维度表缺口修复:面积族原缺「平方分米/平方毫米」(4814
+    # 「平方分米」连族都查不到);体积族整族原缺(立方米/立方分米/立方厘米/
+    # 升/毫升——val_58「立方分米」同因不可判)。
+    "面积": {"平方米": Fraction(1), "平方分米": Fraction(1, 100),
+             "平方厘米": Fraction(1, 10000), "平方毫米": Fraction(1, 1000000),
              "平方千米": Fraction(1000000), "公顷": Fraction(10000)},
+    "体积": {"立方米": Fraction(1), "立方分米": Fraction(1, 1000),
+             "立方厘米": Fraction(1, 1000000), "升": Fraction(1, 1000),
+             "毫升": Fraction(1, 1000000)},
     "质量": {"千克": Fraction(1), "kg": Fraction(1), "公斤": Fraction(1),
              "克": Fraction(1, 1000), "g": Fraction(1, 1000), "吨": Fraction(1000)},
     "时间": {"小时": Fraction(1), "时": Fraction(1), "h": Fraction(1),
@@ -169,7 +176,10 @@ def unit_scale(unit: str) -> Fraction:
 # ×/·→独立乘法 token `*`(绝不与变量 x 合并);=/＝→`==`(等号两侧同规范,
 # 学生半角/全角等价);÷→/;全角括号/小数点→半角;剥空白。字符串等价,
 # sympy 符号等价是第二版(§八 YAGNI)。冒号保留(比例 12:4=6:2 的结构符)。
-_EQUATION_CHARS = re.compile(r"[0-9A-Za-z+\-*/=():.\s]+")
+# π 入字符集(#416 C-1):「比是4：π」的候选段不再断在「4：」——扩展只
+# 影响候选切分,匹配仍是整段字符串等价(零容差,「4:3.14」≠「4:π」),
+# π 无量纲歧义(圆周率唯一)。
+_EQUATION_CHARS = re.compile(r"[0-9A-Za-z+\-*/=():.\sπ]+")
 
 
 def symbol_key(text: str) -> str:

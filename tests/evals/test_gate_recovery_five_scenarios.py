@@ -3,15 +3,17 @@ Gate C 段并入件,零模型)。
 
 #422 审查 P2① 的 5 景(#423 issue 列明)= shortboard 中被 Gate B 段翻转期望的
 五景。恢复链三环:题库 answer_spec 声明面(#424 已合,partner 142 条)→
-normalize() 透传(#427 已合)→ #416 claim 边界校准(**人审,未落地**)。本件
-= 验证动作:每景注入**测试本地构造的声明面**(ADVISORY 建议规格同款)重放,
-实测恢复或逐景归因——#423 exit=逐景有结论。
+normalize() 透传(#427 已合)→ #416 claim 边界校准(2026-09-24 人裁「按建议」
+已落地)。本件 = 验证动作:每景注入**测试本地构造的声明面**(ADVISORY 建议
+规格同款)重放,实测恢复或逐景归因——#423 exit=逐景有结论。
 
-实测结论(2026-09-22,C 段跑面):**0/4 正向景恢复,1 景负向保护如设计成立**
-——五景全部 needs_review,归因均为「白名单外措辞/复合/stale」(#423 预期口径):
-恢复的最后一环是 #416 claim 边界校准(444a「…的高度是0.5m」是 claim 模板外;
-0.4kg「就是0.4千克」同)与复合 v2(25km 多槽、2c85 完整 answer 复合+stale),
-留人审,不在本件裁决。
+实测结论(2026-09-22 C 段跑面 0/4 → 2026-09-24 #416 校准后 **1/4 正向景恢复**):
+- echo-confirm(0.4kg)**恢复**:终答轮「那就是0.4千克。」经 B-5「就是」
+  (末 token+3 字否定窗)+kg/千克同族换算命中 evidence → completed;
+  中间轮「得到了400」仍不命中(truth 带单位而裸值无授权,C-3b 不适用)。
+- 其余三正向景维持 needs_review(设计内):444a「…的高度是0.5m」名词+是
+  (B-6 不收,留审走题库声明面或复合 v2)、25km 多槽复合红线(等 v2)、
+  2c85 复合+单位不同族+stale(等 v2);1 景负向保护(no-premature)如设计成立。
 """
 
 from __future__ import annotations
@@ -57,20 +59,22 @@ READY_ANCHORS = {
     "repro-close-loop-cross-stitch": 2,
 }
 
-# 逐景结论(归因清单,#423 exit 面板;恢复依赖 #416 人审校准/复合 v2,不在本件裁决)
+# 逐景结论(归因清单,#423 exit 面板;2026-09-24 #416 校准后更新)
 CONCLUSIONS = {
     "no-premature-confirm-before-student-answer":
         "负向保护(不适用恢复):学生全程未落终答,声明面在场仍无 evidence → "
         "needs_review 如设计(2791/5106/3490 同型;短路板冻结期望保持)",
     "repro-guard-student-echo-confirm":
-        "白名单外:终答轮「那就是0.4千克。/就是0.4千克」——「就是/那就是」"
-        "非声明式模板;中间轮「得到了400」同(值等价 0.4kg=400g 但非 claim)。",
+        "已恢复(#416 B-5):终答轮「那就是0.4千克。」——「就是」收为声明模板"
+        "(末 token+3 字否定窗双捆绑)+kg/千克同族换算 → evidence,completed;"
+        "中间轮「得到了400」仍不命中(truth 带单位而学生裸值无授权)。",
     "repro-guard-given-scale-reference":
         "复合红线:answer 多槽(A/B 位置+平均速度+1小时后坐标),§三整体不"
         "判定——声明面在场(如实登记 composite)组装即 None,须复合 v2。",
     "repro-close-loop-ball-bounce":
-        "白名单外(444a):终答句「…的高度是0.5m」——「的高度是」claim 模板外"
-        "(值出现≠claim,A-段 §三);前轮「哦对是0.5」同。恢复依赖 #416 校准。",
+        "白名单外(444a,B-6 不收):终答句「…的高度是0.5m」——「的高度是」"
+        "名词+是,B-6 泛化不收(名词集开放,收=白名单坍缩);前轮「哦对是0.5」"
+        "同。恢复走题库声明面或复合 v2,留人审。",
     "repro-close-loop-cross-stitch":
         "白名单外+单位形态+stale(2c85):「是6」无单位且键 6dm² 单位非可选、"
         "「绣了6dm」单位 dm 与 dm² 不同族、末轮「是的,我真棒」无当轮答案"
@@ -95,17 +99,24 @@ def _replay(scenario_id: str):
 
 def test_five_scenarios_each_has_conclusion():
     """#423 exit=逐景有结论:五景全部实测重放(带声明面),终态/证据面/归因
-    逐景断言——0/4 正向景恢复,归因全部落在「白名单外/复合/stale」
-    (#423 预期口径),如实呈报;1 景负向保护如设计成立。"""
+    逐景断言——#416 校准后 1/4 正向景恢复(echo-confirm,B-5「就是」),
+    其余三正向景归因落在「白名单外(B-6 不收)/复合/stale」(留审),如实
+    呈报;1 景负向保护如设计成立。"""
     for scenario_id in FIVE:
         outcome = _replay(scenario_id)
-        assert outcome.final_state == "needs_review", \
-            f"{scenario_id} 带声明面实测 {outcome.final_state}" \
-            "(若 completed=恢复超预期,更新 #423 结论与归因清单)"
-        assert not outcome.evidence_turns, \
-            f"{scenario_id} 出现 evidence 轮 {outcome.evidence_turns}(同上)"
-        assert outcome.gate_rejections >= 1, \
-            f"{scenario_id} 无拦截埋点(短路板冻结期望的保持证据)"
+        if scenario_id == "repro-guard-student-echo-confirm":
+            assert outcome.final_state == "completed", \
+                f"{scenario_id} 校准后应恢复(B-5),实测 {outcome.final_state}"
+            assert outcome.evidence_turns == [3], \
+                f"{scenario_id} evidence 轮异常:{outcome.evidence_turns}"
+        else:
+            assert outcome.final_state == "needs_review", \
+                f"{scenario_id} 带声明面实测 {outcome.final_state}" \
+                "(若 completed=恢复超预期,更新 #423 结论与归因清单)"
+            assert not outcome.evidence_turns, \
+                f"{scenario_id} 出现 evidence 轮 {outcome.evidence_turns}(同上)"
+            assert outcome.gate_rejections >= 1, \
+                f"{scenario_id} 无拦截埋点(短路板冻结期望的保持证据)"
         assert scenario_id in CONCLUSIONS      # 归因清单逐景在案
 
 

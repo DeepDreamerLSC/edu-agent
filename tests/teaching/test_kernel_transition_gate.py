@@ -329,6 +329,23 @@ def test_answer_spec_assembly_is_fail_closed():
     assert _answer_spec(dict(CHOICE_Q)).letter_choices == ("A", "B", "C", "D")
 
 
+def test_answer_spec_counting_unit_grants_unit_optional():
+    """#416 C-3a(spec 组装侧,verifier 零改动):truth 单位 ∈ 计数单位封闭集
+    {名只本人个棵张条辆件次岁页种块支间道门步} → unit_optional=True(计数
+    单位语义下学生裸值可收,4248「36减24应该是12」形态);「分」不入集(度量
+    歧义,维持裸 token 精确匹配);度量单位(度)与非单位答案不授权。"""
+    counting = _answer_spec({"text": "t", "answer": "12名",
+                             "answer_spec": {"answer_type": "numeric_with_unit",
+                                             "ground_truth": "12名"}})
+    assert counting is not None and counting.unit_optional is True
+    minutes = _answer_spec({"text": "t", "answer": "90分",
+                            "answer_spec": {"answer_type": "numeric_with_unit",
+                                            "ground_truth": "90分"}})
+    assert minutes is not None and minutes.unit_optional is False
+    assert _answer_spec(dict(TEMPERATURE_Q)).unit_optional is False   # 度量单位
+    assert _answer_spec(dict(CANDY_Q)).unit_optional is False         # 无单位答案
+
+
 # ---------- 持久化往返(api 层跨进程 confirm 链路) ----------
 
 def test_evidence_survives_store_roundtrip(tmp_path):

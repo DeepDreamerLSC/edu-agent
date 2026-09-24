@@ -42,7 +42,8 @@ from dataclasses import dataclass, field
 
 from edu_agent.gateway import Gateway, ModelRequest, default_gateway
 
-from .completion import ANSWER_TYPES, AnswerSpec, verify_completion
+from .completion import (ANSWER_TYPES, AnswerSpec, counting_unit_optional,
+                         verify_completion)
 from .format_guard import evaluate_student_visible_format
 from .guardrails import evaluate_student_visible_question
 from .numeric import (_ASCII_NUMBER, _answer_focus_numbers, _declarative,
@@ -243,7 +244,11 @@ def _answer_spec(question: dict) -> AnswerSpec | None:
         answer_type=answer_type,
         ground_truth=ground_truth,
         aliases=tuple(str(alias) for alias in declared.get("aliases") or ()),
-        unit_optional=bool(declared.get("unit_optional", False)),
+        # unit_optional:显式声明 ∪ #416 C-3a 计数单位推导(truth 单位 ∈ 计数
+        # 单位封闭集 → 授权省略;「分」不入集——度量歧义)
+        unit_optional=(bool(declared.get("unit_optional", False))
+                       or (answer_type == "numeric_with_unit"
+                           and counting_unit_optional(ground_truth))),
         letter_choices=tuple(str(choice) for choice in declared.get("letter_choices") or ()),
     )
 
