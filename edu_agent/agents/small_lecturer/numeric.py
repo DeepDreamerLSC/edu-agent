@@ -218,8 +218,8 @@ def mask_numbers(text: str, numbers) -> str:
 # ── result-assertion proof(#441 B′ containment;B1 分析件 §4 规则,终裁
 #    5824408984)─────────────────────────────────────────────────────────────
 # 规则类型(#442 硬编码治理 §一):deterministic parser + positive authority——
-# 非 None 即向学生断言「得到 X」,验收从严。设计定位:defect(_step_value 抽到
-# 输入 → anchor 把操作数当结果断言)→ invariant(无 result-assertion proof
+# 非 None 即向学生断言「得到 X」,验收从严。设计定位:defect(_step_value_candidate
+# 抽到输入 → anchor 把操作数当结果断言)→ invariant(无 result-assertion proof
 # 即无「得到 X」权限)→ proof obligation(本函数),不是 case→rule。
 #
 # 红线(B1 终裁④):只描述 syntax/property classes,禁具体数学内容/中文业务词。
@@ -291,12 +291,12 @@ def result_evidence(fragment: str, value: str) -> ResultEvidence | None:
     不是「发现一个数字就证明它是结果」,而是**先找到结果陈述,再绑定这个数字**:
     非 None 才许 anchor 向学生断言「得到 X」;None = fail-closed(弃锚=少一个
     数值提示,不构成假教学)。绑定位(两形态共用)= 片内与 X 相等的最后一个
-    ASCII 数字段——由 `_step_value` 取尾数的构造,这正是抽取发生的位置;片内
+    ASCII 数字段——由 `_step_value_candidate` 取尾数的构造,这正是抽取发生的位置;片内
     无等于 X 的数字段 → 直接 None。
 
     形态 E(explicit_equation_rhs):最后一个等式记号(= / 等于,过否定守卫)
     的 RHS **首数** == X。「26÷3=8(套)…2(米)」绑首数不绑尾数——LHS=RHS
-    断言的值是 RHS 头部;取尾恰是 `_step_value` 的错归因形态,允许尾数作证
+    断言的值是 RHS 头部;取尾恰是 `_step_value_candidate` 的错归因形态,允许尾数作证
     等于给已定性的错归因族发通行证。已知语义边界:定义式等式(「1寸=3.33厘米」)
     形态过、RHS 是换算常数非该步结果(语法 proof 看不见「定义 vs 计算」,
     B1 残留 R3;现 bank anchor 面零等式形态)。

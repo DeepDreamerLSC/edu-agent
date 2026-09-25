@@ -118,8 +118,11 @@ def test_hard_gate_false_anchors_zero_residual():
 
 
 def test_frozen_fragments_match_production_slicing():
-    """切片漂移哨兵:样本 fragment/value 必须逐字等于生产 `_analysis_steps` 对该题
-    切出的对应片段——bank 数据或切梯被改动即红,强制人工重裁(防静默绕过 oracle)。"""
+    """切片漂移哨兵:样本 fragment 必须逐字等于生产 `_analysis_steps` 对该题切出
+    的对应片段;value 按 #446 语义断言 = 冻结 value(若 result_evidence 出证,
+    expected 非 None)否则 ""——bank 数据或切梯/入库门被改动即红,强制人工重裁
+    (防静默绕过 oracle)。19 条 false_anchor 在此即 #446 门 1:文本保留+value 空;
+    3 条 correct_anchor_kept 即门 6:proof-backed value 不清空。"""
     bank = {r["question_id"]: r for r in
             json.loads(BANK_PATH.read_text(encoding="utf-8"))["records"]}
     for sample in SAMPLES + BOUNDARY:
@@ -127,7 +130,8 @@ def test_frozen_fragments_match_production_slicing():
         ladder = _analysis_steps(str(record.get("original_analysis") or ""))
         step = ladder[sample["idx"]]  # 梯变短 → IndexError = 红(数据漂移,须重裁)
         assert step["step"] == sample["fragment"], f"{sample['question_id']} 片段漂移"
-        assert step["value"] == sample["value"], f"{sample['question_id']} 值漂移"
+        expected_value = sample["value"] if sample["expected"] is not None else ""
+        assert step["value"] == expected_value, f"{sample['question_id']} 值漂移"
 
 
 def test_result_evidence_kind_is_closed_set():
@@ -179,8 +183,8 @@ def test_mutation_unrelated_operand_does_not_hijack(fragment, value):
 ])
 def test_mutation_trailing_operand_not_result(fragment, value):
     """mutation④:分母/操作参数不因末尾成结果——尾位是必要条件(值头收尾),
-    非充分条件(还须从句级断言结构);这正是 `_step_value` 取尾数抽到输入的
-    错归因形态,规则必须整体拒绝。"""
+    非充分条件(还须从句级断言结构);这正是 `_step_value_candidate` 取尾数抽到
+    输入的错归因形态,规则必须整体拒绝。"""
     assert result_evidence(fragment, value) is None
 
 
