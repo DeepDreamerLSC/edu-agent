@@ -173,7 +173,11 @@ _ALLOWED_EVENT_KEYS = {"branch", "hint_level", "turn", "soften", "dropped", "anc
 def _synth_seed(rng: random.Random) -> tuple[dict, set[float]]:
     """随机合成 A 形种子:题面数/终答数/阶梯值,重叠与非重叠都造(不变量与
     是否授权无关——锚无论何时出现都必须 ∩pool=∅ 且单数值)。#382 PR-C:step
-    文本带该步数值(analysis 切片可承载 value;「第N步」三字短片会被切片弃)。"""
+    文本带该步数值(analysis 切片可承载 value;「第N步」三字短片会被切片弃)。
+    B′(#441):步文本取系词断言形(先算这一步的结果是X,同 `_class_seed` 形态)
+    ——「先把这一项算出结果 X」是操作叙述(「结果」=算出的宾语,B1 fail-closed
+    弃锚,网格锚面退化为 0);property 的对象是**授权后**不变量,网格须保有
+    非空锚面,弃锚面由 oracle(19 假)/mutation 测试钉。"""
     qnums = rng.sample(range(2, 60), 2)
     pool = rng.sample([n for n in range(2, 99) if n not in qnums], rng.choice([1, 2]))
     # 阶梯值避题面数、末级必触终答池(guard-provenance-fix ③ 门契约:模型阶梯
@@ -182,7 +186,7 @@ def _synth_seed(rng: random.Random) -> tuple[dict, set[float]]:
     ladder = [rng.choice([n for n in range(2, 99) if n not in qnums])
               for _ in range(rng.choice([2, 3]))]
     ladder[-1] = rng.choice(pool)
-    steps = [{"step": f"先把这一项算出结果 {v}", "value": str(v)} for v in ladder]
+    steps = [{"step": f"先算这一步的结果是{v}", "value": str(v)} for v in ladder]
     answer = "、".join(f"{n}只" for n in pool)
     seed = {"session": {"question": {"text": f"一共 {qnums[0]} 只和 {qnums[1]} 只,问各多少?",
                                      "answer": answer},
@@ -207,8 +211,9 @@ def test_property_anchor_never_leaks_answer():
                 anchored += 1
                 assert len(anchor) == 1, f"case{i}: 锚必须单数值,实得 {anchor}"
                 assert not set(anchor) & pool, f"case{i}: 锚 {anchor} 撞终答池 {pool}"
-    # 防网格退化空转(P3-nano③,reviewer 659c6ae9):锚面下限(当前种子实测 76;
-    # 网格/判据若改到不足此限,说明授权面样本萎缩——先查网格再动阈值)
+    # 防网格退化空转(P3-nano③,reviewer 659c6ae9):锚面下限(B′ #441 网格改
+    # 系词断言形后实测 57;网格/判据若改到不足此限,说明授权面样本萎缩——先查
+    # 网格再动阈值)
     assert anchored >= 30, f"property 网格退化:仅 {anchored} 案有锚(<30)"
 
 
