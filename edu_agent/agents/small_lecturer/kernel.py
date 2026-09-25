@@ -48,7 +48,7 @@ from .guardrails import evaluate_student_visible_question
 from .numeric import (_ASCII_NUMBER, _answer_focus_numbers, _declarative,
                       _drift_sources, student_stated_answer,
                       _known_answer, _question_numbers, _reply_numbers, _spoken_numbers,
-                      mask_numbers)
+                      mask_numbers, result_evidence)
 from .prompting import (OPEN_SCHEMA, TUTOR_SUMMARY_SCHEMA, TUTOR_TURN_SCHEMA,
                         _FEEDS_METHOD_CRITIQUE, _SELF_CRITIQUE, _user_prompt,
                         diagnose_turn_hint, first_question_text, grade_grounding, opening_hint,
@@ -431,6 +431,12 @@ def _reveal_stuck_hint(session: "LearnerSession") -> str:
     # (additive,只在授权轮写;未授权轮不加键,整 dict 断言不变,#187/A4 指标连续)。
     anchor = (set() if session.state == "ready_to_confirm"
               else _current_step_anchor_numbers(session, step)) if re_stuck else set()
+    # B′ containment(#441 B1 终裁):七条件之上再合取 result-assertion proof——
+    # anchor 是 authority grant(「得到 X」=向学生断言派生事实),trusted 片段不自动
+    # 传递 authority;无证明即弃锚(fail-closed:弃锚=少一个数值提示,数字照旧随
+    # 步文本可见;误发=向学生讲错数学,Cost(FP)≫Cost(FN))。
+    if anchor and result_evidence(str(step.get("step") or ""), str(step.get("value") or "")) is None:
+        anchor = set()
     # 句末标点由模板统一补:step/answer 自带「。」先剥掉,不叠「。。」
     # (#198 独立审查实测:生产揭示轮 9/14 双句号,学生可见面)。
     if anchor:

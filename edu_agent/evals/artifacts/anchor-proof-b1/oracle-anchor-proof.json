@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "title": "#441 B′ containment · result-assertion proof oracle(B1 分析件 §8 冻结方案)",
+    "frozen_date": "2026-09-25",
+    "issue": "DeepDreamerLSC/edu-agent#441",
+    "ruling": "B1 六项终裁 5824408984(2026-09-25,实现 PR 授权);Team-Contract: fb232d86",
+    "rule": "numeric.result_evidence(fragment, value) -> ResultEvidence|None。形态 E(explicit_equation_rhs):最后等式记号(∈ {=, 等于},否定守卫排 !=/<=/>=/不等于)的 RHS 首数 == X,绑首数不绑尾数。形态 C(explicit_result_clause):X(+至多一个封闭值后缀 ∈ {%, 倍})收尾全片,且绑定位(片内最后一个等于 X 的 ASCII 数字段)所在当前从句满足 C1(独立系词 ∈ {是, 为, 等于},构形成素守卫)或 C2(比…多/少,≤8 字跨度)。两形态均不中 → None(fail-closed)。只描述 syntax/property classes,禁具体数学内容/中文业务词(B1 终裁④)。",
+    "hard_gate": "全部 class=false_anchor 样本 expected=null 且实测必须 None(19/0 冻结;#441 验收硬门)。",
+    "common_mode_ban": "expected 为人工冻结字面值(null / explicit_result_clause / explicit_equation_rhs),禁止由测试内新 helper 自算、禁止由生产函数推导——反 common-mode 铁条。fragment/value/question_id 是题库数据字面量(锚定 contracts/partner_bank.json,由切片漂移哨兵测试对账),不属于 expected。",
+    "boundary_adjudication": "negative_boundary 2 条 = B1 终裁③(2026-09-25):边界二样本按「可证明才授权」归类——能被封闭结构证明才 positive;需人理解句意 = 落 negative。判读依据见 B1 分析件 §5.4:6a62bdb9 数字在枚举主语位(第2、3幅),断言结果是集合非数值;6a62fcb9 系词在场但 3 在谓语 NP 内部(3段…之和),断言的值是结构描述非数 3。人裁若改判,以 amendment 显式留痕入本文件(C07)。",
+    "amendments": []
+  },
+  "samples": [
+    {"question_id": "6a61b67e", "idx": 1, "fragment": "再取7/18", "value": "18", "class": "false_anchor", "mechanism": "分母(操作数,算子宾语位)", "expected": null, "note": "生产实录:#441 点名「再取7/18→得到 18」"},
+    {"question_id": "6a62cef1", "idx": 1, "fragment": "再用总量1去除", "value": "1", "class": "false_anchor", "mechanism": "操作数(总量1)", "expected": null, "note": ""},
+    {"question_id": "6a62f495", "idx": 1, "fragment": "再乘100", "value": "100", "class": "false_anchor", "mechanism": "操作数(题给)", "expected": null, "note": "20260920 事故同题族(天姥山);「这一步先算,得到 100」defect 实录"},
+    {"question_id": "6a630a1c", "idx": 1, "fragment": "再用面积差9 dm²反推每一份面积", "value": "9", "class": "false_anchor", "mechanism": "题给引文", "expected": null, "note": ""},
+    {"question_id": "6a6317bb", "idx": 1, "fragment": "再按24K对应100%换算", "value": "100", "class": "false_anchor", "mechanism": "换算常数", "expected": null, "note": ""},
+    {"question_id": "6a6318a4", "idx": 1, "fragment": "再分析“每满1000减300”与七折等价出现的条件", "value": "300", "class": "false_anchor", "mechanism": "题给引文", "expected": null, "note": "含「等价」不触发「等于」(子串不等于记号)"},
+    {"question_id": "6a631d51", "idx": 1, "fragment": "再根据“少9/23”反推乐府诗", "value": "23", "class": "false_anchor", "mechanism": "引文分母", "expected": null, "note": ""},
+    {"question_id": "6a631d6d", "idx": 1, "fragment": "再乘1.05", "value": "1.05", "class": "false_anchor", "mechanism": "操作数", "expected": null, "note": ""},
+    {"question_id": "6a631dd9", "idx": 1, "fragment": "再求少10%的结果", "value": "10", "class": "false_anchor", "mechanism": "操作数(少10%)", "expected": null, "note": "#9 词表反例:含「结果」二字仍 None——「结果」是求的宾语(操作叙述),词表方案必挂、结构方案能过(B1 终裁:进 PR 设计说明)"},
+    {"question_id": "6a631e57", "idx": 1, "fragment": "再除以原来速度260", "value": "260", "class": "false_anchor", "mechanism": "除数(题给)", "expected": null, "note": ""},
+    {"question_id": "6a631e7b", "idx": 1, "fragment": "折扣方式按25%省钱比较", "value": "25", "class": "false_anchor", "mechanism": "操作数(按25%)", "expected": null, "note": "含「比较」的「比」不跨接(C2 跨度内禁再出现「比」)"},
+    {"question_id": "6a63213a", "idx": 1, "fragment": "再按3个花瓶应用鸽巢原理", "value": "3", "class": "false_anchor", "mechanism": "题给(3个)", "expected": null, "note": ""},
+    {"question_id": "6a69568b", "idx": 1, "fragment": "第(2)问把2020年看作2018年的90%反推", "value": "90", "class": "false_anchor", "mechanism": "操作数(看作)", "expected": null, "note": "「看作」语义近系词但属内容动词,不入封闭系词类(B1 残留 R6:宁漏勿误方向)"},
+    {"question_id": "6a695769", "idx": 1, "fragment": "再除以3%", "value": "3", "class": "false_anchor", "mechanism": "除数", "expected": null, "note": "% 后缀过终位检查但无从句系词/比较式——终位是必要条件非充分"},
+    {"question_id": "6a696046", "idx": 1, "fragment": "最后加100元办卡费", "value": "100", "class": "false_anchor", "mechanism": "加数(题给)", "expected": null, "note": "元=物理单位,不在封闭值后缀集(开放类不收,B1 残留 R5)"},
+    {"question_id": "6a69e63b", "idx": 1, "fragment": "200米按一个半圆弯道差计算", "value": "200", "class": "false_anchor", "mechanism": "题给(200米)", "expected": null, "note": ""},
+    {"question_id": "6a69e6f9", "idx": 1, "fragment": "再利用与非会员的8%差额反推原价", "value": "8", "class": "false_anchor", "mechanism": "题给(8%)", "expected": null, "note": ""},
+    {"question_id": "6a69e78b", "idx": 1, "fragment": "再用降价9元除以原价", "value": "9", "class": "false_anchor", "mechanism": "题给(降价9元)", "expected": null, "note": ""},
+    {"question_id": "6a69e7ba", "idx": 1, "fragment": "再乘3/4", "value": "4", "class": "false_anchor", "mechanism": "分母", "expected": null, "note": ""},
+    {"question_id": "6a631dcf", "idx": 1, "fragment": "再比较实际体重比标准多19.0%", "value": "19.0", "class": "correct_anchor_kept", "mechanism": "C2 比较差值谓语(比标准+多+19.0% 收尾)", "expected": "explicit_result_clause", "note": "片内确有「实际体重比标准多19.0%」——真结果断言"},
+    {"question_id": "6a631e95", "idx": 1, "fragment": "再八折”得实际售价是成本价的1.04倍", "value": "1.04", "class": "correct_anchor_kept", "mechanism": "C1 系词(是+成本价的+1.04倍 收尾)", "expected": "explicit_result_clause", "note": ""},
+    {"question_id": "6a695670", "idx": 1, "fragment": "再增20%，结果是原来的96%", "value": "96", "class": "correct_anchor_kept", "mechanism": "C1 系词(结果是+原来的+96% 收尾)", "expected": "explicit_result_clause", "note": ""},
+    {"question_id": "6a699c84", "idx": 1, "fragment": "再按图示每次增加整瓶容量的1/10，即增加35mL", "value": "35", "class": "correct_anchor_dropped", "mechanism": "无(即+内容动词「增加」+单位 mL;B1 终裁②:弃用,撤销一项系统没有资格拥有的 authority)", "expected": null, "note": "真结果断言但语法头是内容动词+单位后缀;救它的两条路(即-schema/单位入集)均被否——为 recall 引入已知 FP 机制违反「不得为 recall 扩宽高风险规则」。步文本回放仍含 35mL,学生照旧可见该数"}
+  ],
+  "synthetic_pins": [
+    {"fragment": "48÷3=16", "value": "16", "expected": "explicit_equation_rhs", "note": "RHS 单数,首=尾"},
+    {"fragment": "26÷3=8(套)…2(米)", "value": "2", "expected": null, "note": "审计错归因例(9-24):RHS 尾数=余数,不证——绑首数不绑尾数"},
+    {"fragment": "26÷3=8(套)…2(米)", "value": "8", "expected": "explicit_equation_rhs", "note": "函数语义:片确断言 26÷3=8;生产不会如此调用(_step_value 恒抽尾数 2)"},
+    {"fragment": "1寸=3.33厘米换算", "value": "3.33", "expected": "explicit_equation_rhs", "note": "定义式等式:形态过、RHS 是换算常数非该步结果——语法 proof 看不见「定义 vs 计算」,B1 残留 R3(现 bank anchor 面零等式形态)"},
+    {"fragment": "结果不等于42%", "value": "42", "expected": null, "note": "否定等式守卫(「不等于」不算等式记号)"},
+    {"fragment": "a <= b 且得 5", "value": "5", "expected": null, "note": "<= 守卫(等式记号否定形)"},
+    {"fragment": "全长是400", "value": "400", "expected": "explicit_result_clause", "note": "系词+值收尾"},
+    {"fragment": "结果是原来的96%", "value": "96", "expected": "explicit_result_clause", "note": "与 dev 样本 6a695670 同构(合成钉面)"},
+    {"fragment": "实际售价是成本价的1.04倍", "value": "1.04", "expected": "explicit_result_clause", "note": "与 dev 样本 6a631e95 同构"},
+    {"fragment": "实际体重比标准多19.0%", "value": "19.0", "expected": "explicit_result_clause", "note": "与 dev 样本 6a631dcf 同构(C2)"},
+    {"fragment": "再乘100", "value": "100", "expected": null, "note": "操作叙述(与 dev 样本 6a62f495 同文)"},
+    {"fragment": "再求少10%的结果", "value": "10", "expected": null, "note": "#9 词表反例合成钉(与 dev 样本同文)"},
+    {"fragment": "总路程为3段四分之一圆弧之和", "value": "3", "expected": null, "note": "系词在场但数在谓语 NP 内部,片尾是「和」非值头(与边界样本 6a62fcb9 同文)"},
+    {"fragment": "但是省25%", "value": "25", "expected": null, "note": "「但是」构形成素守卫(是 被前邻 但 拦下)"},
+    {"fragment": "原价为100元", "value": "100", "expected": null, "note": "单位后缀不在封闭后缀集(宁丢不扩,B1 残留 R5)"},
+    {"fragment": "再按图示每次增加整瓶容量的1/10，即增加35mL", "value": "35", "expected": null, "note": "即+内容动词:高危形态拒收(B1 终裁②;与 6a699c84 同文)"}
+  ],
+  "negative_boundary": [
+    {"question_id": "6a62bdb9", "idx": 1, "fragment": "4幅图中只有第2、3幅符合", "value": "3", "class": "negative_boundary", "mechanism": "数字在枚举主语位(第2、3幅);断言结果是「哪些图符合」这个集合,非数值 3", "expected": null, "note": "B1 重建发现(Phase A 23 样本外);终裁③归 negative boundary gold。「得到 3」教学效果本身可疑,弃向保守正确"},
+    {"question_id": "6a62fcb9", "idx": 1, "fragment": "总路程为3段四分之一圆弧之和", "value": "3", "class": "negative_boundary", "mechanism": "系词「为」在场,但 3 在谓语 NP 内部(3段…之和),片尾是「和」非值头;断言的值是结构描述,非数 3", "expected": null, "note": "B1 重建发现(Phase A 23 样本外);终裁③归 negative boundary gold"}
+  ]
+}
