@@ -421,19 +421,3 @@ _FEEDS_METHOD_CRITIQUE = (
     "也不要说出答案数字。保留这一轮原有的作用(该引导就继续引导、该确认就确认),"
     "只是不要替学生把方法的名字点出来——用学生已经说过的话来推进,重写这一轮回复。"
 )
-
-# 护栏拦截重写模板(kernel.py _answer_leak_reply 使用;占位符由调用方 .format() 填入):
-#   rule_ids_joined = ','.join(rule_ids)
-#   reply_excerpt   = reply_text[:48]
-#   numbers         = "、".join(f"{n:g}" for n in sorted(violations))
-# 字节级一致性:与外置前 kernel.py 的 f-string 版本在相同输入下产出相同字符串。
-_GUARD_REJECTION_HIT_TEMPLATE = (
-    "你上一条回复被教学护栏拦截(规则:{rule_ids_joined};命中内容:"
-    "「{reply_excerpt}」)。请重写这条回复,直接回应用户当前的问题;"
-    "不要重复被拦截的内容,不要提前给出答案或方法名。"
-)
-_GUARD_REJECTION_NUMBERS_TEMPLATE = (
-    "你上一条回复被教学护栏拦截(规则:{rule_ids_joined};未经学生验证"
-    "就说出的数值:{numbers})。请重写这条回复:不要说这些数值,也不要给出"
-    "答案数字或题面之外的中间结果——用学生已经说过的信息继续引导他往下算。"
-)
