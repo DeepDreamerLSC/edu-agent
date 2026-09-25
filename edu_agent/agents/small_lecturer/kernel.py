@@ -688,10 +688,11 @@ _ANALYSIS_SPLIT_RE = re.compile(r"[。;；\n]+|(?=(?:先|再|然后|接着|最�
 _SLICE_TRIM_RE = re.compile(r"^[\s,、:：]+|[\s,、:：]+$")
 
 
-def _step_value(fragment: str) -> str:
-    """切片 → **该步结果**:有等号取最后一个等号右侧的数字,否则取最后一个数字。
-
-    取不到数字(纯叙述步)返回空串 → 该片不入选阶梯(与 `_store_steps`「无 value 不用」同口径)。
+def _step_value_candidate(fragment: str) -> str:
+    """切片 → **数字候选**(#446 降格重命名:原 `_step_value`):有等号取最后一个等号右侧的
+    数字,否则取最后一个数字。candidate 无 fact authority——操作数/分母/题给引文同样会被
+    抽到(B2 审计 19/19),过 `result_evidence` 出证才可入 step["value"],raw candidate 禁入
+    持久化;取不到数字(纯叙述步)返回空串 → 该片不入选阶梯。
     """
     tail = fragment.rsplit("=", 1)[-1] if "=" in fragment else fragment
     numbers = re.findall(r"\d+(?:\.\d+)?", tail)
@@ -713,6 +714,9 @@ def _analysis_steps(analysis: str) -> list[dict]:
 
     #382 PR-C:切片逐条带 `provenance="analysis"`(trusted 权威源标记,deterministic
     reveal 只消费 trusted 阶梯)。
+
+    #446 修复契约(用户终裁):value 只承载 result_evidence 已证明的该步结果——candidate
+    在场即入梯(admission 不变),无证明 value=""(step/rung 保留);raw candidate 禁入 dict。
     """
     fragments = [_SLICE_TRIM_RE.sub("", f)
                  for f in _ANALYSIS_SPLIT_RE.split(str(analysis or ""))]
@@ -720,9 +724,11 @@ def _analysis_steps(analysis: str) -> list[dict]:
     for fragment in fragments:
         if len(fragment) <= 3:
             continue
-        value = _step_value(fragment)
-        if value:
-            steps.append({"step": fragment, "value": value, "provenance": "analysis"})
+        candidate = _step_value_candidate(fragment)
+        if candidate:
+            evidence = result_evidence(fragment, candidate)
+            steps.append({"step": fragment, "value": candidate if evidence else "",
+                          "provenance": "analysis"})
     return steps if len(steps) >= 2 else []
 
 
