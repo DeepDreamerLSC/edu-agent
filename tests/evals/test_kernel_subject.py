@@ -12,7 +12,11 @@ import json
 import pytest
 from fake_openai import Reply, completion
 
-from edu_agent.evals import EnvironmentFailure, KernelSubject
+from edu_agent.evals import (
+    POST_TURN_OBSERVATION_SCHEMA_VERSION,
+    EnvironmentFailure,
+    KernelSubject,
+)
 
 from teachkit import FakeGateway, kernel_env, open_json, tutor_json
 
@@ -117,6 +121,106 @@ def test_probe_flags_4531_form_same_turn_ready_and_evidence(tmp_path):
     assert [event for event in transcript["guard_events"]
             if event.get("branch") == "completion_gate_rejected"] == [
         {"branch": "completion_gate_rejected", "turn": 2}]
+
+
+# ---------- post-turn observation(#448 §二:eval adapter 只读 session 写 transcript,零 kernel 改动) ----------
+
+_OBS_KEYS = {"state", "session_version", "hint_level", "stuck",
+             "verified_complete", "evidence_turn_id"}
+
+
+def test_obs_4531_form_final_answer_turn_evidence_present(tmp_path):
+    """#448 §二 六字段快照,4531 形态:t1 终答轮当轮 evidence 在场 →
+    verified_complete=True + evidence_turn_id=1(=transcript 轮号);t0/t2 普通轮
+    False;t2 延伸轮 evidence 覆写 None(消耗形态:obs 反映**覆写后**值);
+    state 逐轮与现有 turn['state'] 一致;session_version 逐轮与 kernel Turn
+    契约恒等(start 恒 1、每 reply +1,kernel._commit_turn/_close_on_final_statement
+    ——任务书措辞「恒定」按此落钉:kernel 实况每轮 +1,恒定同值断言不成立,
+    钉的是「恒等于该轮 Turn.session_version」)。"""
+    with kernel_env(tmp_path, [
+        completion(open_json("这道题要我们求什么?")),
+        completion(tutor_json("很好，你把分段计费的道理讲完整了。", ready=True)),
+        completion(tutor_json("对的，字母换成具体数值就能算出结果。", ready=True)),
+    ]) as (fake, gateway):
+        transcript = KernelSubject(gateway).run_case(CASE_4531)
+    turns = transcript["turns"]
+    obs = [turn["obs"] for turn in turns]
+    # 字段面恒六键(#448 §二;cert 冻结的 schema 版本钉死,防静默漂移)
+    assert POST_TURN_OBSERVATION_SCHEMA_VERSION == "v0.1"
+    assert all(set(snapshot) == _OBS_KEYS for snapshot in obs)
+    # state 逐轮与现有 turn['state'] 一致(采样时点=轮后快照)
+    assert [snapshot["state"] for snapshot in obs] == [t["state"] for t in turns]
+    # session_version:start 恒 1,每 reply +1(= 各轮 Turn.session_version)
+    assert [snapshot["session_version"] for snapshot in obs] == [1, 2, 3]
+    # t0 首问(#448 二审:首问就是 obs[0]):无学生消息、零阶梯、未卡、无证据
+    assert obs[0] == {"state": "first_question_ready", "session_version": 1,
+                      "hint_level": 0, "stuck": False,
+                      "verified_complete": False, "evidence_turn_id": None}
+    # t1 终答轮(4531 形态):当轮 evidence 在场(evidence_turn_id=1——kernel 侧
+    # turn_id=history 内 user 消息数,生产时 +1,与 transcript 首问占第 0 轮同轨)
+    assert obs[1]["state"] == "ready_to_confirm"
+    assert obs[1]["verified_complete"] is True
+    assert obs[1]["evidence_turn_id"] == 1
+    # t2 延伸轮(消耗形态):evidence 覆写 None → obs 反映覆写后值
+    assert obs[2]["state"] == "ready_to_confirm"
+    assert obs[2]["verified_complete"] is False
+    assert obs[2]["evidence_turn_id"] is None
+    # hint_level/stuck 如实:4531 全程零揭示、无卡壳
+    assert [snapshot["hint_level"] for snapshot in obs] == [0, 0, 0]
+    assert [snapshot["stuck"] for snapshot in obs] == [False, False, False]
+
+
+def test_obs_completed_close_path_final_turn(tmp_path):
+    """close 路径(ready 后终述轮内直接 finish)的末轮 obs:evidence 在场 +
+    state=completed;收束路径同样 version+1;此前普通轮无证据。"""
+    with kernel_env(tmp_path, [
+        completion(open_json("题目要我们求什么?")),
+        completion(tutor_json("为什么两边都能减7?")),
+        completion(tutor_json("很好,再同时除以3。", ready=True)),
+        # t3 学生终述「x=6」→ close 路径轮内走 finish,此即收束 summary 调用
+        completion(json.dumps({"summary": "你用等式性质解出 x=6 并检验。"},
+                              ensure_ascii=False)),
+    ]) as (fake, gateway):
+        transcript = KernelSubject(gateway).run_case(CASE)
+    obs = [turn["obs"] for turn in transcript["turns"]]
+    assert transcript["final_state"] == "completed"
+    # 末轮 t3:evidence 生产先于一切分支(kernel.reply 首行)→ obs 如实带出
+    assert obs[3]["verified_complete"] is True
+    assert obs[3]["evidence_turn_id"] == 3
+    assert obs[3]["state"] == "completed" == transcript["turns"][3]["state"]
+    # close 路径 version 同样 +1(kernel._close_on_final_statement)
+    assert [snapshot["session_version"] for snapshot in obs] == [1, 2, 3, 4]
+    # 前三轮普通轮:t1/t2 无 equation 命中 → False
+    assert [snapshot["verified_complete"] for snapshot in obs[:3]] == [False] * 3
+
+
+def test_obs_stuck_turn_sets_stuck_and_advances_hint_level(tmp_path):
+    """hint_level/stuck 读取面:学生本人卡壳信号(#382 P0-1 唯一合法写入点)
+    → obs 反映 stuck=True + trusted ladder(题库 analysis 切片)揭示推进
+    hint_level 0→1;无 answer_spec 声明面 → verified_complete 恒 False
+    (fail-closed)。t1 走确定性 stuck 分支,零模型调用。"""
+    case = {
+        "id": "obs_stuck_ladder",
+        "question": {"text": "算一算 6×4÷2 等于多少。",
+                     "analysis": "先算 6×4=24。再算 24÷2=12。"},
+        "grade": "三年级",
+        "student_turns": ["我不会"],
+    }
+    with kernel_env(tmp_path, [
+        completion(open_json("我们先看这道题。")),
+    ]) as (fake, gateway):
+        transcript = KernelSubject(gateway).run_case(case)
+    obs = [turn["obs"] for turn in transcript["turns"]]
+    # t0 首问后:零阶梯、未卡
+    assert obs[0]["hint_level"] == 0
+    assert obs[0]["stuck"] is False
+    # t1 学生卡壳:stuck=True;trusted ladder 揭示第一级 → hint_level=1
+    assert obs[1]["state"] == "dialogue"
+    assert obs[1]["stuck"] is True
+    assert obs[1]["hint_level"] == 1
+    # 无 answer_spec 声明面:无证据(fail-closed)
+    assert obs[1]["verified_complete"] is False
+    assert obs[1]["evidence_turn_id"] is None
 
 
 def test_run_case_content_failure_reraises(tmp_path):

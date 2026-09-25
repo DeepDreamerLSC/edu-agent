@@ -13,7 +13,7 @@ from .image_teaching import (
     to_cases,
     validate_scenario,
 )
-from .kernel_subject import KernelSubject
+from .kernel_subject import POST_TURN_OBSERVATION_SCHEMA_VERSION, KernelSubject
 from .lane_m import LaneMResult, compare_lane_m, run as run_lane_m
 from .judge import (
     DIMENSION_GUIDE,
@@ -95,6 +95,7 @@ __all__ = [
     "EvalRunner",
     "JudgeSubject",
     "KernelSubject",
+    "POST_TURN_OBSERVATION_SCHEMA_VERSION",
     "LaneMResult",
     "compare_lane_m",
     "run_lane_m",

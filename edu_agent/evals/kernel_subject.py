@@ -23,6 +23,39 @@ from .image_teaching import question_image_data_url
 from .runner import EnvironmentFailure
 from .scenario_corpus import select_branch
 
+# #448 §二 post-turn observation 的 schema 版本(#448 §三 P0:sampling/freeze
+# certificate 必填项——cert 冻结本常量,obs 字段面任何变更须升版本号)。
+POST_TURN_OBSERVATION_SCHEMA_VERSION = "v0.1"
+
+
+def _post_turn_observation(session: LearnerSession) -> dict:
+    """第 i 轮结束后快照(#448 §二;轨迹 obs[i-1] → student[i] → tutor[i] →
+    obs[i],首问即 obs[0])。六字段全是系统已有事实,eval-only observable
+    snapshot:只读 session,不发明新状态;latent learner state(misconception/
+    understanding_level/mastery_score/motivation,#448 §二 v0 禁项)一律不入,
+    guard_events 不重设计(现有带轮戳埋点照旧)。
+
+    字段映射(读取面全是 session 现成属性,零 kernel.py 改动):
+    state ← session.state;session_version ← session.session_version(start 恒 1,
+    每 reply +1,kernel._commit_turn 契约);hint_level ← session.hint_level;
+    stuck ← session.stuck(#382 P0-1 收口:学生本人明确卡壳信号位);
+    verified_complete/evidence_turn_id ← session.verified_signal(#414 §五 C 段
+    只读视图,#437 已落):None = 当轮无 trusted CompletionEvidence →
+    verified_complete=False + evidence_turn_id=None。
+
+    采样时点:turns.append 时(该轮 start/reply 已返回、session 已推进完毕)
+    ——evidence turn-scoped 每轮覆写,故 obs[i] 反映的是第 i 轮学生消息刚判完、
+    下一轮尚未覆写的值;剧本末尾的 finish() 不属于任何轮,不产生 obs。"""
+    signal = session.verified_signal
+    return {
+        "state": session.state,
+        "session_version": session.session_version,
+        "hint_level": session.hint_level,
+        "stuck": session.stuck,
+        "verified_complete": signal is not None,
+        "evidence_turn_id": None if signal is None else signal["evidence_turn_id"],
+    }
+
 
 def _same_turn_would_complete(state: str, session: LearnerSession) -> bool:
     """same_turn_ready_and_evidence_would_complete 探针(用户裁 2026-09-24 ②,
@@ -91,7 +124,8 @@ class KernelSubject:
             turns.append({"student": "", "tutor": first.text,
                           "state": first.state, "elapsed_ms": 0,
                           "same_turn_ready_and_evidence_would_complete":
-                              _same_turn_would_complete(first.state, session)})
+                              _same_turn_would_complete(first.state, session),
+                          "obs": _post_turn_observation(session)})
             # 学生消息两种取法共用一个循环体:线性剧本(student_turns 固定序列)
             # 或 v2 分支剧本(steps——每轮按导师上一句选分支,#178 跟随器)。
             tutor_text = first.text
@@ -111,7 +145,8 @@ class KernelSubject:
                               "state": turn.state,
                               "elapsed_ms": int((time.monotonic() - t0) * 1000),
                               "same_turn_ready_and_evidence_would_complete":
-                                  _same_turn_would_complete(turn.state, session)})
+                                  _same_turn_would_complete(turn.state, session),
+                              "obs": _post_turn_observation(session)})
                 tutor_text = turn.text
                 if turn.state == "completed":
                     break  # 终态才断:ready 后客户端仍会发消息(产线实录 444a/2c85
