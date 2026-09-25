@@ -41,16 +41,16 @@ class CompletionEvidence:
 
 ## 三、确定性窄面(领域层,小学数学第一批)
 
-覆盖设计依据:题库 263 题 answer 形态实测分布(2026-09-23 普查):
+覆盖设计依据:题库 263 题 answer 形态实测分布(2026-09-24 修订:PR #418 可复现普查为正本):
 
 | 窄面 | 覆盖形态(实测占比) | 判定逻辑(确定性) |
 |---|---|---|
-| numeric_with_unit | 纯数值 17% | 数值抽取+等价类归一(千分位/分数/小数/百分号——**等价类资产独立抽取为领域侧 normalizer/spec,产品层零 import eval/judge 依赖;评测亦不用与产品完全相同的 verifier 验产品,防 common-mode false green**)。**单位省略仅当题目 schema 显式声明 optional;同义单位须维度安全的确定性转换,无默认容差** |
-| choice_letter | 选择 4% | 字母精确匹配(题面选项字母表为合法集) |
-| true_false | 判断(类型来自 **answer schema/spec** 声明,非题面文字猜) | 对/错/√/× 映射 |
-| equation_form | 方程算式 4% | 符号归一(**×/·→独立乘法 token \`*\`,绝不与变量 x 合并**——ASCII x 在本题域是变量,合并=灾难性等价;＝→==)后字符串等价(sympy 第二版) |
+| numeric_with_unit | 纯数值 33.1%(87) | 数值抽取+等价类归一(千分位/分数/小数/百分号——**等价类资产独立抽取为领域侧 normalizer/spec,产品层零 import eval/judge 依赖;评测亦不用与产品完全相同的 verifier 验产品,防 common-mode false green**)。**单位省略仅当题目 schema 显式声明 optional;同义单位须维度安全的确定性转换,无默认容差** |
+| choice_letter | 选择 4.9%(13) | 字母精确匹配(题面选项字母表为合法集) |
+| true_false | 判断 0.0%(0)(类型来自 **answer schema/spec** 声明,非题面文字猜) | 对/错/√/× 映射 |
+| equation_form | 方程算式 1.1%(3) | 符号归一(**×/·→独立乘法 token \`*\`,绝不与变量 x 合并**——ASCII x 在本题域是变量,合并=灾难性等价;＝→==)后字符串等价(sympy 第二版) |
 | ratio_or_expression | 比例/表达式 | 同上归一族 |
-| short_text_exact | 短文本 39% | **normalized whole-answer exact/显式 alias match**:仅无语义归一(Unicode/全半角/空白/标点)+题库显式 alias;**不做编辑距离、不做裸 substring**("不是易变形"不得因包含"易变形"命中) |
+| short_text_exact | 短文本 18.3%(48) | **normalized whole-answer exact/显式 alias match**:仅无语义归一(Unicode/全半角/空白/标点)+题库显式 alias;**不做编辑距离、不做裸 substring**("不是易变形"不得因包含"易变形"命中) |
 
 **Precision-first claim matching(三审 P0-②,verifier 的输入语法收窄)**:
 
@@ -60,7 +60,7 @@ value_match(答案值出现)≠ claim(学生提交该答案)。"不是 6,我觉�
 - **不可认证形态**(一律不发 evidence,宁 needs_review):否定句/疑问句(含"是不是"探问)/不确定表达("还不确定","可能")/多候选/纠正语境(明确说"刚才的不对")/复杂自由文本——**无法确定性判定时保守拒绝**;
 - 此边界在 Phase A boundary gold 里钉住(负例即上述形态)。
 
-**明确不覆盖(第一版)**:多空/复合 33%——**整体 needs_review,任何局部槽命中不得构造 CompletionEvidence**(未来若需部分进度,另建 ProgressEvidence,不偷"半完成态");开放式题(无可靠 verifier)——**宁可 needs_review,不让 8B 猜完成态**(终裁原话)。~67% 为 **answer-key 形态可判上限(eligibility upper bound)**,非运行时完成覆盖率。实测口径:263 题形态普查(短文本 104/复合 89/纯数值 45/选择 13/方程 12;互斥分类规则=数值含单位>选择字母>判断>方程算式>短文本≤12字>复合;普查脚本随 A 段 PR 入 tests/ 或 scripts/ 留 fingerprint)。**Phase A verifier 接 Kernel 前须独立 boundary gold 集**(各窄面正/负边界案,与 32 案 regression corpus 分立)。
+**明确不覆盖(第一版)**:多空/复合 42.6%(112)——**整体 needs_review,任何局部槽命中不得构造 CompletionEvidence**(未来若需部分进度,另建 ProgressEvidence,不偷"半完成态");开放式题(无可靠 verifier)——**宁可 needs_review,不让 8B 猜完成态**(终裁原话)。**57.4%(151/263)为 answer-key 形态可判上限(eligibility upper bound)**,非运行时完成覆盖率。实测口径(2026-09-24 修订,PR #418 为可复现正本):263 题形态普查=纯数值 87/选择 13/判断 0/方程 3/短文本 48/复合 112,互斥分类规则不变(数值含单位>选择字母>判断>方程算式>短文本≤12字>复合);一条命令复现:`uv run python scripts/answer_census.py`(题库指纹 sha256-16=c38d5feaca409847——指纹敏感于文件字节:#418 原测为 3e2fc480f30f526f,#424 声明面并入(+882 行)后字节变而 answer 分布不变;分布数字以 answer 面为准,指纹以当日实跑为准;7 条裁定点见 #418 对账节)。**初版普查的 ~67% 口径未随数字落档、不可复现,已被本可复现口径取代**(分布差异主因:量词入数值面/短文本排除多槽/多方程归复合,详见 #418)。**Phase A verifier 接 Kernel 前须独立 boundary gold 集**(各窄面正/负边界案,与 32 案 regression corpus 分立)。
 
 ## 四、Kernel 消费契约(transition authority)
 
@@ -144,3 +144,7 @@ verified_complete = exists(CompletionEvidence):  # generation 只读
 - **P0-①正文 iff 真修**:前版修订对照表已记但正文 replace 未命中(「一条」二字失配)——审查者抓的正文与对照表自相矛盾即此;现 §一 已改为「必要授权+fail-closed+不自行触发迁移」;
 - **P0-② precision-first claim matching**:§三 新增专节——value_match≠claim;可认证形态白名单(裸答案/答案+单位/有限枚举声明式模板)/不可认证保守拒绝(否定/疑问/不确定/多候选/纠正语境);不造 commitment engine;boundary gold 钉边界;
 - 其余 P1(problem_id digest/schema 来源/census 映射/标点白名单/验收组件归因)按三审降级为实现建议或 A 段事项,不阻塞设计件。
+
+## 数字修订对照(2026-09-24,PR #418)
+
+- §三 分布表与可判上限改为可复现正本(87/13/0/3/48/112,151/263=57.4%,指纹随题库字节演进——#418 原测 3e2fc480f30f526f,PR 本头实跑 c38d5feaca409847(#424 并入声明面,answer 分布不变)):初版普查(~67%)口径未随数字落档、不可复现——「数字没有可复现的锚」即本教训,现以 scripts/answer_census.py 一条命令复现为正本;互斥分类规则与窄面判定逻辑零变化。

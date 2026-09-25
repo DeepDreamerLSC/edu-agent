@@ -55,6 +55,24 @@ class LearnerSession:
     def finished(self) -> bool:
         return self.state in ("completed", "failed")
 
+    @property
+    def verified_signal(self) -> dict | None:
+        """完成信号只读视图(#414 §五 generation 只读消费,C 段 accessor——任务书裁定
+        放本文件,不进 kernel.py:kernel.py 预算 788/800 已冻结)。
+
+        当轮 trusted CompletionEvidence 在场 → {"verified_complete": True,
+        "evidence_turn_id": N};None = 无证据(prompt 侧「未注入」形态,§五
+        「注入或未注入」)。评测重放/审查的只读消费面;生产 prompt 注入见
+        prompting.completion_signal_fact——kernel 每轮已把判定原料(answer_spec
+        声明面+学生本轮回答+对话记录)送进 prompt 装配,信号在装配侧由同一
+        verifier 重演,与本视图恒等(tests/teaching/test_completion_signal_prompt.py
+        钉死)。不含 canonical answer(§五:学生原文模型已有,塞答案=新
+        answer-leak 面)。"""
+        if self.completion_evidence is None:
+            return None
+        return {"verified_complete": True,
+                "evidence_turn_id": self.completion_evidence.turn_id}
+
 
 @dataclass(frozen=True)
 class Turn:

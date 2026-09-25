@@ -19,7 +19,9 @@ fail-closed 姿态贯穿:问句猜答(疑问标记/语气词)不构成证据(与
 claim(学生提交该答案)——不确定表达(可能/还不确定/大概/也许)与候选间
 「或/还是/要么」多候选消息级整条不判;命中前否定窗(不/没/非/未)六窄面
 通用;numeric 仅认裸答案/裸答案+单位/声明式模板(答案是/所以是/应该是/
-算出是)内的数字为 claim,不全文扫数;命中前猜测词窗(我猜/估计)六窄面
+算出是 + #416 校准:结果是/总共是/就是/得到/得到了 与算式直给形
+「860除以5是172」,新模板须为消息末数字 token)内的数字为 claim,不全文
+扫数;命中前猜测词窗(我猜/估计)六窄面
 通用,紧邻收尾之外另有声明模板交叠短距窗(#420:「我猜答案是X」的「是」
 隔开猜测词与命中段,查模板之前剥标点末 2 字;正镜像「我先猜8。后来算出
 是26只」的「猜」距模板 3 字,照常放行);候选连接窗(和/与/跟/及/同,
@@ -38,6 +40,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 
 from .answer_normalizer import (
+    UNIT_FAMILIES,
     equation_candidates,
     halfwidth,
     number_tokens,
@@ -112,15 +115,48 @@ _JOIN_AFTER_TRUE_FALSE = re.compile(r"[对错没正√✓×✗✘]")  # 连接�
 # 命中段之后的自我否定/犹疑(剥掉紧邻标点空白后起算):「x-21=35不对」。
 _RETRACT_AFTER = ("不对", "不成立", "错了", "错的", "不是", "并不")
 
-# 声明式模板(v3.1 §三可认证白名单,有限枚举的句法模式):numeric 的数字
-# token 仅在裸答案(消息起头)或这些模板之后才算 claim——「答案是6」
-# 「所以是0.5m」「应该是x-21=35」「算出是26只」;「我先猜8」的 8 不是
-# claim(「猜」不在白名单,不全文扫数)。
-_CLAIM_TEMPLATES = ("答案是", "所以是", "应该是", "算出是")
+# 声明式模板(v3.1 §三可认证白名单 + #416 校准扩词,2026-09-24 人裁「按建议」):
+# numeric 的数字 token 仅在裸答案(消息起头)或这些模板之后才算 claim——
+# 「答案是6」「所以是0.5m」「应该是x-21=35」「算出是26只」;「我先猜8」的 8
+# 不是 claim(「猜」不在白名单,不全文扫数)。#416 校准新增五模板(结果是/
+# 总共是/就是/得到/得到了)统一受「命中 token 须为消息末数字 token」约束
+# (3797 枚举形态对抗:「就是7，8，9…」的枚举员不得被收为 claim);动词类
+# (就是/得到/得到了)否定窗加宽至 3 字;「得到的是」不收(5362 中间值形态,
+# 收了会把第一个非终值变 claim);既有四模板语义与 2 字否定窗不动。
+_CLAIM_TEMPLATES = ("答案是", "所以是", "应该是", "算出是",
+                    "结果是", "总共是", "就是", "得到", "得到了")
+# #416 校准新增模板(末 token 约束面)与动词类(3 字否定窗面)
+_CALIBRATED_TEMPLATES = ("结果是", "总共是", "就是", "得到", "得到了")
+_VERB_TEMPLATES = ("就是", "得到", "得到了")
+
+# B-3 算式直给形「A〈运算〉B〈系词〉C」(#416 条件收:末 token 约束+交叠窗
+# 接算式段起点前扫):运算词/系词均封闭集,运算词间不允许夹汉字名词
+# (「1平方分米等于100」不匹配——3565 语义悬崖是特性不是缺陷);「等于」
+# 单独(前缀无算式段)不匹配。仍是句法模板,无算术求值、无语义角色识别。
+_ARITH_KIND = "<算式>"
+_ARITH_DIRECT = re.compile(
+    r"\d+(?:(?:加上|乘以|除以|减去|加|减|乘|除|[×÷+\-*/])\d+)+"
+    r"(?:得出了|得到了|等于|就是|得出|得到|是)$")
 
 _TRUE_RE = re.compile(r"(?<![不没非])对(?![不起吗吧呢])|正确|没错|√|✓|对的|对了")
 _FALSE_RE = re.compile(r"不对|不正确|错误|错了|错的|✗|✘|×|(?<![不没])错")
 _LETTER_RE = re.compile(r"(?<![A-Za-z])([A-Za-z])(?![A-Za-z])")
+
+# 计数单位封闭集(#416 C-3a,2026-09-24 人裁):truth 单位 ∈ 此集 → spec 组装
+# 侧置 unit_optional=True(计数语义下学生裸值可收,4248「36减24应该是12」
+# 形态);「分」不入集(时间/人民币度量歧义,维持裸 token 精确匹配)。
+# 集合归组装面消费(kernel._answer_spec),verifier 判定逻辑零依赖此授权。
+COUNTING_UNITS = frozenset("名只本人个棵张条辆件次岁页种块支间道门步")
+
+# #416 C-3b 单位剥除:truth 无单位而学生带已识别单位词(「应该是7200页」
+# 「就是28平方分米」)→ 剥除比数值。必须限「已识别单位前缀 startswith+
+# 单位串无 和/与/跟/及/同/或」:无条件剥除会打穿 neg-join-numeric×2(「6和7」
+# 的「和」被单位捕获吞成未知单位,是既有意外防线);startswith 判据兼容贪婪
+# 捕获的复合串(「种方案」「公顷啊」)。已识别单位 = 维度表全部成员 ∪ 计数
+# 单位字(计数单位不入换算表,但作为单位词可剥)。
+_UNIT_WORD_PREFIXES = tuple(sorted(
+    ({unit for members in UNIT_FAMILIES.values() for unit in members}
+     | set(COUNTING_UNITS)), key=len, reverse=True))
 
 
 @dataclass(frozen=True)
@@ -203,21 +239,33 @@ def _prefix_key(message: str, start: int) -> str:
     return key
 
 
-def _negated(message: str, start: int) -> bool:
+def _negated(message: str, start: int, width: int = 2) -> bool:
     """命中前否定窗(六窄面通用,short_text 原口径推广):命中起位之前
     剥空白标点的末 2 字含 不/没/非/未——「不是B」「我不选B」「不是x-21=35」
-    「不是6。我觉得是5」整条不判(v3.1 §三否定句不可认证)。"""
+    「不是6。我觉得是5」整条不判(v3.1 §三否定句不可认证)。#416 校准:
+    动词类新模板/算式直给形加宽至 3 字(「就没得到400」「答案不就是6」的
+    否定字紧贴模板前,2 字窗只见模板尾即穿透);既有模板维持 2 字
+    (gold pos/negation 系列不回归)。"""
     prefix = _prefix_key(message, start)
-    return any(n in prefix[-2:] for n in "不没非未")
+    return any(n in prefix[-width:] for n in "不没非未")
 
 
-def _is_claim(message: str, start: int) -> bool:
-    """数字 token 是否学生的答案声明(v3.1 §三白名单):token 之前剥空白
-    标点为空=裸答案/裸答案+单位(消息以答案起头),或以声明式模板
-    (答案是/所以是/应该是/算出是)收尾——此外的数字出现不算提交。"""
+def _claim_match(message: str, start: int) -> tuple[str, int] | None:
+    """数字 token 的 claim 形态与交叠窗扫描止点(v3.1 §三白名单 + #416 校准):
+    (形态, head_end)。形态 ""=裸答案(消息以答案起头);声明式模板串=前缀
+    剥空白标点后以该模板收尾;_ARITH_KIND=算式直给形(B-3)。head_end =
+    模板/算式段起位(猜测词交叠窗改查此前的前缀,#420 口径延伸到新模板
+    与算式段:「我猜结果是52」「我猜860除以5是172」照拦)。None=非 claim。"""
     prefix = _prefix_key(message, start)
-    return (not prefix
-            or any(prefix.endswith(t) for t in _CLAIM_TEMPLATES))
+    if not prefix:
+        return "", 0
+    for template in _CLAIM_TEMPLATES:
+        if prefix.endswith(template):
+            return template, len(prefix) - len(template)
+    arith = _ARITH_DIRECT.search(prefix)
+    if arith is not None:
+        return _ARITH_KIND, arith.start()
+    return None
 
 
 def _stripped_tail(message: str, end: int) -> str:
@@ -233,16 +281,19 @@ def _retracted(message: str, end: int) -> bool:
 
 def _guessed(message: str, start: int) -> bool:
     """命中前猜测词窗(P2-R1,六窄面):命中起位之前剥空白标点后以猜测词
-    收尾(「我猜是B」),或收于声明式模板且模板之前末 2 字内有猜测词
-    (#420 交叠缝:「我猜答案是B」——模板的「是」隔开猜测词与命中段);
-    逐命中判定(与 _negated 同为窗口而非消息级),后继命中不受影响。"""
+    收尾(「我猜是B」),或收于声明式模板/算式直给形且其之前末 2 字内有
+    猜测词(#420 交叠缝:「我猜答案是B」——模板的「是」隔开猜测词与命中
+    段;#416 延伸:「我猜结果是52」「我猜860除以5是172」照拦——B-3 交叠窗
+    接算式段起点前扫);逐命中判定(与 _negated 同为窗口而非消息级),
+    后继命中不受影响。"""
     prefix = _prefix_key(message, start)
     if prefix.endswith(_GUESS_MARKERS):
         return True
-    for template in _CLAIM_TEMPLATES:
-        if prefix.endswith(template):
-            return bool(_GUESS_HEDGE.search(prefix[: len(prefix) - len(template)]))
-    return False
+    match = _claim_match(message, start)
+    if match is None or not match[0]:
+        return False
+    _kind, head_end = match
+    return bool(_GUESS_HEDGE.search(prefix[:head_end]))
 
 
 def _joined(message: str, start: int, end: int,
@@ -267,12 +318,32 @@ def _single_number(ground_truth: str) -> tuple[str, Fraction, str] | None:
     return span, value, unit
 
 
+def counting_unit_optional(ground_truth: str) -> bool:
+    """#416 C-3a(spec 组装侧,verifier 零改动):truth 单位 ∈ 计数单位封闭集
+    → 题面授权单位省略(「12名」的学生裸值「36减24应该是12」可收)。供
+    kernel._answer_spec 组装时消费;「分」不入集(度量歧义)。"""
+    truth = _single_number(ground_truth)
+    return truth is not None and truth[2] in COUNTING_UNITS
+
+
+def _strippable_unit(unit: str) -> bool:
+    """truth 无单位时学生侧尾单位词可剥(C-3b 限定):已识别单位前缀
+    startswith(贪婪捕获吞「种方案」「公顷啊」等复合串亦认)+ 单位串不含
+    候选连接字(「6和7」的「和」被吞成单位是 neg-join 两钉的意外防线)。"""
+    return (not any(marker in unit for marker in _JOIN_MARKERS)
+            and unit.startswith(_UNIT_WORD_PREFIXES))
+
+
 def _unit_value_match(truth_unit: str, truth_value: Fraction, unit_optional: bool,
                       value: Fraction, unit: str) -> bool:
     """数值+单位判定:学生带单位 → token 相等或同族维度安全换算(零容差);
+    truth 无单位而学生带已识别单位词 → 剥除比数值(C-3b:答案键裸值 +
+    「7200页」「28平方分米」形态,前缀/连接字限定见 _strippable_unit);
     单位省略 → 仅 schema 显式 optional 且数值与题面**原值同口径**相等
     (「2千米」的省略形态是 2,不是 2000——省略不换算,审查修正③)。"""
     if unit:
+        if not truth_unit:
+            return _strippable_unit(unit) and value == truth_value
         return (units_compatible(truth_unit, unit)
                 and value * unit_scale(unit) == truth_value * unit_scale(truth_unit))
     if truth_unit and not unit_optional:
@@ -281,12 +352,15 @@ def _unit_value_match(truth_unit: str, truth_value: Fraction, unit_optional: boo
 
 
 def _numeric_tags(span: str, truth_span: str, tags: list[str],
-                  unit: str, truth_unit: str) -> tuple[str, ...]:
+                  unit: str, truth_unit: str,
+                  stripped: bool = False) -> tuple[str, ...]:
     """归一标签:原样命中=空;否则记学生侧数字归一 + 单位判定面。"""
     if span == truth_span:
         return ()
     applied = list(tags)
-    if unit and unit != truth_unit:
+    if stripped:
+        applied.append("单位剥除")
+    elif unit and unit != truth_unit:
         applied.append("单位同义换算")
     if not unit and truth_unit:
         applied.append("单位省略(schema授权)")
@@ -302,24 +376,36 @@ def _verify_numeric_with_unit(spec: AnswerSpec, message: str) -> tuple[str, tupl
     后来算出是26只」里「猜」的 8 不算提交)。claim token 的声明模板之前
     短距内有猜测词(「我猜答案是26只」,#420 交叠缝)也是猜测陈述,非
     提交;被 和/与/跟/及/同 连接到另一数字(「答案是6。和7」,P2-R2)
-    也是候选枚举一环,非终答。"""
+    也是候选枚举一环,非终答。#416 校准:新增模板与算式直给形
+    (结果是/总共是/就是/得到/得到了/「860除以5是172」)的命中还须是
+    **消息末数字 token**(枚举员/中间值非终答:「就是7，8，9…」「3乘4是12,
+    再用12除以6是2」拒),动词类与算式系词否定窗 3 字(见 _negated)。"""
     truth = _single_number(spec.ground_truth)
     if truth is None:
         return None
     truth_span, truth_value, truth_unit = truth
-    for span, start, end, value, unit, tags in number_tokens(message):
-        if value is None or not _is_claim(message, start):
+    tokens = number_tokens(message)
+    last_end = max((token[2] for token in tokens), default=-1)
+    for span, start, end, value, unit, tags in tokens:
+        claim = _claim_match(message, start)
+        if value is None or claim is None:
             continue                      # 非 claim token(「猜8」):值对也不判
+        kind = claim[0]
+        if (kind in _CALIBRATED_TEMPLATES or kind == _ARITH_KIND) and end != last_end:
+            continue                      # 校准新模板/算式直给形:非消息末数字
+                                         # token(枚举员/中间值)不算终答
         if _guessed(message, start):
             continue                      # 「我猜答案是8」(#420):猜测非提交
         if _joined(message, start, end, _JOIN_AFTER_NUMERIC):
             continue                      # 候选连接(「答案是6。和7」):枚举非终答
+        stripped = not truth_unit and bool(unit)
         if not _unit_value_match(
                 truth_unit, truth_value, spec.unit_optional, value, unit):
             continue
-        if _negated(message, start) or _retracted(message, end):
+        width = 3 if kind in _VERB_TEMPLATES or kind == _ARITH_KIND else 2
+        if _negated(message, start, width) or _retracted(message, end):
             continue                      # 命中前否定/命中后自我否定:不构成证据
-        return span, _numeric_tags(span, truth_span, tags, unit, truth_unit)
+        return span, _numeric_tags(span, truth_span, tags, unit, truth_unit, stripped)
     return None
 
 
@@ -332,16 +418,24 @@ def _verify_choice_letter(spec: AnswerSpec, message: str) -> tuple[str, tuple[st
     合法集外字母同属枚举一环,「B,E」也拒——两字母并列即未落终答,与
     E 是否在题面选项内无关)=未落终答,整面不判;「不选B,选A」「A不对,
     是B」的否定/撤回字母不计,修正后终选照常命中。命中前猜测词窗
-    (P2-R1+#420):「我猜是B」「我猜答案是B」非提交。"""
+    (P2-R1+#420):「我猜是B」「我猜答案是B」非提交。#416 C-4 算式变量
+    豁免:字母落在含数字的 equation 候选段内(2n、2n+1 的 n)视为变量,
+    不计存活、不作命中——「偶数表示为2n…所以答案应该是选B」的 n 不与 B
+    并列;顺带关闭「2B+1是奇数,题目说的对」的 B 被当选项命中的误放面
+    (变量是算式记号,非答案)。"""
     letters = [a for a in halfwidth(spec.ground_truth) if a.isascii() and a.isalpha()]
     if len(letters) != 1:
         return None                       # 非单字母答案:不属本窄面(fail-closed)
     truth_letter = letters[0]
     if not spec.letter_choices or truth_letter not in spec.letter_choices:
         return None                       # 合法集缺失/答案字母不在题面选项字母表内
+    variable_zones = [(seg_start, seg_end)
+                      for _seg, seg_start, seg_end in equation_candidates(message)]
     hits = [(m.group(1), m.start(), m.end(),
              not _negated(message, m.start()) and not _retracted(message, m.end()))
-            for m in _LETTER_RE.finditer(halfwidth(message))]
+            for m in _LETTER_RE.finditer(halfwidth(message))
+            if not any(seg_start <= m.start() < seg_end
+                       for seg_start, seg_end in variable_zones)]
     surviving = {letter for letter, _s, _e, alive in hits if alive}
     if len(surviving) >= 2:
         return None                       # 多候选:≥2 个存活字母(不限合法集,
@@ -402,11 +496,38 @@ def _verify_symbolic(spec: AnswerSpec, message: str) -> tuple[str, tuple[str, ..
     return None
 
 
+def _shorttext_bounds(key_message: str,
+                      key_candidate: str) -> tuple[int, int] | None:
+    """whole-answer 命中键位区间 [start, stop) 与左边界核验:直收尾=整答
+    收尾,左边界句首或断言系词(是/为)——「容易变形」不得经后缀包含命中
+    「易变形」,变体只能走题库显式 alias;#416 C-2 配对尾框「用X来表示/
+    用X表示」(「这应该用分数来表示。」)仅在左边界恰为「用」时接受,
+    通用左边界(是/为)不放宽。"""
+    if key_message.endswith(key_candidate):
+        start = len(key_message) - len(key_candidate)
+        boundary = key_message[start - 1] if start else ""
+        if not boundary or boundary in "是为":
+            return start, len(key_message)
+        return None
+    for frame in ("来表示", "表示"):
+        if not key_message.endswith(frame):
+            continue
+        stop = len(key_message) - len(frame)
+        if not key_message[:stop].endswith(key_candidate):
+            continue
+        start = stop - len(key_candidate)
+        boundary = key_message[start - 1] if start else ""
+        if boundary == "用":
+            return start, stop
+    return None
+
+
 def _verify_short_text_exact(spec: AnswerSpec, message: str) -> tuple[str, tuple[str, ...]] | None:
     """短文本窄面:normalized **whole-answer** exact / 题库显式 alias。
 
     仅无语义归一(全半角/空白/标点);命中必须是消息末段的完整答案断言
-    (居中出现=裸 substring,不判);命中前否定窗(不/没/非/未,六窄面
+    (居中出现=裸 substring,不判;#416 C-2 尾框「用X来表示/用X表示」是
+    唯一例外形态,配对左边界「用」);命中前否定窗(不/没/非/未,六窄面
     通用 _negated——「不是易变形」不得因包含「易变形」命中,审查修正④)
     与猜测词窗(「我猜是易变形」,P2-R1);和/与 连接候选结构性免疫——
     左边界只认句首/断言系词(是/为)、右端必须整答收尾,「…和易变形」
@@ -417,15 +538,13 @@ def _verify_short_text_exact(spec: AnswerSpec, message: str) -> tuple[str, tuple
     key_message, spans = text_key(message)
     for candidate in (spec.ground_truth, *spec.aliases):
         key_candidate, _ = text_key(candidate)
-        if not key_candidate or not key_message.endswith(key_candidate):
+        if not key_candidate:
             continue
-        start = len(key_message) - len(key_candidate)
-        # 左边界:句首或断言系词(是/为)——「容易变形」不得经后缀包含命中
-        # 「易变形」,变体只能走题库显式 alias(whole-answer,非裸 substring)。
-        boundary = key_message[start - 1] if start else ""
-        if boundary and boundary not in "是为":
+        bounds = _shorttext_bounds(key_message, key_candidate)
+        if bounds is None:
             continue
-        begin, last = spans[start][0], spans[-1][1]
+        start, stop = bounds
+        begin, last = spans[start][0], spans[stop - 1][1]
         # 否定窗口:命中前 2 字(剥空白标点)含 不/没/非/未(「不是易变形」)。
         if _negated(message, begin):
             continue

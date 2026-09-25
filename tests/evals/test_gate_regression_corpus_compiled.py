@@ -88,8 +88,13 @@ def test_expected_assertions_wellformed_and_tensions_flagged():
                               or probe.get("any_evidence"))
                 assert not has_ev, \
                     f"{case['id']} tension 旗与探针结果矛盾"
-    # 预登记张力面非空(§三 precision-first 白名单 vs §六.1 不劣化)——冻结在案
-    assert tension >= 10, "张力案预登记面异常缩水(判读依据丢失)"
+    # 预登记张力面非空(§三 precision-first 白名单 vs §六.1 不劣化)——冻结在案。
+    # #416 claim 边界校准(2026-09-24 人裁)后张力案 13→5(8 案经 B-1/B-5/
+    # C-3b/维度表恢复 evidence 轮);2591 alias「它易变形」入库(2026-09-24 用户
+    # 双重批准,题库显式声明面逐案例外,verifier 零改动)后 evidence 轮恢复,
+    # 张力案 5→4(2591 出列)——再消失即红(须随重放登记面同步重新登记,防
+    # 静默重释),新增即红(新保守拒判面,须呈报)。
+    assert tension == 4, f"张力案登记面变化(alias 入库后=4,实测 {tension})"
     # pending_review 头部含 700m 差异记录(设计件优先原则的执行凭证)
     assert any("700m" in note for note in payload["pending_review"])
 
@@ -124,7 +129,7 @@ def test_provenance_fingerprints_and_verbatim_embedding():
 
 
 def test_gate_probe_spot_check_with_merged_verifier():
-    """抽验探针可由 A 段 verify_completion(建议规格)复算:正/负/张力各一。"""
+    """抽验探针可由 A 段 verify_completion(建议规格)复算:正/负/校准恢复案各一。"""
     payload = _load()
     by_id = {c["id"]: c for c in payload["cases"]}
     # 正向可构造:4402 equation_form
@@ -142,10 +147,55 @@ def test_gate_probe_spot_check_with_merged_verifier():
     for i, turn in enumerate(case["replay_input"]["student_turns"]):
         assert verify_completion(a_spec, turn, i) is None, \
             f"5106 负向案第 {i} 轮出现可构造 evidence"
-    # 张力案:2322(结果是52,非白名单模板)全轮 None
+    # 2322(#416 校准恢复案):t0「吧」问句整条拒,t2「结果是52」可构造
+    # (B-1 结果是)——探针登记 [2] 可由合并 verifier 复算,张力旗已随
+    # corpus 机械再生成移除
     case = by_id["socraticmath_train_2322"]
-    assert not case["gate_a_probe"]["evidence_turns"]
-    assert any("tension" in f for f in case["expected"]["flags"])
+    spec = case["gate_a_probe"]["spec"]
+    a_spec = AnswerSpec(answer_type=spec["answer_type"],
+                        ground_truth=spec["ground_truth"])
+    turns = case["replay_input"]["student_turns"]
+    assert case["gate_a_probe"]["evidence_turns"] == [2]
+    assert not any("tension" in f for f in case["expected"]["flags"])
+    assert verify_completion(a_spec, turns[0], 0) is None   # 「吧」问句正确保守
+    assert verify_completion(a_spec, turns[2], 2) is not None
+
+
+def test_2591_explicit_alias_declaration_and_adversarial_rejection():
+    """2591 题库显式 alias「它易变形」(2026-09-24 用户双重批准,语义裁决
+    gold-adjudication-c25c46c51-2591-20260924.md §B;verifier 零改动):
+
+    - 声明面:spec.aliases 逐案登记 + 禁推广注记(仅 alias/等价形态,回指
+      绑定本题)——人批显式例外,非通用规则;
+    - 行为面:终句「平行四边形的特性是它易变形。」alias 命中,溯源 gt_ref
+      仍为 ground_truth「易变形」;其余学生轮(背景/疑问式候选/错误答案
+      「稳定性」)与对抗三形态(否定/猜测/后缀「容易变形」)全拒——裁决
+      实测口径:alias 只恢复终句 evidence,不打开新缝。"""
+    payload = _load()
+    case = next(c for c in payload["cases"] if c["id"] == "socraticmath_train_2591")
+    spec = case["gate_a_probe"]["spec"]
+    assert spec["aliases"] == ["它易变形"]
+    assert "不得推广为通用规则" in spec["aliases_note"]
+    assert "回指绑定本题" in spec["aliases_note"]
+    a_spec = AnswerSpec(answer_type=spec["answer_type"],
+                        ground_truth=spec["ground_truth"],
+                        aliases=tuple(spec["aliases"]))
+    turns = case["replay_input"]["student_turns"]
+    # 仅终句命中(alias 尾匹配+左边界「是」),其余轮全拒
+    for i, turn in enumerate(turns):
+        evidence = verify_completion(a_spec, turn, i)
+        if i == len(turns) - 1:
+            assert evidence is not None, "2591 终句 alias 未命中(evidence 面未恢复)"
+            assert evidence.provenance.ground_truth_ref == "易变形"
+            assert evidence.provenance.matched_span == "它易变形"
+        else:
+            assert evidence is None, f"2591 第 {i} 轮因 alias 误收"
+    # 对抗三形态(裁决实测口径):否定窗/猜测窗/左边界各自拦截
+    adversarial = ("平行四边形的特性不是它易变形。",   # 否定:命中前 2 字「不是」
+                   "我猜是它易变形。",                 # 猜测:命中前「猜是」
+                   "这种形状容易变形。")               # 后缀:「容」非左边界,裸 substring 不收
+    for text in adversarial:
+        assert verify_completion(a_spec, text, 9) is None, f"对抗形态误收:{text}"
 
 
 def test_dry_run_linear_replay_verbatim():

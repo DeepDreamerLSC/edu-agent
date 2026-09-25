@@ -221,6 +221,27 @@ def test_evidence_alone_does_not_complete_without_ready_state():
     assert not _gate_rejections(session)     # 未达 ready:既有路径拒绝,非门拒绝
 
 
+def test_finish_state_gate_rejection_records_event():
+    """state 门拒埋点(用户裁 2026-09-24 ①:observation 非 promotion gate):
+    state≠ready_to_confirm 的 finish 走既有 needs_review——落 state_gate_rejected
+    埋点(state 值+轮号),与 completion_gate_rejected 对称且可区分;纯观测,
+    不进任何判定/PASS 口径。"""
+    gateway = FakeGateway([_open("这道题要我们求什么?"),
+                           _tutor("我们先看已知条件。", ready=False)])
+    session = start(dict(TEMPERATURE_Q), {"grade": "六年级"}, gateway=gateway).session
+    turn = reply(session, "我先想想。", gateway=gateway)
+    assert turn.state == "dialogue"
+    requests_before = len(gateway.requests)
+    summary = finish(session, gateway=gateway)
+    assert summary.status == "needs_review" and not session.finished
+    assert session.state == "dialogue"
+    assert len(gateway.requests) == requests_before   # 拒绝先于任何模型调用
+    assert [event for event in session.guard_events
+            if event.get("branch") == "state_gate_rejected"] == [
+        {"branch": "state_gate_rejected", "state": "dialogue", "turn": 1}]
+    assert not _gate_rejections(session)   # state 门与 completion 门两拒可分诊
+
+
 # ---------- ④ turn-scoped:stale evidence 不授权 ----------
 
 def test_stale_turn_evidence_does_not_authorize():
@@ -327,6 +348,23 @@ def test_answer_spec_assembly_is_fail_closed():
     assert spec.ground_truth == "25.8度"          # 缺省回退 question["answer"]
     assert spec.aliases == () and spec.unit_optional is False
     assert _answer_spec(dict(CHOICE_Q)).letter_choices == ("A", "B", "C", "D")
+
+
+def test_answer_spec_counting_unit_grants_unit_optional():
+    """#416 C-3a(spec 组装侧,verifier 零改动):truth 单位 ∈ 计数单位封闭集
+    {名只本人个棵张条辆件次岁页种块支间道门步} → unit_optional=True(计数
+    单位语义下学生裸值可收,4248「36减24应该是12」形态);「分」不入集(度量
+    歧义,维持裸 token 精确匹配);度量单位(度)与非单位答案不授权。"""
+    counting = _answer_spec({"text": "t", "answer": "12名",
+                             "answer_spec": {"answer_type": "numeric_with_unit",
+                                             "ground_truth": "12名"}})
+    assert counting is not None and counting.unit_optional is True
+    minutes = _answer_spec({"text": "t", "answer": "90分",
+                            "answer_spec": {"answer_type": "numeric_with_unit",
+                                            "ground_truth": "90分"}})
+    assert minutes is not None and minutes.unit_optional is False
+    assert _answer_spec(dict(TEMPERATURE_Q)).unit_optional is False   # 度量单位
+    assert _answer_spec(dict(CANDY_Q)).unit_optional is False         # 无单位答案
 
 
 # ---------- 持久化往返(api 层跨进程 confirm 链路) ----------

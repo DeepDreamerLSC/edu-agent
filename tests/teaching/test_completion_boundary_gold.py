@@ -145,6 +145,8 @@ _CASES = [
     # #420 P3-3:「B,E」合法集外字母并入候选计数(收紧 choice 合法集约束)
     ("neg-choice-outofset-pair", "choice_letter", "B", "B,E", False, _ABCD),
     ("neg-either-choice", "choice_letter", "B", "要么B要么D", False, _ABCD),
+    # 注记修正(#434 审查 P3-2):「6和7」系钉的实际承载=_joined 邻接连接
+    # 检测,非 C-3b 单位串连接字检查(后者的独有防线见 neg-numeric-unit-join)
     ("neg-join-numeric", "numeric_with_unit", "6", "6和7", False, {}),
     ("neg-join-numeric-declarative", "numeric_with_unit", "6", "答案是6和7", False, {}),
     ("neg-join-numeric-period", "numeric_with_unit", "6", "答案是6。和7", False, {}),
@@ -164,6 +166,109 @@ _CASES = [
     ("neg-either-numeric", "numeric_with_unit", "7", "要么6要么7", False, {}),
     # #420 P3-1:「要么」marker 拔守卫钉(消息级多候选,原 load-bearing 无钉)
     ("neg-either-truefalse", "true_false", "错", "要么对要么错", False, {}),
+
+    # ---------- #416 claim 边界校准(2026-09-24 人裁「按建议」;提案 ----------
+    # /root/calibration-private/gate-claim-calibration-proposal-20260924.md。
+    # 新模板共同前置:命中 token 须为消息末数字 token(其独有对抗面=空格
+    # 枚举 neg-join-jiushi-space-enumeration;3797 逗号原形的首承载是逗号
+    # 吞 token 而非本前置,见该钉注);动词类模板(得到/得到了/就是)+算式
+    # 直给形否定窗加宽至 3 字;既有四模板语义与否定窗不动(pos/negation
+    # 系列不回归)。
+
+    # B-1「结果是」(收):3 字名词尾框,句法位置与「答案是」同构
+    ("pos-numeric-declarative-jieguoshi", "numeric_with_unit", "41", "结果是41", True, {}),
+    ("neg-guess-template-jieguoshi", "numeric_with_unit", "52", "我猜结果是52", False, {}),
+    ("neg-negation-jieguoshi", "numeric_with_unit", "52", "结果不是52,是74", False, {}),
+    # 引用导师残留(留人审注记):「老师刚说结果是X」与现行白名单下
+    # 「老师刚说答案是6」同构放行——引用检测超出有限枚举,如实钉住现行为;
+    # 若人裁必拒,须引用检测面(另行议题,不在本件)。
+    ("neg-quote-jieguoshi-guard", "numeric_with_unit", "117", "老师刚说结果是117", True, {}),
+
+    # B-2「总共是」(收):同 B-1 的 3 字名词尾框
+    ("pos-numeric-declarative-zonggongshi", "numeric_with_unit", "353元", "总共是353元", True, {}),
+    ("neg-guess-template-zonggongshi", "numeric_with_unit", "353", "我猜总共是353", False, {}),
+
+    # B-4「得到/得到了」(条件收:3 字否定窗捆绑;「得到的是」不收——
+    # 5362 中间值 260 的形态,收了会把第一个非终值变 claim)
+    ("pos-numeric-declarative-dedao", "numeric_with_unit", "258",
+     "先算乘法，得到的是260，然后加4减6，得到258", True, {}),
+    ("pos-numeric-declarative-dedaole", "numeric_with_unit", "400", "得到了400", True, {}),
+    # 加宽否定窗 load-bearing 钉:「就没得到400」的「没」距 hit 3 字,
+    # 现行 2 字窗(末 2 字=「得到」)看不见——拔掉 3 字窗即穿透
+    ("neg-negation-dedao-widewin", "numeric_with_unit", "400", "就没得到400", False, {}),
+    # 提案原文双子句形态(400 非末 token 亦拒,双防线在案)
+    ("neg-negation-dedao-clause", "numeric_with_unit", "400", "我没有得到400,只得到380", False, {}),
+    ("neg-guess-template-dedao", "numeric_with_unit", "258", "我猜得到258", False, {}),
+
+    # B-5「就是」(条件收:末 token+3 字否定窗双捆绑)
+    ("pos-numeric-declarative-jiushi", "numeric_with_unit", "28", "就是28平方分米", True, {}),
+    # 3797 枚举形态:「就是7，8，9…」的枚举员不得被「就是」收为 claim。
+    # 注记修正(#434 审查 P3-2):本钉首承载=逗号吞 token(「7，8，…」落成
+    # 千分位残组,value=None 被 continue),拔末 token 约束本钉不翻;前置
+    # 条件注:修 C-6(逗号千分位误杀)会拆掉本钉与 neg-arith-midvalue 的
+    # 首承载,届时末 token 约束成唯一防线——其独立钉
+    # neg-join-jiushi-space-enumeration(见下)不得先于 C-6 拔除
+    ("neg-join-jiushi-enumeration", "numeric_with_unit", "7",
+     "下半年就是7，8，9，10，11，12这六个月", False, {}),
+    # 末 token 约束 load-bearing 钉(#434 审查 P2-1/矩阵②):同上枚举的
+    # 空格形态,数字 token 彼此独立(逗号吞 token 防线不存在),拔末 token
+    # 约束即翻 matched——把翻面钉进 gold
+    ("neg-join-jiushi-space-enumeration", "numeric_with_unit", "7",
+     "下半年就是7 8 9 10 11 12这六个月", False, {}),
+    # 加宽否定窗 load-bearing 钉:「答案不就是6」的「不」紧贴模板前,
+    # 2 字窗(末 2 字=「就是」)看不见——拔掉 3 字窗即穿透
+    ("neg-negation-jiushi-widewin", "numeric_with_unit", "6", "答案不就是6", False, {}),
+
+    # B-3 算式直给形「A〈运算〉B〈系词〉C」(条件收:末 token+交叠窗接算式段
+    # 起点前扫;运算词间不允许夹汉字名词=3565 特性;「等于」单独不收)
+    ("pos-arith-direct", "numeric_with_unit", "172", "860除以5是172", True, {}),
+    ("neg-guess-arith-direct", "numeric_with_unit", "172", "我猜860除以5是172", False, {}),
+    # 中间值拒收;注记修正(#434 审查 P2-2/P3-2,与 3797 钉同面):本钉首
+    # 承载=逗号吞 token(「12,」value=None),拔末 token 约束本钉不翻,
+    # 修 C-6 前置条件见 neg-join-jiushi-enumeration 注
+    ("neg-arith-midvalue", "numeric_with_unit", "12",
+     "3乘4是12,再用12除以6是2,所以最后答案是3", False, {}),
+    ("neg-arith-noun-between", "numeric_with_unit", "100",
+     "应该是1平方分米等于100平方厘米", False, {}),
+
+    # C-1 π 入 equation 字符集(候选切分面;匹配仍是整段字符串等价,零容差)
+    ("pos-ratio-pi", "ratio_or_expression", "4：π", "比是4：π。", True, {}),
+    ("neg-ratio-pi-approx", "ratio_or_expression", "4：π", "比是4:3.14", False, {}),
+
+    # C-3b 单位剥除(限 truth 无单位+已识别单位前缀 startswith+单位串无
+    # 和/与/跟/及/同/或)+维度表体积族/平方分米补。注记修正(#434 审查
+    # P3-2):neg-join-numeric×2(「6和7」形态)实际由 _joined 承载,非
+    # 本处单位串连接字检查;该检查的独有防线=连接字落进单位捕获串(下钉)
+    ("pos-numeric-unit-family-volume", "numeric_with_unit", "8立方米", "8000立方分米", True, {}),
+    # 连接字检测 load-bearing 钉(#434 审查 P2-1/矩阵④):「6米和7」的
+    # 「和」被贪婪捕获吞进单位串,_joined 邻接面看不见;拔 _strippable_unit
+    # 的连接字检查即翻 matched——把翻面钉进 gold
+    ("neg-numeric-unit-join", "numeric_with_unit", "6", "6米和7", False, {}),
+
+    # C-3a 计数单位省略(spec 组装侧授权 unit_optional;verifier 零改动)
+    ("pos-numeric-counting-unit-omitted", "numeric_with_unit", "12名",
+     "36减24应该是12", True, {"unit_optional": True}),
+    ("neg-numeric-counting-unit-mismatch", "numeric_with_unit", "12名",
+     "应该是12个", False, {"unit_optional": True}),
+
+    # C-4 choice 算式变量豁免(字母落在含数字的 equation 候选段内=变量,
+    # 不计存活不作命中)+顺带关闭「算式变量=答案字母」现行误放面
+    ("pos-choice-variable-exemption", "choice_letter", "B",
+     "偶数表示为2n，一个偶数加上1就变成了2n+1，所以答案应该是选B，题目的说法是正确的。", True, _ABCD),
+    ("neg-choice-variable-as-answer", "choice_letter", "B",
+     "2B+1是奇数,题目说的对", False, _ABCD),
+
+    # C-2 short_text 尾框「用X来表示/用X表示」(条件收:配对左边界「用」,
+    # 通用左边界 是/为 不放宽)。引用指令「老师说要用X来表示」为已知残留
+    # (与自述不可分,留人审注记,不钉)。
+    ("pos-shorttext-frame-laibiaoshi", "short_text_exact", "分数", "这应该用分数来表示。", True, {}),
+    ("neg-shorttext-frame-negation", "short_text_exact", "分数",
+     "不用分数来表示,用小数表示", False, {}),
+    ("neg-shorttext-frame-question", "short_text_exact", "分数",
+     "这道题的答案要用分数来表示吗", False, {}),
+
+    # D 清单补钉:test_88「，不对。」撤回面防拔(设计内保守,维持拒绝)
+    ("neg-choice-retract-after", "choice_letter", "A", "答案应该是A，不对。", False, _ABCD),
 ]
 
 

@@ -134,13 +134,14 @@ def _face_of(question_text: str, cleaned: str) -> tuple[str, str]:
     return face, note
 
 
-def propose_spec(question_text: str, answer: str) -> dict | None:
+def propose_spec(question_text: str, answer: str, sid: str = "") -> dict | None:
     """建议 AnswerSpec(组装契约属 B/C 段,此处仅预登记;pending_review)。
 
     清洗规则(确定性,逐条可审)见 _clean_answer;窄面判定见 _face_of:
     单字母+题面选项→choice_letter;含 =/比例号→equation/ratio(含变量字母为
     equation);「或」多候选或 ≥2 数值 token→composite(§三红线,调度即 None);
-    纯数值→numeric_with_unit;其余→short_text_exact。
+    纯数值→numeric_with_unit;其余→short_text_exact。aliases 仅来自
+    EXPLICIT_ALIASES 逐案人批例外(见其注记:禁推广,回指绑定本题)。
     """
     cleaned = _clean_answer(answer)
     if not cleaned:
@@ -149,14 +150,19 @@ def propose_spec(question_text: str, answer: str) -> dict | None:
     spec: dict = {"answer_type": face, "ground_truth": cleaned}
     if note:
         spec["note"] = note
+    aliases = EXPLICIT_ALIASES.get(sid, ())
+    if aliases:
+        spec["aliases"] = list(aliases)
+        spec["aliases_note"] = ALIASES_NOTE
     if face == "choice_letter":
         spec["letter_choices"] = sorted(
             set(re.findall(r"([ABCD])[.、．]", question_text)))
     return spec
 
 
-def _probe_turns(question_text: str, answer: str, turns: list[str]) -> dict:
-    spec = propose_spec(question_text, answer)
+def _probe_turns(question_text: str, answer: str, turns: list[str],
+                 sid: str = "") -> dict:
+    spec = propose_spec(question_text, answer, sid)
     if spec is None:
         return {"spec": None, "evidence_turns": [],
                 "note": "ADVISORY:无答案/空答案,不可组装 spec"}
@@ -167,7 +173,11 @@ def _probe_turns(question_text: str, answer: str, turns: list[str]) -> dict:
         return {"spec": probe, "evidence_turns": [],
                 "note": "ADVISORY:" + spec["note"]
                         + ";spec 组装契约属 B/C 段(pending_review)"}
-    kw = {"letter_choices": tuple(spec["letter_choices"])} if "letter_choices" in spec else {}
+    kw: dict = {}
+    if "letter_choices" in spec:
+        kw["letter_choices"] = tuple(spec["letter_choices"])
+    if spec.get("aliases"):
+        kw["aliases"] = tuple(spec["aliases"])
     a_spec = AnswerSpec(answer_type=spec["answer_type"],
                         ground_truth=spec["ground_truth"], **kw)
     for idx, text in enumerate(turns):
@@ -180,16 +190,18 @@ def _probe_turns(question_text: str, answer: str, turns: list[str]) -> dict:
 
 def probe_scenario(question_text: str, answer: str, scenario: dict) -> dict:
     """线性案逐轮探;分支案逐 branch 探(重放走径由 tutor 文本路由,条件性记录)。"""
+    sid = str(scenario.get("id") or "")
     if "student_turns" in scenario:
-        return _probe_turns(question_text, answer, scenario["student_turns"])
+        return _probe_turns(question_text, answer, scenario["student_turns"], sid)
     branches = {}
     any_evidence = False
     for step in scenario.get("steps") or []:
         for branch in step.get("branches") or []:
-            result = _probe_turns(question_text, answer, [branch["student_response"]])
+            result = _probe_turns(question_text, answer,
+                                  [branch["student_response"]], sid)
             branches[f"{step['id']}/{branch['id']}"] = bool(result["evidence_turns"])
             any_evidence = any_evidence or bool(result["evidence_turns"])
-    spec = propose_spec(question_text, answer) or {}
+    spec = propose_spec(question_text, answer, sid) or {}
     return {"spec": spec, "evidence_branches": branches,
             "any_evidence": any_evidence,
             "note": "分支案:evidence 条件于实际走径(哪条 branch 被路由);"
@@ -418,6 +430,10 @@ def build() -> dict:
             "八案,不在设计 §六.1 的 32 案定义内,未纳入;如需扩为 33 案须人裁并修订设计件",
             "gate_a_probe 的 AnswerSpec 组装(清洗规则/answer_type 映射)属 B/C 段组装方"
             "契约,本件仅预登记建议规格",
+            "2591 spec 的 aliases=[\"它易变形\"] 是题库显式 alias 的人批逐案例外"
+            "(2026-09-24 用户双重批准,语义裁决 gold-adjudication-c25c46c51-2591-"
+            "20260924.md §B):仅 alias/等价形态,不得推广为通用规则,回指绑定本题;"
+            "清单见编译脚本 EXPLICIT_ALIASES(禁推广注记)",
             "探针与期望的张力案(结构保守拒判 vs §六.1 不劣化)逐案见 gate_a_probe.note "
             "与 cases[].expected.flags:C 段重放判读时须区分「结构性拒判(设计内)」与"
             "「行为回归(设计外)」——留人审",
@@ -460,6 +476,21 @@ RUNTIME_ANSWERS = {
 
 def _runtime_answer(sid: str) -> str | None:
     return RUNTIME_ANSWERS.get(sid)
+
+
+# 题库显式 alias 声明(逐案,B/C 段 spec 组装面的人批显式例外;2026-09-24 用户
+# 双重批准入库)。题库声明面编译器 compile_answer_spec 的「aliases=[] 显式空,
+# 不扩病例短语表是终裁红线」管的是 external_normalized 题库面;本表是 regression
+# corpus 逐案例外,每条须带语义裁决依据,**不得推广为通用规则**:
+#   2591「它易变形」=句内回指代词「它」(先行词=平行四边形)+ground_truth
+#   「易变形」的等价形态:题面问特性谓词、参考答案唯一「易变形」、学生终句为
+#   同一命题的回指表达且源导师终轮确认(语义裁决 gold-adjudication-c25c46c51-
+#   2591-20260924.md §B,用户 2026-09-24 双重批准)。
+ALIASES_NOTE = ("仅 alias/等价形态,不得推广为通用规则;回指绑定本题"
+                "(用户 2026-09-24 禁推广注记)")
+EXPLICIT_ALIASES = {
+    "socraticmath_train_2591": ("它易变形",),
+}
 
 
 def verify_invariants(payload: dict, confirmation: dict, executable: dict,

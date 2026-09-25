@@ -20,6 +20,7 @@
  "pending_review": [
   "PM 提案曾列 700m 回归案(incident-700m-replay):属 r3 26 案而非 ablation 八案,不在设计 §六.1 的 32 案定义内,未纳入;如需扩为 33 案须人裁并修订设计件",
   "gate_a_probe 的 AnswerSpec 组装(清洗规则/answer_type 映射)属 B/C 段组装方契约,本件仅预登记建议规格",
+  "2591 spec 的 aliases=[\"它易变形\"] 是题库显式 alias 的人批逐案例外(2026-09-24 用户双重批准,语义裁决 gold-adjudication-c25c46c51-2591-20260924.md §B):仅 alias/等价形态,不得推广为通用规则,回指绑定本题;清单见编译脚本 EXPLICIT_ALIASES(禁推广注记)",
   "探针与期望的张力案(结构保守拒判 vs §六.1 不劣化)逐案见 gate_a_probe.note 与 cases[].expected.flags:C 段重放判读时须区分「结构性拒判(设计内)」与「行为回归(设计外)」——留人审"
  ],
  "counts": {
@@ -106,16 +107,16 @@
      "§六.2 Gate 正确放行锚"
     ],
     "anchor": true,
-    "flags": [
-     "probe_no_evidence_tension(pending_review):A 段白名单/单位面/复合红线下建议规格无 evidence 轮——§六.1 不劣化期望与 §三 precision-first 保守拒判的结构张力,C 段判读须区分结构拒判与行为回归"
-    ]
+    "flags": []
    },
    "gate_a_probe": {
     "spec": {
      "answer_type": "numeric_with_unit",
      "ground_truth": "52"
     },
-    "evidence_turns": [],
+    "evidence_turns": [
+     2
+    ],
     "note": "ADVISORY:建议规格下 A 段 verify_completion 逐轮探针;spec 组装契约属 B/C 段(pending_review)"
    }
   },
@@ -188,16 +189,17 @@
      "§六.1 正向 completed 不劣化",
      "§五 verified 后不再就答案槽询问"
     ],
-    "flags": [
-     "probe_no_evidence_tension(pending_review):A 段白名单/单位面/复合红线下建议规格无 evidence 轮——§六.1 不劣化期望与 §三 precision-first 保守拒判的结构张力,C 段判读须区分结构拒判与行为回归"
-    ]
+    "flags": []
    },
    "gate_a_probe": {
     "spec": {
      "answer_type": "numeric_with_unit",
      "ground_truth": "28"
     },
-    "evidence_turns": [],
+    "evidence_turns": [
+     1,
+     2
+    ],
     "note": "ADVISORY:建议规格下 A 段 verify_completion 逐轮探针;spec 组装契约属 B/C 段(pending_review)"
    }
   },
@@ -363,16 +365,16 @@
      "§六.1 正向 completed 不劣化",
      "§五 verified 后不再就答案槽询问"
     ],
-    "flags": [
-     "probe_no_evidence_tension(pending_review):A 段白名单/单位面/复合红线下建议规格无 evidence 轮——§六.1 不劣化期望与 §三 precision-first 保守拒判的结构张力,C 段判读须区分结构拒判与行为回归"
-    ]
+    "flags": []
    },
    "gate_a_probe": {
     "spec": {
      "answer_type": "numeric_with_unit",
      "ground_truth": "20"
     },
-    "evidence_turns": [],
+    "evidence_turns": [
+     1
+    ],
     "note": "ADVISORY:建议规格下 A 段 verify_completion 逐轮探针;spec 组装契约属 B/C 段(pending_review)"
    }
   },
@@ -447,16 +449,17 @@
      "§六.1 正向 completed 不劣化",
      "§五 verified 后不再就答案槽询问"
     ],
-    "flags": [
-     "probe_no_evidence_tension(pending_review):A 段白名单/单位面/复合红线下建议规格无 evidence 轮——§六.1 不劣化期望与 §三 precision-first 保守拒判的结构张力,C 段判读须区分结构拒判与行为回归"
-    ]
+    "flags": []
    },
    "gate_a_probe": {
     "spec": {
      "answer_type": "numeric_with_unit",
      "ground_truth": "826"
     },
-    "evidence_turns": [],
+    "evidence_turns": [
+     2,
+     3
+    ],
     "note": "ADVISORY:建议规格下 A 段 verify_completion 逐轮探针;spec 组装契约属 B/C 段(pending_review)"
    }
   },
@@ -808,16 +811,16 @@
      "§六.1 正向 completed 不劣化",
      "§五 verified 后不再就答案槽询问"
     ],
-    "flags": [
-     "probe_no_evidence_tension(pending_review):A 段白名单/单位面/复合红线下建议规格无 evidence 轮——§六.1 不劣化期望与 §三 precision-first 保守拒判的结构张力,C 段判读须区分结构拒判与行为回归"
-    ]
+    "flags": []
    },
    "gate_a_probe": {
     "spec": {
      "answer_type": "numeric_with_unit",
      "ground_truth": "3"
     },
-    "evidence_turns": [],
+    "evidence_turns": [
+     1
+    ],
     "note": "ADVISORY:建议规格下 A 段 verify_completion 逐轮探针;spec 组装契约属 B/C 段(pending_review)"
    }
   },
@@ -892,16 +895,16 @@
      "§六.1 正向 completed 不劣化",
      "§五 verified 后不再就答案槽询问"
     ],
-    "flags": [
-     "probe_no_evidence_tension(pending_review):A 段白名单/单位面/复合红线下建议规格无 evidence 轮——§六.1 不劣化期望与 §三 precision-first 保守拒判的结构张力,C 段判读须区分结构拒判与行为回归"
-    ]
+    "flags": []
    },
    "gate_a_probe": {
     "spec": {
      "answer_type": "numeric_with_unit",
      "ground_truth": "41"
     },
-    "evidence_turns": [],
+    "evidence_turns": [
+     2
+    ],
     "note": "ADVISORY:建议规格下 A 段 verify_completion 逐轮探针;spec 组装契约属 B/C 段(pending_review)"
    }
   },
@@ -976,16 +979,17 @@
      "§六.1 正向 completed 不劣化",
      "§五 verified 后不再就答案槽询问"
     ],
-    "flags": [
-     "probe_no_evidence_tension(pending_review):A 段白名单/单位面/复合红线下建议规格无 evidence 轮——§六.1 不劣化期望与 §三 precision-first 保守拒判的结构张力,C 段判读须区分结构拒判与行为回归"
-    ]
+    "flags": []
    },
    "gate_a_probe": {
     "spec": {
      "answer_type": "numeric_with_unit",
      "ground_truth": "26"
     },
-    "evidence_turns": [],
+    "evidence_turns": [
+     2,
+     3
+    ],
     "note": "ADVISORY:建议规格下 A 段 verify_completion 逐轮探针;spec 组装契约属 B/C 段(pending_review)"
    }
   },
@@ -1224,16 +1228,16 @@
      "§六.1 正向 completed 不劣化",
      "§五 verified 后不再就答案槽询问"
     ],
-    "flags": [
-     "probe_no_evidence_tension(pending_review):A 段白名单/单位面/复合红线下建议规格无 evidence 轮——§六.1 不劣化期望与 §三 precision-first 保守拒判的结构张力,C 段判读须区分结构拒判与行为回归"
-    ]
+    "flags": []
    },
    "gate_a_probe": {
     "spec": {
      "answer_type": "numeric_with_unit",
      "ground_truth": "7200"
     },
-    "evidence_turns": [],
+    "evidence_turns": [
+     1
+    ],
     "note": "ADVISORY:建议规格下 A 段 verify_completion 逐轮探针;spec 组装契约属 B/C 段(pending_review)"
    }
   },
@@ -2275,16 +2279,20 @@
     "design_refs": [
      "§六.1 正向 completed 不劣化(五臂 B-new/AB-old completed 实证)"
     ],
-    "flags": [
-     "probe_no_evidence_tension(pending_review):A 段白名单/单位面/复合红线下建议规格无 evidence 轮——§六.1 不劣化期望与 §三 precision-first 保守拒判的结构张力,C 段判读须区分结构拒判与行为回归"
-    ]
+    "flags": []
    },
    "gate_a_probe": {
     "spec": {
      "answer_type": "short_text_exact",
-     "ground_truth": "易变形"
+     "ground_truth": "易变形",
+     "aliases": [
+      "它易变形"
+     ],
+     "aliases_note": "仅 alias/等价形态,不得推广为通用规则;回指绑定本题(用户 2026-09-24 禁推广注记)"
     },
-    "evidence_turns": [],
+    "evidence_turns": [
+     3
+    ],
     "note": "ADVISORY:建议规格下 A 段 verify_completion 逐轮探针;spec 组装契约属 B/C 段(pending_review)"
    }
   },
