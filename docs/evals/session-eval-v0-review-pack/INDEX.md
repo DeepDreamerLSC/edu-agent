@@ -1,0 +1,79 @@
+# Phase A Layer 1 盲审 pack(64/64,固定 hash 序=cert A64 序)
+
+## 盲法规则(#448 三段式编排,用户 2026-09-25 终裁)
+- **只看**:transcript(student/tutor/state 轮表)+ post-turn obs + 必要运行注记;
+- **不看**(物理分离,本 pack 不含):Judge/check 结果、no-progress detector、聚类结果、baseline 任何面;
+- **顺序固定**:hash 序(即本 INDEX 序),不按 cluster/risk 重排;
+- **fixture-limited 标注**:本批场景未携带 answer_spec(production partner bank 142/263 已带并透传,此为 fixture/production-contract parity limitation)——凡依赖「无 spec→fail-closed」的完成/状态发现,标 fixture-limited / non-attributable,不进 headline failure family;
+- **发现与 spec 无关的问题照常记录**:已知信息重新未知化/跨轮重复/hint-support progression/跨轮事实改写丢失。
+
+## 流程
+1. 逐份盲审 sessions/01-64(标注区盲填);
+2. 64 份首审全部锁定后 → Layer 2 机械导航(obs 轨迹/guard 谱系/turn count/state path 纯机械分组,新发现单独标 post-navigation discovery);
+3. taxonomy 初稿锁定后 → Layer 3 揭 baseline(checks/v3.2 Judge/report-only detector),逐 family 判现有栈是否真捕获同一 failure mechanism。
+
+## 清单(hash 序)
+01. `small_lecturer_math_gold_candidates_rectangle_perimeter_support_boundary`
+02. `small_lecturer_math_gold_candidates_triangle_area_support_boundary`
+03. `small_lecturer_no_progress_controls_v1_no-progress-control-reasonable-review`
+04. `small_lecturer_math_gold_candidates_rectangle_perimeter_complete_reasoning`
+05. `small_lecturer_math_gold_candidates_decimal_multiplication_complete_reasoning`
+06. `small_lecturer_math_gold_candidates_number_pattern_complete_reasoning`
+07. `small_lecturer_math_gold_candidates_equation_addition_complete_reasoning`
+08. `small_lecturer_math_gold_candidates_average_score_misconception_repair`
+09. `small_lecturer_math_gold_candidates_fraction_addition_misconception_repair`
+10. `small_lecturer_math_gold_candidates_rectangle_perimeter_misconception_repair`
+11. `small_lecturer_math_gold_candidates_equation_multiplication_complete_reasoning`
+12. `small_lecturer_math_gold_candidates_distance_speed_support_boundary`
+13. `small_lecturer_math_gold_candidates_number_pattern_misconception_repair`
+14. `small_lecturer_math_gold_candidates_chicken_rabbit_support_boundary`
+15. `small_lecturer_teaching_context_shadow_pilot_20_stability_average`
+16. `small_lecturer_math_gold_candidates_average_score_complete_reasoning`
+17. `small_lecturer_math_gold_candidates_parentheses_equation_misconception_repair`
+18. `small_lecturer_math_gold_candidates_chicken_rabbit_misconception_repair`
+19. `small_lecturer_teaching_context_shadow_pilot_20_stability_chicken_rabbit`
+20. `small_lecturer_math_gold_b2_circle_area_misconception_repair`
+21. `small_lecturer_math_gold_candidates_division_remainder_misconception_repair`
+22. `small_lecturer_math_gold_candidates_equation_multiplication_misconception_repair`
+23. `small_lecturer_math_gold_candidates_percentage_discount_misconception_repair`
+24. `small_lecturer_teaching_context_shadow_pilot_20_stability_fraction_addition`
+25. `small_lecturer_math_gold_candidates_decimal_multiplication_alternative_method`
+26. `small_lecturer_math_gold_candidates_triangle_area_complete_reasoning`
+27. `small_lecturer_teaching_context_shadow_pilot_20_stability_sequence`
+28. `small_lecturer_teaching_context_shadow_pilot_20_stability_speed`
+29. `small_lecturer_teaching_context_shadow_pilot_20_stability_equation_sign`
+30. `small_lecturer_teaching_context_shadow_pilot_20_stability_order_operations`
+31. `small_lecturer_teaching_context_shadow_pilot_20_stability_rectangle_perimeter`
+32. `small_lecturer_teaching_context_shadow_pilot_20_stability_equation_subtract`
+33. `small_lecturer_math_gold_candidates_equation_addition_support_boundary`
+34. `small_lecturer_math_gold_candidates_equation_addition_alternative_method`
+35. `small_lecturer_math_gold_candidates_chicken_rabbit_complete_reasoning`
+36. `small_lecturer_math_gold_candidates_simple_probability_alternative_method`
+37. `small_lecturer_no_progress_real_v1_no-progress-real-6a61aa32-replay`
+38. `small_lecturer_math_gold_candidates_fraction_addition_complete_reasoning`
+39. `small_lecturer_math_gold_candidates_fraction_addition_alternative_method`
+40. `small_lecturer_math_gold_b2_fraction_multiplication_complete_reasoning`
+41. `small_lecturer_math_gold_candidates_simple_probability_complete_reasoning`
+42. `small_lecturer_math_gold_candidates_division_remainder_complete_reasoning`
+43. `small_lecturer_math_gold_candidates_distance_speed_misconception_repair`
+44. `small_lecturer_math_gold_candidates_decimal_multiplication_misconception_repair`
+45. `small_lecturer_math_gold_candidates_average_score_support_boundary`
+46. `small_lecturer_math_gold_candidates_simple_probability_support_boundary`
+47. `small_lecturer_math_gold_b2_heldout_circle_area_complete_reasoning`
+48. `small_lecturer_math_gold_candidates_division_remainder_support_boundary`
+49. `small_lecturer_math_gold_candidates_number_pattern_alternative_method`
+50. `small_lecturer_math_gold_candidates_equation_multiplication_alternative_method`
+51. `small_lecturer_math_gold_candidates_fraction_addition_support_boundary`
+52. `small_lecturer_math_gold_candidates_average_score_alternative_method`
+53. `small_lecturer_target_mode_v3_regressions_target_v3_northwest_clarification_not_leakage`
+54. `small_lecturer_math_gold_candidates_triangle_area_alternative_method`
+55. `small_lecturer_target_mode_v3_regressions_target_v3_compound_question_b_before_c`
+56. `small_lecturer_math_gold_candidates_percentage_discount_complete_reasoning`
+57. `small_lecturer_math_gold_candidates_ratio_share_complete_reasoning`
+58. `small_lecturer_math_gold_candidates_rectangle_perimeter_alternative_method`
+59. `small_lecturer_math_gold_candidates_parentheses_equation_complete_reasoning`
+60. `small_lecturer_math_gold_candidates_number_pattern_support_boundary`
+61. `small_lecturer_no_progress_controls_v1_no-progress-control-thin-reasoning`
+62. `small_lecturer_math_gold_candidates_percentage_discount_alternative_method`
+63. `small_lecturer_math_gold_b2_fraction_multiplication_support_boundary`
+64. `small_lecturer_math_gold_candidates_triangle_area_misconception_repair`
