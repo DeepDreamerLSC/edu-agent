@@ -473,6 +473,22 @@ def load_facts(run_dir: Path | str) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+def salvage_facts(facts_dir: Path | str, out: str | None) -> None:
+    """#450 崩溃路径 facts 保全:tempdir rmtree 前,把 model_call facts 落最新 run 目录。
+
+    Phase A 事故损失面(2026-09-25):tutor 相完成后 check_rows KeyError 崩溃,
+    逐调用 facts 随 finally rmtree 的 tempdir 不可恢复。本函数在 main 的 finally
+    兜底:任何未达 _live_round 落盘点的退出(判定/judge/报告层异常、中断)都不
+    再丢调用级证据。目标目录推导依据不变量:模型调用只发生在 runner.run/judge
+    (其目标恒为 collect 下最新 run 目录)——tempdir 有内容 ⇒ 最新 run 目录即
+    本轮活动目录,整段落盘不误伤历史轮;正常完成路径重复落盘内容幂等一致。"""
+    if not out or not any(Path(facts_dir).glob("model_calls-*.jsonl")):
+        return
+    runs = sorted((Path(out) / "collect").glob("*-*Z-*"))
+    if runs:
+        dump_facts(facts_dir, runs[-1])
+
+
 def facts_calibers(facts_rows: list[dict]) -> dict:
     """三口径数据底座(#238 件 B):调用级按 role 计数 + 会话级 fallback 标记。
 
@@ -911,7 +927,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"运行失败:{type(exc).__name__}: {exc}", file=sys.stderr)
         return 2
     finally:
-        # #257 审 P3-1:facts 已落 run 目录,tempdir 保留理由消失;任何退出路径不留残骸。
+        # #257 审 P3-1 + #450:facts 保全先于清理——任何未达 _live_round 落盘点的
+        # 退出(判定/judge/报告层崩溃、中断)先把调用级证据落最新 run 目录,
+        # tempdir 保留理由消失,任何退出路径不留残骸。
+        salvage_facts(facts_dir, args.out)
         shutil.rmtree(facts_dir, ignore_errors=True)
 
 

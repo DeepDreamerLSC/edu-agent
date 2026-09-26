@@ -18,6 +18,7 @@ from edu_agent.evals import (
     ResumeMismatch,
     RunnerConfig,
     morning_summary,
+    safe_case_id,
     write_summary,
 )
 
@@ -199,3 +200,23 @@ def test_run_with_identity_writes_manifest_block(tmp_path, dataset):
     run_dir2 = make_runner(tmp_path, FakeSubject()).run(dataset, read_jsonl(dataset))
     manifest2 = json.loads((run_dir2 / "manifest.json").read_text(encoding="utf-8"))
     assert "identity" not in manifest2
+
+
+def test_safe_case_id_keeps_long_ids_and_uniqueness():
+    """#450 regression(Phase A 2026-09-25 infra incident):97 字符案整串保真——
+    结果行 case_id 与 scenarios 键(原始 id)一致,check_rows/judge_rows 查键不再
+    断;超文件名字节预算(240B)的病理长 ID 以内容哈希后缀保唯一,同前缀不撞档。"""
+    long_id = "a64_target_v3_northwest_clarification_not_leakage" + "z" * 48
+    assert len(long_id) == 97
+    assert safe_case_id(long_id, 0) == long_id           # 不截断:join 键保真
+    # 既有契约回归面:短 id 原样、非法字符替换、None/空 → 序号兜底
+    assert safe_case_id("c00", 0) == "c00"
+    assert safe_case_id("a/b c", 3) == "a_b_c"
+    assert safe_case_id(None, 7) == "case-0007"
+    assert safe_case_id("", 7) == "case-0007"
+    # 超预算:同 240B 前缀的两个不同 id → 不同 safe id;输出恒 ≤240B;同 id 幂等
+    huge_a = "甲" * 200 + "A"                              # 601B,前 600B 同
+    huge_b = "甲" * 200 + "B"
+    assert safe_case_id(huge_a, 0) != safe_case_id(huge_b, 0)
+    assert all(len(safe_case_id(h, 0).encode("utf-8")) <= 240 for h in (huge_a, huge_b))
+    assert safe_case_id(huge_a, 0) == safe_case_id(huge_a, 1)

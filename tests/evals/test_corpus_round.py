@@ -385,3 +385,58 @@ def test_judger_sha256_public_fingerprint():
     value = judger_sha256()
     assert len(value) == 64 and int(value, 16) >= 0
     assert judger_sha256() == value
+
+
+def test_long_case_id_full_pipeline_join(tmp_path):
+    """#450 regression(Phase A 2026-09-25 infra incident):97 字符 case ID 全流程
+    跑通——runner 结果行 case_id 与 scenarios 键一致,check_rows 查键不再 KeyError
+    (事故形态:safe_case_id [:80] 截断,tutor 相完成后 check_rows 崩溃退出)。"""
+    from edu_agent.evals import EvalRunner, RunnerConfig, load_results
+
+    long_id = "a64_target_v3_northwest_clarification_not_leakage" + "z" * 48
+    assert len(long_id) == 97
+    scenarios = {long_id: _scenario("any", checks=False)}
+    cases = [{"id": long_id, "question": "3+4=?"}]
+    dataset = tmp_path / "cases.jsonl"
+    dataset.write_text("\n".join(json.dumps(c, ensure_ascii=False) for c in cases) + "\n",
+                       encoding="utf-8")
+
+    class OkSubject:
+        name = "ok-subject"
+
+        def run_case(self, case: dict) -> dict:
+            return {"final_state": "completed", "turns": [], "guard_events": []}
+
+    run_dir = EvalRunner(OkSubject(), RunnerConfig(), tmp_path / "runs").run(dataset, cases)
+    results = load_results(run_dir)
+    assert [r["case_id"] for r in results] == [long_id]      # 行内 id 未被截断
+    assert (run_dir / "results" / f"{long_id}.json").is_file()
+    checks = check_rows(scenarios, results)                  # 事故点:此前 KeyError
+    assert checks[long_id]["status"] == "ok"
+    assert checks[long_id]["final_state"] == "completed"
+
+
+def test_salvage_facts_dumps_to_latest_run_dir_before_cleanup(tmp_path):
+    """#450:崩溃路径 facts 保全——tempdir rmtree 前落最新 run 目录;Phase A 事故
+    损失面(逐调用 facts 随 tempdir 不可恢复)不再复现。空 tempdir / 无 run 目录 /
+    无 --out → no-op 不炸。"""
+    from edu_agent.evals import salvage_facts
+
+    facts_dir = tmp_path / "facts-temp"
+    facts_dir.mkdir()
+    (facts_dir / "model_calls-20260925.jsonl").write_text(
+        json.dumps({"edu.role": "tutor", "edu.session_id": "s1"}, ensure_ascii=False) + "\n",
+        encoding="utf-8")
+    run_dir = tmp_path / "out" / "collect" / "x-20260925T000000Z-abcd"
+    run_dir.mkdir(parents=True)
+
+    salvage_facts(facts_dir, str(tmp_path / "out"))
+    rows = [json.loads(line) for line
+            in (run_dir / "facts.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert [r["edu.role"] for r in rows] == ["tutor"]
+
+    empty = tmp_path / "empty-temp"                          # 空 tempdir:no-op
+    empty.mkdir()
+    salvage_facts(empty, str(tmp_path / "out"))
+    salvage_facts(facts_dir, None)                           # 无 --out:no-op
+    salvage_facts(facts_dir, str(tmp_path / "no-such-out"))  # 无 run 目录:no-op

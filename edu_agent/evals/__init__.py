@@ -36,6 +36,7 @@ from .runner import (
     ResumeMismatch,
     RunnerConfig,
     Subject,
+    safe_case_id,
 )
 from .scenario_corpus import (
     DATASETS_DIR,
@@ -57,7 +58,7 @@ _CORPUS_ROUND_LAZY = ("DEFAULT_CORPUS", "build_cases", "build_plan", "caliber_se
                       "judge_rows", "judger_sha256", "load_facts", "load_run_spec", "merge_options",
                       "real_model_scenarios", "render_from", "render_report",
                       "resolve_round", "resolve_spec_cases", "resume_run_dir",
-                      "run_identity", "soften_counts", "soften_line",
+                      "run_identity", "salvage_facts", "soften_counts", "soften_line",
                       "transcript_messages")
 
 
@@ -146,6 +147,8 @@ __all__ = [
     "run_check",
     "run_identity",
     "run_scenario_checks",
+    "safe_case_id",
+    "salvage_facts",
     "sample_independent",
     "scenario_fingerprint",
     "select_branch",
