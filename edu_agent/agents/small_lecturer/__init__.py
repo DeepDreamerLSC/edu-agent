@@ -2,11 +2,15 @@
 
 # completion(Gate A 段)确定性面随包公开(同 #350 先例:02 §6 测试禁私有
 # 导入,零行为变更纯导出面;B 段起 kernel 接线消费,verifier 规格本体不动)。
+# C′(#423):CompletionRejectionReason/diagnose_rejection 同款公开——拒因诊断
+# 纯函数面(零 authority),finish 拒绝路径与 prompt 装配侧重演共同消费。
 from .completion import (
     ANSWER_TYPES,
     AnswerSpec,
     CompletionEvidence,
+    CompletionRejectionReason,
     EvidenceProvenance,
+    diagnose_rejection,
     verify_completion,
 )
 from .format_guard import FormatGuardResult, evaluate_student_visible_format
@@ -64,6 +68,7 @@ from .prompting import (
     OPENING_HINT_CORRECT,
     OPENING_HINT_INCORRECT,
     OPENING_HINT_UNANSWERED,
+    RESTATED_CLAIM_BRIDGE,
     TAIL_COLLECT,
     TAIL_CORRECT,
     first_question_text,
@@ -86,6 +91,7 @@ __all__ = [
     "ANSWER_TYPES",
     "AnswerSpec",
     "CompletionEvidence",
+    "CompletionRejectionReason",
     "EvidenceProvenance",
     "FIRST_QUESTION_COLLECT",
     "FIRST_QUESTION_COLLECT_IMAGE",
@@ -96,6 +102,7 @@ __all__ = [
     "OPENING_HINT_CORRECT",
     "OPENING_HINT_INCORRECT",
     "OPENING_HINT_UNANSWERED",
+    "RESTATED_CLAIM_BRIDGE",
     "LearnerSession",
     "ResultEvidence",
     "SAFE_FALLBACK_TEXT",
@@ -144,4 +151,5 @@ __all__ = [
     "summary_system_prompt",
     "system_prompt",
     "verify_completion",
+    "diagnose_rejection",
 ]
