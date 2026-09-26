@@ -25,6 +25,9 @@ from typing import Protocol
 from uuid import uuid4
 
 _UNSAFE_ID = re.compile(r"[^A-Za-z0-9._-]")
+# 结果文件名字节预算(#450):stem + ".json.tmp"(atomic_write_json 临时名)≤ 255B
+# ——ext4/APFS 单文件名上限;旧 [:80] 字符截断即此预算的最保守近似。
+_SAFE_ID_MAX_BYTES = 240
 
 
 class EnvironmentFailure(Exception):
@@ -66,8 +69,20 @@ def sha256_bytes(data: bytes) -> str:
 
 
 def safe_case_id(raw: object, index: int) -> str:
+    """case id → 结果文件名/结果行 case_id(文件系统安全)。
+
+    #450(Phase A 2026-09-25 infra incident):原 [:80] 字符截断把 97 字符案
+    (a64_target_v3_northwest_clarification_not_leakage)截断——结果行 case_id 与
+    scenarios 键(原始 id)不一致,corpus_round 的 check_rows/judge_rows 查键
+    KeyError 崩溃;同前缀不同案还会撞同一结果文件。现按 UTF-8 字节放宽到 240
+    (现网 ID 全谱在内,含中文 80 字 = 240B 旧包络),超预算的病理长 ID 以
+    前缀+内容哈希后缀保唯一——同 id 幂等(续跑按文件名找 checkpoint)。"""
     text = str(raw) if raw not in (None, "") else f"case-{index:04d}"
-    return _UNSAFE_ID.sub("_", text)[:80]
+    safe = _UNSAFE_ID.sub("_", text)
+    if len(safe.encode("utf-8")) <= _SAFE_ID_MAX_BYTES:
+        return safe
+    prefix = safe.encode("utf-8")[:_SAFE_ID_MAX_BYTES - 13].decode("utf-8", "ignore")
+    return f"{prefix}-{hashlib.sha256(safe.encode('utf-8')).hexdigest()[:12]}"
 
 
 def atomic_write_json(path: Path, payload: dict) -> None:
