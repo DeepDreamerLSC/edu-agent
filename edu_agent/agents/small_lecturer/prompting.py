@@ -20,7 +20,7 @@ from pathlib import Path
 
 import yaml
 
-from .completion import verify_completion
+from .completion import diagnose_rejection, verify_completion
 
 _REPO = Path(__file__).resolve().parents[3]
 SKILL_PATH = Path(__file__).resolve().parent / "prompts" / "SKILL.md"
@@ -163,6 +163,16 @@ TAIL_COLLECT = "这道题你的答案是什么呀?讲讲你的思路吧!"
 # 把判停闸要的结论数字采上来(中性措辞:只采集、不判对错、不预设掌握)。
 ASK_FINAL_ANSWER = "你算出的是多少?把答案说出来,我们对一对。"
 
+# C′ restatement bridge 文案(#423 终裁 2026-09-27,终裁原文):completion gate
+# 拒绝且拒因在场(value_matched_but_claim_uncertified——学生已给出结果但未以
+# 可认证 claim 形态落定)时,finish 拒绝路径的确定性 Summary 文案,替换
+# NEEDS_REVIEW_TEXT 的否定重置形态(仅拒因在场时;其他 needs_review 场景维持
+# 现文案)。四铁律(终裁原文):不说「你答对了」/不补 canonical answer/不重新
+# 教学/不重置已有进展。状态纪律:本轮仍不得 completed、不把已有进展当未开始;
+# 下一轮学生用可认证 claim 重述后由原 Gate 正常出证。
+RESTATED_CLAIM_BRIDGE = ("你已经给出了一个结果。为了确认这是你的最终答案,"
+                         "请把结论单独完整说一句;不用从头重做。")
+
 # 3 句定稿文案(常量形式,供测试与调用方逐字对照):
 FIRST_QUESTION_CORRECT = HEAD_TEXT + TAIL_CORRECT            # correct 档(文字/图像共用)
 FIRST_QUESTION_COLLECT = HEAD_TEXT + TAIL_COLLECT            # 采集·无图
@@ -240,6 +250,45 @@ def completion_signal_fact(question: dict, extra: dict | None) -> dict | None:
     return {"verified_complete": True, "evidence_turn_id": evidence.turn_id}
 
 
+# C′ 拒因在场的轮级指令(#423 终裁:generation 只能消费、不得授权状态)——只把
+# 行为从 reset-to-first-step 改为一次轻量 restatement bridge。指令**不携带
+# value_matched 语义**(告知「值已匹配」=引诱宣告正确,违四铁律之一);学生
+# 原文模型已有(「学生本轮回答」),指令只做行为路由,不含 canonical answer。
+_RESTATEMENT_BRIDGE_DIRECTIVE = (
+    "学生本轮消息里已经包含一个结果,但还没有把它作为最终结论完整说出。"
+    "本轮请他单独完整说一遍结论(如「你已经给出了一个结果,为了确认这是你的"
+    "最终答案,请把结论单独完整说一句;不用从头重做」,允许同义改写)。"
+    "不宣告对错、不说出或补充答案、不重新教学、不要求从头重做、不重置已有进展。")
+
+
+def completion_rejection_directive(question: dict, extra: dict | None) -> str | None:
+    """C′ 拒因的装配侧条件注入(completion_signal_fact 同款,#423 终裁):当轮
+    学生消息经**同一** diagnose_rejection 产生拒因、且无当轮 evidence(两面
+    互斥,防双重注入)→ 返回 restatement bridge 轮级指令;否则 None(§五
+    「注入或未注入」——不在场即未注入,不注入 rejected=false)。
+
+    kernel.py 预算冻结(800/800),信号无法经 kernel 显式下传;与
+    completion_signal_fact 同款,由同一组装方契约(_answer_spec 懒加载防模块
+    级环——kernel 顶层 import prompting)与同一诊断函数在装配侧重演:纯函数
+    同输入同输出,单一实现,不是第二套判据。非 reply 轮(extra 无「学生本
+    轮回答」键:首问/总结装配)→ None,零扰动。"""
+    message = (extra or {}).get("学生本轮回答")
+    if message is None:
+        return None
+    if completion_signal_fact(question, extra) is not None:
+        return None                    # evidence 在场:非拒因形态(消费面互斥)
+    from .kernel import _answer_spec  # 懒加载:同 completion_signal_fact
+    spec = _answer_spec(question)
+    if spec is None:
+        return None                    # 声明面缺/复合红线:fail-closed,未注入
+    history = (extra or {}).get("对话记录") or []
+    turn_id = sum(1 for m in history
+                  if isinstance(m, dict) and m.get("role") == "user") + 1
+    if diagnose_rejection(spec, str(message), turn_id) is None:
+        return None
+    return _RESTATEMENT_BRIDGE_DIRECTIVE
+
+
 def _user_prompt(question: dict, extra: dict | None = None) -> str:
     """tutor user 消息装配(M3 PR2):题目段 = 题面 + 参考答案 + 解析(教师侧专属)。
 
@@ -250,7 +299,9 @@ def _user_prompt(question: dict, extra: dict | None = None) -> str:
 
     C 段(#414 §五):reply 轮当轮完成证据成立时,末尾追加「完成判定」结构化
     只读事实(completion_signal_fact;不塞 canonical answer)——生成层只读
-    消费,无写权限。"""
+    消费,无写权限。C′(#423 终裁):当轮证据缺席而拒因在场(值匹配但 claim
+    形态未认证)时,末尾追加「结论复述请求」轮级指令(completion_rejection_
+    directive,四铁律)——同样只读消费、只改行为路由,两面互斥不并存。"""
     subject = {"题面": str(question.get("text") or "")}
     if question.get("answer"):
         subject["参考答案"] = str(question["answer"])
@@ -261,6 +312,9 @@ def _user_prompt(question: dict, extra: dict | None = None) -> str:
     signal = completion_signal_fact(question, extra)
     if signal is not None:
         context["完成判定"] = signal
+    directive = completion_rejection_directive(question, extra)
+    if directive is not None:
+        context["结论复述请求"] = directive
     return json.dumps(context, ensure_ascii=False)
 
 
