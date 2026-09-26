@@ -10,12 +10,14 @@ trusted text→[:N]→fake quote,病根是 transformation provenance 丢失。
   要么携带完整授权 span(首尾哨兵俱在——保形变换如数值掩码、方法词脱敏不触
   哨兵);把来源 strict prefix/suffix 当完整事实断言 = 红。
 
-四条 student-visible 确定性替代路径逐一触发:answer leak fallback(掩码/纯
+五条 student-visible 确定性替代路径逐一触发:answer leak fallback(掩码/纯
 block 两臂)、feeds-method repair(重生成/脱敏两臂)、format·tone thin 直通、
-summary 确定性零调用路径。partial quote 必红由 meta 测试直接证明(喂入 C41
-形态的截断文本,断言检查器本身咬人)。与 ②(test_summary_quote_span_identity)
-的分野:①钉 span 类别(完整/不引),②钉 summary 引用字段逐字符等式;与 #441
-的界:本件不碰 anchor/_step_value 取值面,只钉「引用保真」行为不变量。
+summary 确定性零调用路径(学生首/末轮 + 题面引用字段)、stuck 阶梯回放
+(#444:trusted analysis 切片回放 + 终答数字掩码,与掩码臂同族——掩码保形,
+哨兵不触)。partial quote 必红由 meta 测试直接证明(喂入 C41 形态的截断文本,
+断言检查器本身咬人,含首尾倒置分支)。与 ②(test_summary_quote_span_identity)
+的分野:①钉 span 类别(完整/不引),②钉 summary 学生引用字段逐字符等式;
+与 #441 的界:本件不碰 anchor/_step_value 取值面,只钉「引用保真」行为不变量。
 """
 
 from __future__ import annotations
@@ -44,7 +46,9 @@ THREE_ROAD_Q = {"text": "三段路分别长82米、88米、94米,这三段总长
                 "answer": "264米", "analysis": "", "knowledge_points": ["加法"]}
 FRACTION_Q = {"text": "比较 3/4 和 5/8 的大小。", "answer": "3/4大于5/8",
               "analysis": "", "knowledge_points": ["分数的大小比较"]}
-LIBRARY_Q = {"text": "图书馆原有120本书,又买来45本,借出38本,现在有多少本?",
+# 题面哨兵(#444 P3-b:summary 题面引用字段 span 钉)——`_structured_summary`
+# 以「{question}」引题面,截断/改写题面字段时哨兵丢失必红(②只钉学生引用字段)
+LIBRARY_Q = {"text": f"{HEAD_SENTINEL}图书馆原有120本书,又买来45本,借出38本,现在有多少本?{TAIL_SENTINEL}",
              "answer": "127本", "answer_spec": {"answer_type": "numeric_with_unit"}}
 LEARNER = {"grade": "六年级", "name": "小明"}
 
@@ -100,6 +104,10 @@ def test_partial_quote_checker_bites():
     with pytest.raises(AssertionError):  # 无哨兵但泄漏来源中段片段
         _assert_full_span_or_no_quote(
             source, "我们接着看82加88加94等于264这一步。", label="meta/fragment")
+    with pytest.raises(AssertionError):  # 首尾倒置:哨兵俱在但换序(拼装/错位)
+        _assert_full_span_or_no_quote(    # ≠ 完整授权 span(#444 P3-a 分支咬合)
+            source, f"你刚说的是「{TAIL_SENTINEL}先算82加88加94等于264{HEAD_SENTINEL}」吗?",
+            label="meta/inverted")
 
 
 # --------------------------------------------------------------------------- #
@@ -213,8 +221,8 @@ def test_tone_violation_fallback_keeps_full_original_span():
 # --------------------------------------------------------------------------- #
 
 def test_structured_summary_quotes_carry_complete_student_spans():
-    """零调用 summary 引用学生原话:引用字段携带完整 span。分轮哨兵使任一
-    引用字段(首轮/末轮)的截断必红——与 ② 的逐字符等式断言互补。"""
+    """零调用 summary 引用学生原话与题面:各引用字段携带完整 span。分轮哨兵使
+    任何引用字段(题面/首轮/末轮)的截断必红——与 ② 的逐字符等式断言互补。"""
     turn1 = "__T1_HEAD__先算120加45等于165本__T1_TAIL__。"
     turn2 = "__T2_HEAD__再算165减38,答案是127本__T2_TAIL__。"
     gateway = FakeGateway(tutor_payloads=[
@@ -232,7 +240,43 @@ def test_structured_summary_quotes_carry_complete_student_spans():
 
     assert summary.status == "completed"
     assert len(gateway.requests) == calls_before  # 确定性零调用路径(非模型总结)
+    _assert_full_span_or_no_quote(LIBRARY_Q["text"], summary.text, label="summary/question")
     _assert_full_span_or_no_quote(turn1, summary.text, label="summary/first",
                                   head="__T1_HEAD__", tail="__T1_TAIL__")
     _assert_full_span_or_no_quote(turn2, summary.text, label="summary/last",
                                   head="__T2_HEAD__", tail="__T2_TAIL__")
+
+
+# --------------------------------------------------------------------------- #
+# 路径五:stuck 阶梯回放(_reveal_stuck_hint trusted analysis 切片,#444)
+# --------------------------------------------------------------------------- #
+
+def test_stuck_ladder_replay_keeps_full_span_with_answer_masked():
+    """阶梯回放:卡住兜底把 trusted(analysis)切片回放给学生——与掩码臂同族
+    (终答数字→□,保形变换;其余逐字)。哨兵钉死「回放=完整授权 span」:
+    未来该路径接任何 [:N] 截断(既有钉子均为子串断言,不咬截断)必红。"""
+    analysis = (f"第一步算{HEAD_SENTINEL}82加88等于170{TAIL_SENTINEL}。"
+                f"第二步算{HEAD_SENTINEL}170加94得到264{TAIL_SENTINEL}。")
+    question = {"text": "三段路分别长82米、88米、94米,这三段总长是多少米?",
+                "answer": "264米", "analysis": analysis, "knowledge_points": ["加法"]}
+    gateway = FakeGateway(tutor_payloads=[
+        _open("这三段路你想怎么算?"),
+    ])
+    turn = start(dict(question), dict(LEARNER), gateway=gateway)
+    assert [s["provenance"] for s in turn.session.steps] == ["analysis", "analysis"]
+    calls_before = len(gateway.requests)
+
+    first = reply(turn.session, "不知道。", gateway=gateway)      # 首次卡住 → 揭第 1 级
+    assert first.session.guard_events[-1]["branch"] == "reveal"
+    assert first.session.hint_level == 1
+    assert len(gateway.requests) == calls_before                  # 确定性零调用
+    _assert_full_span_or_no_quote(turn.session.steps[0]["step"], first.text,
+                                  label="reveal/ladder-plain")
+
+    second = reply(turn.session, "还是不会。", gateway=gateway)   # 再次卡住 → 第 2 级
+    assert second.session.guard_events[-1]["branch"] == "reveal"
+    assert second.session.hint_level == 2
+    assert "264" not in second.text and "□" in second.text        # 终答数字掩码(保形)
+    assert len(gateway.requests) == calls_before
+    _assert_full_span_or_no_quote(turn.session.steps[1]["step"], second.text,
+                                  label="reveal/ladder-masked")
