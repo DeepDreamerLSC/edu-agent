@@ -38,6 +38,12 @@ from .runner import (
     Subject,
     safe_case_id,
 )
+from .s2_judge import (  # #459 件二:S2 专项 Judge(宿主 B,annotation-only)
+    S2_SCHEMA,
+    S2JudgeSubject,
+    s2_judge_transcript,
+    s2_user_prompt,
+)
 from .scenario_corpus import (
     DATASETS_DIR,
     deterministic_scenarios,
@@ -105,6 +111,8 @@ __all__ = [
     "possible_no_progress_cycle",
     "ResumeMismatch",
     "RunnerConfig",
+    "S2_SCHEMA",
+    "S2JudgeSubject",
     "SCHEMA",
     "Subject",
     "UnknownCheck",
@@ -147,6 +155,8 @@ __all__ = [
     "run_check",
     "run_identity",
     "run_scenario_checks",
+    "s2_judge_transcript",
+    "s2_user_prompt",
     "safe_case_id",
     "salvage_facts",
     "sample_independent",
