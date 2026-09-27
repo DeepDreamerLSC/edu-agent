@@ -31,6 +31,17 @@ claim(学生提交该答案)——不确定表达(可能/还不确定/大概/也
 一环,#420 P3)**;命中后紧跟自我否定(「…不对」「…错了」)不构成证据;
 单位省略仅当题面 schema 显式 optional(审查修正③),同义单位仅维度安全
 换算、无默认容差。
+
+C′ stalled-completion mitigation(#423 终裁 2026-09-27,评论 5846062131):
+verify_completion 的返回类型与判定行为**零变化**(仍 Evidence|None,零 Gate
+精度变化);文末新增 CompletionRejectionReason/diagnose_rejection——证据
+缺席时「值匹配但 claim 形态未认证」的**纯 diagnostic 拒因**(#453 实证两类
+FN 形态:numeric「每份重0.4kg」答案嵌陈述无模板 / short_text「结论是无法
+确定」答案先行理由后置),八条件全成立才产生、缺一不产生,共用本文件同一
+解析/归一化/红线逻辑(不在 generation 里另建语义 classifier);它不是
+authority——不触发任何状态迁移,唯一消费效果是 generation 的回复路由
+(否定重置文案 → 一次轻量 restatement bridge,四铁律:不宣告正确/不补
+canonical answer/不重新教学/不重置已有进展)。
 """
 
 from __future__ import annotations
@@ -213,6 +224,36 @@ class CompletionEvidence:
             raise ValueError("CompletionEvidence.verdict 恒为 matched(未匹配即无证据)")
         if self.answer_type not in ANSWER_TYPES:
             raise ValueError(f"CompletionEvidence.answer_type 必须是六窄面之一:{ANSWER_TYPES}")
+
+
+@dataclass(frozen=True)
+class CompletionRejectionReason:
+    """completion gate 拒绝路径的拒因诊断(#423 C′ 终裁,2026-09-27)。
+
+    **纯 diagnostic,零 authority(权限分级铁律)**:CompletionEvidence 是
+    state authority(completed 迁移的必要授权);本类型只回答「为什么这一轮
+    没有证据」——reason 在场**不触发任何状态迁移、不进任何判定口径**,也
+    绝不被当作 trusted signal 消费(#448 §五 verified_complete 处理「已认证
+    完成事实」,本类型处理「未认证但存在窄定义 completion candidate 的拒绝
+    原因」,两者权限等级不同,命名不得复用)。唯一消费效果:generation 的
+    回复路由把 reset-to-first-step 换成一次轻量 restatement bridge(四铁律:
+    不宣告正确/不补 canonical answer/不重新教学/不重置已有进展)。
+
+    matched_value 是学生消息中值命中的**原文片段**(审计凭证,学生自己的
+    话——不是 canonical answer;信号不含题库答案,塞答案=新 answer-leak 面)。
+    reason_type 恒为单值:当前唯一形态是「值匹配但 claim 形态未认证」。"""
+
+    reason_type: str
+    answer_type: str
+    matched_value: str
+    turn_id: int
+
+    def __post_init__(self) -> None:
+        if self.reason_type != "value_matched_but_claim_uncertified":
+            raise ValueError("CompletionRejectionReason.reason_type 恒为 "
+                             "value_matched_but_claim_uncertified(C′ 单一形态)")
+        if self.answer_type not in ANSWER_TYPES:
+            raise ValueError(f"CompletionRejectionReason.answer_type 必须是六窄面之一:{ANSWER_TYPES}")
 
 
 def _is_question(message: str) -> bool:
@@ -604,3 +645,127 @@ def verify_completion(spec: AnswerSpec, student_message: str | None,
         provenance=EvidenceProvenance(
             ground_truth_ref=spec.ground_truth, matched_span=span, normalization=tags),
     )
+
+
+# ---------------------------------------------------------------------------
+# C′ stalled-completion mitigation(#423 终裁 2026-09-27,评论 5846062131)
+#
+# #453 实证:学生完整作答但句式未命中 claim 白名单(答案嵌陈述无模板词 /
+# 答案先行理由后置)→ 无 CompletionEvidence → gate 拒 → Tutor 输出否定重置
+# 文案(C24 形态)。C′ 不动 Gate(零精度变化),只在证据缺席时暴露一个
+# current-turn、read-only、non-authoritative 拒因。**与现有 verifier 共用
+# 同一解析/归一化/红线逻辑**(同一 number_tokens/text_key/_unit_value_match/
+# _shorttext_bounds 与同款窗口守卫),不在 generation 里另建语义 classifier。
+# ---------------------------------------------------------------------------
+
+
+def _diagnose_numeric_with_unit(spec: AnswerSpec, message: str) -> str | None:
+    """numeric 面拒因扫描:存在数字 token 经同一 _unit_value_match 命中 truth
+    (条件③),该 token 的猜测/连接/否定/撤回窗全过(条件⑤⑥⑦,逐命中),
+    且 _claim_match 为 None(条件⑧:非裸答案/声明模板/算式直给位——**值出现
+    了但 claim 形态未认证**,#453「每份重0.4kg」形态)。claim 位在场仍无证据
+    的消息(校准模板非末 token 的枚举/中间值形态)失败在别的面,不属「唯一
+    缺口」,不产生拒因。多槽复合(truth ≥2 数字 token)与 verifier 同口径
+    整体不判定。否定窗取最宽 3 字(动词类模板口径;无 claim kind 可依,
+    保守方向)。"""
+    truth = _single_number(spec.ground_truth)
+    if truth is None:
+        return None
+    _truth_span, truth_value, truth_unit = truth
+    for span, start, end, value, unit, _tags in number_tokens(message):
+        if value is None or not _unit_value_match(
+                truth_unit, truth_value, spec.unit_optional, value, unit):
+            continue                      # 条件③:值/单位确实匹配(同一判定面)
+        if (_guessed(message, start)      # 条件⑤:逐命中猜测窗(「我猜0.4kg」)
+                or _joined(message, start, end, _JOIN_AFTER_NUMERIC)   # 条件⑦紧邻连接
+                or _negated(message, start, 3)        # 条件⑥:命中前否定窗(最宽)
+                or _retracted(message, end)):         # 条件⑥:命中后自我撤回
+            continue
+        if _claim_match(message, start) is not None:
+            continue                      # 条件⑧:claim 位在场——非「claim 未认证」
+        return span
+    return None
+
+
+# 文本面「同面候选」无字符类判据:连接词后任何非空后继都按候选枚举一环拦
+# (deny-only 方向,宁可漏发 bridge 不误发;verifier 的 short_text 面靠
+# 「末段整答收尾」结构性免疫连接窗,本诊断看任意出现位,免疫不成立须显式补)。
+_JOIN_AFTER_TEXT = re.compile(r".")
+
+
+def _diagnose_short_text_exact(spec: AnswerSpec, message: str) -> str | None:
+    """short_text 面拒因扫描:题库 truth/显式 alias 经同一 text_key 归一后在
+    消息中出现(条件③),该出现位的否定/猜测/连接窗全过(条件⑤⑥⑦),且不在
+    认证命中位(条件⑧:_shorttext_bounds——末段整答收尾+左边界句首/断言系词/
+    「用X表示」尾框;#453「结论是无法确定」答案先行形态)。候选在认证位时,
+    证据缺席的失败在否定/猜测等其他守卫,非「唯一缺口」,不产生拒因。多槽
+    复合(truth ≥2 数字 token)同口径整体不判定。"""
+    if len([t for t in number_tokens(spec.ground_truth) if t[3] is not None]) >= 2:
+        return None
+    key_message, spans = text_key(message)
+    for candidate in (spec.ground_truth, *spec.aliases):
+        key_candidate, _ = text_key(candidate)
+        if not key_candidate:
+            continue
+        idx = key_message.find(key_candidate)
+        if idx == -1:
+            continue                      # 条件③:候选值未在消息中出现
+        if _shorttext_bounds(key_message, key_candidate) is not None:
+            continue                      # 条件⑧:认证位在场(失败在别的守卫)
+        begin = spans[idx][0]
+        last = spans[idx + len(key_candidate) - 1][1]
+        if (_negated(message, begin) or _guessed(message, begin)
+                or _joined(message, begin, last, _JOIN_AFTER_TEXT)):
+            continue                      # 条件⑥⑤⑦:该出现位被红线拦
+        return str(message)[begin:last]
+    return None
+
+
+# 仅 numeric/short_text 两面的 verifier 有 claim 位形态门(裸答案/声明模板位;
+# 末段整答收尾+系词左界)。choice/true_false/equation/ratio 四面无此门——
+# 值匹配且守卫全过即命中,「唯一失败=claim 形态未认证」结构性不可能,不进
+# 诊断表(条件②在 dispatch 层收口:六窄面 ∩ 有 claim 门的面)。
+_REJECTION_DIAGNOSES = {
+    "numeric_with_unit": _diagnose_numeric_with_unit,
+    "short_text_exact": _diagnose_short_text_exact,
+}
+
+
+def diagnose_rejection(spec: AnswerSpec | None, student_message: str | None,
+                       turn_id: int) -> CompletionRejectionReason | None:
+    """C′ 拒因诊断:**八条件全成立才产生,缺一不产生**(#423 终裁钉死):
+
+    ① 有合法 answer_spec(spec None → None,fail-closed,不私造);
+    ② answer_type 在可验证窄面且该面有 claim 形态门(复合/开放/未知 → None;
+      choice/true_false/equation/ratio 结构性无「唯一失败=claim 形态」形态);
+    ③ ground-truth/candidate 值确实匹配(value_match:同一归一/换算/等价判定,
+      值不出现或不匹配 → None);
+    ④ 非问句(同一 _is_question,消息级 fail-closed);
+    ⑤ 非猜测/不确定(同一 _is_uncertain 消息级 + 逐命中猜测窗 _guessed);
+    ⑥ 非否定/撤回(同一 _negated/_retracted 窗口);
+    ⑦ 非多候选(同一 _is_alternatives 消息级 + 逐命中连接窗 _joined);
+    ⑧ 唯一失败原因=claim 形态未认证(其他守卫全过;claim 位在场的证据缺席
+      属别的失败面——枚举/中间值/否定/猜测——不产生拒因)。
+
+    禁止清单(终裁原文):「我猜0.4kg」「不是0.4kg」「0.4kg还是0.5kg」
+    「可能是0.4kg」及一切问句形态均不得产生拒因。与 verify_completion 的
+    关系:共用同一解析/归一化/红线逻辑(单一实现),但 **verify_completion
+    返回类型与行为零变化**——本函数由调用方在 Evidence 为 None 时选择性调用
+    (kernel finish 拒绝路径 / prompting 装配侧重演),产物是 diagnostic/
+    routing signal,不是 trusted signal,更不是 state authority。"""
+    if spec is None or spec.answer_type not in _REJECTION_DIAGNOSES:
+        return None                       # 条件①②:无声明面/复合红线/无 claim 门面
+    message = str(student_message or "")
+    if (not message.strip() or not spec.ground_truth.strip()
+            or _is_question(message)      # 条件④:问句猜答不可认证
+            or _is_uncertain(message)     # 条件⑤:不确定表达(消息级)
+            or _is_alternatives(message)):
+        return None                       # 条件⑦:候选间 或/还是/要么(消息级)
+    span = _REJECTION_DIAGNOSES[spec.answer_type](spec, message)
+    if span is None:
+        return None
+    return CompletionRejectionReason(
+        reason_type="value_matched_but_claim_uncertified",
+        answer_type=spec.answer_type,
+        matched_value=span,
+        turn_id=turn_id)

@@ -50,10 +50,11 @@ from .numeric import (_ASCII_NUMBER, _answer_focus_numbers, _declarative,
                       _drift_sources, student_stated_answer,
                       _known_answer, _question_numbers, _reply_numbers, _spoken_numbers,
                       mask_numbers, result_evidence)
-from .prompting import (OPEN_SCHEMA, TUTOR_SUMMARY_SCHEMA, TUTOR_TURN_SCHEMA,
-                        _FEEDS_METHOD_CRITIQUE, _SELF_CRITIQUE, _user_prompt,
-                        diagnose_turn_hint, first_question_text, grade_grounding, opening_hint,
-                        summary_system_prompt, system_prompt)
+from .prompting import (OPEN_SCHEMA, RESTATED_CLAIM_BRIDGE, TUTOR_SUMMARY_SCHEMA,
+                        TUTOR_TURN_SCHEMA, _FEEDS_METHOD_CRITIQUE, _SELF_CRITIQUE,
+                        _user_prompt, diagnose_turn_hint, first_question_text,
+                        grade_grounding, opening_hint, summary_system_prompt,
+                        system_prompt)
 from .session import LearnerSession, SessionVersionConflict, Summary, TerminalStateError, Turn
 from .tone_guardrails import apply_tone_guardrail
 
@@ -96,8 +97,7 @@ def _masked_question(question: dict) -> dict:
     if question.get("analysis"):
         masked["analysis"] = _mask_method_names(str(question["analysis"]))
     if question.get("knowledge_points"):
-        masked["knowledge_points"] = [_mask_method_names(str(kp))
-                                      for kp in question["knowledge_points"]]
+        masked["knowledge_points"] = [_mask_method_names(str(kp)) for kp in question["knowledge_points"]]
     return masked
 
 
@@ -949,11 +949,7 @@ def _structured_summary(session: LearnerSession) -> str:
     first = user_turns[0] if user_turns else "你从题目本身开始"
     last = user_turns[-1] if user_turns else "说出了你的结论"
     question = str(session.question.get("text") or "")
-    return (
-        f"这一题(「{question}」)你自己讲了做法:从「{first}」开始,说到「{last}」,"
-        f"关键步骤和结论都在你自己的话里,和题目的要求也对上了。"
-        f"可以再做一道,或者今天先到这里。"
-    )
+    return f"这一题(「{question}」)你自己讲了做法:从「{first}」开始,说到「{last}」,关键步骤和结论都在你自己的话里,和题目的要求也对上了。可以再做一道,或者今天先到这里。"
 
 
 def finish(session: LearnerSession, *, gateway: Gateway | None = None) -> Summary:
@@ -994,10 +990,20 @@ def finish(session: LearnerSession, *, gateway: Gateway | None = None) -> Summar
         # 不知道门的存在),不调模型、不写 summary;埋点带轮号供度量(负向案
         # completed 消失的归因信号)。Evidence 是必要授权非充分:ready/correct/stuck
         # 等既有条件在下方照旧(§一),本门不是「有 evidence 就完成」。
+        # C′(#423 终裁 2026-09-27)stalled-completion mitigation:拒因诊断(纯
+        # diagnostic,零 authority)——session.completion_rejection 只读视图(session.py,
+        # kernel 预算冻结 800/800)。在场(八条件全成立:值匹配但 claim 形态未认证,
+        # #453 两类 FN 形态)时:①guard_events 记 rejection_reason(additive,仅在场
+        # 加键,埋点口径同 anchor_numbers);②回复路由换 RESTATED_CLAIM_BRIDGE(替换
+        # NEEDS_REVIEW_TEXT 的否定重置文案,仅拒因在场时)。**state/needs_review 终态
+        # 不动**(零状态迁移)——下一轮学生用可认证 claim 重述,再由本门正常出证。
         session.guard_events.append({"branch": "completion_gate_rejected",
                                      "turn": _student_turn_id(session)})
-        return Summary(text=NEEDS_REVIEW_TEXT, status="needs_review",
-                       session_version=session.session_version)
+        rejection = session.completion_rejection
+        if rejection is not None:
+            session.guard_events[-1]["rejection_reason"] = rejection.reason_type
+        return Summary(text=RESTATED_CLAIM_BRIDGE if rejection is not None else NEEDS_REVIEW_TEXT,
+                       status="needs_review", session_version=session.session_version)
     if session.learner.get("answer_status") == "correct" and not session.stuck:
         # 零调用通路保留(原条件 + 已达确认态):完成由学生自己的讲述证据证实。
         # #382 P0-1 后 stuck 语义收窄为「学生本人明确卡壳信号」——本闸随之收窄为

@@ -11,7 +11,11 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 
-from .completion import CompletionEvidence
+from .completion import (
+    CompletionEvidence,
+    CompletionRejectionReason,
+    diagnose_rejection,
+)
 
 
 class SessionVersionConflict(Exception):
@@ -72,6 +76,28 @@ class LearnerSession:
             return None
         return {"verified_complete": True,
                 "evidence_turn_id": self.completion_evidence.turn_id}
+
+    @property
+    def completion_rejection(self) -> CompletionRejectionReason | None:
+        """C′(#423 终裁 2026-09-27)拒因只读视图:completion gate 拒绝路径的
+        diagnostic/routing signal——**最新学生轮消息**经 diagnose_rejection 八
+        条件全成立时在场(值匹配但 claim 形态未认证,#453 两类 FN 形态),
+        turn_id=最新学生轮号。
+
+        **零 authority(权限分级铁律)**:不触发状态迁移、不进任何判定口径;
+        与 verified_signal(trusted 完成事实)权限等级不同、命名不复用(#448
+        §五分界:那是「已认证完成事实」,这是「未认证但存在窄定义 completion
+        candidate 的拒绝原因」)。唯一消费效果=回复路由(finish 拒绝文案 →
+        restatement bridge;prompt 侧经 prompting 装配重演同一 diagnose_rejection,
+        单一实现)。放本文件不进 kernel.py:kernel.py 预算 800/800 已冻结
+        (verified_signal 同款先例)。不含 canonical answer(matched_value 是
+        学生自己的话)。"""
+        from .kernel import _answer_spec  # 懒加载:kernel 顶层 import session
+        message = next((str(m.get("content") or "") for m in reversed(self.history)
+                        if m.get("role") == "user"), "")
+        return diagnose_rejection(
+            _answer_spec(self.question), message,
+            sum(1 for m in self.history if m.get("role") == "user"))
 
 
 @dataclass(frozen=True)
