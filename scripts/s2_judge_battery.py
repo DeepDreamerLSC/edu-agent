@@ -112,8 +112,9 @@ def _score(rows: list[dict], results: dict[str, dict], identity: dict) -> dict:
             if expected is None:
                 continue  # 未单列轴不记分不推断
             actual = transcript[axis]
-            # D2:supporting_turns 仅诊断——精确匹配计数,不入 GA
-            turns_match = sorted(actual["supporting_turns"]) == sorted(expected["turns"])
+            # D2:supporting_turns 仅诊断——精确匹配计数(列表相等,序敏感;
+            # [t2,t3] vs [t3,t2] 不算精确),不入 GA
+            turns_match = actual["supporting_turns"] == expected["turns"]
             turns_diag.append({"case": cid, "axis": axis,
                                "expected": expected["turns"],
                                "actual": actual["supporting_turns"],
@@ -127,8 +128,11 @@ def _score(rows: list[dict], results: dict[str, dict], identity: dict) -> dict:
                     "rationale": actual["rationale"][:160],
                 })
             if expected["verdict"] == "unsure":
+                # GB 钉死定义:输出 unsure ∧ 命中预期边界证据,两条件同时满足
+                # (P0 修复:此前只看证据——verdict=yes 带正确 marker 也会过门)
                 evidence_ok = _boundary_evidence(expected, actual)
-                gb_cases.append((cid, axis, expected, evidence_ok))
+                gb_cases.append((cid, axis, expected,
+                                 actual["verdict"] == "unsure" and evidence_ok))
                 # GB-only miss 也必须进归因输入(GC:全部 miss 必须归因)——
                 # verdict 命中但边界证据未命中 = 边界 miss,单列 kind
                 if evidence_ok is False and expected["verdict"] == actual["verdict"]:
@@ -179,7 +183,7 @@ def _report(run_dir: Path, scored: dict, identity: dict) -> Path:
         "## GA 案级一致(门 ≥20/24;verdict 词级,supporting_turns 仅诊断)",
         f"- {scored['ga']}/{scored['total']}",
         "",
-        "## GB unsure 纪律(①/④/② marker 词级;U-0 marker 或 rationale 二选一)",
+        "## GB unsure 纪律(判定 = verdict=unsure ∧ 边界证据命中;①/④/② marker 词级;U-0 marker 或 rationale 二选一)",
     ]
     for cid, axis, expected, ok in scored["gb_cases"]:
         lines.append(f"- {cid} {axis}:期望边界 {expected['boundary']}"

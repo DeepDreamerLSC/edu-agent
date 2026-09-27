@@ -413,6 +413,34 @@ def test_score_ga_and_gb():
     assert r["misses"] == [] and r["ga"] == 1
 
 
+def test_gb_requires_unsure_verdict_and_evidence():
+    """GB 钉死定义(P0):verdict=unsure ∧ 边界证据,缺一不过门——
+    yes 带正确 marker 只算 verdict miss,GB 仍 fail。"""
+    rows = [_row("C13-T1", "unsure", None, s2a_boundary="①")]
+    scored = s2_judge_battery._score(
+        rows, {"C13-T1": _result(verdict_a="yes", markers_a=["①"])},
+        {"judge_primary_model": "primary-name"})
+    assert scored["gb_pass"] is False
+    assert [m["kind"] for m in scored["misses"]] == ["verdict"]  # 无 boundary miss(证据未参与)
+    # unsure ∧ 证据命中 → 过;unsure ∧ 证据错 → 不过;yes ∧ 证据对 → 不过
+    ok = s2_judge_battery._score(
+        rows, {"C13-T1": _result(verdict_a="unsure", markers_a=["①"])},
+        {"judge_primary_model": "primary-name"})
+    assert ok["gb_pass"] is True
+
+
+def test_turns_exact_match_is_order_sensitive():
+    """D2 收紧:精确匹配 = 列表相等;[t3,t2] 对期望 [t2,t3] 不算命中。"""
+    row = _row("C14-T2", "yes", None)
+    row["expected"]["s2a"]["turns"] = ["t2", "t3"]
+    reversed_actual = _result(verdict_a="yes")
+    reversed_actual["transcript"]["s2a"]["supporting_turns"] = ["t3", "t2"]
+    scored = s2_judge_battery._score(
+        [row], {"C14-T2": reversed_actual}, {"judge_primary_model": "primary-name"})
+    assert scored["ga"] == 1 and scored["turns_match"] == 0  # GA 不动,诊断失配
+    assert scored["misses"] == []
+
+
 def test_boundary_evidence_u0_dual_path():
     expected_u0 = {"boundary": "U-0"}
     assert s2_judge_battery._boundary_evidence(expected_u0, {
