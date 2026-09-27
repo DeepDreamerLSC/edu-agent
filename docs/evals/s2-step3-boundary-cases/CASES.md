@@ -87,7 +87,7 @@ source_anchor = C13(定义 §6-1,NO(t1–t2),R-e)
 operator = 方向性变体 · 换 need 层级(单发泛请求 → 泛请求重复×2 轮 + 零自行推进)
 changed_factor = 学生 t2 轮轨迹:自行推进 → 重复泛请求(零推进)
 held_constant = 题面;t1 学生轮逐字;两轮 Tutor 回应(泛化反问句,逐字重复);stuck=True×2;hint=0
-proposed_expectation = S2a NO(t1)[验收改判:泛请求+回应满足最低功能,与 C13-T4 镜像一致——U-⑥口径已裁定闭合]
+proposed_expectation = S2a UNSURE + 边界①(t1–t2)[回滚:本条不在验收改判面——验收改判仅限 C13-T4/C14-T1,泛请求首轮+后续明示的边界案维持 unsure]
 expectation_rationale = 走查:A-1f:泛请求分类成立(「小提示」未命名教学对象,锚案已钉的同款形态,代理闭合);升格触发=「泛请求重复×2 轮」明文命中(t1+t2 同形态、零推进)→ 不走 A-4.4,路由 U-①(判据 A-1f 升格触发箭头;U-① 调和说明:已锚形态才归 R-e/A-4.4,升格形态属①未裁定区)→ A-4.6 UNSURE+边界①+高敏感。A-3d 附注:response 逐字重复=R4 不成立(零变化),若①日后裁定升格成立,本案即落 A-4.3 的 YES 侧——此为①的直接裁定材料。S2b 侧:B-0 仅 A0/泛化反问,无 giving → NO。
 supporting_definition_clause = 判据 A-1f / A-4.6 / U-① / A-3d;定义 §7-1 升格条件句(「泛请求重复×2 轮、泛请求+持续零推进时,是否升格为 E3 型 need…无锚案无裁定」)+ §7 统一边界纪律段
 ```
@@ -147,8 +147,8 @@ source_anchor = C13(定义 §6-1)
 operator = 最小对比 · 换 need 层级(泛请求 → 半具体「提示一下第二问」,§7-6 明列的未裁定形态)
 changed_factor = t1 学生轮 need 形态:未命名对象泛请求 → 点名目标子问题(第二问)但未命名教学对象
 held_constant = 题面(两问化已作 family 声明);Tutor 回应逐字(泛化反问句);t2 自行推进;stuck=True×2;hint=0
-proposed_expectation = S2a NO(t1)[验收改判:泛请求+第一步级回应=满足最低功能,支持强度须匹配请求剂量——U-⑥口径已由 #459 裁定接受,泛请求侧闭合]
-expectation_rationale = 走查:A-1a 操作代理(「response 能否被判定为对口/不对口」)本身两读:读一——「第二问」只锁定目标子问题、未命名所需支持内容,泛化反问的对口性不可判定 → 按泛请求处理 → A-4.4 NO;读二——点名第二问后,泛化反问可判为「不对口」(未指向第二问的具体内容)→ E1 → A-4.1 YES。代理不能闭合 → U-⑥ → A-4.6 UNSURE+边界⑥。两读即 yes/no 双向,正是 §7-6 未裁定的实态。
+proposed_expectation = S2a NO(t1)[验收改判 #460:泛请求+第一步级回应=满足最低功能,支持强度须匹配请求剂量——U-⑥口径已裁定闭合]
+expectation_rationale = [验收改判后推理已替换——旧 UNSURE 推理已删;当前判定依据见 proposed_expectation 行内验收集注]
 supporting_definition_clause = 判据 A-1a(代理两读→U-⑥)/ U-⑥ / A-4.6;定义 §7-6(「更边界的形态(『给个思路』『提示一下第二问』)未裁定」+ 裁定前代理句)
 ```
 
@@ -174,8 +174,8 @@ source_anchor = C14(定义 §5-2,YES(t1))
 operator = 最小对比 · 换 need 层级(E1 点名请求 → 半具体「给点思路」)
 changed_factor = t1 学生轮 need 形态:「告诉我单位怎么换」(命名对象)→「给我点思路」+ 现场提到两个单位(点名目标语境但请求词未命名教学对象)
 held_constant = 题面;Tutor 回应逐字;t2 自行完成;stuck=False;hint=0
-proposed_expectation = S2a NO(t1)[验收改判:泛请求+第一步级回应=满足最低功能,支持强度须匹配请求剂量——U-⑥口径已由 #459 裁定接受,泛请求侧闭合]
-expectation_rationale = 走查:A-1a 代理两读:读一——「思路」未命名教学对象,回应对口性不可判定 → 泛请求 → A-4.4 NO(+泛化反问高敏感标记);读二——学生已现场点名障碍物(2.5 米 vs 80 厘米单位不同),请求以此语境可判对口性(回应恰在处理单位)→ E1 → 回应无 R1(未给换算)/无 R2(元认知反问,锚案已钉「问回你」非 R2)/无 R3 → A-4.1 YES。代理不能闭合 → U-⑥ UNSURE。与 C13-T4 互为镜像:一个从泛请求侧升、一个从 E1 侧降,双探 §7-6。
+proposed_expectation = S2a NO(t1)[验收改判 #460:「给点思路」泛请求降档+回应满足最低功能,与 C13-T4 镜像一致]
+expectation_rationale = [验收改判后推理已替换——旧 UNSURE 推理已删;当前判定依据见 proposed_expectation 行内验收集注]
 supporting_definition_clause = 判据 A-1a / U-⑥ / A-4.4 / A-4.1 / A-3b(反锚:元认知反问非 R2);定义 §7-6(「给个思路」明列未裁定形态)+ §5-2(「问回你」裁定)
 ```
 
@@ -258,7 +258,7 @@ source_anchor = C24(定义 §6-3,NO(t1–t2),锚案模式)
 operator = 不变性变体 · 删 stuck(latch=True → False)
 changed_factor = 机械位:stuck latch=True → False(全程)
 held_constant = 题面;全部话语轮逐字(程序二选一问题、泛化反问、t2 绕开推进);hint=0
-proposed_expectation = S2a YES(t1)[验收改判:E1 二选一形=具体请求,A-1b 请求形口径已裁接受(#459 U-④)]
+proposed_expectation = S2a UNSURE(边界④)[回滚:本条不在验收改判面,误改回滚]
 expectation_rationale = 走查(未来批模式,无已钉裁定):A-1b:程序二选一型显式问题不入 E2 → 路由 U-④;A-1e:无 stuck → 无 E5;need 侧=程序二选一言证(不再因 stuck 位而可归 E5-only)→ A-4.6 UNSURE+边界④。对照锚案模式(已钉「唯一证据基础=stuck 位」→ R-c NO):删 stuck 后言证形态本身浮出并接管路由——「程序二选一型需边界裁定」这一事实不被锚案的 no 否定,两者证据基础不同。stuck 在/不在,未来批路由均为 U-④(泛化反问句不变)→ 同时验证 A-1e「E5 不改变判定路径」。
 supporting_definition_clause = 判据 A-1b(程序二选一→U-④)/ A-1g / A-1e / A-4.6 / U-④;定义 §7-4(未钉句「知识缺口陈述…与程序二选一问题…是否同级入 E2?」)+ §8 五禁②
 ```
@@ -297,7 +297,7 @@ operator = 最小对比 · 换 need 层级(程序二选一陈述 → E1 请求�
 changed_factor = t1 学生轮 need 形态:二选一陈述 → 请求形(「能先告诉我…吗」)且保留二选一内容(「先算括号还是先除」)
 held_constant = 题面;Tutor 回应逐字;t2 绕开推进;stuck latch=True;hint=0
 proposed_expectation = S2a YES(t1)[验收改判:E1 二选一形=具体请求,U-④ 请求形口径已裁接受]
-expectation_rationale = 走查:A-1a 与 A-1g 同时命中:A-1a 闭合可能(请求命名对象「先算哪个」——告知先算括号即对口、泛化反问不对口,对口性可判 → E1 → A-4.1 YES);A-1g:need 呈程序二选一型(「先算括号还是先除」型,判据 U-④ 触发词逐字命中)→ U-④ UNSURE。两条路径冲突且判据未给优先序 → 判定步不能闭合 → UNSURE(边界④;若严格按 A-1g 边界型扫描优先,U-④;若按 A-1a 代理闭合优先,YES)。stuck latch 只记录(A-1e)。
+expectation_rationale = [验收改判后推理已替换——旧 UNSURE 推理已删;当前判定依据见 proposed_expectation 行内验收集注]
 supporting_definition_clause = 判据 A-1a / A-1g / A-4.1 / A-4.6 / U-④ / U-0;定义 §7-4(「程序二选一问题(『先算括号还是先除』)」原句)+ §7 统一边界纪律段
 ```
 
@@ -361,10 +361,10 @@ supporting_definition_clause = 判据 A-4.7 / B-0 / B-1a / B-2a / B-3d② / B-4.
 - 机械位:obs.stuck=False;hint_level=0
 
 ```text
-source_anchor = C15(定义 §6-4)
+source_anchor = C20(A64 #20,定义 §5-6:S2b 正锚「修复中提前给公式」同构——题面/推理链一致;C15 锚已漂移(正方形/圆面积≠图书馆),改锚点源为 C20 供受控对照)
 operator = 最小对比 · 只增 A1 请求授权(第一步级点名),其余全持常
 changed_factor = t1 学生增「能告诉我第一步做什么吗」(E1,第一步级;U-⑦:授权=第一步范围)
-held_constant = 学生概念理解状态(与锚案一致);Tutor 给终关系(超出第一步=U-⑦ 越权);t2 自行推进;stuck=False
+held_constant = 学生概念理解状态(与 C20 同构:概念已理解但执行层卡住);Tutor 给终关系(超出第一步=U-⑦ 越权);t2 自行推进;stuck=False
 proposed_expectation = S2a NO + S2b YES(t1)
 expectation_rationale = S2a NO:学生 E1 点名第一步,Tutor 确实回应了该 need(给了面积公式=超出第一步但非缺位——C23-T4 验收改判同逻辑:给多≠缺位);S2b YES:A1 只授权第一步范围,Tutor 给终关系=越权(U-⑦ 终裁:请求「第一步」不授权终关系)。
 supporting_definition_clause = U-⑦(A1 最小必要范围)/B-2(A1 授权档)/B-3(B2 关键内容直接给出)/C23-T4 验收改判逻辑(给多≠缺位)
@@ -383,7 +383,7 @@ source_anchor = C15(定义 §6-4,NO(t2–t4))
 operator = 方向性变体 · 换认知归属/保留量(删学生 t2 概念修正轮——保留量单向下调)
 changed_factor = 学生保留量:概念修正+计算执行 → 仅计算执行(修正轮删除;误概念未被任何一方显式修正)
 held_constant = 题面;Tutor t2 路线图逐字(较弱层,不含修正);两步计算由学生执行;t1 语境;stuck=False;hint=0
-proposed_expectation = S2a NO + S2b YES(t1)[验收改判:Tutor 给多了但确实回应了第一步——给多≠缺位;S2b YES 因 E1 只授权第一步,Tutor 同轮给关键洞察=越权]
+proposed_expectation = S2b UNSURE + 边界②(t2)[回滚:本条不在验收改判面,误改回滚]
 expectation_rationale = 走查(S2b,t2):B-0 含 giving(路线图);B-1a 较弱层(给出层未变);B-2:A1/A2/A3 无 → A-失败;B-3:B1 无;B2 无(较弱层);B3:学生保留计算执行(构造执行)→ 不成立——但 B-3d 的不成立锚定形态②要求「路线图而学生保留计算执行+概念修正」,本候选保留量缺概念修正一档,不匹配锚定形态;保留档位落在 C15(概念修正+计算执行)与 C23(仅复述)之间未标定连续谱 → B-未定 → U-② → B-4.4 UNSURE。判据 B-3c 的「保留构造执行 → B3 不成立」只关闭 B3 单项,不能替代 B-3d 的锚定形态闭合(不成立≠任一单项不成立)。S2a(t1):need 无证据 → A-4.7 NO。
 supporting_definition_clause = 判据 B-3c / B-3d(未定→U-②)/ B-4.4 / U-②;定义 §7-2(「中间连续谱未标定」+ 裁定前句「双 prong 逐案认定,不设强度阈值」)
 ```
@@ -447,7 +447,7 @@ supporting_definition_clause = 判据 A-4.7 / B-0 / B-1a / B-2e / B-3d① / B-4.
 source_anchor = C09(定义 §6-5)
 operator = 最小对比 · 只改 Tutor 给出强度(带空位→直接给终值),请求持常
 changed_factor = t1 Tutor 回应:带空位「53−48=□」→ 直接给终值「53−48=5」
-held_constant = t1 学生 E1 请求(与锚案逐字);学生 t2 自行推进;stuck=False;题面
+held_constant = t1 学生 E1 请求(与锚案不同:锚案「余数怎么解释」→本案「53−48 怎么算」;**请求对象已换**,仅强度配对逻辑探针仍有效,标注非严格单变量);学生 t2 自行推进;stuck=False;题面
 proposed_expectation = S2a NO + S2b YES(t1)
 expectation_rationale = S2a NO:Tutor 回应了学生点名的 need(给了减法结果=超出空位但非缺位);S2b YES:E1 只授权「告诉我怎么算」,Tutor 直接给终值=越权代劳(B-3 B2:关键内容直接给出;U-⑦:请求「怎么算」不授权直接给终值)。
 supporting_definition_clause = U-⑦(A1 最小必要范围)/B-3(B2)/C15-T3 同构(给多≠缺位)
@@ -486,7 +486,7 @@ operator = 方向性变体 · 换授权档(增 E4 前级失败轨迹 → A2 失�
 changed_factor = 增 t2 失败轮(「还是不会。」零推进)与 t3 升级给出(支架 → 直讲)——E4/A2 档的构成性变化
 held_constant = 题面;t1 学生轮与支架逐字;升级后给出内容=锚案支架的填空完成态;stuck=False;hint=0
 proposed_expectation = S2a NO + S2b NO(t1)[验收改判:双轴维持负判]
-expectation_rationale = 走查(S2a,t2):need 侧:t1 的 E1 已被 t1 支架对口承接(当轮已闭合);t2「还是不会。」——非请求形(非 E1)/无可点名缺口(非 E2)/「不会」类明示×1(E3 双条件差一轮,不成立)/非泛请求;A-1d:E4 双条件在案(t1 较弱定向支持已给 ∧ 学生仍停滞、零推进)→ need 侧仅剩 E4 → U-⑤ → A-4.6 UNSURE+边界⑤。短路序注记:t2 轮的 response(t3 直讲)虽含对口支持,但 A-4.6 先于 A-4.7(落空)触发——「支持已给」不能闭合 E4-only 案(判据短路序的直接推论,判据未显式示例;变更请求候选 3,§10)。两读注记:若把 t1「不知道余数怎么解释」读作「不会」类明示(锚案归 E1 型请求),则 t1+t2 明示×2+零推进 → E3 在案 → t3 直讲=功能不同的升级(R4 成立)→ A-4.3 条件不满足 → 落 A-4.7 NO(义务已尽)——该读法下 S2a=NO 而非 UNSURE;主判依据=锚案对 t1 的 E1 分类(定义 §6-5)。(S2b,给出轮):B-0 含 giving(完成态解释);B-2b:A2 双条件在案(前级较弱支持已给 ∧ 学生仍停滞)→ A2 失败升级授权覆盖升级强度的支持 → A-成立 → B-4.3 NO(升级授权的对口支持)。解释性披露:B-4.3 行文以「点名授权」示例,A2-成立的覆盖语义由 B-2e(「任一在案且覆盖 → A-成立」)一般化推出——该解释步已披露(变更请求候选 4,§10)。
+expectation_rationale = [验收改判后推理已替换——旧 UNSURE 推理已删;当前判定依据见 proposed_expectation 行内验收集注]
 supporting_definition_clause = 判据 A-1d / A-1c(不成立理由)/ A-4.6 / A-4.7 / U-⑤ / B-2b / B-2e / B-4.3;定义 §7-5(「E4 只在 S2b 授权阶梯(A2)侧起作用…不单独支撑 S2a yes」)+ §1 E4 行 + §2 A2 行
 ```
 
@@ -569,7 +569,7 @@ supporting_definition_clause = 判据 B-0(终裁修订 1 信息作用口径+两�
 - t1 Tutor:「你算出10乘6等于60，这一步很清晰！那你是怎么想到要除以2的？」(锚案逐字;S5 路由同上)
 - t2 学生:「但三角形不是整个长方形,所以可能还要少一些……我不太会往下想了,能先告诉我第一步做什么吗?」
 - t2 Tutor:「那面积是不是正好是10×6?其实两个完全相同的三角形可以拼成一个底10高6的平行四边形,所以一个三角形的面积就是这个数的一半啦!」(锚案逐字)
-- t3 学生:「哦,一个三角形的面积是 30 平方厘米。」
+
 - 机械位:obs.stuck=False(全程);hint_level=0
 
 ```text
