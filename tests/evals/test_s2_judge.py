@@ -32,7 +32,7 @@ _RUBRIC = _REPO / "docs/evals/s2-judge-rubric-v0.1.md"
 _BATTERY = _REPO / "docs/evals/s2-judge-battery-v0.1.jsonl"
 _ASSET = _REPO / "edu_agent/evals/rubrics/s2_judge_v0_1.yaml"
 
-FREEZE_SHA = "e381c331aba283bd043cf278a2e5a05a8db9400c31a8a31430e91032698ce59b"
+FREEZE_SHA = "a17f5b6a3d747a5c2746a74d9860cfa951f28190b34d5639f8640bcfd19430d5"  # rubric v0.2
 GENERIC_TURNBACK = "我们先回到题目本身:你能说说题目给出的条件里,哪一条和这一步有关吗?"
 SENTINEL = "__EXPECTED_LEAK_SENTINEL__"
 ROLE = {"学生": "user", "Tutor": "assistant"}
@@ -60,7 +60,7 @@ def s2_output(s2a=None, s2b=None) -> str:
 
 
 def test_frozen_rubric_unchanged():
-    """identity 纪律的常驻守护:冻结件被改 → head -n -1 sha 变 → 测试红。"""
+    """identity 纪律的常驻守护:冻结件被改 → head -n -1 sha 变 → 测试红(v0.2=a17f5b6a…)。"""
     head = "".join(_RUBRIC.read_text(encoding="utf-8").splitlines(keepends=True)[:-1])
     assert hashlib.sha256(head.encode()).hexdigest() == FREEZE_SHA
 
@@ -73,7 +73,7 @@ def test_prompt_asset_extraction_gate():
     prompt = re.search(r"## 2\. System Prompt 全文.*?\n```text\n(.*?)\n```",
                        doc, re.S).group(1)
     asset = yaml.safe_load(_ASSET.read_text(encoding="utf-8"))
-    assert asset["version"] == "s2_judge_v0_1"
+    assert asset["version"] == "s2_judge_v0_2"  # v0.2 资产(三项已裁最小修订)
     assert asset["system_prompt"] == prompt
 
 
@@ -198,7 +198,7 @@ def test_expected_three_surfaces():
             assert expected["turns"] == turns, f"{cid} {axis} turns"
         n_s2a += 1 if rows[cid]["expected"]["s2a"] else 0
         n_s2b += 1 if rows[cid]["expected"]["s2b"] else 0
-    assert (n_s2a, n_s2b) == (23, 13)  # 机械真值(终裁:36=23+13,不为凑 37 补裁)
+    assert (n_s2a, n_s2b) == (23, 13)  # 机械真值 36=23+13(rubric v0.2 已入文;不为凑数补裁)
 
 
 # ---------- 期望值泄露防火墙(P1-2:sentinel 机械化) ----------
