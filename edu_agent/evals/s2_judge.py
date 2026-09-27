@@ -116,7 +116,10 @@ def s2_judge_transcript(gateway: Gateway, case: dict, role: str = "judge",
         ],
         response_schema=S2_SCHEMA,
         session_id=session_id or f"s2-judge-{case.get('case_id', case.get('id', '?'))}",
-        max_tokens=1200,
+        # 4000:M1 control 容量适配(#459)——deepseek-flash 为思考型输出(实测单案
+        # completion≈1400,含 reasoning≈730),1200 必截断;mlx 输出 <1200 不受影响,
+        # 4000 仅为余量。判定/schema/prompt 零改动。
+        max_tokens=4000,
         temperature=0,
     )
     response = gateway.invoke(request)
