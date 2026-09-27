@@ -267,4 +267,4 @@ S2 judge 引擎模块(gateway 路线 1:prompt 资产化 + schema 本地校验 + 
 
 ---
 
-冻结 sha256:待终裁时补(head -n -1 本文件 | sha256sum 口径)。
+冻结 sha256(v0.1): `e381c331aba283bd043cf278a2e5a05a8db9400c31a8a31430e91032698ce59b` (head -n -1 本文件 | sha256sum 复核;冻结审:PR #461 一轮 5329492355 阻断→已修 §6.6,二轮 5329553704 PASS)。
