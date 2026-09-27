@@ -32,7 +32,7 @@ _RUBRIC = _REPO / "docs/evals/s2-judge-rubric-v0.1.md"
 _BATTERY = _REPO / "docs/evals/s2-judge-battery-v0.1.jsonl"
 _ASSET = _REPO / "edu_agent/evals/rubrics/s2_judge_v0_1.yaml"
 
-FREEZE_SHA = "a17f5b6a3d747a5c2746a74d9860cfa951f28190b34d5639f8640bcfd19430d5"  # rubric v0.2
+FREEZE_SHA = "dd9f8a2ed6229ca8199397a52eac0b4b0a12debd6eca1a660a0e9ff57ba11c84"  # rubric v0.3 草案(冻结行补记后 sha 不变,head -n -1 口径)
 GENERIC_TURNBACK = "我们先回到题目本身:你能说说题目给出的条件里,哪一条和这一步有关吗?"
 SENTINEL = "__EXPECTED_LEAK_SENTINEL__"
 ROLE = {"学生": "user", "Tutor": "assistant"}
@@ -73,7 +73,7 @@ def test_prompt_asset_extraction_gate():
     prompt = re.search(r"## 2\. System Prompt 全文.*?\n```text\n(.*?)\n```",
                        doc, re.S).group(1)
     asset = yaml.safe_load(_ASSET.read_text(encoding="utf-8"))
-    assert asset["version"] == "s2_judge_v0_2"  # v0.2 资产(三项已裁最小修订)
+    assert asset["version"] == "s2_judge_v0_3"  # v0.3 资产(+E1/E2 分界、验证问句窄授权)
     assert asset["system_prompt"] == prompt
 
 
