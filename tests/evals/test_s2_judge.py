@@ -175,21 +175,30 @@ def test_expected_three_surfaces():
         assert rows[cid]["expected"]["s2b"] == _parse_axis(s2b_cell), cid
     text = _CASES.read_text(encoding="utf-8")
     n_s2a = n_s2b = 0
-    # 逐案词级核对(proposed_expectation 行属各案块)
+    # 逐案全字段核对(verdict+boundary+turns;note 形态自由不比对)——
+    # 实现审补口:此前 proposed 侧只核 verdict,轮号与边界未守住
     for m in re.finditer(r"^(#{2,4} (C\d+-T\d))[^\n]*\n(.*?)(?=^#{2,4} C\d+-T\d|^## \d+\. |\Z)",
                          text, re.M | re.S):
         cid, body = m.group(2), m.group(3)
         prop = re.search(r"^proposed_expectation = (.+)$", body, re.M).group(1)
-        axes = {}
-        for pat, axis in ((r"S2a (YES|NO|UNSURE)", "s2a"), (r"S2b (YES|NO|UNSURE)", "s2b")):
-            pm = re.search(pat, prop)
-            if pm:
-                axes[axis] = pm.group(1).lower()
-        got = {a: e["verdict"] for a, e in rows[cid]["expected"].items() if e}
-        assert got == axes, cid
+        for display, axis in (("S2a", "s2a"), ("S2b", "s2b")):
+            pm = re.search(rf"{display} (YES|NO|UNSURE)(.*?)(?=S2[ab] |$)", prop)
+            expected = rows[cid]["expected"][axis]
+            if pm is None:
+                assert expected is None, f"{cid} {axis}:proposed 未单列,jsonl 却有"
+                continue
+            verdict, seg = pm.group(1).lower(), pm.group(2)
+            bm = re.search(r"边界([①②④⑤⑥⑦])", seg)
+            boundary = bm.group(1) if bm else ("U-0" if verdict == "unsure" and "U-0" in seg else None)
+            tm = re.search(r"\(([^)]*)\)", seg)  # 段内首个括号组=轮号锚(其后括号均为注)
+            turns = re.findall(r"t\d+", tm.group(1)) if tm else []
+            assert expected is not None, f"{cid} {axis}:proposed 单列,jsonl 却无"
+            assert expected["verdict"] == verdict, f"{cid} {axis} verdict"
+            assert expected["boundary"] == boundary, f"{cid} {axis} boundary"
+            assert expected["turns"] == turns, f"{cid} {axis} turns"
         n_s2a += 1 if rows[cid]["expected"]["s2a"] else 0
         n_s2b += 1 if rows[cid]["expected"]["s2b"] else 0
-    assert (n_s2a, n_s2b) == (23, 13)  # 机械实数(件一头声明 37 系算术口径偏差,已呈裁)
+    assert (n_s2a, n_s2b) == (23, 13)  # 机械真值(终裁:36=23+13,不为凑 37 补裁)
 
 
 # ---------- 期望值泄露防火墙(P1-2:sentinel 机械化) ----------
@@ -380,12 +389,28 @@ def test_score_ga_and_gb():
     scored = s2_judge_battery._score(rows, results, {"judge_primary_model": "primary-name"})
     assert scored["ga"] == 4 and scored["gb_pass"] is True
     assert len(scored["misses"]) == 0
+    # D2 诊断:4 显式轴全精确匹配(expected turns=[]/actual=[])
+    assert (scored["turns_match"], scored["turns_total"]) == (4, 4)
     # 反例:verdict 同为 unsure 但边界证据未命中(错误规则猜出的 unsure)——
-    # GA 不动(verdict 词级),GB 拦下
+    # GA 不动(verdict 词级),GB 拦下;且 GB-only miss 必须进归因输入(kind=boundary)
     bad = s2_judge_battery._score(
         rows, {**results, "C13-T1": _result(verdict_a="unsure", markers_a=["②"])},
         {"judge_primary_model": "primary-name"})
     assert bad["gb_pass"] is False and bad["ga"] == 4
+    assert [m["kind"] for m in bad["misses"]] == ["boundary"]
+    # turns 诊断反例:命中案 turns 不一致只记诊断不进 miss/GA
+    off = s2_judge_battery._score(
+        rows, {**results, "C13-T1": _result(verdict_a="unsure", markers_a=["①"],
+                                            rationale_a="两读,属 U-0 形态以外的边界①")},
+        {"judge_primary_model": "primary-name"})
+    assert off["ga"] == 4 and off["turns_match"] == 4  # expected=[] 恒匹配;见下条真失配
+    # 真失配:yes 轴给出多余轮号 → 诊断计数下降,miss 清单不动
+    yes_row = [_row("C14-T2", "yes", None)]
+    yes_row[0]["expected"]["s2a"]["turns"] = ["t1"]
+    r = s2_judge_battery._score(
+        yes_row, {"C14-T2": _result(verdict_a="yes")}, {"judge_primary_model": "primary-name"})
+    assert r["turns_match"] == 0 and r["turns_total"] == 1
+    assert r["misses"] == [] and r["ga"] == 1
 
 
 def test_boundary_evidence_u0_dual_path():

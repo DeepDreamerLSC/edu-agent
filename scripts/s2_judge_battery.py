@@ -31,9 +31,9 @@ _ROLE = "judge"
 _AXES = ("s2a", "s2b")
 # 口径注记(已呈裁,GA 案级分母 24 与 GB 四案不受影响)
 _DENOMINATOR_NOTE = (
-    "件一 §4 表头声明 37 显式轴期望(24 S2a+13 S2b);本报告按机械实数计"
-    "(当前 36=23+13:C15-T4 的 S2a 未单列,三面件一表/CASES.md/battery 一致)——"
-    "轴级分母口径待裁;GA 案级 ≥20/24 与 GB 四案不受影响。"
+    "轴级分母 = 36 显式轴期望(23 S2a+13 S2b):终裁机械真值——C15-T4 的 S2a 未单列,"
+    "未单列轴不记分不推断(不为凑 37 补裁)。件一 v0.1 表头的 37 声明系算术口径偏差,"
+    "由尺子修订件(rubric v0.2)同步改字;GA 案级 ≥20/24 与 GB 四案不受影响。"
 )
 
 
@@ -98,7 +98,7 @@ def _score(rows: list[dict], results: dict[str, dict], identity: dict) -> dict:
     valid_model = (len(models) == 1
                    and bool(ok_rows)
                    and next(iter(models)) == identity["judge_primary_model"])
-    case_hits, misses, gb_cases = [], [], []
+    case_hits, misses, gb_cases, turns_diag = [], [], [], []
     for row in rows:
         cid = row["case_id"]
         result = results.get(cid, {})
@@ -112,17 +112,32 @@ def _score(rows: list[dict], results: dict[str, dict], identity: dict) -> dict:
             if expected is None:
                 continue  # 未单列轴不记分不推断
             actual = transcript[axis]
+            # D2:supporting_turns 仅诊断——精确匹配计数,不入 GA
+            turns_match = sorted(actual["supporting_turns"]) == sorted(expected["turns"])
+            turns_diag.append({"case": cid, "axis": axis,
+                               "expected": expected["turns"],
+                               "actual": actual["supporting_turns"],
+                               "match": turns_match})
             if expected["verdict"] != actual["verdict"]:
                 hit = False
                 misses.append({
-                    "case": cid, "axis": axis,
+                    "kind": "verdict", "case": cid, "axis": axis,
                     "expected": expected["verdict"],
                     "actual": actual["verdict"],
                     "rationale": actual["rationale"][:160],
                 })
             if expected["verdict"] == "unsure":
-                gb_cases.append((cid, axis, expected,
-                                 _boundary_evidence(expected, actual)))
+                evidence_ok = _boundary_evidence(expected, actual)
+                gb_cases.append((cid, axis, expected, evidence_ok))
+                # GB-only miss 也必须进归因输入(GC:全部 miss 必须归因)——
+                # verdict 命中但边界证据未命中 = 边界 miss,单列 kind
+                if evidence_ok is False and expected["verdict"] == actual["verdict"]:
+                    misses.append({
+                        "kind": "boundary", "case": cid, "axis": axis,
+                        "expected": f"unsure+{expected['boundary']}(边界证据)",
+                        "actual": f"unsure,markers={actual['boundary_markers']}",
+                        "rationale": actual["rationale"][:160],
+                    })
         case_hits.append((cid, hit))
     ga = sum(1 for _, hit in case_hits if hit)
     gb_pass = bool(gb_cases) and all(ok for *_, ok in gb_cases)
@@ -136,6 +151,9 @@ def _score(rows: list[dict], results: dict[str, dict], identity: dict) -> dict:
         "gb_pass": gb_pass,
         "misses": misses,
         "case_hits": case_hits,
+        "turns_diag": turns_diag,
+        "turns_match": sum(1 for d in turns_diag if d["match"]),
+        "turns_total": len(turns_diag),
     }
 
 
@@ -169,12 +187,23 @@ def _report(run_dir: Path, scored: dict, identity: dict) -> Path:
     lines += [
         f"- 判定:{'4/4 ✓' if scored['gb_pass'] else '✗(私闭合/边界未命中单列零容忍)'}",
         "",
-        f"## miss 清单(GC 归因用:①A 实现失真/①B 翻译失真/② 判据—终验张力/③ 模型执行噪声)",
+        f"## supporting_turns 诊断(D2:不入 GA,精确匹配计数)",
+        f"- {scored['turns_match']}/{scored['turns_total']}",
+    ]
+    for d in scored["turns_diag"]:
+        if not d["match"]:
+            lines.append(f"- ✗ {d['case']} {d['axis']}:期望 {d['expected']} / 实得 {d['actual']}")
+    lines += [
+        "",
+        f"## 轴级 miss 清单({len(scored['misses'])} 个轴级 miss,"
+        f"涉及 {len({m['case'] for m in scored['misses']})} 个失败 case;"
+        "GC 归因用:①A 实现失真/①B 翻译失真/② 判据—终验张力/③ 模型执行噪声)",
     ]
     if scored["misses"]:
         for miss in scored["misses"]:
-            lines.append(f"- {miss['case']} {miss['axis']}:期望 {miss['expected']}"
-                         f" / 实得 {miss['actual']}|rationale:{miss['rationale']}")
+            lines.append(f"- [{miss['kind']}] {miss['case']} {miss['axis']}:"
+                         f"期望 {miss['expected']} / 实得 {miss['actual']}"
+                         f"|rationale:{miss['rationale']}")
     else:
         lines.append("- 无")
     lines += [
