@@ -103,4 +103,4 @@
 
 ---
 
-冻结 sha256:待终裁时补(head -n -1 本文件 | sha256sum 口径)。
+冻结 sha256(v0.1.1): `5063d4ad2bbab9c63158c057a6382f3c5f70dbb5756a86bfcfaa157b9c1f629a` (head -n -1 本文件 | sha256sum 复核;冻结审链:5872026833 七处→5341308160 C/D 收口→5345724552 FREEZE PASS)。
