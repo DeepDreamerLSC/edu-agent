@@ -34,7 +34,8 @@
 + case.question.{text,answer})。
 
 provenance:holdout 标注时冻结 sha16=43ef6f0649bf1571(gold_labels_holdout
-provenance 字段);入库版为过 ruff 复杂度关(02 §2.1)机械抽取 _repeat_reason
+#436 v2.1:盲区三窄补丁(槽位归一/显式重问探针/宾语单字替换守卫),
+  holdout 17/20→20/20,drill/dev 逐字节不变——见 REPORT v2.1 节;provenance 字段);入库版为过 ruff 复杂度关(02 §2.1)机械抽取 _repeat_reason
 助手,判据语义零改动,四道验收输出与冻结版逐字节一致(见 REPORT.md)。
 """
 
@@ -73,6 +74,19 @@ _TAG_RE = re.compile(r"^(?:对吧|对吗|是吧|好吗|行吗|明白吗|懂了�
 REPEAT_SIM = 0.85
 REPEAT_WINDOW = 3          # 回看导师轮数(866 t5→t6 相邻;2591/十字绣 t2→t4 距离 2)
 REPEAT_CLAUSE_MIN_LEN = 8  # 「对吧?」类短标签不参与重复比对
+
+# #436 盲区三窄补丁(REPORT holdout 节 ①②③,确定性,非语义模型):
+_SLOT_SUB_RE = re.compile(r"有[□几多少]+个")   # 槽位问构造(几个/□个/多少个——具体化重复族)
+_SLOT_NORM_RE = re.compile(r"有([□几多少]+)个")  # 槽位归一:有X个 → 有◇个(几≠□≠多少 同槽)
+_REASK_RE = re.compile(r"再[讲说谈解释]")        # 显式重问标记:再+言说动词(再讲讲/再说说;
+# 「再乘以」类步骤词不入——700m-b-t4 带实质脚手架增量的第二次推导问是 legal,不能误伤)
+# #436 review 5334289101 收窄两处:①宾语替换豁免仅限**同一比较框架的对象槽位变化**
+# (「这和X有什么不同」族);非比较框架的单字差不再豁免(微小改写仍按相似度判重复)。
+_COMPARE_FRAME_RE = re.compile(
+    r"(这和|和|跟|与)(.+?)(有什么不同|有什么区别|有什么不一样|差在哪里|差在哪)")
+# ②显式重问探针须**重问同一对象**:与先例问句共享对象锚——数字锚(数字集交集,
+# 「下降6/5℃」)或 ≥4 字公共 CJK 串且不含疑问框架词(「平行四边形」);
+# 「再讲讲另一个方法怎么做」类新对象重问不触发。
 
 # —— 点 4:said 可见性 ——
 # 枚举段:≥3 个裸数字以 、/,/和 串联(因数列表);换算段:数字+单位+等于+数字
@@ -147,7 +161,8 @@ def interrogative_clauses(tutor: str) -> list[str]:
             is_final = j == len(subclauses) - 1
             if ((terminator in "?？" and is_final)
                     or any(m in part for m in CONFIRMING_MARKERS)
-                    or _INTERRO_TAIL_RE.search(part)):
+                    or _INTERRO_TAIL_RE.search(part)
+                    or _SLOT_SUB_RE.search(part)):  # #436:槽位问构造(有□个100米)入捕获
                 clauses.append(part)
     return clauses
 
@@ -157,19 +172,82 @@ def is_tag(clause: str) -> bool:
     return bool(_TAG_RE.match(clause.strip()))
 
 
+def _slot_norm(clause: str) -> str:
+    """#436:槽位归一——「有几个/有□个/有多少个」同槽为「有◇个」。
+
+    数数脚手架的措辞具体化(几个100米 → □个100米)是同一问的槽位改写,
+    归一后相似度即闭合(700m-c 族)。
+    """
+    return _SLOT_NORM_RE.sub("有◇个", clause)
+
+
+def _object_swap(clause: str, other: str) -> bool:
+    """#436(收窄版):同一比较框架、对象槽位变化 → 新问。
+
+    两子句均匹配比较框架(「这和X有什么不同」族,fullmatch),框架词与疑问尾
+    相同而对象槽(X)不同 → 换宾语的新问(223-c:正方形↔长方形),不作重复。
+    **非比较框架的等长单字差不再豁免**(review 5334289101:微小改写仍按相似度
+    判重复,防「改一字即新问」的漏判口子)。
+    """
+    fa = _COMPARE_FRAME_RE.fullmatch(clause.strip())
+    fb = _COMPARE_FRAME_RE.fullmatch(other.strip())
+    if not (fa and fb):
+        return False
+    return (fa.group(1) == fb.group(1) and fa.group(3) == fb.group(3)
+            and fa.group(2) != fb.group(2))
+
+
+def _same_object(clause: str, other: str) -> bool:
+    """#436(收窄版):两问句是否重问同一对象——对象锚=数字集交集,或
+    ≥4 字公共 CJK 串且不含疑问框架词(怎么/为什么/什么/哪/多少)。"""
+    if _numbers(clause) & _numbers(other):
+        return True
+    for i in range(len(clause) - 3):
+        run = clause[i:i + 4]
+        if any(w in run for w in ("怎么", "为什么", "什么", "多少")):
+            continue
+        if all("\u4e00" <= ch <= "\u9fa5" for ch in run) and run in other:
+            return True
+    return False
+
+
+def _explicit_reask(clause: str, window: list[list[str]]) -> str | None:
+    """显式重问探针(#436 收窄版):再+言说动词 ∧ 问怎么 ∧ 窗内先例问怎么
+    ∧ 重问同一对象(对象锚见 _same_object)→ 命中;否则 None。"""
+    if not (_REASK_RE.search(clause) and "怎么" in clause):
+        return None
+    for past in window:
+        for o in past:
+            if len(o) >= REPEAT_CLAUSE_MIN_LEN and "怎么" in o and _same_object(clause, o):
+                return f"显式重问(≈{clause[:24]}…)"
+    return None
+
+
 def _repeat_reason(clauses: list[str], prev_clauses: list[list[str]]) -> str | None:
     """点 6/7:问句重复(no-progress 族;不受 stray/ACK 否决)。
 
     回看窗内导师轮的长子句(≥REPEAT_CLAUSE_MIN_LEN)与本轮任一长子句
     相似度 >REPEAT_SIM 即命中;短标签(「对吧?」)不参与比对。
+    #436 三窄补丁:①比对前槽位归一(有X个→有◇个,具体化重复闭合);
+    ②比较框架对象槽守卫(仅同一比较框架的对象槽变化豁免,换宾语=新问);
+    ③显式重问探针(再+言说动词 ∧ 怎么,窗内先例含怎么——换措辞重问闭合)。
     """
+    window = prev_clauses[-REPEAT_WINDOW:]
     for clause in clauses:
         if len(clause) < REPEAT_CLAUSE_MIN_LEN:
             continue
-        for past in prev_clauses[-REPEAT_WINDOW:]:
-            if any(len(o) >= REPEAT_CLAUSE_MIN_LEN and _sim(clause, o) > REPEAT_SIM
-                   for o in past):
-                return f"问句重复(≈{clause[:24]}…)"
+        norm = _slot_norm(clause)
+        for past in window:
+            for o in past:
+                if len(o) < REPEAT_CLAUSE_MIN_LEN:
+                    continue
+                if _object_swap(norm, _slot_norm(o)):
+                    continue  # 宾语单字替换 = 新问(223-c)
+                if _sim(norm, _slot_norm(o)) > REPEAT_SIM:
+                    return f"问句重复(≈{clause[:24]}…)"
+        reask = _explicit_reask(clause, window)
+        if reask:
+            return reask
     return None
 
 
