@@ -4,15 +4,14 @@
    "incident-700m-replay": {
     "v1_lex_hits": [],
     "v1_count": 0,
-    "v2_er": 1,
-    "v2_np": 1,
+    "v2_er": 0,
+    "v2_np": 2,
     "v2_denominator": 5,
     "domain": "repro-equivalent",
-    "v2_er_turns": [
-     5
-    ],
+    "v2_er_turns": [],
     "v2_np_turns": [
-     4
+     4,
+     5
     ]
    },
    "repro-close-loop-ball-bounce": {
@@ -290,11 +289,14 @@
     "v1_lex_hits": [],
     "v1_count": 0,
     "v2_er": 0,
-    "v2_np": 0,
+    "v2_np": 2,
     "v2_denominator": 5,
     "domain": "repro-equivalent",
     "v2_er_turns": [],
-    "v2_np_turns": []
+    "v2_np_turns": [
+     4,
+     5
+    ]
    },
    "repro-close-loop-ball-bounce": {
     "v1_lex_hits": [],
@@ -360,13 +362,11 @@
     "v1_lex_hits": [],
     "v1_count": 0,
     "v2_er": 0,
-    "v2_np": 1,
+    "v2_np": 0,
     "v2_denominator": 3,
     "domain": "form1_student_answered_tutor_keeps_asking",
     "v2_er_turns": [],
-    "v2_np_turns": [
-     3
-    ]
+    "v2_np_turns": []
    },
    "socraticmath_train_2591": {
     "v1_lex_hits": [],
