@@ -32,7 +32,7 @@ _RUBRIC = _REPO / "docs/evals/s2-judge-rubric-v0.1.md"
 _BATTERY = _REPO / "docs/evals/s2-judge-battery-v0.1.jsonl"
 _ASSET = _REPO / "edu_agent/evals/rubrics/s2_judge_v0_1.yaml"
 
-FREEZE_SHA = "a17f5b6a3d747a5c2746a74d9860cfa951f28190b34d5639f8640bcfd19430d5"  # rubric v0.2
+FREEZE_SHA = "d415be391f4e5d4a2371f0f188b10f0c073cb0b236e6539069282de6107f04c7"  # rubric v0.3 草案(谱系修正后;冻结行补记后 sha 不变,head -n -1 口径)
 GENERIC_TURNBACK = "我们先回到题目本身:你能说说题目给出的条件里,哪一条和这一步有关吗?"
 SENTINEL = "__EXPECTED_LEAK_SENTINEL__"
 ROLE = {"学生": "user", "Tutor": "assistant"}
@@ -73,7 +73,7 @@ def test_prompt_asset_extraction_gate():
     prompt = re.search(r"## 2\. System Prompt 全文.*?\n```text\n(.*?)\n```",
                        doc, re.S).group(1)
     asset = yaml.safe_load(_ASSET.read_text(encoding="utf-8"))
-    assert asset["version"] == "s2_judge_v0_2"  # v0.2 资产(三项已裁最小修订)
+    assert asset["version"] == "s2_judge_v0_3"  # v0.3 资产(+E1/E2 分界、验证问句窄授权)
     assert asset["system_prompt"] == prompt
 
 
@@ -163,7 +163,7 @@ def test_expected_three_surfaces():
     """件一 §4 表(冻结面)↔ jsonl.expected ↔ CASES.md proposed_expectation 三面一致。
 
     口径注记:件一 §4 表头声明 37(24 S2a+13 S2b),机械实数 36(23+13——
-    C15-T4 的 S2a 未单列);已呈裁,GA 案级分母 24 与 GB 四案不受影响。
+    C15-T4 的 S2a 未单列);已呈裁,GA 案级分母 24 不受影响;GB 案数随期望动态。
     """
     rows = {json.loads(line)["case_id"]: json.loads(line)
             for line in _BATTERY.read_text(encoding="utf-8").strip().splitlines()}
@@ -391,6 +391,9 @@ def test_score_ga_and_gb():
     assert len(scored["misses"]) == 0
     # D2 诊断:4 显式轴全精确匹配(expected turns=[]/actual=[])
     assert (scored["turns_match"], scored["turns_total"]) == (4, 4)
+    # GB 分母动态(review 5332914680):命中数/len(gb_cases),非硬编码 4/4
+    assert (sum(1 for *_, ok in scored["gb_cases"] if ok),
+            len(scored["gb_cases"])) == (4, 4)
     # 反例:verdict 同为 unsure 但边界证据未命中(错误规则猜出的 unsure)——
     # GA 不动(verdict 词级),GB 拦下;且 GB-only miss 必须进归因输入(kind=boundary)
     bad = s2_judge_battery._score(
@@ -398,6 +401,16 @@ def test_score_ga_and_gb():
         {"judge_primary_model": "primary-name"})
     assert bad["gb_pass"] is False and bad["ga"] == 4
     assert [m["kind"] for m in bad["misses"]] == ["boundary"]
+    # GB 三案分母形态(v0.3 真实形态:unsure 期望=3):三案两中 → 报告 2/3,fail
+    three = [_row("C13-T1", "unsure", None, s2a_boundary="①"),
+             _row("C24-T2", "unsure", None, s2a_boundary="④"),
+             _row("C23-T3", None, "unsure", s2b_boundary="U-0")]
+    res3 = {"C13-T1": _result(verdict_a="unsure", markers_a=["①"]),
+            "C24-T2": _result(verdict_a="unsure", markers_a=["④"]),
+            "C23-T3": _result(verdict_b="no", markers_b=[])}
+    s3 = s2_judge_battery._score(three, res3, {"judge_primary_model": "primary-name"})
+    assert len(s3["gb_cases"]) == 3 and s3["gb_pass"] is False
+    assert sum(1 for *_, ok in s3["gb_cases"] if ok) == 2
     # turns 诊断反例:命中案 turns 不一致只记诊断不进 miss/GA
     off = s2_judge_battery._score(
         rows, {**results, "C13-T1": _result(verdict_a="unsure", markers_a=["①"],
