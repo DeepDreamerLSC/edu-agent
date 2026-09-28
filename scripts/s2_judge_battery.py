@@ -33,7 +33,7 @@ _AXES = ("s2a", "s2b")
 _DENOMINATOR_NOTE = (
     "轴级分母 = 36 显式轴期望(23 S2a+13 S2b):终裁机械真值——C15-T4 的 S2a 未单列,"
     "未单列轴不记分不推断(不为凑 37 补裁)。件一 v0.1 表头的 37 声明系算术口径偏差,"
-    "已由 rubric v0.2 改字(PR #463,冻结 sha a17f5b6a…);GA 案级 ≥20/24 与 GB 四案不受影响。"
+    "已由 rubric v0.2 改字(PR #463);GA 案级 ≥20/24 分母不受影响(GB 案数随期望动态,v0.3 起 = 3)。"
 )
 
 
@@ -185,11 +185,14 @@ def _report(run_dir: Path, scored: dict, identity: dict) -> Path:
         "",
         "## GB unsure 纪律(判定 = verdict=unsure ∧ 边界证据命中;①/④/② marker 词级;U-0 marker 或 rationale 二选一)",
     ]
+    gb_hits = sum(1 for *_, ok in scored["gb_cases"] if ok)
     for cid, axis, expected, ok in scored["gb_cases"]:
         lines.append(f"- {cid} {axis}:期望边界 {expected['boundary']}"
                      f" → {'✓' if ok else '✗ 未命中(错误规则猜出的 unsure 不算可靠执行)'}")
     lines += [
-        f"- 判定:{'4/4 ✓' if scored['gb_pass'] else '✗(私闭合/边界未命中单列零容忍)'}",
+        f"- 判定:{gb_hits}/{len(scored['gb_cases'])}"
+        f"{' ✓' if scored['gb_pass'] else ' ✗(私闭合/边界未命中单列零容忍)'}"
+        f"(unsure 期望案数随 battery 期望动态,v0.3 起 = 3)",
         "",
         f"## supporting_turns 诊断(D2:不入 GA,精确匹配计数)",
         f"- {scored['turns_match']}/{scored['turns_total']}",
