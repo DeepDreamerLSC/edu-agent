@@ -88,7 +88,7 @@ prereg 之外 judge 侧的已知局限;修它们需要语义级重复判定,超�
 
 **收窄验证(review 5334289101)**:两规则收窄(比较框架槽位/同对象锚)后,drill/dev/holdout/replay 四输出与收窄前**逐字节全同**(窄规则仍闭合 ①②③ 且零波及);对抗守卫入电池(非框架单字差仍判重复;新对象重问不触发)。
 
-**v2.1 sha16**:`57423ddbc6e86e47`;测试电池扩至十条(七点+盲区三案,含守卫正反例与单元直钉)。
+**v2.1 sha16**:`2c0196ac55349c4a`;测试电池扩至十二条(七点+盲区三案+对抗守卫二,含守卫正反例与单元直钉)。
 
 ## 复现
 
@@ -103,7 +103,7 @@ python3 edu_agent/evals/artifacts/er-judge-v2/calibrate.py replay --out r3-diagn
 # --runs-root 默认 /tmp/wt-step7-ab(r3/ablation 工件树)
 ```
 
-仓内护栏:`tests/evals/test_er_judge_v2.py`(七点回归电池,真实案文最小复现)。
+仓内护栏:`tests/evals/test_er_judge_v2.py`(十二条回归电池:七点+盲区三案+对抗守卫,真实案文最小复现)。
 
 
 ## 数据源与归档落点(P3-nano 修法一,#412 审查 5755351702)

@@ -229,7 +229,7 @@ def _repeat_reason(clauses: list[str], prev_clauses: list[list[str]]) -> str | N
     回看窗内导师轮的长子句(≥REPEAT_CLAUSE_MIN_LEN)与本轮任一长子句
     相似度 >REPEAT_SIM 即命中;短标签(「对吧?」)不参与比对。
     #436 三窄补丁:①比对前槽位归一(有X个→有◇个,具体化重复闭合);
-    ②宾语单字替换守卫(等长单 CJK 字差=新问,不误判重复);
+    ②比较框架对象槽守卫(仅同一比较框架的对象槽变化豁免,换宾语=新问);
     ③显式重问探针(再+言说动词 ∧ 怎么,窗内先例含怎么——换措辞重问闭合)。
     """
     window = prev_clauses[-REPEAT_WINDOW:]

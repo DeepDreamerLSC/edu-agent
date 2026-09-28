@@ -241,7 +241,7 @@ def test_blindspot_object_swap_is_new_question():
     hit = _turn(result, 2)
     assert hit["no_progress_hit"]                     # 逐字重问正方形对比 = 真重复
     assert result["no_progress_family"] == 1 and result["er_family"] == 0
-    # 守卫单元直钉:等长单 CJK 字差=换宾语;全同/多字差不入守卫
+    # 守卫单元直钉:同比较框架对象槽变化=换宾语新问;全同/非框架单字差不入守卫
     assert er_judge_v2._object_swap("这和正方形有什么不同", "这和长方形有什么不同")
     assert not er_judge_v2._object_swap("这和正方形有什么不同", "这和正方形有什么不同")
     assert not er_judge_v2._object_swap("你是怎么算出下降6/5℃的", "能讲讲你是怎么算出下降6/5℃的")
