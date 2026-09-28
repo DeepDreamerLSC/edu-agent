@@ -97,3 +97,26 @@ def test_unknown_role_at_call_time(tmp_path):
     registry = load(VALID, tmp_path)
     with pytest.raises(RegistryError, match="未知角色"):
         registry.role("simulator")
+
+
+
+def test_provider_extra_body_passed_through(tmp_path):
+    """#459 GLM-5.3 control:provider 级 extra_body 透传进线上请求体;
+    不设该项的存量路径零变化(仓内配置全 None)。全程公开入口(02 §6)。"""
+    from edu_agent.gateway import ModelRequest, load_registry
+    from fake_openai import completion
+    from gwkit import REPO_CONFIG, fake_gateway
+
+    with fake_gateway(tmp_path, [completion('{"answer": "ok"}')],
+                      role_name="judge",
+                      provider_extra_body={"reasoning_effort": "max"}) as (fake, gateway):
+        gateway.invoke(ModelRequest(role="judge",
+                                    messages=[{"role": "user", "content": "x"}],
+                                    response_schema={"type": "object",
+                                                     "properties": {"answer": {"type": "string"}},
+                                                     "required": ["answer"]}))
+    body = fake.requests[0]
+    assert body["reasoning_effort"] == "max"
+    # 仓内配置不设该项:全部 provider extra_body=None(零行为变化)
+    repo = load_registry(REPO_CONFIG)
+    assert all(p.extra_body is None for p in repo.providers.values())

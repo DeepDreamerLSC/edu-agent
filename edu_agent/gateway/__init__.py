@@ -114,12 +114,16 @@ class Gateway:
 
     def _invoke_handler(self, role: RoleConfig, model: ModelConfig) -> Handler:
         provider = self.registry.provider(model.provider)
-        base = invoke_handler(self._client(provider), provider.base_url, self._api_key(provider), model.name)
+        base = invoke_handler(self._client(provider), provider.base_url,
+                             self._api_key(provider), model.name,
+                             extra_body=provider.extra_body)
         return with_timeouts(None, role.total_timeout_s, stream=False)(base)
 
     def _stream_handler(self, role: RoleConfig, model: ModelConfig) -> StreamHandler:
         provider = self.registry.provider(model.provider)
-        base = stream_handler(self._client(provider), provider.base_url, self._api_key(provider), model.name)
+        base = stream_handler(self._client(provider), provider.base_url,
+                              self._api_key(provider), model.name,
+                              extra_body=provider.extra_body)
         return with_timeouts(role.first_token_timeout_s, role.total_timeout_s, stream=True)(base)
 
     def invoke(self, request: ModelRequest) -> ModelResponse:

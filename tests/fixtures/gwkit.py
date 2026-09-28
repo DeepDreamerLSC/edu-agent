@@ -63,14 +63,17 @@ def role_config(**overrides) -> RoleConfig:
 def registry_for(base_url: str, *, model_name: str = "fake-model",
                  fallback_url: str | None = None, role_name: str = "tutor",
                  provider_json_strict: bool | None = None,
+                 provider_extra_body: dict | None = None,
                  **role_kwargs) -> ModelRegistry:
     """单角色最小配置;fallback_url 提供时角色带备选(可指向另一假上游或同一地址)。
 
     provider_json_strict 缺省跟随角色 json_strict;显式传入可构造
-    「provider 无服务端保证 + 角色仍走路线 1」的 judge 形态(#32)。"""
+    「provider 无服务端保证 + 角色仍走路线 1」的 judge 形态(#32)。
+    provider_extra_body 透传 provider 级请求体附加参数(#459 GLM-5.3 control)。"""
     strict = role_kwargs.get("json_strict", True)
     provider_strict = strict if provider_json_strict is None else provider_json_strict
-    providers = {"fake": ProviderConfig("fake", base_url, None, provider_strict)}
+    providers = {"fake": ProviderConfig("fake", base_url, None, provider_strict,
+                                        extra_body=provider_extra_body)}
     models = {"m": ModelConfig("m", "fake", model_name)}
     fallback = None
     if fallback_url is not None:
