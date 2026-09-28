@@ -36,9 +36,19 @@ models:
   qwen3_vl_8b: # VL tutor(2026-09-07 人批):同 8303 服务,可看图教学+纯文本更快
     provider: vision
     name: Qwen3-VL-8B-GGUF
-  deepseek_chat:
+  deepseek_chat: # legacy request contract(2026-09-28 #459 终裁改保守方案,review 5332914775):
+    # 请求名 deepseek-chat 被服务端静默别名至 deepseek-flash,但按**非思考档**服务
+    # (实测 900 max_tokens 内完整返回,#32 通用 judge(fallback/judge_independent)
+    # 依赖此契约)——保留原名与消费者不变,勿直接切显式 flash。
     provider: deepseek
     name: deepseek-chat
+  deepseek_flash: # 显式思考型模型(2026-09-28 入册,#459 control 实证):请求
+    # deepseek-flash 为思考档,同案 completion 实测 2518–7175(含 reasoning),
+    # #32 通用 judge max_tokens=900 下必截断(1200→23/24、4000→11/24 截断,
+    # 16384 跑满)——迁移 fallback/judge_independent 须先真实 smoke 定
+    # token/timeout,另开小件;当前仅 S2 实验配置(calibration-private 变体)使用。
+    provider: deepseek
+    name: deepseek-flash
 
 roles:
   tutor: # VL tutor 切换(2026-09-07 人批):主选 VL——可看图教学+纯文本更快;
