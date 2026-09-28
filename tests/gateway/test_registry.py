@@ -50,7 +50,8 @@ def test_repo_config_loads():
     # VL tutor 切换(2026-09-07 人批):tutor 主选 VL(看图+纯文本更快),judge 主选 mlx(路线 1)
     assert registry.roles["tutor"].primary == "qwen3_vl_8b"
     assert registry.roles["judge"].primary == "mlx_27b"
-    assert registry.roles["judge"].fallback == "deepseek_chat"
+    assert registry.roles["judge"].fallback == "deepseek_chat"  # legacy 契约不变(#459)
+    assert registry.models["deepseek_flash"].name == "deepseek-flash"
     # M3 PR7:vision 角色 8303(llama-server grammar 级),单并发;首字 15s 覆盖
     # 真实手机大图视觉编码 8-12s,总 60s
     vision = registry.roles["vision"]
