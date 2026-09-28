@@ -28,7 +28,7 @@
 | D4 权限方向正确 | 横切 | answer_leaked 单向;state_is 声明零使用 | A64(#17/#47)/C24(C05)/OOT-9 | **生产侧 guard 方向性机制**;eval 侧 state_is 声明面+人审;当前无自动判据(件一 D4 复核修正) | 负例在案(阻断/回退);**边界(合法披露 vs 阻断)无样本** | 人审 | 个案(dev) | **规则缺口**(反向泄露/意图承接零面) |
 | D5 学习者证据解释与消费 | L1 | **无判据**;obs 六字段记录零消费 | A64(PN-1,#63)/C24(OOT-4) | 证据记录=obs 数据 owner;解释消费=人审 | 数据样本在(64+24 案逐轮 obs);**消费面正负样本无** | 人审(obs 不进 judge) | A64/C24 全量(dev) | **规则缺口**(measurement-gap:数据在零消费) |
 | D6 需求识别与目标校准 | L1 | 无判据(请求具体性) | C24(C03/C14 vs C13 人审边界) | 人审;**S2-M1 后:S2a 判据链(定义 v0.2.2→判据 v0.1.2→rubric v0.3)** | **S2-M1 新增:E1-E5/R1-R4 判据链+24 案 battery(正负边界齐)+锚案 14**;S2a 请求形已裁 | **人审(裁定权);flash 辅助标注 GA 19/24 级(不接管)**;mlx 不可用(明文反锚在案) | S2 battery 24 案=**dev(重度暴露,v0.1→v0.3 三轮修订消费)**;无 untouched holdout | **证据缺口**(判据与样本已有;独立集执行证据缺——M1 遗留:C09-T3 终值层次 limitation+4 ③能力边界) |
-| D7 支架校准——最小充分帮助 | L2 | 无校准轴(邻接面反向记分) | A64(#01/#20/#63)/C24(C03/C13/C22/C23)/disagreement(S2 3/24) | 人审;**S2-M1 后:S2b 双 prong 判据链(分块授权 v0.3)** | **S2-M1 新增:B0-B4/Prong A-B 判据链+24 案(验证问句窄授权/E1-E2 分界已裁)+三模型×三版尺子全程对照** | 同 D6:人审裁定权;flash 辅助 19/24 级 | 同 D6(dev 重度暴露) | **证据缺口**(同 D6;rubric v0.3 冻结 `d415be39`,独立集未验) |
+| D7 支架校准——最小充分帮助 | L2 | 无校准轴(邻接面反向记分) | A64(#01/#20/#63)/C24(C03/C13/C22/C23)/disagreement(S2 3/24) | 人审;**S2-M1 后:S2b 双 prong 判据链(分块授权 v0.3)** | **S2-M1 新增:B0-B4/Prong A-B 判据链+24 案(验证问句窄授权/E1-E2 分界已裁)+**mlx/deepseek-flash 双模型跨 v0.1–v0.3 分阶段对照** | 同 D6:人审裁定权;flash 辅助 19/24 级 | 同 D6(dev 重度暴露) | **证据缺口**(同 D6;rubric v0.3 冻结 `d415be39`,独立集未验) |
 | D8 引导质量与问题回收 | L2 | socratic 维(不稳)+**ER Judge v2.1(2026-09-28,#436):问句重复族确定性判分,holdout 20/20** | A64(#13/#21)/C24(C03 同句异分)/#436(r3 replay) | 问题回收=ER v2.1 确定性(bounded:词面族;语义重复仍两读在案已补三窄补丁);引导质量=人审+judge bounded | **#436 新增:盲区三案负例+守卫正反例入测试电池**;正例(drill 四案×7 臂)+holdout 20 gold | ER 重复族:确定性 scorer(v2.1);引导质量:人审 | drill/dev/holdout 金标在仓(gold;holdout=未曝光抽样);r3 replay=dev | **证据缺口→收窄**(v2.1 后重复族过校准;引导质量轴仍样本缺口) |
 | D9 及时纠错与形成性反馈 | L2 | mi 1 档(3 案 0 命中) | C24(OOT-2:C06/C17/C20) | 错误判定:有 gold 确定性;及时性/形态:人审+mi bounded | 负例在案(漏纠/越档);**1 档正例零** | 人审 | 个案(dev) | **样本缺口**(1 档形态无正例)+证据缺口(档位错位) |
 | D10 进展消费 | L3 | S1 detector(结构盲)+judge 通用面(S7 n=2)+**ER v2.1 no-progress 族** | A64(§5.1/5.2)/C24(S7 2/2) | S7 形态:judge 通用面 bounded;S1:专设 detector(结构须修);**ER v2.1 np 族确定性** | S7 正例 2;**#436 后 np 族金标扩(drill+holdout+盲区)**;OOT-1 回指零样本 | ER np 族:确定性;回指:人审 | 同 D8 | **样本缺口**(回指/未消费子域零样本)+规则缺口(S1 结构) |
@@ -52,7 +52,7 @@
 | OOT | 带外观察(OOT-1~10,附于 A64/C24 读数) | 观察记录 |
 | #453 | completion/mastery 归因调查(**completed**)——production-parity 已复现,claim-recognition 边界定位(后续 #423/#416) | 调查结论+parity 工件 |
 | disagreement evidence | C24 adjudication 分歧 3/24(S2/S5)+两轮 AI 包夹 | 发现信号 |
-| **S2-M1(新)** | 判据链三件+battery 24 案+7 次 run+三模型对照+M1 四问结项 | **battery=dev 重度暴露;无 untouched holdout(M1 已声明)** |
+| **S2-M1(新)** | 判据链三件+battery 24 案+**mlx/deepseek-flash 双模型**分阶段对照(v0.1–v0.3 共 5 次 run;后续 Qwen3.8/122B shadow 属 Judge reliability 线不计入)+M1 四问结项 | **battery=dev 重度暴露;无 untouched holdout(M1 已声明)** |
 
 ## 4. 缺口分布读数(四类,#464 口径;**主表逐维标签机械统计为唯一真源**,v0.1.1 重算——终审 5338055100 阻断②)
 
@@ -66,11 +66,11 @@
 ## 5. 待裁清单(第一版盘点产出的开放项,不填坑)
 
 1. D6/D7 独立 gold 集验证(**M2 独立证据资产,不绑定 Qwen3.8 shadow**——后续 Qwen/Flash/GLM/人工均可消费;模型路由属 Judge reliability 线——终审 5338055100);
-2. D14 学习结果观测形态定义(#453 open);
+2. D14 学习结果观测形态定义(#453 已 completed——调查完成但观测形态仍缺,定义工作属 #453 后继);
 3. ~~D13 production-parity 复现~~(#453 已 completed,**不再重做**;claim-recognition 边界继续走 #423/#416——终审 5338055100);
 4. D1 mi 档位与机制对齐(OOT-2 越档在案);
 5. D5 obs 消费面(D5→judge 的路线已被 #448 拒绝 latent state;消费面形态待裁);
-6. 本表(待核)单元复核(判定权限列 D4/D11 的 bounded 边界)。
+6. ~~D4/D11 bounded 边界待核~~(已收口:D4 终审 PASS[5338055100];D11 主表 owner=人审无 bounded 标注,无待核问题——终审 5338596198)。
 
 ---
 
