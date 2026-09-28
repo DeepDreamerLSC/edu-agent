@@ -89,7 +89,8 @@ def validate_schema(schema: dict, text: str) -> str:
     return normalized
 
 
-def _body(request: ModelRequest, ctx: CallContext, model_name: str, stream: bool) -> dict:
+def _body(request: ModelRequest, ctx: CallContext, model_name: str, stream: bool,
+          extra_body: dict[str, object] | None = None) -> dict:
     body: dict = {
         "model": model_name,
         "messages": build_messages(request, ctx.repair),
@@ -101,6 +102,8 @@ def _body(request: ModelRequest, ctx: CallContext, model_name: str, stream: bool
         body["max_tokens"] = request.max_tokens
     if request.temperature is not None:
         body["temperature"] = request.temperature
+    if extra_body:
+        body.update(extra_body)  # provider 级附加参数(GLM-5.3 control,#459)
     return body
 
 
@@ -198,7 +201,8 @@ def _begin_attempt(ctx: CallContext) -> None:
 
 
 def invoke_handler(client: httpx.Client, base_url: str, api_key: str | None,
-                   model_name: str) -> Handler:
+                   model_name: str,
+                   extra_body: dict[str, object] | None = None) -> Handler:
     """最内层处理器:一次非流式 chat completion。"""
 
     def handler(request: ModelRequest, ctx: CallContext) -> ModelResponse:
@@ -208,7 +212,8 @@ def invoke_handler(client: httpx.Client, base_url: str, api_key: str | None,
         try:
             resp = client.post(
                 f"{base_url}/chat/completions",
-                json=_body(request, ctx, model_name, stream=False),
+                json=_body(request, ctx, model_name, stream=False,
+                           extra_body=extra_body),
                 headers=_headers(api_key),
                 timeout=_http_timeout(ctx, stream=False),
             )
@@ -230,7 +235,8 @@ def invoke_handler(client: httpx.Client, base_url: str, api_key: str | None,
 
 
 def stream_handler(client: httpx.Client, base_url: str, api_key: str | None,
-                   model_name: str) -> StreamHandler:
+                   model_name: str,
+                   extra_body: dict[str, object] | None = None) -> StreamHandler:
     """最内层流式处理器:SSE 逐行解析,首 token 记 TTFT,结尾做 finish_reason 与 schema 校验。"""
 
     def handler(request: ModelRequest, ctx: CallContext) -> Iterator[StreamEvent]:
@@ -241,7 +247,8 @@ def stream_handler(client: httpx.Client, base_url: str, api_key: str | None,
             with client.stream(
                 "POST",
                 f"{base_url}/chat/completions",
-                json=_body(request, ctx, model_name, stream=True),
+                json=_body(request, ctx, model_name, stream=True,
+                               extra_body=extra_body),
                 headers=_headers(api_key),
                 timeout=_http_timeout(ctx, stream=True),
             ) as resp:

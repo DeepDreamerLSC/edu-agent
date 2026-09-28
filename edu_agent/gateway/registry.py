@@ -25,6 +25,9 @@ class ProviderConfig:
     base_url: str
     api_key_env: str | None
     json_strict: bool
+    # 请求体附加参数(GLM-5.3 control,#459):provider 级透传(如 reasoning_effort);
+    # 仓内配置不设此项,零行为变化;实验变体配置专用。
+    extra_body: dict[str, object] | None = None
 
 
 @dataclass(frozen=True)
@@ -88,6 +91,7 @@ def _provider_entries(raw: dict) -> dict[str, ProviderConfig]:
             base_url=str(base_url),
             api_key_env=spec.get("api_key_env"),
             json_strict=bool(spec.get("json_strict", False)),
+            extra_body=spec.get("extra_body"),
         )
     return entries
 
