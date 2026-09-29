@@ -1,20 +1,16 @@
-"""matched-surface renderer 机械测试:格式行/锚框架/暴露检测/泄漏门。
+"""matched-surface renderer/runner 机械测试:格式行/锚框架/暴露检测/泄漏门/执行附录。
 
 不触网零模型;用合成 mini-pack(一 plain 案 + 一 dict 题面含 answer 案)走
-parse → render → build → assert 全链。
+parse → render → build → assert 全链,并锚 P0-1 系统级执行附录的前缀完整性。
 """
 
 from __future__ import annotations
 
-import importlib.util
+import hashlib
 import json
-from pathlib import Path
 
-_SPEC = importlib.util.spec_from_file_location(
-    "d6d7_matched_surface",
-    Path(__file__).resolve().parents[2] / "scripts" / "d6d7_matched_surface.py")
-ms = importlib.util.module_from_spec(_SPEC)
-_SPEC.loader.exec_module(ms)
+import d6d7_gold_consume as gc  # scripts/(conftest 挂载)
+import d6d7_matched_surface as ms
 
 MINI_PACK = """# 包头
 ---
@@ -58,7 +54,7 @@ def test_render_format_and_anchor():
     assert "小讲师(轮1):那剩下的5本书还需要再加一个盒子吗?" in lines
     assert any(line.startswith("【判定锚】判定对象 = 小讲师(轮1)") for line in lines)
     assert prompt.count("【判定锚】") == 1
-    # 引擎尾部输出要求逐字共享(_USER_INSTRUCTIONS)
+    # 引擎尾部输出要求逐字共享(renderer 模块引用的 _USER_INSTRUCTIONS)
     assert lines[-2:] == ms._USER_INSTRUCTIONS
 
 
@@ -98,28 +94,15 @@ def test_gold_json_shape_matches_builder():
     json.dumps(GOLD)  # 可序列化
 
 
-def _load_runner():
-    spec = importlib.util.spec_from_file_location(
-        "d6d7_gold_consume",
-        Path(__file__).resolve().parents[2] / "scripts" / "d6d7_gold_consume.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
 def test_system_addendum_p0_1():
-    """P0-1(#485 冻结审):附录存在、只桥接输入形态、sha 可复算(身份链锚)。"""
-    import hashlib
-    gc = _load_runner()
+    """P0-1(#485 冻结审):附录存在、只桥接输入形态、sha 可复算、前缀完整。"""
     assert gc._SYSTEM_ADDENDUM.startswith("【matched-surface 执行附录")
     # 只桥接输入形态,不做任何判据语义改写
     for banned in ("改为", "不适用", "忽略上述", "override", "以本附录为准"):
         assert banned not in gc._SYSTEM_ADDENDUM
     assert gc._addendum_sha() == hashlib.sha256(
         gc._SYSTEM_ADDENDUM.encode()).hexdigest()
-    # 系统消息 = 冻结件逐字前缀 + 附录(前缀完整性)
-    from edu_agent.evals.s2_judge import SYSTEM_PROMPT
+    # 系统消息 = 冻结件逐字前缀 + 附录(经 runner 自身的公开属性引用,不私有导入)
     content = gc._system_content()
-    assert content.startswith(SYSTEM_PROMPT)
+    assert content.startswith(gc.SYSTEM_PROMPT)
     assert content.endswith(gc._SYSTEM_ADDENDUM)
-
