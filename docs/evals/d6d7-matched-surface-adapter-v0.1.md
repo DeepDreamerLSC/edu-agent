@@ -6,7 +6,7 @@
 
 ## 0. 定位与红线
 
-**input-surface adapter,不是 rubric v0.4,不改 S2 判据语义。** SYSTEM_PROMPT(prompt 资产)、S2_SCHEMA、gateway 调用参数(max_tokens 16384 / temperature 0)随引擎冻结件逐字共享;唯一变化 = user prompt 的渲染面,全部向 **Human Pass 1 实际可见面**对齐。目的:同一份证据给真人和 Judge,测 Judge 能否执行同一套 S2 判据——人机 disagreement 不混入「两边看到的证据不同」这个额外变量。
+**input-surface adapter,不是 rubric v0.4,不改 S2 判据语义。** S2 rubric semantics / frozen SYSTEM_PROMPT asset prefix / S2_SCHEMA / gateway 参数保持不变;execution contract 由版本化 system addendum(§2.1)适配 matched surface,user prompt 同步按 Human Pass 1 可见面渲染。目的:同一份证据给真人和 Judge,测 Judge 能否执行同一套 S2 判据——人机 disagreement 不混入「两边看到的证据不同」这个额外变量。
 
 ## 1. 输入面合同(终裁六条)
 
