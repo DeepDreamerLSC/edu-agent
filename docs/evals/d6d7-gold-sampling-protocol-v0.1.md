@@ -179,4 +179,4 @@ Flash/GLM/Qwen 等 Judge 正式消费 Gold
 
 > **Primary gold = 协议冻结后新 corpus round → 机械条件分层 + 固定 seed 随机 → 30 个 primary slice → 原则上一 session 一 slice → 单真人第一次独立标注 → 第二次盲化复核 → 不一致案真人终裁 → Human Gold 冻结 → AI 独立 Shadow 标注 → Flash/GLM/Qwen Judge 正式消费。**
 
-冻结 sha256:待终裁时补(head -n -1 本文件 | sha256sum 口径)。
+冻结 sha256(v0.1): `9c00aa9715aaf265c4e8ad7b49ac76f5ec67906fa02e506b0b46ee734c154186` (head -n -1 本文件 | sha256sum 复核;冻结时间戳 **2026-09-29T04:50:03Z**——此时间之后产生的 session 才有 primary-pool 资格[§1.5];冻结审链:5883014937 Method PASS→四 P0+Phase A→三收口+两措辞→FREEZE PASS)。
