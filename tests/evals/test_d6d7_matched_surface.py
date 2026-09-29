@@ -95,14 +95,36 @@ def test_gold_json_shape_matches_builder():
 
 
 def test_system_addendum_p0_1():
-    """P0-1(#485 冻结审):附录存在、只桥接输入形态、sha 可复算、前缀完整。"""
+    """P0-1(#485 冻结审+复审):附录只桥接输入形态且只判锚轮,sha 可复算、前缀完整。"""
     assert gc._SYSTEM_ADDENDUM.startswith("【matched-surface 执行附录")
     # 只桥接输入形态,不做任何判据语义改写
     for banned in ("改为", "不适用", "忽略上述", "override", "以本附录为准"):
         assert banned not in gc._SYSTEM_ADDENDUM
+    # 复审 5356022635 收紧:锚轮唯一判定对象,前轮仅上下文(聚合后门封死)
+    assert "只判锚轮" in gc._SYSTEM_ADDENDUM
+    assert "不得把前轮自身 failure 作为本案成立证据" in gc._SYSTEM_ADDENDUM
     assert gc._addendum_sha() == hashlib.sha256(
         gc._SYSTEM_ADDENDUM.encode()).hexdigest()
     # 系统消息 = 冻结件逐字前缀 + 附录(经 runner 自身的公开属性引用,不私有导入)
     content = gc._system_content()
     assert content.startswith(gc.SYSTEM_PROMPT)
     assert content.endswith(gc._SYSTEM_ADDENDUM)
+
+
+def _make_rows(count: int, exposed: int) -> list[dict]:
+    return [{"case_id": f"P1-{i:02d}", "answer_exposed": i < exposed}
+            for i in range(count)]
+
+
+def test_frozen_pinned_and_preflight_p0_2():
+    """P0-2(#485 复审):代码钉死冻结 sha;preflight 恰 30/唯一/exposed 恰 5。"""
+    assert gc.FROZEN_CASES_SHA256 == (
+        "71069ca8dca305ef2ae0cb07153bbc1d478ae09dfa123a852870899cbbbe1437")
+    assert gc._preflight(_make_rows(30, 5)) is None
+    assert gc._preflight(_make_rows(29, 5)) is not None  # 29 案 ≠ 30
+    assert gc._preflight(_make_rows(31, 5)) is not None  # 31 案 ≠ 30
+    duplicated = _make_rows(30, 5)
+    duplicated[1]["case_id"] = duplicated[0]["case_id"]
+    assert gc._preflight(duplicated) is not None  # case_id 重复
+    assert gc._preflight(_make_rows(30, 6)) is not None  # exposed 6 ≠ 5
+    assert gc._preflight(_make_rows(30, 4)) is not None  # exposed 4 ≠ 5

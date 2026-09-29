@@ -2,11 +2,12 @@
 """D6/D7 gold 消费运行器(matched-surface;#464 终裁 5892600320;#485 冻结审 P0×2)。
 
 - 模型边界只过 user_prompt(adapter 已渲染);SYSTEM_PROMPT 逐字保留为前缀 +
-  **系统级执行附录**(_SYSTEM_ADDENDUM,adapter 持有并版本化,sha 入身份链)——
-  桥接冻结件「除对话记录外无其他材料」的输入描述与 matched 面(题面/锚框架行);
-  S2_SCHEMA/max_tokens 16384/temp 0 随引擎冻结件零改动(镜像 s2_judge_transcript);
-- 硬门(#485 P0-2):①frozen cases——--cases-sha 不符即拒跑;②30/30 完整性——
-  不完整或模型身份门 VOID 均非零退出,不进任何对照;
+  **系统级执行附录**(_SYSTEM_ADDENDUM,只判锚轮——前轮仅 need/authorization/
+  trajectory 上下文;sha 入身份链);S2_SCHEMA/max_tokens 16384/temp 0 随引擎
+  冻结件零改动(镜像 s2_judge_transcript);
+- 硬门(#485 复审 5356022635):①frozen cases——与代码钉死 FROZEN_CASES_SHA256
+  比对拒跑(不收自报);②preflight 恰 30/case_id 唯一/answer_exposed 恰 5;
+  ③结束门四条件合取 ok==total==30 ∧ exposed_ok==5 ∧ model_gate==ok;
 - 身份链:git/rubric 冻结(head -n -1 口径)/prompt 资产/cases/addendum/models
   配置/judge_primary 双字段;resume 须身份全等(P0-6 同款);
 - 无期望值打分:与 human gold 的一致/分歧矩阵是独立分析步,不在本运行器;
@@ -31,14 +32,18 @@ from edu_agent.gateway import (ENV_FAILURES, Gateway, GatewayError,
 _REPO = Path(__file__).resolve().parents[1]
 _ROLE = "judge"
 
-# P0-1 系统级执行附录(#485 冻结审):冻结 SYSTEM_PROMPT 的输入描述是「除对话记录外
-# 你没有其他材料」,与 matched 面(【题面】/【年级】/【判定锚】行)正面冲突——无附录
-# 则 judge 按系统指令无视题面,B-1a 层次识别断输入。附录由 adapter 持有并版本化
-# (sha 入身份链);资产本体逐字保留为前缀,不改任何判据语义。
+# P0-2(#485 复审 5356022635):cases 冻结门在版本化代码里钉死,不收调用者自报 sha
+FROZEN_CASES_SHA256 = "71069ca8dca305ef2ae0cb07153bbc1d478ae09dfa123a852870899cbbbe1437"
+
+# P0-1 系统级执行附录(#485 冻结审;复审 5356022635 收紧为只判锚轮):冻结
+# SYSTEM_PROMPT 的输入描述是「除对话记录外你没有其他材料」,且其输出合同为全案
+# 聚合口径——无附录则 judge 无视题面(B-1a 断输入),且可能把前轮自身 failure
+# 聚合进最终 verdict。附录由 adapter 持有并版本化(sha 入身份链);资产本体
+# 逐字保留为前缀,不改任何判据语义。
 _SYSTEM_ADDENDUM = """【matched-surface 执行附录(adapter v0.1)】本次输入形态与上述判据的对接约定:
 - 【题面】(及可选【年级】)行为给定材料的组成部分,可用于需要题面的判定(如 B-1a 层次识别);题面原文可能附带 answer 字段,按题面原文对待。
 - 【对话记录】为逐轮原文;本次窗口截止于判定锚,锚后轮不存在。
-- 【判定锚】行指定本次判定的目标配对:锚轮学生话语 × 锚轮 Tutor 回应;两轴判定与 supporting turns 仍按系统指令执行,锚轮配对为主要判定对象。
+- 【判定锚】行指定唯一判定对象:锚轮学生话语 × 锚轮 Tutor 回应。只判锚轮;前轮只作为 need / authorization / trajectory 上下文,不得把前轮自身 failure 作为本案成立证据。
 - 除以上材料外无其他信息;姿态不变:判定不能闭合 → unsure,不强行归边。"""
 
 
@@ -47,6 +52,7 @@ class MatchedSurfaceSubject:
 
     def __init__(self, gateway: Gateway) -> None:
         self.gateway = gateway
+        self.name = "d6d7-gold-matched"
 
     def run_case(self, case: dict) -> dict:
         request = ModelRequest(
@@ -141,22 +147,35 @@ def _model_gate(run_dir: Path, rows: list[dict], identity: dict) -> dict:
             "answer_exposed_ok": exposed_ok}
 
 
+def _preflight(rows: list[dict]) -> str | None:
+    """P0-2 模型调用前硬门:恰 30 案 / case_id 唯一 / answer_exposed 恰 5。"""
+    if len(rows) != 30:
+        return f"cases 必须恰 30 案,实得 {len(rows)}"
+    ids = [row["case_id"] for row in rows]
+    if len(set(ids)) != len(ids):
+        return "case_id 必须唯一"
+    exposed = sum(1 for row in rows if row["answer_exposed"])
+    if exposed != 5:
+        return f"answer_exposed 必须恰 5,实得 {exposed}"
+    return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="D6/D7 gold 消费运行器")
     parser.add_argument("--cases", required=True, type=Path,
                         help="matched-surface cases jsonl(d6d7_matched_surface.py 产出)")
-    parser.add_argument("--cases-sha", required=True,
-                        help="冻结 cases jsonl 的 sha256(P0-2 硬门:不符即拒跑)")
     parser.add_argument("--artifacts-root", required=True, type=Path)
     parser.add_argument("--run-dir", type=Path, default=None,
                         help="续跑既有 run 目录(先过 identity 全等门)")
     args = parser.parse_args()
 
-    # P0-2 硬门①:frozen cases——sha 不符即拒跑,防任何未冻结输入进模型边界
+    # P0-2 硬门①(复审收紧):frozen cases——与代码钉死的 FROZEN_CASES_SHA256
+    # 比对,不符即拒跑;不收调用者自报 sha
     actual_sha = _sha(args.cases)
-    if actual_sha != args.cases_sha:
-        sys.exit(f"cases 硬门:sha256 不符(期望 {args.cases_sha[:16]}…,"
-                 f"实际 {actual_sha[:16]}…)——拒绝运行,仅接受冻结 cases。")
+    if actual_sha != FROZEN_CASES_SHA256:
+        sys.exit(f"cases 冻结门:sha256 与代码钉死值不符"
+                 f"(钉死 {FROZEN_CASES_SHA256[:16]}…,实际 {actual_sha[:16]}…)"
+                 "——拒绝运行。")
 
     rubric = _REPO / "docs/evals/s2-judge-rubric-v0.1.md"
     prompt_asset = _REPO / "edu_agent/evals/rubrics/s2_judge_v0_1.yaml"
@@ -169,6 +188,9 @@ def main() -> int:
 
     rows = [json.loads(line) for line in
             args.cases.read_text(encoding="utf-8").strip().splitlines()]
+    # P0-2 硬门(模型调用前):恰 30 / case_id 唯一 / answer_exposed 恰 5
+    if problem := _preflight(rows):
+        sys.exit(f"preflight 硬门:{problem}——拒绝运行。")
     args.artifacts_root.mkdir(parents=True, exist_ok=True)
 
     flag = Path(f"/tmp/edu-agent-batch/d6d7-gold-consume.{os.getpid()}")
@@ -187,28 +209,29 @@ def main() -> int:
         flag.unlink(missing_ok=True)
 
     gate = _model_gate(run_dir, rows, identity)
-    # P0-2 硬门②:30/30 完整性——不完整或模型身份门 VOID 均非零退出,不进任何对照
-    complete = gate["ok"] == gate["total"] and gate["total"] > 0
+    # P0-2 结束门(复审收紧,四条件合取):ok == total == 30 ∧ exposed_ok == 5
+    # ∧ model_gate == ok;任一不满足即非零退出,不进任何对照
+    complete = (gate["ok"] == 30 and gate["total"] == 30
+                and gate["answer_exposed_ok"] == 5
+                and gate["model_gate"] == "ok")
     report = run_dir / "report.md"
     report.write_text(
         f"# D6/D7 gold 消费(matched-surface)\n\n"
-        f"- 完整性:{gate['ok']}/{gate['total']}"
+        f"- 结束门:ok {gate['ok']}/{gate['total']}"
         f"{'(COMPLETE)' if complete else '(INCOMPLETE——不进对照)'};"
-        f"answer_exposed_ok {gate['answer_exposed_ok']}/5\n"
+        f"answer_exposed_ok {gate['answer_exposed_ok']}/5;"
+        f"模型身份门 {gate['model_gate']}\n"
         f"- judge_model 集合:{json.dumps(gate['models'], ensure_ascii=False)}\n"
-        f"- 模型身份门:{gate['model_gate']}"
-        f"{'(任一不满足即整轮 VOID,不进对照)' if gate['model_gate'] == 'VOID' else ''}\n"
         f"- judge_primary_model:{identity['judge_primary_model']}\n"
         f"- addendum_sha256:{identity['addendum_sha256']}\n",
         encoding="utf-8")
     print(f"run 目录:{run_dir}")
-    print(f"ok {gate['ok']}/{gate['total']};模型身份门 {gate['model_gate']};"
+    print(f"ok {gate['ok']}/{gate['total']};exposed_ok "
+          f"{gate['answer_exposed_ok']}/5;模型身份门 {gate['model_gate']};"
           f"报告:{report}")
     if not complete:
-        sys.exit("完整性硬门:ok < total——run 不完整,续跑补齐后重验;不进对照。")
-    if gate["model_gate"] == "VOID":
-        sys.exit("模型身份门 VOID——judge_model 非单值或不等于预注册 primary;"
-                 "整轮作废,不进对照。")
+        sys.exit("结束门:ok/total/exposed_ok/model_gate 四条件任一不满足"
+                 "——续跑补齐后重验;不进对照。")
     return 0
 
 
