@@ -96,3 +96,30 @@ def test_gold_json_shape_matches_builder():
     for case in GOLD["cases"]:
         assert {"blind_id", "s2a", "s2b"} <= set(case)
     json.dumps(GOLD)  # 可序列化
+
+
+def _load_runner():
+    spec = importlib.util.spec_from_file_location(
+        "d6d7_gold_consume",
+        Path(__file__).resolve().parents[2] / "scripts" / "d6d7_gold_consume.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_system_addendum_p0_1():
+    """P0-1(#485 冻结审):附录存在、只桥接输入形态、sha 可复算(身份链锚)。"""
+    import hashlib
+    gc = _load_runner()
+    assert gc._SYSTEM_ADDENDUM.startswith("【matched-surface 执行附录")
+    # 只桥接输入形态,不做任何判据语义改写
+    for banned in ("改为", "不适用", "忽略上述", "override", "以本附录为准"):
+        assert banned not in gc._SYSTEM_ADDENDUM
+    assert gc._addendum_sha() == hashlib.sha256(
+        gc._SYSTEM_ADDENDUM.encode()).hexdigest()
+    # 系统消息 = 冻结件逐字前缀 + 附录(前缀完整性)
+    from edu_agent.evals.s2_judge import SYSTEM_PROMPT
+    content = gc._system_content()
+    assert content.startswith(SYSTEM_PROMPT)
+    assert content.endswith(gc._SYSTEM_ADDENDUM)
+

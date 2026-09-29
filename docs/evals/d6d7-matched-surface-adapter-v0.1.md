@@ -1,6 +1,6 @@
 # D6/D7 matched-surface adapter v0.1(待冻结审)
 
-> **状态**:草案(2026-09-29;零模型调用;冻结后按运行计划执行)。
+> **状态**:草案(2026-09-29;零模型调用;冻结后按运行计划执行)。2026-09-30 冻结审 P0×2 已修:§2.1 系统级执行附录、§4 硬门(frozen cases + 30/30);分歧三分类入 §4。
 > **终裁依据**:#464 comment 5892600320(matched-surface 批准 + answer 暴露处置 + 运行收紧)。
 > **上游**:human-gold-v0.1(sha `8a334895…`,single-pass 口径)/ pass1-pack(sha `1f460ece…`,人类实际可见面)/ S2 rubric v0.3(冻结 sha `d415be39…`;**语义零改动**)。
 
@@ -30,19 +30,42 @@
 
 **设计选择(冻结审复核点)**:判定锚以非对话框架行给出(`【判定锚】判定对象 = 小讲师(轮N)的本轮回应…`),与人类「判锚轮配对」的任务框架一致;不把标记混入 Tutor 话语(避免内容污染)。若裁不设锚框架行,renderer 改一行即可。
 
+### 2.1 系统级执行附录(P0-1,#485 冻结审修复)
+
+冻结 SYSTEM_PROMPT 的输入描述是「除对话记录外你没有其他材料」——与 matched 面(【题面】/【年级】/【判定锚】行)**正面冲突**:无桥接则 judge 按系统指令无视题面,B-1a 层次识别断输入。修法:runner 以 `_system_content()` 拼装系统消息 = **冻结 SYSTEM_PROMPT 逐字前缀 + adapter 执行附录**;附录由 adapter 持有并版本化(`addendum_sha256` 入身份链,附录变则旧 run 拒续跑),不改任何判据语义。附录全文:
+
+```text
+【matched-surface 执行附录(adapter v0.1)】本次输入形态与上述判据的对接约定:
+- 【题面】(及可选【年级】)行为给定材料的组成部分,可用于需要题面的判定(如 B-1a 层次识别);题面原文可能附带 answer 字段,按题面原文对待。
+- 【对话记录】为逐轮原文;本次窗口截止于判定锚,锚后轮不存在。
+- 【判定锚】行指定本次判定的目标配对:锚轮学生话语 × 锚轮 Tutor 回应;两轴判定与 supporting turns 仍按系统指令执行,锚轮配对为主要判定对象。
+- 除以上材料外无其他信息;姿态不变:判定不能闭合 → unsure,不强行归边。
+```
+
+附录 sha256:`ae7b0b2310ffaad34889f96c5eae48ef2f7ce4695a464f34ba7f96893e0b1124`。前缀完整性有测试锚(`test_system_addendum_p0_1`:startswith(SYSTEM_PROMPT) ∧ endswith(addendum) ∧ 语义改写词零命中)。
+
 ## 3. 答案暴露异质(5 案,已机械核验)
 
 - **P1-09 / P1-10 / P1-14 / P1-27 / P1-28**:cases.jsonl 题面对象为 dict `{text, answer}`(answer 依次:5厘米 / 鸡3只兔5只 / x=6 / 7/8 / 26厘米),另有 `student_turns` 剧本与 `answer_status: correct`;pack 当时逐字渲染了 dict 原文 → **真人标注时答案可见**。其余 25 案题面为纯文本。
 - **处置(终裁)**:Judge 输入按真人所见**原样复现**;不静默清洗、不删案、不重开 Gold;结果报告单列 `answer_exposed=5 / non_exposed=25` 两组的一致率 / 错误分布。
 - 机械判据:题面字串 `ast.literal_eval` 为 dict 且含 `answer` 键。
 
-## 4. 运行计划与比较纪律(终裁)
+## 4. 运行计划、硬门与分歧三分类(终裁)
 
 1. 冻结本 adapter(只定义 renderer/input contract);
 2. DeepSeek Flash **×2**(同配置双跑,测 repeat variance);
 3. GLM-5.3 **×1**(terminal Strong-Judge control);
 4. human-vs-AI disagreement / miss / FP / unsupported-strong / boundary / failure-correlation 分解。
 **然后停。**
+
+**硬门(P0-2,#485 冻结审修复)**:① frozen cases——`--cases-sha` 必填,与冻结 cases jsonl(`71069ca8…`)不符即拒跑;② 30/30 完整性——run 结束 ok < total 或模型身份门 VOID 均非零退出,不进任何对照。
+
+**分歧三分类(single-pass Gold 下的解释框架,终裁 2026-09-30)**:AI 标注结果不直接读作「AI 对/人错」,分三类——
+1. **Human = AI**:该案有人机一致证据,可信度上升;
+2. **Human ≠ AI 且 AI 明显违反 rubric**:归 Judge failure(miss / FP / unsupported strong / boundary misread);
+3. **Human ≠ AI 且 AI 给出有力、规则一致的反证**:**不自动改 Gold**,进 Human Gold Audit queue,后续真人复核(Human 有终裁权,但也可审计)。
+
+**边界**:AI Shadow 可以提出「这个 Gold 可能有问题」,但不能自己把 Gold 改掉——既不把人工神化,也不让模型夺取真值权。
 
 - Qwen3.8-27B 本地臂**本轮不恢复**(已失去 daily Judge 存在权;仅当 Flash/GLM 对 Gold 的结果显示「本地替代 API」有明确业务价值,再按既定 bounded ablation 单独点火);
 - 不加第三个云端 challenger;不改 Gold;不改 rubric;
@@ -53,12 +76,13 @@
 | 件 | sha256 |
 |---|---|
 | renderer `scripts/d6d7_matched_surface.py` | `1dab55afc3d4788b86568cafe7004da2bcf6499ffc4b95a2532c6c7a55165765` |
-| runner `scripts/d6d7_gold_consume.py` | `3782d78eacccde1800977373784070d234694776d26eb21e0519424b0f8e8d72` |
-| test `tests/evals/test_d6d7_matched_surface.py` | `838892a2a71b2b1b232493e4883f34f0677b78b8ceb3002ee032aea29563bd19` |
+| runner `scripts/d6d7_gold_consume.py`(P0×2 后) | `25cb8cb32bd98b59594693ea201634edf3f90326c7ea146b90fe88cb8cc65c77` |
+| 系统级执行附录(§2.1,入身份链) | `ae7b0b2310ffaad34889f96c5eae48ef2f7ce4695a464f34ba7f96893e0b1124` |
+| test `tests/evals/test_d6d7_matched_surface.py`(6 用例) | `6b625ac1e4707bf820abdee24c18357e8dda54b495330461a26f50cc8b98141a` |
 | 冻结渲染输出 cases jsonl(私有,不入仓;gold 随行仅供 scorer,模型边界只过 user_prompt) | `71069ca8dca305ef2ae0cb07153bbc1d478ae09dfa123a852870899cbbbe1437` |
 
 - 渲染链:pass1-pack `1f460ece…` → human-gold `8a334895…` → cases jsonl `71069ca8…`(零网络零模型,确定性;泄漏门断言零命中,5 案暴露标记已验);
-- run 身份(runner 落盘):git / rubric 冻结(head -n -1 口径)/ prompt 资产 / cases / models 配置 / judge_primary 双字段;resume 须身份全等;**模型身份门**(judge_model 单值 ∧ == 预注册 primary)任一不满足 → 整轮 VOID,不进对照。
+- run 身份(runner 落盘):git / rubric 冻结(head -n -1 口径)/ prompt 资产 / cases / **addendum** / models 配置 / judge_primary 双字段;resume 须身份全等;**模型身份门**(judge_model 单值 ∧ == 预注册 primary)任一不满足 → 整轮 VOID,不进对照。
 
 ## 6. 记录更正与附带发现(2026-09-29,#464 5892600320)
 

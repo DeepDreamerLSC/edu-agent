@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""D6/D7 gold 消费运行器(matched-surface;#464 终裁 5892600320)。
+"""D6/D7 gold 消费运行器(matched-surface;#464 终裁 5892600320;#485 冻结审 P0×2)。
 
-- 模型边界只过 user_prompt(adapter 已渲染);SYSTEM_PROMPT/S2_SCHEMA/
-  max_tokens 16384/temp 0 随引擎冻结件零改动(镜像 s2_judge_transcript);
-- 身份链:git/rubric 冻结(head -n -1 口径)/prompt 资产/cases(含 pack+gold
-  派生)/models 配置/judge_primary 双字段;resume 须身份全等(P0-6 同款);
-- 模型身份门(P0-2/P0-4 同款):judge_model 单值 ∧ == 预注册 primary,
-  任一不满足 → 整轮 VOID,不进任何对照;
+- 模型边界只过 user_prompt(adapter 已渲染);SYSTEM_PROMPT 逐字保留为前缀 +
+  **系统级执行附录**(_SYSTEM_ADDENDUM,adapter 持有并版本化,sha 入身份链)——
+  桥接冻结件「除对话记录外无其他材料」的输入描述与 matched 面(题面/锚框架行);
+  S2_SCHEMA/max_tokens 16384/temp 0 随引擎冻结件零改动(镜像 s2_judge_transcript);
+- 硬门(#485 P0-2):①frozen cases——--cases-sha 不符即拒跑;②30/30 完整性——
+  不完整或模型身份门 VOID 均非零退出,不进任何对照;
+- 身份链:git/rubric 冻结(head -n -1 口径)/prompt 资产/cases/addendum/models
+  配置/judge_primary 双字段;resume 须身份全等(P0-6 同款);
 - 无期望值打分:与 human gold 的一致/分歧矩阵是独立分析步,不在本运行器;
 - 本轮仅云臂(Flash×2 / GLM×1);本地臂重启前须先修 #241 flag 的 Mac 侧落点。
 """
@@ -29,9 +31,19 @@ from edu_agent.gateway import (ENV_FAILURES, Gateway, GatewayError,
 _REPO = Path(__file__).resolve().parents[1]
 _ROLE = "judge"
 
+# P0-1 系统级执行附录(#485 冻结审):冻结 SYSTEM_PROMPT 的输入描述是「除对话记录外
+# 你没有其他材料」,与 matched 面(【题面】/【年级】/【判定锚】行)正面冲突——无附录
+# 则 judge 按系统指令无视题面,B-1a 层次识别断输入。附录由 adapter 持有并版本化
+# (sha 入身份链);资产本体逐字保留为前缀,不改任何判据语义。
+_SYSTEM_ADDENDUM = """【matched-surface 执行附录(adapter v0.1)】本次输入形态与上述判据的对接约定:
+- 【题面】(及可选【年级】)行为给定材料的组成部分,可用于需要题面的判定(如 B-1a 层次识别);题面原文可能附带 answer 字段,按题面原文对待。
+- 【对话记录】为逐轮原文;本次窗口截止于判定锚,锚后轮不存在。
+- 【判定锚】行指定本次判定的目标配对:锚轮学生话语 × 锚轮 Tutor 回应;两轴判定与 supporting turns 仍按系统指令执行,锚轮配对为主要判定对象。
+- 除以上材料外无其他信息;姿态不变:判定不能闭合 → unsure,不强行归边。"""
+
 
 class MatchedSurfaceSubject:
-    """被测对象:matched-surface 案(user_prompt 已渲染)→ 引擎同款请求。"""
+    """被测对象:matched-surface 案(user_prompt 已渲染)→ 引擎同款请求+系统级附录。"""
 
     def __init__(self, gateway: Gateway) -> None:
         self.gateway = gateway
@@ -40,7 +52,7 @@ class MatchedSurfaceSubject:
         request = ModelRequest(
             role=_ROLE,
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": _system_content()},
                 {"role": "user", "content": case["user_prompt"]},
             ],
             response_schema=S2_SCHEMA,
@@ -64,6 +76,16 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _addendum_sha() -> str:
+    """执行附录 sha(身份链审计锚:附录变则旧 run 拒续跑)。"""
+    return hashlib.sha256(_SYSTEM_ADDENDUM.encode()).hexdigest()
+
+
+def _system_content() -> str:
+    """系统消息 = 冻结 SYSTEM_PROMPT 逐字前缀 + 执行附录(P0-1)。"""
+    return f"{SYSTEM_PROMPT}\n\n{_SYSTEM_ADDENDUM}"
+
+
 def _rubric_head_sha(rubric: Path) -> str:
     """冻结件 head -n -1 口径 sha(rubric 被改即变值,旧 run 随之拒绝续跑)。"""
     head = "".join(rubric.read_text(encoding="utf-8").splitlines(keepends=True)[:-1])
@@ -81,6 +103,7 @@ def _identity(models_yaml: Path, cases: Path, rubric: Path,
         "rubric_freeze_sha": _rubric_head_sha(rubric),
         "prompt_asset_sha": _sha(prompt_asset),
         "cases_sha": _sha(cases),
+        "addendum_sha256": _addendum_sha(),
         "models_yaml_sha": _sha(models_yaml),
         # P0-4 双字段:id 仅追溯,不与 response.model 比;model 才是比较基准
         "judge_primary_id": role.primary,
@@ -122,10 +145,18 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="D6/D7 gold 消费运行器")
     parser.add_argument("--cases", required=True, type=Path,
                         help="matched-surface cases jsonl(d6d7_matched_surface.py 产出)")
+    parser.add_argument("--cases-sha", required=True,
+                        help="冻结 cases jsonl 的 sha256(P0-2 硬门:不符即拒跑)")
     parser.add_argument("--artifacts-root", required=True, type=Path)
     parser.add_argument("--run-dir", type=Path, default=None,
                         help="续跑既有 run 目录(先过 identity 全等门)")
     args = parser.parse_args()
+
+    # P0-2 硬门①:frozen cases——sha 不符即拒跑,防任何未冻结输入进模型边界
+    actual_sha = _sha(args.cases)
+    if actual_sha != args.cases_sha:
+        sys.exit(f"cases 硬门:sha256 不符(期望 {args.cases_sha[:16]}…,"
+                 f"实际 {actual_sha[:16]}…)——拒绝运行,仅接受冻结 cases。")
 
     rubric = _REPO / "docs/evals/s2-judge-rubric-v0.1.md"
     prompt_asset = _REPO / "edu_agent/evals/rubrics/s2_judge_v0_1.yaml"
@@ -156,18 +187,28 @@ def main() -> int:
         flag.unlink(missing_ok=True)
 
     gate = _model_gate(run_dir, rows, identity)
+    # P0-2 硬门②:30/30 完整性——不完整或模型身份门 VOID 均非零退出,不进任何对照
+    complete = gate["ok"] == gate["total"] and gate["total"] > 0
     report = run_dir / "report.md"
     report.write_text(
         f"# D6/D7 gold 消费(matched-surface)\n\n"
-        f"- ok {gate['ok']}/{gate['total']};answer_exposed_ok {gate['answer_exposed_ok']}/5\n"
+        f"- 完整性:{gate['ok']}/{gate['total']}"
+        f"{'(COMPLETE)' if complete else '(INCOMPLETE——不进对照)'};"
+        f"answer_exposed_ok {gate['answer_exposed_ok']}/5\n"
         f"- judge_model 集合:{json.dumps(gate['models'], ensure_ascii=False)}\n"
         f"- 模型身份门:{gate['model_gate']}"
         f"{'(任一不满足即整轮 VOID,不进对照)' if gate['model_gate'] == 'VOID' else ''}\n"
-        f"- judge_primary_model:{identity['judge_primary_model']}\n",
+        f"- judge_primary_model:{identity['judge_primary_model']}\n"
+        f"- addendum_sha256:{identity['addendum_sha256']}\n",
         encoding="utf-8")
     print(f"run 目录:{run_dir}")
     print(f"ok {gate['ok']}/{gate['total']};模型身份门 {gate['model_gate']};"
           f"报告:{report}")
+    if not complete:
+        sys.exit("完整性硬门:ok < total——run 不完整,续跑补齐后重验;不进对照。")
+    if gate["model_gate"] == "VOID":
+        sys.exit("模型身份门 VOID——judge_model 非单值或不等于预注册 primary;"
+                 "整轮作废,不进对照。")
     return 0
 
 
