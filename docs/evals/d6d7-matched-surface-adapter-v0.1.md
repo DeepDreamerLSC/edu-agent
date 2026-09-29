@@ -78,7 +78,7 @@
 | renderer `scripts/d6d7_matched_surface.py` | `1dab55afc3d4788b86568cafe7004da2bcf6499ffc4b95a2532c6c7a55165765` |
 | runner `scripts/d6d7_gold_consume.py`(P0×2 后) | `25cb8cb32bd98b59594693ea201634edf3f90326c7ea146b90fe88cb8cc65c77` |
 | 系统级执行附录(§2.1,入身份链) | `ae7b0b2310ffaad34889f96c5eae48ef2f7ce4695a464f34ba7f96893e0b1124` |
-| test `tests/evals/test_d6d7_matched_surface.py`(6 用例) | `6b625ac1e4707bf820abdee24c18357e8dda54b495330461a26f50cc8b98141a` |
+| test `tests/evals/test_d6d7_matched_surface.py`(6 用例;经 conftest 挂载 scripts,零私有导入) | `1b0db25df1330783f8527eecb188bb0a5b88a11939b91143fe61a8eb30be9e9a` |
 | 冻结渲染输出 cases jsonl(私有,不入仓;gold 随行仅供 scorer,模型边界只过 user_prompt) | `71069ca8dca305ef2ae0cb07153bbc1d478ae09dfa123a852870899cbbbe1437` |
 
 - 渲染链:pass1-pack `1f460ece…` → human-gold `8a334895…` → cases jsonl `71069ca8…`(零网络零模型,确定性;泄漏门断言零命中,5 案暴露标记已验);
