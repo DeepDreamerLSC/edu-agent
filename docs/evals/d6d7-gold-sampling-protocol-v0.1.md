@@ -12,7 +12,7 @@
 
 | 来源 | 案数 | 参与过(逐项) | 独立性判定 |
 |---|---|---|---|
-| Phase A 64 session | 64 | **failure discovery**(A64 baseline judge 全评);**coverage mapping**(Matrix v0.1 层 3 证据源);**rule formation**(D1-D16 层 3 证据引此);**人工讨论**(Phase A review pack) | **不可作为 untouched**;可作「新人工 gold / held-out-from-judge」(对 Judge 是新的,对规则形成链不是) |
+| Phase A 64 session | 64 | **failure discovery**(A64 baseline judge 全评);**coverage mapping**(Matrix v0.1 层 3 证据源);**rule formation**(D1-D16 层 3 证据引此);**人工讨论**(Phase A review pack) | **不可作为 untouched**;本轮 primary gold **全量排除**(终裁 A);其 baseline judge(v3.2)评分已存在,称「held-out-from-S2-Judge」(对 S2 专项 Judge 无输出)是准确的,但不能称「held-out-from-judge」泛称——v3.2 Judge 已评过 |
 | Phase C 24 案 | 24 | **judge calibration**(C24 adjudication 分歧矩阵);**boundary discussion**(S2 定义/判据锚案);**rubric revision**(S2 v0.1→v0.3 全链);**battery 组成**(24 案 dev 集) | **完全排除** |
 | S2 Step 3 battery 24 案 | 24 | 同上 + **rubric revision 直接调参对象** | **完全排除** |
 | 定义/判据 14 锚案 | 14 | **rule formation**(锚案=定义 §5/§6 案卷);**rubric revision** | **完全排除** |
@@ -20,7 +20,7 @@
 | OOT 带外观察 | ~10 | **人工讨论**(A64/C24 读数附注) | **完全排除** |
 | #453 parity 复现 session | 0(目录空) | — | **不可用** |
 
-**结论:当前仓内/私有证据源中,没有任何可标「untouched」的现成 session。** Phase A 64 session 是唯一可扩展池,但只能标「**新人工 gold / held-out-from-judge**」——对 Judge 是新案(没有任何 Judge 输出),但其失效模式已被 coverage review 消费、可能间接影响了规则形成。
+**结论:当前仓内/私有证据源中,没有任何可标「untouched」的现成 session。** Phase A 64 session 曾被视为可扩展池,但其 v3.2 baseline judge 评分已在 A64 读数中消费,且失效模式已被 coverage review 使用——**本轮全量排除**(终裁 A),不进入 primary pool;未来若作 secondary 对照另议,并须逐案 provenance 反查(终裁 C)。
 
 ### 新 session 通道
 
@@ -86,22 +86,22 @@ Phase A 64 session **已集合级确认暴露**(全部被 A64 baseline judge 评
 | Tutor 给出步骤/方法 | 是 / 否 | 覆盖 giving-move vs 纯提问 |
 | Tutor 给出终值/结论 | 是 / 否 | 覆盖 answer_leaked vs 未泄 |
 
-**五条件产生 2⁵=32 个理论格子;实际只需控制关键格子非空**(不用全格等量):至少覆盖「有求助+有给出」「有求助+无给出」「无求助+有给出」「无求助+无给出」四个大类。
+**层间分配机械化(P0 修订)**:五条件中取前两条(「学生明确求助」「Tutor 给出步骤/方法」)构成 **2×2=4 个主层**,每层预分配 **30÷4 = 7.5 → 8/8/7/7 个位置**(按层编号序:求助+给出=8,求助+无给出=8,无求助+给出=7,无求助+无给出=7);其余三条件(尝试/提示失败/给终值)**不参与分配,仅作格子内排序参考**——保证分配完全机械,无任何人为裁量。
 
 **分层 ≠ 标签配额(终裁钉子 3)**:五个可观察条件只用于保证场景覆盖,**不允许预先凑 S2a/S2b YES/NO/UNSURE 比例**。标注后才统计 S2a/S2b 分布——如果某关键类别严重缺失,按 §7 补样规则补(按可观察条件补,不按语义标签补)。
 
 ## 5. 选择方法
 
-1. 候选池形成后(排除+资格过滤后),按 §4 可观察条件做**机械分层**;
-2. 每层内按 **session_id 排序后随机序机械抽取**(seed 预注册,抽样脚本可复现);
+1. 候选池形成后(排除+资格过滤后),按 §4 的 **2×2 四主层**做机械分层,每层按 8/8/7/7 位置分配;
+2. 每层内按 **session_id 排序后随机序机械抽取**(seed 预注册,抽样脚本可复现);层内候选不足时从最大剩余层按同 seed 序补足,补层规则预注册;
 3. **不人工挑案例**;如果某 slice 被抽中但 §7 判定无效,按 §7 替换;
-4. 抽样结果(候选池+分层+选中列表)作为抽样协议附录落盘,与协议同冻结。
+4. 抽样结果(候选池+分层+选中列表)在**协议冻结后**产生,作为抽样执行记录落盘(附录),与协议分开冻结;**协议先冻、session 后产、抽样再执行**——时序不可倒置。
 
 ## 6. 规模与停止规则
 
 - **预注册 30 案**(slice 级)为第一轮;
 - 如果有效可判样本 < 30(因无效/替换不足),按同规则从剩余候选补到 30;
-- **上限 50**;不跑后扩样;
+- **最终 primary gold 固定 N=30**;「上限 50」仅为**结构性替换尝试的上限**(替换过程尝试过的候选数,含无效替换),最终入 gold 的 slice 恒 ≤30(P0 修订:不跑后扩样,N 在跑前锁死为 30);
 - 30 案 = kill-test 规模,不用于声称 production 级准确率。
 
 ## 7. 无效样本/替换规则
@@ -146,7 +146,7 @@ Flash/GLM/Qwen 等 Judge 正式消费 Gold
 ### 第二次盲化复核的最低要求
 
 - **首选**:30 案全部重新盲标一次(测 intra-rater consistency);
-- **压缩口径**(报告中必须声明):至少复核 ①第一次标 unsure 的案 ②边界案 ③真人低信心案 ④后续 AI shadow 与真人不一致的案;
+- **压缩口径**(报告中必须声明):至少复核 ①第一次标 unsure 的案 ②边界案 ③真人低信心案;~~④后续 AI shadow 与真人不一致的案~~(P0 修订:AI shadow 在 gold 冻结**之后**才运行,gold 冻结前该条件不可能触发——移出二次复核清单;gold 冻结后 AI shadow 发现的分歧作为 shadow agreement 分析材料,不反向触发 gold 修改);
 - 两次不一致案由真人终裁(终裁时可见两次答案+transcript);
 - **gold 冻结 = 全部 slice 终裁完成 + intra-rater 一致率记录 + 终裁人签字时间戳**。
 
