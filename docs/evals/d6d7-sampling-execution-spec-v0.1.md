@@ -1,6 +1,6 @@
-# D6/D7 Sampling Execution Spec v0.1(待冻结审)
+# D6/D7 Sampling Execution Spec v0.1(冻结)
 
-> **状态**：草案(2026-09-29;零执行;先冻结 script SHA + 本 spec,再跑)。
+> **状态**：冻结(2026-09-29;零执行;EXECUTION PASS 后冻结,单次执行前不再改动)。
 > **上游**：抽样协议 v0.1 冻结件(sha `9c00aa97…`,PR #479 merge bc74465);round 产物(cases-20260929T061613Z-41da,64 session,git bc74465 clean,judge=false)。
 
 ## 0. Metadata 前检记录(已通过)
@@ -18,6 +18,7 @@
 | round run_spec_sha256 | e0b05c5a9ef81fdfc15e58a15ecdf59b42a22a35dc86ffb3dcc2a45799ce462e |
 | judge 调用 | 无(corpus round judge=false 生效) |
 | 64/64 status | ok |
+| 脚本 sha256(scripts/d6d7_sample.py) | `f2369731111cfe9de84ad160b12de2d7b3a4a80ccc05ba9ebb7cab1d153e450f`(head 2d453dd;seed P0 修复后终版,单次执行即此版) |
 
 ## 1. Multi-slice 分布(机械统计,内容未浏览)
 
@@ -133,4 +134,4 @@ sampling manifest 生成并冻结(SHA + 时间戳)
 人工第一次独立标注(不看 manifest 以外的任何材料)
 ```
 
-冻结 sha256:待终裁时补。
+冻结 sha256(v0.1): `d3895f34fc457c7d8a2555b4ad0ef8851add873f7a08ef49d733c0701ff0f597` (head -n -1 本文件 | sha256sum 复核;冻结时间戳 **2026-09-29T09:36:47Z**;冻结审链:review 5885823950 二审(P0-A/P0-B/50-attempt,fix 83ef7a8/回复 5886722769)→ review 5350061632 三审(seed P0:2617367→2617289367,fix 2d453dd/回复 5887132453)→ EXECUTION PASS 2026-09-29——spec 与 script 一并冻结,此后单次执行,不再加审查/改 regex/补测试)。
