@@ -15,7 +15,7 @@ import re
 import sys
 from pathlib import Path
 
-SEED = 2617367  # int("9c00aa97", 16)
+SEED = 2617289367  # int("9c00aa97", 16),与 seed.txt 预注册一致
 PROTOCOL_FREEZE_SHA = "9c00aa9715aaf265"
 LAYER_QUOTA = {"help_sought_giving": 8, "help_sought_no_giving": 8,
                "no_help_giving": 7, "no_help_no_giving": 7}
