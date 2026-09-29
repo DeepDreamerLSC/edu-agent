@@ -89,4 +89,4 @@
 - **记录更正**:上轮「跳过 Pass 2」非裁定(原要求 Pass 1 → Pass 2 → adjudication);single-pass 口径保留为**降级证据资产**,最终报告不得声称 intra-rater consistency;证据名 = `single-human single-pass gold + AI shadow agreement`。
 - **batch flag 根因发现**:battery 的 `/tmp/edu-agent-batch/` 旗标落在执行机(WSL2),而 benchmark 让路检查在 Mac runner 侧——两机 /tmp 不通,即 09-28 三红灯未让路的机制性根因。本轮云臂(Flash/GLM)不涉;本地臂重启前须先修(flag 须经 ssh 落到 Mac),已记 #464。
 
-冻结 sha256:待终裁时补。
+冻结 sha256(v0.1): `71199d5cbb4995215617b45bf0e23c24611d0b3282db88051ca747b8e2cfc628` (head -n -1 本文件 | sha256sum 复核;冻结时间戳 **2026-09-29T23:45:00Z**;冻结审链:#464 终裁 5892600320 → 冻结审 P0×2(系统级执行附录+硬门)→ 复审 5356022635(只判锚轮+FROZEN_CASES_SHA256 钉死)→ 复审 5356202787(§0 收口)→ FREEZE PASS 5897978866;工件 sha 见 §5 表;此后按 §4 运行计划执行,不加审查不改尺子)。
