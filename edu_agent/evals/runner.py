@@ -85,6 +85,34 @@ def safe_case_id(raw: object, index: int) -> str:
     return f"{prefix}-{hashlib.sha256(safe.encode('utf-8')).hexdigest()[:12]}"
 
 
+def _identity_resume_diffs(stored: object, current: dict | None) -> list[str]:
+    """strict 续跑的 identity 全等门(#490 M1):空列表 = 放行,非空 = 拒绝理由。
+
+    stored 取 manifest.get("identity")(键缺席/null 均算缺失);current 取本次 run()
+    的 identity 参数。两边都必须存在且全等:current 缺失 fail closed、stored 缺失
+    覆盖旧 run 目录、stored 非对象按病态 manifest 拒绝而非崩溃(两个专项脚本现
+    行此处 AttributeError)。差异按 新增(current-only)/缺失(stored-only)/值变
+    三类枚举字段名,键序 sorted(键并集)——与 s2/d6d7 两个 _resume_gate 同键集。
+    """
+    if current is None:
+        return ["当前调用未传 identity(strict 模式要求显式身份)"]
+    if stored is None:
+        return ["stored identity 缺失(manifest 无 identity 键或为 null)"]
+    if not isinstance(stored, dict):
+        return [f"stored identity 非对象({type(stored).__name__}),manifest 病态"]
+    if stored == current:
+        return []
+    diffs = []
+    for key in sorted(set(stored) | set(current)):
+        if key not in stored:
+            diffs.append(f"新增字段 {key}")
+        elif key not in current:
+            diffs.append(f"缺失字段 {key}")
+        elif stored[key] != current[key]:
+            diffs.append(f"字段 {key} 值变")
+    return diffs
+
+
 def atomic_write_json(path: Path, payload: dict) -> None:
     """先写临时文件再替换:进程被杀不留半行,checkpoint 可信。"""
     tmp = path.with_name(path.name + ".tmp")
@@ -106,12 +134,21 @@ class EvalRunner:
         self._ledger_lock = threading.Lock()
 
     def run(self, dataset_path: Path | str, cases: list[dict],
-            run_dir: Path | str | None = None, identity: dict | None = None) -> Path:
+            run_dir: Path | str | None = None, identity: dict | None = None, *,
+            strict_identity: bool = False) -> Path:
         """identity(#238 件 A):跑批身份字段(git/prompt/models 哈希),原样进 manifest;
-        None = 不写该键(非 corpus_round 调用方不受影响)。"""
+        None = 不写该键(非 corpus_round 调用方不受影响)。
+
+        strict_identity(#490 M1):只作用于 resume——stored/current identity 两边都
+        必须存在且全等,任一方缺失或字段不等即 ResumeMismatch(fail closed);不落
+        manifest、不进 config sha,新开 run 行为与非 strict 完全一致。"""
         dataset = Path(dataset_path)
         dataset_sha = sha256_bytes(dataset.read_bytes())
         config_sha = sha256_bytes(json.dumps(asdict(self.config), sort_keys=True).encode())
+        if run_dir is not None:
+            # strict identity 门先于三面(s2/d6d7 现行顺序:脚本 identity 门先于 runner 检查)
+            self._verify_resume(Path(run_dir), dataset_sha, config_sha,
+                                identity, strict_identity)
         target = self._run_dir(run_dir, dataset, dataset_sha, config_sha, len(cases), identity)
         pending = [
             (case, safe_case_id(case.get("id", case.get("case_id")), index))
@@ -136,9 +173,7 @@ class EvalRunner:
     def _run_dir(self, run_dir: Path | str | None, dataset: Path, dataset_sha: str,
                  config_sha: str, total: int, identity: dict | None = None) -> Path:
         if run_dir is not None:
-            target = Path(run_dir)
-            self._verify_resume(target, dataset_sha, config_sha)
-            return target
+            return Path(run_dir)  # 纯目录复用;resume 校验已上提至 run()(#490 M1)
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         target = self.runs_root / f"{dataset.stem}-{stamp}-{uuid4().hex[:4]}"
         target.mkdir(parents=True)
@@ -154,11 +189,19 @@ class EvalRunner:
         atomic_write_json(target / "manifest.json", manifest)
         return target
 
-    def _verify_resume(self, target: Path, dataset_sha: str, config_sha: str) -> None:
+    def _verify_resume(self, target: Path, dataset_sha: str, config_sha: str,
+                       identity: dict | None = None,
+                       strict_identity: bool = False) -> None:
         try:
             manifest = json.loads((target / "manifest.json").read_text(encoding="utf-8"))
         except (FileNotFoundError, json.JSONDecodeError) as exc:
             raise ResumeMismatch(f"{target} 不是可续跑的 run 目录(无 manifest)") from exc
+        if strict_identity:
+            problems = _identity_resume_diffs(manifest.get("identity"), identity)
+            if problems:
+                raise ResumeMismatch(
+                    f"{target} 的运行身份不满足 strict 续跑条件({'; '.join(problems)}),"
+                    "请新开 run 目录")
         mismatches = []
         if manifest["dataset"]["sha256"] != dataset_sha:
             mismatches.append("数据集版本")

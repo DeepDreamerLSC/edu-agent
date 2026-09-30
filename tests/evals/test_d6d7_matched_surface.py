@@ -8,9 +8,18 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
+
+import pytest
 
 import d6d7_gold_consume as gc  # scripts/(conftest 挂载)
 import d6d7_matched_surface as ms
+from edu_agent.evals import (
+    ResumeMismatch,
+    file_sha256,
+    git_head_sha,
+    head_sha256,
+)
 
 MINI_PACK = """# 包头
 ---
@@ -128,3 +137,95 @@ def test_frozen_pinned_and_preflight_p0_2():
     assert gc._preflight(duplicated) is not None  # case_id 重复
     assert gc._preflight(_make_rows(30, 6)) is not None  # exposed 6 ≠ 5
     assert gc._preflight(_make_rows(30, 4)) is not None  # exposed 4 ≠ 5
+
+
+def _fabricate_results(run_dir, judge_model, status="ok"):
+    """伪造 30 案结果文件(judge_model 单值或 i=29 异值)。"""
+    for i in range(30):
+        model = judge_model if not isinstance(judge_model, tuple) else judge_model[i]
+        record = {"case_id": f"P1-{i:02d}", "status": status,
+                  "transcript": {"judge_model": model}}
+        (run_dir / "results" / f"P1-{i:02d}.json").write_text(
+            json.dumps(record), encoding="utf-8")
+
+
+def test_model_gate_uses_common_comparison(tmp_path):
+    """#490 M3:模型身份比较基础部分走公共 compare_models,四类读数同旧谓词;
+    VOID 措辞、ok/total/exposed 计数与四条件结束门处置留本脚本。"""
+    run_dir = tmp_path / "run"
+    (run_dir / "results").mkdir(parents=True)
+    rows = _make_rows(30, 5)
+    identity = {"judge_primary_model": "primary-name"}
+    _fabricate_results(run_dir, "primary-name")
+    gate = gc._model_gate(run_dir, rows, identity)
+    # 返回形状保持(#490 M3 迁移证明:消费面 ok/total/models/model_gate/
+    # answer_exposed_ok 五键不增不减,VOID 措辞留本脚本)
+    assert set(gate) == {"ok", "total", "models", "model_gate", "answer_exposed_ok"}
+    assert gate["model_gate"] == "ok" and gate["models"] == ["primary-name"]
+    assert (gate["ok"], gate["total"], gate["answer_exposed_ok"]) == (30, 30, 5)
+    # 异值(29 案 primary + 1 案 fallback)→ 整轮 VOID,fallback 反例镜像
+    _fabricate_results(run_dir, tuple(
+        "primary-name" if i < 29 else "fallback-name" for i in range(30)))
+    mixed = gc._model_gate(run_dir, rows, identity)
+    assert mixed["model_gate"] == "VOID"
+    assert mixed["models"] == ["fallback-name", "primary-name"]
+    # 单值但不等预注册 → VOID
+    _fabricate_results(run_dir, "other-name")
+    wrong = gc._model_gate(run_dir, rows, identity)
+    assert wrong["model_gate"] == "VOID" and wrong["models"] == ["other-name"]
+    # 零 ok 案(全环境失败)→ 无观察 → VOID
+    _fabricate_results(run_dir, "primary-name", status="environment")
+    empty = gc._model_gate(run_dir, rows, identity)
+    assert empty["model_gate"] == "VOID" and empty["models"] == []
+    assert empty["ok"] == 0 and empty["answer_exposed_ok"] == 0
+
+
+def test_resume_refusal_delegates_to_common_strict_gate(tmp_path, monkeypatch):
+    """#490 M3:resume 门迁公共层——strict_identity=True 委托 + ResumeMismatch →
+    CLI 非零退出;identity 字段全链(cases/addendum 在内)不丢;门语义本体由
+    tests/evals/test_runner.py 持有。"""
+    assert not hasattr(gc, "_resume_gate")  # 重复机制已删,不复活
+    captured = {}
+
+    class SpyRunner:
+        def __init__(self, subject, config, runs_root):
+            captured["subject"] = subject
+
+        def run(self, dataset_path, cases, run_dir=None, identity=None,
+                strict_identity=False):
+            captured.update(run_dir=run_dir, identity=identity,
+                            strict_identity=strict_identity)
+            raise ResumeMismatch("spy:identity 不一致(字段 cases_sha 值变)")
+
+    class DummyGateway:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def close(self):
+            pass
+
+    cases = tmp_path / "cases.jsonl"
+    cases.write_text("\n".join(json.dumps(row) for row in _make_rows(30, 5)) + "\n",
+                     encoding="utf-8")
+    # 冻结门钉死真件 sha(上方常量测试持有);wiring 测试对合成件放行同款比对
+    monkeypatch.setattr(gc, "FROZEN_CASES_SHA256",
+                        hashlib.sha256(cases.read_bytes()).hexdigest())
+    monkeypatch.setattr(gc, "EvalRunner", SpyRunner)
+    monkeypatch.setattr(gc, "Gateway", DummyGateway)
+    resume_dir = tmp_path / "prior-run"
+    monkeypatch.setattr(sys, "argv", [
+        "d6d7-gold-consume", "--cases", str(cases),
+        "--artifacts-root", str(tmp_path / "art"), "--run-dir", str(resume_dir)])
+    with pytest.raises(SystemExit, match="resume 拒绝"):
+        gc.main()
+    assert captured["strict_identity"] is True and captured["run_dir"] == resume_dir
+    # identity 字段全链不丢(#485:git/rubric/prompt/cases/addendum/models + 双字段)
+    assert set(captured["identity"]) == {
+        "git_sha", "rubric_freeze_sha", "prompt_asset_sha", "cases_sha",
+        "addendum_sha256", "models_yaml_sha", "judge_primary_id",
+        "judge_primary_model"}
+    # 指纹口径与公共 helper 一致(#490 M0 表第③项:构造侧唯一实现)
+    assert captured["identity"]["git_sha"] == git_head_sha(gc._REPO)
+    assert captured["identity"]["rubric_freeze_sha"] == head_sha256(
+        gc._REPO / "docs/evals/s2-judge-rubric-v0.1.md")
+    assert captured["identity"]["cases_sha"] == file_sha256(cases)

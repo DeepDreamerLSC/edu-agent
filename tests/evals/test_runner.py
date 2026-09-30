@@ -7,6 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from dataclasses import fields
 from pathlib import Path
 
 import pytest
@@ -200,6 +201,141 @@ def test_run_with_identity_writes_manifest_block(tmp_path, dataset):
     run_dir2 = make_runner(tmp_path, FakeSubject()).run(dataset, read_jsonl(dataset))
     manifest2 = json.loads((run_dir2 / "manifest.json").read_text(encoding="utf-8"))
     assert "identity" not in manifest2
+
+
+# 消费者真实字段名(git/rubric/prompt/cases/battery/models/addendum 七 hash);
+# Runner 对字段名 schema-agnostic——哑字段亦可,只证完整全等
+IDENT = {"git_sha": "g" * 40,
+         "rubric_freeze_sha": "r" * 64,
+         "prompt_asset_sha": "p" * 64,
+         "cases_sha": "c" * 64,
+         "battery_sha": "b" * 64,
+         "models_yaml_sha": "m" * 64,
+         "addendum_sha256": "a" * 64}
+
+
+def test_strict_identity_resume_identical_passes(tmp_path, dataset):
+    """#490 M1:strict 模式下 stored/current 全等 → 可续跑,环境失败案照常补跑。"""
+    cases = read_jsonl(dataset)
+    script = {"c00": ["env"]}
+    run_dir = make_runner(tmp_path, FakeSubject(script)).run(dataset, cases, identity=IDENT)
+    resumed = FakeSubject()
+    make_runner(tmp_path, resumed).run(dataset, cases, run_dir=run_dir,
+                                       identity=IDENT, strict_identity=True)
+    assert resumed.calls == ["c00"]  # 全等放行:只补环境失败案,其余 checkpoint 不碰
+
+
+@pytest.mark.parametrize("key", sorted(IDENT))
+def test_strict_identity_resume_refuses_any_field_change(tmp_path, dataset, key):
+    """M1 必测(#490 §四):git/rubric/prompt/cases/battery/models/addendum
+    任一 hash 字段变化即拒,错误指名变化字段。"""
+    cases = read_jsonl(dataset)
+    run_dir = make_runner(tmp_path, FakeSubject()).run(dataset, cases, identity=IDENT)
+    changed = {**IDENT, key: "x" * 64}
+    with pytest.raises(ResumeMismatch, match=f"字段 {key} 值变"):
+        make_runner(tmp_path, FakeSubject()).run(dataset, cases, run_dir=run_dir,
+                                                 identity=changed, strict_identity=True)
+
+
+def test_strict_identity_resume_refuses_added_and_removed_fields(tmp_path, dataset):
+    """增字段(current-only)与删字段(stored-only)均拒,错误指名字段与类别。"""
+    cases = read_jsonl(dataset)
+    run_dir = make_runner(tmp_path, FakeSubject()).run(dataset, cases, identity=IDENT)
+    with pytest.raises(ResumeMismatch, match="新增字段 extra_sha"):
+        make_runner(tmp_path, FakeSubject()).run(
+            dataset, cases, run_dir=run_dir,
+            identity={**IDENT, "battery_sha": "b" * 64, "extra_sha": "e" * 64},
+            strict_identity=True)
+    removed = {k: v for k, v in IDENT.items() if k != "models_yaml_sha"}
+    with pytest.raises(ResumeMismatch, match="缺失字段 models_yaml_sha"):
+        make_runner(tmp_path, FakeSubject()).run(dataset, cases, run_dir=run_dir,
+                                                 identity=removed, strict_identity=True)
+
+
+def test_strict_identity_resume_refuses_missing_stored_and_current(tmp_path, dataset):
+    """fail closed 两角:stored 缺失(旧 run 无 identity)与 current 缺失(未传)。"""
+    cases = read_jsonl(dataset)
+    plain_dir = make_runner(tmp_path, FakeSubject()).run(dataset, cases)  # 无 identity 旧 run
+    with pytest.raises(ResumeMismatch, match="stored identity 缺失"):
+        make_runner(tmp_path, FakeSubject()).run(dataset, cases, run_dir=plain_dir,
+                                                 identity=IDENT, strict_identity=True)
+    ident_dir = make_runner(tmp_path, FakeSubject()).run(dataset, cases, identity=IDENT)
+    with pytest.raises(ResumeMismatch, match="未传 identity"):
+        make_runner(tmp_path, FakeSubject()).run(dataset, cases, run_dir=ident_dir,
+                                                 strict_identity=True)
+
+
+def test_strict_identity_resume_refuses_pathological_stored(tmp_path, dataset):
+    """stored 非对象(病态 manifest)→ 干净拒绝,不 AttributeError 崩溃。"""
+    cases = read_jsonl(dataset)
+    run_dir = make_runner(tmp_path, FakeSubject()).run(dataset, cases, identity=IDENT)
+    manifest_path = run_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["identity"] = "not-a-mapping"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ResumeMismatch, match="非对象"):
+        make_runner(tmp_path, FakeSubject()).run(dataset, cases, run_dir=run_dir,
+                                                 identity=IDENT, strict_identity=True)
+
+
+def test_identity_mismatch_without_strict_still_resumes(tmp_path, dataset):
+    """零变化锚(镜像 rescore_judge 用法):非 strict 下 identity 不一致照常续跑。"""
+    cases = read_jsonl(dataset)
+    run_dir = make_runner(tmp_path, FakeSubject()).run(dataset, cases, identity=IDENT)
+    again = make_runner(tmp_path, FakeSubject()).run(
+        dataset, cases, run_dir=run_dir, identity={**IDENT, "git_sha": "z" * 40})
+    assert again == run_dir
+
+
+def test_new_run_strict_manifest_has_no_extra_keys(tmp_path, dataset):
+    """新 run + strict:manifest 与非 strict 同构——strict 不落 manifest、无新键、
+    不进 config sha(started_at 是两次 run 间唯一合法差异,剔除后逐键全等)。"""
+    cases = read_jsonl(dataset)
+    strict_dir = make_runner(tmp_path, FakeSubject()).run(
+        dataset, cases, identity=IDENT, strict_identity=True)
+    plain_dir = make_runner(tmp_path, FakeSubject()).run(dataset, cases, identity=IDENT)
+
+    def manifest_without_ts(run_dir):
+        manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
+        del manifest["started_at"]
+        return manifest
+
+    assert manifest_without_ts(strict_dir) == manifest_without_ts(plain_dir)
+    assert set(manifest_without_ts(strict_dir)) == {
+        "dataset", "config", "subject", "total_cases", "identity"}
+    # identity 字段无丢失(#490 M3 迁移证明):七字段整映射逐字落盘,无键增删
+    assert manifest_without_ts(strict_dir)["identity"] == IDENT
+
+
+def test_strict_identity_gate_precedes_three_faces(tmp_path, dataset):
+    """拒绝强度不降(顺序保持):identity 与三面同时不一致时,identity 门先报、
+    错误指名 identity 字段——迁移前 s2/d6d7 脚本门先于 runner 三面的报错优先级
+    在公共层内保持。"""
+    cases = read_jsonl(dataset)
+    run_dir = make_runner(tmp_path, FakeSubject()).run(dataset, cases, identity=IDENT)
+    other = tmp_path / "other.jsonl"
+    write_jsonl(other, [{"id": f"x{i}", "q": i} for i in range(3)])
+    with pytest.raises(ResumeMismatch, match="字段 git_sha 值变") as exc_info:
+        make_runner(tmp_path, FakeSubject()).run(
+            other, cases, run_dir=run_dir,
+            identity={**IDENT, "git_sha": "z" * 40}, strict_identity=True)
+    assert "数据集版本" not in str(exc_info.value)  # 三面未先行吞掉 identity 错
+
+
+def test_runner_config_surface_has_no_domain_gates():
+    """专项门未进 Runner(#490 §七「不把专项 preflight 收进 Runner」):RunnerConfig
+    公开面只有并发——无 30 案/exposed/模型身份等任何领域字段。"""
+    assert [f.name for f in fields(RunnerConfig)] == ["concurrency"]
+
+
+def test_runner_imposes_no_specialty_preflight(tmp_path):
+    """专项 preflight 未进 Runner(行为面):d6d7 的恰 30/唯一/exposed 恰 5、S2 的
+    battery 面数门在各自脚本;Runner 对携带这些字段且不满足这些门的批量照常执行。"""
+    rows = [{"id": f"p{i}", "answer_exposed": True} for i in range(3)]  # ≠30 且 exposed=3
+    mini = write_jsonl(tmp_path / "mini.jsonl", rows)
+    run_dir = make_runner(tmp_path, FakeSubject()).run(mini, rows)
+    results = results_of(run_dir)
+    assert len(results) == 3 and all(r["status"] == "ok" for r in results.values())
 
 
 def test_safe_case_id_keeps_long_ids_and_uniqueness():
