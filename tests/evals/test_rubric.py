@@ -8,17 +8,17 @@ import edu_agent.evals
 from edu_agent.evals import DIMENSION_GUIDE, user_prompt
 
 judge_path = edu_agent.evals.judge.__file__
-ASSET = Path(judge_path).parent / "rubrics" / "small_lecturer_v3_2.yaml"
+ASSET = Path(judge_path).parent / "rubrics" / "small_lecturer_v3_3.yaml"
 # 通过资产重组还原 SYSTEM_PROMPT(不直接导入非公开名)
 _rubric = yaml.safe_load(ASSET.read_text(encoding="utf-8"))
 SYSTEM_PROMPT = _rubric["preamble"] + "\n\n" + DIMENSION_GUIDE
 
-PINNED_SYSTEM_PROMPT_SHA256 = "ec7378665960f53f6c3cefb0b6eb6267ffa645e93abc9cd44d78220198a5bf78"
+PINNED_SYSTEM_PROMPT_SHA256 = "8b32a7a2e9f8a2b20398103c91c2854147b25d0adcd00de16172c487bab482be"
 
 
 def test_rubric_version_and_composition():
     rubric = yaml.safe_load(ASSET.read_text(encoding="utf-8"))
-    assert rubric["version"] == "small_lecturer_v3_2"
+    assert rubric["version"] == "small_lecturer_v3_3"
     guide = "\n\n".join(rubric[k] for k in ("dimension_guide", "math_integrity_guide", "verdict_policy"))
     assert guide == DIMENSION_GUIDE  # 组装口径:三节 "\n\n" 连接
     assert SYSTEM_PROMPT == rubric["preamble"] + "\n\n" + DIMENSION_GUIDE

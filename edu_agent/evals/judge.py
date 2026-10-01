@@ -1,7 +1,7 @@
-"""judge 评分引擎(#32 人审定稿 + #253 rubric v3.2):判据文本 = 版本化资产,本模块只剩引擎。
+"""judge 评分引擎(#32 人审定稿):判据文本 = 版本化资产,本模块只剩引擎。
 
-#254 P2:判据文本(dimension/math integrity/verdict/user instructions)迁出为
-rubrics/small_lecturer_v3_2.yaml(渲染等价门:加载资产渲染的 prompt 与迁移前逐字节相等);
+当前资产:rubrics/small_lecturer_v3_3.yaml(v3.2 派生,含 S5/D3 amendment——
+mi 0 分示例析取支删除,#481 终裁 5914617921);旧 v3.2 原样保留作对照;
 ENV_FAILURES 迁至 gateway.errors。引擎职责:读 rubric → 构造 ModelRequest → 校验 schema
 → 重算 verdict → 落 artifact。
 
@@ -79,7 +79,7 @@ DIMENSIONS = (
 
 # 判据文本 = 版本化资产(#254 P2 自内联迁出):version/preamble/dimension_guide/
 # math_integrity_guide/verdict_policy/user_instructions 六键;文件名即版本,无注册表面。
-_RUBRIC_PATH = Path(__file__).parent / "rubrics" / "small_lecturer_v3_2.yaml"
+_RUBRIC_PATH = Path(__file__).parent / "rubrics" / "small_lecturer_v3_3.yaml"
 _RUBRIC = yaml.safe_load(_RUBRIC_PATH.read_text(encoding="utf-8"))
 
 DIMENSION_GUIDE = "\n\n".join(
