@@ -22,11 +22,11 @@
 
 | 维度 | 层 | 当前判据(简) | 证据来源 | 判定权限 | 样本(正/负/边界/反事实) | 可信判定者 | 数据角色 | 缺口类型 |
 |---|---|---|---|---|---|---|---|---|
-| D1 数学事实诚实 | L0 | mi 硬门 0 档+1 档封顶 | A64/C24(OOT-2 三案) | math-gold 确定性(有 gold 题);无 gold→mi bounded+人审 | 正负各在案(#44=0 捕获/C19 同型放行);**边界样本无** | 有 gold:确定性;无 gold:人审 | 判例散在 A64/C24(dev 性质) | **证据缺口**(判例错位在案:同型相反结局) |
+| D1 数学事实诚实 | L0 | mi 硬门 0 档+1 档封顶 | A64/C24(OOT-2 三案) | math-gold 确定性(有 gold 题);无 gold→mi bounded+人审 | 正负各在案(#44=0 捕获/C19 同型放行);**边界样本无** | 有 gold:确定性;无 gold:人审 | 判例散在 A64/C24(dev 性质) | **证据缺口**(判例错位在案:同型相反结局;**2026-10-01 EXIT — calibration FAIL but limitation accepted**:v3.3 保持 active,Candidate 3 无 promotion 权限;Flash mi class-boundary 执行 instability 由 deterministic math-gold/human review 权威承接——#481 终裁 5931158776) |
 | D2 学生贡献忠实保持 | L0 | mi 转述失真 0 档;mask/soft 无专设 | A64(mask #23/#38,soft #25) | **生产侧确定性不变量(①)最可信**;「等价或更强形态」语义边界=人审(件一 D2 复核修正) | 正例在案;**mask/soft 负例零边界样本** | 人审 | A64 个案(dev) | **样本缺口+规则缺口**(mask/soft 判据缺面) |
 | D3 归因诚实 | L0 | sm provenance(scope 仅总结) | A64(#26/#50/#37)/C24(C23×S5) | 人审(对话中段零判据) | 正例在案;**中段边界样本无** | 人审 | 个案(dev) | **规则缺口**(scope 错位) |
 | D4 权限方向正确 | 横切 | answer_leaked 单向;state_is 声明零使用 | A64(#17/#47)/C24(C05)/OOT-9 | **生产侧 guard 方向性机制**;eval 侧 state_is 声明面+人审;当前无自动判据(件一 D4 复核修正) | 负例在案(阻断/回退);**边界(合法披露 vs 阻断)无样本** | 人审 | 个案(dev) | **规则缺口**(反向泄露/意图承接零面) |
-| D5 学习者证据解释与消费 | L1 | **无判据**;obs 六字段记录零消费 | A64(PN-1,#63)/C24(OOT-4) | 证据记录=obs 数据 owner;解释消费=人审 | 数据样本在(64+24 案逐轮 obs);**消费面正负样本无** | 人审(obs 不进 judge) | A64/C24 全量(dev) | **规则缺口**(measurement-gap:数据在零消费) |
+| D5 学习者证据解释与消费 | L1 | **无判据**;obs 六字段记录零消费 | A64(PN-1,#63)/C24(OOT-4) | 证据记录=obs 数据 owner;解释消费=人审 | 数据样本在(64+24 案逐轮 obs);**消费面正负样本无** | 人审(obs 不进 judge) | A64/C24 全量(dev) | **规则缺口**(measurement-gap:数据在零消费;**consumer-existence gate 未通过,不点火**——obs 六字段零读取方;重开条件=先出现真实 consumer→明确 decision→再反推 minimum evidence fields;#481 终裁 5931623417) |
 | D6 需求识别与目标校准 | L1 | 无判据(请求具体性) | C24(C03/C14 vs C13 人审边界) | 人审;**S2-M1 后:S2a 判据链(定义 v0.2.2→判据 v0.1.2→rubric v0.3)** | **S2-M1 新增:E1-E5/R1-R4 判据链+24 案 battery(正负边界齐)+锚案 14**;S2a 请求形已裁 | **人审(裁定权);flash 辅助标注 GA 19/24 级(不接管)**;mlx 不可用(明文反锚在案) | S2 battery 24 案=**dev(重度暴露,v0.1→v0.3 三轮修订消费)**;D6/D7 gold 30 案=**initially untouched(首次 Judge 消费前)→ exposed validation(三臂揭盲入 audit 后)→ v0.2 calibrated reference** | **证据缺口(收窄)**:独立集已到(30 案 initially-untouched gold+matched-surface 三臂,2026-09-30,见下块)——可执行性已证(跨家族近乎完全一致 56/56·55/56;复跑 58/60);剩余=**②/④ 边界判例收口 + Judge 独立正确率(需新独立标注;v0.2 校准参照不可作独立证据)** |
 | D7 支架校准——最小充分帮助 | L2 | 无校准轴(邻接面反向记分) | A64(#01/#20/#63)/C24(C03/C13/C22/C23)/disagreement(S2 3/24) | 人审;**S2-M1 后:S2b 双 prong 判据链(分块授权 v0.3)** | **S2-M1 新增:B0-B4/Prong A-B 判据链+24 案(验证问句窄授权/E1-E2 分界已裁)+**mlx/deepseek-flash 双模型跨 v0.1–v0.3 分阶段对照** | 同 D6:人审裁定权;flash 辅助 19/24 级 | 同 D6(dev 重度暴露) | **证据缺口(收窄)**:同 D6——独立集三臂已验(matched-surface);P1-16 问句预设判例(人采信改判);剩余=同 D6(独立正确率+边界②) |
 | D8 引导质量与问题回收 | L2 | socratic 维(不稳)+**ER Judge v2.1(2026-09-28,#436):问句重复族确定性判分,holdout 20/20** | A64(#13/#21)/C24(C03 同句异分)/#436(r3 replay) | 问题回收=ER v2.1 确定性(bounded:词面族;语义重复仍两读在案已补三窄补丁);引导质量=人审+judge bounded | **#436 新增:盲区三案负例+守卫正反例入测试电池**;正例(drill 四案×7 臂)+holdout 20 gold | ER 重复族:确定性 scorer(v2.1);引导质量:人审 | drill/dev/holdout 金标在仓(gold;holdout=未曝光抽样);r3 replay=dev | **证据缺口→收窄**(v2.1 后重复族过校准;引导质量轴仍样本缺口) |
@@ -34,7 +34,7 @@
 | D10 进展消费 | L3 | S1 detector(结构盲)+judge 通用面(S7 n=2)+**ER v2.1 no-progress 族** | A64(§5.1/5.2)/C24(S7 2/2) | S7 形态:judge 通用面 bounded;S1:专设 detector(结构须修);**ER v2.1 np 族确定性** | S7 正例 2;**#436 后 np 族金标扩(drill+holdout+盲区)**;OOT-1 回指零样本 | ER np 族:确定性;回指:人审 | 同 D8 | **样本缺口**(回指/未消费子域零样本)+规则缺口(S1 结构) |
 | D11 会话控制意图尊重 | L3 | 零面 | A64(#02 单例) | 人审 | 负例仅 1;**无正负边界样本** | 人审 | 单例 | **样本缺口+规则缺口** |
 | D12 收口时点 | L4 | termination 维(样板饱和)+finish check | A64/C24(全池读数) | 生产 completion 逻辑+judge termination 维(样板饱和在案) | fixture 依赖在案;**answer_spec 场景样本缺** | 人审+生产逻辑 | 两批(fixture-entangled) | **样本缺口**(fixture 无 answer_spec 约束)+证据缺口(零区分度) |
-| D13 完成/掌握语义分离 | L4 | 记录面在;归因区分无面 | A64(PN-2)/#453(completed) | **生产侧 completion authority**(production-parity 已完成;CompletionEvidence producer 的 claim-recognition 边界已定位,后续走 #423/#416);eval 侧不可归因(件一 D13 复核修正) | 正例在案(production-parity 复现);**claim-recognition 正反边界未稳定校准** | 人审+生产侧 | parity 复现工件(#423 线) | **证据缺口**(边界校准未稳定;parity 不再重做——终审 5338055100) |
+| D13 完成/掌握语义分离 | L4 | 记录面在;归因区分无面 | A64(PN-2)/#453(completed) | **生产侧 completion authority**(production-parity 已完成;CompletionEvidence producer 的 claim-recognition 边界已定位,后续走 #423/#416);eval 侧不可归因(件一 D13 复核修正) | 正例在案(production-parity 复现);**claim-recognition 正反边界未稳定校准** | 人审+生产侧 | parity 复现工件(#423 线) | **证据缺口**(边界校准未稳定;parity 不再重做——终审 5338055100;**2026-10-01 residual review PASS — known product damage mitigated**:C′ 足够解决 #453 已确认损伤;claim-recognition recall 仍为 partial debt(非 covered),重开条件未满足不再点火——#481 终裁 5931509505) |
 | D14 学习结果证据 | L4 | sm 名义面(样板饱和) | A64/C24/#453(completed) | **currently unobservable(终裁:session 无学习结果观测)** | 无(观测缺位,非样本问题) | —(须先有观测) | — | **证据缺口(当前不可观测,不自动建设)**(要求已定义[D14 件冻结 #476];近迁移/延时/跨题证据当前不可获得) |
 | D15 表达适龄性与认知负荷 | 横切 | grade_fit(旁路)+pacing(样板污染) | A64(§5.3)/C24(§4) | Judge grade_fit/pacing 维(**bounded**;旁路/样板污染在案);适龄性判定人审兜底(件一 D15 复核确认) | 正例仅 #38;**适龄负例/边界样本零** | 人审 | 个案(dev) | **样本缺口+证据缺口** |
 | D16 行为一致性 | L0 | 无判据;guard_events 数据在 | C24(OOT-9 五处理/OOT-3) | **dev/系统件 investigation**(guard 谱系机制;#453 类 production-parity 路径,件一 D16 复核修正——原误写人审) | OOT-9 五处理样本在;**反事实对照零** | 系统件 investigation | C24 个案(dev) | **规则缺口+样本缺口** |
@@ -71,10 +71,10 @@
 1. ~~D6/D7 独立 gold 集验证~~(**已完成 2026-09-30**:30 案 gold+三臂 matched-surface,见 D6/D7 独立 gold 块;M2 独立证据资产,后续 Qwen/Flash/GLM/人工均可消费;模型路由属 Judge reliability 线——终审 5338055100);
 2. ~~D14 学习结果观测形态定义~~(**已冻结**——D14 件 #476 merge 028e12c,观测形态 v0.1.1 定义完成;D14 迁移为证据缺口——终裁 5881728123);
 3. ~~D13 production-parity 复现~~(#453 已 completed,**不再重做**;claim-recognition 边界继续走 #423/#416——终审 5338055100);
-4. D1 mi 档位与机制对齐(OOT-2 越档在案);
-5. D5 obs 消费面(D5→judge 的路线已被 #448 拒绝 latent state;消费面形态待裁);
+4. ~~D1 mi 档位与机制对齐(OOT-2 越档在案)~~(**已收口 2026-10-01**:D1 EXIT — calibration FAIL but limitation accepted;v3.3 保持 active,Candidate 3 不晋升,剩余为 Flash execution limitation 由 deterministic math-gold/human review 承接——#481 终裁 5931158776、授权 5931623417);
+5. ~~D5 obs 消费面(D5→judge 的路线已被 #448 拒绝 latent state;消费面形态待裁)~~(**已收口 2026-10-01**:consumer-existence gate 未通过——obs 六字段零读取方,D5 不点火,保持 conditional/consumer-gated debt;重开条件=先出现真实 consumer→明确 decision→再反推 minimum evidence fields——#481 终裁 5931623417);
 6. ~~D4/D11 bounded 边界待核~~(已收口:D4 终审 PASS[5338055100];D11 主表 owner=人审无 bounded 标注,无待核问题——终审 5338596198)。
 
 ---
 
-本件为 M2 第一版地图(盘点);后续任何填坑(新判据/新样本/新观测)均按 #464 四件套逐件过裁,不在本件内展开。
+本件为 M2 第一版地图(盘点);后续任何填坑(新判据/新样本/新观测)均按 #464 四件套逐件过裁,不在本件内展开。第二能力族 M2 不点火(#481 终裁 5931623417,2026-10-01:F 节三条件——新 gap/真实 consumer/值得迁移 S2 流程——无一同时满足;未来条件齐备再重新申请)。
