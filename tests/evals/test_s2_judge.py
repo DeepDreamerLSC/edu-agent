@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import sys
 from pathlib import Path
 
 import pytest
@@ -20,6 +21,10 @@ import s2_judge_battery  # scripts/(conftest 挂载)
 from edu_agent.evals import (
     S2_SCHEMA,
     S2JudgeSubject,
+    ResumeMismatch,
+    file_sha256,
+    git_head_sha,
+    head_sha256,
     s2_judge_transcript,
     s2_user_prompt,
 )
@@ -316,25 +321,85 @@ def test_subject_maps_env_vs_content_failures(tmp_path):
             S2JudgeSubject(gateway).run_case(case)
 
 
-# ---------- 脚本门(方案 §4/§5:P0-6 resume、P0-2/P0-4 模型身份、GA/GB) ----------
+# ---------- 脚本门(方案 §4/§5;#490 M3:resume 门与模型身份比较已迁公共层) ----------
 
 
-def test_resume_gate_rejects_identity_mismatch(tmp_path):
-    """P0-6:manifest.identity 与当前身份任一字段不等 → 拒绝 resume。"""
+class _DummyGateway:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def close(self):
+        pass
+
+
+def test_resume_refusal_delegates_to_common_strict_gate(tmp_path, monkeypatch):
+    """#490 M3:P0-6 门迁公共层——脚本职责收窄为委托(strict_identity=True、
+    identity 字段全链不丢)与 ResumeMismatch → CLI 非零退出;门语义本体由
+    tests/evals/test_runner.py 的 strict 用例持有。"""
+    assert not hasattr(s2_judge_battery, "_resume_gate")  # 重复机制已删,不复活
+    captured = {}
+
+    class SpyRunner:
+        def __init__(self, subject, config, runs_root):
+            captured["subject"] = subject
+
+        def run(self, dataset_path, cases, run_dir=None, identity=None,
+                strict_identity=False):
+            captured.update(run_dir=run_dir, identity=identity,
+                            strict_identity=strict_identity)
+            raise ResumeMismatch("spy:manifest identity 不一致(字段 git_sha 值变)")
+
+    monkeypatch.setattr(s2_judge_battery, "EvalRunner", SpyRunner)
+    monkeypatch.setattr(s2_judge_battery, "Gateway", _DummyGateway)
+    battery = tmp_path / "battery.jsonl"
+    battery.write_text(json.dumps(_row("C13-T1", "no", None)) + "\n", encoding="utf-8")
+    resume_dir = tmp_path / "prior-run"
+    monkeypatch.setattr(sys, "argv", [
+        "s2-judge-battery", "--battery", str(battery),
+        "--artifacts-root", str(tmp_path / "art"), "--run-dir", str(resume_dir)])
+    with pytest.raises(SystemExit, match="resume 拒绝"):
+        s2_judge_battery.main()
+    assert captured["strict_identity"] is True and captured["run_dir"] == resume_dir
+    # identity 字段全链不丢(#459:git/rubric/prompt/battery/models + primary 双字段)
+    assert set(captured["identity"]) == {
+        "git_sha", "rubric_freeze_sha", "prompt_asset_sha", "battery_sha",
+        "models_yaml_sha", "judge_primary_id", "judge_primary_model"}
+    # 指纹口径与公共 helper 一致(#490 M0 表第③项:构造侧唯一实现)
+    assert captured["identity"]["git_sha"] == git_head_sha(_REPO)
+    assert captured["identity"]["rubric_freeze_sha"] == head_sha256(_RUBRIC)
+    assert captured["identity"]["battery_sha"] == file_sha256(battery)
+
+
+def test_main_completes_when_common_gate_passes(tmp_path, monkeypatch):
+    """迁移后主路径:公共门放行(run 正常返回)→ _score/compare_models/_report
+    全链不塌,退出 0。"""
     run_dir = tmp_path / "run"
-    run_dir.mkdir()
-    (run_dir / "manifest.json").write_text(json.dumps(
-        {"identity": {"git_sha": "old", "rubric_freeze_sha": "old"}}), encoding="utf-8")
-    with pytest.raises(SystemExit, match="P0-6"):
-        s2_judge_battery._resume_gate(run_dir, {"git_sha": "new", "rubric_freeze_sha": "old"})
+    (run_dir / "results").mkdir(parents=True)
+    transcript = {"s2a": axis_payload(), "s2b": axis_payload(),
+                  "judge_model": "any-observed-model"}
+    (run_dir / "results" / "C13-T1.json").write_text(json.dumps(
+        {"case_id": "C13-T1", "status": "ok", "transcript": transcript}),
+        encoding="utf-8")
 
+    class SpyRunner:
+        def __init__(self, subject, config, runs_root):
+            pass
 
-def test_resume_gate_accepts_equal_identity(tmp_path):
-    run_dir = tmp_path / "run"
-    run_dir.mkdir()
-    identity = {"git_sha": "a", "judge_primary_model": "m"}
-    (run_dir / "manifest.json").write_text(json.dumps({"identity": identity}), encoding="utf-8")
-    s2_judge_battery._resume_gate(run_dir, identity)  # 全等 → 放行(不抛即过)
+        def run(self, dataset_path, cases, run_dir=None, identity=None,
+                strict_identity=False):
+            assert strict_identity is True
+            return run_dir
+
+    monkeypatch.setattr(s2_judge_battery, "EvalRunner", SpyRunner)
+    monkeypatch.setattr(s2_judge_battery, "Gateway", _DummyGateway)
+    battery = tmp_path / "battery.jsonl"
+    battery.write_text(json.dumps(_row("C13-T1", "no", None)) + "\n", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", [
+        "s2-judge-battery", "--battery", str(battery),
+        "--artifacts-root", str(tmp_path / "art"), "--run-dir", str(run_dir)])
+    assert s2_judge_battery.main() == 0
+    report = (run_dir / "report.md").read_text(encoding="utf-8")
+    assert "GA 案级一致" in report and "1/1" in report  # 唯一 ok 案 verdict 命中
 
 
 def _row(cid, s2a_verdict, s2b_verdict, s2a_boundary=None, s2b_boundary=None):
@@ -371,6 +436,21 @@ def test_score_model_identity_gate():
         rows, {"C13-T1": _result_model(_result(), "fallback-name")},
         {"judge_primary_model": "primary-name"})
     assert void["model_valid"] is False
+
+
+def test_model_mismatch_marks_round_void_in_report(tmp_path):
+    """#490 M3 迁移证明:模型比较走公共 compare_models 后,整轮 VOID/不计算 GA/GB
+    的领域处置仍由 S2 报告面持有(语义保持;公共层不输出裁决词)。"""
+    rows = [_row("C13-T1", "no", None)]
+    identity = {"git_sha": "g" * 40, "rubric_freeze_sha": "r" * 64,
+                "prompt_asset_sha": "p" * 64, "battery_sha": "b" * 64,
+                "models_yaml_sha": "m" * 64, "judge_primary_id": "judge",
+                "judge_primary_model": "primary-name"}
+    void = s2_judge_battery._score(
+        rows, {"C13-T1": _result_model(_result(), "fallback-name")}, identity)
+    report = s2_judge_battery._report(tmp_path, void, identity)
+    text = report.read_text(encoding="utf-8")
+    assert "**作废(VOID)**" in text and "不计算 GA/GB" in text
 
 
 def test_score_ga_and_gb():

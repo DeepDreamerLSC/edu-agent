@@ -2,11 +2,13 @@
 """S2 battery 运行脚本(#459 件二):24 案 → S2JudgeSubject → runner 断点续跑通道。
 
 运行纪律(方案 v0.1.1,点火令钉死):
-- P0-6 resume 同一性门:进 resume 前 manifest.identity 须与当前实现身份完全相等,
-  不等即拒绝(引擎/Schema/转换器/prompt 资产/battery 数据/模型配置任一变化,
-  原结果即失效,须新开 run);
+- P0-6 resume 同一性门(#490 M3 起由公共层承载):runner.run(strict_identity=True)
+  ——manifest.identity 须与当前实现身份完全相等,不等即拒(引擎/Schema/转换器/
+  prompt 资产/battery 数据/模型配置任一变化,原结果即失效,须新开 run);
+  identity 指纹构造走公共 helper(#490 M0 表第③项);
 - P0-2/P0-4 模型身份门:24 案 judge_model 同值 ∧ == judge_primary_model
-  (服务通告名,不是 registry 内部 ID);任一不满足 → 整轮作废,不计算 GA/GB;
+  (服务通告名,不是 registry 内部 ID);身份比较走公共 compare_models(#490 M2),
+  任一不满足 → 整轮作废,不计算 GA/GB(VOID 处置留本脚本);
 - 核实重跑 = 新开 run(resume 只补环境失败案,不得当第二次评分);
 - 批声明旗标先行(/tmp/edu-agent-batch/,端口竞争教训);
 - 期望值泄露防火墙:expected 只进 scorer,模型边界只过 messages(引擎侧钉死,
@@ -16,14 +18,21 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
-import subprocess
 import sys
 from pathlib import Path
 
-from edu_agent.evals import EvalRunner, RunnerConfig, S2JudgeSubject
+from edu_agent.evals import (
+    EvalRunner,
+    ResumeMismatch,
+    RunnerConfig,
+    S2JudgeSubject,
+    compare_models,
+    file_sha256,
+    git_head_sha,
+    head_sha256,
+)
 from edu_agent.gateway import Gateway, load_registry
 
 _REPO = Path(__file__).resolve().parents[1]
@@ -37,50 +46,21 @@ _DENOMINATOR_NOTE = (
 )
 
 
-def _sha(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def _rubric_freeze_sha(rubric: Path) -> str:
-    """冻结件 head -n -1 口径 sha:应恒等于 e381c331…;rubric 被改即变值,
-    旧 run 随之拒绝续跑(identity 纪律的机械落点,不做字符串断言)。"""
-    head = "".join(rubric.read_text(encoding="utf-8").splitlines(keepends=True)[:-1])
-    return hashlib.sha256(head.encode()).hexdigest()
-
-
 def _identity(models_yaml: Path, battery: Path, rubric: Path,
               prompt_asset: Path, registry) -> dict:
     role = registry.role(_ROLE)
     return {
-        "git_sha": subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=_REPO, capture_output=True,
-            text=True, check=True,
-        ).stdout.strip(),
-        "rubric_freeze_sha": _rubric_freeze_sha(rubric),
-        "prompt_asset_sha": _sha(prompt_asset),
-        "battery_sha": _sha(battery),
-        "models_yaml_sha": _sha(models_yaml),
+        # 指纹构造走公共 helper(#490 M0 表第③项):文件字节/rubric 冻结
+        # (head -n -1)/git HEAD 三面;字段集与键名仍由本专项声明
+        "git_sha": git_head_sha(_REPO),
+        "rubric_freeze_sha": head_sha256(rubric),
+        "prompt_asset_sha": file_sha256(prompt_asset),
+        "battery_sha": file_sha256(battery),
+        "models_yaml_sha": file_sha256(models_yaml),
         # P0-4 双字段:id 仅追溯,不与 response.model 比;model 才是比较基准
         "judge_primary_id": role.primary,
         "judge_primary_model": registry.model(role.primary).name,
     }
-
-
-def _resume_gate(run_dir: Path, identity: dict) -> None:
-    """P0-6:runner 的 _verify_resume 只比 dataset/config/subject 三面,不比
-    identity——本脚本在进入 resume 前补齐该恢复语义(消费现成 manifest 字段)。"""
-    manifest_path = run_dir / "manifest.json"
-    if not manifest_path.is_file():
-        return  # 新目录,由 runner 首建
-    stored = json.loads(manifest_path.read_text(encoding="utf-8")).get("identity")
-    if stored != identity:
-        diff = [k for k in sorted(set(stored or {}) | set(identity))
-                if (stored or {}).get(k) != identity.get(k)]
-        sys.exit(
-            f"resume 拒绝(P0-6):manifest.identity 与当前实现身份不一致"
-            f"({', '.join(diff)})——引擎/Schema/转换器/prompt 资产/battery 数据/"
-            f"模型配置有变,原结果已失效,请新开 run 目录。"
-        )
 
 
 def _boundary_evidence(expected: dict, actual: dict) -> bool:
@@ -94,10 +74,12 @@ def _boundary_evidence(expected: dict, actual: dict) -> bool:
 def _score(rows: list[dict], results: dict[str, dict], identity: dict) -> dict:
     ok_rows = {r["case_id"]: r for r in rows
                if results.get(r["case_id"], {}).get("status") == "ok"}
-    models = {results[c]["transcript"]["judge_model"] for c in ok_rows}
-    valid_model = (len(models) == 1
-                   and bool(ok_rows)
-                   and next(iter(models)) == identity["judge_primary_model"])
+    # P0-2/P0-4 模型身份比较(#490 M2 公共 helper):observed 提取(仅 ok 行的
+    # transcript.judge_model)与 VOID 处置留本脚本
+    comparison = compare_models(
+        (results[c]["transcript"]["judge_model"] for c in ok_rows),
+        identity["judge_primary_model"])
+    valid_model = comparison.matched
     case_hits, misses, gb_cases, turns_diag = [], [], [], []
     for row in rows:
         cid = row["case_id"]
@@ -149,7 +131,7 @@ def _score(rows: list[dict], results: dict[str, dict], identity: dict) -> dict:
         "total": len(rows),
         "ok": len(ok_rows),
         "model_valid": valid_model,
-        "models": sorted(models),
+        "models": comparison.observed_models,
         "ga": ga,
         "gb_cases": gb_cases,
         "gb_pass": gb_pass,
@@ -232,7 +214,7 @@ def main() -> int:
     parser.add_argument("--artifacts-root", type=Path,
                         default=_REPO / "edu_agent/evals/artifacts/s2-judge-battery-v0.1")
     parser.add_argument("--run-dir", type=Path, default=None,
-                        help="续跑既有 run 目录(先过 P0-6 identity 全等门)")
+                        help="续跑既有 run 目录(#490 M3:公共层 strict identity 全等门)")
     args = parser.parse_args()
 
     rubric = _REPO / "docs/evals/s2-judge-rubric-v0.1.md"
@@ -241,9 +223,6 @@ def main() -> int:
                         or _REPO / "configs" / "models.yaml")
     registry = load_registry(models_yaml)
     identity = _identity(models_yaml, args.battery, rubric, prompt_asset, registry)
-
-    if args.run_dir is not None:
-        _resume_gate(args.run_dir, identity)  # P0-6:先于 runner 的一切续跑检查
 
     rows = [json.loads(line) for line in
             args.battery.read_text(encoding="utf-8").strip().splitlines()]
@@ -257,10 +236,14 @@ def main() -> int:
         try:
             runner = EvalRunner(S2JudgeSubject(gateway), RunnerConfig(),
                                 runs_root=args.artifacts_root)
-            run_dir = runner.run(args.battery, rows,
-                                 run_dir=args.run_dir, identity=identity)
+            # P0-6(#490 M3):resume 同一性门由公共层承载——strict 下 stored/current
+            # identity 须全等,且先于 dataset/config/subject 三面(迁移前顺序不变)
+            run_dir = runner.run(args.battery, rows, run_dir=args.run_dir,
+                                 identity=identity, strict_identity=True)
         finally:
             gateway.close()
+    except ResumeMismatch as exc:
+        sys.exit(f"resume 拒绝(P0-6):{exc}")
     finally:
         flag.unlink(missing_ok=True)
 

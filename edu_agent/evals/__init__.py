@@ -7,6 +7,11 @@ from .checks import (
     possible_no_progress_cycle,
     run_check,
 )
+from .identity import (  # #490 M0 表第③项:指纹构造 helper(M3 迁移两消费者)
+    file_sha256,
+    git_head_sha,
+    head_sha256,
+)
 from .image_teaching import (
     load_scenarios,
     question_image_data_url,
@@ -15,6 +20,7 @@ from .image_teaching import (
 )
 from .kernel_subject import POST_TURN_OBSERVATION_SCHEMA_VERSION, KernelSubject
 from .lane_m import LaneMResult, compare_lane_m, run as run_lane_m
+from .model_match import ModelComparison, compare_models  # #490 M2:纯比较 helper
 from .judge import (
     DIMENSION_GUIDE,
     DIMENSIONS,
@@ -104,7 +110,9 @@ __all__ = [
     "KernelSubject",
     "POST_TURN_OBSERVATION_SCHEMA_VERSION",
     "LaneMResult",
+    "ModelComparison",
     "compare_lane_m",
+    "compare_models",
     "run_lane_m",
     "LegacyAdapter",
     "REGISTRY",
@@ -129,8 +137,11 @@ __all__ = [
     "dump_facts",
     "dump_spec_artifacts",
     "facts_calibers",
+    "file_sha256",
     "format_plan",
     "git_dirty_state",
+    "git_head_sha",
+    "head_sha256",
     "format_failures",
     "judge_rows",
     "judge_gate",

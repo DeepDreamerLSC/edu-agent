@@ -9,7 +9,9 @@
   比对拒跑(不收自报);②preflight 恰 30/case_id 唯一/answer_exposed 恰 5;
   ③结束门四条件合取 ok==total==30 ∧ exposed_ok==5 ∧ model_gate==ok;
 - 身份链:git/rubric 冻结(head -n -1 口径)/prompt 资产/cases/addendum/models
-  配置/judge_primary 双字段;resume 须身份全等(P0-6 同款);
+  配置/judge_primary 双字段;指纹构造走公共 helper(#490 M0 表第③项),
+  resume 须身份全等(#490 M3 起由公共层 strict_identity 承载;模型身份比较走公共
+  compare_models,VOID 处置留本脚本);
 - 无期望值打分:与 human gold 的一致/分歧矩阵是独立分析步,不在本运行器;
 - 本轮仅云臂(Flash×2 / GLM×1);本地臂重启前须先修 #241 flag 的 Mac 侧落点。
 """
@@ -20,11 +22,19 @@ import argparse
 import hashlib
 import json
 import os
-import subprocess
 import sys
 from pathlib import Path
 
-from edu_agent.evals import EnvironmentFailure, EvalRunner, RunnerConfig
+from edu_agent.evals import (
+    EnvironmentFailure,
+    EvalRunner,
+    ResumeMismatch,
+    RunnerConfig,
+    compare_models,
+    file_sha256,
+    git_head_sha,
+    head_sha256,
+)
 from edu_agent.evals.s2_judge import S2_SCHEMA, SYSTEM_PROMPT, _strip_code_fence
 from edu_agent.gateway import (ENV_FAILURES, Gateway, GatewayError,
                                ModelRequest, load_registry)
@@ -78,10 +88,6 @@ class MatchedSurfaceSubject:
                 "judge_model": response.model}
 
 
-def _sha(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def _addendum_sha() -> str:
     """执行附录 sha(身份链审计锚:附录变则旧 run 拒续跑)。"""
     return hashlib.sha256(_SYSTEM_ADDENDUM.encode()).hexdigest()
@@ -92,58 +98,42 @@ def _system_content() -> str:
     return f"{SYSTEM_PROMPT}\n\n{_SYSTEM_ADDENDUM}"
 
 
-def _rubric_head_sha(rubric: Path) -> str:
-    """冻结件 head -n -1 口径 sha(rubric 被改即变值,旧 run 随之拒绝续跑)。"""
-    head = "".join(rubric.read_text(encoding="utf-8").splitlines(keepends=True)[:-1])
-    return hashlib.sha256(head.encode()).hexdigest()
-
-
 def _identity(models_yaml: Path, cases: Path, rubric: Path,
               prompt_asset: Path, registry) -> dict:
     role = registry.role(_ROLE)
     return {
-        "git_sha": subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=_REPO, capture_output=True,
-            text=True, check=True,
-        ).stdout.strip(),
-        "rubric_freeze_sha": _rubric_head_sha(rubric),
-        "prompt_asset_sha": _sha(prompt_asset),
-        "cases_sha": _sha(cases),
+        # 指纹构造走公共 helper(#490 M0 表第③项):文件字节/rubric 冻结
+        # (head -n -1)/git HEAD 三面;addendum/字段集与键名仍由本专项声明
+        "git_sha": git_head_sha(_REPO),
+        "rubric_freeze_sha": head_sha256(rubric),
+        "prompt_asset_sha": file_sha256(prompt_asset),
+        "cases_sha": file_sha256(cases),
         "addendum_sha256": _addendum_sha(),
-        "models_yaml_sha": _sha(models_yaml),
+        "models_yaml_sha": file_sha256(models_yaml),
         # P0-4 双字段:id 仅追溯,不与 response.model 比;model 才是比较基准
         "judge_primary_id": role.primary,
         "judge_primary_model": registry.model(role.primary).name,
     }
 
 
-def _resume_gate(run_dir: Path, identity: dict) -> None:
-    """P0-6 同款:进 resume 前身份须全等,不等即拒。"""
-    manifest_path = run_dir / "manifest.json"
-    if not manifest_path.is_file():
-        return
-    stored = json.loads(manifest_path.read_text(encoding="utf-8")).get("identity")
-    if stored != identity:
-        diff = [key for key in sorted(set(stored or {}) | set(identity))
-                if (stored or {}).get(key) != identity.get(key)]
-        sys.exit(f"resume 拒绝(P0-6):identity 不一致({', '.join(diff)}),"
-                 "请新开 run 目录。")
-
-
 def _model_gate(run_dir: Path, rows: list[dict], identity: dict) -> dict:
-    """P0-2/P0-4 同款:judge_model 单值 ∧ == primary;否则整轮 VOID。"""
+    """P0-2/P0-4 同款:judge_model 单值 ∧ == primary;否则整轮 VOID。
+
+    身份比较走公共 compare_models(#490 M2);observed 提取(仅 ok 行的
+    transcript.judge_model)、VOID 措辞与结束门处置留本脚本。"""
     results = {}
     for path in sorted((run_dir / "results").glob("*.json")):
         record = json.loads(path.read_text(encoding="utf-8"))
         results[record["case_id"]] = record
     ok = {row["case_id"] for row in rows
           if results.get(row["case_id"], {}).get("status") == "ok"}
-    models = {results[c]["transcript"]["judge_model"] for c in ok}
-    valid = (len(models) == 1 and len(ok) > 0
-             and next(iter(models)) == identity["judge_primary_model"])
+    comparison = compare_models(
+        (results[c]["transcript"]["judge_model"] for c in ok),
+        identity["judge_primary_model"])
     exposed_ok = sum(1 for r in rows if r["answer_exposed"] and r["case_id"] in ok)
-    return {"ok": len(ok), "total": len(rows), "models": sorted(models),
-            "model_gate": "ok" if valid else "VOID",
+    return {"ok": len(ok), "total": len(rows),
+            "models": comparison.observed_models,
+            "model_gate": "ok" if comparison.matched else "VOID",
             "answer_exposed_ok": exposed_ok}
 
 
@@ -166,12 +156,12 @@ def main() -> int:
                         help="matched-surface cases jsonl(d6d7_matched_surface.py 产出)")
     parser.add_argument("--artifacts-root", required=True, type=Path)
     parser.add_argument("--run-dir", type=Path, default=None,
-                        help="续跑既有 run 目录(先过 identity 全等门)")
+                        help="续跑既有 run 目录(#490 M3:公共层 strict identity 全等门)")
     args = parser.parse_args()
 
     # P0-2 硬门①(复审收紧):frozen cases——与代码钉死的 FROZEN_CASES_SHA256
-    # 比对,不符即拒跑;不收调用者自报 sha
-    actual_sha = _sha(args.cases)
+    # 比对,不符即拒跑;不收调用者自报 sha(指纹口径走公共 file_sha256)
+    actual_sha = file_sha256(args.cases)
     if actual_sha != FROZEN_CASES_SHA256:
         sys.exit(f"cases 冻结门:sha256 与代码钉死值不符"
                  f"(钉死 {FROZEN_CASES_SHA256[:16]}…,实际 {actual_sha[:16]}…)"
@@ -183,8 +173,6 @@ def main() -> int:
                        or _REPO / "configs" / "models.yaml")
     registry = load_registry(models_yaml)
     identity = _identity(models_yaml, args.cases, rubric, prompt_asset, registry)
-    if args.run_dir is not None:
-        _resume_gate(args.run_dir, identity)
 
     rows = [json.loads(line) for line in
             args.cases.read_text(encoding="utf-8").strip().splitlines()]
@@ -201,10 +189,14 @@ def main() -> int:
         try:
             runner = EvalRunner(MatchedSurfaceSubject(gateway), RunnerConfig(),
                                 runs_root=args.artifacts_root)
-            run_dir = runner.run(args.cases, rows,
-                                 run_dir=args.run_dir, identity=identity)
+            # P0-6(#490 M3):resume 同一性门由公共层承载——strict 下 stored/current
+            # identity 须全等,且先于 dataset/config/subject 三面(迁移前顺序不变)
+            run_dir = runner.run(args.cases, rows, run_dir=args.run_dir,
+                                 identity=identity, strict_identity=True)
         finally:
             gateway.close()
+    except ResumeMismatch as exc:
+        sys.exit(f"resume 拒绝(P0-6):{exc}")
     finally:
         flag.unlink(missing_ok=True)
 
