@@ -193,6 +193,45 @@ def test_model_ladder_value_still_backstops_known_answer():
     assert any(e.get("guard") == "answer_leak" for e in turn.session.guard_events)
 
 
+# ---------- #506:答案 authority 溯源(capability ≠ authority) ----------
+
+
+def test_steps_value_is_numeric_evidence_not_sentence_authority():
+    """#506 authority contract(C05 咬合形态):question.answer 缺失、学生已自行
+    说出 steps 末值 1.2 → numeric 面合法放行(学生已述=合法 evidence,不掩码);
+    但句级 grounded_* 门的 answer_reference 不得取 steps 末值——含 ordered cue
+    + 答案断言的解决路径语句在 variant 下原样通过。若把 `_known_answer` 接回
+    句级装配点(base 行为):answer_present 由 untrusted 末值成立 → solution_path
+    FALLBACK → 学生已述致 mask 集空 → 整段 PURE_BLOCK——本测试三条断言全灭。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你先说说从图里看到了什么?", [dict(s) for s in MODEL_LADDER]),
+        _tutor_payload("没错,我们先看最高气温,再减去最低气温,最后求出温差是1.2度,这就是完整过程。"),
+    ])
+    first = start(dict(QUESTION_NO_ANALYSIS), dict(LEARNER), gateway=gateway)
+    turn = reply(first.session, "我算出来温差是1.2度。", gateway=gateway)
+    # capability 半:学生已述 → numeric 视 1.2 为合法 evidence,不掩码不告警
+    assert "1.2" in turn.text
+    # authority 半:句级 solution_path 不得由 untrusted 末值触发 FALLBACK
+    assert not any("grounded_solution_path_disclosure" in rule
+                   for e in turn.session.guard_events for rule in e.get("rule_ids", []))
+    # 教学语句结构不被整段替换(非 PURE_BLOCK)
+    assert "完整过程" in turn.text
+
+
+def test_trusted_answer_still_feeds_sentence_authority():
+    """#506 对照:question.answer 在场时,句级 authority 正常获得 trusted
+    answer——同样的话术照旧触发 grounded_* finding(正向保护不因溯源收紧退化)。"""
+    question = dict(QUESTION_NO_ANALYSIS, answer="A是700米,B是1000米")
+    gateway = FakeGateway(tutor_payloads=[
+        _open_payload("你先说说从图里看到了什么?", [dict(s) for s in MODEL_LADDER]),
+        _tutor_payload("对,答案就是A是700米、B是1000米。"),
+    ])
+    first = start(dict(question), dict(LEARNER), gateway=gateway)
+    turn = reply(first.session, "我先看看图。", gateway=gateway)
+    assert any("grounded" in rule for e in turn.session.guard_events
+               for rule in e.get("rule_ids", []))
+
+
 # ---------- 支持动作:giving 判据只对 trusted 阶梯成立 ----------
 
 
