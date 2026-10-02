@@ -73,7 +73,7 @@ description: >
 
 **Red Lane**：触及 Authority、Policy、Product Contract、schema/API/persistence 语义、ruler/success definition、hard invariant、新 fallback、跨层依赖、新 framework/architecture abstraction、删除既有 protection、deterministic→model judgment、observation→production truth 时，必须升级。
 
-**Exit Report** 固定六项：Outcome / Evidence / Invariants / Delivered / Discoveries / Residual Debt / Decision Needed。若 `Decision Needed = none`，报告是通知，PM 继续下一个已授权 Green Lane 工作包，不等 Architect 回执。
+**Exit Report** 固定七项：Outcome / Evidence / Invariants / Delivered / Discoveries / Residual Debt / Decision Needed。若 `Decision Needed = none`，报告是通知，PM 继续下一个已授权 Green Lane 工作包，不等 Architect 回执。
 
 **认知升级原则**：正常结果不上升；改变我们对系统理解的新事实必须上升。对冻结 SHA 做实验时写确切 integration target，不用会漂移的 `current main` 代替身份。
 
