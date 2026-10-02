@@ -1,8 +1,9 @@
 """#333 泄露网 V1 锚/终答测试面——三层测试之①②(裁定 c5717512971;PM 49255c5dba108a0b)。
 
 ①Q5 第二层四断言(首次 stuck 不给数值 / 再次 stuck 给当前级非终答锚 / 单步题
-repeated stuck 仍不给 / 部件重叠仍不给)+ ②Q5 第一层边界对 C/D/F(support 零锚 /
-ready_to_confirm 禁 / 答案不可判定 fail-closed)。种子 = 同目录 seeds-anchor-v1.json
+repeated stuck 仍不给 / 部件重叠仍不给)+ ②Q5 第一层边界对 D/F(ready_to_confirm
+禁 / 答案不可判定 fail-closed;C「support 零锚」随 #3a-response(#500)support
+路径删除移除)。种子 = 同目录 seeds-anchor-v1.json
 (A-D/M/F 七对);走**公开面驱动**(start/reply + FakeGateway,与 test_kernel_restate
 同款口径),steps 经 open payload 注入(种子里 steps 为合成 plan 步,已标注);
 #382 PR-C 起 reveal 只消费 trusted(analysis)阶梯,故 `_drive` 同时由 steps 反解
@@ -119,23 +120,15 @@ def _analysis_from_steps(steps: list[dict]) -> str:
     return "。".join(str(s.get("step") or "") for s in steps) + "。"
 
 
-def test_C_support_guiding_focus_gives_no_anchor():
-    """C 非 telling 路径 → 零锚:学生上一轮复述了当前级数字(「脚数差是10」)→
-    下一轮卡住走 guiding_focus 拆小问句(只问不揭示,#169 不含数字)——
-    support 轮无 reveal 事件、无 anchor_numbers(此前轮的合法锚不受影响)。"""
-    seed = SEEDS["C_support_guiding_focus_no_anchor"]
-    turn = _drive(seed, stuck_rounds=3,
-                  student_messages=["嗯,我看看,还是不会。", "哦,全部按鸡是16只脚,然后呢。", "还是不会。"])
-    assert turn.session.guard_events[-1]["branch"] == "support"
-    assert turn.session.guard_events[-1]["move"] == "guiding_focus"
-    assert not any(ch.isdigit() for ch in turn.text)
-
-
+# #3a-response(#500):C(support 零锚)测试随 `_support_move`/support 路径死链删除
+# 移除——非 telling 分支已不存在,「support 轮零锚」面随之消失(种子留在
+# seeds-anchor-v1.json 作历史记录);D/F 边界照旧。
 def test_D_ready_state_demoted_by_stuck_anchor_resumes():
     """D ready_to_confirm → 禁(#333 七条件,kernel 保留防直接调用方)。公开流实证:
-    学生卡壳信号先把确认态降回 dialogue(t2)→ re-stuck 锚按**当前态**授权——
-    本测试钉住「state 检查读当前态」:若误用陈旧 ready 旗,t3 的合法锚会被错拦。
-    ready 态与 re-stuck 在公开流互斥(卡壳即降态),防御条件由源读核验。"""
+    确认态下学生卡壳 → 该轮走模型路径(#3a-response #500),复读确认句直达
+    (repeat_confirm_pass)、以 ready=False 提交 → 确认态降回 dialogue;此后复读
+    兜底逐轮揭示,re-stuck 锚按**当前态**授权——本测试钉住「state 检查读当前态」:
+    若误用陈旧 ready 旗,揭示到授权级时锚会被错拦。"""
     seed = SEEDS["D_ready_to_confirm_blocks_anchor"]
     fx = seed["session"]
     gateway = FakeGateway(tutor_payloads=[_open_payload(FIRST_QUESTION_COLLECT, [dict(s) for s in fx["steps"]])])
@@ -148,13 +141,20 @@ def test_D_ready_state_demoted_by_stuck_anchor_resumes():
     gateway.tutor_queue.extend([_tutor_payload("我们把思路理清楚了。", ready=True)])
     turn1 = reply(first.session, "鸡3只,兔5只。", gateway=gateway)
     assert turn1.state == "ready_to_confirm"
-    # 轮2/3:确认态下卡壳 → 降回 dialogue → 背板揭示第2级 → 锚按当前态授权
-    gateway.tutor_queue.extend([_tutor_payload(turn1.text)] * 2)
+    # 轮2:确认态下卡壳 → 复读确认句直达(单次调用)→ ready=False 提交降回 dialogue
+    gateway.tutor_queue.extend([_tutor_payload(turn1.text)])
     turn2 = reply(turn1.session, "嗯,我看看,还是不会。", gateway=gateway)
-    assert turn2.session.state == "dialogue"  # 卡壳信号降态
+    assert turn2.session.state == "dialogue"  # 卡壳轮降态(模型路径提交)
+    assert turn2.session.stuck is True         # 命中 → 置位
+    # 轮3:复读兜底揭示第 1 级(首次 reveal:hint_level 0→1,零锚)
     gateway.tutor_queue.extend([_tutor_payload(turn2.text)] * 2)
     turn3 = reply(turn2.session, "嗯,我看看,还是不会。", gateway=gateway)
-    assert _reveal_events(turn3)[-1]["anchor_numbers"] == [10.0]
+    assert _reveal_events(turn3)[-1]["hint_level"] == 1
+    assert not _reveal_events(turn3)[-1].get("anchor_numbers")
+    # 轮4:再次卡壳 → 揭示第 2 级 → 锚按当前态(dialogue)授权
+    gateway.tutor_queue.extend([_tutor_payload(turn3.text)] * 2)
+    turn4 = reply(turn3.session, "嗯,我看看,还是不会。", gateway=gateway)
+    assert _reveal_events(turn4)[-1]["anchor_numbers"] == [10.0]
 
 
 def test_F_answer_undeterminable_fail_closed():

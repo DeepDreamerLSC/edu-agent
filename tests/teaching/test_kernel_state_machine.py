@@ -226,32 +226,40 @@ def test_reply_student_says_understood_routes_to_model(tmp_path):
         assert not any(e.get("branch") == "elicit" for e in turn.session.guard_events)
 
 
-def test_reply_stuck_reveals_next_step_with_varied_lead(tmp_path):
-    """学生说「我不太会」→ 揭示下一级**trusted(analysis)阶梯**(确定性),开场用
-    轮换模板避免固定前缀生硬;模型 steps 照喂但不被 reveal 消费(#382 PR-C)。"""
+def test_reply_stuck_sets_flag_and_routes_to_model(tmp_path):
+    """#3a-response(#500,deletion test 六门通过):学生说「我不太会」→ 置 stuck、
+    该轮走模型路径(命中→置位→模型调用→非常量返回);模型 steps 照喂入库但不再被
+    stuck 轮消费(#382 PR-C 的 reveal 消费面只在复读兜底)。"""
+    follow = tutor_json("这一步你觉得卡在哪里?我们回到条件看看。")
     with kernel_env(tmp_path, [completion(open_json(
         "你先说说题目给了哪些条件?",
         steps=[{"step": "两边减7", "value": "18"}, {"step": "除以3", "value": "6"}],
-    ))]) as (fake, gateway):
+    )), completion(follow)]) as (fake, gateway):
         first = start(QUESTION, LEARNER, gateway=gateway)
+        assert first.session.stuck is False
         calls_before = len(fake.requests)
         turn = reply(first.session, "我不太会。", gateway=gateway)
-        assert turn.text == "我们从这里入手:两边同时减7得3x=18。你接着算下一步。"
-        assert turn.ready_to_confirm is False  # 不关对话
-        assert len(fake.requests) == calls_before  # 零模型调用
+        assert turn.session.stuck is True                # 命中 → 置位
+        assert len(fake.requests) == calls_before + 1    # 该轮发生模型调用
+        assert turn.text == json.loads(follow)["reply"]  # 模型直通(非常量返回)
+        assert turn.ready_to_confirm is False            # 不关对话
+        assert turn.session.hint_level == 0              # 阶梯不被 stuck 轮消耗
 
 
 def test_reply_negative_huile_goes_stuck_not_understanding(tmp_path):
-    """#109 P2-1:「我不会了」是卡住,不是「懂了」——不能触发请讲思路,要揭示下一级阶梯。
+    """#109 P2-1:「我不会了」是卡住,不是「懂了」——不能触发请讲思路。#333 终裁起
+    elicit 句族已删;#3a-response(#500):卡住轮改走模型路径(置 stuck)。
 
     回归:曾经 `会了` 命中 `不会了` 子串 → understanding 短路,错触发「从头讲讲思路」。"""
+    follow = tutor_json("哪里卡住了?你说说目前的想法。")
     with kernel_env(tmp_path, [completion(open_json(
         "你先说说题目给了哪些条件?",
         steps=[{"step": "两边减7", "value": "18"}, {"step": "除以3", "value": "6"}],
-    ))]) as (fake, gateway):
+    )), completion(follow)]) as (fake, gateway):
         first = start(QUESTION, LEARNER, gateway=gateway)
         turn = reply(first.session, "我不会了。", gateway=gateway)
-        assert turn.text == "我们从这里入手:两边同时减7得3x=18。你接着算下一步。"  # 揭示阶梯,非请讲
+        assert turn.session.stuck is True                # 判卡住(非「懂了」短路)
+        assert turn.text == json.loads(follow)["reply"]  # 模型直通
         assert turn.ready_to_confirm is False
         assert "讲讲你的思路" not in turn.text
 
@@ -314,65 +322,3 @@ def test_analysis_ladder_is_revealed_on_repeat_fallback(tmp_path):
         turn = reply(first.session, "嗯,我看看。", gateway=gateway)
         assert "先假设8只全是鸡" in turn.text        # 揭开的是题库解析的第一级
         assert turn.session.hint_level == 1
-
-
-# ---------- #198 第一步:支持动作(枚举 + 确定性选择;#174 渐隐档折叠至此) ----------
-
-# #382 PR-C:support 面钉 trusted(analysis)阶梯(giving 判据只对权威阶梯有意义);
-# 模型注入的 _FADE_STEPS 仍照喂(与 analysis 切片并存时后者整副优先)。
-_FADE_STEPS = [{"step": "先算全部按鸡的脚数", "value": "16"},
-               {"step": "再算脚数差", "value": "10"},
-               {"step": "兔的只数", "value": "5"}]  # 末级触答案焦点(guard-provenance-fix ③ 门契约)
-_FADE_ANALYSIS = ("先假设8只全是鸡,算出脚的总数8×2=16。再算实际脚数比假设多26-16=10只。"
-                  "最后每把一只鸡换成兔脚数多4-2=2只,10÷2=5只兔,鸡有8-5=3只。")
-
-
-@contextmanager
-def _stuck_session(tmp_path, extra_payloads: list | None = None):
-    """开一个带两级**trusted(analysis)阶梯**的会话(卡住/复读/命中等确定性路径不调模型)。"""
-    fakes = [completion(open_json("你现在算到哪一步了?", steps=_FADE_STEPS))]
-    fakes.extend(extra_payloads or [])
-    with kernel_env(tmp_path, fakes) as (fake, gateway):
-        turn = start({"text": "鸡兔同笼,共8只26脚", "answer": "鸡3只兔5只",
-                      "analysis": _FADE_ANALYSIS, "knowledge_points": []},
-                     {"grade": "六年级", "answer_status": "incorrect"}, gateway=gateway)
-        yield fake, gateway, turn.session
-
-
-def test_support_ask_after_student_performs_revealed_step(tmp_path):
-    """揭示一级 → 学生**自己做出来**(值出现在上一学生轮)→ 再卡住先问不揭示(guiding_focus);
-    再卡住升回揭示(telling)。#174 渐隐档折叠进 `_support_move` 后的同款行为。
-    #382 PR-C:阶梯 = analysis 切片(trusted),揭示文本随之取切片原文。"""
-    with _stuck_session(tmp_path, [completion(tutor_json("对,继续往下想。"))]) as (fake, gateway, session):
-        revealed = reply(session, "我不会做。", gateway=gateway)
-        assert "先假设8只全是鸡" in revealed.text and session.hint_level == 1
-        reply(session, "我算了一下,是不是 16 只脚?", gateway=gateway)
-        faded = reply(session, "我不会了。", gateway=gateway)
-        assert faded.text.startswith("我们把这一步拆小")           # 只问不揭示
-        assert session.hint_level == 1                               # 不消耗阶梯
-        ask_events = [e for e in session.guard_events if e.get("branch") == "support"]
-        assert ask_events and ask_events[0]["move"] == "guiding_focus"  # #169 起事件另带 turn 字段
-        escalated = reply(session, "我不会做。", gateway=gateway)
-        assert "再算实际脚数比假设多" in escalated.text and session.hint_level == 2   # 升回全支持
-
-
-def test_support_keeps_full_support_without_performance_signal(tmp_path):
-    """学生没有做出刚揭示的那一步 → **不撤支持**:下次卡住继续揭示下一级,且无 support 事件。"""
-    with _stuck_session(tmp_path) as (fake, gateway, session):
-        reply(session, "我不会做。", gateway=gateway)
-        reply(session, "我不会了。", gateway=gateway)
-        assert session.hint_level == 2
-        assert not any(event.get("branch") == "support" for event in session.guard_events)
-
-
-def test_support_ask_requires_fresh_performance_signal(tmp_path):
-    """掌握度只认**紧邻上一学生轮**(#198 折叠:无状态推导,粘滞语义随状态位删除):
-    做出那步与卡住之间隔着普通轮 → 不再撤支持,直接揭示。"""
-    with _stuck_session(tmp_path, [completion(tutor_json("嗯,你在想什么?")),
-                                   completion(tutor_json("我们继续。"))]) as (fake, gateway, session):
-        reply(session, "我不会做。", gateway=gateway)            # 揭示第 1 级
-        reply(session, "我算了一下,是不是 16 只脚?", gateway=gateway)  # 做出该步
-        turn = reply(session, "我再想想别的。", gateway=gateway)  # 普通轮:掌握度证据过时
-        stuck = reply(session, "我不会了。", gateway=gateway)
-        assert "再算实际脚数比假设多" in stuck.text and session.hint_level == 2  # 直接揭示下一级,未发拆小问句
-        assert not any(event.get("branch") == "support" for event in session.guard_events)

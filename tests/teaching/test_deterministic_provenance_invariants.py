@@ -248,11 +248,13 @@ def test_structured_summary_quotes_carry_complete_student_spans():
 
 
 # --------------------------------------------------------------------------- #
-# 路径五:stuck 阶梯回放(_reveal_stuck_hint trusted analysis 切片,#444)
+# 路径五:阶梯回放(_reveal_stuck_hint trusted analysis 切片,#444;
+# #3a-response #500:卡壳轮走模型路径,揭示经复读兜底触发)
 # --------------------------------------------------------------------------- #
 
 def test_stuck_ladder_replay_keeps_full_span_with_answer_masked():
-    """阶梯回放:卡住兜底把 trusted(analysis)切片回放给学生——与掩码臂同族
+    """阶梯回放(#3a-response #500:卡壳轮改走模型路径——置位+模型调用;揭示经
+    复读兜底触发):兜底把 trusted(analysis)切片回放给学生——与掩码臂同族
     (终答数字→□,保形变换;其余逐字)。哨兵钉死「回放=完整授权 span」:
     未来该路径接任何 [:N] 截断(既有钉子均为子串断言,不咬截断)必红。"""
     analysis = (f"第一步算{HEAD_SENTINEL}82加88等于170{TAIL_SENTINEL}。"
@@ -266,17 +268,21 @@ def test_stuck_ladder_replay_keeps_full_span_with_answer_masked():
     assert [s["provenance"] for s in turn.session.steps] == ["analysis", "analysis"]
     calls_before = len(gateway.requests)
 
-    first = reply(turn.session, "不知道。", gateway=gateway)      # 首次卡住 → 揭第 1 级
+    stuck = reply(turn.session, "不知道。", gateway=gateway)      # 卡壳 → 模型路径
+    assert stuck.session.stuck is True                            # 命中 → 置位
+    assert len(gateway.requests) == calls_before + 1              # 该轮发生模型调用
+
+    gateway.tutor_queue.extend([_tutor(stuck.text)] * 2)          # 复读 → 重生成仍复读 → 兜底
+    first = reply(stuck.session, "还是不会。", gateway=gateway)    # 卡壳 + 复读兜底 → 揭第 1 级
     assert first.session.guard_events[-1]["branch"] == "reveal"
     assert first.session.hint_level == 1
-    assert len(gateway.requests) == calls_before                  # 确定性零调用
     _assert_full_span_or_no_quote(turn.session.steps[0]["step"], first.text,
                                   label="reveal/ladder-plain")
 
-    second = reply(turn.session, "还是不会。", gateway=gateway)   # 再次卡住 → 第 2 级
+    gateway.tutor_queue.extend([_tutor(first.text)] * 2)
+    second = reply(first.session, "还是不会。", gateway=gateway)   # 再次卡住 + 复读 → 第 2 级
     assert second.session.guard_events[-1]["branch"] == "reveal"
     assert second.session.hint_level == 2
     assert "264" not in second.text and "□" in second.text        # 终答数字掩码(保形)
-    assert len(gateway.requests) == calls_before
     _assert_full_span_or_no_quote(turn.session.steps[1]["step"], second.text,
                                   label="reveal/ladder-masked")

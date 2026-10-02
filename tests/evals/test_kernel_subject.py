@@ -194,11 +194,11 @@ def test_obs_completed_close_path_final_turn(tmp_path):
     assert [snapshot["verified_complete"] for snapshot in obs[:3]] == [False] * 3
 
 
-def test_obs_stuck_turn_sets_stuck_and_advances_hint_level(tmp_path):
+def test_obs_stuck_turn_sets_stuck_and_keeps_hint_level(tmp_path):
     """hint_level/stuck 读取面:学生本人卡壳信号(#382 P0-1 唯一合法写入点)
-    → obs 反映 stuck=True + trusted ladder(题库 analysis 切片)揭示推进
-    hint_level 0→1;无 answer_spec 声明面 → verified_complete 恒 False
-    (fail-closed)。t1 走确定性 stuck 分支,零模型调用。"""
+    → obs 反映 stuck=True;#3a-response(#500):卡壳轮走模型路径(该轮一次
+    模型调用),trusted ladder 不被 stuck 轮消耗(hint_level 恒 0);无
+    answer_spec 声明面 → verified_complete 恒 False(fail-closed)。"""
     case = {
         "id": "obs_stuck_ladder",
         "question": {"text": "算一算 6×4÷2 等于多少。",
@@ -208,16 +208,18 @@ def test_obs_stuck_turn_sets_stuck_and_advances_hint_level(tmp_path):
     }
     with kernel_env(tmp_path, [
         completion(open_json("我们先看这道题。")),
+        completion(tutor_json("这一步你卡在哪里?说说你的想法。")),
     ]) as (fake, gateway):
         transcript = KernelSubject(gateway).run_case(case)
     obs = [turn["obs"] for turn in transcript["turns"]]
+    assert len(fake.requests) == 2  # t0 统一 open + t1 卡壳轮模型调用
     # t0 首问后:零阶梯、未卡
     assert obs[0]["hint_level"] == 0
     assert obs[0]["stuck"] is False
-    # t1 学生卡壳:stuck=True;trusted ladder 揭示第一级 → hint_level=1
+    # t1 学生卡壳:stuck=True;模型续句(dialogue),阶梯不消耗
     assert obs[1]["state"] == "dialogue"
     assert obs[1]["stuck"] is True
-    assert obs[1]["hint_level"] == 1
+    assert obs[1]["hint_level"] == 0
     # 无 answer_spec 声明面:无证据(fail-closed)
     assert obs[1]["verified_complete"] is False
     assert obs[1]["evidence_turn_id"] is None

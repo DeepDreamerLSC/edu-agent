@@ -9,8 +9,9 @@ deterministic reveal;无 trusted ladder → safe guiding question(不硬编码�
 
 断言即规格(公开面驱动 start/reply + FakeGateway,与 test_kernel_restate 同款):
   · provenance 标记:`_store_steps` 入库步 = model,`_analysis_steps` 切片 = analysis;
-  · model 阶梯不揭示:卡壳/复读兜底 → `_UNTRUSTED_LADDER_HINT`,记
-    {branch: reveal_untrusted},hint_level 不动,模型阶梯数字不上学生面;
+  · model 阶梯不揭示:复读兜底 → `_UNTRUSTED_LADDER_HINT`,记
+    {branch: reveal_untrusted},hint_level 不动,模型阶梯数字不上学生面
+    (#3a-response #500:卡壳轮改走模型路径,不再触 reveal);
   · analysis 阶梯照常揭示(trusted 回放不变);
   · 规划辅助不受边界影响:模型 steps 值仍进 `_drift_sources` 允许集/答案兜底
     (模型阶梯保留规划辅助,deterministic reveal 只此一门收紧);
@@ -78,20 +79,23 @@ def test_analysis_ladder_stored_with_analysis_provenance():
 # ---------- model 阶梯不进 deterministic reveal(核心边界) ----------
 
 
-def test_stuck_with_model_ladder_gives_safe_question_not_replay():
-    """事故 700m 形态:无 analysis(切不出 trusted 阶梯)+ 模型阶梯(500/1.2 与
-    图不符)→ 学生卡壳时 reveal **不回放**模型阶梯——safe guiding question,
-    模型阶梯数字不上学生面,零模型调用。"""
+def test_stuck_with_model_ladder_routes_to_model_and_consumes_nothing():
+    """事故 700m 形态 + #3a-response(#500):卡壳轮改走模型路径(命中→置位→模型
+    调用→非常量返回);model 阶梯照旧不进 deterministic reveal、hint_level 不动
+    (untrusted 边界的 reveal 消费面在复读兜底,见下方 repeat 兜底测试)。"""
+    stuck_reply = "这一步你卡在哪里?说说你从图里看出了什么。"
     gateway = FakeGateway(tutor_payloads=[
-        _open_payload("你先说说从图里看到了什么?", [dict(s) for s in MODEL_LADDER])])
+        _open_payload("你先说说从图里看到了什么?", [dict(s) for s in MODEL_LADDER]),
+        _tutor_payload(stuck_reply)])
     first = start(dict(QUESTION_NO_ANALYSIS), dict(LEARNER), gateway=gateway)
     calls_before = len(gateway.requests)
     turn = reply(first.session, "我不太会。", gateway=gateway)
-    assert turn.text == _UNTRUSTED_LADDER_HINT
-    assert "500" not in turn.text and "1.2" not in turn.text  # 模型阶梯数字不达学生面
-    assert turn.session.hint_level == 0                        # 阶梯不消耗
-    assert turn.session.guard_events[-1]["branch"] == "reveal_untrusted"
-    assert len(gateway.requests) == calls_before               # 确定性:零模型调用
+    assert turn.session.stuck is True                 # 命中 → 置位
+    assert len(gateway.requests) == calls_before + 1  # 该轮发生模型调用
+    assert turn.text == stuck_reply                   # 模型直通(非常量返回)
+    assert "500" not in turn.text and "1.2" not in turn.text
+    assert turn.session.hint_level == 0               # 阶梯不消耗
+    assert turn.session.guard_events[-1]["branch"] == "model"
 
 
 def test_repeat_fallback_with_model_ladder_gives_safe_question():
@@ -110,41 +114,52 @@ def test_repeat_fallback_with_model_ladder_gives_safe_question():
     assert turn.session.guard_events[-1]["branch"] == "reveal_untrusted"
 
 
-def test_repeated_stuck_with_model_ladder_stays_safe_and_consumes_nothing():
-    """连续卡壳:model 阶梯恒不揭示(不因再次 stuck 解锁),hint_level 恒 0,
-    reveal_untrusted 每轮在案(可度量)。"""
+def test_repeated_stuck_with_model_ladder_consumes_nothing():
+    """连续卡壳(#3a-response #500:逐轮走模型路径):model 阶梯恒不揭示、
+    hint_level 恒 0;stuck 恒置位。"""
+    stuck_replies = ["这一步你卡在哪里?说说你看到了什么。",
+                     "我们从题目条件重新想起,你觉得缺什么?",
+                     "别急,你觉得哪一句读不懂?"]
     gateway = FakeGateway(tutor_payloads=[
-        _open_payload("你先说说从图里看到了什么?", [dict(s) for s in MODEL_LADDER])])
+        _open_payload("你先说说从图里看到了什么?", [dict(s) for s in MODEL_LADDER]),
+        *[_tutor_payload(t) for t in stuck_replies]])
     first = start(dict(QUESTION_NO_ANALYSIS), dict(LEARNER), gateway=gateway)
     session = first.session
-    for message in ("我不会做。", "还是不会。", "我完全不知道怎么做。"):
+    for reply_text, message in zip(stuck_replies,
+                                   ("我不会做。", "还是不会。", "我完全不知道怎么做。"), strict=True):
         turn = reply(session, message, gateway=gateway)
-        assert turn.text == _UNTRUSTED_LADDER_HINT
-        assert session.hint_level == 0
-    untrusted = [e for e in session.guard_events
-                 if e.get("branch") == "reveal_untrusted"]
-    assert len(untrusted) == 3
+        assert turn.text == reply_text              # 每轮模型直通
+        assert session.stuck is True
+        assert session.hint_level == 0              # 阶梯不消耗
+    assert len([e for e in session.guard_events
+                if e.get("branch") == "reveal_untrusted"]) == 0  # 卡壳轮不再触边界
 
 
 # ---------- analysis 阶梯照常揭示(trusted 回放不变) ----------
 
 
-def test_stuck_with_analysis_ladder_reveals_trusted_step():
-    """对照:题库解析切得出 ≥2 步 → 卡壳照常揭示下一级 analysis 切片
-    (trusted 回放,既有行为零回归)。"""
+def test_stuck_with_analysis_ladder_routes_to_model_and_keeps_ladder():
+    """对照(#3a-response #500):题库解析切得出 ≥2 步 → 卡壳轮走模型路径,
+    analysis 阶梯不消耗(trusted 回放的消费面在复读兜底,
+    test_kernel_state_machine::test_analysis_ladder_is_revealed_on_repeat_fallback)。"""
     question = {"text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?",
                 "answer": "鸡3只兔5只",
-                "analysis": "先假设8只全是鸡,算出脚的总数8×2=16。再算实际脚数比"
+                "analysis": "先假设8只全是鸡,算出鸡脚的总数8×2=16。再算实际脚数比"
                             "假设多26-16=10只。",
                 "knowledge_points": []}
+    stuck_reply = "这一步你卡在哪里?题目给了哪几个条件?"
     gateway = FakeGateway(tutor_payloads=[
-        _open_payload("你先说说题目给了哪些条件?", [dict(s) for s in MODEL_LADDER])])
+        _open_payload("你先说说题目给了哪些条件?", [dict(s) for s in MODEL_LADDER]),
+        _tutor_payload(stuck_reply)])
     first = start(dict(question), dict(LEARNER), gateway=gateway)
+    calls_before = len(gateway.requests)
     turn = reply(first.session, "我不太会。", gateway=gateway)
-    assert "先假设8只全是鸡" in turn.text       # 揭的是 analysis 切片
-    assert "500" not in turn.text                # 模型阶梯仍在库但不被揭示
-    assert first.session.hint_level == 1
-    assert first.session.guard_events[-1]["branch"] == "reveal"
+    assert turn.session.stuck is True                 # 命中 → 置位
+    assert len(gateway.requests) == calls_before + 1  # 该轮发生模型调用
+    assert turn.text == stuck_reply                   # 模型直通(非常量返回)
+    assert "500" not in turn.text                     # 模型阶梯文本不在响应里
+    assert first.session.hint_level == 0              # analysis 阶梯不被 stuck 轮消耗
+    assert turn.session.guard_events[-1]["branch"] == "model"
 
 
 # ---------- 规划辅助不受边界影响(model 阶梯保留其辅助用途) ----------
@@ -200,15 +215,19 @@ def test_support_guiding_not_triggered_by_model_ladder_values():
 
 def test_provenance_persists_through_file_store(tmp_path):
     """steps 的 provenance 字段随 FileSessionStore asdict 落盘并可恢复
-    (重启恢复的会话 reveal 边界不回退)。"""
+    (重启恢复的会话 reveal 边界不回退)。#3a-response(#500):恢复会话的卡壳轮
+    同样走模型路径(置位→模型调用→非常量返回)。"""
     store = FileSessionStore(tmp_path / "sessions")
+    stuck_reply = "这一步你卡在哪里?说说你从图里看出了什么。"
     gateway = FakeGateway(tutor_payloads=[
-        _open_payload("你先说说从图里看到了什么?", [dict(s) for s in MODEL_LADDER])])
+        _open_payload("你先说说从图里看到了什么?", [dict(s) for s in MODEL_LADDER]),
+        _tutor_payload(stuck_reply)])
     first = start(dict(QUESTION_NO_ANALYSIS), dict(LEARNER), gateway=gateway)
     store.save(first.session)
     restored = store.load(first.session.session_id)
     assert restored is not None
     assert all(s["provenance"] == "model" for s in restored.steps)  # 标记随盘
-    turn = reply(restored, "我不太会。", gateway=gateway)            # 恢复会话照样守边界
-    assert turn.text == _UNTRUSTED_LADDER_HINT
-    assert restored.guard_events[-1]["branch"] == "reveal_untrusted"
+    turn = reply(restored, "我不太会。", gateway=gateway)            # 恢复会话照走模型路径
+    assert restored.stuck is True
+    assert turn.text == stuck_reply
+    assert restored.guard_events[-1]["branch"] == "model"

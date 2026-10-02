@@ -289,8 +289,9 @@ def test_no_trusted_ladder_falls_to_safe_guiding_question():
 
 
 def test_analysis_ladder_remains_trusted_for_reveal():
-    """trusted 通道不误伤:题库 analysis 切得出 ≥2 步时,卡住揭示照常回放
-    (PR-C 只收窄来源,不禁机制本身)。"""
+    """trusted 通道不误伤:题库 analysis 切得出 ≥2 步时,阶梯照常回放
+    (PR-C 只收窄来源,不禁机制本身)。#3a-response(#500):卡壳轮走模型路径
+    (置位+模型调用),揭示经复读兜底触发。"""
     question = {
         "text": "鸡和兔一共 8 只,共有 26 只脚。鸡和兔各有多少只?说明思路。",
         "answer": "鸡3只兔5只",
@@ -300,11 +301,16 @@ def test_analysis_ladder_remains_trusted_for_reveal():
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你怎么想?", [{"step": "外题", "value": "99"}]),
         _tutor_payload("先看看脚数。"),
+        _tutor_payload("我们继续往下想。"),
     ])
     first = start(dict(question), {"grade": GRADE}, gateway=gateway)
     session = first.session
     reply(session, "我先算了一部分。", gateway=gateway)
-    turn = reply(session, "我不会", gateway=gateway)
+    stuck = reply(session, "我不会", gateway=gateway)
+    assert stuck.session.stuck is True                # 命中 → 置位
+    assert stuck.text == "我们继续往下想。"           # 卡壳轮模型直通(非常量返回)
+    gateway.tutor_queue.extend([_tutor_payload(stuck.text)] * 2)  # 复读 → 兜底揭示
+    turn = reply(session, "还是不会", gateway=gateway)
     # analysis 阶梯优先于模型阶梯(start() L668-670):揭示句含 analysis 步文本
     assert "鸡" in turn.text or "脚" in turn.text, (
         f"analysis 来源的 trusted 阶梯应照常揭示,实际:「{turn.text}」")

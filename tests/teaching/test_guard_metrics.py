@@ -53,10 +53,12 @@ def test_events_persist_through_file_store(tmp_path):
         store.save(first.session)
         restored = store.load(first.session.session_id)
         assert restored is not None
-        # 泄露事件 + 确定性揭示埋点(branch 分流);首问另经模板覆盖,不额外留痕
+        # 泄露事件 + 模型路径埋点(#3a-response #500:卡壳轮走模型路径,置 stuck);
+        # 首问另经模板覆盖,不额外留痕
         assert len(restored.guard_events) == 2
         assert restored.guard_events[0]["guard"] == "answer_leak"
-        assert restored.guard_events[1]["branch"] == "reveal"
+        assert restored.guard_events[1]["branch"] == "model"
+        assert restored.stuck is True                    # 卡壳置位随盘
 
 
 def test_kernel_subject_transcript_carries_events(tmp_path):

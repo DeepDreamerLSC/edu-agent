@@ -670,13 +670,18 @@ def test_reveal_skips_completed_subgoal():
         _tutor_payload("我们先把第一周算出来。"),
         _tutor_payload("好,第二周呢?"),
         _tutor_payload("我们看下一步。"),
+        _tutor_payload("我们再从条件想想。"),
     ])
     session = _incorrect_session(gateway, question)
     reply(session, "第一周是20乘2/5等于8。", gateway=gateway)   # 完成子目标1
     reply(session, "第二周就8乘3/4。", gateway=gateway)         # 子目标2 数字齐(前半)
     reply(session, "是6。", gateway=gateway)                    # 子目标2 数字齐(后半)
-    turn4 = reply(session, "还是不会。", gateway=gateway)        # 首次卡住 → 揭示
-    skips = [e for e in turn4.session.guard_events if e.get("branch") == "reveal_step_skipped"]
+    stuck = reply(session, "还是不会。", gateway=gateway)       # 卡壳:置位 + 模型轮(#3a-response #500)
+    assert stuck.session.stuck is True
+    assert stuck.text == "我们再从条件想想。"
+    gateway.tutor_queue.extend([_tutor_payload(stuck.text)] * 2)  # 复读 → 兜底揭示
+    turn = reply(session, "还是不会。", gateway=gateway)
+    skips = [e for e in turn.session.guard_events if e.get("branch") == "reveal_step_skipped"]
     assert {e.get("hint_level") for e in skips} == {1, 2}  # 已完成的1/2级均被跳过
-    assert "验算" in turn4.text  # 直达第3级(唯一未完成子目标)
-    assert "第一周" not in turn4.text and "3/4" not in turn4.text  # 不重发已完成文本
+    assert "验算" in turn.text  # 直达第3级(唯一未完成子目标)
+    assert "第一周" not in turn.text and "3/4" not in turn.text  # 不重发已完成文本
