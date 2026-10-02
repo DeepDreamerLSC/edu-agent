@@ -59,6 +59,24 @@ description: >
 - **叠链 PR 合并纪律**:base 指向另一 PR 分支的叠链 PR,合并时不用 `--delete-branch`(删 base 分支会被 GitHub 关闭下游 PR 而非 retarget);BEHIND 阻塞用服务端 merges API 同步分支,不用 `--admin` 绕门;
 - **模型路由矩阵**:判断密集件(预注册/路线级分析)用 `5.3$max`;常规开发/审查/分析/跑批执行用 `5.3$high`;机械对账/确定性执行用 `5.3$low`;简单小件(脚本/文档)用 `Flash$high`;**max 不得作为默认档**。
 
+### 工作包合同与 Architect 升级（2026-10-02 固化）
+
+**默认单位 = Delivery Contract / 工作包，不是 PR。** 对架构型、调查型、跨 PR 工作，点火前冻结五件套：
+
+1. **Outcome**：最终要证明的系统事实，不写成“改文件/修 case/让测试过”；
+2. **Hard Invariants**：3–7 条不能破坏的边界，见结果后不得为过门而改；
+3. **Evidence Contract**：预先声明什么证据足以完成，优先 deterministic replay / base-vs-variant / field-equivalence / regression / production revalidation；
+4. **Scope Budget**：允许与禁止触碰的文件、层、依赖、调用预算；
+5. **Escalation Triggers**：原假设被证伪、合同需改、Authority/Policy/Product Contract/Measurement/Architecture 变化、证据冲突、scope 扩大、或出现改变系统认知的新事实。
+
+**Green Lane**：完全处于冻结合同内、无新 authority/policy/schema/dependency、无测试删除/放宽、证据与 claim 一致的任务，PM 自主连续推进；实现方案、issue/PR 拆分、测试组织不逐项请示 Architect。
+
+**Red Lane**：触及 Authority、Policy、Product Contract、schema/API/persistence 语义、ruler/success definition、hard invariant、新 fallback、跨层依赖、新 framework/architecture abstraction、删除既有 protection、deterministic→model judgment、observation→production truth 时，必须升级。
+
+**Exit Report** 固定七项：Outcome / Evidence / Invariants / Delivered / Discoveries / Residual Debt / Decision Needed。若 `Decision Needed = none`，报告是通知，PM 继续下一个已授权 Green Lane 工作包，不等 Architect 回执。
+
+**认知升级原则**：正常结果不上升；改变我们对系统理解的新事实必须上升。对冻结 SHA 做实验时写确切 integration target，不用会漂移的 `current main` 代替身份。
+
 ### 循环内路由
 
 | 消息 | 接收者 | PM 立即介入 |
