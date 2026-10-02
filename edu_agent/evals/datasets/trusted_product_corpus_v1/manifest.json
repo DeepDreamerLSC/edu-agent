@@ -3,11 +3,12 @@
  "corpus_id": "trusted_product_corpus_v1",
  "lane": "M4 overnight Lane A",
  "execution_identity": {
-  "git_commit": "6f3e70785545b51932b32b41f7b6a3d226934a66",
+  "git_commit": "6f3e70785545b51932b32c41f7b6a3d226934a66",
   "commit_subject": "Merge pull request #509 (fix/6a61bd8d-stem-options-closure)",
   "worktree": "/tmp/edu-corpus-laneA (detached @ commit)",
   "built_utc": "2026-10-02T16:14:11+00:00",
-  "tutor_smoke": "qwen3_vl_8b @ http://127.0.0.1:8303(default_gateway 产线默认参数,未改配置)"
+  "tutor_smoke": "qwen3_vl_8b @ http://127.0.0.1:8303(default_gateway 产线默认参数,未改配置)",
+  "git_commit_note": "fixed one-hex typo (b→c at position 22) 2026-10-03; cat-file verified"
  },
  "admission_gates_core": [
   "G1 source identity 明确",
