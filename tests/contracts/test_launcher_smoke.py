@@ -15,7 +15,7 @@ _SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
-import serve_partner_api  # noqa: E402
+import serve_partner_api  # E402 不在 ruff select(02 §2.1),旧 noqa 已过时——预算换位 02 §2「要加就先删」
 from auth_testing import signed_token
 
 

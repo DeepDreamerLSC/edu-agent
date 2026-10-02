@@ -706,11 +706,19 @@ def _has_trusted_ladder(session: "LearnerSession") -> bool:
     return any(step.get("provenance") == "analysis" for step in session.steps)
 
 
-def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
-            session: LearnerSession, images: list[str] | None = None):
+# open-solve 单调用四合一(acceptable/transcription/steps/reply)对个别题需求 >800
+# completion tokens(截断归因 REQUEST-LIMIT OWNED @ _invoke 旧硬编码 max_tokens=800);
+# start 的 open 专用上限,其余调用点(reply/finish/重生成/修复)保持默认 800 不变。
+_OPEN_MAX_TOKENS = 1200
+
+
+def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,  # noqa: PLR0913
+            session: LearnerSession, images: list[str] | None = None,
+            max_tokens: int = 800):
+    # 7 参 = 修复合同钉死的最小传参面(start-only budget 参数化;再收敛须动全部调用点)
     return gateway.invoke(ModelRequest(
         role=role, messages=messages, response_schema=schema,
-        session_id=session.session_id, max_tokens=800, temperature=0,
+        session_id=session.session_id, max_tokens=max_tokens, temperature=0,
         images=images,
     ))
 
@@ -753,6 +761,7 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
     ]
     payload = json.loads(_invoke(
         gateway, "tutor", open_messages, OPEN_SCHEMA, session, images=images,
+        max_tokens=_OPEN_MAX_TOKENS,
     ).text)
     if not payload.get("acceptable", True) and not question.get("text"):
         # 纯图题无文字兜底:fail closed(与旧 vision 语义一致,不采信 reply/steps)

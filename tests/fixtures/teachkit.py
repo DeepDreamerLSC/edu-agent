@@ -109,7 +109,8 @@ class FakeGateway:
         self.requests: list[dict] = []
 
     def invoke(self, request):
-        self.requests.append({"role": request.role, "messages": request.messages})
+        self.requests.append({"role": request.role, "messages": request.messages,
+                              "max_tokens": request.max_tokens})
         payload = (self.vision_queue.pop(0) if request.role == "vision" and self.vision_queue
                    else self.tutor_queue.pop(0) if self.tutor_queue
                    else {"reply": "先回到当前小问。", "ready_to_confirm": False,
