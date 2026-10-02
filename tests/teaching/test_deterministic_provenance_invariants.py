@@ -145,23 +145,25 @@ def test_answer_leak_pure_block_fallback_is_fixed_non_quote_template():
 
 
 # --------------------------------------------------------------------------- #
-# 路径二:feeds-method repair(_repair_feeds_method 重生成臂 / 脱敏臂)
+# 路径二:feeds-method repair(#499 mask 优先;重生成降为 mask 不清空时的保险臂)
 # --------------------------------------------------------------------------- #
 
-def test_feeds_method_regenerated_replacement_does_not_quote_source():
-    """重生成臂:修复文本为全新内容,不得复现来源的任何截断片段。"""
+def test_feeds_method_mask_first_skips_regeneration_keeps_full_span():
+    """#499 mask 优先:即使后排了可用重生成剧本也不消费——脱敏即修好,完整授权
+    span(哨兵俱在)保留,零重生成模型调用。"""
     probe = (f"下一步用通分,先把{HEAD_SENTINEL}3/4和5/8化成同分母"
              f"{TAIL_SENTINEL}再比,你来试试?")
     gateway = FakeGateway(tutor_payloads=[
         _open("这两个分数你想怎么比?"),
         _tutor(probe),
-        _tutor("你先把这两个分数变一变,再说说你的想法?", ready=True),
+        _tutor("你先把这两个分数变一变,再说说你的想法?", ready=True),  # 不再消费
     ])
     turn = start(dict(FRACTION_Q), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
 
-    assert _guard_modes(turn.session, "feeds_method") == ["regenerated"]
-    _assert_full_span_or_no_quote(probe, turn.text, label="feeds_method/regenerated")
+    assert _guard_modes(turn.session, "feeds_method") == ["masked"]
+    assert len(gateway.requests) == 2               # 零重生成调用(#499)
+    _assert_full_span_or_no_quote(probe, turn.text, label="feeds_method/masked")
 
 
 def test_feeds_method_masked_replacement_keeps_full_span():

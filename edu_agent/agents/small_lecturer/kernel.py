@@ -790,19 +790,22 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
 
 def _repair_feeds_method(ctx: "_GuardContext", session: LearnerSession, text: str,
                          hits: list[str], ready_to_confirm: bool = False) -> tuple[str, str]:
-    """代喂命中的处置(#165 WS4「守卫替换粒度」):重生成 → 脱敏 → 模板兜底。
+    """代喂命中的处置(#165 WS4「守卫替换粒度」):脱敏 → 重生成 → 模板兜底。
 
     返回 `(学生可见文本, 处置路径)`;路径取值 `regenerated` / `masked` / `template`,
     落 `guard_events[].mode` 供度量区分。原实现一律整轮换成复讲模板,连本轮引导/确认
     语义一并丢掉(并强制不确认)→ 学生已说出终答的末轮被推成 needs_review。
     不变量的最后一道:任何路径下学生可见文本都不含未说出的方法词。
+    #499(#498 Phase 0):顺序改为 mask 优先——raw 合格确认/推进语义先做最小
+    token-level 脱敏(词表无互为子串项,一次替换即清空命中);mask 后命中仍不清空
+    才进现有 regeneration(词表将来引入子串重叠时的保险臂);template 兜底最后保留。
     """
-    regenerated = _regenerate(ctx, session, text, _FEEDS_METHOD_CRITIQUE, ready_to_confirm)
-    if regenerated is not None and not _feeds_method_hits(regenerated, ctx.student_evidence):
-        return regenerated, "regenerated"
     masked = _mask_hit_tokens(text, hits)
     if not _feeds_method_hits(masked, ctx.student_evidence):
         return masked, "masked"
+    regenerated = _regenerate(ctx, session, text, _FEEDS_METHOD_CRITIQUE, ready_to_confirm)
+    if regenerated is not None and not _feeds_method_hits(regenerated, ctx.student_evidence):
+        return regenerated, "regenerated"
     return SAFE_FALLBACK_TEXT, "template"  # 兜底:词表无互为子串项,脱敏理论上必清空命中
 
 
