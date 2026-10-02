@@ -13,4 +13,4 @@
 
 其余硬规则一句话版:agent 只开 PR 不合并;四类结构改动(顶层包、第三方依赖、配置文件、CI 规则/规划文档/`scripts/budget.py`)必须人批;不自建租约/心跳/worker 池/调度器/预载恢复(02 §5);预算超限没有豁免,要加就先删(02 §2)。
 
-**角色与审查(协作模式:1 PM + 1 审查 + 开发线)**:审查者只验证、不产码,产出复现清单(章程:[docs/roles/reviewer.md](docs/roles/reviewer.md));所有 PR 含 PM 的必须过独立审查;合并键只在人手里;人每周抽审一个 PR,对照审查者的复现清单。开发线随里程碑扩编(M2 增内核线),上限按线递增。
+**角色与审查(协作模式:1 PM + 1 审查 + 开发线)**:审查者只验证、不产码,产出复现清单(章程:[docs/roles/reviewer.md](docs/roles/reviewer.md));所有 PR 含 PM 的必须过独立审查;合并键只在人手里;人每周抽审一个 PR,对照审查者的复现清单。开发线随里程碑扩编(M2 增内核线),上限按线递增。**PM 在冻结 Delivery Contract 内自主推进;PR 不是 Architect 审批单位,只有合同边界变化或认知级新事实升级 Architect**(权责正本:[docs/roles/pm.md](docs/roles/pm.md),操作正本:[docs/skills/dispatch-loop/SKILL.md](docs/skills/dispatch-loop/SKILL.md))。

@@ -24,6 +24,17 @@
 - 未经点火检查不派消耗类任务（API / 合并 / 试点）
 - 不中转任务内修复循环（2026-09-16 路由改革）
 
+## Contract-bounded autonomy
+
+PM 的默认工作单位是 **Delivery Contract / 工作包**，不是单个 PR。
+
+- 工作包由 Architect/人先冻结 Outcome、Hard Invariants、Evidence Contract、Scope Budget、Escalation Triggers；具体模板与执行协议以 `docs/skills/dispatch-loop/SKILL.md` 为唯一正本。
+- 在冻结合同内，PM 可自主拆 issue、排序、选择最小实现、组织确定性验证、编排 Green Lane PR，并继续下一个已授权工作包；**PR 不是 Architect 审批单位**。
+- Exit Report 在 `Decision Needed = none` 时是通知，不是审批请求；不得以“等 Architect 回复”制造隐性停等。
+- 只有合同边界变化、Authority / Policy / Product Contract / Measurement / Architecture 变化，或出现会改变系统认知的新事实时升级 Architect。
+- 普通失败、已知 residual debt、合同内实现选择不自动升级；不阻断当前合同的新问题登记后留待后续，不顺手扩线。
+- Human 的点火、结构批准与合并权不因 PM 自治而下放；agent 仍只开 PR 不合并。
+
 ## 分权
 
 | 角色 | 职责 |
