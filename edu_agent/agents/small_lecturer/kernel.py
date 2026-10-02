@@ -445,14 +445,24 @@ class _GuardContext:
     role: str = "tutor"
     messages: list[dict] | None = None
     schema: dict | None = None
-    # 答案对照基线(#149):由 `_known_answer(session)` 填入(answer 优先、steps 末值兜底)
-    # ——评测侧 question 只传 {"text": ...} 时护栏也有基准。
+    # 句级护栏答案基线(#506):trusted-only,由 `_trusted_answer_reference(session)`
+    # 填入(仅 question.answer);steps 末值兜底只进 numeric 侧(`_drift_sources`)。
     answer_reference: str = ""
     images: list[str] | None = None
     student_message: str | None = None
     student_evidence: tuple[str, ...] = ()  # 学生历史 user 消息(泄露护栏对照:已说答案可复述)
     cited_numbers: list[float] = field(default_factory=list)  # 模型自报集(影子对照,埋点用)
     model_turn: bool = True  # 是否落模型路径埋点(首问 False:首问经固定模板覆盖,不额外留痕)
+
+
+def _trusted_answer_reference(session: "LearnerSession") -> str:
+    """句级护栏的答案基线(#506):只认 question.answer(trusted 题库面)。
+
+    `_known_answer` 的 steps 末值兜底是 untrusted 规划件(#382 PR-C 的
+    trusted/untrusted 分界同源):句级 answer_present/双豁免不得因模型自措辞
+    成立。no-answer 面的数值保护由 numeric 侧(`_drift_sources`,仍消费
+    `_known_answer`)原样承接;#149 的「三处判定基线一致」在句级侧收窄至此。"""
+    return str(session.question.get("answer") or "").strip()
 
 
 def _guard_check(ctx: "_GuardContext", text: str, session: "LearnerSession | None" = None,
@@ -470,8 +480,9 @@ def _guard_check(ctx: "_GuardContext", text: str, session: "LearnerSession | Non
     blocked=拦下重写 / observed=仅检测),不再只是记账(key: 一次判定,无第二套实现)。"""
     leak = evaluate_student_visible_question(
         text,
-        # #149:答案基线统一走 _known_answer(answer 优先、steps 末值兜底);
-        # ctx 未带基线(旧调用方)时退回 question["answer"],行为与改动前一致。
+        # #506:句级基线 trusted-only(装配点 `_trusted_answer_reference`,仅
+        # question.answer;steps 末值不进句级门);ctx 未带基线(旧调用方)时退回
+        # question["answer"],同为 trusted 源。numeric 侧(_drift_sources)不受影响。
         answer_reference=ctx.answer_reference or str(ctx.question.get("answer") or ""),
         analysis_reference=str(ctx.question.get("analysis") or ""),
         student_evidence=list(ctx.student_evidence),
@@ -771,7 +782,8 @@ def start(question: dict, learner: dict, *, gateway: Gateway | None = None) -> T
         session.steps = ladder
     ctx = _GuardContext(question=session.question, grade=learner.get("grade", ""),
                         gateway=gateway, role="tutor", messages=open_messages,
-                        schema=OPEN_SCHEMA, answer_reference=_known_answer(session),
+                        schema=OPEN_SCHEMA,
+                        answer_reference=_trusted_answer_reference(session),
                         model_turn=False)  # 首问经固定模板覆盖:不落模型路径埋点
     safe_text = _guard_output(str(payload.get("reply") or ""), session, ctx)
     if not safe_text.strip():
@@ -882,7 +894,7 @@ def reply(session: LearnerSession, student_message: str, *,
     ctx = _GuardContext(question=session.question, grade=session.learner.get("grade", ""),
                         gateway=gateway, role="tutor", messages=_reply_messages,
                         schema=TUTOR_TURN_SCHEMA, student_message=student_message,
-                        answer_reference=_known_answer(session),
+                        answer_reference=_trusted_answer_reference(session),
                         cited_numbers=sorted({float(n) for n in (output.get("cited_numbers") or [])}),
                         student_evidence=(tuple(
                             str(message["content"]) for message in session.history
