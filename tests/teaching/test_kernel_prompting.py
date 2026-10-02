@@ -104,6 +104,46 @@ def test_arc_diagnose_hint_absent_without_incorrect_status(tmp_path):
         assert all("弧线第" not in p for p in _tutor_prompt_blobs(fake))
 
 
+# ---------- #501 P1+P2:两段冻结诊断政策文本的装配锁定(字节=冻结件,不得改一字) ----------
+
+# 逐字取自 /tmp/p12-out/candidate-texts.json(P1_TACTICS_insert / P2_DIAGNOSE_TURN_HINT_append,
+# 冻结于 2026-10-02;C 线五门 CANDIDATE_PASS 的受测字节)。改这两段 = 重开实验,不是改测试。
+P1_TACTICS_FROZEN = (
+    '"只追问思路、不评价不纠正"只限于刚采集作答后的一个诊断回合。'
+    '已经听到学生思路、且能定位具体错误或缺口后,后续回合应针对该错误关系或步骤'
+    '引导检查和修正,不得继续沿用"只问怎么想"的限制。'
+)
+P2_DIAGNOSE_FROZEN = (
+    '本轮"只追问怎么想、不纠正"只适用于学生刚给出一个作答或选项、'
+    '但还没有说明思路的情形。若学生本轮已经明确指出某个未解决的条件、关系或步骤缺口,'
+    '不要泛化地再问"怎么想",应直接针对这个具体缺口提出一个最小追问;仍不直接给答案。'
+)
+
+
+def test_system_prompt_carries_frozen_p1_tactics_line():
+    """#501 P1:correction-timing 规则进 TACTICS——start/reply 共用 system,每轮在场。"""
+    assert P1_TACTICS_FROZEN in system_prompt("六年级")
+
+
+def test_diagnose_hint_carries_frozen_p2_line_first_reply_only(tmp_path):
+    """#501 P2:applicability carve-out 随弧线第②步提示注入——仅 incorrect 首回轮。
+
+    hint 走 user 消息的 json.dumps 装配(ensure_ascii=False),文本内的 ASCII 引号
+    在线上形态为 \" 转义——以 json.dumps 同款转义后的冻结字节比对(转义双射,字面仍逐字)。"""
+    p2_on_wire = json.dumps(P2_DIAGNOSE_FROZEN, ensure_ascii=False)[1:-1]
+    with kernel_env(tmp_path, [
+        completion(open_json("你算出的结果是多少?")),
+        completion(tutor_json("你是怎么想到把三个数加在一起的?", ready=False)),
+        completion(tutor_json("把这两个条件放在一起看,你觉得哪里会不一样?", ready=False)),
+    ]) as (fake, gateway):
+        first = start(QUESTION_TEXT, dict(DIAGNOSE_LEARNER), gateway=gateway)
+        reply(first.session, "我把三个数直接加在一起。", gateway=gateway)
+        reply(first.session, "因为题目说又买来又借出。", gateway=gateway)
+        prompts = _tutor_prompt_blobs(fake)
+        assert p2_on_wire in prompts[1]            # 首回轮:与弧线第②步提示同场
+        assert p2_on_wire not in prompts[2]        # 之后轮次不在场(时窗不扩)
+
+
 # ---------- 第一验收:护栏不过的输出不进入 Turn.text ----------
 
 def test_kernel_replaces_leaking_tutor_output(tmp_path):
