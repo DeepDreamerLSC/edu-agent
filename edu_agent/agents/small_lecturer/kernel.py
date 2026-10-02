@@ -101,9 +101,6 @@ def _masked_question(question: dict) -> dict:
     return masked
 
 
-# 卡壳支持拆小问句(#198 确定性文本;提取为常量供 GEPA 双旋钮 seam 注入,行为零变化)
-_SUPPORT_HINT = ("我们把这一步拆小:先不想整道题,你只看这一步里最小的一个数,"
-                "从它开始你觉得能先算出什么?想到多少说多少。")
 # 无 trusted ladder 时的 safe guiding question(#382 PR-C,事故 20260920 裁定 P0-3:
 # 「无 trusted ladder → safe guiding question」)。只问不揭示、不含数字、不硬编码
 # 任何题目话术(禁令§11:不给700m/6⁄5/温度题写 case-specific 条件)。
@@ -128,7 +125,7 @@ def _feeds_method(text: str, student_evidence: tuple[str, ...] = ()) -> bool:
 
 
 def _student_signals_stuck(student_message: str) -> bool:
-    r"""学生表示「不会/猜不出」——支持动作选择(`_support_move`)的触发点(治复读探针)。
+    r"""学生表示「不会/猜不出」——stuck 置位的触发点(治复读探针)。
 
     现行口径(#198 检测器覆盖轮,按 D 卡 1 八形态扩表;每步都过 11/11 基线):
     我不太会/我猜不出(来)/想不出/我不会(裸,「我不会吧」反诘仍不判)/不会吧(后接
@@ -144,38 +141,6 @@ def _student_signals_stuck(student_message: str) -> bool:
     tests/teaching/test_kernel_invariants.py 参数表(#198 B 线)。"""
     return bool(re.search(r"我不太会|我猜不出|(?<![还但])不知道(?!\s*[多几])|想不出|我不会(?!吧)|有点不会|怎么.{0,3}不会|看不懂|还是不会|不会吧(?![?!？])|太难了|没思路|越来越不懂", student_message))
 
-
-# 支持动作(#198 第一步,MathDial teacher moves 分类学——采用,不发明):guiding_focus =
-# Focus · Guiding Student Focus,只问不揭示;#174 渐隐档折叠至此——触发源由
-# scaffold_faded 状态位改为就地判定「上一学生轮把刚揭示的那一步自己做出来了」
-# (判据:该步 value 数字全出现在消息里,数字集包含、顺序不敏感、含中文数字单字,
-# hint_level=0 恒不触发,fail-closed;粘滞跨轮语义随状态位删除,只认最近一条)。
-# telling = Telling 揭示族:下一级阶梯,耗尽即既有 bottom-out(设计内,不动)。
-# 轮 1「拆小」/轮 2「换数字」的 streak 触发源在检测器覆盖轮之后接入本选择函数
-# (#198 后续顺序:净减回血 → 检测器覆盖 → 轮 1)。
-def _support_move(session: "LearnerSession") -> str:
-    """卡住支持动作的**确定性选择函数**(#198;零模型、可复算、可进回归网)。
-
-    trusted ladder 边界(#382 PR-C):giving 判据只对 **trusted(analysis)阶梯**有意义
-    ——「上一学生轮把刚揭示的那一步自己做出来了」预设了揭示内容来自权威解析;
-    model 阶梯的 value 是规划件数字,拿它做掌握度判据会把幻觉值洗成教学信号。
-    无 trusted 阶梯时恒 telling(实际揭示由 `_reveal_stuck_hint` 的边界接管)。"""
-    if not _has_trusted_ladder(session):
-        return "telling"
-    prev_student = session.history[-2]["content"] if len(session.history) >= 2 else ""
-    numbers = (_question_numbers(str(session.steps[session.hint_level - 1].get("value") or ""))
-               if 0 < session.hint_level <= len(session.steps) else set())
-    return "guiding_focus" if numbers and numbers <= _spoken_numbers(prev_student) else "telling"
-
-
-def _stuck_hint(session: "LearnerSession") -> str:
-    """卡住支持动作执行(#198:枚举 + 确定性选择,取代渐隐/揭示双分支)。guiding_focus →
-    拆小问句(只问不揭示、不含数字、不消耗阶梯;埋点 {branch: support, move},#169 起
-    随轮提交补 turn);telling → `_reveal_stuck_hint`(下一级/耗尽 bottom-out,口径同 #185)。"""
-    if _support_move(session) == "guiding_focus":
-        session.guard_events.append({"branch": "support", "move": "guiding_focus"})
-        return _SUPPORT_HINT
-    return _reveal_stuck_hint(session)
 
 
 def _hits_numbers(numbers: set[float], text: str) -> bool:
@@ -387,7 +352,7 @@ def _current_step_anchor_numbers(session: "LearnerSession", step: dict) -> set[f
       补符号解析反开「-5≠5 可锚」的漏洞面。
 
     七条件收敛(裁定原文):stuck × telling 由调用方结构保证(`_reveal_stuck_hint`
-    只从 `_stuck_hint` 的 telling 分支到达);next step 存在由调用方 step 非 None;
+    只从 `_repeat_refine` 的复读兜底到达);next step 存在由调用方 step 非 None;
     hint_level>0 / state≠ready_to_confirm 同由调用方判定——本函数只管数字面:
     value 非空、anchor 非空、∩answer_pool=∅。纯函数:只读 step 与 session 的
     question/steps,不知道 stuck/telling/hint_level(Q7:归因不进 numeric.py)。"""
@@ -868,14 +833,13 @@ def _repeat_refine(ctx, session, safe_text: str, ready: bool) -> str:
 def _deterministic_turn(session: LearnerSession, student_message: str,
                         gateway: Gateway | None = None) -> Turn | None:
     """reply 的确定性分支(Thin Kernel #333 终裁:elicit 句族×3 已删,仅剩卡住
-    支持——复合体组件,无条件产品路径)。None=无命中走模型路径。"""
+    信号置位——复合体组件,无条件产品路径)。恒 None=命中只置 stuck,响应走模型路径。"""
     if _student_signals_stuck(student_message):
-        hint = _stuck_hint(session)
-        # PR-A(#382 P0-1 裁定):session.stuck 的唯一合法写入点 = 学生本人明确
+        # #382 P0-1 裁定:session.stuck 的唯一合法写入点 = 学生本人明确
         # stuck 信号(本分支)。Tutor repeat / guard failure / regen / fallback /
-        # Gateway 一律不得写(系统状态≠学生状态)。
+        # Gateway 一律不得写(系统状态≠学生状态)。置位后落入模型路径
+        # (Model→Guard→Commit),_repeat_refine 自此对 stuck 轮可达。
         session.stuck = True
-        return _commit_turn(session, student_message, hint, "dialogue")
     return None
 
 

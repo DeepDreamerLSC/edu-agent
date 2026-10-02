@@ -11,7 +11,11 @@ from __future__ import annotations
 
 import pytest
 
-from edu_agent.agents.small_lecturer import NEEDS_REVIEW_TEXT, reply, start
+from edu_agent.agents.small_lecturer import (
+    _UNTRUSTED_LADDER_HINT,
+    reply,
+    start,
+)
 
 from test_drift_and_tone import LEARNER
 from teachkit import FakeGateway
@@ -48,11 +52,6 @@ def _drift_event(turn) -> dict:
     return next((e for e in events if e.get("violation_sources")), events[-1])
 
 
-def _route_branch(session, phrase: str, gateway) -> str:
-    turn = reply(session, phrase, gateway=gateway)
-    return turn.session.guard_events[-1].get("branch")
-
-
 # --------------------------------------------------------------------------- #
 # c2:意图分类器对抗样例(负向断言补全,含两条实弹)——经 reply 路由断言
 # --------------------------------------------------------------------------- #
@@ -87,11 +86,23 @@ def _route_branch(session, phrase: str, gateway) -> str:
     ("平均每段不知道几米。", False),    # 「几」侧同口径
     ("我完全不知道怎么做。", True),     # 全局性「不知道」仍判卡住(无量问对象)
 ])
-def test_stuck_routes_to_reveal(phrase, is_stuck):
-    gateway = FakeGateway(tutor_payloads=[_open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS)])
+def test_stuck_signal_sets_stuck_and_routes_to_model(phrase, is_stuck):
+    """#3a-response(#500 裁定,deletion test 六门通过):卡住命中只置 session.stuck,
+    响应走模型路径——命中→置位→该轮模型调用→非常量返回。旧断言「命中→branch=reveal」
+    随 deterministic 短路删除翻转;11/11 检测面(命中/不命中)逐行保持零翻转。"""
+    gateway = FakeGateway(tutor_payloads=[
+        _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
+        _tutor("题面给了 8 只和 26 只脚,你想先从哪个数想起?"),
+    ])
     session = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway).session
-    branch = _route_branch(session, phrase, gateway)
-    assert (branch == "reveal") is is_stuck
+    calls_before = len(gateway.requests)
+    turn = reply(session, phrase, gateway=gateway)
+    assert turn.session.stuck is is_stuck               # 命中→置位;不命中→不置
+    assert len(gateway.requests) == calls_before + 1    # 两种走向都过模型路径
+    assert turn.session.guard_events[-1].get("branch") == "model"
+    assert turn.text == "题面给了 8 只和 26 只脚,你想先从哪个数想起?"  # 走完 Commit
+    if is_stuck:
+        assert turn.text != _UNTRUSTED_LADDER_HINT      # 非确定性常量直接返回
 
 
 # --------------------------------------------------------------------------- #
@@ -241,14 +252,17 @@ def test_model_branch_records_shadow_event():
 
 
 def test_deterministic_branches_record_guard_events():
-    # 确定性分支埋点:elicit/reveal 记 {branch, hint_level}
+    # #3a-response(#500):卡住命中不再走确定性回复分支(只置 stuck),该轮埋点=
+    # 模型路径数字守卫 {branch: model};reveal 埋点仍在复读兜底存活(见下方回归②)。
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
+        _tutor("题面给了 8 只和 26 只脚,你想先从哪个数想起?"),
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     assert turn.session.guard_events == []  # start 不跑数字守卫/分支埋点
-    turn = reply(turn.session, "我不太会", gateway=gateway)  # Thin Kernel:唯一确定性分支=卡住支持
-    assert turn.session.guard_events[-1] == {"branch": "reveal", "hint_level": 1, "turn": 1}
+    turn = reply(turn.session, "我不太会", gateway=gateway)
+    assert turn.session.stuck is True
+    assert turn.session.guard_events[-1].get("branch") == "model"
 
 
 # --------------------------------------------------------------------------- #
@@ -256,22 +270,26 @@ def test_deterministic_branches_record_guard_events():
 # --------------------------------------------------------------------------- #
 
 def test_final_answer_only_disclosed_via_finish_not_step_reveal():
-    # Thin Kernel(#333 终裁):阶梯揭示(给步骤)确定性文本不含终答;阶梯耗尽
-    # 不再 bottom-out 披露(终答唯一披露点 = finish 路径)。
+    # Thin Kernel(#333 终裁):终答唯一披露点 = finish 路径。#3a-response(#500):
+    # 卡住轮改走模型路径,阶梯不再被 stuck 轮消耗(hint_level 恒 0);阶梯揭示与
+    # bottom-out 的终答掩码面由 test_property_invariants 直测 `_reveal_stuck_hint`
+    # 覆盖。模型响应逐轮不披露终答(泄漏侧断言口径不变)。
+    tutor_turns = ["你想先从题面的哪个条件想起?",
+                   "题面给了 8 只和 26 只脚,先看哪个数?",
+                   "先想想全部按鸡来算会是什么情形?",
+                   "我们回到脚数的差,再想想看。"]
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
+        *[_tutor(t) for t in tutor_turns],
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
-    reveal1 = reply(turn.session, "我不太会", gateway=gateway)
-    assert "鸡3只兔5只" not in reveal1.text  # 第一级阶梯只给步骤,不给终答
-    reveal2 = reply(reveal1.session, "我不知道", gateway=gateway)
-    assert "鸡3只兔5只" not in reveal2.text  # 第二级阶梯仍只给步骤
-    reveal3 = reply(reveal2.session, "我猜不出来", gateway=gateway)
-    assert "鸡3只兔5只" not in reveal3.text  # 第三级(答案级)步骤文本不带终答值
-    exhausted = reply(reveal3.session, "我还是不会", gateway=gateway)
-    # 阶梯耗尽 → 通用引导,不披露终答(bottom-out 已删,句族入土)
-    assert "鸡3只兔5只" not in exhausted.text
-    assert exhausted.text == NEEDS_REVIEW_TEXT
+    for phrase, expected in zip(["我不太会", "我不知道", "我猜不出来", "我还是不会"],
+                                tutor_turns, strict=True):
+        turn = reply(turn.session, phrase, gateway=gateway)
+        assert "鸡3只兔5只" not in turn.text  # 模型响应不给终答
+        assert turn.text == expected          # 走完 Commit(模型路径)
+        assert turn.session.hint_level == 0   # stuck 轮不再消耗阶梯
+    assert turn.session.stuck is True
 
 
 # --------------------------------------------------------------------------- #
@@ -284,15 +302,20 @@ def test_final_answer_only_disclosed_via_finish_not_step_reveal():
 def test_student_stuck_signal_still_sets_stuck():
     """回归①:学生本人明确 stuck 信号(「我不太会」)→ 仍置 stuck(合法路径保留)。
 
-    这是 session.stuck 的唯一合法写入路径(_deterministic_turn)。"""
+    这是 session.stuck 的唯一合法写入路径(#3a-response #500:置位后落入模型路径,
+    deterministic 短路已删——命中→置位→模型调用→非常量返回)。"""
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
+        _tutor("题面给了 8 只和 26 只脚,你想先从哪个数想起?"),
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     assert turn.session.stuck is False               # 初始未置
+    calls_before = len(gateway.requests)
     turn = reply(turn.session, "我不太会", gateway=gateway)
     assert turn.session.stuck is True                # 学生信号 → 置位
-    assert turn.session.guard_events[-1]["branch"] == "reveal"
+    assert len(gateway.requests) == calls_before + 1  # 该轮发生模型调用
+    assert turn.session.guard_events[-1]["branch"] == "model"
+    assert turn.text != _UNTRUSTED_LADDER_HINT       # 非常量直接返回(走完 Commit)
 
 
 def test_tutor_repeat_fallback_reveal_does_not_set_stuck():

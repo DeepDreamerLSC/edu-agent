@@ -141,16 +141,19 @@ def test_finish_correct_without_narration_needs_review(tmp_path):
 def test_finish_correct_ready_but_stuck_uses_model_summary(tmp_path):
     """原条件保留:correct + 已达确认态但有卡点标记 → 模型总结(零调用模板不适用)。
 
-    卡点走确定性卡壳路径(学生「我不会」→ 阶梯揭示 → stuck,零 gateway 依赖)。"""
+    #3a-response(#500):卡壳轮走模型路径(学生「我不会」→ 置位 + 模型续句
+    ready=False,不再短路消耗后续剧本)。"""
     with kernel_env(tmp_path, [
         completion(open_json(_OPENING_TEXT["correct"])),
+        completion(tutor_json("这一步你卡在哪里?说说你目前的想法。")),
         completion(tutor_json("你自己把两边减 7、再除以 3 讲清楚了。", ready=True)),
         completion(json.dumps({"summary": "模型总结:你把两步思路都讲清楚了。"}, ensure_ascii=False)),
     ]) as (fake, gateway):
         first = start(_EQUATION_Q, {"grade": "五年级", "answer_status": "correct"},
                       gateway=gateway)
-        reply(first.session, "我不会,这道题太难了。", gateway=gateway)  # 卡壳 → 揭示 → stuck
+        stuck_turn = reply(first.session, "我不会,这道题太难了。", gateway=gateway)  # 卡壳 → 置位 + 模型轮
         assert first.session.stuck is True
+        assert stuck_turn.session.state == "dialogue"  # 卡壳轮模型续句不关对话
         reply(first.session, "两边同时减 7 得 18,再除以 3 得 x=6,代回检验成立。", gateway=gateway)
         assert first.session.state == "ready_to_confirm"
         summary = finish(first.session, gateway=gateway)
