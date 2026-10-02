@@ -1,0 +1,53 @@
+{
+  "schema_version": "small_lecturer_diagnostic_policy_case/v1",
+  "provenance": {
+    "issue": 501,
+    "authorization": "#501 [M3-06] CANDIDATE_PASS → prompt-only PR(只开不合)",
+    "frozen_definition": "/tmp/p12-out/e1-frozen.json(冻结于 2026-10-02T13:20:00+08:00,先于一切候选动作;本件由该冻结件逐字转写)",
+    "frozen_candidate_texts": "/tmp/p12-out/candidate-frozen.md + candidate-texts.json(prompting.py 两段冻结文本的权威字节副本)",
+    "gates": "/tmp/p12-out/gates.md:CANDIDATE_PASS 5/5;门②(E1 首个 eligible correction turn 进入针对性检查/纠正)即本案判读口径",
+    "base_sha": "0bfeb5e325546d735e7c0491fe0afca4b6ecc697"
+  },
+  "scenarios": [
+    {
+      "id": "C17-ext-cor8",
+      "title": "诊断政策回归案 E1:C17-phasec 延伸——首个 eligible correction turn 的针对性检查/纠正",
+      "caliber": "diagnostic/regression",
+      "question": {
+        "text": "三分之二乘以六等于多少?"
+      },
+      "grade": "六年级",
+      "answer_status": "incorrect",
+      "tags": [
+        "diagnostic",
+        "regression",
+        "诊断政策",
+        "真模型",
+        "P12"
+      ],
+      "student_turns": [
+        "把 6 看成六分之六,三分之二乘六分之六 = 十八分之三十六,约分 = 4。",
+        "25 减 7 等于 18,x 等于 18。",
+        "那我回到这道题重新算:三分之二乘六,还是把 6 看成六分之六,分子乘分子是 2 乘 6 等于 12,分母乘分母是 3 乘 6 等于 18,得十二分之十八,约分是三分之二,所以答案是三分之二。"
+      ],
+      "eligible_correction_turns": [
+        false,
+        false,
+        true
+      ],
+      "stop_after_turn": 3,
+      "call_finish": false,
+      "source": {
+        "issue": 501,
+        "note": "E1 冻结件入仓(diagnostic fixture,不进任何 benchmark 权重/历史结论)。t1/t2 逐字取自原案 C17-phasec(题面/剧本与 phase-c 原案一致,原 C17 一字不改、不在本仓库);t3 是冻结件唯一新增文本。eligible_correction_turns 为逐轮旗标:t3 = 首个 eligible correction turn(诊断已完成、学生再次呈现含错误的完整计算链、错误具体可定位——把 6 改写成 6/6 改变了被乘数的值,且结果三分之二与 t1 自报答案 4 矛盾),P1 政策(已听到思路且定位错误后应针对该错误引导检查修正)的第一个可观察落点即本轮 tutor 回复。stop_after_turn=3 且 call_finish=false:记录 t3 的 tutor 回复后立即停止,不调 finish(finish 总结不属于该构念)。",
+        "design_notes": "question 故意只有 text、不带 answer/answer_spec(冻结设计:完成证据 fail-closed,不给学生文本侧的 premature completion 通道,观察面只落在 tutor 行为)——因此本件不适用 load_shortboard_corpus 真模型口径(该口径要求 question.answer 必填),由 diagnostic 运行面按 driver_contract 消费;不得为过 corpus loader 而补 answer。",
+        "driver_contract": "同 B 线口径(small_lecturer start/reply 经 default_gateway,text-only 题面,learner 同本件 grade/answer_status;E1 不调 finish;证据件 /tmp/p12-out/drive_p12.py)",
+        "derived_from": {
+          "original_case": "C17-phasec",
+          "source_of_verbatim_turns": "/tmp/survival-out/drive_survival.py CASES['C17-phasec'](与 phase-c/C17.md 原案 transcript t1/t2 逐字一致)",
+          "original_case_untouched": true
+        }
+      }
+    }
+  ]
+}
