@@ -194,24 +194,24 @@ def test_reply_masks_method_names_in_teacher_prompt(tmp_path):
 
 
 def test_reply_repairs_method_feed_and_keeps_open(tmp_path):
-    """复讲轮代喂(输出侧兜底):学生给普通回答,tutor 回「你用的是假设法」→ **重生成**
-    保留本轮引导语义(不再整轮换复讲模板),且 ready_to_confirm=False(不关对话,
-    继续收集讲题内容)。
+    """复讲轮代喂(输出侧兜底):学生给普通回答,tutor 回「你用的是假设法」→ #499
+    mask 优先:**确定性脱敏**保留本轮引导语义(不再先重生成、不整轮换复讲模板),
+    且 ready_to_confirm=False(不关对话,继续收集讲题内容)。
 
     学生消息必须是普通回答(非「都懂了」/卡住),否则会走理解/卡壳的确定性短路、不调模型,
     这条输出侧代喂分支就永远测不到(#109 P2-2)。"""
     with kernel_env(tmp_path, [
         completion(open_json("你先说说题目给了哪些条件?")),
         completion(tutor_json("你用的是假设法,对吧?", ready=True)),
-        completion(tutor_json("这个思路可以,那这一步你打算先算哪一个?", ready=False)),
     ]) as (fake, gateway):
         first = start({"text": "鸡兔同笼,共8只26脚", "answer": "鸡3只兔5只",
                        "knowledge_points": ["假设法"]}, {"grade": "六年级"}, gateway=gateway)
         turn = reply(first.session, "我先说说我的想法。", gateway=gateway)
-        assert turn.text == "这个思路可以,那这一步你打算先算哪一个?"  # 本轮引导语义保留
+        assert turn.text == "你用的是这种方法,对吧?"  # 本轮引导语义保留(仅方法词脱敏)
         assert turn.ready_to_confirm is False  # 不关对话,继续收集
-        assert turn.session.stuck is False     # 重生成修好 = 非硬降级(不再连坐卡点)
+        assert turn.session.stuck is False     # 脱敏修好 = 非硬降级(不再连坐卡点)
         assert "假设法" not in turn.text
+        assert len(fake.requests) == 2         # mask 优先:代喂修复零重生成调用(#499)
 
 
 def test_reply_student_says_understood_routes_to_model(tmp_path):

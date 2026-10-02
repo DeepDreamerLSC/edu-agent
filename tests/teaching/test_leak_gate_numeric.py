@@ -249,8 +249,9 @@ def test_gate_and_repair_rule_ids_come_from_one_computation():
 
 
 def test_method_repair_in_confirm_state_paraphrases():
-    """③-确认态 + 代喂修复(VERDICT#6 更新):方法词代喂重生成与终答引述拦截并存,
-    重生成为转述式确认(无方法名、无终答数字)——两修复都不被连坐。"""
+    """③-确认态 + 代喂修复(VERDICT#6 更新;#499 mask 优先):方法词代喂修复与
+    终答引述拦截并存,脱敏版转述式确认保留(无方法名、学生已述终答数字可见)
+    ——两修复都不被连坐。"""
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
         _tutor("你讲得很好,用的就是假设法,5 只兔和 3 只鸡都对。", ready=True),
@@ -259,10 +260,10 @@ def test_method_repair_in_confirm_state_paraphrases():
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "兔有10除以2等于5只,鸡有3只,验算26只脚。", gateway=gateway)
 
-    assert turn.text == "你的思路很完整,验算也对。最后请你自己完整说一遍结论。"
+    assert turn.text == "你讲得很好,用的就是这种方法,5 只兔和 3 只鸡都对。"
     assert turn.state == "ready_to_confirm" and turn.ready_to_confirm is True
     assert turn.session.stuck is not True
-    assert "假设法" not in turn.text  # 方法名不再出现(重生成版本)
+    assert "假设法" not in turn.text  # 方法名不再出现(脱敏版本)
     # guard-provenance-fix ①:学生已述终答(5/3)→ 数值门零事件(转述合法);
     # 方法词代喂修复独立在案(feeds_method),不再与终答掩码连坐
     assert _repairs(turn.session.guard_events) == []

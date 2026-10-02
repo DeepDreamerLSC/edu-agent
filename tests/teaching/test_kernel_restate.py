@@ -275,24 +275,25 @@ def test_dropped_reveal_step_is_flagged_in_guard_events():
 
 
 
-def test_method_feed_hit_regenerates_and_records_event():
-    """命中代喂 → **重生成保留本轮语义**(不整轮换复讲模板);埋点留痕原文/命中词/路径。"""
-    repaired = "你说的这个方法很关键,那这一步你打算先算哪一个?"
+def test_method_feed_hit_masks_first_and_records_event():
+    """命中代喂 → #499 mask 优先:**确定性脱敏**保留本轮引导语义(不整轮换复讲
+    模板、也不再先重生成);埋点留痕原文/命中词/路径。"""
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("你先说说题目给了哪些条件?"),
         _tutor_payload("你用的是假设法,对吧?", ready=True),
-        _tutor_payload(repaired),        # 重生成:守住本轮引导语义、不点名
+        _tutor_payload("你说的这个方法很关键,那这一步你打算先算哪一个?"),
     ])
     first = start(dict(CHICKEN_QUESTION), {"grade": "六年级"}, gateway=gateway)
     turn = reply(first.session, "我先说说我的想法。", gateway=gateway)
-    assert turn.text == repaired                # 保留本轮引导,不是复讲模板
+    assert turn.text == "你用的是这种方法,对吧?"  # 保留本轮引导,只隐方法词
     assert "假设法" not in turn.text
     assert turn.session.stuck is False          # 修好 = 非硬降级(不落卡点)
+    assert len(gateway.requests) == 2           # mask 优先:零重生成调用(#499)
     events = [e for e in turn.session.guard_events if e.get("guard") == "feeds_method"]
     assert events and events[-1]["original"] == "你用的是假设法,对吧?"
     assert events[-1]["rule_ids"] == ["假设法"]
     assert events[-1]["regenerated"] is True
-    assert events[-1]["mode"] == "regenerated"
+    assert events[-1]["mode"] == "masked"
 
 
 def test_method_feed_hit_masks_only_unsaid_tokens():
