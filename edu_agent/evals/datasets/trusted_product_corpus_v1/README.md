@@ -55,8 +55,8 @@ Core 72 介于目标 50–80,**未凑数**:bank 池 142 题 answer_spec 中仅 1
 |---|---|---|
 | G1/G3/G4/G5/G6 | 过 | source identity 明确;answer_spec short_text_exact 在场且 #509 零改动;DATA-CONFOUNDED(vl-误读归因)经 #509 stem 闭合已 resolve |
 | G2 | 过(带注) | stem 已对原图逐字闭合(#509:④6.7+组合行);**残余**:static/bank.json 演示面同案 50 字截断+④8.7 未修(#509 明示不在范围) |
-| G7 | **不过** | [M] start() 含图在 d55ce9ef 两次 `finish_reason=length` 截断(BLOCKED-again);修复 8738381e(start-only open budget)**未入 main@6f3e7078**;另:档案学生脚本末轮「④8.7」与闭合后 stem(④=6.7)不符=脚本 stale,逐字重放不再忠实 |
-| 结论 | Challenge | stem/answer/图三件套本身已可信,但当前身份 replay 面被请求上限截断阻断+脚本漂移——历史事故面(BLOCKED)归 Challenge,待 A 线修复入 main 后可复议 Core |
+| G7 | **不过** | ~~start() 含图截断~~(**勘误 2026-10-03:此半条不成立**——闭合 stem 在 main@6f3e7078 原产线 800 上限下实测 `finish_reason=stop`、output=749 tok,/tmp/reval-800-postmerge/facts 直接证据;族B 终局=historical REQUEST-LIMIT boundary / DATA-CONFOUNDED / no current change right,#496 评论 5954221906;#510 修复已按 YAGNI 关闭);G7 仍不过的真实理由:**档案学生脚本末轮「④8.7」与闭合后 stem(④=6.7)不符=脚本 stale,逐字重放不再忠实**(需按闭合后题面重铸脚本才可复验) |
+| 结论 | Challenge | stem/answer/图三件套本身已可信;归 Challenge 的理由=历史事故案(BLOCKED/数据混淆正本)+档案脚本漂移,而非当前 main 截断(已证不存在)。重铸脚本并复验后可复议 Core |
 
 ## 6. Coverage matrix(Core;Challenge 全矩阵见 manifest)
 
