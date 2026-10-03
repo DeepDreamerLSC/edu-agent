@@ -84,10 +84,10 @@ tutor=qwen3_vl_8b@http://127.0.0.1:8303(default_gateway 产线默认参数,配�
 
 | # | 发现 | Failure Boundary | Root Operational Cause | Change Right |
 |---|---|---|---|---|
-| F1 | [M] live-distributive start 含图截断在冻结身份仍 BLOCKED | product start() 图题面 | kernel 请求上限(kernel.py:713 REQUEST-LIMIT);修复 8738381e 未入 main | A 线 PR 合入后重跑终判(已在 /tmp/reval-final 登记 Escalation) |
+| F1 | [M] live-distributive 含图截断:**已解阻**(勘误 2026-10-03)——闭合 stem @ current main(6f3e7078)@ 原 800 上限实测 `stop@749`,族B 终局=historical REQUEST-LIMIT boundary / DATA-CONFOUNDED / **no current change right**(#496 评论 5954221906;#510 按 YAGNI 关闭) | 历史 product start() 图题面(旧 stem 时期) | 旧 stem 数据面驱动生成越过 800(#509 已修) | **本面 none**;当前 Challenge 身份=历史事故价值+learner 脚本 stale(末轮「④8.7」与闭合题面漂移),与 current-main 截断无关;重铸脚本复验后可复议 Core |
 | F2 | [M] signal_enrichment_v2 understanding/completion 8 案期望面已废 | eval 数据集 vs kernel 机制 | #333 终裁 06e4ecee Thin Kernel 删七机制:两个 matcher 删除、验证测试同步删除,数据集未标废 | 数据集侧标废或重建消费面(人裁;本 corpus 仅降层) |
 | F3 | [P] bank.json 演示面 150 处与合同面不一致:149 纯截断+1 值错(6a61bd8d ④8.7) | api 静态演示层 | 序列化生成截断/误录(#509 已明示独立缺陷未动) | 演示面再生成或删除(数据管道面,人裁) |
-| F4 | [P] partner_bank 263 题 `question_image` 全 null,而 static/bank 存 257 图 | 合同件数据管道 | 挂图缺失(#509 记录「数据管道面,未动」) | 管道补挂图并逐案核 stem-图(人裁;核前 bank 案仅 text-only 格) |
+| F4 | [P] partner_bank 263 题 `question_image` 全 null,而 static/bank 存 257 图 | **snapshot 闭合面(非生产管道缺陷)**——question_source.py 现行合同明示「题图由客户端上传,不在快照内」 | 快照按合同设计不携带题图载荷;263/263 null 证明的是 partner-bank snapshot **不能独立承担离线 image replay** | **none currently**;仅当产品合同要求 bank snapshot 自身可独立恢复 image path,或实际客户端上传链发生缺图,才获得生产修复权。对本 corpus=snapshot/corpus closure limitation(核验前 bank 案仅 text-only 格) |
 | F5 | [P] true_false 期望面全池 0 | corpus 覆盖 | 候选源(142 spec 题)分布即无此型 | 不造数;未来 partner 供给或人裁扩面 |
 | F6 | [A] 档案 learner 默认无 unanswered/correct 声明源,Core learner 面靠剧本弧覆盖 | corpus 输入参数面 | kernel_subject 默认 incorrect;历史批次从未声明其他值 | 如产品面需要,人裁后以受控声明扩格(本版不扩) |
 
