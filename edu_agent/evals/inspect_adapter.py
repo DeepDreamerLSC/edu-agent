@@ -1,5 +1,8 @@
 """Inspect 执行 adapter(#521 I5):corpus_round 默认 execution owner 切到 inspect-ai
 之后的 edu-agent 侧窄模块。spike(/tmp/i2 i3 i4)只抽生产必需件,不整包搬。
+#521 I6-A 窄扩展:InspectRoundRequest.scenarios=None 表达 execution-only 轮
+(S2 判卷电池形态——判分是 run 级确定性计算,由消费面自 checkpoint 复算,不经
+Inspect scorer),task_name 可指定(Task 元数据即 provenance,不冒名 corpus 轮)。
 
 十职责(全部单内,零调度):
   ① Subject→Inspect solver bridge ② Canonical 翻译(fail closed,合同 §4)
@@ -250,17 +253,23 @@ def make_judge_scorer(gateway, scenarios: dict[str, dict]) -> Scorer:
 # ----------------------------------------------------- identity preflight(职责⑤)----
 @dataclass(frozen=True)
 class InspectRoundRequest:
-    """run_inspect_round 入参束(PLR0913:路径/身份/配置/场景一次收口)。"""
+    """run_inspect_round 入参束(PLR0913:路径/身份/配置/场景一次收口)。
+
+    scenarios=None = execution-only(#521 I6-A,S2 判卷电池):不装配 corpus scorer,
+    返回 (run_dir, {}, {})——GA/GB/VOID 等 run 级判分由消费面自 results/*.json
+    checkpoint 复算,判分语义不复制进 adapter。task_name 随消费面命名(provenance
+    不冒名 corpus 轮;缺省 = corpus 轮名)。"""
 
     subject: Subject
     gateway: object
     cases_file: Path
-    scenarios: dict
+    scenarios: dict | None
     identity: dict
     concurrency: int
     judge_enabled: bool
     collect_root: Path
     resume_dir: Path | None
+    task_name: str = TASK_NAME
 
 
 def _verify_resume_identity(run_dir: Path, request: InspectRoundRequest,
@@ -325,15 +334,18 @@ def _case_samples(lines: list[str]) -> list[Sample]:
 
 def _build_task(request: InspectRoundRequest, run_dir: Path) -> Task:
     """Inspect Task 装配:scorer 语义全在 edu-agent 侧 wrapper(职责⑥⑦),样本集与
-    Subject 输入同 legacy 一条 cases.jsonl,不建第二套 dataset truth。"""
+    Subject 输入同 legacy 一条 cases.jsonl,不建第二套 dataset truth。scenarios=None
+    (execution-only)不装 scorer——该形态的判分是 run 级计算,归消费面。"""
     samples = MemoryDataset(samples=_case_samples(_read_case_lines(request)),
                             name=request.cases_file.stem)
-    scorers = [make_deterministic_scorer(request.scenarios)]
-    if request.judge_enabled:
-        scorers.append(make_judge_scorer(request.gateway, request.scenarios))
-    return Task(name=TASK_NAME, dataset=samples,
+    scorers: list[Scorer] = []
+    if request.scenarios is not None:
+        scorers.append(make_deterministic_scorer(request.scenarios))
+        if request.judge_enabled:
+            scorers.append(make_judge_scorer(request.gateway, request.scenarios))
+    return Task(name=request.task_name, dataset=samples,
                 solver=make_bridge_solver(request.subject, run_dir),
-                scorer=scorers, metadata={
+                scorer=scorers or None, metadata={
                     "execution_owner": EXECUTION_OWNER,
                     "evidence_origin": "inspect_execution",
                     "inspect_role": "execution_owner",
@@ -416,6 +428,8 @@ def run_inspect_round(request: InspectRoundRequest) -> tuple[Path, dict, dict]:
         raise KeyboardInterrupt  # SIGINT:checkpoint 已原子落档,续跑由 guard 复用
     log = logs[0]
     _write_execution_provenance(run_dir, log, request)
+    if request.scenarios is None:  # execution-only:无 scorer 面,消费面自 checkpoint 取数
+        return run_dir, {}, {}
     if request.judge_enabled:
         print(f"评分:{sum(1 for r in load_results(run_dir) if r['status'] == 'ok')} 行(judge 单遍 primary)")
     else:
