@@ -1,5 +1,5 @@
 {
- "schema_version": "trusted_product_corpus_v1/manifest/v1",
+ "schema_version": "trusted_product_corpus_v1/manifest/v1.1",
  "corpus_id": "trusted_product_corpus_v1",
  "lane": "M4 overnight Lane A",
  "execution_identity": {
@@ -172,6 +172,38 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "short_text_exact",
+       "compile_spec": {
+        "answer_type": "short_text_exact",
+        "ground_truth": "B. 正西",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -210,6 +242,38 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "0.4kg",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -248,6 +312,38 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "short_text_exact",
+       "compile_spec": {
+        "answer_type": "short_text_exact",
+        "ground_truth": "B. 15",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -286,6 +382,38 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "short_text_exact",
+       "compile_spec": {
+        "answer_type": "short_text_exact",
+        "ground_truth": "无法确定",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -324,6 +452,38 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "short_text_exact",
+       "compile_spec": {
+        "answer_type": "short_text_exact",
+        "ground_truth": "A.10",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -362,6 +522,38 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "1.16m",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -400,6 +592,38 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "0.5m",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -438,6 +662,38 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "300步",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -476,6 +732,48 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "22",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
+    },
+    "known_failure": {
+     "type": "structured_generation_loop",
+     "registered": "2026-10-03",
+     "evidence": "/tmp/wp1/diag-4096.json (41-char verbatim loop @4096 saturated; 800/1200/1600/4096 all finish=length); /tmp/os-split/ (G1 free-generation counterfactual)",
+     "attribution_status": "OWNER SPLIT CONCLUDED (2026-10-03, /tmp/os-split/): generation loop is dependent on the route-1 structured-output schema-instruction message (prompt-side) x temp-0 greedy decoding — G1 removed ONLY the schema message (system+question bytes intact): stop@732 tokens, zero loop, model solves x=22 correctly, temp-0 repeat byte-identical; grammar engine excluded (no response_format/server grammar in this path). Repair surface = structured-output contract face; all repair options remain Architect-gated (Red).",
+     "baseline_semantics": "stays in Core and keeps failing red; must not be silenced via xfail/expected-fail/exclusion — any future repair must genuinely turn it green",
+     "known_failure_family": "structured_generation_loop",
+     "disposition": "stays in Core, NOT xfail, stays in denominator - long-term regression case (Architect 2026-10-03 final ruling)",
+     "repair_surface_ruled": "OPEN_SCHEMA-specific schema-instruction annotation (minimal); global _SCHEMA_INSTRUCTION untouchable; four-in-one split denied at current evidence"
     }
    },
    {
@@ -514,6 +812,38 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "13",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -552,6 +882,38 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "3/100",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -590,6 +952,44 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "choice_letter",
+       "compile_spec": {
+        "answer_type": "choice_letter",
+        "ground_truth": "D",
+        "aliases": [],
+        "unit_optional": false,
+        "letter_choices": [
+         "A",
+         "B",
+         "C",
+         "D"
+        ]
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -628,6 +1028,44 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "choice_letter",
+       "compile_spec": {
+        "answer_type": "choice_letter",
+        "ground_truth": "D",
+        "aliases": [],
+        "unit_optional": false,
+        "letter_choices": [
+         "A",
+         "B",
+         "C",
+         "D"
+        ]
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -666,6 +1104,44 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "choice_letter",
+       "compile_spec": {
+        "answer_type": "choice_letter",
+        "ground_truth": "D",
+        "aliases": [],
+        "unit_optional": false,
+        "letter_choices": [
+         "A",
+         "B",
+         "C",
+         "D"
+        ]
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -704,6 +1180,44 @@
       "completion_exercisable"
      ],
      "source_family": "partner_bank"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_no_student_script",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "choice_letter",
+       "compile_spec": {
+        "answer_type": "choice_letter",
+        "ground_truth": "A",
+        "aliases": [],
+        "unit_optional": false,
+        "letter_choices": [
+         "A",
+         "B",
+         "C",
+         "D"
+        ]
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": false,
+       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -748,6 +1262,29 @@
       "reveal_ladder"
      ],
      "source_family": "pujia_school_question_bank(image_teaching_v1)"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c2_compiler_left_empty(composite_not_compiled)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "reference_answer_wp4_approved",
+        "detail": "reference_answer.value;WP4 人审 approved(issue #130)+WP3 仲裁定稿"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "composite",
+       "compile_spec": null,
+       "reason": "composite_not_compiled"
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -792,6 +1329,42 @@
       "reveal_ladder"
      ],
      "source_family": "pujia_school_question_bank(image_teaching_v1)"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "reference_answer_wp4_approved",
+        "detail": "reference_answer.value;WP4 人审 approved(issue #130)+WP3 仲裁定稿"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "9",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "那3份就是3×3=9个。所以需要涂9个圆片。",
+       "turn_index": 3,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -836,6 +1409,29 @@
       "reveal_ladder"
      ],
      "source_family": "pujia_school_question_bank(image_teaching_v1)"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c2_compiler_left_empty(composite_not_compiled)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "reference_answer_wp4_approved",
+        "detail": "reference_answer.value;WP4 人审 approved(issue #130)+WP3 仲裁定稿"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "composite",
+       "compile_spec": null,
+       "reason": "composite_not_compiled"
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -880,6 +1476,48 @@
       "reveal_ladder"
      ],
      "source_family": "pujia_school_question_bank(image_teaching_v1)"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "reference_answer_wp4_approved",
+        "detail": "reference_answer.value;WP4 人审 approved(issue #130)+WP3 仲裁定稿"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "choice_letter",
+       "compile_spec": {
+        "answer_type": "choice_letter",
+        "ground_truth": "C",
+        "aliases": [],
+        "unit_optional": false,
+        "letter_choices": [
+         "A",
+         "B",
+         "C",
+         "D"
+        ]
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "C图长方形长a、宽b，面积1 m²，a×b=1，这才互为倒数。所以选C。",
+       "turn_index": 3,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -924,6 +1562,29 @@
       "reveal_ladder"
      ],
      "source_family": "pujia_school_question_bank(image_teaching_v1)"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c2_compiler_left_empty(composite_not_compiled)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "reference_answer_wp4_approved",
+        "detail": "reference_answer.value;WP4 人审 approved(issue #130)+WP3 仲裁定稿"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "composite",
+       "compile_spec": null,
+       "reason": "composite_not_compiled"
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -968,6 +1629,29 @@
       "reveal_ladder"
      ],
      "source_family": "pujia_school_question_bank(image_teaching_v1)"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c2_compiler_left_empty(composite_not_compiled)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "reference_answer_wp4_approved",
+        "detail": "reference_answer.value;WP4 人审 approved(issue #130)+WP3 仲裁定稿"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "composite",
+       "compile_spec": null,
+       "reason": "composite_not_compiled"
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1012,6 +1696,29 @@
       "reveal_ladder"
      ],
      "source_family": "pujia_school_question_bank(image_teaching_v1)"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c2_compiler_left_empty(choice_no_reliable_letter_choices)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "reference_answer_wp4_approved",
+        "detail": "reference_answer.value;WP4 人审 approved(issue #130)+WP3 仲裁定稿"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "choice_letter",
+       "compile_spec": null,
+       "reason": "choice_no_reliable_letter_choices"
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1056,6 +1763,29 @@
       "reveal_ladder"
      ],
      "source_family": "pujia_school_question_bank(image_teaching_v1)"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c2_compiler_left_empty(composite_not_compiled)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "reference_answer_wp4_approved",
+        "detail": "reference_answer.value;WP4 人审 approved(issue #130)+WP3 仲裁定稿"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "composite",
+       "compile_spec": null,
+       "reason": "composite_not_compiled"
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1098,6 +1828,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1140,6 +1889,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1182,6 +1950,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1224,6 +2011,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1266,6 +2072,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1308,6 +2133,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1350,6 +2194,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1392,6 +2255,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1434,6 +2316,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1476,6 +2377,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1518,6 +2438,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1560,6 +2499,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1603,6 +2561,25 @@
       "misconception_repair"
      ],
      "source_family": "math_gold_b2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1645,6 +2622,25 @@
       "completion_arc(complete_reasoning 子集)"
      ],
      "source_family": "math_gold_candidates"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1687,6 +2683,25 @@
       "completion_arc(complete_reasoning 子集)"
      ],
      "source_family": "math_gold_candidates"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1729,6 +2744,25 @@
       "completion_arc(complete_reasoning 子集)"
      ],
      "source_family": "math_gold_candidates"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1771,6 +2805,25 @@
       "completion_arc(complete_reasoning 子集)"
      ],
      "source_family": "math_gold_candidates"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1813,6 +2866,25 @@
       "completion_arc(complete_reasoning 子集)"
      ],
      "source_family": "math_gold_candidates"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1855,6 +2927,25 @@
       "completion_arc(complete_reasoning 子集)"
      ],
      "source_family": "math_gold_candidates"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1897,6 +2988,25 @@
       "completion_arc(complete_reasoning 子集)"
      ],
      "source_family": "math_gold_candidates"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1939,6 +3049,25 @@
       "completion_arc(complete_reasoning 子集)"
      ],
      "source_family": "math_gold_candidates"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -1981,6 +3110,25 @@
       "completion_arc(complete_reasoning 子集)"
      ],
      "source_family": "math_gold_candidates"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2023,6 +3171,25 @@
       "completion_arc(complete_reasoning 子集)"
      ],
      "source_family": "math_gold_candidates"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2065,6 +3232,25 @@
       "completion_arc(complete_reasoning 子集)"
      ],
      "source_family": "math_gold_candidates"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2107,6 +3293,25 @@
       "completion_arc(complete_reasoning 子集)"
      ],
      "source_family": "math_gold_candidates"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(none)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "none",
+        "detail": "expectation=teaching_arc_gold(trajectory only);question 为裸 text 无产品级 answer authority(裁定:B2 类不得投影)"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2155,6 +3360,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "equation_form",
+       "compile_spec": {
+        "answer_type": "equation_form",
+        "ground_truth": "x=6",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2203,6 +3444,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "equation_form",
+       "compile_spec": {
+        "answer_type": "equation_form",
+        "ground_truth": "x=6",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "接着两边同时除以2，x等于6，代入2乘6加5等于17。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2251,6 +3528,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "equation_form",
+       "compile_spec": {
+        "answer_type": "equation_form",
+        "ground_truth": "x=4",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "最后两边同时除以4，x等于4，代回原式得到24。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2299,6 +3612,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "7/8",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "同分母后分子相加得到八分之七，分母仍然是8。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2347,6 +3696,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "1.2",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "是的，120从右往左数两位得到1.20，也就是1.2；0.5表示一半，2.4的一半也是1.2。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2395,6 +3780,78 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": {
+      "answer_type": "numeric_with_unit",
+      "ground_truth": "26厘米",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "26厘米",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "可以写成括号8加5括号乘2，结果是26厘米。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "numeric_with_unit",
+        "verifier": "numeric_with_unit",
+        "matched_span": "26厘米",
+        "ground_truth_ref": "26厘米",
+        "normalization": []
+       },
+       "other_turns_hit": [
+        {
+         "turn_index": 4,
+         "evidence": {
+          "hit": true,
+          "turn_id": 4,
+          "answer_type": "numeric_with_unit",
+          "verifier": "numeric_with_unit",
+          "matched_span": "26厘米",
+          "ground_truth_ref": "26厘米",
+          "normalization": []
+         }
+        }
+       ]
+      },
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       },
+       "answer_value": "26厘米",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)"
+       }
+      }
+     }
     }
    },
    {
@@ -2443,6 +3900,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "30平方厘米",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "所以三角形面积是10乘6再除以2，等于30平方厘米。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2491,6 +3984,29 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c2_compiler_left_empty(composite_not_compiled)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "composite",
+       "compile_spec": null,
+       "reason": "composite_not_compiled"
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2539,6 +4055,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "88分",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "264除以3等于88，所以平均分是88分。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2587,6 +4139,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "160元",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "200乘0.8等于160，现价是160元，少付40元。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2635,6 +4223,29 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c2_compiler_left_empty(composite_not_compiled)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "composite",
+       "compile_spec": null,
+       "reason": "composite_not_compiled"
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2683,6 +4294,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "short_text_exact",
+       "compile_spec": {
+        "answer_type": "short_text_exact",
+        "ground_truth": "60千米/小时",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "结果是60，平均速度是每小时60千米。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2731,6 +4378,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "12岁",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "小华是12岁，12乘3等于36，符合题意。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2779,6 +4462,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "350厘米",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "结果是350，因此3.5米等于350厘米。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2827,6 +4546,29 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c2_compiler_left_empty(composite_not_compiled)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "composite",
+       "compile_spec": null,
+       "reason": "composite_not_compiled"
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2875,6 +4617,55 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "14",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "所以规律是每次增加3，下一项是14，再下一项会是17。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": [
+        {
+         "turn_index": 3,
+         "evidence": {
+          "hit": true,
+          "turn_id": 3,
+          "answer_type": "numeric_with_unit",
+          "verifier": "numeric_with_unit",
+          "matched_span": "14",
+          "ground_truth_ref": "14",
+          "normalization": []
+         }
+        }
+       ]
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2923,6 +4714,29 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c2_compiler_left_empty(verifier_incompatible_original)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "short_text_exact",
+       "compile_spec": null,
+       "reason": "verifier_incompatible_original"
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -2971,6 +4785,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "115度",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "180减65等于115，另一个角是115度，65加115正好是180。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -3019,6 +4869,78 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": {
+      "answer_type": "numeric_with_unit",
+      "ground_truth": "6",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "6",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "再算18减12等于6，所以结果是6。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "numeric_with_unit",
+        "verifier": "numeric_with_unit",
+        "matched_span": "6",
+        "ground_truth_ref": "6",
+        "normalization": []
+       },
+       "other_turns_hit": [
+        {
+         "turn_index": 4,
+         "evidence": {
+          "hit": true,
+          "turn_id": 4,
+          "answer_type": "numeric_with_unit",
+          "verifier": "numeric_with_unit",
+          "matched_span": "6",
+          "ground_truth_ref": "6",
+          "normalization": []
+         }
+        }
+       ]
+      },
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       },
+       "answer_value": "6",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)"
+       }
+      }
+     }
     }
    },
    {
@@ -3067,6 +4989,42 @@
       "support"
      ],
      "source_family": "shadow_pilot_20"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": true,
+       "authority": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       }
+      },
+      "c2_deterministic_compiler_rules": {
+       "classify": "numeric_with_unit",
+       "compile_spec": {
+        "answer_type": "numeric_with_unit",
+        "ground_truth": "127本",
+        "aliases": [],
+        "unit_optional": false
+       },
+       "reason": null
+      },
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": {
+       "evaluable": true,
+       "final_turn": "再算165减38等于127本，所以现在有127本。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
+      },
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -3111,6 +5069,25 @@
       "math"
      ],
      "source_family": "signal_enrichment_v2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(reference_answer_freeform)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "reference_answer_freeform",
+        "detail": "reference_answer 为解题过程自由文本(stuck 诊断锚),非 canonical answer 声明面"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -3155,6 +5132,25 @@
       "math"
      ],
      "source_family": "signal_enrichment_v2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(reference_answer_freeform)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "reference_answer_freeform",
+        "detail": "reference_answer 为解题过程自由文本(stuck 诊断锚),非 canonical answer 声明面"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -3199,6 +5195,25 @@
       "math"
      ],
      "source_family": "signal_enrichment_v2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(reference_answer_freeform)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "reference_answer_freeform",
+        "detail": "reference_answer 为解题过程自由文本(stuck 诊断锚),非 canonical answer 声明面"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    },
    {
@@ -3243,6 +5258,25 @@
       "math"
      ],
      "source_family": "signal_enrichment_v2"
+    },
+    "runtime_projection": {
+     "answer_spec": null,
+     "status": "left_empty",
+     "left_empty_reason": "c1_no_authoritative_answer(reference_answer_freeform)",
+     "conditions": {
+      "c1_authoritative_answer": {
+       "pass": false,
+       "authority": {
+        "kind": "reference_answer_freeform",
+        "detail": "reference_answer 为解题过程自由文本(stuck 诊断锚),非 canonical answer 声明面"
+       }
+      },
+      "c2_deterministic_compiler_rules": null,
+      "c3_no_llm": true,
+      "c4_no_semantic_guess": true,
+      "c5_self_feed_verifier_on_script_final_turn": null,
+      "c6_provenance": null
+     }
     }
    }
   ],
@@ -8979,5 +11013,58 @@
   "pilot/goldc/b2 为 pre-answer_spec 语料(2026-09 人审):answer 值/型在六窄面内但无形式 spec 声明——逐案标注",
   "m3 Challenge 案冻结输入在 /tmp 证据目录(只读);manifest 以 driver sha256 钉身份,不在仓内复制载荷",
   "learner answer_status=correct 无档案字面源:correct 学习者面由剧本弧(学生轮达终答/gold complete_reasoning)覆盖,非 start 声明字段"
- ]
+ ],
+ "completion_capable_core": {
+  "count": 2,
+  "rule": "三条件同满足:①runtime_projection.answer_spec 在场(trusted 投影);②剧本学生终答轮经 verify_completion 判 verified(可验证终答 claim);③expectation 明确要求 completion(expect.final_states=completed)。全部可由本 manifest 逐案 runtime_projection 复算。",
+  "cases": [
+   {
+    "case_id": "core-pilot-stability_rectangle_perimeter",
+    "record_id": "stability_rectangle_perimeter",
+    "answer_spec": {
+     "answer_type": "numeric_with_unit",
+     "ground_truth": "26厘米",
+     "aliases": [],
+     "unit_optional": false
+    },
+    "final_turn_verified": true,
+    "expectation_kind": "completion_final_state",
+    "expectation_declares": "final_states=[completed] + finish_status=completed 检查(teacher_confirmed,patha-pilot-20,issue-178#c5657431632)"
+   },
+   {
+    "case_id": "core-pilot-stability_order_operations",
+    "record_id": "stability_order_operations",
+    "answer_spec": {
+     "answer_type": "numeric_with_unit",
+     "ground_truth": "6",
+     "aliases": [],
+     "unit_optional": false
+    },
+    "final_turn_verified": true,
+    "expectation_kind": "completion_final_state",
+    "expectation_declares": "final_states=[completed] + finish_status=completed 检查(teacher_confirmed,patha-pilot-20,issue-178#c5657431632)"
+   }
+  ],
+  "historical_baseline_note": "旧 completion 0/71(lane-b baseline,71 案 judged 全 needs_review,34 案 finish 处 completion_gate_rejected)保留为 historical schema-mismatch baseline,不动;本 denominator 是其 corpus-side 投影修复后的新口径,两者不可直接相减。"
+ },
+ "wp3_projection": {
+  "stats": {
+   "core": 72,
+   "projected": 2,
+   "left_empty": 70,
+   "empty_reasons": {
+    "c5_no_student_script": 15,
+    "c2_compiler_left_empty": 10,
+    "c5_self_feed_miss_on_final_turn": 16,
+    "c1_no_authoritative_answer": 29
+   }
+  },
+  "rule_version": {
+   "compile_rule": "scripts/compile_answer_spec.py",
+   "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+   "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+   "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)"
+  },
+  "ruling": "Architect 2026-10-03 Morning:corpus-side 显式 answer_spec 投影;禁止迁移/放宽 Kernel Gate 语义(Gate fail-closed 设计不动)。"
+ }
 }
