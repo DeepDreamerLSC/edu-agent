@@ -764,6 +764,13 @@
       },
       "c6_provenance": null
      }
+    },
+    "known_failure": {
+     "type": "generation_loop",
+     "registered": "2026-10-03",
+     "evidence": "/tmp/wp1/diag-4096.json (41-char verbatim loop @4096 saturated; 800/1200/1600/4096 all finish=length)",
+     "attribution_status": "GENERATION LOOP under current structured-output stack — owner split PENDING (grammar/constrained-decoding interaction not excluded); NOT yet MODEL-GENERATION OWNED",
+     "baseline_semantics": "stays in Core and keeps failing red; must not be silenced via xfail/expected-fail/exclusion — any future repair must genuinely turn it green"
     }
    },
    {
