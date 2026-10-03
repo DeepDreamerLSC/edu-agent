@@ -112,9 +112,19 @@ schema 升 `trusted_product_corpus_v1/manifest/v1.1`(仅增字段,零删改;froz
 
 **Completion Baseline v1**(新 denominator 2 案 ×1 遍,8303 真跑;驱动口径与 Lane B 一致=EvalRunner+KernelSubject+checkpoint+facts;测量件不是修复件,结果如实;五指标与 identity 四件套见 §8b 与 PR body)。corpus-side 投影的消费方式:replay 驱动把投影 answer_spec 附着到 question 载荷,经 `KernelSubject._question_payload` 既有透传契约(「answer_spec 声明面透传,有才传,零行为变化」)进内核——**零 runtime 代码改动**。
 
-## 8b. Completion Baseline v1 结果(见 PR body;/tmp/wp3/baseline/ 证据)
+## 8b. Completion Baseline v1 结果(证据 /tmp/wp3/baseline/;run=cases-20261003T002207Z-4cc4)
 
-(本节由 WP3 baseline 跑批后回填。)
+新 denominator 2 案 ×1 遍,8303 真跑(qwen3_vl_8b,内核 `_invoke` temperature=0 产线默认;驱动=EvalRunner+KernelSubject+checkpoint+facts,与 Lane B 同纪律;corpus-side 投影经 question 载荷附着+透传契约,零 runtime 改动)。**测量件不是修复件,结果如实:**
+
+| 指标 | 案数 | 说明 |
+|---|---|---|
+| evidence produced | **2/2** | 均在剧本终答轮(turn 4)出证——与投影 c5 self-feed 预检一致 |
+| ready_to_confirm reached | **2/2** | order_ops 经 finish() 路径收 completed;rectangle 经 ready+evidence 同轮 close-on-final-statement 路径(turn 4 直接 completed) |
+| completed | **2/2** | historical 0/71 → 新 denominator 口径 2/2;**口径不同不可直接相减**(旧 71 含无 answer_spec 声明面/无剧本终答的案) |
+| needs_review | **0/2** | — |
+| completion_gate_rejected | **0/2** | Gate 语义零改动下零拒 |
+
+零 fallback 核验:11/11 model_call 全部 role=tutor、attempt=1、ok、request=qwen3_vl_8b→response=Qwen3-VL-8B-GGUF、fallback_from/to 均 null、finish_reason=stop;invalid 清单=空(零静默剔除)。identity 四件套:code `6f3e7078`(detached worktree)/corpus 分支 `data/completion-capable-projection@3c149a22`/manifest sha256 `936bce9e…`/8303 实读 `/v1/models`=llamacpp Qwen3-VL-8B-GGUF(详见 /tmp/wp3/baseline/analysis.json)。调用量纪律:denominator ×1 遍,零重试零补跑(全部 attempt=1 ok)。
 
 ## 9. 复算命令(冻结身份)
 
