@@ -132,12 +132,12 @@ def verdict_from_scores(scores: dict[str, int], answer_leaked: bool, math_integr
     return verdict
 
 
-# judge 单次输出 token 上限:模块常量 + 参数可覆盖,探针走
-# judge_transcript(max_tokens=…) 显式传值,默认值即正式判卷的冻结需求。
-# 900→1200(REOPEN):core-b2-fraction_multiplication_alternative_method 案
-# finish_reason=length@900(Lane B 唯一 judge 内容失败);1200 探针四门全过
-# (stop/schema/verdict 重算/temp-0 逐字节),3 正常案 900↔1200 输出逐字节一致。
-MAX_TOKENS = 1200
+# judge 单次输出 token 上限(私有常量:探针 override 不入生产 API,未来实验
+# 在临时 worktree/probe harness 里做)。900→1200(REOPEN):
+# core-b2-fraction_multiplication_alternative_method 案 finish_reason=length@900
+# (Lane B 唯一 judge 内容失败);1200 探针四门全过(stop/schema/verdict 重算/
+# temp-0 逐字节),3 正常案 900↔1200 输出逐字节一致。
+_JUDGE_MAX_TOKENS = 1200
 
 
 def judge_transcript(
@@ -145,7 +145,6 @@ def judge_transcript(
     case: dict,
     role: str = "judge",
     session_id: str | None = None,
-    max_tokens: int = MAX_TOKENS,
 ) -> dict:
     """评一条教学对话,返回含六维分数、泄露标志、证据、verdict 与 judge 模型披露。"""
     transcript = case["messages"]
@@ -159,7 +158,7 @@ def judge_transcript(
         ],
         response_schema=SCHEMA,
         session_id=session_id or f"judge-{case.get('id', '?')}",
-        max_tokens=max_tokens,
+        max_tokens=_JUDGE_MAX_TOKENS,
         temperature=0,
     )
     response = gateway.invoke(request)

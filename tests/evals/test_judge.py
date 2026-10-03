@@ -12,7 +12,6 @@ from fake_openai import Reply, completion
 
 from edu_agent.evals import (
     DIMENSIONS,
-    MAX_TOKENS,
     SCHEMA,
     EnvironmentFailure,
     JudgeSubject,
@@ -243,20 +242,14 @@ def test_judge_transcript_parses_and_gates_math_integrity(tmp_path):
 # ---------- 输出上限(REOPEN:core-b2 案 finish_reason=length@900 → 冻结 1200) ----------
 
 
-def test_judge_request_limit_frozen_and_reaches_wire(tmp_path):
-    """冻结值钉死(1200,改 MAX_TOKENS 须连本断言一起改);默认路径请求体
-    max_tokens==MAX_TOKENS(temp-0);探针形态显式传值直达线上;JudgeSubject
-    批判卷路径走默认——其他 judge 调用路径不受参数化影响。"""
-    assert MAX_TOKENS == 1200
+def test_judge_request_limit_frozen_at_1200(tmp_path):
+    """三根钉:直接调用与 JudgeSubject 批判卷路径的请求体 max_tokens==1200、
+    temperature==0(冻结值改动须连本断言一起改)。"""
     with judge_env(tmp_path, [completion(model_output([2, 2, 2, 2, 2, 2]))]) as (fake, gateway):
         judge_transcript(gateway, CASE)
-    assert fake.requests[0]["max_tokens"] == MAX_TOKENS == 1200
+    assert fake.requests[0]["max_tokens"] == 1200
     assert fake.requests[0]["temperature"] == 0
-
-    with judge_env(tmp_path, [completion(model_output([2, 2, 2, 2, 2, 2]))]) as (fake, gateway):
-        judge_transcript(gateway, CASE, max_tokens=900)
-    assert fake.requests[0]["max_tokens"] == 900
 
     with judge_env(tmp_path, [completion(model_output([1, 1, 1, 1, 1, 1]))]) as (fake, gateway):
         JudgeSubject(gateway).run_case(CASE)
-    assert fake.requests[0]["max_tokens"] == MAX_TOKENS
+    assert fake.requests[0]["max_tokens"] == 1200

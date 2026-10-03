@@ -24,7 +24,6 @@ from .model_match import ModelComparison, compare_models  # #490 M2:纯比较 he
 from .judge import (
     DIMENSION_GUIDE,
     DIMENSIONS,
-    MAX_TOKENS,
     SCHEMA,
     JudgeSubject,
     any_judge_model,
@@ -148,7 +147,6 @@ __all__ = [
     "judge_gate",
     "judge_transcript",
     "judger_sha256",
-    "MAX_TOKENS",
     "load_facts",
     "load_run_spec",
     "merge_options",
