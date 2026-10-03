@@ -1,6 +1,12 @@
 """corpus checks × 真模型运行面(#216):corpus 真模型口径场景批跑 → checks 判定 →
 judge 评分 → run 工件落盘 → 跨轮对照报告。口径对齐 scripts/tuning_round.py(#211 先例):
-KernelSubject + EvalRunner(case 级 checkpoint/续跑/失败台账)+ judge 单遍 primary。
+KernelSubject + 执行面(case 级 checkpoint/续跑/失败台账)+ judge 单遍 primary。
+
+默认 execution owner = Inspect(#521 I5):case 级调度/并发/sample retry 归
+inspect-ai,bridge/scorer/身份/失败映射归 edu_agent 侧窄模块 inspect_adapter;
+checkpoint 仍是 Canonical durable evidence + 被动幂等守卫,artifact 消费面零变化。
+过渡期显式 `--legacy-runner` 走 EvalRunner 旧执行面(禁自动 fallback,manifest
+明示 execution_owner)。
 
 边界(#216,不扩界):
 - 确定性口径(fake_model 罐头)**不在此跑**——它们在 pytest 参数化里永久回放,重复接线零增益;
@@ -11,7 +17,7 @@ KernelSubject + EvalRunner(case 级 checkpoint/续跑/失败台账)+ judge 单�
 
 入口(模块入口,不动 scripts/ 结构路径):
     uv run python -m edu_agent.evals.corpus_round --out <运行根目录> \
-        [--corpus <数据集 JSON>]... [--diff-from <上轮 collect run 目录>]
+        [--corpus <数据集 JSON>]... [--diff-from <上轮 collect run 目录>] [--legacy-runner]
     uv run python -m edu_agent.evals.corpus_round --render-from <运行根目录> \
         [--diff-from <上轮 collect run 目录>]   # 不跑批,零模型重渲染 report(#257 审 P3-2)
     uv run python -m edu_agent.evals.corpus_round --config <run-spec.yaml> \
@@ -23,7 +29,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import re
 import shutil
 import socket
 import subprocess
@@ -40,6 +45,12 @@ from .judge import judge_transcript
 from .kernel_subject import KernelSubject
 from .runner import EvalRunner, ResumeMismatch, RunnerConfig
 from .scenario_corpus import load_shortboard_corpus, run_scenario_checks, to_kernel_case
+from .summary import (  # 三口径/软化报告段(#521 I5 移驻 summary,此处 re-export 兼容)
+    caliber_section,
+    facts_calibers,
+    soften_counts,
+    soften_line,
+)
 from .summary import load_results
 from edu_agent.gateway import Gateway, GatewayError, load_registry
 
@@ -277,8 +288,13 @@ def resolve_round(args, spec: dict | None) -> tuple[dict, dict[str, dict], list[
 
 def judge_gate(gateway: Gateway, scenarios: dict[str, dict],
                results: list[dict], enabled: bool) -> dict[str, dict]:
-    """judge 启停闸(#350 ③):关 = 硬零 judge calls(judge_rows 不进,网关零触达)。"""
-    return judge_rows(gateway, scenarios, results) if enabled else {}
+    """judge 启停闸(#350 ③):关 = 硬零 judge calls(judge_rows 不进,网关零触达);
+    开 = 单遍 primary(行数披露与 Inspect 路径同口径,#521 I5)。"""
+    if not enabled:
+        print("judge:off(run-spec)——本跑 0 judge calls")
+        return {}
+    print(f"评分:{sum(1 for r in results if r['status'] == 'ok')} 行(judge 单遍 primary)")
+    return judge_rows(gateway, scenarios, results)
 
 
 def dump_spec_artifacts(out_dir: Path, source_path: Path, resolved: dict) -> str:
@@ -428,30 +444,6 @@ def check_rows(scenarios: dict[str, dict], results: list[dict]) -> dict[str, dic
     return rows
 
 
-def soften_counts(results: list[dict]) -> dict[str, int]:
-    """软化两造计数(#241 行 4「掩码成功 vs 整步弃用」):transcript.guard_events 的 reveal 轮——
-    cut = 同分句边界收回;mask = 兜底改写「几」;dropped = 整步弃用(轮级 dropped=True,
-    此前全仓只写不读)。无 tag 且未弃用(无泄漏保留原文/未走揭示)不计。"""
-    counts = {"cut": 0, "mask": 0, "dropped": 0}
-    for row in results:
-        for event in (row.get("transcript") or {}).get("guard_events") or []:
-            if event.get("soften") in ("cut", "mask"):
-                counts[event["soften"]] += 1
-            elif event.get("dropped"):
-                counts["dropped"] += 1
-    return counts
-
-
-def soften_line(counts: dict[str, int]) -> str:
-    """软化计数 → 报告脚注行(拼在 render_report 产物之后,#244 审 P1:不加参防
-    与 #242 provenance 撞 PLR0913 max-args=6);三值全零 → 空串(不占行)。"""
-    if not any(counts.get(k) for k in ("cut", "mask", "dropped")):
-        return ""
-    return (f"\n- 软化路径命中(#241 行 4):cut={counts.get('cut', 0)}(同分句边界收回) / "
-            f"mask={counts.get('mask', 0)}(兜底改写「几」) / "
-            f"dropped={counts.get('dropped', 0)}(整步弃用)")
-
-
 def dump_facts(facts_dir: Path | str, run_dir: Path | str) -> list[dict]:
     """model_call facts 落 run 目录(#238 件 B):FactWriter 按 UTC 天切文件、且原
     tempdir 随进程丢——本函数把整轮(tutor + judge)合并成 run_dir/facts.jsonl,
@@ -487,132 +479,6 @@ def salvage_facts(facts_dir: Path | str, out: str | None) -> None:
     runs = sorted((Path(out) / "collect").glob("*-*Z-*"))
     if runs:
         dump_facts(facts_dir, runs[-1])
-
-
-def facts_calibers(facts_rows: list[dict]) -> dict:
-    """三口径数据底座(#238 件 B):调用级按 role 计数 + 会话级 fallback 标记。
-
-    - roles:role → {calls, fallbacks(edu.fallback_to 非 None), rate};
-    - sessions:session_id → 该会话是否走过 fallback(任一调用 fallback 即 True)
-      ——case 级口径由调用方查表:tutor 会话 = transcript.session_id,
-      judge 会话 = "judge-{case_id}"(judge.py 的 session 命名)。"""
-    roles: dict[str, dict] = {}
-    sessions: dict[str, bool] = {}
-    for row in facts_rows:
-        stats = roles.setdefault(row.get("edu.role") or "?", {"calls": 0, "fallbacks": 0})
-        stats["calls"] += 1
-        fell = row.get("edu.fallback_to") is not None
-        if fell:
-            stats["fallbacks"] += 1
-        sid = row.get("edu.session_id") or ""
-        if sid:
-            sessions[sid] = sessions.get(sid, False) or fell
-    for stats in roles.values():
-        stats["rate"] = stats["fallbacks"] / stats["calls"] if stats["calls"] else 0.0
-    return {"roles": roles, "sessions": sessions}
-
-
-def _ascii_numbers(text: str) -> set[float]:
-    """false-confirm 代理的数字提取(件 B 口径注记的一部分):ASCII 数字集合。
-
-    仅报告层代理判据,非内核护栏判据(kernel 侧 _answer_focus_numbers 的允许集
-    口径与用途都不同;报告只描述不拦截,#184 的「第二套判据」禁令不适用)。"""
-    return {float(m) for m in re.findall(r"\d+(?:\.\d+)?", text or "")}
-
-
-def _case_fell_back(row: dict, sessions: dict[str, bool]) -> bool:
-    transcript = row.get("transcript") or {}
-    return bool(sessions.get(transcript.get("session_id") or "")
-                or sessions.get(f"judge-{row['case_id']}"))
-
-
-def _pct(x: float | None) -> str:
-    return f"{x:.1%}" if x is not None else "-"
-
-
-def _four_metrics(subset: list[dict], checks: dict[str, dict], scores: dict[str, dict],
-                  scenarios: dict[str, dict]) -> dict:
-    """四指标(评审 P1-7)在给定 case 子集上算;口径注记见 caliber_section。"""
-    completed = [r for r in subset
-                 if (checks.get(r["case_id"]) or {}).get("final_state") == "completed"]
-    student_turn_counts = [sum(1 for t in r["transcript"].get("turns") or [] if t.get("student"))
-                           for r in completed]
-    false_n = denom = 0
-    for row in completed:
-        question = scenarios[row["case_id"]]["question"]
-        expected = _ascii_numbers(question.get("answer", "") if isinstance(question, dict) else "")
-        if not expected:
-            continue  # 定性/无数字答案:不进 false-confirm 分母(口径注记)
-        denom += 1
-        said: set[float] = set()
-        for turn in row["transcript"].get("turns") or []:
-            said |= _ascii_numbers(turn.get("student") or "")
-        if not expected <= said:
-            false_n += 1
-    stuck = sum(1 for r in subset
-                if any(e.get("branch") == "reveal"
-                       for e in (r["transcript"].get("guard_events") or [])))
-    needs_review = sum(1 for r in subset
-                       if (checks.get(r["case_id"]) or {}).get("final_state") == "needs_review")
-    totals = [scores[r["case_id"]]["total"] for r in subset
-              if r["case_id"] in scores and "total" in scores[r["case_id"]]]
-    return {
-        "n": len(subset),
-        "completed": len(completed),
-        "turns_to_confirm": (round(sum(student_turn_counts) / len(student_turn_counts), 1)
-                             if student_turn_counts else None),
-        "false_confirm_n": false_n,
-        "false_confirm_denom": denom,
-        "false_confirm_rate": round(false_n / denom, 3) if denom else None,
-        "stuck_rate": round(stuck / len(subset), 3) if subset else None,
-        "needs_review_rate": round(needs_review / len(subset), 3) if subset else None,
-        "judge_mean": round(sum(totals) / len(totals), 1) if totals else None,
-    }
-
-
-def caliber_section(calibers: dict, results: list[dict], checks: dict[str, dict],
-                    scores: dict[str, dict], scenarios: dict[str, dict]) -> str:
-    """三口径 × 四指标报告段(#238 件 B,GEPA 前置):calibers = facts_calibers(facts 行)。
-
-    口径钉死在段内(报告不说清就没法判「优化对象是 system score 还是
-    primary-only」):primary-only = ok case 中 tutor/judge 会话全无 fallback 的
-    干净集;with-fallback = 全部 ok case(system 实产);fallback-rate 按调用级
-    分 role 列。四指标 = mean turns-to-confirm / false-confirm(代理)/ stuck /
-    needs-review,口径见注记。"""
-    sessions = calibers["sessions"]
-    ok = [r for r in results if r["status"] == "ok"]
-    rows = [("primary-only", [r for r in ok if not _case_fell_back(r, sessions)]),
-            ("with-fallback", ok)]
-    lines = [
-        "",
-        "## 三口径 × 四指标(#238 件 B,GEPA 前置)",
-        "",
-        "口径注记:",
-        "- primary-only = ok case 中 tutor 会话与 judge 会话均未走 fallback 的子集",
-        "  (tutor 备选 mlx_27b / judge 备选 deepseek;case 级 = 任一调用 fallback 即出局,",
-        "  GEPA 归因要的干净集——优化对象是 system score 还是 primary-only 由此可判)",
-        "- with-fallback = 全部 ok case(system 实产口径);fallback-rate = 调用级按 role 分列",
-        "- turns-to-confirm = completed 帧学生轮数均值(一轮 = 一学生消息 + 一导师回应,首问不计)",
-        "- false-confirm(代理)= completed ∧ 期望答案含 ASCII 数字 ∧ 期望数字集未全现于",
-        "  学生消息;定性答案不进分母,中文数字不在判据内(已知盲区)",
-        "- stuck = guard_events 出现 reveal 分支(窄词表「不会」族)占比;",
-        "  needs-review = final_state=needs_review 占比;judge 均值 = total/12 口径内均值",
-        "",
-        "| 口径 | n | completed | turns-to-confirm | false-confirm | stuck | needs-review | judge 均值 |",
-        "|---|---|---|---|---|---|---|---|",
-    ]
-    for name, subset in rows:
-        m = _four_metrics(subset, checks, scores, scenarios)
-        lines.append(
-            f"| {name} | {m['n']} | {m['completed']} "
-            f"| {m['turns_to_confirm'] if m['turns_to_confirm'] is not None else '-'} "
-            f"| {m['false_confirm_n']}/{m['false_confirm_denom']} ({_pct(m['false_confirm_rate'])}) "
-            f"| {_pct(m['stuck_rate'])} | {_pct(m['needs_review_rate'])} "
-            f"| {m['judge_mean'] if m['judge_mean'] is not None else '-'} |")
-    lines += ["", "调用级 fallback:", "", "| role | calls | fallbacks | rate |", "|---|---|---|---|"]
-    for role, stats in sorted(calibers["roles"].items()):
-        lines.append(f"| {role} | {stats['calls']} | {stats['fallbacks']} | {stats['rate']:.1%} |")
-    return "\n".join(lines) + "\n"
 
 
 def diff_checks(current: dict[str, dict], previous: dict[str, dict]) -> dict[str, str]:
@@ -779,6 +645,19 @@ def render_from(out_dir: Path, diff_from: str | None = None) -> int:
     return 0
 
 
+def _spec_identity(out_dir: Path, spec: dict | None, spec_source: Path | None,
+                   effective: dict, cases: list[dict]) -> dict:
+    """跑批身份 + run-spec 双工件(#521 I5 自 _live_round 拆出,语句预算 PLR0915;
+    行为零变化:spec 在场才落 run_spec_sha256,见 dump_spec_artifacts ⑦⑨)。"""
+    identity = run_identity()
+    if spec is not None and spec_source is not None:
+        resolved_payload = {**{k: v for k, v in effective.items() if k != "cases"},
+                            "version": RUN_SPEC_VERSION,
+                            "resolved_cases": [c["id"] for c in cases]}
+        identity["run_spec_sha256"] = dump_spec_artifacts(out_dir, spec_source, resolved_payload)
+    return identity
+
+
 def _live_round(args, gateway: Gateway, facts_dir: Path,
                 spec: dict | None = None, spec_source: Path | None = None) -> int:
     """活跑路径(#257 审 P3 后从 main 拆出:语句预算 PLR0915 + 平铺);facts
@@ -793,12 +672,7 @@ def _live_round(args, gateway: Gateway, facts_dir: Path,
         return 1
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
-    identity = run_identity()
-    if spec is not None and spec_source is not None:
-        resolved_payload = {**{k: v for k, v in effective.items() if k != "cases"},
-                            "version": RUN_SPEC_VERSION,
-                            "resolved_cases": [c["id"] for c in cases]}
-        identity["run_spec_sha256"] = dump_spec_artifacts(out_dir, spec_source, resolved_payload)
+    identity = _spec_identity(out_dir, spec, spec_source, effective, cases)
     cases_file = out_dir / "cases.jsonl"
     cases_file.write_text("\n".join(json.dumps(c, ensure_ascii=False) for c in cases) + "\n",
                           encoding="utf-8")
@@ -807,23 +681,29 @@ def _live_round(args, gateway: Gateway, facts_dir: Path,
     if resume_dir is not None:
         print(f"续跑:{resume_dir}(上轮未完成,身份一致)")
     print(f"批跑:{len(cases)} 场景(真模型口径;确定性口径不在本面)→ {collect_root}")
-    runner = EvalRunner(KernelSubject(gateway), RunnerConfig(concurrency=effective["concurrency"]),
-                        collect_root)
-    runner.run(cases_file, cases, run_dir=resume_dir, identity=identity)
-    run_dir = resume_dir or sorted(collect_root.glob("*-*Z-*"))[-1]
+    identity["execution_owner"] = "evalrunner_legacy" if args.legacy_runner else "inspect"
+    if args.legacy_runner:
+        # 过渡回退(#521 I5 G6):显式 --legacy-runner 才走 EvalRunner;禁自动 fallback
+        runner = EvalRunner(KernelSubject(gateway), RunnerConfig(concurrency=effective["concurrency"]),
+                            collect_root)
+        runner.run(cases_file, cases, run_dir=resume_dir, identity=identity)
+        run_dir = resume_dir or sorted(collect_root.glob("*-*Z-*"))[-1]
+        results = load_results(run_dir)
+        checks = check_rows(scenarios, results)
+        scores = judge_gate(gateway, scenarios, results, effective["judge"])
+    else:
+        # 默认 execution owner = Inspect(#521 I5):调度/并发/sample retry 归 Inspect,
+        # checkpoint 为 Canonical durable evidence + 被动幂等守卫;续跑六面门在 adapter。
+        from .inspect_adapter import InspectRoundRequest, run_inspect_round
+        run_dir, checks, scores = run_inspect_round(InspectRoundRequest(
+            subject=KernelSubject(gateway), gateway=gateway, cases_file=cases_file,
+            scenarios=scenarios, identity=identity, concurrency=effective["concurrency"],
+            judge_enabled=effective["judge"], collect_root=collect_root, resume_dir=resume_dir))
+        results = load_results(run_dir)
     dirty = git_dirty_state()
     if identity.get("git_dirty") and dirty["patch"]:
         # ⑧:dirty 证据进 run 目录;仅未跟踪文件变脏时 patch 为空,由 git_diff_sha256=None 自述
         (run_dir / "worktree.patch").write_text(dirty["patch"], encoding="utf-8")
-    results = load_results(run_dir)
-
-    checks = check_rows(scenarios, results)
-    if effective["judge"]:
-        print(f"评分:{sum(1 for r in results if r['status'] == 'ok')} 行(judge 单遍 primary)")
-        scores = judge_rows(gateway, scenarios, results)
-    else:
-        print("judge:off(run-spec)——本跑 0 judge calls")
-        scores = {}
 
     def dump(path: Path, rows: dict[str, dict]) -> None:
         path.write_text("\n".join(json.dumps({"case_id": k, **v}, ensure_ascii=False)
@@ -895,6 +775,9 @@ def main(argv: list[str] | None = None) -> int:
                              "git SHA/dirty/调用规模)后退出——在端点预检之前,不建网关")
     parser.add_argument("--concurrency", type=int, default=None,
                         help="并发(缺省 = run-spec 的 concurrency,再缺省 2;#350 ④ 三级优先)")
+    parser.add_argument("--legacy-runner", dest="legacy_runner", action="store_true",
+                        help="#521 I5 过渡回退:显式用 EvalRunner 旧执行面(默认 = Inspect;"
+                             "禁自动 fallback/禁双 owner 同 run,manifest 明示 execution_owner)")
     args = parser.parse_args(argv)
 
     if args.render_from_arg:

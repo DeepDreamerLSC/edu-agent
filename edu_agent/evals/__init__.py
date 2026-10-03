@@ -78,12 +78,19 @@ _EXTERNAL_LAZY = ("EXTERNAL_ROLES", "EXTERNAL_SCHEMA_VERSION", "external_fingerp
                   "load_normalized", "validate_external_scenario")
 # to_v1_record 随真原件适配退役(旧签名不再成立),导出面换成 collect_records 公开别名。
 _IMPORTER_LAZY = ("collect_socraticmath_records", "import_socraticmath")
+# inspect_adapter(#521 I5)惰性导出:adapter 模块级 import corpus_round,保持包级惰性
+# 口径(-m 入口与包级急切导入不双载,同 _CORPUS_ROUND_LAZY 理由)。
+_INSPECT_LAZY = ("InspectRoundRequest", "DET_SCORER_NAME", "harness_identity",
+                 "run_inspect_round", "validate_canonical")
 
 
 def __getattr__(name: str):
     if name in _CORPUS_ROUND_LAZY:
         from . import corpus_round
         return getattr(corpus_round, name)
+    if name in _INSPECT_LAZY:
+        from . import inspect_adapter
+        return getattr(inspect_adapter, name)
     if name in _EXTERNAL_LAZY:
         from . import external_scenario
         return getattr(external_scenario, name)
@@ -147,6 +154,11 @@ __all__ = [
     "judge_gate",
     "judge_transcript",
     "judger_sha256",
+    "InspectRoundRequest",
+    "DET_SCORER_NAME",
+    "harness_identity",
+    "run_inspect_round",
+    "validate_canonical",
     "load_facts",
     "load_run_spec",
     "merge_options",
