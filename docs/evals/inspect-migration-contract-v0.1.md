@@ -77,8 +77,8 @@ CI/strict 门消费者)且非冻结里程碑一次性工具:
 
 | # | 消费者 | 证据 | 分类 |
 |---|---|---|---|
-| 1 | `edu_agent/evals/corpus_round.py:810-812` | 模块入口 `python -m edu_agent.evals.corpus_round`(薄包装 scripts/corpus_round.sh);identity=run_identity()(:79-93)+run_spec 指纹;resume 走自己的 `resume_run_dir`(:300-325),不用 strict_identity | **active** · #521 Consumer A |
-| 2 | `scripts/s2_judge_battery.py:237-242` | S2 battery 入口,`strict_identity=True`;identity 六键(:49-63) | **active** · #521 Consumer B |
+| 1 | `edu_agent/evals/corpus_round.py:685-693` | 模块入口 `python -m edu_agent.evals.corpus_round`(薄包装 scripts/corpus_round.sh);**I5 起默认 execution owner = Inspect**(inspect_adapter;scorer 编排/checkpoint/guard/identity preflight),显式 `--legacy-runner` 才走 EvalRunner(:685-693,禁自动 fallback) | **switched**(I5)· default active EvalRunner=0;`--legacy-runner` 过渡 |
+| 2 | `scripts/s2_judge_battery.py:249-272` | S2 battery 入口;**I6-A 起默认 execution owner = Inspect**(execution-only 轮:GA/GB/VOID 判分留 battery 自 checkpoint 复算),显式 `--legacy-runner` 走 EvalRunner+`strict_identity=True`(legacy 通道语义不变);identity 六键(:63-77)+ owner/harness 面 | **switched**(I6-A)· default active EvalRunner=0;`--legacy-runner` 过渡 |
 | 3 | `scripts/tuning_round.py:448` | **nightly CI 接线**(evals-nightly.yml「夜评」step,每日 23:00) | **active** |
 | 4 | `scripts/image_teaching_round.py:106` | **nightly CI 接线**(evals-nightly.yml image 段 step) | **active** |
 | 5 | `scripts/d6d7_gold_consume.py:190-195` | `strict_identity=True`;#464/#485 冻结审时代的运行器(云臂),identity 链与 strict 门均为现行 #490 M3 形态 | **active** |
@@ -89,7 +89,8 @@ CI/strict 门消费者)且非冻结里程碑一次性工具:
 | 10 | `edu_agent/evals/finish_evidence_eval.py:156` | 2026-09-16 finish() 语义验收跑批器(一次性验收) | runnable · 里程碑绑定 |
 
 **非执行消费者**(不得计入 active):tests/evals/ 下 test_runner / test_corpus_round /
-test_s2_judge / test_d6d7_matched_surface / test_legacy_adapter(测试);docs/evals/ 4 篇
+test_s2_judge(+I6-A 的 test_s2_battery_switch)/ test_d6d7_matched_surface /
+test_legacy_adapter / test_inspect_adapter(测试);docs/evals/ 4 篇
 proposal/trial 文档与 artifacts/datasets README(历史证据);`scenario_corpus.py`(仅
 docstring 提及,不构造 runner);`classroom_burst.py`(stub 内核服务小压测,**不消费
 EvalRunner**,审计排除)。
@@ -97,6 +98,13 @@ EvalRunner**,审计排除)。
 **审计事实(交 §9/§11)**:#521 叙事以 corpus_round + S2 为两个迁移证明面;实读仓库,
 执行消费者共 **6 active + 4 里程碑绑定 = 10 个可调用执行面**。COMPLETE 的
 consumer-zero 审计(§7/§8)必须覆盖全部 10 个(迁移或删除),不能只数两个证明面。
+
+**I6-A 时点分类口径(五类,2026-10-03 回填,#521 UTC 口径)**:①default active(仍以 EvalRunner 为
+默认执行面:tuning/image/d6d7/rescore 4 面)②switched · 显式 legacy 过渡
+(corpus_round、S2:default active EvalRunner=0,各自 `--legacy-runner` 保留过渡回退,
+均计 I6-C 删除面)③runnable · 里程碑绑定(judge_score/arc×2/finish 4 面)④test-only
+(tests/evals 合同测试,不产 artifact)⑤artifact reader(offline 消费历史 run 工件,
+不构造 runner)。active 从 I0 的 6 → I5 后 5 → **I6-A 后 4**(S2 出列)。
 
 ## 3. Ownership Map(冻结)
 

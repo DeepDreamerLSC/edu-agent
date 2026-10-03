@@ -335,7 +335,8 @@ class _DummyGateway:
 def test_resume_refusal_delegates_to_common_strict_gate(tmp_path, monkeypatch):
     """#490 M3:P0-6 门迁公共层——脚本职责收窄为委托(strict_identity=True、
     identity 字段全链不丢)与 ResumeMismatch → CLI 非零退出;门语义本体由
-    tests/evals/test_runner.py 的 strict 用例持有。"""
+    tests/evals/test_runner.py 的 strict 用例持有。#521 I6-A 起本路径 = 显式
+    `--legacy-runner` 回退通道(默认 Inspect,另测)。"""
     assert not hasattr(s2_judge_battery, "_resume_gate")  # 重复机制已删,不复活
     captured = {}
 
@@ -356,14 +357,18 @@ def test_resume_refusal_delegates_to_common_strict_gate(tmp_path, monkeypatch):
     resume_dir = tmp_path / "prior-run"
     monkeypatch.setattr(sys, "argv", [
         "s2-judge-battery", "--battery", str(battery),
-        "--artifacts-root", str(tmp_path / "art"), "--run-dir", str(resume_dir)])
+        "--artifacts-root", str(tmp_path / "art"), "--run-dir", str(resume_dir),
+        "--legacy-runner"])
     with pytest.raises(SystemExit, match="resume 拒绝"):
         s2_judge_battery.main()
     assert captured["strict_identity"] is True and captured["run_dir"] == resume_dir
     # identity 字段全链不丢(#459:git/rubric/prompt/battery/models + primary 双字段)
+    # + I6-A owner 明示(execution_owner,manifest 落档)
     assert set(captured["identity"]) == {
         "git_sha", "rubric_freeze_sha", "prompt_asset_sha", "battery_sha",
-        "models_yaml_sha", "judge_primary_id", "judge_primary_model"}
+        "models_yaml_sha", "judge_primary_id", "judge_primary_model",
+        "execution_owner"}
+    assert captured["identity"]["execution_owner"] == "evalrunner_legacy"
     # 指纹口径与公共 helper 一致(#490 M0 表第③项:构造侧唯一实现)
     assert captured["identity"]["git_sha"] == git_head_sha(_REPO)
     assert captured["identity"]["rubric_freeze_sha"] == head_sha256(_RUBRIC)
@@ -372,7 +377,7 @@ def test_resume_refusal_delegates_to_common_strict_gate(tmp_path, monkeypatch):
 
 def test_main_completes_when_common_gate_passes(tmp_path, monkeypatch):
     """迁移后主路径:公共门放行(run 正常返回)→ _score/compare_models/_report
-    全链不塌,退出 0。"""
+    全链不塌,退出 0。#521 I6-A 起本路径 = 显式 `--legacy-runner` 回退通道。"""
     run_dir = tmp_path / "run"
     (run_dir / "results").mkdir(parents=True)
     transcript = {"s2a": axis_payload(), "s2b": axis_payload(),
@@ -396,7 +401,8 @@ def test_main_completes_when_common_gate_passes(tmp_path, monkeypatch):
     battery.write_text(json.dumps(_row("C13-T1", "no", None)) + "\n", encoding="utf-8")
     monkeypatch.setattr(sys, "argv", [
         "s2-judge-battery", "--battery", str(battery),
-        "--artifacts-root", str(tmp_path / "art"), "--run-dir", str(run_dir)])
+        "--artifacts-root", str(tmp_path / "art"), "--run-dir", str(run_dir),
+        "--legacy-runner"])
     assert s2_judge_battery.main() == 0
     report = (run_dir / "report.md").read_text(encoding="utf-8")
     assert "GA 案级一致" in report and "1/1" in report  # 唯一 ok 案 verdict 命中
