@@ -768,8 +768,8 @@
     "known_failure": {
      "type": "generation_loop",
      "registered": "2026-10-03",
-     "evidence": "/tmp/wp1/diag-4096.json (41-char verbatim loop @4096 saturated; 800/1200/1600/4096 all finish=length)",
-     "attribution_status": "GENERATION LOOP under current structured-output stack — owner split PENDING (grammar/constrained-decoding interaction not excluded); NOT yet MODEL-GENERATION OWNED",
+     "evidence": "/tmp/wp1/diag-4096.json (41-char verbatim loop @4096 saturated; 800/1200/1600/4096 all finish=length); /tmp/os-split/ (G1 free-generation counterfactual)",
+     "attribution_status": "OWNER SPLIT CONCLUDED (2026-10-03, /tmp/os-split/): generation loop is dependent on the route-1 structured-output schema-instruction message (prompt-side) x temp-0 greedy decoding — G1 removed ONLY the schema message (system+question bytes intact): stop@732 tokens, zero loop, model solves x=22 correctly, temp-0 repeat byte-identical; grammar engine excluded (no response_format/server grammar in this path). Repair surface = structured-output contract face; all repair options remain Architect-gated (Red).",
      "baseline_semantics": "stays in Core and keeps failing red; must not be silenced via xfail/expected-fail/exclusion — any future repair must genuinely turn it green"
     }
    },
