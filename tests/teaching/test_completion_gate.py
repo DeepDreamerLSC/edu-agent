@@ -199,6 +199,35 @@ def test_equation_retraction_not_evidence():
     assert _verify("equation_form", "x-21=35", "x-21=35不对,应该是x+21=35") is None
 
 
+def test_equation_math_copula_bounded_normalization():
+    """#442 有界调查交付:数学系词「等于」→= 的确定性规范化(equation_form
+    专属路径,保位替入 ==,2 字→2 字符)。认证候选「x等于6」≡「x=6」
+    (span 是学生原文,归一记「符号归一」);成对反例四面全拒:「不等于」
+    (替入面不含「不」,候选段在否定字处断开)、「…吗」(问句消息级)、
+    「我猜」前缀(猜测窗)、「或7」(多候选消息级)——四守卫全是既有机制,
+    零新增词表。"""
+    evidence = _verify("equation_form", "x=6", "x等于6")
+    assert evidence is not None
+    assert evidence.provenance.matched_span == "x等于6"
+    assert evidence.provenance.normalization == ("符号归一",)
+    assert _verify("equation_form", "x=6", "我算出来是x等于6") is not None
+    assert _verify("equation_form", "x=6", "x不等于6") is None
+    assert _verify("equation_form", "x=6", "x等于6吗") is None
+    assert _verify("equation_form", "x=6", "我猜x等于6") is None
+    assert _verify("equation_form", "x=6", "x等于6或7") is None
+
+
+def test_equation_math_copula_scope_fenced():
+    """边界钉死(裁定逐字遵守):「等于」替入只在 equation_form 分派路径——
+    ratio_or_expression 仍走裸符号面(「12:4等于6:2」不因此命中);不进
+    _CLAIM_TEMPLATES/numeric claim 面(「也是6」「所以最后也是6」「x等于6」
+    对 numeric truth 维持 needs_review,自然语言族不扩词权)。"""
+    assert _verify("ratio_or_expression", "12:4=6:2", "12:4等于6:2") is None
+    assert _verify("numeric_with_unit", "6", "也是6") is None
+    assert _verify("numeric_with_unit", "6", "所以最后也是6") is None
+    assert _verify("numeric_with_unit", "6", "x等于6") is None
+
+
 # ---------- ratio_or_expression:同族符号归一 ----------
 
 

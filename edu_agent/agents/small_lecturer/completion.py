@@ -42,6 +42,10 @@ FN 形态:numeric「每份重0.4kg」答案嵌陈述无模板 / short_text「结
 authority——不触发任何状态迁移,唯一消费效果是 generation 的回复路由
 (否定重置文案 → 一次轻量 restatement bridge,四铁律:不宣告正确/不补
 canonical answer/不重新教学/不重置已有进展)。
+
+#442 有界调查交付:equation_form 专属分派路径把数学系词「等于」保位规范化
+为 =(替入 ==),认证仍由既有符号等价 oracle 独立确认;ratio/choice/numeric
+解析面与 _CLAIM_TEMPLATES 零改动,自然语言族(「也是6」)维持 needs_review。
 """
 
 from __future__ import annotations
@@ -515,26 +519,47 @@ def _verify_true_false(spec: AnswerSpec, message: str) -> tuple[str, tuple[str, 
     return matched.group(0), ()
 
 
-def _verify_symbolic(spec: AnswerSpec, message: str) -> tuple[str, tuple[str, ...]] | None:
+def _verify_symbolic(spec: AnswerSpec, message: str,
+                     math_copula: bool = False) -> tuple[str, tuple[str, ...]] | None:
     """equation_form / ratio_or_expression 共用:符号归一后整段字符串等价。
 
     ×/·→`*`(独立乘法 token,绝不与变量 x 合并);=/＝→==;÷→/;剥空白。
     「3×4=12」与「3x4=12」**不相等**——x 是变量不是乘号(审查修正①)。
-    命中 span 剥尾随空白(matched_span 是审计凭证,不得带 'x-21=35 ' 尾巴)。"""
-    truth_key = symbol_key(spec.ground_truth)
+    命中 span 剥尾随空白(matched_span 是审计凭证,不得带 'x-21=35 ' 尾巴)。
+
+    math_copula(#442 有界调查,equation_form 专属路径):数学系词「等于」
+    确定性规范化为 =(保位替入 ==,2 字→2 字符,候选段下标与原文坐标 1:1)
+    ——「x等于6」与「x=6」进同一等价类;truth 侧同变换(符号形 truth 恒等
+    变换)。认证仍由本函数既有符号等价判定独立确认(题库 ground_truth 是
+    唯一 oracle,不造新 oracle)。「不等于」的「不」不在替入面:候选段在
+    否定字处照常断开,不得认证;守卫(_negated/_guessed/_joined/_retracted)
+    恒以原文坐标运行,等于形态与 = 形态在全部守卫下行为逐字相同——本归一
+    不新增任何暴露面,只扩既有等号等价类的书写形态。"""
+    truth_key = symbol_key(spec.ground_truth.replace("等于", "==") if math_copula
+                           else spec.ground_truth)
     if not truth_key:
         return None
-    for span, start, end in equation_candidates(message):
-        if symbol_key(span) != truth_key:
+    scanned = message.replace("等于", "==") if math_copula else message
+    for _seg, start, end in equation_candidates(scanned):
+        if symbol_key(_seg) != truth_key:
             continue
         if _negated(message, start) or _retracted(message, end):
-            continue                      # 命中前否定/「x-21=35不对」已撤回
+            continue                      # 守卫恒在原文坐标(保位替入,下标互通)
         if _guessed(message, start) or _joined(message, start, end, _JOIN_AFTER_SYMBOLIC):
             continue                      # 「我猜是x-21=35」/和连接候选枚举(P2-R1/R2)
-        span = span.rstrip()              # 剥尾随空白(候选段含空白字符)
-        tags = () if symbol_key(span) == span else ("符号归一",)
+        span = str(message)[start:end].rstrip()   # 审计凭证回原文(剥尾随空白)
+        tags = () if span == symbol_key(_seg.rstrip()) else ("符号归一",)
         return span, tags
     return None
+
+
+def _verify_equation_form(spec: AnswerSpec, message: str) -> tuple[str, tuple[str, ...]] | None:
+    """equation_form 专属分派入口:符号面 + 数学系词「等于」→= 的确定性
+    规范化(#442 有界调查交付,规则三分「Deterministic math/parser|鼓励,
+    须独立 oracle」类)。只经本入口生效——ratio_or_expression 仍走裸符号面,
+    numeric/choice/short_text 与 _CLAIM_TEMPLATES 零改动(自然语言族
+    「也是6」类维持 needs_review,不扩词权)。"""
+    return _verify_symbolic(spec, message, math_copula=True)
 
 
 def _shorttext_bounds(key_message: str,
@@ -605,7 +630,7 @@ _VERIFIERS = {
     "numeric_with_unit": _verify_numeric_with_unit,
     "choice_letter": _verify_choice_letter,
     "true_false": _verify_true_false,
-    "equation_form": _verify_symbolic,
+    "equation_form": _verify_equation_form,
     "ratio_or_expression": _verify_symbolic,
     "short_text_exact": _verify_short_text_exact,
 }
