@@ -191,20 +191,34 @@ strict resume 门语义(#490 M1/M3):stored/current 两边必须存在且全等,�
 | grader model identity | 服务通告名比较(compare_models;judge_primary 双字段:id 仅追溯、model 是比较基准;s2/d6d7 任一不满足 → VOID/作废) |
 | scorer config | temperature/max_tokens/response_schema 等随 scorer 冻结的配置面 |
 
-### C. Harness Identity(**candidate / verify-in-I1 —— 本节字段集为待验证候选,不是已冻结事实**)
+### C. Harness Identity(**已回填:I1/I2 实证口径,#521 I2 授权增量 1;docs-only,不改其余各节**)
 
-未来 Inspect 作为 execution substrate 时,Execution Identity 至少再记录:
+Inspect 作为 execution/scoring substrate 时,Execution Identity 至少再记录(字段
+口径已经 I1 Frozen Shadow 与 I2 Offline Ruler Bridge 实证):
 
-- `inspect_version`;
-- dependency / lock identity(uv.lock 中 inspect 相关子集的指纹口径,I1 定义);
-- Inspect task implementation SHA(Subject bridge 代码);
-- adapter implementation SHA(EvalLog→Canonical adapter);
-- EvalLog schema / version(若 Inspect 暴露稳定版本字段)。
+- `inspect_version` = `0.3.276`(获取面:`importlib.metadata.version("inspect-ai")`;
+  I1/I2 实测值);
+- dependency / lock identity:仓内 `uv.lock` **无 inspect-ai 条目**(I0 纪律:spike
+  阶段不装进仓),uv.lock inspect 闭包口径暂不可算——如实记为 experimental
+  identity:丢弃式 venv sorted `pip freeze` 行 sha256 =
+  `d154b799925492b2f611dd16f1aab871856ce11edb9b52fd44e36454379a0b84`
+  (79 行,`/tmp/i1-venv`;inspect 相关子集 = inspect-ai 0.3.276 + pydantic 2.13.5
+  + pydantic_core 2.46.5 + typing-inspection 0.4.4)。进仓安装后再改定为 uv.lock
+  inspect 依赖闭包子集行的 sorted-sha,不伪装最终口径;
+- Inspect task implementation SHA = scorer bridge(Subject bridge)实现文件字节
+  sha256,随 run 落档(I2 spike `/tmp/i2/i2_harness.py` =
+  `03c3baa91db0d2481836d533723672ffa367ffd61a7a4bba8677872e0232cfb9`,
+  spike 不入仓,进仓后以仓内文件 sha 为准);
+- adapter implementation SHA = EvalLog→Canonical + Canonical→scoring view adapter
+  实现文件字节 sha256(I2 与 task bridge 同文件同 sha;分体实现后分记);
+- EvalLog schema / version:`EvalLog.version: int` 字段稳定存在,0.3.276 写出与
+  读回均为 **2**。
 
 规则:«**Inspect version change = Harness change,不是透明依赖升级**»——同一
 Product/Model 下升级 Inspect 产生的 execution,不得默认视为同一 Harness Identity。
-以上字段的取值口径与可获取性在 I1 Shadow 中实证后回填本节(回填 = 修本合同 → 走
-§10 STOP 规则报 #521 批)。
+回填履行:本节为 §10 预留的 I1 实证回填面,#521 I2 授权评论(5967774564)增量 1
+授权本修改;其余各节(Ownership/Canonical Result/Failure semantics/Rollback/
+Net Deletion)零改动。
 
 ## 6. Failure & Retry Semantics(I0 只冻原则,不实现)
 
