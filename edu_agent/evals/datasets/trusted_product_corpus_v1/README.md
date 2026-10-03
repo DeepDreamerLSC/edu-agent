@@ -126,6 +126,22 @@ schema 升 `trusted_product_corpus_v1/manifest/v1.1`(仅增字段,零删改;froz
 
 零 fallback 核验:11/11 model_call 全部 role=tutor、attempt=1、ok、request=qwen3_vl_8b→response=Qwen3-VL-8B-GGUF、fallback_from/to 均 null、finish_reason=stop;invalid 清单=空(零静默剔除)。identity 四件套:code `6f3e7078`(detached worktree)/corpus 分支 `data/completion-capable-projection@3c149a22`/manifest sha256 `936bce9e…`/8303 实读 `/v1/models`=llamacpp Qwen3-VL-8B-GGUF(详见 /tmp/wp3/baseline/analysis.json)。调用量纪律:denominator ×1 遍,零重试零补跑(全部 attempt=1 ok)。
 
+## 8c. v1.2:投影刷新 on #515 surface(Completion-Capable 2→5)
+
+schema 升 `trusted_product_corpus_v1/manifest/v1.2`(仅刷新受 #515 影响的面)。**触发**:#515 equation-form deterministic math-copula normalization 已合 main(d4fbdf60)——verifier `_verify_equation_form` 分派路径把数学系词「等于」保位规范化为 =,「x等于6」≡「x=6」进同一等价类(认证仍由既有符号等价 oracle 独立确认,守卫恒在原文坐标,不新增暴露面)。
+
+**重跑口径**:六条件与 §8a 逐字不变(零 LLM/零语义猜测/不造编译器);代码面 6f3e7078 → d4fbdf60——`scripts/compile_answer_spec.py` 两 commit 逐字节相同(sha `b2a1ad71…`),受影响面仅 c5 verifier(sha `cb302f92…`→`4949fddb…`,双锚存 manifest `wp3_projection.rule_version`)。全部 Core 72 案六条件重算并与 v1.1 逐案对账:**其余 69 案结果逐字节一致、manifest 记录零改动**(含 v1.1 已投影 2 案,c6 锚保留 6f3e7078 原值);客观变化仅 §8a c5 留空表中 equation 形 3 案,全部 EMPTY→PROJ:
+
+| 新增投影案 | spec | 终答轮命中证据(turn 4) |
+|---|---|---|
+| core-pilot-stability_equation_subtract | equation_form / x=6 | matched_span=`x等于6`(「…再同时除以3,得到x等于6,代回去等式成立。」),verifier=equation_form,normalization=[符号归一] |
+| core-pilot-stability_equation_sign | equation_form / x=6 | matched_span=`x等于6`(「…x等于6,代入2乘6加5等于17。」),verifier=equation_form,normalization=[符号归一] |
+| core-pilot-stability_equation_parentheses | equation_form / x=4 | matched_span=`x等于4`(「…最后两边同时除以4,x等于4,代回原式得到24。」),verifier=equation_form,normalization=[符号归一] |
+
+**投影统计变化(Core 72:2 投影/70 留空 → 5 投影/67 留空)**:留空原因仅 c5_self_feed_miss_on_final_turn 16→13;c1 29/c2 10/c5 无剧本 15 不变。v1.1 统计存档于 manifest `wp3_projection.v1_2_refresh.stats_v1_1`。
+
+**Completion-Capable Core denominator 2 → 5**(manifest `completion_capable_core` 可由逐案 runtime_projection 复算;三条件不变,新增 3 案均 shadow_pilot 族 expectation=completion_final_state;v1.1 旧 2 案条目逐字节不动)。**不重跑基线**:§8b Baseline v1(2/2)已存档于 v1.1,新分母 5 案的面值留给 v1.2 基线或下次任务。自查:JSON 可解析;frozen_input_sha256 全 446 指纹(sets+rejections)零漂移——重跑仅刷新 3 案 runtime_projection,零输入变化。
+
 ## 9. 复算命令(冻结身份)
 
 ```bash
@@ -141,3 +157,4 @@ uv run python -c "from edu_agent.agents.small_lecturer import _student_signals_s
 - 冒烟产物与构建脚本在 /tmp(/tmp 证据目录只读纪律:本任务只读 /tmp/survival-out、/tmp/reval-final,新建 /tmp/edu-corpus-smoke)。
 - `make check` 未跑:零 runtime 改动(本 PR 仅新增数据资产目录);PR 前自查 manifest JSON 可解析、全部 sha256 实算非占位。
 - v1.1 投影复算(WP3;代码面同 6f3e7078 worktree):`python3 /tmp/wp3/project_answer_spec.py`(六条件逐案重算,与 manifest `runtime_projection`/`wp3_projection.stats` 对账);baseline 重放证据在 /tmp/wp3/baseline/。
+- v1.2 投影刷新复算(#515 surface;worktree d4fbdf60=/tmp/wp3-v12-worktree):`python3 /tmp/wp3-v12/project_answer_spec_v12.py` + `apply_projection_v12.py`(六条件逐字不变重算 72 案、与 v1.1 逐案对账仅 3 案翻面、写入 manifest v1.2);产物 /tmp/wp3-v12/projection_report_v12.json。
