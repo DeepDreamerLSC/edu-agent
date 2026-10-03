@@ -1,5 +1,5 @@
 {
- "schema_version": "trusted_product_corpus_v1/manifest/v1.1",
+ "schema_version": "trusted_product_corpus_v1/manifest/v1.2",
  "corpus_id": "trusted_product_corpus_v1",
  "lane": "M4 overnight Lane A",
  "execution_identity": {
@@ -3362,9 +3362,14 @@
      "source_family": "shadow_pilot_20"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "answer_spec": {
+      "answer_type": "equation_form",
+      "ground_truth": "x=6",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -3390,11 +3395,48 @@
        "final_turn": "因为等式两边做相同运算仍然相等，所以再同时除以3，得到x等于6，代回去等式成立。",
        "turn_index": 4,
        "evidence": {
-        "hit": false
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "equation_form",
+        "verifier": "equation_form",
+        "matched_span": "x等于6",
+        "ground_truth_ref": "x=6",
+        "normalization": [
+         "符号归一"
+        ]
        },
-       "other_turns_hit": []
+       "other_turns_hit": [
+        {
+         "turn_index": 4,
+         "evidence": {
+          "hit": true,
+          "turn_id": 4,
+          "answer_type": "equation_form",
+          "verifier": "equation_form",
+          "matched_span": "x等于6",
+          "ground_truth_ref": "x=6",
+          "normalization": [
+           "符号归一"
+          ]
+         }
+        }
+       ]
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       },
+       "answer_value": "x=6",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     }
    },
@@ -3446,9 +3488,14 @@
      "source_family": "shadow_pilot_20"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "answer_spec": {
+      "answer_type": "equation_form",
+      "ground_truth": "x=6",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -3474,11 +3521,48 @@
        "final_turn": "接着两边同时除以2，x等于6，代入2乘6加5等于17。",
        "turn_index": 4,
        "evidence": {
-        "hit": false
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "equation_form",
+        "verifier": "equation_form",
+        "matched_span": "x等于6",
+        "ground_truth_ref": "x=6",
+        "normalization": [
+         "符号归一"
+        ]
        },
-       "other_turns_hit": []
+       "other_turns_hit": [
+        {
+         "turn_index": 4,
+         "evidence": {
+          "hit": true,
+          "turn_id": 4,
+          "answer_type": "equation_form",
+          "verifier": "equation_form",
+          "matched_span": "x等于6",
+          "ground_truth_ref": "x=6",
+          "normalization": [
+           "符号归一"
+          ]
+         }
+        }
+       ]
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       },
+       "answer_value": "x=6",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     }
    },
@@ -3530,9 +3614,14 @@
      "source_family": "shadow_pilot_20"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
+     "answer_spec": {
+      "answer_type": "equation_form",
+      "ground_truth": "x=4",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -3558,11 +3647,48 @@
        "final_turn": "最后两边同时除以4，x等于4，代回原式得到24。",
        "turn_index": 4,
        "evidence": {
-        "hit": false
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "equation_form",
+        "verifier": "equation_form",
+        "matched_span": "x等于4",
+        "ground_truth_ref": "x=4",
+        "normalization": [
+         "符号归一"
+        ]
        },
-       "other_turns_hit": []
+       "other_turns_hit": [
+        {
+         "turn_index": 4,
+         "evidence": {
+          "hit": true,
+          "turn_id": 4,
+          "answer_type": "equation_form",
+          "verifier": "equation_form",
+          "matched_span": "x等于4",
+          "ground_truth_ref": "x=4",
+          "normalization": [
+           "符号归一"
+          ]
+         }
+        }
+       ]
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "question_answer_teacher_confirmed",
+        "detail": "question.answer + expect.final_states=completed 逐案 teacher_confirmed(patha-pilot-20,issue-178#c5657431632;review.csv 20/20)"
+       },
+       "answer_value": "x=4",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     }
    },
@@ -11015,7 +11141,7 @@
   "learner answer_status=correct 无档案字面源:correct 学习者面由剧本弧(学生轮达终答/gold complete_reasoning)覆盖,非 start 声明字段"
  ],
  "completion_capable_core": {
-  "count": 2,
+  "count": 5,
   "rule": "三条件同满足:①runtime_projection.answer_spec 在场(trusted 投影);②剧本学生终答轮经 verify_completion 判 verified(可验证终答 claim);③expectation 明确要求 completion(expect.final_states=completed)。全部可由本 manifest 逐案 runtime_projection 复算。",
   "cases": [
    {
@@ -11043,6 +11169,48 @@
     "final_turn_verified": true,
     "expectation_kind": "completion_final_state",
     "expectation_declares": "final_states=[completed] + finish_status=completed 检查(teacher_confirmed,patha-pilot-20,issue-178#c5657431632)"
+   },
+   {
+    "case_id": "core-pilot-stability_equation_subtract",
+    "record_id": "stability_equation_subtract",
+    "answer_spec": {
+     "answer_type": "equation_form",
+     "ground_truth": "x=6",
+     "aliases": [],
+     "unit_optional": false
+    },
+    "final_turn_verified": true,
+    "expectation_kind": "completion_final_state",
+    "expectation_declares": "final_states=[completed] + finish_status=completed 检查(teacher_confirmed,patha-pilot-20,issue-178#c5657431632)",
+    "projection_version": "v1.2(#515 surface d4fbdf60;evidence verifier=equation_form, matched_span=x等于6, normalization=['符号归一'])"
+   },
+   {
+    "case_id": "core-pilot-stability_equation_sign",
+    "record_id": "stability_equation_sign",
+    "answer_spec": {
+     "answer_type": "equation_form",
+     "ground_truth": "x=6",
+     "aliases": [],
+     "unit_optional": false
+    },
+    "final_turn_verified": true,
+    "expectation_kind": "completion_final_state",
+    "expectation_declares": "final_states=[completed] + finish_status=completed 检查(teacher_confirmed,patha-pilot-20,issue-178#c5657431632)",
+    "projection_version": "v1.2(#515 surface d4fbdf60;evidence verifier=equation_form, matched_span=x等于6, normalization=['符号归一'])"
+   },
+   {
+    "case_id": "core-pilot-stability_equation_parentheses",
+    "record_id": "stability_equation_parentheses",
+    "answer_spec": {
+     "answer_type": "equation_form",
+     "ground_truth": "x=4",
+     "aliases": [],
+     "unit_optional": false
+    },
+    "final_turn_verified": true,
+    "expectation_kind": "completion_final_state",
+    "expectation_declares": "final_states=[completed] + finish_status=completed 检查(teacher_confirmed,patha-pilot-20,issue-178#c5657431632)",
+    "projection_version": "v1.2(#515 surface d4fbdf60;evidence verifier=equation_form, matched_span=x等于4, normalization=['符号归一'])"
    }
   ],
   "historical_baseline_note": "旧 completion 0/71(lane-b baseline,71 案 judged 全 needs_review,34 案 finish 处 completion_gate_rejected)保留为 historical schema-mismatch baseline,不动;本 denominator 是其 corpus-side 投影修复后的新口径,两者不可直接相减。"
@@ -11050,12 +11218,12 @@
  "wp3_projection": {
   "stats": {
    "core": 72,
-   "projected": 2,
-   "left_empty": 70,
+   "projected": 5,
+   "left_empty": 67,
    "empty_reasons": {
     "c5_no_student_script": 15,
     "c2_compiler_left_empty": 10,
-    "c5_self_feed_miss_on_final_turn": 16,
+    "c5_self_feed_miss_on_final_turn": 13,
     "c1_no_authoritative_answer": 29
    }
   },
@@ -11063,8 +11231,34 @@
    "compile_rule": "scripts/compile_answer_spec.py",
    "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
    "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
-   "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)"
+   "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+   "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+   "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
   },
-  "ruling": "Architect 2026-10-03 Morning:corpus-side 显式 answer_spec 投影;禁止迁移/放宽 Kernel Gate 语义(Gate fail-closed 设计不动)。"
+  "ruling": "Architect 2026-10-03 Morning:corpus-side 显式 answer_spec 投影;禁止迁移/放宽 Kernel Gate 语义(Gate fail-closed 设计不动)。",
+  "v1_2_refresh": {
+   "date": "2026-10-03",
+   "trigger": "#515 equation-form deterministic math-copula normalization 已合 main(「x等于6」≡「x=6」,verifier _verify_equation_form 分派路径)",
+   "surface": "d4fbdf60(=origin/main,#515 后;compile 规则文件与 6f3e7078 逐字节相同,sha b2a1ad71…;受影响面仅 c5 verifier,sha cb302f92…→4949fddb…)",
+   "changed_cases": [
+    "core-pilot-stability_equation_parentheses",
+    "core-pilot-stability_equation_sign",
+    "core-pilot-stability_equation_subtract"
+   ],
+   "change": "3 案 c5 终答轮 self-feed miss→hit(equation_form,math-copula 归一,normalization=符号归一);其余 69 案六条件重算结果与 v1.1 逐字节一致,manifest 记录不动(v1.1 已投影 2 案的 c6 锚保留 6f3e7078 原值)",
+   "stats_v1_1": {
+    "core": 72,
+    "projected": 2,
+    "left_empty": 70,
+    "empty_reasons": {
+     "c5_no_student_script": 15,
+     "c2_compiler_left_empty": 10,
+     "c5_self_feed_miss_on_final_turn": 16,
+     "c1_no_authoritative_answer": 29
+    }
+   },
+   "stats_delta": "projected 2→5;left_empty 70→67;empty_reasons.c5_self_feed_miss_on_final_turn 16→13",
+   "conditions_verbatim": "六条件与 v1.1 逐字不变(见 README §8a);零 LLM/零语义猜测/不造编译器"
+  }
  }
 }
