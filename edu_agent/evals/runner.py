@@ -68,6 +68,59 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def isolated_call(action, on_error):
+    """受控异常边界(#521 I5:BLE001 豁免的单一落点,legacy 与 Inspect adapter 共用)。
+
+    Subject 内容失败分类与 grader 失败隔离都需要「捕获 Exception 后不重抛、转成
+    记录」——此类捕获全仓只允许出现在本函数一处(豁免预算 1/10 挪并自 _run_one,
+    #521 I5 起 Inspect 路径复用同一边界,不再新增豁免点)。on_error 收到原始异常,
+    自行分类(environment / content / grader_failed)。KeyboardInterrupt、SystemExit
+    不是 Exception,照常穿透。"""
+    try:
+        return action()
+    except Exception as exc:  # noqa: BLE001 未知异常按内容失败/评分失败入台账,不中断过夜批次(豁免预算 1/10,全仓单点)
+        return on_error(exc)
+
+
+def result_row(case_id: str, status: str, attempts: int, started: float,
+               *, error: str | None = None, transcript: dict | None = None) -> dict:
+    """Canonical 七字段结果行(合同 §4;原 EvalRunner._result 收为模块级,I5 起两路共用)。"""
+    return {
+        "case_id": case_id,
+        "status": status,
+        "attempts": attempts,
+        "duration_ms": int((time.monotonic() - started) * 1000),
+        "finished_at": now_iso(),
+        "error": error,
+        "transcript": transcript,
+    }
+
+
+def execute_subject_case(subject: Subject, case: dict, case_id: str, ledger) -> tuple[dict, bool]:
+    """执行单个 case 并按 Canonical 三态分类(#521 I5:legacy runner 与 Inspect adapter
+    共用的单一分类面——失败 taxonomy 不许两套实现)。
+
+    返回 (result, retryable):ok/content → sample 执行完成(retryable=False,content
+    不进任何 retry,重跑改变不了内容缺陷);EnvironmentFailure → retryable=True
+    (environment 可由 execution resume 重跑,进程内不自动重跑)。ledger 回调签名
+    (case_id, kind, detail),由调用方接线写各自的 failures.jsonl(两路同形)。"""
+    started = time.monotonic()
+
+    def _failure(exc: BaseException) -> tuple[dict, bool]:
+        if isinstance(exc, EnvironmentFailure):
+            detail = str(exc)
+            ledger(case_id, "environment", detail)
+            return result_row(case_id, "environment", 1, started, error=detail), True
+        detail = f"{type(exc).__name__}: {exc}\n{traceback.format_exc()[-300:]}"
+        ledger(case_id, "content", detail)
+        return result_row(case_id, "content", 1, started, error=detail), False
+
+    outcome = isolated_call(lambda: subject.run_case(case), _failure)
+    if isinstance(outcome, tuple):
+        return outcome
+    return result_row(case_id, "ok", 1, started, transcript=outcome), False
+
+
 def safe_case_id(raw: object, index: int) -> str:
     """case id → 结果文件名/结果行 case_id(文件系统安全)。
 
@@ -220,31 +273,15 @@ class EvalRunner:
         return status == "environment"  # 内容失败不补跑,环境失败可补跑
 
     def _run_one(self, target: Path, case: dict, case_id: str) -> dict:
-        started = time.monotonic()
-        try:
-            transcript = self.subject.run_case(case)
-        except EnvironmentFailure as exc:
-            # 不重跑整案:Gateway/适配器层已尽各自重试,整案重跑只会叠加可靠性语义;
-            # 落 environment 状态,由续跑(_needs_run)补跑。
-            self._ledger(target, case_id, "environment", 1, str(exc))
-            return self._result(case_id, "environment", 1, started, error=str(exc))
-        except Exception as exc:  # noqa: BLE001 未知异常按内容失败入台账,不中断过夜批次(豁免预算 1/10)
-            detail = f"{type(exc).__name__}: {exc}\n{traceback.format_exc()[-300:]}"
-            self._ledger(target, case_id, "content", 1, detail)
-            return self._result(case_id, "content", 1, started, error=detail)
-        return self._result(case_id, "ok", 1, started, transcript=transcript)
+        def ledger(case_id: str, kind: str, detail: str) -> None:
+            self._ledger(target, case_id, kind, 1, detail)
+
+        result, _retryable = execute_subject_case(self.subject, case, case_id, ledger)
+        return result
 
     def _result(self, case_id: str, status: str, attempts: int, started: float,
                 *, error: str | None = None, transcript: dict | None = None) -> dict:
-        return {
-            "case_id": case_id,
-            "status": status,
-            "attempts": attempts,
-            "duration_ms": int((time.monotonic() - started) * 1000),
-            "finished_at": now_iso(),
-            "error": error,
-            "transcript": transcript,
-        }
+        return result_row(case_id, status, attempts, started, error=error, transcript=transcript)
 
     def _ledger(self, target: Path, case_id: str, kind: str, attempt: int, detail: str) -> None:
         line = json.dumps({"ts": now_iso(), "case_id": case_id, "kind": kind,
