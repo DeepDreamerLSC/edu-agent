@@ -441,16 +441,22 @@ TUTOR_SUMMARY_SCHEMA = {
 # 统一 open schema(任务包2步4):一次调用产出 转写 + 分步解 + 首问。
 # 因 tutor 即 VL 模型,vision 判定(acceptable/transcription)与首问(reply)
 # 合入同一次调用;steps 是阶梯底稿 + 数字校验基准。
+# generation-loop 最小修复(2026-10-03 终裁,6a62ca09 复读环):annotation-only——
+# 只加 description 承担非验证语义(写到哪停/不重复);键集/类型/required/additionalProperties
+# 零变化,jsonschema 校验行为不变。因果证据链见 owner-split(/tmp/os-split):
+# 复读环 = 本 schema 文本(路线 1 指令消息)× temp-0 贪心解码。
 OPEN_SCHEMA = {
     "type": "object",
+    "description": "输出一个紧凑的完整 JSON 对象:每个字段内容只写一遍,四个字段写完立即闭合对象并停止,不重复任何文字片段。",
     "properties": {
-        "acceptable": {"type": "boolean"},
-        "transcription": {"type": "string"},
-        "steps": {"type": "array", "items": {
+        "acceptable": {"type": "boolean", "description": "题面是否完整、可用于教学(布尔)"},
+        "transcription": {"type": "string", "description": "题面文字转写:完整转写一遍即可,不要重复同一段转写"},
+        "steps": {"type": "array", "description": "分步解题底稿:通常 2-6 步、每步一句话;每步只写一次,不要重复同一步或同一句", "items": {
             "type": "object",
-            "properties": {"step": {"type": "string"}, "value": {"type": "string"}},
+            "properties": {"step": {"type": "string", "description": "这一步做什么,一句话"},
+                           "value": {"type": "string", "description": "这一步得到的结果,没有则为空字符串"}},
             "required": ["step", "value"], "additionalProperties": False}},
-        "reply": {"type": "string"},
+        "reply": {"type": "string", "description": "给学生的第一句引导提问:简短(一至两句),写完即结束"},
     },
     "required": ["acceptable", "transcription", "steps", "reply"],
     "additionalProperties": False,
