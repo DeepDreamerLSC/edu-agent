@@ -91,6 +91,31 @@ tutor=qwen3_vl_8b@http://127.0.0.1:8303(default_gateway 产线默认参数,配�
 | F5 | [P] true_false 期望面全池 0 | corpus 覆盖 | 候选源(142 spec 题)分布即无此型 | 不造数;未来 partner 供给或人裁扩面 |
 | F6 | [A] 档案 learner 默认无 unanswered/correct 声明源,Core learner 面靠剧本弧覆盖 | corpus 输入参数面 | kernel_subject 默认 incorrect;历史批次从未声明其他值 | 如产品面需要,人裁后以受控声明扩格(本版不扩) |
 
+## 8a. v1.1:runtime_projection.answer_spec + Completion-Capable Core(WP3,Architect 2026-10-03 Morning 裁定)
+
+schema 升 `trusted_product_corpus_v1/manifest/v1.1`(仅增字段,零删改;frozen_input_sha256 与 sets 不动)。**corpus-side 显式 answer_spec 投影**——把可信历史语料投影到当前 Product Contract(question.answer_spec 显式声明面);**禁止迁移/放宽 Kernel Gate 语义**,Gate 的 fail-closed 设计不动。
+
+**六条件(逐字执行,全部确定性、零 LLM、零语义猜测)**:①source 存在明确 authoritative answer;②answer 类型用仓内已批准 deterministic compiler 规则判定(直接复用 `scripts/compile_answer_spec.py` 的 `compile_spec`——classify 互斥分类/composite 不编/choice letter_choices 从 stem 确定性识别/组装面/自回喂验收门;先例=partner_bank 142 题 spec @147562e8;代码面 6f3e7078 同规则文件);③不用 LLM;④不做语义猜测;⑤self-feed verifier 必须命中——投影 spec 喂 `completion.verify_completion`,对该案剧本学生终答轮(线性剧本=末轮)必须判 verified,不命中/无剧本→留空;⑥provenance 写明来源与规则版本。逐案六条件执行记录在 manifest `runtime_projection.conditions`。
+
+**投影统计(Core 72:2 投影 / 70 留空)**:
+
+| 留空原因 | 数 | 案群 |
+|---|---|---|
+| c1 无产品级 answer authority | 29 | math_gold_b2 13 + gold_candidates 12(仅 trajectory gold,裁定明示不得投影)+ signal_v2 stuck 4(reference_answer 为解题过程自由文本,非 canonical answer 声明) |
+| c5 无学生剧本 | 15 | partner_bank 全部(start→finish 最小弧,无学生轮;c5 不可评估按「不命中→留空」fail-closed;15/15 重编译与仓内存储 spec 逐字一致=幂等对账通过,c1/c2 本身成立) |
+| c2 compiler 留空 | 10 | composite 8(imgv1 多空 5 + pilot 鸡兔/按比例/余数 3)+ choice 选项列表不可靠 1(imgv1 open_27)+ 自回喂不命中 1(pilot probability「红球可能性更大」——「可能性」含不确定 marker「可能」,规则 fail-closed) |
+| c5 终答轮 self-feed 不命中 | 16 | pilot 14(含 equation 形 3 案:剧本终答用「x等于6」中文系词,symbol_key 不识别=规则口径;「也是/等于」收尾非 claim 模板白名单形态) + imgv1 2(open_14 多候选字母存活、formula_06 终答「所以需要涂9个」非 claim 模板位) |
+
+投影 2 案:`core-pilot-stability_rectangle_perimeter`(26厘米/numeric_with_unit,终答轮「结果是26厘米」命中)与 `core-pilot-stability_order_operations`(6/numeric_with_unit,终答轮「结果是6」命中);authority 均为 question.answer + teacher_confirmed(patha-pilot-20,issue-178#c5657431632)。
+
+**Completion-Capable Core 新 denominator = 2**(manifest `completion_capable_core` 可复算;三条件:投影在场 ∧ 剧本终答轮可验证 claim ∧ expectation 明确要求 completion——后者唯一 Core 族=shadow_pilot_20 的 completion_final_state)。旧 completion 0/71(lane-b)保留为 historical schema-mismatch baseline,不动,两者不可直接相减。bank 15 案虽 c1/c2 成立且 answer_spec 在产线透传,但无剧本终答 claim,不进 denominator(与 lane-b 实测 bank 案 start→finish=needs_review 一致)。
+
+**Completion Baseline v1**(新 denominator 2 案 ×1 遍,8303 真跑;驱动口径与 Lane B 一致=EvalRunner+KernelSubject+checkpoint+facts;测量件不是修复件,结果如实;五指标与 identity 四件套见 §8b 与 PR body)。corpus-side 投影的消费方式:replay 驱动把投影 answer_spec 附着到 question 载荷,经 `KernelSubject._question_payload` 既有透传契约(「answer_spec 声明面透传,有才传,零行为变化」)进内核——**零 runtime 代码改动**。
+
+## 8b. Completion Baseline v1 结果(见 PR body;/tmp/wp3/baseline/ 证据)
+
+(本节由 WP3 baseline 跑批后回填。)
+
 ## 9. 复算命令(冻结身份)
 
 ```bash
@@ -105,3 +130,4 @@ uv run python -c "from edu_agent.agents.small_lecturer import _student_signals_s
 - sha256 口径:文件=`sha256(文件字节)`;frozen input=`sha256(canonical JSON:sort_keys+ensure_ascii=False+紧凑分隔符)`(bank 案含 learner 声明;scenario 案=整条 record;imgv1 附图字节实测 sha)。
 - 冒烟产物与构建脚本在 /tmp(/tmp 证据目录只读纪律:本任务只读 /tmp/survival-out、/tmp/reval-final,新建 /tmp/edu-corpus-smoke)。
 - `make check` 未跑:零 runtime 改动(本 PR 仅新增数据资产目录);PR 前自查 manifest JSON 可解析、全部 sha256 实算非占位。
+- v1.1 投影复算(WP3;代码面同 6f3e7078 worktree):`python3 /tmp/wp3/project_answer_spec.py`(六条件逐案重算,与 manifest `runtime_projection`/`wp3_projection.stats` 对账);baseline 重放证据在 /tmp/wp3/baseline/。
