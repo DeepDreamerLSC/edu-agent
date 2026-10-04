@@ -154,7 +154,7 @@ def build_cases() -> list[dict]:
 
 
 def to_judge_cases(rows: list[dict]) -> list[dict]:
-    """run 结果 → judge 输入(judge_score.py 同款形态;transcript 的 turns 展开)。"""
+    """run 结果 → judge 输入(id/question/grade/reference_answer/messages 形态;transcript 的 turns 展开)。"""
     judge_cases = []
     for row in rows:
         if row["status"] != "ok":
