@@ -79,8 +79,8 @@ CI/strict 门消费者)且非冻结里程碑一次性工具:
 |---|---|---|---|
 | 1 | `edu_agent/evals/corpus_round.py:685-693` | 模块入口 `python -m edu_agent.evals.corpus_round`(薄包装 scripts/corpus_round.sh);**I5 起默认 execution owner = Inspect**(inspect_adapter;scorer 编排/checkpoint/guard/identity preflight),显式 `--legacy-runner` 才走 EvalRunner(:685-693,禁自动 fallback) | **switched**(I5)· default active EvalRunner=0;`--legacy-runner` 过渡 |
 | 2 | `scripts/s2_judge_battery.py:249-272` | S2 battery 入口;**I6-A 起默认 execution owner = Inspect**(execution-only 轮:GA/GB/VOID 判分留 battery 自 checkpoint 复算),显式 `--legacy-runner` 走 EvalRunner+`strict_identity=True`(legacy 通道语义不变);identity 六键(:63-77)+ owner/harness 面 | **switched**(I6-A)· default active EvalRunner=0;`--legacy-runner` 过渡 |
-| 3 | `scripts/tuning_round.py:448` | **nightly CI 接线**(evals-nightly.yml「夜评」step,每日 23:00) | **active** |
-| 4 | `scripts/image_teaching_round.py:106` | **nightly CI 接线**(evals-nightly.yml image 段 step) | **active** |
+| 3 | `scripts/tuning_round.py` | **nightly CI 接线**(evals-nightly.yml「夜评」step,每日 23:00)不变;**I6-C C1-A 起默认 execution owner = Inspect**(execution-only 轮:judge 单遍 primary 与对照报告语义留脚本),显式 `--legacy-runner` 走 EvalRunner(manifest 明示 execution_owner,禁自动 fallback) | **switched**(I6-C C1-A)· default active EvalRunner=0;`--legacy-runner` 过渡 |
+| 4 | `scripts/image_teaching_round.py` | **nightly CI 接线**(evals-nightly.yml image 段 step)不变;**I6-C C1-A 起默认 execution owner = Inspect**(execution-only 轮:judge/报告语义留脚本),显式 `--legacy-runner` 走 EvalRunner(同 #3 口径) | **switched**(I6-C C1-A)· default active EvalRunner=0;`--legacy-runner` 过渡 |
 | 5 | `scripts/d6d7_gold_consume.py:190-195` | `strict_identity=True`;#464/#485 冻结审时代的运行器(云臂),identity 链与 strict 门均为现行 #490 M3 形态 | **active** |
 | 6 | `scripts/rescore_judge.py:140-141` | offline rescore 路径(JudgeSubject 经 EvalRunner;#254 件1)——#521 中「offline re-score」候选能力的现状本体 | **active**(离线工具) |
 | 7 | `scripts/judge_score.py:68` | #32(M0)judge 稳定性档案工具;无 CI/夜间接线 | runnable · 里程碑绑定(非 active path) |
@@ -104,7 +104,8 @@ consumer-zero 审计(§7/§8)必须覆盖全部 10 个(迁移或删除),不能�
 (corpus_round、S2:default active EvalRunner=0,各自 `--legacy-runner` 保留过渡回退,
 均计 I6-C 删除面)③runnable · 里程碑绑定(judge_score/arc×2/finish 4 面)④test-only
 (tests/evals 合同测试,不产 artifact)⑤artifact reader(offline 消费历史 run 工件,
-不构造 runner)。active 从 I0 的 6 → I5 后 5 → **I6-A 后 4**(S2 出列)。
+不构造 runner)。active 从 I0 的 6 → I5 后 5 → I6-A 后 4(S2 出列)→
+**I6-C C1-A 后 2**(tuning/image 出列,同批切换;回填 2026-10-04)。
 
 ## 3. Ownership Map(冻结)
 
