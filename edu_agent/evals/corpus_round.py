@@ -5,8 +5,7 @@ KernelSubject + 执行面(case 级 checkpoint/续跑/失败台账)+ judge 单遍
 默认 execution owner = Inspect(#521 I5):case 级调度/并发/sample retry 归
 inspect-ai,bridge/scorer/身份/失败映射归 edu_agent 侧窄模块 inspect_adapter;
 checkpoint 仍是 Canonical durable evidence + 被动幂等守卫,artifact 消费面零变化。
-过渡期显式 `--legacy-runner` 走 EvalRunner 旧执行面(禁自动 fallback,manifest
-明示 execution_owner)。
+`--legacy-runner` 过渡回退已删(#521 I6-C C3):Inspect 是唯一执行面。
 
 边界(#216,不扩界):
 - 确定性口径(fake_model 罐头)**不在此跑**——它们在 pytest 参数化里永久回放,重复接线零增益;
@@ -17,7 +16,7 @@ checkpoint 仍是 Canonical durable evidence + 被动幂等守卫,artifact 消�
 
 入口(模块入口,不动 scripts/ 结构路径):
     uv run python -m edu_agent.evals.corpus_round --out <运行根目录> \
-        [--corpus <数据集 JSON>]... [--diff-from <上轮 collect run 目录>] [--legacy-runner]
+        [--corpus <数据集 JSON>]... [--diff-from <上轮 collect run 目录>]
     uv run python -m edu_agent.evals.corpus_round --render-from <运行根目录> \
         [--diff-from <上轮 collect run 目录>]   # 不跑批,零模型重渲染 report(#257 审 P3-2)
     uv run python -m edu_agent.evals.corpus_round --config <run-spec.yaml> \
@@ -43,7 +42,7 @@ import yaml  # 已有依赖(models.yaml 同源),#350 V0 不新增
 from .checks import possible_no_progress_cycle
 from .judge import judge_transcript
 from .kernel_subject import KernelSubject
-from .runner import EvalRunner, ResumeMismatch, RunnerConfig
+from .runner import ResumeMismatch
 from .scenario_corpus import load_shortboard_corpus, run_scenario_checks, to_kernel_case
 from .summary import (  # 三口径/软化报告段(#521 I5 移驻 summary,此处 re-export 兼容)
     caliber_section,
@@ -679,25 +678,16 @@ def _live_round(args, gateway: Gateway, facts_dir: Path,
     if resume_dir is not None:
         print(f"续跑:{resume_dir}(上轮未完成,身份一致)")
     print(f"批跑:{len(cases)} 场景(真模型口径;确定性口径不在本面)→ {collect_root}")
-    identity["execution_owner"] = "evalrunner_legacy" if args.legacy_runner else "inspect"
-    if args.legacy_runner:
-        # 过渡回退(#521 I5 G6):显式 --legacy-runner 才走 EvalRunner;禁自动 fallback
-        runner = EvalRunner(KernelSubject(gateway), RunnerConfig(concurrency=effective["concurrency"]),
-                            collect_root)
-        runner.run(cases_file, cases, run_dir=resume_dir, identity=identity)
-        run_dir = resume_dir or sorted(collect_root.glob("*-*Z-*"))[-1]
-        results = load_results(run_dir)
-        checks = check_rows(scenarios, results)
-        scores = judge_gate(gateway, scenarios, results, effective["judge"])
-    else:
-        # 默认 execution owner = Inspect(#521 I5):调度/并发/sample retry 归 Inspect,
-        # checkpoint 为 Canonical durable evidence + 被动幂等守卫;续跑六面门在 adapter。
-        from .inspect_adapter import InspectRoundRequest, run_inspect_round
-        run_dir, checks, scores = run_inspect_round(InspectRoundRequest(
-            subject=KernelSubject(gateway), gateway=gateway, cases_file=cases_file,
-            scenarios=scenarios, identity=identity, concurrency=effective["concurrency"],
-            judge_enabled=effective["judge"], collect_root=collect_root, resume_dir=resume_dir))
-        results = load_results(run_dir)
+    # execution owner = Inspect(#521 I5;I6-C C3 删 --legacy-runner 回退后唯一执行面):
+    # 调度/并发/sample retry 归 Inspect,checkpoint 为 Canonical durable evidence +
+    # 被动幂等守卫;续跑六面门在 adapter。
+    identity["execution_owner"] = "inspect"
+    from .inspect_adapter import InspectRoundRequest, run_inspect_round
+    run_dir, checks, scores = run_inspect_round(InspectRoundRequest(
+        subject=KernelSubject(gateway), gateway=gateway, cases_file=cases_file,
+        scenarios=scenarios, identity=identity, concurrency=effective["concurrency"],
+        judge_enabled=effective["judge"], collect_root=collect_root, resume_dir=resume_dir))
+    results = load_results(run_dir)
     dirty = git_dirty_state()
     if identity.get("git_dirty") and dirty["patch"]:
         # ⑧:dirty 证据进 run 目录;仅未跟踪文件变脏时 patch 为空,由 git_diff_sha256=None 自述
@@ -773,9 +763,6 @@ def main(argv: list[str] | None = None) -> int:
                              "git SHA/dirty/调用规模)后退出——在端点预检之前,不建网关")
     parser.add_argument("--concurrency", type=int, default=None,
                         help="并发(缺省 = run-spec 的 concurrency,再缺省 2;#350 ④ 三级优先)")
-    parser.add_argument("--legacy-runner", dest="legacy_runner", action="store_true",
-                        help="#521 I5 过渡回退:显式用 EvalRunner 旧执行面(默认 = Inspect;"
-                             "禁自动 fallback/禁双 owner 同 run,manifest 明示 execution_owner)")
     args = parser.parse_args(argv)
 
     if args.render_from_arg:
