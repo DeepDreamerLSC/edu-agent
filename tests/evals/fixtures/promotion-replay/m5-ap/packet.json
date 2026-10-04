@@ -1,0 +1,119 @@
+{
+ "schema": "evaluator-promotion-packet/1",
+ "cycle": {
+  "cycle_id": "replay-m5ap-v2",
+  "issue": "DeepDreamerLSC/edu-agent#535",
+  "created": "2026-10-04",
+  "note": "历史重构件(#535 M5-A' FAIL 实验):维度隔离仍失守,projection guard 3 案 locked 漂移"
+ },
+ "change_scope": {
+  "requested_dims": [
+   "pacing",
+   "summary_mastery",
+   "termination"
+  ],
+  "registry": {
+   "path": "edu_agent/evals/rubrics/dimension-ownership.yaml",
+   "sha256": "4ebff0d911afaf6a21bbbb76d2a66f64ea6d2532740316dbaa261dd0bb41513c"
+  },
+  "change_right_basis": "#535 Calibration Contract(Architect 2026-10-04 批准):candidate ruler 实验授权;change right 呈裁不自决"
+ },
+ "identity": {
+  "baseline_scoring_identity": {
+   "ruler_version": "small_lecturer_v3_3",
+   "ruler_sha256": "d7ed68e6f48655131c41f965ebf1d9a749d2bc88be278a70359e32c0c0f650f4",
+   "scoring_schema_sha256": "8ff560f0a2a67e625078a0aa318a2826eb9675e3f039ece3152d1160e4c7233e",
+   "verdict_rule": "生产 verdict_from_scores 重算(阈值不动;一票否决+数学硬门)",
+   "judge_face": "mlx_27b(Qwen3.5-27B-4bit)@ http://127.0.0.1:8301/v1,temp-0",
+   "note": "冻结 old 臂 = /tmp/lane-b judge 行,零调用复用"
+  },
+  "candidate_scoring_identity": {
+   "ruler_version": "small_lecturer_v3_3_contextual_candidate_v2",
+   "ruler_sha256": "684801c7a6ad84f3f5fb23e731b3c0dc1e9d643437c2af6cc05b99fe7decfdc6",
+   "scoring_schema_sha256": "8ff560f0a2a67e625078a0aa318a2826eb9675e3f039ece3152d1160e4c7233e",
+   "verdict_rule": "生产 verdict_from_scores 重算(阈值不动;一票否决+数学硬门)",
+   "judge_face": "mlx_27b(Qwen3.5-27B-4bit)@ http://127.0.0.1:8301/v1,temp-0",
+   "note": "实验 scorer,复用生产 SCHEMA/Gateway/verdict(#535 合同)"
+  },
+  "execution_identity": {
+   "product_rerun": 0,
+   "evidence_rule": "same-evidence re-score:冻结 /tmp/lane-b judge 行零调用复用,candidate 臂同证据重判(#535 执行序)"
+  }
+ },
+ "frozen_evidence": {
+  "files": [
+   {
+    "path": "judge-rows.jsonl",
+    "sha256": "1481bd6ebef03d9ac99f501747f38c55aa000e1e7b10a4880cf196ee3c6d35d1",
+    "role": "judge-rows"
+   },
+   {
+    "path": "anchored-arm.jsonl",
+    "sha256": "e4dc8b1caf258f899b29d52fc99fd2c5bc6b96e4319ab4315fc722972ed7743d",
+    "role": "anchored-arm"
+   },
+   {
+    "path": "flags.jsonl",
+    "sha256": "936dd2eb8be8eb7b332519448c180670ea8fc5468c7e50d9125fc631958f1eb8",
+    "role": "flags"
+   }
+  ]
+ },
+ "anchored_comparison": {
+  "baseline": {
+   "path": "baseline.json",
+   "sha256": "0c966453b7f93fb92231c441595ee8ab4936f6dd9a0567c4d23d4c2e9770b969"
+  },
+  "arm": {
+   "path": "anchored-arm.jsonl",
+   "sha256": "e4dc8b1caf258f899b29d52fc99fd2c5bc6b96e4319ab4315fc722972ed7743d"
+  },
+  "locked_fields": [
+   "first_question",
+   "socratic_followup",
+   "grade_fit",
+   "answer_leaked",
+   "math_integrity"
+  ],
+  "cases": 12
+ },
+ "masking_proof": {
+  "negative_protection_set": [
+   {
+    "case_id": "core-pilot-stability_probability",
+    "old_verdict": "fail"
+   },
+   {
+    "case_id": "core-imgv1-image_v1_application_table_14",
+    "old_verdict": "fail"
+   },
+   {
+    "case_id": "core-imgv1-image_v1_visual_statistics_open_27",
+    "old_verdict": "fail"
+   },
+   {
+    "case_id": "core-b2-circle_area_alternative_method",
+    "old_verdict": "fail"
+   },
+   {
+    "case_id": "core-b2-rope_unit_app_misconception_repair",
+    "old_verdict": "fail"
+   }
+  ],
+  "challenge_flags": {
+   "path": "flags.jsonl",
+   "sha256": "936dd2eb8be8eb7b332519448c180670ea8fc5468c7e50d9125fc631958f1eb8",
+   "flag_cases": [
+    "core-imgv1-image_v1_application_table_14",
+    "core-imgv1-image_v1_visual_statistics_open_27",
+    "core-b2-circle_area_alternative_method"
+   ],
+   "route": "new calibration cycle"
+  }
+ },
+ "human_promotion": {
+  "decision": null,
+  "key_holder": "human",
+  "note": "机器验证面恒空;人 promotion 步骤填写(Validator ≠ Approver,#537)"
+ }
+}

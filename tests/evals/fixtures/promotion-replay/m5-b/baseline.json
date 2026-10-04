@@ -1,0 +1,291 @@
+{
+ "schema": "anchored-baseline/1",
+ "primitive": "baseline-anchored-dimension-isolation",
+ "version": "v0.1",
+ "cycle_id": "replay-m5b-decomposed",
+ "cycle": "#535 Baseline Anchored Dimension Isolation v0.1",
+ "created": "2026-10-05",
+ "immutable_this_cycle": true,
+ "ownership": {
+  "registry": "/private/tmp/wt-m5d-governance/edu_agent/evals/rubrics/dimension-ownership.yaml",
+  "registry_sha256": "4ebff0d911afaf6a21bbbb76d2a66f64ea6d2532740316dbaa261dd0bb41513c",
+  "locked_fields": [
+   "first_question",
+   "socratic_followup",
+   "grade_fit",
+   "answer_leaked",
+   "math_integrity"
+  ],
+  "allowed_dims": [
+   "pacing",
+   "summary_mastery",
+   "termination"
+  ]
+ },
+ "provenance": {
+  "judge_rows_file": "/tmp/wt-m5d-governance/tests/evals/fixtures/promotion-replay/m5-b/judge-rows.jsonl",
+  "judge_rows_sha256": "0163173c2760b27f133126cdb03b92af52896e2f4035f1083192f0faaa5a3844",
+  "locked_values_source": "冻结 judge 行(零模型调用,机械取值)",
+  "sha_chain": "baseline.json ← sidecar baseline.json.sha256;baseline ← judge_rows_sha256;逐案 ← judge_input_sha256(行内携带时)"
+ },
+ "cases": {
+  "core-pilot-stability_probability": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 0,
+    "grade_fit": 1,
+    "answer_leaked": false,
+    "math_integrity": 0
+   },
+   "old_arm_reference": {
+    "total": 3,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "c52f56498417711c17cfa803bc84284eb4bff5827e26747fd7b0a880bdeeeb5b"
+   }
+  },
+  "core-imgv1-image_v1_application_table_14": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 1,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 5,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "bca625a11aad376e9156a9697b394bf69e7de35b9253caced1e5bb4ec74b22db"
+   }
+  },
+  "core-imgv1-image_v1_visual_statistics_open_27": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 1,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 5,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "8b9802ee6c1bf78131400b5259c348ff143f30947acd367eb703ca481989e376"
+   }
+  },
+  "core-b2-circle_area_alternative_method": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 1,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 6,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "213b383eec32f3e9e5e41a3c45ea366f7a9d070b47704eb37c1cf5731e9337a6"
+   }
+  },
+  "core-b2-rope_unit_app_misconception_repair": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 6,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "5581e06188312e36b474631215a035877def6c83297bf78aabc739dcb60381e4"
+   }
+  },
+  "core-b2-fraction_multiplication_support_boundary": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 7,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "9ebeb044604a62cd41f1b403a4fe3f454f63b6b3cadbcfdf7957c7ccf33545f4"
+   }
+  },
+  "core-goldc-average_score_alternative_method": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 7,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "a45c1d6bb15d3a75f80459caefa5538c03659cc7d3b11d5cda961de03334a100"
+   }
+  },
+  "core-goldc-average_score_complete_reasoning": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 7,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "ae5a0f1106bf25cffe96c6e4bd7aacc10a197af12a842a9eb12f80b0dc79c62d"
+   }
+  },
+  "core-goldc-chicken_rabbit_complete_reasoning": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 7,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "e65767720aed555eda4c3ca027f46fec7501a1e9672c6daf035f6ae4bcf64885"
+   }
+  },
+  "core-goldc-equation_addition_complete_reasoning": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 7,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "d252d3e1c41f2c0035196ffbcbf0316267edaf724c2c25f9a6824758d1f6a458"
+   }
+  },
+  "core-pilot-stability_chicken_rabbit": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 8,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "1fa1cfa5afba35fd2bf323d3d08210d85418c60cca739858c182294bba0cad61"
+   }
+  },
+  "core-pilot-stability_decimal_multiply": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 8,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "5f14fee1509c3f2f17480c93d5beb25e108c0b89dd702c33d4f37ec422922413"
+   }
+  },
+  "core-b2-circle_area_misconception_repair": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 1,
+    "grade_fit": 1,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 4,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "64c14d31c0d262dced6e503118d8aa92a1caf0ce8a3033c59e513074b1901a8e"
+   }
+  },
+  "core-b2-circle_area_support_boundary_hard_pressure": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 0,
+    "grade_fit": 1,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 3,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "29b5f597d073ed8e728de5552097b2856f73c2ad50a0c57b3753ede6244a1086"
+   }
+  },
+  "core-goldc-chicken_rabbit_alternative_method": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 1,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 5,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "b45021b1f6931a357fe3e8e205c2cf94fdb2e801710125ae1a2b4f6a2ad6148f"
+   }
+  },
+  "core-imgv1-image_v1_visual_statistics_open_30": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 1,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 5,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "01c649aced89d7a395ee1c915a36f004943ff8d58f29c72edb772fd278f2a7bf"
+   }
+  },
+  "core-sigv2-enrich_v2_stuck_03": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 1,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 7,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit",
+    "judge_input_sha256": "c6e394c82c321fb86852cca6084842a32eb40c7c14808b221c2e8bfccd76dfe4"
+   }
+  }
+ },
+ "counts": {
+  "cases": 17
+ }
+}
