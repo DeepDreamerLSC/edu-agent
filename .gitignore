@@ -8,6 +8,8 @@ __pycache__/
 !edu_agent/evals/artifacts/**/*.jsonl
 # 测试夹具真原件形态目录(#368 适配:夹具须随仓走,CI 才能跑 importer e2e)
 !tests/fixtures/**/*.jsonl
+# promotion replay corpus(#537 M5-D):冻结重放语料须随仓走,CI 才能跑 validator 验收
+!tests/evals/fixtures/promotion-replay/**/*.jsonl
 .DS_Store
 .ruff_cache/
 .pytest_cache/

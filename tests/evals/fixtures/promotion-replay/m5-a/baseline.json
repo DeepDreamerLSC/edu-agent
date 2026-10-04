@@ -1,0 +1,204 @@
+{
+ "schema": "anchored-baseline/1",
+ "primitive": "baseline-anchored-dimension-isolation",
+ "version": "v0.1",
+ "cycle_id": "replay-m5a-contextual",
+ "cycle": "#535 Baseline Anchored Dimension Isolation v0.1",
+ "created": "2026-10-05",
+ "immutable_this_cycle": true,
+ "ownership": {
+  "registry": "/private/tmp/wt-m5d-governance/edu_agent/evals/rubrics/dimension-ownership.yaml",
+  "registry_sha256": "4ebff0d911afaf6a21bbbb76d2a66f64ea6d2532740316dbaa261dd0bb41513c",
+  "locked_fields": [
+   "first_question",
+   "socratic_followup",
+   "grade_fit",
+   "answer_leaked",
+   "math_integrity"
+  ],
+  "allowed_dims": [
+   "pacing",
+   "summary_mastery",
+   "termination"
+  ]
+ },
+ "provenance": {
+  "judge_rows_file": "/tmp/wt-m5d-governance/tests/evals/fixtures/promotion-replay/m5-a/judge-rows.jsonl",
+  "judge_rows_sha256": "1481bd6ebef03d9ac99f501747f38c55aa000e1e7b10a4880cf196ee3c6d35d1",
+  "locked_values_source": "冻结 judge 行(零模型调用,机械取值)",
+  "sha_chain": "baseline.json ← sidecar baseline.json.sha256;baseline ← judge_rows_sha256;逐案 ← judge_input_sha256(行内携带时)"
+ },
+ "cases": {
+  "core-pilot-stability_probability": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 0,
+    "grade_fit": 1,
+    "answer_leaked": false,
+    "math_integrity": 0
+   },
+   "old_arm_reference": {
+    "total": 3,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+   }
+  },
+  "core-imgv1-image_v1_application_table_14": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 1,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 5,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+   }
+  },
+  "core-imgv1-image_v1_visual_statistics_open_27": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 1,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 5,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+   }
+  },
+  "core-b2-circle_area_alternative_method": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 1,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 6,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+   }
+  },
+  "core-b2-rope_unit_app_misconception_repair": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 6,
+    "verdict": "fail",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+   }
+  },
+  "core-b2-fraction_multiplication_support_boundary": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 7,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+   }
+  },
+  "core-goldc-average_score_alternative_method": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 7,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+   }
+  },
+  "core-goldc-average_score_complete_reasoning": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 7,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+   }
+  },
+  "core-goldc-chicken_rabbit_complete_reasoning": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 7,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+   }
+  },
+  "core-goldc-equation_addition_complete_reasoning": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 7,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+   }
+  },
+  "core-pilot-stability_chicken_rabbit": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 8,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+   }
+  },
+  "core-pilot-stability_decimal_multiply": {
+   "locked": {
+    "first_question": 2,
+    "socratic_followup": 2,
+    "grade_fit": 2,
+    "answer_leaked": false,
+    "math_integrity": 2
+   },
+   "old_arm_reference": {
+    "total": 8,
+    "verdict": "review",
+    "judge_model": "/Users/linsuchang/Desktop/work/models/Qwen3.5-27B-4bit"
+   }
+  }
+ },
+ "counts": {
+  "cases": 12
+ }
+}

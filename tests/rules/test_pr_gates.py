@@ -225,3 +225,69 @@ def test_calibration_line_must_start_the_line():
     body = "评审备注:请补 calibration: 一致率 48/52, 翻转 2"
     assert pr_gates.calibration_gate(api, 1, files, body) != []
     assert pr_gates.calibration_gate(api, 1, files, f"  {CALIBRATION}") == []  # 行首空白容忍
+
+
+# ---------- evaluator-change 完备性卡口(#537 M5-D) ----------
+
+PROMOTION_PACKET = (
+    "promotion-packet: tests/evals/fixtures/promotion-replay/m5-b2/packet.json "
+    "(validator 过验:structurally complete, awaiting human key)"
+)
+
+
+def test_rubric_touch_without_packet_line_fails():
+    """① 触 rubrics/ 缺 promotion-packet 行 → 失败并打 evaluator-change 标签。"""
+    api = StubApi()
+    files = [{"filename": "edu_agent/evals/rubrics/small_lecturer_v3_3.yaml",
+              "additions": 3, "deletions": 1}]
+    failures = pr_gates.evaluator_change_gate(api, 1, files, "普通描述,没有 packet 行")
+    assert failures and "promotion-packet:" in failures[0]
+    assert api.added == ["evaluator-change"]
+
+
+def test_judge_face_touch_without_packet_line_fails():
+    """② 触 judge 判分执行面(judge.py/s2_judge.py)缺 packet 行 → 同样失败。"""
+    api = StubApi()
+    files = [{"filename": "edu_agent/evals/judge.py", "additions": 5, "deletions": 0}]
+    assert pr_gates.evaluator_change_gate(api, 1, files, "") != []
+    assert api.added == ["evaluator-change"]
+
+
+def test_packet_line_passes_but_stays_labelled():
+    """③ 有 promotion-packet 行 → 绿;标签仍亮到合并时刻(同 structural/calibration)。"""
+    api = StubApi()
+    files = [{"filename": "edu_agent/evals/s2_judge.py", "additions": 2, "deletions": 0}]
+    assert pr_gates.evaluator_change_gate(api, 1, files, f"说明\n{PROMOTION_PACKET}\n") == []
+    assert api.added == ["evaluator-change"]
+
+
+def test_non_evaluator_pr_not_affected():
+    """④ 不触 rubrics/ 与 judge 面的 PR 零影响(evals 其他文件/文档不算)。"""
+    api = StubApi()
+    files = [
+        {"filename": "edu_agent/evals/runner.py", "additions": 10, "deletions": 0},
+        {"filename": "docs/evals/evaluator-change-protocol.md", "additions": 5, "deletions": 0},
+        {"filename": "edu_agent/gateway/client.py", "additions": 1, "deletions": 1},
+    ]
+    assert pr_gates.evaluator_change_gate(api, 1, files, "") == []
+    assert api.added == [] and api.removed == ["evaluator-change"]
+
+
+def test_packet_line_must_carry_reference():
+    """⑤ 前缀后必须带引用(空行不算);行中被提及不算(同 structural-approval 口径)。"""
+    api = StubApi()
+    files = [{"filename": "edu_agent/evals/rubrics/dimension-ownership.yaml",
+              "additions": 1, "deletions": 0}]
+    assert pr_gates.evaluator_change_gate(api, 1, files, "promotion-packet:") != []
+    assert pr_gates.evaluator_change_gate(api, 1, files, "见 promotion-packet: 一行") != []
+    assert pr_gates.evaluator_change_gate(api, 1, files, PROMOTION_PACKET) == []
+
+
+def test_evaluator_face_path_pattern():
+    """⑥ 只认 rubrics/ 目录与两个 judge 面文件;同名/其他路径不算。"""
+    assert pr_gates.path_is_evaluator_face("edu_agent/evals/rubrics/dimension-ownership.yaml")
+    assert pr_gates.path_is_evaluator_face("edu_agent/evals/judge.py")
+    assert pr_gates.path_is_evaluator_face("edu_agent/evals/s2_judge.py")
+    assert not pr_gates.path_is_evaluator_face("edu_agent/evals/judgement.py")
+    assert not pr_gates.path_is_evaluator_face("edu_agent/evals/rubrics.py")
+    assert not pr_gates.path_is_evaluator_face("tests/evals/test_judge.py")

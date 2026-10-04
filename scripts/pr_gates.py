@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """PR 元数据门(04 §3.1):分支年龄、PR 触碰顶层包数、large-pr 软标签、structural 主门、
-calibration 卡口(#405 ②)。
+calibration 卡口(#405 ②)、evaluator-change 完备性卡口(#537 M5-D)。
 
 只在有 PR 上下文(GITHUB_TOKEN/GH_TOKEN + PR 号 + GITHUB_REPOSITORY)时执行,本地跳过。
 分支年龄检查对"引入本检查的 PR"自豁免(04 §3.1:M0 第一个 PR 豁免;判断方式为
@@ -10,7 +10,11 @@ base 分支上不存在 scripts/pr_gates.py)。structural 主门(02 §7,issue #4
 structural-approval 同款机制:rubric 是量具(改 rubric = 换尺子),触碰
 edu_agent/evals/rubrics/ → 打 calibration 标签,描述缺 `calibration:` 一行
 (金标集一致率 + verdict 翻转数,人工跑 rescore 附工件,PR CI 不调真模型 02 §6)
-即 pr-gates 失败。只依赖标准库,经 GitHub REST API 读写。
+即 pr-gates 失败。evaluator-change 卡口(#537 M5-D,同款机制):rubric 是量具,
+judge 面(judge.py/s2_judge.py)是判分执行面——触碰 rubrics/ 或 judge 面而描述缺
+`promotion-packet:` 行(指向 docs/evals/promotion-packet.schema.json 合规 packet,
+经 scripts/validate_promotion_packet.py 过验)即 pr-gates 失败。只依赖标准库,经
+GitHub REST API 读写。
 """
 
 from __future__ import annotations
@@ -34,11 +38,14 @@ STRUCTURAL_LABEL = "structural"
 APPROVAL_PREFIX = "structural-approval:"
 CALIBRATION_LABEL = "calibration"
 CALIBRATION_PREFIX = "calibration:"
+EVALUATOR_CHANGE_LABEL = "evaluator-change"
+PROMOTION_PACKET_PREFIX = "promotion-packet:"
 LABEL_COLORS = {
     STALE_LABEL: "b60205",
     LARGE_LABEL: "fbca04",
     STRUCTURAL_LABEL: "5319e7",
     CALIBRATION_LABEL: "0e8a16",
+    EVALUATOR_CHANGE_LABEL: "d93f0b",
 }
 
 # 四类结构路径(issue #22 方案 A 通配制):目录以前缀匹配,文件在仓库根精确匹配;
@@ -64,6 +71,13 @@ PLANNED_TOP_LEVEL_PACKAGES = frozenset(
 # rubric 是量具,改 rubric = 换尺子(#405 ②):目录前缀匹配。金标集在
 # edu_agent/evals/datasets/golden/ 是卡口的检查对象(#404 已入仓),不在此触发路径内。
 RUBRICS_PATH = "edu_agent/evals/rubrics/"
+# judge 面(#537 M5-D):生产判分执行面——SCHEMA/DIMENSIONS/verdict_from_scores/
+# judge_transcript 在 judge.py,S2 专项判分在 s2_judge.py。改判分面=换尺子,
+# 与 rubrics/ 同触发 evaluator-change 卡口(rubrics/ 由 RUBRICS_PATH 前缀另行命中)。
+JUDGE_FACE_PATHS = (
+    "edu_agent/evals/judge.py",
+    "edu_agent/evals/s2_judge.py",
+)
 
 
 # ---------- 纯逻辑(供 tests/rules 单测) ----------
@@ -140,6 +154,20 @@ def path_is_rubric(name: str) -> bool:
 def has_calibration_line(body: str) -> bool:
     """描述里有一行以 calibration: 开头(金标集一致率 + verdict 翻转数,格式自由,#405 ②)。"""
     return any(line.lstrip().startswith(CALIBRATION_PREFIX) for line in body.splitlines())
+
+
+def path_is_evaluator_face(name: str) -> bool:
+    """触碰 evaluator 判分面:rubrics/ 目录前缀或 judge 面文件(#537 M5-D)。"""
+    return path_is_rubric(name) or name in JUDGE_FACE_PATHS
+
+
+def has_promotion_packet_line(body: str) -> bool:
+    """描述里有一行以 promotion-packet: 开头(指向合规 packet,#537 M5-D)。"""
+    return any(
+        line.lstrip().startswith(PROMOTION_PACKET_PREFIX)
+        and line.lstrip()[len(PROMOTION_PACKET_PREFIX):].strip()
+        for line in body.splitlines()
+    )
 
 
 def parse_iso(value: str) -> datetime:
@@ -241,6 +269,33 @@ def calibration_gate(api, number: int, files: list, body: str) -> list[str]:
     ]
 
 
+def evaluator_change_gate(api, number: int, files: list, body: str) -> list[str]:
+    """evaluator-change 完备性卡口(#537 M5-D):换尺子必须有 packet。
+
+    触碰 rubrics/ 或 judge 面而描述缺 promotion-packet: 行即失败——packet 须按
+    docs/evals/promotion-packet.schema.json 构造并经
+    scripts/validate_promotion_packet.py 过验(validator 只证结构完备,promotion
+    仍由人裁,Validator ≠ Approver)。标签亮到合并时刻,同 structural/calibration。
+    """
+    touched = [entry["filename"] for entry in files
+               if path_is_evaluator_face(entry["filename"])]
+    if not touched:
+        api.remove_label(number, EVALUATOR_CHANGE_LABEL)
+        print("PR-GATE-OK evaluator-change: 未触碰 rubrics/ 或 judge 面")
+        return []
+    api.add_label(number, EVALUATOR_CHANGE_LABEL, LABEL_COLORS[EVALUATOR_CHANGE_LABEL])
+    if has_promotion_packet_line(body):
+        print(f"PR-GATE-OK evaluator-change: 触碰 {touched};描述含 "
+              f"{PROMOTION_PACKET_PREFIX} 行(#537 M5-D)")
+        return []
+    return [
+        f"evaluator-change: 触碰 {touched},换尺子/改判分面,描述缺 "
+        f"{PROMOTION_PACKET_PREFIX} 行(指向 docs/evals/promotion-packet.schema.json "
+        "合规 packet,scripts/validate_promotion_packet.py 过验)即失败"
+        "(#537 M5-D,已打标签)"
+    ]
+
+
 def run_pr_gates(api: GithubApi, number: int) -> list[str]:
     pr = api.get(f"pulls/{number}")
     if not isinstance(pr, dict):
@@ -252,6 +307,7 @@ def run_pr_gates(api: GithubApi, number: int) -> list[str]:
     failures += packages_gate(api, number, files)
     failures += structural_gate(api, number, files, pr.get("body") or "")
     failures += calibration_gate(api, number, files, pr.get("body") or "")
+    failures += evaluator_change_gate(api, number, files, pr.get("body") or "")
     large_pr_gate(api, number, pr.get("additions", 0))
     return failures
 

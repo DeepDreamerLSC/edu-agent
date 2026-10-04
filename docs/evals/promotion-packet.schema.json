@@ -1,0 +1,267 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "edu-agent/docs/evals/promotion-packet.schema.json",
+ "title": "Evaluator Change Promotion Packet v1(#537 M5-D)",
+ "description": "evaluator change(rubric / judge prompt / scorer / grader model / scoring topology / dimension ownership)申请 promotion 时的机器可读 packet。validator(scripts/validate_promotion_packet.py)只验完备性与身份一致性,不拥有 promotion authority:human_promotion.decision 在机器验证面恒为 null,由人 promotion 步骤填写——本 schema 不存在任何可被机器填写的批准位。",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "schema",
+  "cycle",
+  "change_scope",
+  "identity",
+  "frozen_evidence",
+  "anchored_comparison",
+  "masking_proof",
+  "human_promotion"
+ ],
+ "properties": {
+  "schema": {
+   "const": "evaluator-promotion-packet/1"
+  },
+  "cycle": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["cycle_id", "issue", "created"],
+   "properties": {
+    "cycle_id": {
+     "type": "string",
+     "minLength": 1,
+     "description": "calibration cycle 标识;与本 cycle baseline.json 的 cycle_id 同源"
+    },
+    "issue": {
+     "type": "string",
+     "minLength": 1,
+     "description": "本 cycle 的授权 issue(如 DeepDreamerLSC/edu-agent#535)"
+    },
+    "created": {
+     "type": "string",
+     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "note": {
+     "type": "string",
+     "description": "replay/重构件在此如实声明(不得冒充原生 runner 工件)"
+    }
+   }
+  },
+  "change_scope": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["requested_dims", "registry", "change_right_basis"],
+   "properties": {
+    "requested_dims": {
+     "type": "array",
+     "minItems": 1,
+     "uniqueItems": true,
+     "items": {"type": "string", "minLength": 1},
+     "description": "四问①:本 cycle 声明有权变化的维度。未声明 = 无 change right;validator 对照 dimension-ownership registry 校验其 ⊆ allowed(mutable)集"
+    },
+    "registry": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["path", "sha256"],
+     "properties": {
+      "path": {"type": "string", "minLength": 1},
+      "sha256": {
+       "type": "string",
+       "pattern": "^[0-9a-f]{64}$",
+       "description": "dimension-ownership registry 冻结时的 sha256;validator 重算比对,漂移即拒(registry change = meta-change = 新 cycle)"
+      }
+     }
+    },
+    "change_right_basis": {
+     "type": "string",
+     "minLength": 1,
+     "description": "change right 的授权来源(issue comment / Architect 裁定)"
+    }
+   }
+  },
+  "identity": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "baseline_scoring_identity",
+    "candidate_scoring_identity",
+    "execution_identity"
+   ],
+   "properties": {
+    "baseline_scoring_identity": {"$ref": "#/$defs/scoring_identity"},
+    "candidate_scoring_identity": {"$ref": "#/$defs/scoring_identity"},
+    "execution_identity": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["product_rerun", "evidence_rule"],
+     "properties": {
+      "product_rerun": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 0,
+       "description": "Scoring Identity ≠ Execution Identity:换尺/换 grader 不触发 Product rerun。packet v1 恒为 0;真缺 evidence 的新采集不走在本 packet 面内"
+      },
+      "evidence_rule": {
+       "type": "string",
+       "minLength": 1,
+       "description": "evidence 复用口径(如 same-evidence re-score,冻结 judge 行零调用)"
+      }
+     }
+    }
+   }
+  },
+  "frozen_evidence": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["files"],
+   "properties": {
+    "files": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "role"],
+      "properties": {
+       "path": {
+        "type": "string",
+        "minLength": 1,
+        "description": "相对 packet 文件所在目录解析(绝对路径亦可)"
+       },
+       "sha256": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$",
+        "description": "validator 重算文件 sha256 比对,evidence 不随尺改写"
+       },
+       "role": {
+        "type": "string",
+        "enum": ["judge-rows", "anchored-arm", "flags", "matrix", "other"]
+       }
+      }
+     }
+    }
+   }
+  },
+  "anchored_comparison": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["baseline", "arm", "locked_fields", "cases"],
+   "properties": {
+    "baseline": {"$ref": "#/$defs/file_sha"},
+    "arm": {"$ref": "#/$defs/file_sha"},
+    "locked_fields": {
+     "type": "array",
+     "minItems": 1,
+     "uniqueItems": true,
+     "items": {"type": "string", "minLength": 1},
+     "description": "四问②:必须保持的面。validator 校验 == registry locked 集,且逐案 anchored == baseline"
+    },
+    "cases": {
+     "type": "integer",
+     "minimum": 1,
+     "description": "arm 行数 == baseline 案数(不许丢案)"
+    }
+   }
+  },
+  "masking_proof": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["negative_protection_set", "challenge_flags"],
+   "properties": {
+    "negative_protection_set": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "old_verdict"],
+      "properties": {
+       "case_id": {"type": "string", "minLength": 1},
+       "old_verdict": {
+        "enum": ["fail", "review"],
+        "description": "必须与冻结 old 臂 verdict 三方一致(packet/anchored-arm/baseline),不得改写"
+       }
+      }
+     },
+     "description": "四问③:防洗白保护集。old=fail 案必须全部申报(validator 机械查覆盖),不许为过门静默剔除"
+    },
+    "challenge_flags": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["path", "sha256", "flag_cases", "route"],
+     "properties": {
+      "path": {"type": "string", "minLength": 1},
+      "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+      "flag_cases": {
+       "type": "array",
+       "uniqueItems": true,
+       "items": {"type": "string", "minLength": 1},
+       "description": "必须与 flags.jsonl 实际行集、anchored-arm 中 detector 发散案集逐案相等(零静默)"
+      },
+      "route": {
+       "const": "new calibration cycle",
+       "description": "locked 张力只能路由新 cycle,不能被 candidate 值静默吸收"
+      }
+     }
+    }
+   }
+  },
+  "human_promotion": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["decision", "key_holder"],
+   "properties": {
+    "decision": {
+     "type": ["null", "string"],
+     "description": "机器验证面恒为 null。validator 见非 null 即拒(Validator ≠ Approver);该位只由人 promotion 步骤在人手里填写"
+    },
+    "key_holder": {
+     "const": "human",
+     "description": "promotion key 只在人手里(#537)"
+    },
+    "note": {"type": "string"}
+   }
+  }
+ },
+ "$defs": {
+  "file_sha": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["path", "sha256"],
+   "properties": {
+    "path": {"type": "string", "minLength": 1},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+   }
+  },
+  "scoring_identity": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "ruler_version",
+    "ruler_sha256",
+    "verdict_rule",
+    "judge_face"
+   ],
+   "properties": {
+    "ruler_version": {"type": "string", "minLength": 1},
+    "ruler_sha256": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "scoring_schema_sha256": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$",
+     "description": "judge response SCHEMA 的 sha256(#490 identity 纪律)"
+    },
+    "verdict_rule": {
+     "type": "string",
+     "minLength": 1,
+     "description": "verdict 组装口径(如 生产 verdict_from_scores 重算,阈值不动)"
+    },
+    "judge_face": {
+     "type": "string",
+     "minLength": 1,
+     "description": "判分执行面(endpoint/模型/温度等)"
+    },
+    "note": {"type": "string"}
+   }
+  }
+ }
+}
