@@ -116,6 +116,11 @@ def check_evidence(packet: dict, packet_dir: Path, baseline: dict) -> list[str]:
                             "evidence 不随尺改写,须回到冻结原件(#537 边界三)")
         if entry.get("role") == "judge-rows":
             judge_rows = sha256_file(path)
+    if not judge_rows:
+        # #539 独立验证员披露缺口收口:frozen_evidence.files 必须携带 judge-rows 角色
+        # 条目——缺位即 fail-closed,不得静默跳过 judge-rows↔baseline 溯源链检查。
+        failures.append("evidence: frozen_evidence.files 缺 judge-rows 角色条目"
+                        "(四问④:溯源链检查不可跳过)")
     if judge_rows and baseline["provenance"].get("judge_rows_sha256") != judge_rows:
         failures.append("evidence: judge-rows 与 baseline.provenance.judge_rows_sha256 "
                         "链条不闭合(四问④:frozen evidence identity)")

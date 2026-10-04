@@ -216,3 +216,25 @@ def test_requested_dim_without_change_right_rejected(tmp_path):
 
     result = run_cli(mutate_b2(tmp_path, widen))
     assert result.returncode == 1 and "无 change right" in result.stdout
+
+
+def test_packet_without_judge_rows_role_rejected(tmp_path):
+    """#539 验证员披露缺口收口钉:删掉 frozen_evidence.files 里的 judge-rows 条目
+    → validator 拒绝(溯源链检查不可被静默跳过),不再 exit 0。"""
+    import shutil
+    from pathlib import Path
+    import subprocess
+    import sys
+
+    src = Path(__file__).resolve().parents[2] / "tests/evals/fixtures/promotion-replay/m5-b2"
+    dst = tmp_path / "no-jr"
+    shutil.copytree(src, dst)
+    packet_path = dst / "packet.json"
+    packet = json.loads(packet_path.read_text(encoding="utf-8"))
+    kept = [f for f in packet["frozen_evidence"]["files"] if f.get("role") != "judge-rows"]
+    assert len(kept) < len(packet["frozen_evidence"]["files"])
+    packet["frozen_evidence"]["files"] = kept
+    packet_path.write_text(json.dumps(packet, ensure_ascii=False, indent=1), encoding="utf-8")
+    r = subprocess.run([sys.executable, str(Path(__file__).resolve().parents[2] / "scripts/validate_promotion_packet.py"), str(packet_path)], capture_output=True, text=True)
+    assert r.returncode != 0
+    assert "judge-rows" in (r.stdout + r.stderr)
