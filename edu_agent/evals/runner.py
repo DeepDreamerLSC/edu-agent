@@ -1,11 +1,12 @@
-"""评测 runner 骨架(00 §8.2):被测对象抽象 + case 级 checkpoint + 失败分类台账。
+"""评测共享契约面:Subject 协议 + 失败分类 + Canonical 结果行 + identity 比对面。
 
-过夜安全六需求:①每 case 一份结果文件即 checkpoint,续跑只补缺(环境失败可补跑,
-内容失败不补);②环境/内容失败分开入台账;③并发上限;④环境失败不进程内重跑
-(模型调用可靠性只归 Gateway,整案重跑=叠加;#254 P1);
-⑤每轮一目录 + manifest(数据集版本/配置哈希/被测对象标识);⑥晨间摘要见 summary.py。
-M1 实现(老系统适配器)与 M2 实现(内核三函数)只实现 Subject 协议,本模块不感知
-gateway、老系统与真实模型——桩在协议上,不在代码里。
+execution machinery(EvalRunner:ThreadPoolExecutor 并发、per-case checkpoint 调度、
+resume/strict-resume-gate 执行侧、manifest/failures 台账写入)已删(#521 I6-C C4,
+Net Deletion §9):执行 owner = inspect_adapter(inspect-ai),本模块只剩两路共用的
+契约本体——Subject 协议、EnvironmentFailure/ResumeMismatch 分类、
+execute_subject_case/isolated_call/result_row(失败 taxonomy 唯一实现)、
+safe_case_id(#450)、_identity_resume_diffs(strict identity 全等比较)、
+atomic_write_json。Subject 实现不感知 gateway 之外的世界——桩在协议上,不在代码里。
 """
 
 from __future__ import annotations
@@ -14,15 +15,11 @@ import hashlib
 import json
 import os
 import re
-import threading
 import time
 import traceback
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Protocol
-from uuid import uuid4
 
 _UNSAFE_ID = re.compile(r"[^A-Za-z0-9._-]")
 # 结果文件名字节预算(#450):stem + ".json.tmp"(atomic_write_json 临时名)≤ 255B
@@ -33,18 +30,13 @@ _SAFE_ID_MAX_BYTES = 240
 class EnvironmentFailure(Exception):
     """环境失败(网络/凭据/服务不可用):不进程内重跑整案,落 environment 状态由续跑补跑。
 
-    模型调用可靠性只归 Gateway(其内部已穷尽 retry+fallback);Runner 再整案重跑 = 可靠性叠加。
+    模型调用可靠性只归 Gateway(其内部已穷尽 retry+fallback);执行层再整案重跑 = 可靠性叠加。
     其他异常一律按内容失败入台账,不重试——重跑改变不了内容缺陷。
     """
 
 
 class ResumeMismatch(Exception):
     """续跑目录与当前数据集/配置/被测对象不一致:换新目录,不带病续跑。"""
-
-
-@dataclass(frozen=True)
-class RunnerConfig:
-    concurrency: int = 2
 
 
 class Subject(Protocol):
@@ -69,11 +61,11 @@ def sha256_bytes(data: bytes) -> str:
 
 
 def isolated_call(action, on_error):
-    """受控异常边界(#521 I5:BLE001 豁免的单一落点,legacy 与 Inspect adapter 共用)。
+    """受控异常边界(#521 I5:BLE001 豁免的单一落点,Inspect adapter 全程复用)。
 
     Subject 内容失败分类与 grader 失败隔离都需要「捕获 Exception 后不重抛、转成
-    记录」——此类捕获全仓只允许出现在本函数一处(豁免预算 1/10 挪并自 _run_one,
-    #521 I5 起 Inspect 路径复用同一边界,不再新增豁免点)。on_error 收到原始异常,
+    记录」——此类捕获全仓只允许出现在本函数一处(豁免预算 1/10,#521 I5 起
+    Inspect 路径复用同一边界,不再新增豁免点)。on_error 收到原始异常,
     自行分类(environment / content / grader_failed)。KeyboardInterrupt、SystemExit
     不是 Exception,照常穿透。"""
     try:
@@ -84,7 +76,7 @@ def isolated_call(action, on_error):
 
 def result_row(case_id: str, status: str, attempts: int, started: float,
                *, error: str | None = None, transcript: dict | None = None) -> dict:
-    """Canonical 七字段结果行(合同 §4;原 EvalRunner._result 收为模块级,I5 起两路共用)。"""
+    """Canonical 七字段结果行(合同 §4;原 EvalRunner._result 收为模块级)。"""
     return {
         "case_id": case_id,
         "status": status,
@@ -97,13 +89,13 @@ def result_row(case_id: str, status: str, attempts: int, started: float,
 
 
 def execute_subject_case(subject: Subject, case: dict, case_id: str, ledger) -> tuple[dict, bool]:
-    """执行单个 case 并按 Canonical 三态分类(#521 I5:legacy runner 与 Inspect adapter
-    共用的单一分类面——失败 taxonomy 不许两套实现)。
+    """执行单个 case 并按 Canonical 三态分类(#521 I5:失败 taxonomy 的唯一实现,
+    inspect_adapter 执行路径复用)。
 
     返回 (result, retryable):ok/content → sample 执行完成(retryable=False,content
     不进任何 retry,重跑改变不了内容缺陷);EnvironmentFailure → retryable=True
     (environment 可由 execution resume 重跑,进程内不自动重跑)。ledger 回调签名
-    (case_id, kind, detail),由调用方接线写各自的 failures.jsonl(两路同形)。"""
+    (case_id, kind, detail),由调用方接线写各自的 failures.jsonl(同形)。"""
     started = time.monotonic()
 
     def _failure(exc: BaseException) -> tuple[dict, bool]:
@@ -141,11 +133,13 @@ def safe_case_id(raw: object, index: int) -> str:
 def _identity_resume_diffs(stored: object, current: dict | None) -> list[str]:
     """strict 续跑的 identity 全等门(#490 M1):空列表 = 放行,非空 = 拒绝理由。
 
-    stored 取 manifest.get("identity")(键缺席/null 均算缺失);current 取本次 run()
-    的 identity 参数。两边都必须存在且全等:current 缺失 fail closed、stored 缺失
-    覆盖旧 run 目录、stored 非对象按病态 manifest 拒绝而非崩溃(两个专项脚本现
-    行此处 AttributeError)。差异按 新增(current-only)/缺失(stored-only)/值变
+    stored 取 manifest.get("identity")(键缺席/null 均算缺失);current 取本次
+    执行的 identity 参数。两边都必须存在且全等:current 缺失 fail closed、stored
+    缺失覆盖旧 run 目录、stored 非对象按病态 manifest 拒绝而非崩溃(两个专项脚本
+    现行此处 AttributeError)。差异按 新增(current-only)/缺失(stored-only)/值变
     三类枚举字段名,键序 sorted(键并集)——与 s2/d6d7 两个 _resume_gate 同键集。
+    比较面归 edu-agent 不随 execution 迁移而迁移(#521 I0 表);执行侧消费方 =
+    inspect_adapter._verify_resume_identity。
     """
     if current is None:
         return ["当前调用未传 identity(strict 模式要求显式身份)"]
@@ -171,121 +165,3 @@ def atomic_write_json(path: Path, payload: dict) -> None:
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     os.replace(tmp, path)
-
-
-class EvalRunner:
-    """一批用例一个 run 目录;同目录重入即续跑(只补缺与环境失败)。
-
-    类名避开 runner 模块名:macOS 大小写不敏感文件系统下
-    from edu_agent.evals import Runner 会被私有导入检查当作导入私有模块 runner.py。
-    """
-
-    def __init__(self, subject: Subject, config: RunnerConfig, runs_root: Path | str) -> None:
-        self.subject = subject
-        self.config = config
-        self.runs_root = Path(runs_root)
-        self._ledger_lock = threading.Lock()
-
-    def run(self, dataset_path: Path | str, cases: list[dict],
-            run_dir: Path | str | None = None, identity: dict | None = None, *,
-            strict_identity: bool = False) -> Path:
-        """identity(#238 件 A):跑批身份字段(git/prompt/models 哈希),原样进 manifest;
-        None = 不写该键(非 corpus_round 调用方不受影响)。
-
-        strict_identity(#490 M1):只作用于 resume——stored/current identity 两边都
-        必须存在且全等,任一方缺失或字段不等即 ResumeMismatch(fail closed);不落
-        manifest、不进 config sha,新开 run 行为与非 strict 完全一致。"""
-        dataset = Path(dataset_path)
-        dataset_sha = sha256_bytes(dataset.read_bytes())
-        config_sha = sha256_bytes(json.dumps(asdict(self.config), sort_keys=True).encode())
-        if run_dir is not None:
-            # strict identity 门先于三面(s2/d6d7 现行顺序:脚本 identity 门先于 runner 检查)
-            self._verify_resume(Path(run_dir), dataset_sha, config_sha,
-                                identity, strict_identity)
-        target = self._run_dir(run_dir, dataset, dataset_sha, config_sha, len(cases), identity)
-        pending = [
-            (case, safe_case_id(case.get("id", case.get("case_id")), index))
-            for index, case in enumerate(cases)
-        ]
-        pending = [item for item in pending if self._needs_run(target, item[1])]
-        results = target / "results"
-        results.mkdir(exist_ok=True)
-        with ThreadPoolExecutor(max_workers=self.config.concurrency) as pool:
-            futures = [pool.submit(self._run_one, target, case, case_id) for case, case_id in pending]
-            try:
-                for future in as_completed(futures):
-                    result = future.result()
-                    atomic_write_json(results / f"{result['case_id']}.json", result)
-            except KeyboardInterrupt:
-                # Ctrl-C:取消未开始的用例再退出,已完成的 checkpoint 保留,晨间摘要可见未跑
-                for future in futures:
-                    future.cancel()
-                raise
-        return target
-
-    def _run_dir(self, run_dir: Path | str | None, dataset: Path, dataset_sha: str,
-                 config_sha: str, total: int, identity: dict | None = None) -> Path:
-        if run_dir is not None:
-            return Path(run_dir)  # 纯目录复用;resume 校验已上提至 run()(#490 M1)
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        target = self.runs_root / f"{dataset.stem}-{stamp}-{uuid4().hex[:4]}"
-        target.mkdir(parents=True)
-        manifest = {
-            "started_at": now_iso(),
-            "dataset": {"name": dataset.name, "sha256": dataset_sha},
-            "config": {**asdict(self.config), "sha256": config_sha},
-            "subject": self.subject.name,
-            "total_cases": total,
-        }
-        if identity is not None:
-            manifest["identity"] = identity
-        atomic_write_json(target / "manifest.json", manifest)
-        return target
-
-    def _verify_resume(self, target: Path, dataset_sha: str, config_sha: str,
-                       identity: dict | None = None,
-                       strict_identity: bool = False) -> None:
-        try:
-            manifest = json.loads((target / "manifest.json").read_text(encoding="utf-8"))
-        except (FileNotFoundError, json.JSONDecodeError) as exc:
-            raise ResumeMismatch(f"{target} 不是可续跑的 run 目录(无 manifest)") from exc
-        if strict_identity:
-            problems = _identity_resume_diffs(manifest.get("identity"), identity)
-            if problems:
-                raise ResumeMismatch(
-                    f"{target} 的运行身份不满足 strict 续跑条件({'; '.join(problems)}),"
-                    "请新开 run 目录")
-        mismatches = []
-        if manifest["dataset"]["sha256"] != dataset_sha:
-            mismatches.append("数据集版本")
-        if manifest["config"]["sha256"] != config_sha:
-            mismatches.append("配置哈希")
-        if manifest["subject"] != self.subject.name:
-            mismatches.append("被测对象标识")
-        if mismatches:
-            raise ResumeMismatch(f"{target} 的 {'/'.join(mismatches)} 与当前不一致,请新开 run 目录")
-
-    def _needs_run(self, target: Path, case_id: str) -> bool:
-        path = target / "results" / f"{case_id}.json"
-        if not path.is_file():
-            return True
-        status = json.loads(path.read_text(encoding="utf-8"))["status"]
-        return status == "environment"  # 内容失败不补跑,环境失败可补跑
-
-    def _run_one(self, target: Path, case: dict, case_id: str) -> dict:
-        def ledger(case_id: str, kind: str, detail: str) -> None:
-            self._ledger(target, case_id, kind, 1, detail)
-
-        result, _retryable = execute_subject_case(self.subject, case, case_id, ledger)
-        return result
-
-    def _result(self, case_id: str, status: str, attempts: int, started: float,
-                *, error: str | None = None, transcript: dict | None = None) -> dict:
-        return result_row(case_id, status, attempts, started, error=error, transcript=transcript)
-
-    def _ledger(self, target: Path, case_id: str, kind: str, attempt: int, detail: str) -> None:
-        line = json.dumps({"ts": now_iso(), "case_id": case_id, "kind": kind,
-                           "attempt": attempt, "detail": detail[:500]}, ensure_ascii=False)
-        with self._ledger_lock:
-            with (target / "failures.jsonl").open("a", encoding="utf-8") as handle:
-                handle.write(line + "\n")

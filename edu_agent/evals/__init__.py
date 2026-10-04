@@ -36,11 +36,9 @@ from .judge import (
 )
 from .legacy_adapter import LegacyAdapter
 from .report import render_html
-from .runner import (
+from .runner import (  # 执行机械已删(#521 I6-C C4):只导共享契约面
     EnvironmentFailure,
-    EvalRunner,
     ResumeMismatch,
-    RunnerConfig,
     Subject,
     safe_case_id,
 )
@@ -112,7 +110,6 @@ __all__ = [
     "collect_socraticmath_records",
     "EXTERNAL_SCHEMA_VERSION",
     "EXTERNAL_ROLES",
-    "EvalRunner",
     "JudgeSubject",
     "KernelSubject",
     "POST_TURN_OBSERVATION_SCHEMA_VERSION",
@@ -125,7 +122,6 @@ __all__ = [
     "REGISTRY",
     "possible_no_progress_cycle",
     "ResumeMismatch",
-    "RunnerConfig",
     "S2_SCHEMA",
     "S2JudgeSubject",
     "SCHEMA",

@@ -1,6 +1,6 @@
 """corpus_round 纯逻辑测试(#216):零模型——过滤/撞名/跨轮 diff/报告渲染。
 
-批跑面(KernelSubject+EvalRunner+judge)与 tuning_round 同口径,不在单测里重复
+批跑面(KernelSubject+inspect_adapter+judge)与 tuning_round 同口径,不在单测里重复
 (#216 边界:真模型不进 CI);这里只钉数据的分诊与对照语义。
 """
 
@@ -389,9 +389,11 @@ def test_judger_sha256_public_fingerprint():
 
 def test_long_case_id_full_pipeline_join(tmp_path):
     """#450 regression(Phase A 2026-09-25 infra incident):97 字符 case ID 全流程
-    跑通——runner 结果行 case_id 与 scenarios 键一致,check_rows 查键不再 KeyError
-    (事故形态:safe_case_id [:80] 截断,tutor 相完成后 check_rows 崩溃退出)。"""
-    from edu_agent.evals import EvalRunner, RunnerConfig, load_results
+    跑通——结果行 case_id 与 scenarios 键一致,check_rows 查键不再 KeyError
+    (事故形态:safe_case_id [:80] 截断,tutor 相完成后 check_rows 崩溃退出)。
+    #521 I6-C C4 起执行面 = run_inspect_round(EvalRunner 已删,零真模型:
+    Subject 走 canned transcript)。"""
+    from edu_agent.evals import InspectRoundRequest, load_results, run_inspect_round
 
     long_id = "a64_target_v3_northwest_clarification_not_leakage" + "z" * 48
     assert len(long_id) == 97
@@ -407,7 +409,11 @@ def test_long_case_id_full_pipeline_join(tmp_path):
         def run_case(self, case: dict) -> dict:
             return {"final_state": "completed", "turns": [], "guard_events": []}
 
-    run_dir = EvalRunner(OkSubject(), RunnerConfig(), tmp_path / "runs").run(dataset, cases)
+    run_dir, _, _ = run_inspect_round(InspectRoundRequest(
+        subject=OkSubject(), gateway=None, cases_file=dataset, scenarios=None,
+        identity={"git_sha": "abc", "prompts_sha256": "p" * 64, "models_sha256": "m" * 64},
+        concurrency=1, judge_enabled=False, collect_root=tmp_path / "collect",
+        resume_dir=None, task_name="edu_corpus_round"))
     results = load_results(run_dir)
     assert [r["case_id"] for r in results] == [long_id]      # 行内 id 未被截断
     assert (run_dir / "results" / f"{long_id}.json").is_file()

@@ -1,16 +1,17 @@
-"""rescore_judge Inspect offline re-score switch 合同(#521 I6-C C1-B G1)。
+"""rescore_judge Inspect offline re-score switch 合同(#521 I6-C C1-B G1;
+I6-C C4 删 EvalRunner 后 Inspect 为唯一执行面,防复活断言持有)。
 
-零真模型——默认路径走真实 inspect_adapter(execution-only 轮,scenarios=None,
-评分语义与平铺留脚本),legacy 走显式 `--legacy-runner`。覆盖清单(逐条):
-- 默认 owner = Inspect:run_inspect_round 接线(scenarios=None/identity/task_name/
-  concurrency/resume_dir)+ EvalRunner 零构造;identity 明示 execution_owner=inspect;
+零真模型——路径走真实 inspect_adapter(execution-only 轮,scenarios=None,
+评分语义与平铺留脚本)。覆盖清单(逐条):
+- owner = Inspect:run_inspect_round 接线(scenarios=None/identity/task_name/
+  concurrency/resume_dir)且模块无 EvalRunner 可构造;identity 明示
+  execution_owner=inspect;
 - End-to-end:假存档(历史 EvalRunner 工件形)→ _archive_cases 读者面 → 假 judge →
   checkpoint Canonical 七字段 → judge-scores.jsonl 平铺;judger.sha256 资产指纹不变;
   manifest 带 harness 面,EvalLog 零 scorer 面(execution-only);
 - 历史 artifact 只读:存档 run 目录文件字节零改写、零新增;
-- 禁自动 fallback:Inspect 路径异常直接传播,不回落 EvalRunner;
-- legacy 显式可用:manifest identity 明示 evalrunner_legacy,无 Inspect 工件;
-- resume 自动探测:out/collect 下已有 judge-cases-* run 目录 → 两 owner 同传该目录;
+- 禁自动 fallback:Inspect 路径异常直接传播(无第二执行面可回落);
+- resume 自动探测:out/collect 下已有 judge-cases-* run 目录 → 作 resume_dir 传 adapter;
 - 身份面(抽 2 面:git/prompts):任一变化 → ResumeMismatch 且 0 调(strict
   preflight 先于 Gateway/judge);
 - 跨 owner:legacy-owned run 目录被同形 Inspect 请求拒绝(禁双 owner 同 run)。
@@ -140,7 +141,7 @@ def _scores(out: Path) -> dict[str, dict]:
     return rows
 
 
-# ------------------------------------------------------- 默认 owner = Inspect ----
+# ------------------------------------------------------- owner = Inspect(唯一)----
 def test_default_wires_inspect_and_never_constructs_evalrunner(tmp_path, monkeypatch):
     captured = {}
     run_dir = tmp_path / "out" / "collect" / "pre-made"
@@ -157,8 +158,7 @@ def test_default_wires_inspect_and_never_constructs_evalrunner(tmp_path, monkeyp
         return run_dir, {}, {}
 
     monkeypatch.setattr(rescore, "run_inspect_round", spy_run)
-    monkeypatch.setattr(rescore, "EvalRunner",
-                        lambda *a, **k: pytest.fail("默认路径禁触 EvalRunner(legacy 需显式 --legacy-runner)"))
+    assert not hasattr(rescore, "EvalRunner")  # I6-C C4:第二执行面已删,不复活
     argv, _, out = _argv(tmp_path, "out")
     _run_main(monkeypatch, tmp_path, argv)
     request = captured["request"]
@@ -167,7 +167,7 @@ def test_default_wires_inspect_and_never_constructs_evalrunner(tmp_path, monkeyp
     assert request.task_name == "edu_rescore_judge"  # provenance 不冒名 corpus 轮
     assert request.identity["execution_owner"] == "inspect"  # owner 明示
     assert "git_sha" in request.identity and "prompts_sha256" in request.identity  # run_identity 同源
-    assert request.concurrency == 2  # 与 legacy RunnerConfig 同并发(paired 前提)
+    assert request.concurrency == 2  # 与原 legacy 通道同并发(paired 前提)
     assert request.resume_dir is None and request.collect_root == out / "collect"
     assert request.cases_file == out / "judge-cases.jsonl"
     assert request.subject is FakeJudgeSubject.last
@@ -180,8 +180,7 @@ def test_default_wires_inspect_and_never_constructs_evalrunner(tmp_path, monkeyp
 def test_default_inspect_end_to_end_reader_compat_and_flattening(tmp_path, monkeypatch):
     """真 adapter 端到端:历史工件读者面只读、judge-cases 输入同 corpus 口径、owner/harness
     面进 manifest,checkpoint = Canonical 七字段,EvalLog 零 scorer,judger 指纹不变。"""
-    monkeypatch.setattr(rescore, "EvalRunner",
-                        lambda *a, **k: pytest.fail("默认路径禁触 EvalRunner"))
+    assert not hasattr(rescore, "EvalRunner")  # I6-C C4:第二执行面已删,不复活
     extra = tmp_path / "extra.json"
     extra.write_text(json.dumps({
         "case_id": "rescore_case_c15", "question": "构造挑战案", "grade": "六年级",
@@ -226,42 +225,22 @@ def test_default_inspect_end_to_end_reader_compat_and_flattening(tmp_path, monke
     assert (out / "judger.sha256").read_text(encoding="utf-8").strip() == judger_sha256()
 
 
-# ------------------------------------------------- 禁自动 fallback / legacy 显式 ----
+# --------------------------------------------------------- 禁自动 fallback ----
 def test_inspect_failure_propagates_no_silent_fallback(tmp_path, monkeypatch):
     def boom(request):
         raise RuntimeError("inspect down")
 
     monkeypatch.setattr(rescore, "run_inspect_round", boom)
-    monkeypatch.setattr(rescore, "EvalRunner",
-                        lambda *a, **k: pytest.fail("禁自动 fallback:Inspect 失败不得回落 EvalRunner"))
+    assert not hasattr(rescore, "EvalRunner")  # I6-C C4:第二执行面已删,无回落地
     argv, _, _ = _argv(tmp_path, "out")
     with pytest.raises(RuntimeError, match="inspect down"):
         _run_main(monkeypatch, tmp_path, argv)
 
 
-def test_legacy_runner_explicit(tmp_path, monkeypatch):
-    """"--legacy-runner:EvalRunner 旧执行面 + manifest identity 明示 evalrunner_legacy,
-    无 Inspect 工件(一次 execution 只有一个 owner);平铺与 rubric 指纹同口径。"""
-    monkeypatch.setattr(rescore, "run_inspect_round",
-                        lambda *a, **k: pytest.fail("legacy 显式路径禁触 Inspect(禁双 owner)"))
-    argv, _, out = _argv(tmp_path, "out", ["--legacy-runner"])
-    _run_main(monkeypatch, tmp_path, argv)
-    collect = _latest_collect(out)
-    manifest = json.loads((collect / "manifest.json").read_text(encoding="utf-8"))
-    assert manifest["identity"]["execution_owner"] == "evalrunner_legacy"  # owner 明示
-    assert manifest["subject"] == "fake-judge-subject"
-    assert not (collect / "execution.json").exists()  # 无 Inspect 工件
-    assert not (collect / "inspect-logs").exists()
-    assert len(list((collect / "results").glob("*.json"))) == len(_FACES)
-    rows = _scores(out)
-    assert set(rows) == {f["id"] for f in _FACES} and rows[_FACES[0]["id"]]["total"] == 12
-    assert (out / "judger.sha256").read_text(encoding="utf-8").strip() == judger_sha256()
-
-
-# --------------------------------------------------- resume 自动探测(两 owner)----
-def test_resume_autodetects_latest_judge_cases_run_for_both_owners(tmp_path, monkeypatch):
-    """out/collect 已有 judge-cases-* run 目录:默认路径作 resume_dir 传 adapter,
-    legacy 作 run_dir 传 EvalRunner(同目录、同语义,glob 修正后真实生效)。"""
+# ------------------------------------------------------- resume 自动探测 ----
+def test_resume_autodetects_latest_judge_cases_run(tmp_path, monkeypatch):
+    """out/collect 已有 judge-cases-* run 目录 → 作 resume_dir 传 adapter
+    (glob 修正后真实生效;I6-C C4 起 owner 只剩 Inspect 一面)。"""
     existing = tmp_path / "out" / "collect" / "judge-cases-20260101T000000Z-old1"
     existing.mkdir(parents=True)
     captured = {}
@@ -274,23 +253,6 @@ def test_resume_autodetects_latest_judge_cases_run_for_both_owners(tmp_path, mon
     argv, _, _ = _argv(tmp_path, "out")
     _run_main(monkeypatch, tmp_path, argv)
     assert captured["resume"] == existing
-
-    class FakeRunner:
-        def __init__(self, subject, config, runs_root):
-            captured["constructed"] = True
-
-        def run(self, dataset_path, cases, run_dir=None, identity=None, **kw):
-            captured["legacy_run_dir"] = run_dir
-            return existing
-
-    monkeypatch.setattr(rescore, "run_inspect_round",
-                        lambda *a, **k: pytest.fail("legacy 显式路径禁触 Inspect"))
-    monkeypatch.setattr(rescore, "EvalRunner", FakeRunner)
-    legacy_existing = tmp_path / "out2" / "collect" / "judge-cases-20260101T000000Z-old1"
-    legacy_existing.mkdir(parents=True)
-    argv, _, _ = _argv(tmp_path, "out2", ["--legacy-runner"])
-    _run_main(monkeypatch, tmp_path, argv)
-    assert captured["legacy_run_dir"] == legacy_existing
 
 
 # ------------------------------------------- 身份面(抽 2 面:接线参与共享 preflight)----

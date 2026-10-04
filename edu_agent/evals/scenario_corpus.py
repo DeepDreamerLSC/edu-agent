@@ -1,8 +1,8 @@
 """回归网 corpus(#197 第二批起含确定性/真模型两口径):薄加载 + 用例级 check 复算
 (带来源归属的失败清单)。
 
-EvalRunner.run() 只收预加载 cases(不读数据集路径),image_teaching.load_scenarios
-锁死图文 v1 schema 会拒本 corpus——故用 scripts/tuning_round.py 同款薄读取口径。
+执行面只收预加载 cases(不读数据集路径),image_teaching.load_scenarios 锁死
+图文 v1 schema 会拒本 corpus——故用 scripts/tuning_round.py 同款薄读取口径。
 """
 
 from __future__ import annotations

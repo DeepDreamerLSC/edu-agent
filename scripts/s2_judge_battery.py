@@ -33,7 +33,6 @@ from pathlib import Path
 from edu_agent.evals import (
     InspectRoundRequest,
     ResumeMismatch,
-    RunnerConfig,
     S2JudgeSubject,
     compare_models,
     file_sha256,
@@ -246,16 +245,16 @@ def main() -> int:
             subject = S2JudgeSubject(gateway)
             # owner 明示进 identity(manifest 落档;跨 owner 混续同一 run 被拒)
             identity["execution_owner"] = "inspect"
-            # execution owner = Inspect(#521 I6-A;I6-C C3 删 --legacy-runner 回退后
-            # 唯一执行面):调度/并发/sample retry 归 inspect-ai,checkpoint 为
-            # Canonical durable evidence + 被动幂等守卫;strict 门(六面 + owner/
-            # harness)在 adapter preflight,先于 Gateway。execution-only(scenarios=
-            # None):GA/GB/VOID 判分仍由本脚本自 checkpoint 复算,expected 不进模型
-            # 边界(P1-2 防火墙原样)。
+            # execution owner = Inspect(#521 I6-A;I6-C C4 删 EvalRunner 后唯一执行面,
+            # 并发沿用原 RunnerConfig 缺省值 2):调度/并发/sample retry 归 inspect-ai,
+            # checkpoint 为 Canonical durable evidence + 被动幂等守卫;strict 门(六面 +
+            # owner/harness)在 adapter preflight,先于 Gateway。execution-only(
+            # scenarios=None):GA/GB/VOID 判分仍由本脚本自 checkpoint 复算,expected
+            # 不进模型边界(P1-2 防火墙原样)。
             run_dir, _checks, _scores = run_inspect_round(InspectRoundRequest(
                 subject=subject, gateway=gateway, cases_file=args.battery,
                 scenarios=None, identity=identity,
-                concurrency=RunnerConfig().concurrency, judge_enabled=False,
+                concurrency=2, judge_enabled=False,
                 collect_root=args.artifacts_root, resume_dir=args.run_dir,
                 task_name=_INSPECT_TASK))
         finally:
