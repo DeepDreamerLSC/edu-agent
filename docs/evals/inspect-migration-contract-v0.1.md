@@ -82,7 +82,7 @@ CI/strict 门消费者)且非冻结里程碑一次性工具:
 | 3 | `scripts/tuning_round.py` | **nightly CI 接线**(evals-nightly.yml「夜评」step,每日 23:00)不变;**I6-C C1-A 起默认 execution owner = Inspect**(execution-only 轮:judge 单遍 primary 与对照报告语义留脚本),显式 `--legacy-runner` 走 EvalRunner(manifest 明示 execution_owner,禁自动 fallback) | **switched**(I6-C C1-A)· default active EvalRunner=0;`--legacy-runner` 过渡 |
 | 4 | `scripts/image_teaching_round.py` | **nightly CI 接线**(evals-nightly.yml image 段 step)不变;**I6-C C1-A 起默认 execution owner = Inspect**(execution-only 轮:judge/报告语义留脚本),显式 `--legacy-runner` 走 EvalRunner(同 #3 口径) | **switched**(I6-C C1-A)· default active EvalRunner=0;`--legacy-runner` 过渡 |
 | 5 | `scripts/d6d7_gold_consume.py:190-195` | `strict_identity=True`;#464/#485 冻结审时代的运行器(云臂),identity 链与 strict 门均为现行 #490 M3 形态 | **active** |
-| 6 | `scripts/rescore_judge.py:140-141` | offline rescore 路径(JudgeSubject 经 EvalRunner;#254 件1)——#521 中「offline re-score」候选能力的现状本体 | **active**(离线工具) |
+| 6 | `scripts/rescore_judge.py:113-137` | offline rescore 入口(#254 件1);**I6-C C1-B 起默认 execution owner = Inspect**(execution-only 轮:judge 单遍 primary 评分语义与 judge-scores 平铺留脚本;历史 EvalRunner 工件只读消费,reader 面零变化),显式 `--legacy-runner` 走 EvalRunner(manifest 明示 execution_owner,禁自动 fallback) | **switched**(I6-C C1-B)· default active EvalRunner=0;`--legacy-runner` 过渡 |
 | 7 | `scripts/judge_score.py:68` | #32(M0)judge 稳定性档案工具;无 CI/夜间接线 | runnable · 里程碑绑定(非 active path) |
 | 8 | `scripts/arc_eval_collect.py:92` | #101/#143 双臂评测收集器,口径冻结于 teaching-arc-eval-v1.md | runnable · 里程碑绑定 |
 | 9 | `scripts/arc_eval_fix112_frames.py:167` | #112/#148 帧网格工具(一次性 before/after) | runnable · 里程碑绑定 |
@@ -105,7 +105,8 @@ consumer-zero 审计(§7/§8)必须覆盖全部 10 个(迁移或删除),不能�
 均计 I6-C 删除面)③runnable · 里程碑绑定(judge_score/arc×2/finish 4 面)④test-only
 (tests/evals 合同测试,不产 artifact)⑤artifact reader(offline 消费历史 run 工件,
 不构造 runner)。active 从 I0 的 6 → I5 后 5 → I6-A 后 4(S2 出列)→
-**I6-C C1-A 后 2**(tuning/image 出列,同批切换;回填 2026-10-04)。
+**I6-C C1-A 后 2**(tuning/image 出列,同批切换)→ **I6-C C1-B 后 1**(rescore 出列;
+回填 2026-10-04)。
 
 ## 3. Ownership Map(冻结)
 
