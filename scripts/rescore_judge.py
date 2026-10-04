@@ -7,13 +7,12 @@
 judge 不被告知来源。单遍 primary(role=judge,mlx_27b);judger.sha256(#238 §5 判分器
 指纹)随产物落位。判分器本体(checks.py/judge.py)不在本命令改动面,指纹与 main 一致。
 
-默认 execution owner = Inspect(#521 I6-C C1-B):judge 批执行的 case 级调度/并发/
-sample retry 归 inspect-ai(execution-only 轮,scenarios=None,复用 inspect_adapter);
-评分语义与评分平铺(scores = transcript 平铺 → judge-scores.jsonl)全留本脚本;
-checkpoint 仍是 Canonical durable evidence + 被动幂等守卫,collect 工件面与旧执行
-同形。历史 EvalRunner 工件只读消费(_archive_cases/load_results 读者面零变化,不回填
-不改写)。过渡期显式 `--legacy-runner` 走 EvalRunner 旧执行面(禁自动 fallback,
-manifest 明示 execution_owner,同 owner 混续由各执行面自身校验)。
+默认 execution owner = Inspect(#521 I6-C C1-B;I6-C C4 删 EvalRunner 后唯一执行面):
+judge 批执行的 case 级调度/并发/sample retry 归 inspect-ai(execution-only 轮,
+scenarios=None,复用 inspect_adapter);评分语义与评分平铺(scores = transcript 平铺 →
+judge-scores.jsonl)全留本脚本;checkpoint 仍是 Canonical durable evidence + 被动幂等
+守卫,collect 工件面与旧执行同形。历史 EvalRunner 工件只读消费(_archive_cases/
+load_results 读者面零变化,不回填不改写)。
 
 用法:
   uv run python scripts/rescore_judge.py \
@@ -21,7 +20,7 @@ manifest 明示 execution_owner,同 owner 混续由各执行面自身校验)。
     [--extra-case <挑战案 JSON>]...        # C15/构造52 等,可多次
     [--only <case_id 清单文件,每行一个>] \
     [--old-scores <旧 judge-scores.jsonl,只做新旧对照>] \
-    --out <产物目录> [--concurrency 2] [--legacy-runner]
+    --out <产物目录> [--concurrency 2]
 
 --archive 可多次(corpus-round-v2 / fix112 等存档源各一)。
 """
@@ -34,10 +33,8 @@ import sys
 from pathlib import Path
 
 from edu_agent.evals import (
-    EvalRunner,
     InspectRoundRequest,
     JudgeSubject,
-    RunnerConfig,
     judger_sha256,
     load_results,
     run_identity,
@@ -111,24 +108,16 @@ def _resume_dir(root: Path) -> Path | None:
 
 
 def _execute(gateway, cases_file: Path, cases: list[dict], out: Path, args) -> Path:
-    """判卷批执行(一次 execution 只有一个 owner):默认 Inspect execution-only 轮,
-    显式 --legacy-runner 走 EvalRunner 旧执行面;resume 自动探测两 owner 同语义。"""
+    """判卷批执行(I6-C C4 起唯一执行面 = Inspect execution-only 轮;resume 自动探测)。"""
     subject = JudgeSubject(gateway, role="judge")
     resume = _resume_dir(out / "collect")
     # 跑批身份(corpus_round.run_identity 同源:git/dirty/diff/prompts/models)
     # + owner 明示(manifest 落档;跨 owner 混续同一 run 在 adapter preflight 被拒)
-    identity = {**run_identity(),
-                "execution_owner": "evalrunner_legacy" if args.legacy_runner else "inspect"}
-    if args.legacy_runner:
-        # 过渡回退(#521 I6-C C1-B G6):显式 --legacy-runner 才走 EvalRunner 旧执行面,
-        # 语义与切换前一致(identity 原样进 manifest,strict 门不启用 = 原口径)
-        runner = EvalRunner(subject, RunnerConfig(concurrency=args.concurrency),
-                            out / "collect")
-        return runner.run(cases_file, cases, run_dir=resume, identity=identity)
-    # 默认 execution owner = Inspect(#521 I6-C C1-B):judge 批执行的调度/并发/
-    # sample retry 归 inspect-ai(execution-only 轮,scenarios=None);评分语义
-    # 与平铺留本脚本(judge-scores.jsonl 自 checkpoint 取数);checkpoint =
-    # Canonical durable evidence + 被动幂等守卫,collect 工件面与 legacy 同形。
+    identity = {**run_identity(), "execution_owner": "inspect"}
+    # execution owner = Inspect(#521 I6-C C1-B;I6-C C4 删 EvalRunner 后唯一执行面):
+    # judge 批执行的调度/并发/sample retry 归 inspect-ai(execution-only 轮,
+    # scenarios=None);评分语义与平铺留本脚本(judge-scores.jsonl 自 checkpoint 取数);
+    # checkpoint = Canonical durable evidence + 被动幂等守卫。
     run_dir, _checks, _scores = run_inspect_round(InspectRoundRequest(
         subject=subject, gateway=gateway, cases_file=cases_file, scenarios=None,
         identity=identity, concurrency=args.concurrency, judge_enabled=False,
@@ -148,9 +137,6 @@ def main() -> int:
     parser.add_argument("--old-scores", metavar="JSONL", help="旧 judge-scores.jsonl(只做新旧对照)")
     parser.add_argument("--out", required=True, help="产物目录")
     parser.add_argument("--concurrency", type=int, default=2)
-    parser.add_argument("--legacy-runner", dest="legacy_runner", action="store_true",
-                        help="#521 I6-C 过渡回退:显式用 EvalRunner 旧执行面(默认 = Inspect;"
-                             "禁自动 fallback/禁双 owner 同 run,manifest 明示 execution_owner)")
     args = parser.parse_args()
 
     only = None

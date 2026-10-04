@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """M2 调优循环一轮(00 §8.4 阶段 3):收集(内核)→ 评分(judge)→ 对照两轮基线。
 
-默认 execution owner = Inspect(#521 I6-C C1-A):收集相 case 级调度/并发/sample
-retry 归 inspect-ai(execution-only 轮,复用 I5 inspect_adapter);judge 单遍
-primary 与对照报告语义留本脚本(判分语义不迁);checkpoint 仍是 Canonical durable
-evidence + 被动幂等守卫,collect 工件面与旧执行同形。过渡期显式 `--legacy-runner`
-走 EvalRunner 旧执行面(禁自动 fallback,manifest 明示 execution_owner)。
+默认 execution owner = Inspect(#521 I6-C C1-A;I6-C C4 删 EvalRunner 后唯一执行面):
+收集相 case 级调度/并发/sample retry 归 inspect-ai(execution-only 轮,复用 I5
+inspect_adapter);judge 单遍 primary 与对照报告语义留本脚本(判分语义不迁);
+checkpoint 仍是 Canonical durable evidence + 被动幂等守卫,collect 工件面与旧执行同形。
 
 用法:uv run python scripts/tuning_round.py --out var/tuning/round-N [--nightly]
       uv run python scripts/tuning_round.py --render-from <run 目录>   # 不跑批,纯重渲染
@@ -39,10 +38,8 @@ from urllib.parse import urlparse
 from scripts.json_first_pass import json_first_pass_report
 
 from edu_agent.evals import (
-    EvalRunner,
     InspectRoundRequest,
     KernelSubject,
-    RunnerConfig,
     judge_transcript,
     load_results,
     run_identity,
@@ -442,9 +439,6 @@ def main() -> int:
     parser.add_argument("--render-from", metavar="RUN_DIR",
                         help="不跑批:从既有 run 目录(cases.jsonl/collect/judge-scores.json)"
                              "重渲染 comparison.md;jfp 段承接原文件(facts 不在 run 目录)")
-    parser.add_argument("--legacy-runner", dest="legacy_runner", action="store_true",
-                        help="#521 I6-C 过渡回退:显式用 EvalRunner 旧执行面(默认 = Inspect;"
-                             "禁自动 fallback/禁双 owner 同 run,manifest 明示 execution_owner)")
     args = parser.parse_args()
     if args.render_from:
         return render_from(Path(args.render_from))
@@ -466,22 +460,17 @@ def main() -> int:
                               encoding="utf-8")
         # 跑批身份(corpus_round.run_identity 同源:git/dirty/diff/prompts/models)+
         # owner 明示(manifest 落档;跨 owner 混续同一 run 在 adapter preflight 被拒)
-        identity = {**run_identity(),
-                    "execution_owner": "evalrunner_legacy" if args.legacy_runner else "inspect"}
+        identity = {**run_identity(), "execution_owner": "inspect"}
         subject = KernelSubject(gateway)
-        if args.legacy_runner:
-            # 过渡回退(#521 I6-C C1-A G6):显式 --legacy-runner 才走 EvalRunner 旧执行面
-            run_dir = EvalRunner(subject, RunnerConfig(concurrency=2), collect_root).run(
-                cases_file, CASES, identity=identity)
-        else:
-            # 默认 execution owner = Inspect(#521 I6-C C1-A):调度/并发/sample retry 归
-            # inspect-ai(execution-only 轮,scenarios=None);判分语义留本脚本
-            # (to_judge_cases → judge_transcript 单遍 primary 原路径不动);checkpoint =
-            # Canonical durable evidence + 被动幂等守卫,collect 工件面与 legacy 同形。
-            run_dir, _checks, _scores = run_inspect_round(InspectRoundRequest(
-                subject=subject, gateway=gateway, cases_file=cases_file, scenarios=None,
-                identity=identity, concurrency=2, judge_enabled=False,
-                collect_root=collect_root, resume_dir=None, task_name=_INSPECT_TASK))
+        # execution owner = Inspect(#521 I6-C C1-A;I6-C C4 删 EvalRunner 后唯一
+        # 执行面):调度/并发/sample retry 归 inspect-ai(execution-only 轮,
+        # scenarios=None);判分语义留本脚本(to_judge_cases → judge_transcript
+        # 单遍 primary 原路径不动);checkpoint = Canonical durable evidence +
+        # 被动幂等守卫。
+        run_dir, _checks, _scores = run_inspect_round(InspectRoundRequest(
+            subject=subject, gateway=gateway, cases_file=cases_file, scenarios=None,
+            identity=identity, concurrency=2, judge_enabled=False,
+            collect_root=collect_root, resume_dir=None, task_name=_INSPECT_TASK))
         rows = load_results(run_dir)
         judge_input = to_judge_cases(rows)
         (out / "judge-cases.jsonl").write_text(

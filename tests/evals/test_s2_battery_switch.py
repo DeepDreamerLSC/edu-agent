@@ -153,7 +153,7 @@ def test_default_path_wires_inspect_and_never_constructs_evalrunner(tmp_path, mo
     assert request.task_name == "edu_s2_judge_battery"  # provenance 不冒名 corpus 轮
     assert request.identity["execution_owner"] == "inspect"
     assert request.collect_root == tmp_path / "art" and request.resume_dir == run_dir
-    assert request.concurrency == 2  # 与 RunnerConfig 缺省并发同值(G2 配对前提)
+    assert request.concurrency == 2  # 原 RunnerConfig 缺省并发(I6-C C4 起为字面量)
 
 
 def test_default_inspect_end_to_end_manifest_and_checkpoints(tmp_path, monkeypatch):

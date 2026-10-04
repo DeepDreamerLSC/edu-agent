@@ -1,5 +1,6 @@
 """老系统适配器合同(00 §8.2 阶段 1-2):对着假老系统服务器验证流程驱动、恢复路径与
-fresh 学生池轮换;以及适配器 × EvalRunner 的集成(失败分类与 checkpoint)。
+fresh 学生池轮换(适配器 × 执行面的集成由 test_inspect_adapter 经 Subject 协议持有,
+#521 I6-C C4 删 EvalRunner 后不再有专属集成测试)。
 
 真实环境的行为结论见 docs/evals/spike-legacy-adapter.md(实测);这里只测适配器逻辑。
 FakeLegacy+LegacyAdapter 生命周期在 tests/fixtures/evalkit.py(legacy_env)。
@@ -12,15 +13,12 @@ import socket
 import threading
 
 import pytest
-from evalkit import legacy_env, results_of, write_jsonl
+from evalkit import legacy_env
 from fake_legacy import FakeLegacy
 
 from edu_agent.evals import (
     EnvironmentFailure,
-    EvalRunner,
     LegacyAdapter,
-    RunnerConfig,
-    morning_summary,
 )
 
 CASE = {"question_id": "6a695a01", "student_turns": ["12", "3", "我讲完了"]}
@@ -182,18 +180,3 @@ def test_missing_pool_env_is_environment_failure(monkeypatch):
     adapter = LegacyAdapter()
     with pytest.raises(EnvironmentFailure, match="EDU_LEGACY_STUDENT_POOL"):
         adapter.run_case(CASE)
-
-
-def test_runner_integration_checkpoint_and_classification(pool_file, tmp_path):
-    """适配器 × EvalRunner(#31):ok 入 checkpoint(环境失败落账不重跑、续跑补跑的语义见 test_runner)。"""
-    with legacy_env(["第一问", "很好,完成"]) as (fake, adapter):
-        ok_cases = [{"id": f"ok-{i}", "question_id": "q", "student_turns": ["1", "2"]}
-                    for i in range(2)]
-        config = RunnerConfig(concurrency=2)
-        runner = EvalRunner(adapter, config, tmp_path / "runs")
-        dataset = write_jsonl(tmp_path / "cases.jsonl", ok_cases)
-        run_dir = runner.run(dataset, ok_cases)
-        results = results_of(run_dir)
-    assert {r["status"] for r in results.values()} == {"ok"}
-    assert all(r["transcript"]["final_state"] == "completed" for r in results.values())
-    assert "全部 2 条完成" in morning_summary(run_dir)
