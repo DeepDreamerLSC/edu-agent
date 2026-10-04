@@ -329,6 +329,12 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         fail_closed(args.cases is not None, "--run-anchored 需要 --cases(fail-closed)")
         baseline = load_baseline(args.baseline or (out_dir / "baseline.json"))
+        # cycle 身份门(#538 阻断修复):Gateway 构造前 fail-closed——--cycle-id 必须
+        # 与 baseline 冻结的 cycle_id 全等;不猜测、不覆盖(改 ownership 须另开 cycle)。
+        fail_closed(baseline.get("cycle_id") == args.cycle_id,
+                    f"cycle 身份不匹配:--cycle-id={args.cycle_id!r} vs "
+                    f"baseline.cycle_id={baseline.get('cycle_id')!r}"
+                    "(baseline 不随调用方覆盖;改 ownership 须另开 calibration cycle)")
         gateway = Gateway(load_registry(args.models_config), facts_dir=out_dir / "facts")
         try:
             summary = run_anchored(gateway, baseline, read_jsonl(args.cases),

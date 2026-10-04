@@ -315,3 +315,37 @@ def test_cli_freeze_then_tampered_run_exits_nonzero(tmp_path):
                           "--cycle-id", "cycle-cli", "--cases", str(cases_path),
                           "--out-dir", str(out)], capture_output=True, text=True, check=False)
     assert bad.returncode != 0 and "FAIL-CLOSED" in bad.stderr
+
+
+def test_cycle_identity_mismatch_rejected_before_gateway(tmp_path, monkeypatch):
+    """#538 阻断修复钉:--cycle-id 与 baseline.cycle_id 不一致 → Gateway 构造前
+    fail-closed(exit 1+明示两个 cycle 身份),0 Gateway/0 Judge 调用、零工件写出;
+    不允许猜测或覆盖 baseline cycle identity。"""
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parents[2] / "scripts" / "anchored_calibration.py"
+    rows, _, _ = scenario()
+    rows_path = write_jsonl(tmp_path / "judge-rows.jsonl", rows)
+    out_a = tmp_path / "cyA"
+    r = subprocess.run([sys.executable, str(script), "--cycle-id", "cycle-A",
+                        "--freeze-baseline", "--judge-rows", str(rows_path),
+                        "--out-dir", str(out_a)],
+                       capture_output=True, text=True, cwd=script.parents[1])
+    assert r.returncode == 0, r.stderr
+    out_b = tmp_path / "cyB"
+    out_b.mkdir()
+    rr = subprocess.run([sys.executable, str(script), "--cycle-id", "cycle-B",
+                         "--run-anchored", "--cases", str(rows_path),
+                         "--baseline", str(out_a / "baseline.json"),
+                         "--out-dir", str(out_b)],
+                        capture_output=True, text=True, cwd=script.parents[1])
+    assert rr.returncode != 0
+    combined = rr.stderr + rr.stdout
+    assert "cycle 身份不匹配" in combined
+    assert "cycle-A" in combined and "cycle-B" in combined
+    # 0 Gateway/0 Judge:facts 目录未创建、零评分工件
+    assert not (out_b / "facts").exists()
+    assert not (out_b / "anchored-arm.jsonl").exists()
+    assert not (out_b / "anchored-summary.json").exists()
