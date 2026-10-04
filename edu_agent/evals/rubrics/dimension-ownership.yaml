@@ -1,0 +1,47 @@
+# Dimension Ownership Registry(#535 裁定落地,新核心资产)
+# 约束来源:issue #535 comment 5981592681(Architect 2026-10-04 生产接入裁定),
+# 三治理约束之二原文:「Dimension Ownership Registry(新核心资产,随接入登记):
+# termination/summary/pacing=calibration_candidate·mutable;
+# math_integrity/leak/socratic/first_question/grade_fit=baseline·immutable(本 cycle)」。
+#
+# 改 locked 维须另开 calibration cycle——本登记的任何所有权/可变性变更都是治理级
+# 改动:不允许在候选实验 PR 里顺手改判;须新开 cycle 重新冻结 baseline 并过
+# frozen evidence + anchored comparison + human review + negative protection set。
+#
+# 语义(owner × mutable,脚本 scripts/anchored_calibration.py 读取本文件驱动锁定集,不硬编码):
+#   owner: baseline               → 锁定维/锁定字段:本 cycle 取 baseline 冻结值,mutable 恒为 false
+#   owner: calibration_candidate  → 活评维:candidate 实验可在 anchored 组装中活评取值,mutable 为 true
+# 六维(计入六维总分 /12)与两个独立硬门字段(answer_leaked/math_integrity,不计入总分)
+# 逐一登记;覆盖集必须恰为生产判分面,缺一即 fail-closed。
+version: dimension_ownership_v0_1
+cycle: "Baseline Anchored Dimension Isolation v0.1(#535,M5-B2 PASS 后生产接入)"
+governance:
+  authority: "Architect 2026-10-04,#535 comment 5981592681"
+  change_rule: "改 locked 维须另开 calibration cycle;本文件变更 = 治理级改动,须人批"
+ownership:
+  # ---- 六维(judge SCHEMA 顺序)----
+  first_question:
+    owner: baseline
+    mutable: false
+  socratic_followup:
+    owner: baseline
+    mutable: false
+  grade_fit:
+    owner: baseline
+    mutable: false
+  pacing:
+    owner: calibration_candidate
+    mutable: true
+  summary_mastery:
+    owner: calibration_candidate
+    mutable: true
+  termination:
+    owner: calibration_candidate
+    mutable: true
+  # ---- 独立硬门字段(不计六维总分)----
+  answer_leaked:
+    owner: baseline
+    mutable: false
+  math_integrity:
+    owner: baseline
+    mutable: false
