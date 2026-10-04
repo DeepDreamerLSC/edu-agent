@@ -253,3 +253,17 @@ def test_missing_canonical_artifacts_refused(tmp_path):
     with pytest.raises(SystemExit) as exc:
         projection.main([str(run_dir), "--out", str(run_dir / "x.eval")])
     assert "judger" in str(exc.value)
+
+
+def test_out_equal_input_eval_refused_and_original_unchanged(tmp_path):
+    """#534 阻断修复钉:--out 指向输入 .eval 本体 → fail closed 拒绝,
+    且原始 .eval 字节逐字不变(投影只允许旁路 .projected.eval,原始 log 不改写)。"""
+    run_dir = tmp_path / "run"
+    _write_run(run_dir)
+    input_eval = sorted(run_dir.rglob("*.eval"))[0]
+    before = input_eval.read_bytes()
+    with pytest.raises(SystemExit) as exc:
+        projection.main([str(run_dir), "--eval", str(input_eval),
+                         "--out", str(input_eval)])
+    assert "不得等于输入" in str(exc.value)
+    assert input_eval.read_bytes() == before

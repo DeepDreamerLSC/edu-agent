@@ -281,6 +281,8 @@ def main(argv: list[str] | None = None) -> int:
     judger_sha = judger_path.read_text(encoding="utf-8").strip()
     input_eval = resolve_input_eval(run_dir, args.eval)
     out_path = args.out or input_eval.with_name(input_eval.stem + ".projected.eval")
+    if out_path.resolve() == input_eval.resolve():
+        raise SystemExit("--out 不得等于输入 .eval(原始 EvalLog 不改写,投影只出旁路 .projected.eval)")
     if out_path.resolve() in {p.resolve() for p in (checks_path, judge_path, judger_path)}:
         raise SystemExit("--out 不得指向 canonical 工件(护栏 5:禁反向同步)")
     snapshot = _canonical_snapshot(run_dir, {"checks.jsonl": checks_path,
