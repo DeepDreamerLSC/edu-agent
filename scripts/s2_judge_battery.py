@@ -5,15 +5,13 @@
 inspect-ai(execution-only 轮,无 scorer 面),checkpoint 仍是 Canonical durable
 evidence + 被动幂等守卫;GA/GB/VOID 判分与模型身份门是 run 级确定性计算,仍由
 本脚本自 results/*.json checkpoint 复算——report 语义与 expected 泄露防火墙零变化。
-过渡期显式 `--legacy-runner` 走 EvalRunner 旧执行面(禁自动 fallback,artifact
-明示 execution_owner)。
+`--legacy-runner` 过渡回退已删(#521 I6-C C3):Inspect 是唯一执行面。
 
 运行纪律(方案 v0.1.1,点火令钉死):
-- P0-6 resume 同一性门(#490 M3 起由公共层承载):legacy 路径 runner.run(
-  strict_identity=True);默认路径 strict 门在 inspect_adapter preflight(同一
-  _identity_resume_diffs 全等比较,另加 owner/harness 面,跨 owner 混续拒绝)
-  ——manifest.identity 须与当前实现身份完全相等,不等即拒(引擎/Schema/转换器/
-  prompt 资产/battery 数据/模型配置任一变化,原结果即失效,须新开 run);
+- P0-6 resume 同一性门(#490 M3 起由公共层承载):strict 门在 inspect_adapter
+  preflight(同一 _identity_resume_diffs 全等比较,另加 owner/harness 面,跨 owner
+  混续拒绝)——manifest.identity 须与当前实现身份完全相等,不等即拒(引擎/Schema/
+  转换器/prompt 资产/battery 数据/模型配置任一变化,原结果即失效,须新开 run);
   identity 指纹构造走公共 helper(#490 M0 表第③项);
 - P0-2/P0-4 模型身份门:24 案 judge_model 同值 ∧ == judge_primary_model
   (服务通告名,不是 registry 内部 ID);身份比较走公共 compare_models(#490 M2),
@@ -33,7 +31,6 @@ import sys
 from pathlib import Path
 
 from edu_agent.evals import (
-    EvalRunner,
     InspectRoundRequest,
     ResumeMismatch,
     RunnerConfig,
@@ -227,9 +224,6 @@ def main() -> int:
                         default=_REPO / "edu_agent/evals/artifacts/s2-judge-battery-v0.1")
     parser.add_argument("--run-dir", type=Path, default=None,
                         help="续跑既有 run 目录(#490 M3:公共层 strict identity 全等门)")
-    parser.add_argument("--legacy-runner", dest="legacy_runner", action="store_true",
-                        help="#521 I6-A 过渡回退:显式用 EvalRunner 旧执行面(默认 = Inspect;"
-                             "禁自动 fallback/禁双 owner 同 run,manifest 明示 execution_owner)")
     args = parser.parse_args()
 
     rubric = _REPO / "docs/evals/s2-judge-rubric-v0.1.md"
@@ -251,27 +245,19 @@ def main() -> int:
         try:
             subject = S2JudgeSubject(gateway)
             # owner 明示进 identity(manifest 落档;跨 owner 混续同一 run 被拒)
-            identity["execution_owner"] = "evalrunner_legacy" if args.legacy_runner else "inspect"
-            if args.legacy_runner:
-                # 过渡回退(#521 I6-A G6):显式 --legacy-runner 才走 EvalRunner;
-                # 禁自动 fallback。P0-6(#490 M3):strict identity 全等门由公共层承载
-                # ——strict 下 stored/current identity 须全等,且先于 dataset/config/
-                # subject 三面
-                runner = EvalRunner(subject, RunnerConfig(), runs_root=args.artifacts_root)
-                run_dir = runner.run(args.battery, rows, run_dir=args.run_dir,
-                                     identity=identity, strict_identity=True)
-            else:
-                # 默认 execution owner = Inspect(#521 I6-A):调度/并发/sample retry 归
-                # inspect-ai,checkpoint 为 Canonical durable evidence + 被动幂等守卫;
-                # strict 门(六面 + owner/harness)在 adapter preflight,先于 Gateway。
-                # execution-only(scenarios=None):GA/GB/VOID 判分仍由本脚本自
-                # checkpoint 复算,expected 不进模型边界(P1-2 防火墙原样)。
-                run_dir, _checks, _scores = run_inspect_round(InspectRoundRequest(
-                    subject=subject, gateway=gateway, cases_file=args.battery,
-                    scenarios=None, identity=identity,
-                    concurrency=RunnerConfig().concurrency, judge_enabled=False,
-                    collect_root=args.artifacts_root, resume_dir=args.run_dir,
-                    task_name=_INSPECT_TASK))
+            identity["execution_owner"] = "inspect"
+            # execution owner = Inspect(#521 I6-A;I6-C C3 删 --legacy-runner 回退后
+            # 唯一执行面):调度/并发/sample retry 归 inspect-ai,checkpoint 为
+            # Canonical durable evidence + 被动幂等守卫;strict 门(六面 + owner/
+            # harness)在 adapter preflight,先于 Gateway。execution-only(scenarios=
+            # None):GA/GB/VOID 判分仍由本脚本自 checkpoint 复算,expected 不进模型
+            # 边界(P1-2 防火墙原样)。
+            run_dir, _checks, _scores = run_inspect_round(InspectRoundRequest(
+                subject=subject, gateway=gateway, cases_file=args.battery,
+                scenarios=None, identity=identity,
+                concurrency=RunnerConfig().concurrency, judge_enabled=False,
+                collect_root=args.artifacts_root, resume_dir=args.run_dir,
+                task_name=_INSPECT_TASK))
         finally:
             gateway.close()
     except ResumeMismatch as exc:

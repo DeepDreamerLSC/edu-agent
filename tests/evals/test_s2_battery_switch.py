@@ -1,15 +1,17 @@
-"""S2 battery Inspect consumer switch 合同(#521 I6-A G1):零真模型——默认路径走
-真实 inspect_adapter(execution-only 轮),legacy 走显式 `--legacy-runner`。
+"""S2 battery Inspect consumer switch 合同(#521 I6-A G1;I6-C C3 起唯一执行面):
+零真模型——路径走真实 inspect_adapter(execution-only 轮);`--legacy-runner`
+过渡回退已删,模块不再暴露 EvalRunner(防复活断言)。
 
 覆盖清单(逐条):
-- 默认 owner = Inspect:run_inspect_round 接线(task/scenarios=None/identity/根目录)
-  且 EvalRunner 零构造;manifest 明示 execution_owner=inspect + harness 面;
+- owner = Inspect:run_inspect_round 接线(task/scenarios=None/identity/根目录)
+  且模块无 EvalRunner 可构造;manifest 明示 execution_owner=inspect + harness 面;
 - End-to-end:假 gateway 出 S2 双轴 payload → checkpoint Canonical 七字段 →
   _score/_report 全链不塌;expected 泄露防火墙经 bridge 后原样(P1-2);
 - Resume:同身份续跑 guard 0 调、checkpoint 逐字节不动;
 - Strict identity:S2 六面(git/rubric/prompt/battery/models/judge_primary)+
   dataset/subject/harness 任一变化 → ResumeMismatch 且 0 调(先于 Gateway);
-- 跨 owner:legacy-owned run 目录被 Inspect 续跑拒绝(禁双 owner 同 run)。
+- 跨 owner:legacy-owned run 目录(历史 EvalRunner 工件)被 Inspect 续跑拒绝
+  (禁双 owner 同 run)。
 """
 
 from __future__ import annotations
@@ -112,15 +114,12 @@ def _request(tmp_path: Path, battery: Path, subject, identity: dict | None = Non
         task_name=s2_judge_battery._INSPECT_TASK)
 
 
-def _run_main(monkeypatch, tmp_path, battery: Path, run_dir: Path | None = None,
-              legacy: bool = False) -> FakeS2Gateway:
+def _run_main(monkeypatch, tmp_path, battery: Path, run_dir: Path | None = None) -> FakeS2Gateway:
     monkeypatch.setattr(s2_judge_battery, "Gateway", FakeS2Gateway)
     argv = ["s2-judge-battery", "--battery", str(battery),
             "--artifacts-root", str(tmp_path / "art")]
     if run_dir is not None:
         argv += ["--run-dir", str(run_dir)]
-    if legacy:
-        argv += ["--legacy-runner"]
     monkeypatch.setattr(sys, "argv", argv)
     monkeypatch.delenv("EDU_MODELS_YAML", raising=False)
     FakeS2Gateway.last = None
@@ -129,7 +128,7 @@ def _run_main(monkeypatch, tmp_path, battery: Path, run_dir: Path | None = None,
     return FakeS2Gateway.last
 
 
-# ------------------------------------------------------- 默认 owner = Inspect ----
+# ------------------------------------------------------- owner = Inspect(唯一)----
 def test_default_path_wires_inspect_and_never_constructs_evalrunner(tmp_path, monkeypatch):
     captured = {}
 
@@ -144,11 +143,9 @@ def test_default_path_wires_inspect_and_never_constructs_evalrunner(tmp_path, mo
         "finished_at": "t", "error": None,
         "transcript": {"s2a": _axis(), "s2b": _axis(), "judge_model": "m"}}), encoding="utf-8")
     monkeypatch.setattr(s2_judge_battery, "run_inspect_round", spy_run)
+    # I6-C C3:--legacy-runner 回退已删,模块不再暴露 EvalRunner(防复活)
+    assert not hasattr(s2_judge_battery, "EvalRunner")
 
-    def _forbidden(*args, **kwargs):
-        raise AssertionError("默认路径禁触 EvalRunner(legacy 需显式 --legacy-runner)")
-
-    monkeypatch.setattr(s2_judge_battery, "EvalRunner", _forbidden)
     battery = _battery_file(tmp_path, [_row("C13-T1")])
     _run_main(monkeypatch, tmp_path, battery, run_dir=run_dir)
     request = captured["request"]
@@ -156,7 +153,7 @@ def test_default_path_wires_inspect_and_never_constructs_evalrunner(tmp_path, mo
     assert request.task_name == "edu_s2_judge_battery"  # provenance 不冒名 corpus 轮
     assert request.identity["execution_owner"] == "inspect"
     assert request.collect_root == tmp_path / "art" and request.resume_dir == run_dir
-    assert request.concurrency == 2  # 与 legacy RunnerConfig 同并发(G2 配对前提)
+    assert request.concurrency == 2  # 与 RunnerConfig 缺省并发同值(G2 配对前提)
 
 
 def test_default_inspect_end_to_end_manifest_and_checkpoints(tmp_path, monkeypatch):
@@ -167,9 +164,7 @@ def test_default_inspect_end_to_end_manifest_and_checkpoints(tmp_path, monkeypat
     for row in rows:  # expected 面 sentinel 化:若经 bridge 泄露,FakeS2Gateway 即红
         row["expected"]["s2a"]["note"] = SENTINEL
     battery = _battery_file(tmp_path, rows)
-    monkeypatch.setattr(
-        s2_judge_battery, "EvalRunner",
-        lambda *a, **k: pytest.fail("默认路径禁触 EvalRunner"))
+    assert not hasattr(s2_judge_battery, "EvalRunner")  # I6-C C3:回退开关已删
     FakeS2Gateway.model_name = _battery_identity(battery)["judge_primary_model"]
     gateway = _run_main(monkeypatch, tmp_path, battery)
     assert gateway.invokes == 2  # 每案恰 1 次 judge 标注调用
