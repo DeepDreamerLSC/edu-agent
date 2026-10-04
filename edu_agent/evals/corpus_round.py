@@ -58,9 +58,7 @@ REPO = Path(__file__).resolve().parents[2]
 # 默认 corpus = teaching_context pilot(20,有学生剧本)。
 # adaptive pilot 无剧本(模拟器消费面,#211 明确「另行接入」)——kernel 批跑面跑不了,
 # 传 --corpus 进来也会被 build_cases 显式跳过并计数,不静默。
-DEFAULT_CORPUS = (
-    "edu_agent/evals/datasets/small_lecturer_teaching_context_shadow_pilot_20.json",
-)
+DEFAULT_CORPUS = "edu_agent/evals/datasets/small_lecturer_teaching_context_shadow_pilot_20.json"
 
 
 def _probe(url: str, timeout: float = 2.0) -> str:

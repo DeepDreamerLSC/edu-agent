@@ -440,3 +440,17 @@ def test_salvage_facts_dumps_to_latest_run_dir_before_cleanup(tmp_path):
     salvage_facts(empty, str(tmp_path / "out"))
     salvage_facts(facts_dir, None)                           # 无 --out:no-op
     salvage_facts(facts_dir, str(tmp_path / "no-such-out"))  # 无 run 目录:no-op
+
+
+def test_default_corpus_no_arg_path_is_str_paths():
+    """#525:无参默认路径钉死——DEFAULT_CORPUS 必须是 str(历史尾逗号 tuple 使
+    [DEFAULT_CORPUS] 变 list 含 tuple,无参入口必炸);merge_options 三档解析
+    (CLI>spec>default)产出必须全是可作路径消费的 str。"""
+    from types import SimpleNamespace
+
+    from edu_agent.evals import corpus_round
+
+    assert isinstance(corpus_round.DEFAULT_CORPUS, str)
+    opts = corpus_round.merge_options(SimpleNamespace(corpus=None, concurrency=None), None)
+    assert opts["corpora"] == [corpus_round.DEFAULT_CORPUS]
+    assert all(isinstance(c, str) for c in opts["corpora"])
