@@ -448,9 +448,9 @@ def test_default_corpus_no_arg_path_is_str_paths():
     (CLI>spec>default)产出必须全是可作路径消费的 str。"""
     from types import SimpleNamespace
 
-    from edu_agent.evals import corpus_round
+    from edu_agent.evals import DEFAULT_CORPUS, merge_options
 
-    assert isinstance(corpus_round.DEFAULT_CORPUS, str)
-    opts = corpus_round.merge_options(SimpleNamespace(corpus=None, concurrency=None), None)
-    assert opts["corpora"] == [corpus_round.DEFAULT_CORPUS]
+    assert isinstance(DEFAULT_CORPUS, str)
+    opts = merge_options(SimpleNamespace(corpus=None, concurrency=None), None)
+    assert opts["corpora"] == [DEFAULT_CORPUS]
     assert all(isinstance(c, str) for c in opts["corpora"])
