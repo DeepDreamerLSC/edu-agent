@@ -9,6 +9,7 @@ M1 的被测对象是老系统适配器(legacy_adapter),M2 换成内核三函数
 from __future__ import annotations
 
 import time
+from pathlib import Path
 
 from edu_agent.agents.small_lecturer import (
     LearnerSession,
@@ -19,6 +20,7 @@ from edu_agent.agents.small_lecturer import (
 )
 from edu_agent.gateway import ENV_FAILURES, Gateway, GatewayError
 
+from .identity import git_sha_or_none
 from .image_teaching import question_image_data_url
 from .runner import EnvironmentFailure
 from .scenario_corpus import select_branch
@@ -26,6 +28,8 @@ from .scenario_corpus import select_branch
 # #448 §二 post-turn observation 的 schema 版本(#448 §三 P0:sampling/freeze
 # certificate 必填项——cert 冻结本常量,obs 字段面任何变更须升版本号)。
 POST_TURN_OBSERVATION_SCHEMA_VERSION = "v0.1"
+
+REPO = Path(__file__).resolve().parents[2]
 
 
 def _post_turn_observation(session: LearnerSession) -> dict:
@@ -171,4 +175,7 @@ class KernelSubject:
             # #238 件 B:tutor 调用的 facts join 键(facts.edu.session_id);judge 侧
             # 天然是 "judge-{case_id}",两侧合齐后报告层可拆 primary-only 口径。
             "session_id": session.session_id,
+            # M7-1 C 件(#545):工件代码来源指纹(additive;git 缺席 None 不伪造,
+            # 与 manifest identity.git_sha 同口径——重放/双臂工件自此自足指回 revision)。
+            "git_sha": git_sha_or_none(REPO),
         }

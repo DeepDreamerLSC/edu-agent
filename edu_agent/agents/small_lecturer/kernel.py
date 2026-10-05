@@ -57,6 +57,11 @@ from .prompting import (OPEN_SCHEMA, RESTATED_CLAIM_BRIDGE, TUTOR_SUMMARY_SCHEMA
                         system_prompt)
 from .session import LearnerSession, SessionVersionConflict, Summary, TerminalStateError, Turn
 from .tone_guardrails import apply_tone_guardrail
+from .trace_spine import (Disposition, PHASE_FALLBACK_RECHECK, PHASE_FIRST_CHECK,
+                          PHASE_MASK_RECHECK, PHASE_REPAIR_RECHECK,
+                          blocked_disposition, fallback_disposition,
+                          masked_disposition, method_disposition,
+                          shadow_event, spine_event)
 
 # grammar 真强制(llama-server)下模型只可能产出符合 schema 的 JSON;
 # #54 后 gateway.text 即已验证内容,直接 json.loads。
@@ -466,7 +471,9 @@ def _trusted_answer_reference(session: "LearnerSession") -> str:
 
 
 def _guard_check(ctx: "_GuardContext", text: str, session: "LearnerSession | None" = None,
-                 ready_to_confirm: bool = False) -> tuple[str | None, list[str], str | None, set[float]]:
+                 ready_to_confirm: bool = False, *,
+                 phase: str = PHASE_FIRST_CHECK,
+                 subject_const: str | None = None) -> tuple[str | None, list[str], str | None, set[float]]:
     """三护栏(泄露/语气/格式)逐个过 + 数值披露门(单一判据)。
 
     「未经学生验证的源值披露」的**唯一判据** = 数字级归因(`_drift_sources` 的允许集/
@@ -500,10 +507,10 @@ def _guard_check(ctx: "_GuardContext", text: str, session: "LearnerSession | Non
     sources = [{"number": n, "source": "answer" if n in answer_pool else "hallucinated"}
                for n in sorted(violations)]
     if session is not None and ctx.model_turn:  # 首问不落模型路径埋点(原口径)
-        session.guard_events.append({
-            "branch": "model", "cited": ctx.cited_numbers,
-            "extracted": sorted(extracted), "violation_sources": sources,
-            "gate": "blocked" if violations else "observed"})
+        # M7-1 A 件:影子事件补被检对象身份(role/phase/subject_id)——复检事件
+        # 与真实调用事件自此可机械区分(#545 M3 缺口),字段合同见 trace_spine。
+        session.guard_events.append(shadow_event(
+            ctx, text, phase, sorted(extracted), sources, subject_const))
     if leak.fallback_required or violations:
         rules = [f.finding for f in leak.findings]
         rules += [f"source_value_disclosure:{source}"
@@ -521,16 +528,12 @@ def _guard_check(ctx: "_GuardContext", text: str, session: "LearnerSession | Non
 
 
 def _record_event(session: "LearnerSession | None", guard: str, rule_ids: list[str],
-                  original: str, regenerated: bool, mode: str | None = None) -> None:
-    """护栏埋点。`mode`(可选,additive)记处置路径:regenerated / masked / template
-    ——度量侧要区分「重生成修好」与「确定性脱敏」两类处置(#165 WS4 替换粒度)。
-    不写 session.stuck(#382 P0-1 裁定:系统侧降级 ≠ 学生卡住,只记 guard_events)。"""
+                  original: str, spine: Disposition) -> None:
+    """护栏埋点。`mode` 记处置路径(regenerated/masked/template,#165 WS4 度量口径)。
+    M7-1 A 件(#545):spine 携带被检对象/输出身份(role/phase/subject_id/output_id/
+    effect,合同见 trace_spine)。不写 session.stuck(#382 P0-1:降级≠卡住)。"""
     if session is not None:
-        event = {"guard": guard, "rule_ids": rule_ids,
-                 "original": original, "regenerated": regenerated}
-        if mode is not None:
-            event["mode"] = mode
-        session.guard_events.append(event)
+        session.guard_events.append(spine_event(guard, rule_ids, original, spine))
 
 
 def _regenerate(ctx: "_GuardContext", session: "LearnerSession | None", reply_text: str,
@@ -549,7 +552,8 @@ def _regenerate(ctx: "_GuardContext", session: "LearnerSession | None", reply_te
     new_text = str(repaired.get("reply") or "").strip()
     if not new_text:
         return None
-    g2, _r2, d2, _v2 = _guard_check(ctx, new_text, session, ready_to_confirm)
+    g2, _r2, d2, _v2 = _guard_check(ctx, new_text, session, ready_to_confirm,
+                                    phase=PHASE_REPAIR_RECHECK)
     return d2 if g2 is None else None
 
 
@@ -571,20 +575,20 @@ def _guard_output(reply_text: str, session: "LearnerSession | None" = None,
         return reply_text  # thin:非 A 类不处置,原文直通
     masked = mask_numbers(reply_text, violations)
     if (masked != reply_text
-            and _guard_check(ctx, masked, session, ready_to_confirm)[0] is None):
-        _record_event(session, guard, rule_ids, reply_text,
-                      regenerated=False, mode="masked")
+            and _guard_check(ctx, masked, session, ready_to_confirm,
+                             phase=PHASE_MASK_RECHECK)[0] is None):
+        _record_event(session, guard, rule_ids, reply_text, masked_disposition(masked))
         return masked
     # 问句兜底(#542):句级/字母答案泄漏下数值掩码恒空转(masked==reply)或复检仍
     # 命中时,漏斗此前直接退化为 PURE_BLOCK 硬停(Case 15 学生面断裂)。落一级仓内
     # 既有常量问句,零模型调用;同 `_guard_check` 复检干净才返回,否则仍落
     # PURE_BLOCK(fail-closed 末级 rung 不删)。guard_events 照记 original+mode。
-    if _guard_check(ctx, SAFE_FALLBACK_TEXT, session, ready_to_confirm)[0] is None:
-        _record_event(session, guard, rule_ids, reply_text,
-                      regenerated=False, mode="safe_fallback")
+    if _guard_check(ctx, SAFE_FALLBACK_TEXT, session, ready_to_confirm,
+                    phase=PHASE_FALLBACK_RECHECK,
+                    subject_const="SAFE_FALLBACK_TEXT")[0] is None:
+        _record_event(session, guard, rule_ids, reply_text, fallback_disposition())
         return SAFE_FALLBACK_TEXT
-    _record_event(session, guard, rule_ids, reply_text,
-                  regenerated=False, mode="blocked")
+    _record_event(session, guard, rule_ids, reply_text, blocked_disposition())
     return PURE_BLOCK
 
 
@@ -728,10 +732,13 @@ def _has_trusted_ladder(session: "LearnerSession") -> bool:
 
 def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
             session: LearnerSession, images: list[str] | None = None):
+    # M7-1 B 件(#545):facts 行带 edu.turn——与 _stamp_turn 同口径(transcript
+    # 下标:首问 0、reply i = i、finish 总结 = 末轮+1),join 合同见 trace_spine。
     return gateway.invoke(ModelRequest(
         role=role, messages=messages, response_schema=schema,
         session_id=session.session_id, max_tokens=800, temperature=0,
         images=images,
+        turn=len(session.history) // 2 + (1 if session.first_question else 0),
     ))
 
 
@@ -917,7 +924,7 @@ def reply(session: LearnerSession, student_message: str, *,
         repaired, mode = _repair_feeds_method(ctx, session, safe_text, method_hits,
                                                bool(output["ready_to_confirm"]))
         _record_event(session, "feeds_method", method_hits, safe_text,
-                      regenerated=(mode != "template"), mode=mode)
+                      method_disposition(mode, repaired))
         safe_text = repaired
         if not _student_stated_answer(session, student_message):
             output["ready_to_confirm"] = False
