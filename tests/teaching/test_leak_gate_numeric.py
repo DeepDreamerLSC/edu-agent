@@ -3,7 +3,7 @@
 口径(断言即规格):
   · 判据 = `_reply_numbers(文本) − _drift_sources(...)[0]`,来源标签池 `answer_pool` 再分
     「泄漏(answer,对话态提前说终答)」与「幻觉(hallucinated,无任何合法来源)」;
-  · 两者都拦(Thin Kernel 掩码/纯 block);#382 P0-1 后系统侧处置一律
+  · 两者都拦(Thin Kernel 掩码;掩不掉走 #542 问句兜底,不安全兜底才纯 block);#382 P0-1 后系统侧处置一律
     **不置 stuck**(guard 降级≠学生卡住,stuck 只由学生本人明确信号写入);
   · 允许集三来源(题面 / steps 值 / 学生已说)及其单步算式;确认轮不引述终答(VERDICT#6)
     结果 —— 原样放行,不替换、不置 stuck(过拦防线);
@@ -12,7 +12,7 @@
 
 from __future__ import annotations
 
-from edu_agent.agents.small_lecturer import PURE_BLOCK, reply, start
+from edu_agent.agents.small_lecturer import SAFE_FALLBACK_TEXT, reply, start
 
 from teachkit import FakeGateway
 
@@ -102,10 +102,12 @@ def test_hallucinated_number_is_intercepted_like_issue_184():
         {"number": 30.0, "source": "answer"}, {"number": 120.0, "source": "hallucinated"}]
 
 
-def test_unmaskable_violation_pure_blocks_without_stuck():
-    """④纯 block(#382 P0-1 语义修订):带修饰形(前导零「05」)检得出、掩不掉
-    ——词边界护体(「05」的 5 被前导 0 挡住)→ round-2 纯 block。系统侧降级
-    **不再置 stuck**(guard 降级≠学生卡住,只记 guard_events mode=blocked)。"""
+def test_unmaskable_violation_falls_back_to_safe_question_without_stuck():
+    """④确定性问句兜底(#542 迁移,原「纯 block」;#382 P0-1 语义修订):带修饰形
+    (前导零「05」)检得出、掩不掉——词边界护体(「05」的 5 被前导 0 挡住)→
+    掩码空转 → 常量问句兜底。系统侧降级**不置 stuck**(guard 降级≠学生卡住,
+    只记 guard_events mode=safe_fallback);不安全兜底仍 PURE_BLOCK 的对照见
+    test_guard_recovery_ladder ③。"""
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?"),
         _tutor("题目里一共 05 只脚,所以兔子很多。"),
@@ -113,11 +115,11 @@ def test_unmaskable_violation_pure_blocks_without_stuck():
     turn = start(dict(QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
 
-    assert turn.text == PURE_BLOCK
+    assert turn.text == SAFE_FALLBACK_TEXT
     assert "3" not in turn.text and "5" not in turn.text
     repair = _repairs(turn.session.guard_events)[-1]
-    assert repair["regenerated"] is False and repair["mode"] == "blocked"
-    assert turn.session.stuck is not True          # #382:纯 block 不写学生卡点
+    assert repair["regenerated"] is False and repair["mode"] == "safe_fallback"
+    assert turn.session.stuck is not True          # #382:guard 降级不写学生卡点
     assert "source_value_disclosure:answer" in repair["rule_ids"]
 
 

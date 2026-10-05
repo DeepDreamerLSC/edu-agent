@@ -132,21 +132,22 @@ def test_tutor_repeat_fallback_never_marks_student_stuck():
 
 
 def test_guard_hard_degradation_never_marks_student_stuck():
-    """护栏硬降级(答案泄露纯 block)是 tutor 质量问题,不是学生卡住——
+    """护栏硬降级(答案泄露确定性处置)是 tutor 质量问题,不是学生卡住——
     系统状态 ≠ 学生状态(guard_events 已记系统异常,不占学生状态位)。
     红灯证据:基底 `_record_event` 在 mode=blocked 时置 `session.stuck = True`
-    (kernel.py L441,2026-09-20 基底实测红)。前导零「022.8」形态检得出、
-    掩不掉(词边界护体)→ round-2 纯 block,同 test_leak_gate_numeric ④口径。"""
-    # 前导零泄露句:答案焦点 22.8(山顶)以「022.8」出现 → PURE_BLOCK 硬降级
+    (kernel.py L441,2026-09-20 基底实测红)。#542 迁移:前导零「022.8」形态
+    检得出、掩不掉(词边界护体)→ 掩码空转 → 问句兜底(mode=safe_fallback),
+    stuck 语义不变。"""
+    # 前导零泄露句:答案焦点 22.8(山顶)以「022.8」出现 → 确定性兜底降级
     leak_reply = "山顶气温是022.8度,直接记住这个数就行。"
     gateway = FakeGateway(tutor_payloads=[
         _open_payload("这道题你怎么想?先说说看。", MODEL_LADDER_WRONG_500M),
         _tutor_payload(leak_reply),
-        _tutor_payload(leak_reply),  # 重生成仍泄露 → 纯 block 硬降级
+        _tutor_payload(leak_reply),  # 重生成仍泄露 → 确定性处置兜底
     ])
     session = _session_after_first_exchange(gateway)
-    blocked = [e for e in session.guard_events if e.get("mode") == "blocked"]
-    assert blocked, "前置自检:泄露句必须走纯 block 硬降级路径(否则本用例空转)"
+    degraded = [e for e in session.guard_events if e.get("mode")]
+    assert degraded, "前置自检:泄露句必须走确定性处置路径(否则本用例空转)"
     assert session.stuck is not True, (
         "guard failure 的硬降级是系统状态,不得写学生卡点标记(P0-1)")
 
