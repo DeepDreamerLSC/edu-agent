@@ -7,9 +7,10 @@ from .checks import (
     possible_no_progress_cycle,
     run_check,
 )
-from .identity import (  # #490 M0 表第③项:指纹构造 helper(M3 迁移两消费者)
+from .identity import (  # #490 M0 表第③项:指纹构造 helper(M3 迁移两消费者,
     file_sha256,
     git_head_sha,
+    git_sha_or_none,
     head_sha256,
 )
 from .image_teaching import (
@@ -68,7 +69,7 @@ _CORPUS_ROUND_LAZY = ("DEFAULT_CORPUS", "build_cases", "build_plan", "caliber_se
                       "judge_rows", "judger_sha256", "load_facts", "load_run_spec", "merge_options",
                       "real_model_scenarios", "render_from", "render_report",
                       "resolve_round", "resolve_spec_cases", "resume_run_dir",
-                      "run_identity", "salvage_facts", "soften_counts", "soften_line",
+                      "run_identity", "git_sha_or_none", "salvage_facts", "soften_counts", "soften_line",
                       "transcript_messages")
 
 
@@ -144,6 +145,7 @@ __all__ = [
     "format_plan",
     "git_dirty_state",
     "git_head_sha",
+    "git_sha_or_none",
     "head_sha256",
     "format_failures",
     "judge_rows",
