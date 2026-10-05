@@ -71,6 +71,7 @@ def build_payload(
         "edu.attempt": ctx.attempt,
         "edu.outcome": "ok" if error is None else error.failure.value,
         "edu.session_id": request.session_id,
+        "edu.turn": request.turn,  # M7-1 B 件(#545):join 脊柱(additive;非 Kernel 调用为 null)
         "edu.fallback_from": ctx.fallback_from,
         "edu.fallback_to": ctx.fallback_to,
         "edu.redacted": redacted,
