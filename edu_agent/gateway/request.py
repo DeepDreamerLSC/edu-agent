@@ -23,6 +23,7 @@ class ModelRequest:
     max_tokens: int | None = None
     temperature: float | None = None
     images: list[str] | None = None
+    turn: int | None = None  # M7-1 B 件(#545):Kernel turn 下标,进 facts 不进 HTTP 体
 
 
 @dataclass(slots=True)

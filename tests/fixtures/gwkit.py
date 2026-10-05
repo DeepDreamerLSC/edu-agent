@@ -39,10 +39,11 @@ SCHEMA = {
     "required": ["answer"],
 }
 # 01 §7 事实记录全字段(键与次序固定;invoke 的集合断言与 e2e 的逐字段断言共用一份)
+# M7-1 B 件(#545):+edu.turn(join 脊柱;非 Kernel 调用为 null)。
 FACT_FIELDS = (
     "edu.call_id", "edu.ts", "edu.role", "edu.attempt", "edu.outcome",
-    "edu.session_id", "edu.fallback_from", "edu.fallback_to", "edu.redacted",
-    "edu.trace_id", "edu.queue_ms", "edu.error_detail",
+    "edu.session_id", "edu.turn", "edu.fallback_from", "edu.fallback_to",
+    "edu.redacted", "edu.trace_id", "edu.queue_ms", "edu.error_detail",
     "gen_ai.provider.name", "gen_ai.request.model", "gen_ai.response.model",
     "gen_ai.usage.input_tokens", "gen_ai.usage.output_tokens",
     "gen_ai.usage.cache_read.input_tokens", "gen_ai.response.finish_reasons",
