@@ -60,7 +60,8 @@ from .tone_guardrails import apply_tone_guardrail
 from .trace_spine import (Disposition, PHASE_FALLBACK_RECHECK, PHASE_FIRST_CHECK,
                           PHASE_MASK_RECHECK, PHASE_REPAIR_RECHECK,
                           blocked_disposition, fallback_disposition,
-                          masked_disposition, method_disposition,
+                          final_statement_route_event, masked_disposition,
+                          method_disposition, ready_override_event,
                           shadow_event, spine_event)
 
 # grammar 真强制(llama-server)下模型只可能产出符合 schema 的 JSON;
@@ -79,9 +80,9 @@ _METHOD_TOKENS = (
 
 def _mask_method_names(text: str) -> str:
     """复讲阶段方法名脱敏(确定性,零模型调用):方法名 → 「这种方法」。"""
-    for token in _METHOD_TOKENS:
-        text = text.replace(token, "这种方法")
-    return text
+    # 与 _mask_hit_tokens 同一实现(未命中的词 replace 本就是空操作,#499 后收拢
+    # 单一实现;kernel 行数对账见 M7-2 PR body)。
+    return _mask_hit_tokens(text, list(_METHOD_TOKENS))
 
 
 def _mask_hit_tokens(text: str, tokens: list[str]) -> str:
@@ -122,11 +123,6 @@ def _feeds_method_hits(text: str, student_evidence: tuple[str, ...] = ()) -> lis
     """
     said = "".join(student_evidence)
     return [token for token in _METHOD_TOKENS if token in text and token not in said]
-
-
-def _feeds_method(text: str, student_evidence: tuple[str, ...] = ()) -> bool:
-    """tutor 输出里点名了方法(代喂):学生还没自己讲,tutor 不该报方法名。"""
-    return bool(_feeds_method_hits(text, student_evidence))
 
 
 def _student_signals_stuck(student_message: str) -> bool:
@@ -267,17 +263,21 @@ def _close_on_final_statement(session: LearnerSession, student_message: str,
     永不闭环(ready 态被揭示轮覆写成 dialogue,会话吊死)。
 
     终述先入史(参与 _structured_summary 首末引语),再 finish,再补 assistant
-    轮 + 版本;不复用 _commit_turn(它再 append user 会双记;本路径零 guard
-    事件,无需 _stamp_turn)。
+    轮 + 版本;不复用 _commit_turn(它再 append user 会双记)。M7-2 D1(#545):
+    唯一事件=终述路由 decision(自带 turn,同 _stamp_turn 口径);语义 route
+    attempted→committed(失败回滚保持 attempted,不冒充 commit;trace_spine D 节)。
 
     #382 PR-B 原子性(P0-2,2026-09-20):append → finish(可调 Gateway)之间
     任何异常(GatewayError 等)不得半提交——回滚终述入史,session 恢复调用
     前状态后原样 raise(调用方决定重试;同消息重试不重复 history)。最小修复,
-    不做 transaction framework。
+    不做 transaction framework;decision 事件不入回滚面(只陈述路由已决)。
 
     Gate B 段(#414 §四):finish 现在可能被 completion 硬门拒(无当轮 evidence
     → needs_review,session 保持 ready_to_confirm)——Turn 状态随 summary 实况,
     不得谎报 completed;被拒路径即「教师继续引导」(生成层不知道门的存在)。"""
+    # M7-2 D1:路由决策事件先于一切副作用落史(turn=既有口径:history 未入终述)。
+    session.guard_events.append(route := final_statement_route_event(
+        len(session.history) // 2 + (1 if session.first_question else 0), student_message))
     session.history.append({"role": "user", "content": student_message})
     try:
         summary = finish(session, gateway=gateway)
@@ -286,6 +286,7 @@ def _close_on_final_statement(session: LearnerSession, student_message: str,
         raise
     session.history.append({"role": "assistant", "content": summary.text})
     session.session_version += 1
+    route["outcome"] = "committed"   # 收束已提交(assistant+version);此前=attempted
     return Turn(text=summary.text, session_version=session.session_version,
                 state="completed" if summary.status == "completed" else "ready_to_confirm",
                 ready_to_confirm=True, session=session)
@@ -736,8 +737,7 @@ def _invoke(gateway: Gateway, role: str, messages: list[dict], schema: dict,
     # 下标:首问 0、reply i = i、finish 总结 = 末轮+1),join 合同见 trace_spine。
     return gateway.invoke(ModelRequest(
         role=role, messages=messages, response_schema=schema,
-        session_id=session.session_id, max_tokens=800, temperature=0,
-        images=images,
+        session_id=session.session_id, max_tokens=800, temperature=0, images=images,
         turn=len(session.history) // 2 + (1 if session.first_question else 0),
     ))
 
@@ -926,7 +926,10 @@ def reply(session: LearnerSession, student_message: str, *,
         _record_event(session, "feeds_method", method_hits, safe_text,
                       method_disposition(mode, repaired))
         safe_text = repaired
-        if not _student_stated_answer(session, student_message):
+        # M7-2 D2(#545):仅真实 True→False 覆盖记 decision 事件(模型原判为 true
+        # 而学生未陈述终答);False→False/True→True 零事件。turn 由 _commit_turn 统一打。
+        if output["ready_to_confirm"] and not _student_stated_answer(session, student_message):
+            session.guard_events.append(ready_override_event())
             output["ready_to_confirm"] = False
     state = "ready_to_confirm" if output["ready_to_confirm"] else "dialogue"
     return _commit_turn(session, student_message, safe_text, state,
