@@ -10,8 +10,8 @@ trusted text→[:N]→fake quote,病根是 transformation provenance 丢失。
   要么携带完整授权 span(首尾哨兵俱在——保形变换如数值掩码、方法词脱敏不触
   哨兵);把来源 strict prefix/suffix 当完整事实断言 = 红。
 
-五条 student-visible 确定性替代路径逐一触发:answer leak fallback(掩码/纯
-block 两臂)、feeds-method repair(重生成/脱敏两臂)、format·tone thin 直通、
+五条 student-visible 确定性替代路径逐一触发:answer leak fallback(掩码臂 /
+#542 问句兜底臂)、feeds-method repair(重生成/脱敏两臂)、format·tone thin 直通、
 summary 确定性零调用路径(学生首/末轮 + 题面引用字段)、stuck 阶梯回放
 (#444:trusted analysis 切片回放 + 终答数字掩码,与掩码臂同族——掩码保形,
 哨兵不触)。partial quote 必红由 meta 测试直接证明(喂入 C41 形态的截断文本,
@@ -25,7 +25,7 @@ from __future__ import annotations
 import pytest
 
 from edu_agent.agents.small_lecturer import (
-    PURE_BLOCK,
+    SAFE_FALLBACK_TEXT,
     apply_tone_guardrail,
     evaluate_student_visible_format,
     finish,
@@ -111,7 +111,7 @@ def test_partial_quote_checker_bites():
 
 
 # --------------------------------------------------------------------------- #
-# 路径一:answer leak fallback(_guard_output 掩码臂 / 纯 block 臂)
+# 路径一:answer leak fallback(_guard_output 掩码臂 / 问句兜底臂 #542)
 # --------------------------------------------------------------------------- #
 
 def test_answer_leak_masked_fallback_keeps_full_span():
@@ -129,8 +129,9 @@ def test_answer_leak_masked_fallback_keeps_full_span():
     _assert_full_span_or_no_quote(probe, turn.text, label="answer_leak/masked")
 
 
-def test_answer_leak_pure_block_fallback_is_fixed_non_quote_template():
-    """纯 block 臂:无可掩形态(前导零)→ 固定非转述模板,不引原文任何片段。"""
+def test_answer_leak_mask_noop_fallback_is_fixed_non_quote_template():
+    """掩码空转臂(#542 迁移,原「纯 block 臂」):无可掩形态(前导零)不再直达
+    PURE_BLOCK,先落确定性问句兜底——仍是固定非转述模板,不引原文任何片段。"""
     probe = f"总长就是{HEAD_SENTINEL}82加88加94等于0264{TAIL_SENTINEL}米,你算算看?"
     gateway = FakeGateway(tutor_payloads=[
         _open("这三段路你想怎么算?"),
@@ -139,9 +140,9 @@ def test_answer_leak_pure_block_fallback_is_fixed_non_quote_template():
     turn = start(dict(THREE_ROAD_Q), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
 
-    assert turn.text == PURE_BLOCK
-    assert _guard_modes(turn.session, "answer_leak")[-1] == "blocked"
-    _assert_full_span_or_no_quote(probe, turn.text, label="answer_leak/blocked")
+    assert turn.text == SAFE_FALLBACK_TEXT
+    assert _guard_modes(turn.session, "answer_leak")[-1] == "safe_fallback"
+    _assert_full_span_or_no_quote(probe, turn.text, label="answer_leak/safe_fallback")
 
 
 # --------------------------------------------------------------------------- #

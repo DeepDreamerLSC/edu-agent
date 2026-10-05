@@ -421,8 +421,8 @@ FINISH_EVIDENCE_TEXT = "这道题之前已经答对了,我们还需要听你把�
 # 护栏命中时的确定性安全问句(老仓库 hard_safety_fallback 同款语义;M2 清单
 # 阶段 2:护栏不过的输出不得到达学生可见面)
 SAFE_FALLBACK_TEXT = "先回到当前小问,你能说出题目明确给出的一个条件吗?"
-# Thin Kernel 泄露纯 block(#333 终裁·附录 A round-2):无可掩形态/复检仍命中时
-# 的确定性终文——不重教、不兜底句,一句话说明并停在该轮。
+# Thin Kernel 泄露纯 block(#333 终裁·附录 A round-2;#542 后为末级 rung):
+# 掩码与问句兜底均救不回时的确定性终文——不重教,一句话说明并停在该轮。
 PURE_BLOCK = "这条回复包含题目终答,我不能直接给出。"
 
 
@@ -557,9 +557,10 @@ def _guard_output(reply_text: str, session: "LearnerSession | None" = None,
                   ctx: "_GuardContext | None" = None,
                   ready_to_confirm: bool = False) -> str:
     """Thin Kernel 泄露响应(#333 终裁:附录 A 最小恢复生产化,替换泄露 regen 路径):
-    round-1 确定性数值掩码(结构逐字保留,仅违规终答数值→□)→ 复检仍命中/无可掩形态
-    → 纯 block(A 类 V1:检测+block+hard stop 语义不动)。tone/format 等非 A 类
-    原文直通(B 臂同款 thin 语义);掩码零模型调用。"""
+    round-1 确定性数值掩码(结构逐字保留,仅违规终答数值→□)→ 仍命中/无可掩形态
+    → 确定性问句兜底(#542:guardrails 声明的 authoritative_subquestion_fallback,
+    零模型,同 `_guard_check` 复检)→ 兜底仍命中才纯 block(A 类 V1:检测+block+
+    hard stop 语义不动)。tone/format 等非 A 类原文直通(B 臂同款 thin 语义)。"""
     if ctx is None:
         return reply_text
     guard, rule_ids, normalized, violations = _guard_check(ctx, reply_text, session,
@@ -574,6 +575,14 @@ def _guard_output(reply_text: str, session: "LearnerSession | None" = None,
         _record_event(session, guard, rule_ids, reply_text,
                       regenerated=False, mode="masked")
         return masked
+    # 问句兜底(#542):句级/字母答案泄漏下数值掩码恒空转(masked==reply)或复检仍
+    # 命中时,漏斗此前直接退化为 PURE_BLOCK 硬停(Case 15 学生面断裂)。落一级仓内
+    # 既有常量问句,零模型调用;同 `_guard_check` 复检干净才返回,否则仍落
+    # PURE_BLOCK(fail-closed 末级 rung 不删)。guard_events 照记 original+mode。
+    if _guard_check(ctx, SAFE_FALLBACK_TEXT, session, ready_to_confirm)[0] is None:
+        _record_event(session, guard, rule_ids, reply_text,
+                      regenerated=False, mode="safe_fallback")
+        return SAFE_FALLBACK_TEXT
     _record_event(session, guard, rule_ids, reply_text,
                   regenerated=False, mode="blocked")
     return PURE_BLOCK

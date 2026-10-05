@@ -343,15 +343,16 @@ def test_tutor_repeat_fallback_reveal_does_not_set_stuck():
 
 
 def test_guard_hard_degrade_does_not_set_stuck():
-    """回归③(#382 P0-1):guard 纯 block(不可掩形态)硬降级 → **不置 stuck**,
-    系统异常只记 guard_events(mode=blocked)——guard 降级 ≠ 学生卡住。"""
+    """回归③(#382 P0-1):guard 降级(掩码复检仍命中,#542 迁移后落问句兜底)
+    → **不置 stuck**,系统异常只记 guard_events(mode=safe_fallback)——guard
+    降级 ≠ 学生卡住。"""
     gateway = FakeGateway(tutor_payloads=[
         _open("先看题面说的 8 只、26 只脚,你打算先算什么?", STEPS),
         {"reply": "答案是 3 只鸡和 05 只兔。", "ready_to_confirm": False,
-         "cited_numbers": [3, 5]},   # 前导零 05:检得出掩不掉 → 纯 block
+         "cited_numbers": [3, 5]},   # 3 可掩、前导零 05 掩不掉 → 复检仍命中 → 兜底
     ])
     turn = start(dict(ANSWERED_QUESTION), dict(LEARNER), gateway=gateway)
     turn = reply(turn.session, "然后呢?", gateway=gateway)
     assert turn.session.stuck is False
-    blocked = [e for e in turn.session.guard_events if e.get("mode")]  # 系统异常落在埋点
-    assert [e["mode"] for e in blocked] == ["blocked"]
+    degraded = [e for e in turn.session.guard_events if e.get("mode")]  # 系统异常落在埋点
+    assert [e["mode"] for e in degraded] == ["safe_fallback"]
