@@ -37,3 +37,13 @@ def git_head_sha(repo: Path | str) -> str:
         ["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True,
         text=True, check=True,
     ).stdout.strip()
+
+
+def git_sha_or_none(repo: Path | str) -> str | None:
+    """git_head_sha 的跑批容错面(M7-1 C 件,#545):git 不可用/非仓库时 None
+    (不伪造——与 corpus_round.run_identity 的 None 兜底同政策,evals 工件侧
+    逐案 result 行指回代码版本用,不建第二 truth)。"""
+    try:
+        return git_head_sha(repo)
+    except (OSError, subprocess.SubprocessError):
+        return None

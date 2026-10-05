@@ -61,3 +61,18 @@ def test_fingerprint_construction_not_duplicated_in_consumers():
         assert "rev-parse" not in source
     assert not hasattr(s2_judge_battery, "_sha")
     assert not hasattr(s2_judge_battery, "_rubric_freeze_sha")
+
+
+# ---------- M7-1 B 件 additive:git_sha_or_none 容错面(#545) ----------
+
+def test_git_sha_or_none_matches_head_when_git_available():
+    from edu_agent.evals import git_sha_or_none
+
+    assert git_sha_or_none(_REPO) == git_head_sha(_REPO)
+
+
+def test_git_sha_or_none_records_none_without_fabrication(tmp_path):
+    from edu_agent.evals import git_sha_or_none
+
+    # git 不可用(非仓库目录)→ None,不伪造(不建第二 truth)
+    assert git_sha_or_none(tmp_path) is None
