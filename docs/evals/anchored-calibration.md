@@ -87,3 +87,38 @@ protocol。
 - 冻结面零模型调用;活评走生产 judge 面(温度/Schema/rubric 产线默认)。
 - baseline 篡改(sidecar sha 不符)→ 非零退出;flag(locked 张力)→ 如实披露、
   路由新 calibration cycle,不改用 probe 值、不静默、不失败。
+
+## cycle-1 记录:#552 v3.3-contextual promoted(2026-10-07)
+
+首个真实校准周期闭环:`cycle-1-v3.3-baseline`(12 校准 + 5 boundary 案,
+judge 行机械提取自 /tmp/lane-b 冻结 Lane B 证据,零调用)。candidate ruler
+`small_lecturer_v3_3_contextual`(由生产 v3.3 复制:仅 version 换名 + allowed
+三维 pacing/summary_mastery/termination 增 completion context 知情段;locked
+五维判分指令逐字 v3.3)。工件根 /tmp/m80(promotion-packet.json 27 文件逐 sha,
+当前 sha256 `60251441ab5a2b9e…`;human 位 null,validator exit 0 =
+«structurally complete, awaiting human key»)。
+
+**人键(promotion key)**:[#552 comment 6031119317](https://github.com/DeepDreamerLSC/edu-agent/issues/552#issuecomment-6031119317)
+(Architect 2026-10-06,APPROVED;键锚定时刻 packet 原始 sha b188cb9c…,ruler
+sha `4c55714eff6b6024…` 与本仓 `rubrics/small_lecturer_v3_3_contextual.yaml`
+逐字节一致)。
+
+**anchored 三面结果**(17 案,G1 locked==baseline 17/17×5 字段全等):
+
+- B 恢复 10/10:termination/summary 分值上移 8 案,evidence 写明结构归因 10 案;
+  verdict 移动 7 案(fail→review×4、review→pass×2、review→fail×1);
+- A 保护 2/2:locked 全等(构造 + guard 独立断言),verdict fail→fail / fail→review;
+- Boundary 不放过 5/5:anchored verdict 全部非 pass(context 在场不放行);
+- flag 通道 7 案 locked 张力→路由新 calibration cycle(披露,非组装输入)。
+
+**Baseline v1.2 摘要**(Step4 换尺重判,72/72 全量,same-evidence re-score:
+Product rerun=0,L0 逐字节复用 v1.1 冻结,evidence 逐案 sha 72/72 全等):
+verdict pass 5 / review 37 / fail 30(v1.1:2/21/49);total mean 6.69 vs 5.4;
+pacing 0.40→0.65、summary_mastery 0.12→0.25、termination 0.07→0.53;
+verdict 变化 24 案;归因标记 9/72;硬门:泄露 0 案、math_integrity=0 0 案。
+
+**入产语义(#552 M8-0)**:rubric 文件入仓 `rubrics/`;**默认 ruler 不切**——
+生产默认仍 v3.3,v3.3-contextual 仅显式 `SMALL_LECTURER_RUBRIC` 环境变量选用
+(judge.py 加载面,与 anchored 的 --cycle-id 门同款:无默认路径、拼错
+fail-closed 拒载);dimension-ownership registry / completion gate / 判分
+SCHEMA 与 verdict 阈值零改动。

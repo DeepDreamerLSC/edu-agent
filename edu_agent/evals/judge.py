@@ -2,6 +2,8 @@
 
 当前资产:rubrics/small_lecturer_v3_3.yaml(v3.2 派生,含 S5/D3 amendment——
 mi 0 分示例析取支删除,#481 终裁 5914617921);旧 v3.2 原样保留作对照;
+v3.3-contextual(#552 M8-0 cycle-1 人键 promoted)入仓但**默认不切**,仅显式
+SMALL_LECTURER_RUBRIC 环境变量选用。
 ENV_FAILURES 迁至 gateway.errors。引擎职责:读 rubric → 构造 ModelRequest → 校验 schema
 → 重算 verdict → 落 artifact。
 
@@ -18,6 +20,7 @@ judge 模型与版本——judge_model 字段随每次评分结果落盘。
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import yaml
@@ -79,8 +82,14 @@ DIMENSIONS = (
 
 # 判据文本 = 版本化资产(#254 P2 自内联迁出):version/preamble/dimension_guide/
 # math_integrity_guide/verdict_policy/user_instructions 六键;文件名即版本,无注册表面。
-_RUBRIC_PATH = Path(__file__).parent / "rubrics" / "small_lecturer_v3_3.yaml"
+# ruler 选择(#552 M8-0 入产):默认恒 v3.3;v3.3-contextual(cycle-1 promoted)仅
+# 显式 SMALL_LECTURER_RUBRIC 环境变量选用——无默认路径,与 anchored_calibration
+# 的 --cycle-id 门同款(#535 约束一);值拼错即文件缺失,fail-closed 拒载。
+_RUBRIC_VERSION = os.environ.get("SMALL_LECTURER_RUBRIC") or "small_lecturer_v3_3"
+_RUBRIC_PATH = Path(__file__).parent / "rubrics" / f"{_RUBRIC_VERSION}.yaml"
 _RUBRIC = yaml.safe_load(_RUBRIC_PATH.read_text(encoding="utf-8"))
+if _RUBRIC["version"] != _RUBRIC_VERSION:  # 文件名即版本:名实不符 fail-closed
+    raise RuntimeError(f"rubric 名实不符:{_RUBRIC_PATH} version={_RUBRIC['version']!r}")
 
 DIMENSION_GUIDE = "\n\n".join(
     _RUBRIC[key] for key in ("dimension_guide", "math_integrity_guide", "verdict_policy"))
