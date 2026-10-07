@@ -253,3 +253,32 @@ def test_judge_request_limit_frozen_at_1200(tmp_path):
     with judge_env(tmp_path, [completion(model_output([1, 1, 1, 1, 1, 1]))]) as (fake, gateway):
         JudgeSubject(gateway).run_case(CASE)
     assert fake.requests[0]["max_tokens"] == 1200
+
+
+# ---------- ruler 选择(#552 M8-0:v3.3-contextual promoted,默认不切) ----------
+
+
+def test_rubric_default_v33_and_explicit_env_selection(monkeypatch):
+    """默认恒 v3.3;v3.3-contextual 仅显式 SMALL_LECTURER_RUBRIC 选用——无默认
+    路径,与 anchored_calibration 的 --cycle-id 门同款(#535 约束一);拼错
+    fail-closed 拒载。锁三面:显式选用生效 / 未知版本拒载 / 环境清空回落默认。"""
+    import importlib
+
+    from edu_agent import evals
+
+    # judge 子模块经公开包属性取模块对象(reload 就地变更;02 §6 测试只导公开入口)
+    judge_module = evals.judge
+    original_prompt = judge_module.SYSTEM_PROMPT
+
+    monkeypatch.setenv("SMALL_LECTURER_RUBRIC", "small_lecturer_v3_3_contextual")
+    importlib.reload(judge_module)
+    assert "completion context 知情" in judge_module.SYSTEM_PROMPT  # 显式选用生效
+
+    monkeypatch.setenv("SMALL_LECTURER_RUBRIC", "small_lecturer_v3_4")
+    with pytest.raises(FileNotFoundError):  # 未知版本 fail-closed,不静默回落
+        importlib.reload(judge_module)
+
+    monkeypatch.delenv("SMALL_LECTURER_RUBRIC")
+    importlib.reload(judge_module)
+    assert "completion context 知情" not in judge_module.SYSTEM_PROMPT  # 默认仍 v3.3
+    assert judge_module.SYSTEM_PROMPT == original_prompt  # 复位完整(后续测试不受染)
