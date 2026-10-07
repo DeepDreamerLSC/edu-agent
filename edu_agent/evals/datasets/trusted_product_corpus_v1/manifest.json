@@ -1,5 +1,5 @@
 {
- "schema_version": "trusted_product_corpus_v1/manifest/v1.2",
+ "schema_version": "trusted_product_corpus_v1/manifest/v1.3",
  "corpus_id": "trusted_product_corpus_v1",
  "lane": "M4 overnight Lane A",
  "execution_identity": {
@@ -414,6 +414,37 @@
       },
       "c6_provenance": null
      }
+    },
+    "arc_version": "v0",
+    "student_script": {
+     "contract": "#554 c6032153905(Bank Arc Contract v0,Architect 收紧版 2026-10-07)",
+     "identity_note": "arc 面与 v1.2 基线同 case_id 并存;arc_version 字段在场=机械区分标记,frozen_input_sha256 不含剧本(题面/答案/learner 冻结面零改动);重放驱动按 student_turns 推进(KernelSubject 既有线性剧本口径)",
+     "selection_rationale": "short_text_exact 说理题:「具体量 vs 分率」经典混淆,答案「无法确定」要求结论+理由,exit evidence(说理复述)代表性最好",
+     "student_state": "知道分数既可表示具体量也可表示分率,但见到「2/5m」与「2/5」时直觉认为一样;未意识到第二根剪下的长度取决于绳子总长;困惑点=绳子同样长为什么不能直接比。",
+     "student_turns": [
+      "一样长吧。第一根剪下 2/5m,第二根剪下 2/5,都是 2/5 呀,所以剪下的部分一样长。",
+      "2/5m 是一段具体的长度,可 2/5 是把绳子平均分成 5 份取其中 2 份?那第二根到底剪了多长,好像跟绳子有多长有关系。",
+      "我来算算:要是绳子长 1m,第二根的 2/5 就是 2/5m,这才一样长;要是绳子长 2m,第二根的 2/5 就是 4/5m,比 2/5m 长;要是绳子只有 0.5m,第二根的 2/5 就是 0.2m,比 2/5m 短。三种情况都有!",
+      "所以不能直接比:第一根剪下的是固定的 2/5m,第二根剪下的是全长的 2/5,折成具体长度由绳子总长决定,总长不同结果就不同,这道题的结论是:无法确定。"
+     ],
+     "interaction_opportunities": [
+      "T1→T2 澄清机会:2/5m(具体量)与 2/5(分率)的区别",
+      "T3 纠错/验证机会:取特殊值(1m/2m/0.5m)枚举三种情形",
+      "T4 总结机会:从特例到一般结论+临界值(总长 1m)的说理复述"
+     ],
+     "tutor_decision_points": [
+      "T1 后:面对「都是 2/5」的直觉,选追问两个数的区别还是直接纠正",
+      "T2 后:学生已意识到与总长有关,选让其取值验证还是先给临界值",
+      "T3 后:三种情形列出,选引导归纳临界点还是直接收束",
+      "T4 后:结论已由学生完整说理,选确认收束"
+     ],
+     "exit_evidence": "T4 学生给出结论「无法确定」并完整说理(具体量 vs 分率、总长决定)(理解表达+答案确认)。",
+     "c5_self_feed_precheck": {
+      "rule": "completion.verify_completion 六窄面,末轮(学生终答轮)确定性判定,零 LLM",
+      "answer_type": "short_text_exact",
+      "matched_span": "无法确定",
+      "normalization": []
+     }
     }
    },
    {
@@ -554,6 +585,39 @@
       },
       "c6_provenance": null
      }
+    },
+    "arc_version": "v0",
+    "student_script": {
+     "contract": "#554 c6032153905(Bank Arc Contract v0,Architect 收紧版 2026-10-07)",
+     "identity_note": "arc 面与 v1.2 基线同 case_id 并存;arc_version 字段在场=机械区分标记,frozen_input_sha256 不含剧本(题面/答案/learner 冻结面零改动);重放驱动按 student_turns 推进(KernelSubject 既有线性剧本口径)",
+     "selection_rationale": "numeric_with_unit 两步应用:异分母加法「分子加分子分母加分母」高频真实错法,纠错+方法比较双机会",
+     "student_state": "会「求一个数的几分之几用乘法」;异分母分数加法习惯性错算(分子加分子、分母加分母:2/5+3/7=5/12),未察觉该步错误,只觉得后面除不尽;困惑点=5/12×1.4 除不尽是哪里出了问题。",
+     "student_turns": [
+      "两周合起来就是 2/5+3/7,分子相加 2+3=5,分母相加 5+7=12,等于 5/12,再用 5/12×1.4,可是除不尽,我算不下去了。",
+      "哦,分母不一样不能直接加,要先通分。2/5=14/35,3/7=15/35,加起来是 29/35,这是两周一共织了全长的 29/35。",
+      "然后用全长乘这个分率:1.4×29/35,1.4×29=40.6,40.6÷35=1.16,所以两周一共织了全长的……不对,是织了 1.16m。",
+      "整理一下:先通分求出两周共织全长的 29/35,再用全长 1.4m 乘 29/35,算出来 1.4×29/35=1.16。也可以分开算:1.4×2/5=0.56,1.4×3/7=0.6,0.56+0.6=1.16,两种方法结果一样。所以答案是 1.16 米。"
+     ],
+     "interaction_opportunities": [
+      "T1→T2 纠错机会:异分母加法直接加分子分母的错误,由学生自己补通分修正",
+      "T3→T4 澄清机会:29/35(占比)与 1.16m(长度)两个量的辨析",
+      "T4 方法比较机会:先加占比再乘总量 vs 分开乘再相加,两法互验"
+     ],
+     "tutor_decision_points": [
+      "T1 后:学生卡在除不尽,选指出根本错误(加法步)还是顺着往下算",
+      "T2 后:通分完成,选确认 29/35 的含义还是直接给算式",
+      "T3 后:数值已出但占比/长度表述含混,选澄清还是收束",
+      "T4 后:双方法验算一致,选确认收束"
+     ],
+     "exit_evidence": "T4 学生复述完整方法(通分求占比→乘全长)并给出第二种方法交叉验算,终答「1.16 米」由学生自己写出(方法复述+答案确认)。",
+     "c5_self_feed_precheck": {
+      "rule": "completion.verify_completion 六窄面,末轮(学生终答轮)确定性判定,零 LLM",
+      "answer_type": "numeric_with_unit",
+      "matched_span": "1.16 米",
+      "normalization": [
+       "单位同义换算"
+      ]
+     }
     }
    },
    {
@@ -623,6 +687,38 @@
        "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
       },
       "c6_provenance": null
+     }
+    },
+    "arc_version": "v0",
+    "student_script": {
+     "contract": "#554 c6032153905(Bank Arc Contract v0,Architect 收紧版 2026-10-07)",
+     "identity_note": "arc 面与 v1.2 基线同 case_id 并存;arc_version 字段在场=机械区分标记,frozen_input_sha256 不含剧本(题面/答案/learner 冻结面零改动);重放驱动按 student_turns 推进(KernelSubject 既有线性剧本口径)",
+     "selection_rationale": "numeric_with_unit 多步应用:「第二次弹起」过程量误读(2/6 vs 逐次递推)+连续求几分之几,审题陷阱代表",
+     "student_state": "会「求一个数的几分之几」;误区①=把「第二次弹起」当成 18 的 2/6;误区②=只算一次弹起就停(3m 即终答);困惑点=第二次弹起的「下落高度」到底是 18m 还是第一次弹起的高度。",
+     "student_turns": [
+      "18 的 1/6 是 3,弹起 3m。第二次我想就是再乘一个 1/6,18×2/6=6m。",
+      "哦不对,球第一次弹到 3m 后会再落下来,第二次弹起是从 3m 落下去弹起来的,高度是 3 的 1/6,不是 18 的 2/6。",
+      "那接着算:3×1/6=0.5,第二次弹起 0.5m。",
+      "捋一遍过程:球从 18m 落下,第一次弹起 18×1/6=3m;球再从 3m 落下,第二次弹起 3×1/6=0.5m。每次弹起都是这次下落高度的 1/6,要用刚落下的那个高度乘 1/6。答案应该是 0.5 米。"
+     ],
+     "interaction_opportunities": [
+      "T1→T2 纠错机会:「第二次」的过程量误解(总量 2/6 vs 逐次递推)",
+      "T4 总结机会:两次「下落→弹起」递推关系的复述"
+     ],
+     "tutor_decision_points": [
+      "T1 后:学生停在 6m 误解,选带其走一遍「落-弹-落-弹」过程还是直接否定",
+      "T2 后:学生已自行纠正过程量,选让其继续算还是先验第一步",
+      "T3 后:数值已出,选要求复述完整过程还是确认收束",
+      "T4 后:完整复述在场,选确认收束"
+     ],
+     "exit_evidence": "T4 学生复述两次「下落→弹起」的递推过程并给出终答 0.5 米(方法复述+答案确认)。",
+     "c5_self_feed_precheck": {
+      "rule": "completion.verify_completion 六窄面,末轮(学生终答轮)确定性判定,零 LLM",
+      "answer_type": "numeric_with_unit",
+      "matched_span": "0.5 米",
+      "normalization": [
+       "单位同义换算"
+      ]
      }
     }
    },
@@ -914,6 +1010,36 @@
       },
       "c6_provenance": null
      }
+    },
+    "arc_version": "v0",
+    "student_script": {
+     "contract": "#554 c6032153905(Bank Arc Contract v0,Architect 收紧版 2026-10-07)",
+     "identity_note": "arc 面与 v1.2 基线同 case_id 并存;arc_version 字段在场=机械区分标记,frozen_input_sha256 不含剧本(题面/答案/learner 冻结面零改动);重放驱动按 student_turns 推进(KernelSubject 既有线性剧本口径)",
+     "selection_rationale": "numeric 错例分析(逆向倒推):错误结果/原数/正确结果三量混淆,misconception repair 教学面代表",
+     "student_state": "会分数除法法则(除以一个数等于乘它的倒数);误区=把「计算结果 3/4」直接当原数处理,分不清错误结果/原数/正确结果三个量;困惑点=为什么求正确结果要倒推两步。",
+     "student_turns": [
+      "题目说计算结果是 3/4,那正确的结果就是把 3/4 除以 5 吧,3/4÷5=3/20。",
+      "我明白了,3/4 是「乘 5 之后」得到的错误结果,原数应该是 3/4÷5=3/20,不是直接拿 3/4 当原数去算。",
+      "求出原数是 3/20 之后,再按题目本来要算的「除以 5」来算:3/20÷5=3/20×1/5=3/100。",
+      "完整说一遍:第一步先用错误结果倒推原数,因为原数×5=3/4,所以原数是 3/4÷5=3/20;第二步按原题除以 5,3/20÷5=3/100。所以应该是 3/100。"
+     ],
+     "interaction_opportunities": [
+      "T1→T2 澄清机会:错误结果/原数/正确结果三个量的辨析(3/20 是原数不是终答)",
+      "T4 总结机会:两步倒推方法的完整复述"
+     ],
+     "tutor_decision_points": [
+      "T1 后:学生把 3/4 当原数直接除,选追问「3/4 是哪个数的结果」还是直接给式子",
+      "T2 后:原数已倒推,选让其继续第二步还是先确认三个量已分清",
+      "T3 后:数值已出,选要求完整复述两步逻辑还是直接确认",
+      "T4 后:完整复述在场,选确认收束"
+     ],
+     "exit_evidence": "T4 学生完整复述两步倒推方法并自己写出终答 3/100(方法复述+答案确认)。",
+     "c5_self_feed_precheck": {
+      "rule": "completion.verify_completion 六窄面,末轮(学生终答轮)确定性判定,零 LLM",
+      "answer_type": "numeric_with_unit",
+      "matched_span": "3/100",
+      "normalization": []
+     }
     }
    },
    {
@@ -989,6 +1115,37 @@
        "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
       },
       "c6_provenance": null
+     }
+    },
+    "arc_version": "v0",
+    "student_script": {
+     "contract": "#554 c6032153905(Bank Arc Contract v0,Architect 收紧版 2026-10-07)",
+     "identity_note": "arc 面与 v1.2 基线同 case_id 并存;arc_version 字段在场=机械区分标记,frozen_input_sha256 不含剧本(题面/答案/learner 冻结面零改动);重放驱动按 student_turns 推进(KernelSubject 既有线性剧本口径)",
+     "selection_rationale": "choice_letter 面唯一概念题:商与被除数大小关系需分情况讨论,六年级直觉误区「除必缩小」典型,教学决策面最宽且零计算负担",
+     "student_state": "已会「除以一个数等于乘这个数的倒数」的法则;持有整数除法经验形成的直觉「除法让结果变小」,初选 B;困惑点=为什么除以分数有时结果反而比原数大。",
+     "student_turns": [
+      "我选 B,小于。除法不就是平均分吗,分完肯定比原来小,比如 10÷2=5,5 就比 10 小呀。",
+      "那我按法则试试 6÷1/2,换成 6×2=12,12 比 6 还大!是我算错了,还是这道题有问题?",
+      "我再试两个:6÷2=3,3 小于 6;6÷1=6,和 6 相等;6÷1/2=12,12 大于 6。原来除数不同,商和原数的大小关系也不同。",
+      "我懂了:除数大于 1 时商小于原数,除数等于 1 时商等于原数,除数小于 1 时商反而大于原数,三种情况都有,这题选 D。"
+     ],
+     "interaction_opportunities": [
+      "T1→T2 纠错机会:学生用整数除法类比得 B,可引导其用法则自己试出反例(认知冲突)",
+      "T3 方法比较机会:三组例子(除数>1/=1/<1)的枚举归纳比较",
+      "T4 总结机会:从枚举到分情况一般化的复述"
+     ],
+     "tutor_decision_points": [
+      "T1 后:面对直觉性错答,选追问依据还是直接给反例",
+      "T2 后:学生出现认知冲突,选指出计算没错还是让其再举例验证",
+      "T3 后:三例已列,选引导归纳分情况还是直接给结论",
+      "T4 后:学生已完整复述并终选,选确认收束还是补问边界"
+     ],
+     "exit_evidence": "T4 学生用自己的话完整复述三种大小关系与分情况结论,并给出终选 D(理解表达+答案确认)。",
+     "c5_self_feed_precheck": {
+      "rule": "completion.verify_completion 六窄面,末轮(学生终答轮)确定性判定,零 LLM",
+      "answer_type": "choice_letter",
+      "matched_span": "D",
+      "normalization": []
      }
     }
    },

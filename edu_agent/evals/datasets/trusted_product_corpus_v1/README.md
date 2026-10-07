@@ -142,6 +142,18 @@ schema 升 `trusted_product_corpus_v1/manifest/v1.2`(仅刷新受 #515 影响的
 
 **Completion-Capable Core denominator 2 → 5**(manifest `completion_capable_core` 可由逐案 runtime_projection 复算;三条件不变,新增 3 案均 shadow_pilot 族 expectation=completion_final_state;v1.1 旧 2 案条目逐字节不动)。**不重跑基线**:§8b Baseline v1(2/2)已存档于 v1.1,新分母 5 案的面值留给 v1.2 基线或下次任务。自查:JSON 可解析;frozen_input_sha256 全 446 指纹(sets+rejections)零漂移——重跑仅刷新 3 案 runtime_projection,零输入变化。
 
+## 8d. v1.3:Bank Arc Contract v0——5 案学生弧剧本(#554 c6032153905,5-case spike)
+
+schema 升 `trusted_product_corpus_v1/manifest/v1.3`。**定性**(Architect 收紧版):目标≠提升分数,=**恢复真实教学交互合同,让 evaluator 能观察系统完整教学能力**——v1.2 bank 族 15 案 soc_avg 0.13 的暴露面是「评测样本没有提供足够信息」(弧=首问+收尾两条固定句,无学生轮),非教学缺陷。本节为 5 案补学生弧(Bank Arc Contract v0 四要件:Student State / Interaction Opportunity / Tutor Decision Point / Exit Evidence),逐案结构化记录于 manifest 新字段 `student_script`(sub-keys:student_state / student_turns / interaction_opportunities / tutor_decision_points / exit_evidence / c5_self_feed_precheck)。
+
+**identity 纪律**:5 案与 v1.2 基线同 case_id 并存,`arc_version: "v0"` 字段在场=新旧机械区分标记;`frozen_input_sha256` 零改动(学生弧=驱动面增量,不在 frozen input 冻结面内——题面/answer_spec/learner 不变);counts/runtime_projection/wp3_projection/completion_capable_core 等既有面零改动(六条件投影刷新是独立操作,arc 面的投影刷新留给 arc 合入后的下一轮)。选 5 案自 14 个 bank fail(6a62ca09=review 不在池):题型面 choice 1/short_text 1/numeric 3;教学场景面=概念辨析/说理题/应用纠错/错例倒推/多步过程量;全部六年级分数域(fail 池 14 案 11 案分数域,同构)。「原 transcript 最短」不区分——14 fail 案 v1.2 弧全部=2 轮固定句。
+
+**确定性 precheck(零 LLM,入 manifest `student_script.c5_self_feed_precheck`)**:末轮(学生终答轮)经 `completion.verify_completion` 六窄面判定 5/5 命中(D / 无法确定 / 1.16 米[单位同义换算] / 3/100 / 0.5 米[单位同义换算]);早轮零认证命中、零 stuck 信号触发、文本面早轮零终答原文。
+
+**live 重放 5/5(证据 /tmp/m81/arc/;branch i554/m8-1-bank-arc-v0)**:run_inspect_round + KernelSubject(现役执行 owner=Inspect),@8303 qwen3_vl_8b 产线默认 temp-0;26 tutor 调(预算闸 30,案均 5.2,零 fallback 污染,3 调 Gateway 内 schema 重试 attempt=2)+ 5 judge 调 = 31 调。结果:**5/5 final_state=completed**(v1.2 基线同 5 案全 needs_review 2 轮),末轮 verified_complete=True 5/5(与 precheck 一致),ready_to_confirm 于 turn 3-4 到达,3 案经 close-on-final-statement 收束。
+
+**判卷对照(v3.3-contextual,显式 SMALL_LECTURER_RUBRIC env,生产 judge 面 @8301 mlx_27B temp-0)**:5 案新弧 pass 5/5,socratic_followup/summary_mastery/termination 全 2/2(v1.2 基线同 5 案全 fail,soc/sum/term 全 0);判语方向从「对话中无学生回答,未体现苏格拉底式引导」翻为逐轮引用真实追问/学生原话/掌握后自然收尾,leak 判定正确处理学生先述终答后 tutor 确认的形态(非泄)。**口径披露**:v1.2 基线判卷=mctx3 三字段装配(step4);本轮=生产 judge.py env 选用面(无 mctx3 管道)——两轮判卷面存在该装配差,解读分数时须知。结论(5 案 spike,如实):**socratic/summary/termination 三维从不可观察翻为可观察且判语有据**→归因「corpus owner(弧设计缺陷)」在 5 案上成立;建议扩展至其余 9 fail 案后重基线再定 ②/③ 方向(排序照 #554)。
+
 ## 9. 复算命令(冻结身份)
 
 ```bash
