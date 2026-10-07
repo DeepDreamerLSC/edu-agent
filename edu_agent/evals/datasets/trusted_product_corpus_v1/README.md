@@ -11,7 +11,7 @@
 | set | 数 | 定义 |
 |---|---|---|
 | **Core** | **72** | Admission Gate G1–G8 全过(门列表见 manifest `admission_gates_core`) |
-| Challenge | 80 | 历史 failure/边界/反事实/已修事故(有价值但不满足 Core 门) |
+| Challenge | 84 | 历史 failure/边界/反事实/已修事故 80 + Bank Arc negative variants 4(§8e,合成安全探测,不并入 Core 统计) |
 | Exploration | 136 | 信息不足/期望消费面已废/人审未定 |
 | (reserve) | 4 | `math_gold_b2_heldout`:teacher_confirmed 但 holdout 角色,**不入任何 set** |
 
@@ -154,6 +154,20 @@ schema 升 `trusted_product_corpus_v1/manifest/v1.3`。**定性**(Architect 收�
 
 **判卷对照(v3.3-contextual,显式 SMALL_LECTURER_RUBRIC env,生产 judge 面 @8301 mlx_27B temp-0)**:5 案新弧 pass 5/5,socratic_followup/summary_mastery/termination 全 2/2(v1.2 基线同 5 案全 fail,soc/sum/term 全 0);判语方向从「对话中无学生回答,未体现苏格拉底式引导」翻为逐轮引用真实追问/学生原话/掌握后自然收尾,leak 判定正确处理学生先述终答后 tutor 确认的形态(非泄)。**口径披露**:v1.2 基线判卷=mctx3 三字段装配(step4);本轮=生产 judge.py env 选用面(无 mctx3 管道)——两轮判卷面存在该装配差,解读分数时须知。结论(5 案 spike,如实):**socratic/summary/termination 三维从不可观察翻为可观察且判语有据**→归因「corpus owner(弧设计缺陷)」在 5 案上成立;建议扩展至其余 9 fail 案后重基线再定 ②/③ 方向(排序照 #554)。
 
+## 8e. v1.4:Bank Arc Contract Phase 2——余 9 Core arcs + 4 negative Challenge variants(#554 Gate c6033889476)
+
+schema 升 `trusted_product_corpus_v1/manifest/v1.4`(仅增字段/增条目;counts.challenge 80→84;Core 72 分母不变——9 案 bank arc 是替换旧最小弧不是新增)。两段分拆(Gate 拆分:Core arc completion + Challenge negative coverage,不为分布污染 Core)。
+
+**script-first freeze(Gate 新增硬门,先冻后跑)**:13 案剧本(A 9 + B 4)先写完并冻结——逐案 sha256(canonical JSON)+ 正本文件 sha + UTC 时间戳存 `/tmp/m81/phase2/freeze.json`,**frozen_at_utc=2026-10-07T08:42:36Z**;重放 driver 每次启动先断言冻结 sha 一致。首调时间戳=首 run `manifest.json.started_at` **2026-10-07T08:43:09Z** > 冻结时间(顺序可证);判卷在重放之后,看分后零改本(manifest `student_turns` 与冻结正本逐字节一致,edit 脚本断言)。
+
+**A 面(余 9 bank fail 补学生弧,四要件+Gate 预登记 learner_trajectory 起点/是否自纠/是否可验证终答/卡点或退出形态)**:确定性 precheck(零 LLM)——7 案末轮认证命中(A.10[剥空白标点]/0.4kg/300 步/13/D/D/A),2 案(acc7 分量抵消、b65d 不等式合并)**预登记为未完成轨迹**(末轮不落终答,命中=否);早轮零认证命中、零 stuck、9 案 frozen_input_sha256 复算与 v1.2 一致。live 重放(@8303 产线默认 temp-0,run_inspect_round+KernelSubject):**8 案 ok——6 案 completed(全部与 precheck 命中一致)+2 案 needs_review(恰为预登记未完成的 2 案,系统未强行 completed)**;1 案(6a699c32)content 失败:GatewayError schema_violation(模型 JSON 输出非法),**两跑同点位复现=确定性,非 transient**——产品面鲁棒性边界如实记录,该案未判卷。判卷(v3.3-contextual 显式 env,@8301 产线 judge,口径同 §8d 披露):8 案 soc 全 2(v1.2 全 0);6 completing 案中 5 pass(sum/term 全 2 或近 2)、1 review(afaa:completed 但 judge 判「未确认掌握即终止」,sum=1/term=1——完成态与判卷面分歧如实保留);2 未完成案 review(sum/term=0 符合未完成轨迹)。**结论:bank 族 soc/sum/term 从「结构不可测」恢复为可解释分布的归因,9 案中 8 案成立(1 案产品边界待修)**。
+
+**B 面(4 negative Challenge variants,distinct case_id/variant_id,不覆盖 Core identity,不并入 Core 均分/pass rate)**:覆盖 Gate 三形态+可选第四——neg1 persistent misconception(降幅和 16% 相等陷阱,反例 0.24 元被合理化为误差)、neg2 partial progress·no final evidence(分段计税走到 100000 但不落答)、neg3 disengage(负温度畏难放弃,末轮 stuck「太难了」按设计触发)、neg4 repeated new errors·engaged(促销规则反复误读仍互动)。负向 precheck(零 LLM):任意轮零认证命中+ground_truth 原文零出现。live 重放:**4/4 final_state=needs_review——系统对负向弧全部正确不完成,零强行 completed、零答案泄露换闭环(leak=False 4/4)**;neg3 stuck 信号触发后安全停住。判卷 L1 仅参考(4 案 fail:sum/term=0 与负向终态一致;neg2 判语「学生已给出正确答案仍要求重来」与 final_state 面分歧——确定性 verifier 因学生问句/犹疑形态正确拒绝认证,保守不完成是对的,L1 叙事面供 Product 参考)。
+
+**调用账(逐段,fail-closed 闸)**:product 68 调=首 run 60(12 案 ok+6a699c32 第 3 调 schema 失败)+resume 5(6a631898-neg)+单案补跑 3(6a699c32 复现同点位失败);judge 12 调(6a699c32 无 transcript 不判);**合计 80 调**——超本任务 ≤75 线 5 调,构成:13 案×5 调+判卷 12 的算术下界即 77,加 6a699c32 确定性失败消耗 3 调(两跑共 6 调中 1 跑计入首 run)。如实列账,不藏失败。
+
+**identity 区分**:A 面 arc_version=v0(与 #555 spike 5 案同标记,新 Case 同字段面+learner_trajectory 新子键);B 面 arc_version=v0-negative+variant_id+frozen_input_sha256 按 Core bank 同式实算(题面均不入 Core 的 bank 题,identity 与 Core 零重叠);Core 分母 72 不变,`completion_capable_core`/runtime_projection 面零改动(投影刷新独立操作,与 §8d 同纪律留给下一轮)。v1.3 Core baseline 重刷(Gate C 段)在 14 案 arc 齐备后另行执行,本 PR 只做 corpus+读出。
+
 ## 9. 复算命令(冻结身份)
 
 ```bash
@@ -170,3 +184,4 @@ uv run python -c "from edu_agent.agents.small_lecturer import _student_signals_s
 - `make check` 未跑:零 runtime 改动(本 PR 仅新增数据资产目录);PR 前自查 manifest JSON 可解析、全部 sha256 实算非占位。
 - v1.1 投影复算(WP3;代码面同 6f3e7078 worktree):`python3 /tmp/wp3/project_answer_spec.py`(六条件逐案重算,与 manifest `runtime_projection`/`wp3_projection.stats` 对账);baseline 重放证据在 /tmp/wp3/baseline/。
 - v1.2 投影刷新复算(#515 surface;worktree d4fbdf60=/tmp/wp3-v12-worktree):`python3 /tmp/wp3-v12/project_answer_spec_v12.py` + `apply_projection_v12.py`(六条件逐字不变重算 72 案、与 v1.1 逐案对账仅 3 案翻面、写入 manifest v1.2);产物 /tmp/wp3-v12/projection_report_v12.json。
+- v1.4 Phase 2 复算(base 4248b816):冻结正本+sha/时间戳 `/tmp/m81/phase2/freeze.json`,precheck/重放/判卷/编辑脚本 `/tmp/m81/phase2/*.py`(driver 启动即断言冻结 sha);重放证据 `/tmp/m81/phase2/arc/collect/cases-20261007T084309Z-b157/`(12 案 ok)+ `cases-6a699c32-20261007T084851Z-f591/`(content 失败复现),判卷 `/tmp/m81/phase2/arc/judge/judge-results.json`;对照基线 /tmp/m80/step4/(只读)。
