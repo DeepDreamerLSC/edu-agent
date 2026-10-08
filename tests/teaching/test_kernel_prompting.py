@@ -106,12 +106,14 @@ def test_arc_diagnose_hint_absent_without_incorrect_status(tmp_path):
 
 # ---------- #501 P1+P2:两段冻结诊断政策文本的装配锁定(字节=冻结件,不得改一字) ----------
 
-# 逐字取自 /tmp/p12-out/candidate-texts.json(P1_TACTICS_insert / P2_DIAGNOSE_TURN_HINT_append,
-# 冻结于 2026-10-02;C 线五门 CANDIDATE_PASS 的受测字节)。改这两段 = 重开实验,不是改测试。
+# 逐字取自 /tmp/p12-out/candidate-texts.json(P2_DIAGNOSE_TURN_HINT_append,
+# 冻结于 2026-10-02;C 线五门 CANDIDATE_PASS 的受测字节)。改这段 = 重开实验,不是改测试。
+# P1 段原冻结件(#501,2026-10-02)已按 #558 Phase 2 Gate comment 6040689353 P2-B
+# (R1/R3/R4/R5 → 单条 IF→THEN consolidation,R5 时序边界以改写并入,b72f97ec)
+# 重冻结为合并子句;correction-timing 语义(诊断回合仅一轮→定位错误后针对修正)逐义保留。
 P1_TACTICS_FROZEN = (
-    '"只追问思路、不评价不纠正"只限于刚采集作答后的一个诊断回合。'
-    '已经听到学生思路、且能定位具体错误或缺口后,后续回合应针对该错误关系或步骤'
-    '引导检查和修正,不得继续沿用"只问怎么想"的限制。'
+    '「只问怎么想、不评价不纠正」仅限刚采集作答后的一个诊断回合,'
+    '定位到具体错误后,后续回合直接针对该错误关系或步骤引导检查修正。'
 )
 P2_DIAGNOSE_FROZEN = (
     '本轮"只追问怎么想、不纠正"只适用于学生刚给出一个作答或选项、'
