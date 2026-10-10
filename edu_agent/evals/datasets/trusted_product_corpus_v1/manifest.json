@@ -1,5 +1,5 @@
 {
- "schema_version": "trusted_product_corpus_v1/manifest/v1.4",
+ "schema_version": "trusted_product_corpus_v1/manifest/v1.5",
  "corpus_id": "trusted_product_corpus_v1",
  "lane": "M4 overnight Lane A",
  "execution_identity": {
@@ -176,7 +176,7 @@
     "runtime_projection": {
      "answer_spec": null,
      "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -199,8 +199,13 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "我觉得方向上应该是往西边的,两段里朝北和朝南的分量感觉能互相抵消,可这个抵消我只敢「觉得」,还说不出道理,斜着的路程怎么分成分量我还没弄懂。这题我先不定结论,等我把分量怎么分想明白再说。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
       },
       "c6_provenance": null
      }
@@ -282,9 +287,14 @@
      "source_family": "partner_bank"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "answer_spec": {
+      "answer_type": "numeric_with_unit",
+      "ground_truth": "0.4kg",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -307,10 +317,38 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "我重新说一遍:一瓶水重 2kg,求它的 1/5 的重量,用乘法 2×1/5,也就是把 2kg 平均分成 5 份取其中的 1 份。所以这瓶水的 1/5 重,答案是 0.4kg。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "numeric_with_unit",
+        "verifier": "numeric_with_unit",
+        "matched_span": "0.4kg",
+        "ground_truth_ref": "0.4kg",
+        "normalization": []
+       },
+       "other_turns_hit": []
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       },
+       "answer_value": "0.4kg",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+        "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     },
     "arc_version": "v0",
@@ -391,7 +429,7 @@
     "runtime_projection": {
      "answer_spec": null,
      "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "left_empty_reason": "c5_self_feed_miss_on_final_turn",
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -414,8 +452,13 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "合起来 b 要小于 16 又大于 14……在自然数里夹在 14 和 16 中间的,我眼看就要找出来了,让我把两个不等式再各代一遍验一验,这道题我还没算完,先不写答案。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": false
+       },
+       "other_turns_hit": []
       },
       "c6_provenance": null
      }
@@ -497,9 +540,14 @@
      "source_family": "partner_bank"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "answer_spec": {
+      "answer_type": "short_text_exact",
+      "ground_truth": "无法确定",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -522,10 +570,38 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "所以不能直接比:第一根剪下的是固定的 2/5m,第二根剪下的是全长的 2/5,折成具体长度由绳子总长决定,总长不同结果就不同,这道题的结论是:无法确定。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "short_text_exact",
+        "verifier": "short_text_exact",
+        "matched_span": "无法确定",
+        "ground_truth_ref": "无法确定",
+        "normalization": []
+       },
+       "other_turns_hit": []
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       },
+       "answer_value": "无法确定",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+        "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     },
     "arc_version": "v0",
@@ -598,9 +674,14 @@
      "source_family": "partner_bank"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "answer_spec": {
+      "answer_type": "short_text_exact",
+      "ground_truth": "A.10",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -623,10 +704,40 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "看错的比正确的多加了 36-26=10,所以多的是 10。这道题的答案是 A.10。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "short_text_exact",
+        "verifier": "short_text_exact",
+        "matched_span": "A.10",
+        "ground_truth_ref": "A.10",
+        "normalization": [
+         "剥空白标点"
+        ]
+       },
+       "other_turns_hit": []
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       },
+       "answer_value": "A.10",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+        "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     },
     "arc_version": "v0",
@@ -707,9 +818,14 @@
      "source_family": "partner_bank"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "answer_spec": {
+      "answer_type": "numeric_with_unit",
+      "ground_truth": "1.16m",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -732,10 +848,40 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "整理一下:先通分求出两周共织全长的 29/35,再用全长 1.4m 乘 29/35,算出来 1.4×29/35=1.16。也可以分开算:1.4×2/5=0.56,1.4×3/7=0.6,0.56+0.6=1.16,两种方法结果一样。所以答案是 1.16 米。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "numeric_with_unit",
+        "verifier": "numeric_with_unit",
+        "matched_span": "1.16 米",
+        "ground_truth_ref": "1.16m",
+        "normalization": [
+         "单位同义换算"
+        ]
+       },
+       "other_turns_hit": []
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       },
+       "answer_value": "1.16m",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+        "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     },
     "arc_version": "v0",
@@ -810,9 +956,14 @@
      "source_family": "partner_bank"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "answer_spec": {
+      "answer_type": "numeric_with_unit",
+      "ground_truth": "0.5m",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -835,10 +986,40 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "捋一遍过程:球从 18m 落下,第一次弹起 18×1/6=3m;球再从 3m 落下,第二次弹起 3×1/6=0.5m。每次弹起都是这次下落高度的 1/6,要用刚落下的那个高度乘 1/6。答案应该是 0.5 米。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "numeric_with_unit",
+        "verifier": "numeric_with_unit",
+        "matched_span": "0.5 米",
+        "ground_truth_ref": "0.5m",
+        "normalization": [
+         "单位同义换算"
+        ]
+       },
+       "other_turns_hit": []
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       },
+       "answer_value": "0.5m",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+        "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     },
     "arc_version": "v0",
@@ -912,9 +1093,14 @@
      "source_family": "partner_bank"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "answer_spec": {
+      "answer_type": "numeric_with_unit",
+      "ground_truth": "300步",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -937,10 +1123,38 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "整理一下:先算爷爷的步数,2700×8/9=2400 步;再算差,2700-2400=300 步。所以爷爷比奶奶少走的步数,答案是 300 步。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "numeric_with_unit",
+        "verifier": "numeric_with_unit",
+        "matched_span": "300 步",
+        "ground_truth_ref": "300步",
+        "normalization": []
+       },
+       "other_turns_hit": []
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       },
+       "answer_value": "300步",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+        "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     },
     "arc_version": "v0",
@@ -1098,9 +1312,14 @@
      "source_family": "partner_bank"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "answer_spec": {
+      "answer_type": "numeric_with_unit",
+      "ground_truth": "13",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -1123,10 +1342,38 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "从 9 往两边数:9-4=5,9-2=7,9+2=11,9+4=13,这五个数是 5、7、9、11、13,验算 5+7+9+11+13=45,正好。所以这五个奇数中最大的数,答案是 13。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "numeric_with_unit",
+        "verifier": "numeric_with_unit",
+        "matched_span": "13",
+        "ground_truth_ref": "13",
+        "normalization": []
+       },
+       "other_turns_hit": []
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       },
+       "answer_value": "13",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+        "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     },
     "arc_version": "v0",
@@ -1205,9 +1452,14 @@
      "source_family": "partner_bank"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "answer_spec": {
+      "answer_type": "numeric_with_unit",
+      "ground_truth": "3/100",
+      "aliases": [],
+      "unit_optional": false
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -1230,10 +1482,38 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "完整说一遍:第一步先用错误结果倒推原数,因为原数×5=3/4,所以原数是 3/4÷5=3/20;第二步按原题除以 5,3/20÷5=3/100。所以应该是 3/100。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "numeric_with_unit",
+        "verifier": "numeric_with_unit",
+        "matched_span": "3/100",
+        "ground_truth_ref": "3/100",
+        "normalization": []
+       },
+       "other_turns_hit": []
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       },
+       "answer_value": "3/100",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+        "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     },
     "arc_version": "v0",
@@ -1305,9 +1585,20 @@
      "source_family": "partner_bank"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "answer_spec": {
+      "answer_type": "choice_letter",
+      "ground_truth": "D",
+      "aliases": [],
+      "unit_optional": false,
+      "letter_choices": [
+       "A",
+       "B",
+       "C",
+       "D"
+      ]
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -1336,10 +1627,38 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "我懂了:除数大于 1 时商小于原数,除数等于 1 时商等于原数,除数小于 1 时商反而大于原数,三种情况都有,这题选 D。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "choice_letter",
+        "verifier": "choice_letter",
+        "matched_span": "D",
+        "ground_truth_ref": "D",
+        "normalization": []
+       },
+       "other_turns_hit": []
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       },
+       "answer_value": "D",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+        "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     },
     "arc_version": "v0",
@@ -1412,9 +1731,20 @@
      "source_family": "partner_bank"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "answer_spec": {
+      "answer_type": "choice_letter",
+      "ground_truth": "D",
+      "aliases": [],
+      "unit_optional": false,
+      "letter_choices": [
+       "A",
+       "B",
+       "C",
+       "D"
+      ]
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -1443,10 +1773,38 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "D 的「销量增长了 353%」说得通:增长率是增长的部分和原来比,是可以超过 100% 的,比如去年卖 100 箱,今年卖 453 箱,453-100=353,正好增长 353%。说法正确的就是 D 这个,这道题选 D。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "choice_letter",
+        "verifier": "choice_letter",
+        "matched_span": "D",
+        "ground_truth_ref": "D",
+        "normalization": []
+       },
+       "other_turns_hit": []
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       },
+       "answer_value": "D",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+        "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     },
     "arc_version": "v0",
@@ -1525,9 +1883,20 @@
      "source_family": "partner_bank"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "answer_spec": {
+      "answer_type": "choice_letter",
+      "ground_truth": "D",
+      "aliases": [],
+      "unit_optional": false,
+      "letter_choices": [
+       "A",
+       "B",
+       "C",
+       "D"
+      ]
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -1556,10 +1925,38 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "D「一定大于 50%」把话说死了,投篮命中率谁也保证不了,发挥失常跌破一半也是会发生的事。「一定」这个说法不成立,这道题选 D。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "choice_letter",
+        "verifier": "choice_letter",
+        "matched_span": "D",
+        "ground_truth_ref": "D",
+        "normalization": []
+       },
+       "other_turns_hit": []
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       },
+       "answer_value": "D",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+        "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     },
     "arc_version": "v0",
@@ -1638,9 +2035,20 @@
      "source_family": "partner_bank"
     },
     "runtime_projection": {
-     "answer_spec": null,
-     "status": "left_empty",
-     "left_empty_reason": "c5_no_student_script",
+     "answer_spec": {
+      "answer_type": "choice_letter",
+      "ground_truth": "A",
+      "aliases": [],
+      "unit_optional": false,
+      "letter_choices": [
+       "A",
+       "B",
+       "C",
+       "D"
+      ]
+     },
+     "status": "projected",
+     "left_empty_reason": null,
      "conditions": {
       "c1_authoritative_answer": {
        "pass": true,
@@ -1669,10 +2077,38 @@
       "c3_no_llm": true,
       "c4_no_semantic_guess": true,
       "c5_self_feed_verifier_on_script_final_turn": {
-       "evaluable": false,
-       "note": "bank 案无档案剧本(lane-b 口径 start→finish,无学生轮)——c5 不可评估,按「不命中→留空」fail-closed"
+       "evaluable": true,
+       "final_turn": "A 就是 3/8×9/5,和化简后的原式一模一样。和 0.375×1又4/5 计算结果相同的就是 A,这道题选 A。",
+       "turn_index": 4,
+       "evidence": {
+        "hit": true,
+        "turn_id": 4,
+        "answer_type": "choice_letter",
+        "verifier": "choice_letter",
+        "matched_span": "A",
+        "ground_truth_ref": "A",
+        "normalization": []
+       },
+       "other_turns_hit": []
       },
-      "c6_provenance": null
+      "c6_provenance": {
+       "authority_source": {
+        "kind": "bank_compiled_spec",
+        "detail": "question.answer + answer_spec(147562e8 编译,#422 A 段透传)",
+        "stored_spec_matches_recompile": true
+       },
+       "answer_value": "A",
+       "compile_rule_version": {
+        "compile_rule": "scripts/compile_answer_spec.py",
+        "rule_file_sha256_at_6f3e7078": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
+        "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
+        "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+        "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+        "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+       }
+      }
      }
     },
     "arc_version": "v0",
@@ -11980,12 +12416,12 @@
  "wp3_projection": {
   "stats": {
    "core": 72,
-   "projected": 5,
-   "left_empty": 67,
+   "projected": 17,
+   "left_empty": 55,
    "empty_reasons": {
-    "c5_no_student_script": 15,
+    "c5_no_student_script": 1,
     "c2_compiler_left_empty": 10,
-    "c5_self_feed_miss_on_final_turn": 13,
+    "c5_self_feed_miss_on_final_turn": 15,
     "c1_no_authoritative_answer": 29
    }
   },
@@ -11995,7 +12431,9 @@
    "completion_verifier_sha256_at_6f3e7078": "cb302f92b8dbd8ae72b32594ed7dc64196841ef31869e79a2285c573903f0a7a",
    "precedent": "partner_bank 142 spec @147562e8 (#422 A 段透传)",
    "rule_file_sha256_at_d4fbdf60": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
-   "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
+   "completion_verifier_sha256_at_d4fbdf60": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b",
+   "rule_file_sha256_at_96f0f58f": "b2a1ad717c449311b515b7b6f602a7a0ef25fce3705e58b5628668f8d15cb4b1",
+   "completion_verifier_sha256_at_96f0f58f": "4949fdbdbc173114e2b4e92c72c2c576844532ada8728894b1acca69f9ec994b"
   },
   "ruling": "Architect 2026-10-03 Morning:corpus-side 显式 answer_spec 投影;禁止迁移/放宽 Kernel Gate 语义(Gate fail-closed 设计不动)。",
   "v1_2_refresh": {
@@ -12021,6 +12459,41 @@
    },
    "stats_delta": "projected 2→5;left_empty 70→67;empty_reasons.c5_self_feed_miss_on_final_turn 16→13",
    "conditions_verbatim": "六条件与 v1.1 逐字不变(见 README §8a);零 LLM/零语义猜测/不造编译器"
+  },
+  "v1_5_refresh": {
+   "date": "2026-10-10",
+   "trigger": "#555/#556 Bank Arc Contract(v1.3/v1.4)已合 main:14 bank Core 案补 student_script,c5 由「无剧本不可评估」变为可评估;§8d/#556 明文预留的独立投影刷新操作(弧闭合线,exit #554)",
+   "surface": "96f0f58f(=origin/main,#556 后;compile 规则与 verifier 与 d4fbdf60 逐字节相同——git diff d4fbdf60..96f0f58f 为空,sha 见 rule_version)",
+   "changed_cases": [
+    "core-bank-6a61acc7",
+    "core-bank-6a61afaa",
+    "core-bank-6a61b65d",
+    "core-bank-6a61ba43",
+    "core-bank-6a61c351",
+    "core-bank-6a62bda2",
+    "core-bank-6a62bdae",
+    "core-bank-6a62c353",
+    "core-bank-6a62ca0e",
+    "core-bank-6a62cb51",
+    "core-bank-6a62cc86",
+    "core-bank-6a6955a9",
+    "core-bank-6a6955b3",
+    "core-bank-6a699c32"
+   ],
+   "change": "12 案 c5_no_student_script→projected(c1/c2 既有成立,c5 于剧本终答轮自回喂命中);2 案 c5_no_student_script→c5_self_feed_miss_on_final_turn(#556 预登记未完成轨迹,末轮设计即不落终答);其余 57 案重算与 v1.2/v1.4 逐字节一致、记录零改动;15 bank 案 frozen_input_sha256 复算一致(输入零变化);completion_capable_core 维持 5(bank expectation.kind=answer_spec 不声明 completion,规则③不满足——分母扩张需 expectation 面人裁,非投影操作)",
+   "stats_v1_4": {
+    "core": 72,
+    "projected": 5,
+    "left_empty": 67,
+    "empty_reasons": {
+     "c5_no_student_script": 15,
+     "c2_compiler_left_empty": 10,
+     "c5_self_feed_miss_on_final_turn": 13,
+     "c1_no_authoritative_answer": 29
+    }
+   },
+   "stats_delta": "projected 5→17;left_empty 67→55;empty_reasons.c5_no_student_script 15→1;empty_reasons.c5_self_feed_miss_on_final_turn 13→15;c1 29/c2 10 不变",
+   "conditions_verbatim": "六条件与 §8a 逐字不变(零 LLM/零语义猜测/不造编译器);b2/goldc 25 案维持 c1 留空(§8a 裁定:仅 trajectory gold,无产品级 answer authority,不得投影)"
   }
  }
 }

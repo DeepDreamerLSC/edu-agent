@@ -166,6 +166,32 @@ schema 升 `trusted_product_corpus_v1/manifest/v1.4`(仅增字段/增条目;coun
 
 **调用账(逐段,fail-closed 闸)**:product 68 调=首 run 60(12 案 ok+6a699c32 第 3 调 schema 失败)+resume 5(6a631898-neg)+单案补跑 3(6a699c32 复现同点位失败);judge 12 调(6a699c32 无 transcript 不判);**合计 80 调**——超本任务 ≤75 线 5 调,构成:13 案×5 调+判卷 12 的算术下界即 77,加 6a699c32 确定性失败消耗 3 调(两跑共 6 调中 1 跑计入首 run)。如实列账,不藏失败。
 
+## 8f. v1.5:弧闭合——bank arc 投影刷新(projected 5→17;弧闭合线 exit #554)
+
+schema 升 `trusted_product_corpus_v1/manifest/v1.5`。**触发**:#555/#556(§8d/§8e Bank Arc Contract v1.3/v1.4)已合 main——14 bank Core 案补齐 `student_script`,c5(剧本终答轮自回喂)由「无剧本不可评估→留空」变为可评估;§8d 与 #556 PR body 均明文「投影刷新独立操作,留给 arc 合入后的下一轮」,本节即该预留操作(弧闭合线收口)。
+
+**重跑口径**:六条件与 §8a 逐字不变(零 LLM/零语义猜测/不造编译器);代码面 96f0f58f(=origin/main,#556 后)——`git diff d4fbdf60..96f0f58f` 于 compile 规则/completion verifier/answer_census 三文件**为空**,sha 与 v1.2 surface 相同(`b2a1ad71…`/`4949fddb…`,锚增记于 `wp3_projection.rule_version` 与逐案 c6)。**纯离线零调用**:#556 Gate 记的 budget-preflight 硬门照做——本操作 preflight 调用下界=0,机械证明:全部 socket 连接入口(connect/connect_ex/create_connection/getaddrinfo)禁用下全程重跑成功,且产物与常规运行逐字节一致(确定性);不触 8303/8301。
+
+**逐案重算+对账(全部机械断言,任一失败不落盘)**:①57 非 bank 案重算与 v1.2/v1.4 逐字节一致、记录零改动(白名单外全树 deep-equal);②15 bank 记录 c2 重编译与仓内存储 `answer_spec` 逐字一致;③14 剧本案 c5 重算与 #555/#556 入库的 `student_script.c5_self_feed_precheck` 逐案一致,命中案早轮零认证;④15 bank 案 `frozen_input_sha256` 按 #556 precheck 同式复算一致(冻结面零漂移)。
+
+**结果(12 投影/2 留空迁移/1 维持)**:
+
+| 变化 | 案 | 终答轮命中证据(turn 4) |
+|---|---|---|
+| →projected(numeric 6) | 6a62bda2 / 6a62bdae / 6a62c353 / 6a62ca0e / 6a62cb51 / 6a61afaa | `1.16 米`[单位同义换算]/`0.5 米`[单位同义换算]/`300 步`/`13`/`3/100`/`0.4kg` |
+| →projected(choice 3) | 6a62cc86 / 6a6955a9 / 6a6955b3 | `D` ×3 |
+| →projected(short_text 2) | 6a61c351 / 6a61ba43 | `A.10`[剥空白标点]/`无法确定` |
+| →projected(choice 1) | 6a699c32 | `A`(投影=确定性离线判定;该案 live 重放 GatewayError 为 #557 产品面边界,与本离线投影独立) |
+| c5_no_student_script→c5_self_feed_miss_on_final_turn(2) | 6a61acc7 / 6a61b65d | #556 预登记未完成轨迹(末轮设计即不落终答),重算命中=否,与预登记一致 |
+| 维持 c5_no_student_script(1) | 6a62ca09 | review 不在 arc 池,无剧本,c5 不可评估 fail-closed |
+
+**投影统计(Core 72:5 投影/67 留空 → 17 投影/55 留空)**:empty_reasons 仅 c5_no_student_script 15→1、c5_self_feed_miss_on_final_turn 13→15;c1 29/c2 10 不变(v1.4 统计存档 `wp3_projection.v1_5_refresh.stats_v1_4`)。
+
+**Completion-Capable Core 分母维持 5(不扩张,如实)**:规则③要求 expectation 明确声明 completion(expect.final_states=completed),Core 内满足该面唯一族=shadow_pilot_20(completion_final_state);bank 案 expectation.kind=answer_spec 不声明 completion——投影在场使条件①②成立,③仍不满足。分母扩张需 expectation 面人裁(合同边界变化),非投影操作可及;本节不越权改 expectation。
+
+**b2/goldc 25 案维持 c1 留空(弧闭合线的不可达面,如实记录)**:math_gold_b2 13 + gold_candidates 12 案,源记录 73 条(small_lecturer_math_gold_b2.json 13 + small_lecturer_math_gold_candidates.json 60)`question` 均为裸字符串、无任何 answer 字段(机械核验 2026-10-10),且 §8a 已裁定「仅 trajectory gold,不得投影」。该族闭合需 teacher 侧在源数据集补 answer authority(teacher_confirmed gold 操作,人裁)或裁定变更——超出 corpus manifest 数据文件操作边界,本 PR 不为凑数从题面/剧本语义抽取答案。
+
+
 **identity 区分**:A 面 arc_version=v0(与 #555 spike 5 案同标记,新 Case 同字段面+learner_trajectory 新子键);B 面 arc_version=v0-negative+variant_id+frozen_input_sha256 按 Core bank 同式实算(题面均不入 Core 的 bank 题,identity 与 Core 零重叠);Core 分母 72 不变,`completion_capable_core`/runtime_projection 面零改动(投影刷新独立操作,与 §8d 同纪律留给下一轮)。v1.3 Core baseline 重刷(Gate C 段)在 14 案 arc 齐备后另行执行,本 PR 只做 corpus+读出。
 
 ## 9. 复算命令(冻结身份)
@@ -185,3 +211,4 @@ uv run python -c "from edu_agent.agents.small_lecturer import _student_signals_s
 - v1.1 投影复算(WP3;代码面同 6f3e7078 worktree):`python3 /tmp/wp3/project_answer_spec.py`(六条件逐案重算,与 manifest `runtime_projection`/`wp3_projection.stats` 对账);baseline 重放证据在 /tmp/wp3/baseline/。
 - v1.2 投影刷新复算(#515 surface;worktree d4fbdf60=/tmp/wp3-v12-worktree):`python3 /tmp/wp3-v12/project_answer_spec_v12.py` + `apply_projection_v12.py`(六条件逐字不变重算 72 案、与 v1.1 逐案对账仅 3 案翻面、写入 manifest v1.2);产物 /tmp/wp3-v12/projection_report_v12.json。
 - v1.4 Phase 2 复算(base 4248b816):冻结正本+sha/时间戳 `/tmp/m81/phase2/freeze.json`,precheck/重放/判卷/编辑脚本 `/tmp/m81/phase2/*.py`(driver 启动即断言冻结 sha);重放证据 `/tmp/m81/phase2/arc/collect/cases-20261007T084309Z-b157/`(12 案 ok)+ `cases-6a699c32-20261007T084851Z-f591/`(content 失败复现),判卷 `/tmp/m81/phase2/arc/judge/judge-results.json`;对照基线 /tmp/m80/step4/(只读)。
+- v1.5 弧闭合投影刷新复算(surface 96f0f58f):`python3 /tmp/arc-closure-refresh/reproject_v15.py`(离线六条件重算+四门对账:57 案逐字节/15 案 c2 重编译/14 案 c5==precheck/15 案 frozen sha 复算;任一失败不落盘;零模型零网络);manifest 变更面=schema_version+wp3_projection+14 案 runtime_projection,余全树 deep-equal。
