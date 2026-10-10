@@ -144,6 +144,28 @@ def test_diagnose_hint_carries_frozen_p2_line_first_reply_only(tmp_path):
         assert p2_on_wire not in prompts[2]        # 之后轮次不在场(时窗不扩)
 
 
+# ---------- #560:student-echo 开场从必选改为可选(prompt 面) ----------
+
+
+def test_system_prompt_makes_student_echo_opening_optional():
+    """#560(Architect 产品反馈):«每轮必须先复述学生表达»的固定开场收拢为可选锚定。
+    三处指令面(TACTICS 追问/确认赞许、_TONE_DIRECTIVE)都带「不必每轮复述」许可;
+    教学语义不删:具体缺口锚定、证据表扬、不引终答数字、收束请学生自述。"""
+    prompt = system_prompt("六年级")
+    assert "不必每轮以复述他的话开场" in prompt          # TACTICS 追问:引用改为可选
+    assert "不必每轮先复述他说过的内容" in prompt        # TACTICS 确认与赞许轮
+    assert "可直接给简短反馈再过渡到引导问题" in prompt   # _TONE_DIRECTIVE
+    assert "引用他说过的词只是可选的锚定手段" in prompt   # 具体性锚定意图保留
+    assert "肯定学生时复述他的方法" not in prompt         # 旧复述强制已摘除
+
+
+def test_style_shape_expansion_allows_direct_response():
+    """#560:acknowledgement_plus_one_question 的展开不再把确认定义为«针对学生内容的
+    确认»(每轮复述的结构性根源);确认可短可直,轮结构(回应+问题)不变,config 零改动。"""
+    assert "不必复述学生内容" in style_directives("六年级")
+    assert "一句针对学生内容的确认" not in style_directives("六年级")
+
+
 # ---------- 第一验收:护栏不过的输出不进入 Turn.text ----------
 
 def test_kernel_replaces_leaking_tutor_output(tmp_path):
@@ -229,6 +251,28 @@ def test_tutor_turn_schema_declares_reason_before_reply():
     assert props.index("reason") < props.index("reply"), "reason 必须声明在 reply 之前"
     assert "reason" in TUTOR_TURN_SCHEMA["required"]
     assert TUTOR_TURN_SCHEMA["properties"]["reason"] == {"type": "string"}
+
+
+def test_tutor_turn_schema_pins_legal_json_number_for_cited_numbers():
+    """#557(math-dense structured-output 断裂,6a699c32):cited_numbers 是 schema 里
+    唯一 number 类型面,模型曾把学生输入的分数记法(4/5、3/8、9/5)原样镜像进去——
+    分数不是合法 JSON 数字,json.loads 在数组内断裂(schema_violation,temp-0 修复
+    重试字节同形,两跑同点位)。修面 = annotation-only description(先例 1cb763a6
+    OPEN_SCHEMA):指令必须真实到达模型面(schema 经 json.dumps 序列化进路线 1
+    prompt 指令消息),且结构零变化——键集/类型/required/additionalProperties 冻结,
+    jsonschema 校验行为不变。"""
+    cited = TUTOR_TURN_SCHEMA["properties"]["cited_numbers"]
+    # 结构冻结(annotation-only):类型面与必填面不变
+    assert cited["type"] == "array"
+    assert cited["items"]["type"] == "number"
+    assert TUTOR_TURN_SCHEMA["required"] == ["reason", "reply", "ready_to_confirm",
+                                             "cited_numbers"]
+    assert TUTOR_TURN_SCHEMA["additionalProperties"] is False
+    # 指令在场且经序列化(路线 1 prompt 的同一 json.dumps 口径)到达模型面
+    serialized = json.dumps(TUTOR_TURN_SCHEMA, ensure_ascii=False)
+    assert "分数记法" in serialized and "不是合法 JSON 数字" in serialized
+    assert "写小数" in serialized, "必须给出可执行替代(4/5→0.8),否则模型无从改写"
+    assert "省略" in serialized, "不能精确换算的分数必须有出路(自报影子字段,宁缺勿断)"
 
 
 def test_reason_field_never_read_by_app_code():
