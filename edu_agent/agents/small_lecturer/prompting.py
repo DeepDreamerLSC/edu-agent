@@ -427,7 +427,21 @@ TUTOR_TURN_SCHEMA = {
         "reply": {"type": "string"},
         "ready_to_confirm": {"type": "boolean"},
         # 数字漂移守卫:模型自报本轮回复中引用的题目条件数字(服务端对题面校验)
-        "cited_numbers": {"type": "array", "items": {"type": "number"}},
+        # #557(math-dense 断裂,6a699c32 两跑+origin/main 重放同点位):模型把学生
+        # 输入里的分数记法(4/5、3/8、9/5)原样镜像进 number 数组——分数不是合法
+        # JSON 数字,json.loads 在数组内断裂(schema_violation;temp-0 修复重试字节
+        # 同形)。annotation-only 修面(先例 1cb763a6 OPEN_SCHEMA):description 承担
+        # 「元素=单个合法 JSON 数字」格式约束;键集/类型/required/additionalProperties
+        # 零变化,jsonschema 校验行为不变。cited_numbers 是自报影子字段(不进任何
+        # 判定),不能精确换算的分数宁缺勿断。
+        "cited_numbers": {
+            "type": "array",
+            "description": "本轮回复引用的题目数字,元素必须是单个合法 JSON 数字(整数或小数,如 3、0.375)",
+            "items": {
+                "type": "number",
+                "description": "单个合法 JSON 数字:整数或小数。分数记法(如 4/5、3/8)不是合法 JSON 数字,会把整个输出变成非法 JSON——能精确换算的写小数(4/5 写 0.8、3/8 写 0.375),不能精确换算的省略该元素",
+            },
+        },
     },
     "required": ["reason", "reply", "ready_to_confirm", "cited_numbers"],
     "additionalProperties": False,

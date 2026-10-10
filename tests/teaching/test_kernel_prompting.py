@@ -231,6 +231,28 @@ def test_tutor_turn_schema_declares_reason_before_reply():
     assert TUTOR_TURN_SCHEMA["properties"]["reason"] == {"type": "string"}
 
 
+def test_tutor_turn_schema_pins_legal_json_number_for_cited_numbers():
+    """#557(math-dense structured-output 断裂,6a699c32):cited_numbers 是 schema 里
+    唯一 number 类型面,模型曾把学生输入的分数记法(4/5、3/8、9/5)原样镜像进去——
+    分数不是合法 JSON 数字,json.loads 在数组内断裂(schema_violation,temp-0 修复
+    重试字节同形,两跑同点位)。修面 = annotation-only description(先例 1cb763a6
+    OPEN_SCHEMA):指令必须真实到达模型面(schema 经 json.dumps 序列化进路线 1
+    prompt 指令消息),且结构零变化——键集/类型/required/additionalProperties 冻结,
+    jsonschema 校验行为不变。"""
+    cited = TUTOR_TURN_SCHEMA["properties"]["cited_numbers"]
+    # 结构冻结(annotation-only):类型面与必填面不变
+    assert cited["type"] == "array"
+    assert cited["items"]["type"] == "number"
+    assert TUTOR_TURN_SCHEMA["required"] == ["reason", "reply", "ready_to_confirm",
+                                             "cited_numbers"]
+    assert TUTOR_TURN_SCHEMA["additionalProperties"] is False
+    # 指令在场且经序列化(路线 1 prompt 的同一 json.dumps 口径)到达模型面
+    serialized = json.dumps(TUTOR_TURN_SCHEMA, ensure_ascii=False)
+    assert "分数记法" in serialized and "不是合法 JSON 数字" in serialized
+    assert "写小数" in serialized, "必须给出可执行替代(4/5→0.8),否则模型无从改写"
+    assert "省略" in serialized, "不能精确换算的分数必须有出路(自报影子字段,宁缺勿断)"
+
+
 def test_reason_field_never_read_by_app_code():
     """#146 M1 红线:reason 是规划装置,不是验证装置——应用代码(edu_agent/)任何位置
     不得读取 reason;cited_numbers 前车之鉴:自报字段一进判定逻辑就变成谎报源。
