@@ -5,10 +5,13 @@
      + mmproj Q8_0 投影器,#34 环境侧交付,冒烟三分支通过)。--mmproj 挂载视觉
      投影器;--jinja 启用 chat template,json_schema 走 llama.cpp grammar 约束;
      --alias 对齐 configs/models.yaml 的 models.vision_8b.name。
-     2026-09-18 #255 判据2 试点并发实验(PM 233d0fca,人批载体=派单+本 PR 合并键):
-     --parallel 4 开 4 解码槽(burst T2 P95 79s 根因=单槽×网关 2 并发排队);
-     --ctx-size 为槽间总量,8192→32768 保持每槽 8k。实验性质,回滚线=本文件与
-     configs/models.yaml(tutor concurrency)同时回退 + launchctl 重载即回单槽。 -->
+     2026-10-12 #565/#564 Capacity Gate 4→8 容量实验(人批载体=Capacity Gate +
+     本配置 PR 合并键):--parallel 4→8 开 8 解码槽;--ctx-size 为槽间总量,
+     32768→65536 维持每槽 8k(资源预检通过方可,预检不过则 STOP 不静默 32768/8)。
+     vision 角色共用本服务,8 槽非 tutor 独占。实验性质,回滚 tuple=(tutor=4,
+     parallel=4, ctx-size=32768)=本文件与 configs/models.yaml(tutor
+     concurrency)同时回退 + launchctl 重载。前史:2026-09-18 #255 判据2(PM
+     233d0fca)8192→32768×parallel 4(burst T2 P95 79s 根因=单槽×网关 2 并发排队)。 -->
 <dict>
   <key>Label</key>
   <string>com.edu-agent.m0.vision-8303</string>
@@ -24,9 +27,9 @@
     <string>--port</string>
     <string>8303</string>
     <string>--ctx-size</string>
-    <string>32768</string>
+    <string>65536</string>
     <string>--parallel</string>
-    <string>4</string>
+    <string>8</string>
     <string>--jinja</string>
     <string>--alias</string>
     <string>Qwen3-VL-8B-GGUF</string>
