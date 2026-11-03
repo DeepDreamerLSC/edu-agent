@@ -26,11 +26,11 @@ def base_repo(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def pkg_tree(tmp_path: Path) -> Path:
-    """含 02 §2 预定六个顶层包的临时仓库,import-linter 合同可评估。"""
+    """含 02 §2 预定七个顶层包的临时仓库,import-linter 合同可评估。"""
     root = tmp_path / "pkgrepo"
     (root / "edu_agent").mkdir(parents=True)
     (root / "edu_agent" / "__init__.py").touch()
-    for name in ("gateway", "agents", "evals", "contracts", "api", "store"):
+    for name in ("gateway", "agents", "evals", "contracts", "api", "store", "ingest"):
         package = root / "edu_agent" / name
         package.mkdir()
         (package / "__init__.py").touch()

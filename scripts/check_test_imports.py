@@ -10,7 +10,7 @@ edu_agent/gateway/middleware.py,存在且不在公开名单内即报 PRIVATE-IMP
 公开入口子模块(from edu_agent.agents import small_lecturer)与普通符号不受影响。
 evals 于 M1 前置(评测 runner 单测)加入公开名单;store 于 M3 前置(决策 2:store
 有独立公开面,测试直连而非绕道 api 再导出)加入公开名单——均 02 §7 结构性改动,随 PR 人批。
-另查 tests/ 一级目录白名单:只允许六类(teaching/gateway/contracts/e2e/rules/evals)+ fixtures,
+另查 tests/ 一级目录白名单:只允许七类(teaching/gateway/contracts/e2e/rules/evals/ingest)+ fixtures,
 未知目录非零退出(防止目录漂移无 CI 拦截)。
 只依赖标准库。
 """
@@ -28,11 +28,12 @@ PUBLIC_MODULES = frozenset({
     "edu_agent.api",
     "edu_agent.contracts",
     "edu_agent.store",
+    "edu_agent.ingest",
 })
 # 02 §6:测试只写在六类固定目录(teaching/gateway/contracts/e2e/rules/evals)+ fixtures;
 # tests/ 下出现未知目录即偏离(目录漂移无 CI 拦截 → 第六、第七个目录静默出现)。
 TEST_DIRS = frozenset({
-    "teaching", "gateway", "contracts", "e2e", "rules", "evals", "fixtures",
+    "teaching", "gateway", "contracts", "e2e", "rules", "evals", "ingest", "fixtures",
 })
 SKIP_DIRS = frozenset({
     ".git", ".venv", "__pycache__", ".pytest_cache", ".ruff_cache",

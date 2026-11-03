@@ -66,7 +66,7 @@ STRUCTURAL_PATHS = (
     "AGENTS.md",
 )
 PLANNED_TOP_LEVEL_PACKAGES = frozenset(
-    {"gateway", "evals", "agents", "contracts", "api", "store"}  # 02 §2
+    {"gateway", "evals", "agents", "contracts", "api", "store", "ingest"}  # 02 §2(2026-11-03 #572 +ingest)
 )
 # rubric 是量具,改 rubric = 换尺子(#405 ②):目录前缀匹配。金标集在
 # edu_agent/evals/datasets/golden/ 是卡口的检查对象(#404 已入仓),不在此触发路径内。

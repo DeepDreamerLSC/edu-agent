@@ -1,4 +1,4 @@
-"""02 §2.2 四条包依赖合同的红灯测试:违规导入必须让 lint-imports 非零退出并点名合同。"""
+"""02 §2.2 六条包依赖合同的红灯测试:违规导入必须让 lint-imports 非零退出并点名合同。"""
 
 import os
 import shutil
@@ -13,6 +13,8 @@ CONTRACT_VIOLATIONS = {
     "agents-no-api-store": ("agents", "import edu_agent.store"),
     "evals-no-api": ("evals", "import edu_agent.api"),
     "contracts-imports-nothing-internal": ("contracts", "import edu_agent.gateway"),
+    "ingest-no-api-agents-evals": ("ingest", "import edu_agent.evals"),
+    "agents-no-ingest": ("agents", "import edu_agent.ingest"),
 }
 
 
@@ -52,6 +54,6 @@ def test_contract_turns_red(lint_imports, pkg_tree, contract):
 
 
 def test_clean_tree_passes(lint_imports, pkg_tree):
-    """干净的六包骨架必须通过(合同不误伤)。"""
+    """干净的七包骨架必须通过(合同不误伤)。"""
     result = run_linter(lint_imports, pkg_tree)
     assert result.returncode == 0, result.stdout + result.stderr

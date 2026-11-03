@@ -1,5 +1,5 @@
 # 02 §2.2 包依赖方向:四条合同,CI 强制(lint-imports)。
-# 六个顶层包是 02 §2 的预定名单;第七个包需人批并同步文档与本文件。
+# 七个顶层包是 02 §2 的预定名单(2026-11-03 #572 人批 +ingest);第八个包需人批并同步文档与本文件。
 [importlinter]
 root_package = edu_agent
 
@@ -30,6 +30,24 @@ source_modules =
     edu_agent.evals
 forbidden_modules =
     edu_agent.api
+
+[importlinter:contract:ingest-isolation]
+name = ingest-no-api-agents-evals
+type = forbidden
+source_modules =
+    edu_agent.ingest
+forbidden_modules =
+    edu_agent.api
+    edu_agent.agents
+    edu_agent.evals
+
+[importlinter:contract:agents-no-ingest]
+name = agents-no-ingest
+type = forbidden
+source_modules =
+    edu_agent.agents
+forbidden_modules =
+    edu_agent.ingest
 
 [importlinter:contract:contracts-purity]
 name = contracts-imports-nothing-internal
