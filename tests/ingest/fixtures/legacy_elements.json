@@ -1,0 +1,5 @@
+{
+  "output": {
+    "content": "{\"elements\":[{\"bbox\":[10,20,300,44],\"text\":\"1.计算下列各题\",\"kind\":\"text\"},{\"bbox\":[40,60,200,180],\"kind\":\"figure\"},{\"bbox\":[\"x\",2,3,4],\"text\":\"坏bbox跳过\",\"kind\":\"text\"}]}"
+  }
+}
