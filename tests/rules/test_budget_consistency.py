@@ -15,7 +15,8 @@ def edit_doc(base_repo, transform) -> None:
 
 def test_doc_number_mismatch_fails(base_repo):
     """改了文档数字没改常量 → 红,并点名指标。"""
-    edit_doc(base_repo, lambda text: text.replace("| 30 000 |", "| 29 000 |", 1))
+    good = f"| {budget.LIMIT_APP_TOTAL_LINES:,} |".replace(",", " ")
+    edit_doc(base_repo, lambda text: text.replace(good, "| 29 000 |", 1))
     result = run_py("budget.py", "--root", str(base_repo))
     assert result.returncode != 0
     assert "BUDGET-FAIL doc-consistency(app-total-lines)" in result.stdout

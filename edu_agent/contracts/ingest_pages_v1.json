@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "edu-agent:contracts/ingest_pages_v1.json",
+  "title": "ingest_pages_v1(render 阶段输出,pages.jsonl 每行一条)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "source_pdf", "dpi", "page_no", "width_px", "height_px", "image"],
+  "properties": {
+    "version": {"const": "ingest_pages_v1"},
+    "source_pdf": {"type": "string", "minLength": 1},
+    "dpi": {"type": "integer", "minimum": 72, "maximum": 400},
+    "page_no": {"type": "integer", "minimum": 1},
+    "width_px": {"type": "integer", "minimum": 1},
+    "height_px": {"type": "integer", "minimum": 1},
+    "image": {"type": "string", "pattern": "^pages/[0-9]{4}\\.png$"}
+  }
+}

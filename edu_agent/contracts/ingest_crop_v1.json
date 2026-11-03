@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "edu-agent:contracts/ingest_crop_v1.json",
+  "title": "ingest_crop_v1(compose 阶段输出,每题一条;markdown 含 LaTeX 片段)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "run_id", "page_no", "question_no", "crop_image", "markdown", "latex_fragments", "figures"],
+  "properties": {
+    "version": {"const": "ingest_crop_v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "page_no": {"type": "integer", "minimum": 1},
+    "question_no": {"type": ["integer", "string"], "minLength": 1},
+    "crop_image": {"type": "string", "pattern": "^crops/.+\\.png$"},
+    "markdown": {"type": "string"},
+    "latex_fragments": {"type": "array", "items": {"type": "string"}},
+    "figures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "bbox"],
+        "properties": {
+          "ref": {"type": "string", "minLength": 1},
+          "bbox": {"$ref": "#/$defs/bbox"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "bbox": {
+      "type": "array",
+      "items": {"type": "integer", "minimum": 0},
+      "minItems": 4,
+      "maxItems": 4
+    }
+  }
+}

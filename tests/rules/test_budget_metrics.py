@@ -38,7 +38,8 @@ def test_single_file_lines_over_limit(base_repo):
 
 
 def test_top_level_packages_over_limit(base_repo):
-    for name in ("a", "b", "c", "d", "e", "f", "g"):
+    for index in range(budget.LIMIT_TOP_LEVEL_PACKAGES + 1):
+        name = chr(ord("a") + index)
         package = base_repo / "edu_agent" / name
         package.mkdir()
         (package / "__init__.py").touch()

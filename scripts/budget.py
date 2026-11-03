@@ -17,11 +17,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 # ---- 02 §2 表的预算常量(文档是唯一事实源;改数字必须同步改文档并走 structural 人批)----
-LIMIT_APP_TOTAL_LINES = 30_000
+LIMIT_APP_TOTAL_LINES = 27_000
 LIMIT_SINGLE_FILE_LINES = 800
-LIMIT_TOP_LEVEL_PACKAGES = 6
+LIMIT_TOP_LEVEL_PACKAGES = 7
 LIMIT_RUNTIME_DEPS = 15
-LIMIT_CONFIG_FILES = 5
+LIMIT_CONFIG_FILES = 4
 LIMIT_TEST_RATIO = 1.0
 LIMIT_DEPLOY_SCRIPT_LINES = 100
 LIMIT_SUPPRESSIONS = 10
@@ -256,6 +256,7 @@ def collect_metrics(root: Path) -> list[Metric]:
     scripts_total = scripts_total_lines(root, py_files)
     fixtures_total = fixtures_total_lines(root, py_files)
     kernel_if = kernel_mechanisms_if_count(root)
+    ingest_total = sum(code_lines(p) for p in py_files if is_under(p, root, "edu_agent", "ingest"))
     suppressions = sum(count_comment_suppressions(p) for p in py_files) + pyproject_suppressions(root)
     return [
         Metric("app-total-lines", f"{total_app} / {LIMIT_APP_TOTAL_LINES}", total_app <= LIMIT_APP_TOTAL_LINES),
@@ -284,6 +285,8 @@ def collect_metrics(root: Path) -> list[Metric]:
         Metric("fixtures-total-lines", f"{fixtures_total}(登记用,不设限)", True, blocking=False),
         # 登记(#201):kernel reply() 机制分支数(AST 数 If 节点,单一口径)——只登记不设限。
         Metric("kernel-mechanisms", f"{kernel_if}(登记用,不设限)", True, blocking=False),
+        # 登记(08 §7):ingest 线内部行数 ≤4000,只报告不阻塞——超限即设计偏离,人裁。
+        Metric("ingest-total-lines", f"{ingest_total} / 4000(08 §7 登记用)", ingest_total <= 4000, blocking=False),
     ]
 
 

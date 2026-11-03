@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "edu-agent:contracts/ingest_elements_v1.json",
+  "title": "ingest_elements_v1(ocr 阶段输出,elements.jsonl 每页一条,bbox 为像素 [x1,y1,x2,y2])",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "run_id", "engine", "page_no", "lines", "visual_blocks"],
+  "properties": {
+    "version": {"const": "ingest_elements_v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "engine": {"type": "string", "minLength": 1},
+    "page_no": {"type": "integer", "minimum": 1},
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["bbox", "text"],
+        "properties": {
+          "bbox": {"$ref": "#/$defs/bbox"},
+          "text": {"type": "string"},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    },
+    "visual_blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["bbox", "kind"],
+        "properties": {
+          "bbox": {"$ref": "#/$defs/bbox"},
+          "kind": {"enum": ["figure", "table", "formula", "header", "footer", "caption", "stamp", "other"]},
+          "text": {"type": "string"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "bbox": {
+      "type": "array",
+      "items": {"type": "integer", "minimum": 0},
+      "minItems": 4,
+      "maxItems": 4
+    }
+  }
+}

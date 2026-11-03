@@ -31,17 +31,18 @@
 
 | 项目 | v1 上限 | 度量方式 |
 |---|---|---|
-| 应用代码总行数（`edu_agent/` 下 `*.py`，不含空行与注释） | 30 000 | `scripts/budget.py` 统计 |
+| 应用代码总行数（`edu_agent/` 下 `*.py`，不含空行与注释） | 27 000 | `scripts/budget.py` 统计 |
 | 单文件非空非注释行 | 800 | 同上 |
-| 顶层包数量（`edu_agent/` 下一级目录） | 6 | 同上 |
+| 顶层包数量（`edu_agent/` 下一级目录） | 7 | 同上 |
 | 第三方运行时依赖（`pyproject.toml` dependencies） | 15 | 同上 |
-| 配置文件数量（`configs/`） | 5 | 同上 |
+| 配置文件数量（`configs/`） | 4 | 同上 |
 | 测试代码 / 应用代码 行数比 | ≤ 1.0 | 同上；**永久只报告不阻塞**（见第 6 节，2026-09-11 人裁） |
 | 部署脚本行数 | 100 | 同上 |
 | `# noqa` / `# type: ignore` / `per-file-ignores` 总数 | 10 | 同上，见第 11 节 |
 
-v1 顶层包预定为：`gateway`、`evals`、`agents`、`contracts`（接口合同与 schema）、`api`（M3）、`store`（M3）。
-第七个包需要人批准并在本表登记，同时收紧其他某一项。
+v1 顶层包预定为：`gateway`、`evals`、`agents`、`contracts`（接口合同与 schema）、`api`（M3）、`store`（M3）、
+`ingest`（题目入库线，2026-11-03 经 #572 人批加入，见 08 文档）。
+第八个包需要人批准并在本表登记，同时收紧其他某一项。
 
 数字可以调整，调整只能通过修改本文档的 PR，且只能向下。
 
@@ -110,7 +111,7 @@ CI 以关键词扫描 `edu_agent/` 中的 `lease`、`heartbeat`、`worker_pool`�
 
 ## 6. 测试只写在合同边界
 
-允许的测试只有六类，各放在固定目录：
+允许的测试只有七类，各放在固定目录：
 
 | 类型 | 目录 | 守护对象 |
 |---|---|---|
@@ -120,6 +121,7 @@ CI 以关键词扫描 `edu_agent/` 中的 `lease`、`heartbeat`、`worker_pool`�
 | 黄金路径 | `tests/e2e/` | 一条端到端用例，见 04 文档 3.3 节 |
 | 评测合同 | `tests/evals/` | 评测 runner 单测、judge/legacy-adapter 适配器（假上游返回值对齐老系统形状） |
 | 规则红灯 | `tests/rules/` | 每条预算与 lint 规则会变红，见第 11 节 |
+| ingest 合同 | `tests/ingest/` | ingest 阶段纯函数与 artifact schema 合同（08 文档 §3），08 §7 随 #572 人批 |
 
 模型输出的语义质量不在这里测，那是评测线的事（第 8 节）。PR CI 里的测试不调用真实模型；
 唯一例外是 main CI 的效率基准与评测冒烟（04 文档 3.2、3.4 节），它们跑在能访问

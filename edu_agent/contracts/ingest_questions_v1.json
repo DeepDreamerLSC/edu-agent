@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "edu-agent:contracts/ingest_questions_v1.json",
+  "title": "ingest_questions_v1(segment 阶段输出,questions.jsonl 每题一条;block ids 指 elements 的 lines/visual_blocks 序号)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "run_id", "page_no", "question_no", "target_block_ids", "question_bbox", "excluded_block_ids", "status"],
+  "properties": {
+    "version": {"const": "ingest_questions_v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "page_no": {"type": "integer", "minimum": 1},
+    "question_no": {"type": ["integer", "string"], "minLength": 1},
+    "target_block_ids": {"type": "array", "items": {"type": "integer", "minimum": 0}, "minItems": 1},
+    "question_bbox": {"$ref": "#/$defs/bbox"},
+    "excluded_block_ids": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+    "status": {"enum": ["accepted", "needs_review", "rejected"]}
+  },
+  "$defs": {
+    "bbox": {
+      "type": "array",
+      "items": {"type": "integer", "minimum": 0},
+      "minItems": 4,
+      "maxItems": 4
+    }
+  }
+}
