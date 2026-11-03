@@ -5,7 +5,17 @@
 """
 
 from edu_agent.ingest.artifacts import read_jsonl, validate_record, write_jsonl
+from edu_agent.ingest.engines import get_engine
 from edu_agent.ingest.errors import IngestError
+from edu_agent.ingest.ocr import run_ocr
 from edu_agent.ingest.render import render_pdf
 
-__all__ = ["IngestError", "read_jsonl", "render_pdf", "validate_record", "write_jsonl"]
+__all__ = [
+    "IngestError",
+    "get_engine",
+    "read_jsonl",
+    "render_pdf",
+    "run_ocr",
+    "validate_record",
+    "write_jsonl",
+]
