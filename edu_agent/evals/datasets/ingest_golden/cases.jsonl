@@ -1,0 +1,2 @@
+{"case_id": "grade8_math_a_page4_header_pollution", "pdf": "grade8_math_a_p4.pdf", "page": 1, "tier": "blocking", "question_no": 1, "expected_status": "accepted", "forbidden_target_text": ["选择题每小题3分", "基础对点练"]}
+{"case_id": "final_exam3_page1_q1_anchor", "pdf": "final_exam3_p1.pdf", "page": 1, "tier": "watch", "question_no": 1, "expected_status": "accepted", "forbidden_target_text": []}

@@ -30,6 +30,20 @@ def _int_bbox(bbox: list[float]) -> list[int] | None:
     return [x1, y1, x2, y2]
 
 
+def _multipart(png: bytes, name: str, api_key: str) -> tuple[bytes, str]:
+    """手工构造 multipart(经代理时 httpx 自带编码器有 h11 兼容问题,故自建)。"""
+    boundary = "----eduagentingest7f3a1c"
+    parts = [
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"api_key\"\r\n\r\n{api_key}\r\n",
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"output_formats\"\r\n\r\njson\r\n",
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"output_formats\"\r\n\r\nmarkdown\r\n",
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{name}\"\r\n"
+        f"Content-Type: image/png\r\n\r\n",
+    ]
+    body = "".join(parts).encode("utf-8") + png + f"\r\n--{boundary}--\r\n".encode("utf-8")
+    return body, f"multipart/form-data; boundary={boundary}"
+
+
 class OxrEngine:
     """免费/自部署 OXR 服务的同步解析客户端;环境变量覆盖 base/key/超时。"""
 
@@ -42,17 +56,17 @@ class OxrEngine:
         self.retries = int(os.environ.get("OXR_RETRIES", "2"))
 
     def parse_page(self, png_path: Path, width_px: int, height_px: int) -> dict[str, Any]:
-        data = [("api_key", self.api_key), ("output_formats", "json"), ("output_formats", "markdown")]
+        content, content_type = _multipart(png_path.read_bytes(), png_path.name, self.api_key)
+        headers = {"Content-Type": content_type}
         last_error = "unattempted"
         for attempt in range(self.retries + 1):
             try:
-                with png_path.open("rb") as handle:
-                    response = httpx.post(
-                        f"{self.base_url}/parse/sync",
-                        data=data,
-                        files={"file": (png_path.name, handle, "image/png")},
-                        timeout=self.timeout,
-                    )
+                response = httpx.post(
+                    f"{self.base_url}/parse/sync",
+                    content=content,
+                    headers=headers,
+                    timeout=self.timeout,
+                )
                 if response.status_code >= 500:
                     last_error = f"http {response.status_code}"
                 else:
